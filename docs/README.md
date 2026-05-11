@@ -4,7 +4,7 @@
 
 | Document | Description |
 |----------|-------------|
-| [DEPLOYMENT.md](./DEPLOYMENT.md) | Publier sur npmjs ou GitHub Packages depuis GitHub Actions |
+| [DEPLOYMENT.md](./DEPLOYMENT.md) | GitHub Packages (flux principal, comme portaki-sdk), npmjs optionnel |
 | [MODULE_README_SCHEMA.md](./MODULE_README_SCHEMA.md) | Modèle unique des README par module (marketing + technique), pensé pour être recopié sur la landing |
 
 ## Liens utiles

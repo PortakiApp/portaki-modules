@@ -1,45 +1,69 @@
 # Déploiement des packages npm
 
-Ce dépôt publie les modules sous le scope **`@portaki`** via **pnpm**. La CI installe avec `pnpm install --frozen-lockfile` : le fichier `pnpm-lock.yaml` doit être commité après tout changement de dépendances.
+Le dépôt utilise **pnpm** (`pnpm-lock.yaml` à committer). En local : `pnpm install --frozen-lockfile`.
 
-## Prérequis côté npmjs
+Les modules peuvent être publiés soit sur **GitHub Packages** (flux principal, aligné sur [PortakiApp/portaki-sdk](https://github.com/PortakiApp/portaki-sdk)), soit sur **npmjs.com** (workflow manuel optionnel).
 
-1. Créer un compte sur [npmjs.com](https://www.npmjs.com/) et rejoindre ou créer l’organisation **`@portaki`** (packages scoped publics).
-2. Générer un **token d’accès** avec permission **Publish** (classic token ou granular selon votre politique).
-3. Dans le dépôt GitHub : **Settings → Secrets and variables → Actions** → ajouter **`NPM_TOKEN`** avec ce token.
+---
 
-Ordre recommandé lors d’une publication « all » : le workflow publie d’abord **`@portaki/module-sdk`**, puis les modules métier. Les dépendances `workspace:*` sont réécrites par pnpm vers les versions réellement publiées au moment du `pnpm publish`.
+## GitHub Packages (recommandé — comme `portaki-sdk`)
 
-Avant la première release, incrémenter les champs **`version`** dans les `package.json` concernés (semver).
+Le workflow **Publish modules (GitHub Packages)** (`.github/workflows/publish-github-packages.yml`) reprend la même logique que **Publish JavaScript (GitHub Packages)** dans `portaki-sdk` :
 
-## Workflow « Publish packages (npmjs) »
+- Authentification avec **`GITHUB_TOKEN`** uniquement (`permissions: packages: write`).
+- Le scope npm publié est **`@<propriétaire_github_en_minuscules>/…`** (ex. `@portakiapp/module-sdk` pour l’organisation **PortakiApp**). Le job exécute `scripts/align-npm-scope-for-gpr.mjs` pour réécrire `@portaki/*` → `@owner/*` **uniquement dans le runner CI** (les fichiers du dépôt restent en `@portaki/*` pour le dev local).
+- Ordre de publication : **`module-sdk`** puis les modules métier.
 
-1. Onglet **Actions** du dépôt GitHub.
-2. Choisir **Publish packages (npmjs)** → **Run workflow**.
-3. Sélectionner le package (ou **all**).
-4. Vérifier les journaux : une version déjà publiée avec le même numéro fera échouer la tâche (comportement npm normal).
+### Déclencheurs
 
-Fichier : `.github/workflows/publish-npm.yml`.
+| Événement | Version publiée |
+|-----------|-----------------|
+| **Push sur `develop`** (chemins filtrés : code des packages, `scripts/`, ce workflow) | `<base>-develop.<run_number>` (ex. `0.1.0-develop.42`) pour **tous** les packages — une nouvelle version à chaque push afin d’éviter les collisions npm. |
+| **Release GitHub** publiée | Tag parsé : préfixes acceptés `modules-v` ou `v` (ex. `modules-v0.2.0` → `0.2.0`). |
+| **workflow_dispatch** | Champ optionnel **version** : si renseigné, cette semver est appliquée à tous les `package.json` publishables ; si vide, les versions du dépôt sont utilisées telles quelles (échec si déjà publiée). |
 
-## GitHub Packages (registre npm intégré)
+### Consommer les paquets (app ou CI)
 
-Workflow : **Publish packages (GitHub Packages)** (`.github/workflows/publish-github-packages.yml`).
-
-Contrainte importante : sur GitHub Packages, le **scope npm** (`@portaki` dans le champ `name` du `package.json`) doit en général **correspondre au propriétaire GitHub** du dépôt ou à une convention documentée par GitHub pour votre organisation. Si votre organisation GitHub s’appelle par exemple `PortakiApp` et le scope npm `@portaki`, il peut être nécessaire soit de publier sur **npmjs** plutôt que sur GPR, soit d’aligner le naming (`@portakiapp/*`) selon votre stratégie.
-
-Permissions du workflow : `packages: write` (déjà déclaré). Le secret **`GITHUB_TOKEN`** fourni par GitHub Actions suffit pour pousser des artefacts vers GitHub Packages du même dépôt / organisation, sous réserve des règles de scope ci-dessus.
-
-Configurer le client npm / pnpm côté application consommatrice, par exemple :
+Comme pour `portaki-sdk`, ajoutez un `.npmrc` :
 
 ```ini
-@portaki:registry=https://npm.pkg.github.com
+@portakiapp:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
 ```
 
+Remplace `portakiapp` par **ton owner GitHub en minuscules**. Installe ensuite par exemple :
+
+```bash
+pnpm add @portakiapp/module-sdk @portakiapp/module-train
+```
+
+Pour un PAT lecture : `read:packages`. Dans une GitHub Action du **même** dépôt, `GITHUB_TOKEN` peut suffire selon les permissions du workflow.
+
+---
+
+## npmjs.com (optionnel)
+
+### Prérequis
+
+1. Organisation **`@portaki`** (ou autre scope autorisé) sur [npmjs.com](https://www.npmjs.com/).
+2. Secret **`NPM_TOKEN`** dans les GitHub Actions du dépôt.
+
+### Workflow « Publish packages (npmjs) »
+
+Déclenchement manuel uniquement : **Publish packages (npmjs)** → choix du package ou **all**.
+
+Fichier : `.github/workflows/publish-npm.yml`.
+
+Les noms restent **`@portaki/module-*`** sur ce registre (pas d’alignement automatique du propriétaire GitHub).
+
+---
+
 ## CI continue
 
-Le workflow **CI** (`.github/workflows/ci.yml`) ne publie rien : il valide que le workspace s’installe et que les scripts `lint` passent.
+Le workflow **CI** (`.github/workflows/ci.yml`) ne publie pas : `pnpm install --frozen-lockfile` + `pnpm lint`.
+
+---
 
 ## Backend Java (`pre-arrival-form/backend`)
 
-Ce dossier n’est **pas** publié par les workflows npm. Il suit le cycle de build Maven / déploiement de votre plateforme (image Docker, registry privé, etc.).
+Non publié par ces workflows npm. Suivre votre pipeline Maven / Docker habituel.

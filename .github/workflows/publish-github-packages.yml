@@ -1,66 +1,101 @@
-name: Publish packages (GitHub Packages)
+name: Publish modules (GitHub Packages)
+
+# Même esprit que PortakiApp/portaki-sdk (.github/workflows/publish-npm.yml) :
+# registre npm.pkg.github.com, scope @<owner_github_minuscule>/..., préversions sur develop.
 
 on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "packages/**"
+      - "train/**"
+      - "events/**"
+      - "rules/**"
+      - "appliances/**"
+      - "checklist/**"
+      - "pre-arrival-form/frontend/**"
+      - "scripts/**"
+      - ".github/workflows/publish-github-packages.yml"
+  release:
+    types:
+      - published
   workflow_dispatch:
     inputs:
-      package:
-        description: Package npm à publier
-        required: true
-        type: choice
-        options:
-          - all
-          - "@portaki/module-sdk"
-          - "@portaki/module-train"
-          - "@portaki/module-events"
-          - "@portaki/module-rules"
-          - "@portaki/module-appliances"
-          - "@portaki/module-checklist"
-          - "@portaki/module-pre-arrival-form"
+      version:
+        description: "Version semver (ex. 0.2.0). Vide = versions actuelles des package.json."
+        required: false
+        type: string
 
 permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: publish-gpr-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   publish:
+    name: pnpm publish → GitHub Packages
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Align scopes npm (@portaki → propriétaire GitHub)
+        run: |
+          OWNER_LOWER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')
+          echo "OWNER_LOWER=$OWNER_LOWER" >> $GITHUB_ENV
+          export OWNER_LOWER
+          node scripts/align-npm-scope-for-gpr.mjs
+
+      - name: Préversion (push sur develop)
+        if: github.event_name == 'push'
+        run: node scripts/bump-workspace-versions.mjs prerelease "develop.${{ github.run_number }}"
+
+      - name: Version depuis release GitHub
+        if: github.event_name == 'release'
+        shell: bash
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          RAW="${TAG#modules-v}"
+          RAW="${RAW#v}"
+          node scripts/bump-workspace-versions.mjs set "$RAW"
+
+      - name: Version manuelle (workflow_dispatch)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.version != ''
+        run: node scripts/bump-workspace-versions.mjs set "${{ github.event.inputs.version }}"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9.15.4
 
-      - name: Setup Node.js (GitHub Packages registry)
+      - name: Setup Node.js (GitHub Packages)
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "pnpm"
           registry-url: "https://npm.pkg.github.com"
-          scope: "@portaki"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
-      - name: Publish selected package(s)
+      - name: Publish all workspace packages (ordre SDK → modules)
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
         run: |
           set -euo pipefail
-          TARGET="${{ inputs.package }}"
-          publish_one() {
-            pnpm publish --filter "$1" --no-git-checks
+          O="${OWNER_LOWER:?}"
+          publish_pkg() {
+            pnpm publish --filter "@${O}/$1" --access restricted --no-git-checks
           }
-          if [ "$TARGET" = "all" ]; then
-            publish_one "@portaki/module-sdk"
-            publish_one "@portaki/module-train"
-            publish_one "@portaki/module-events"
-            publish_one "@portaki/module-rules"
-            publish_one "@portaki/module-appliances"
-            publish_one "@portaki/module-checklist"
-            publish_one "@portaki/module-pre-arrival-form"
-          else
-            publish_one "$TARGET"
-          fi
+          publish_pkg module-sdk
+          publish_pkg module-train
+          publish_pkg module-events
+          publish_pkg module-rules
+          publish_pkg module-appliances
+          publish_pkg module-checklist
+          publish_pkg module-pre-arrival-form

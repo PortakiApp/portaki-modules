@@ -62,8 +62,8 @@ Chaque sous-dossier de module contient un `README.md` qui suit ce schéma.
 
 ## Publication & CI
 
-- **CI** : workflow [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) — `pnpm install --frozen-lockfile` + `pnpm lint` sur `main` / PRs.
-- **npmjs** : [`.github/workflows/publish-npm.yml`](./.github/workflows/publish-npm.yml) — déclenchement manuel ; secret `NPM_TOKEN`.
-- **GitHub Packages** : [`.github/workflows/publish-github-packages.yml`](./.github/workflows/publish-github-packages.yml) — déclenchement manuel ; token `GITHUB_TOKEN` (permissions `packages:write`). Voir les contraintes de scope dans [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).
+- **CI** : workflow [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) — `pnpm install --frozen-lockfile` + `pnpm lint` sur `develop` / `main` / PRs.
+- **GitHub Packages** (flux principal, comme [portaki-sdk](https://github.com/PortakiApp/portaki-sdk)) : [`.github/workflows/publish-github-packages.yml`](./.github/workflows/publish-github-packages.yml) — push sur **`develop`** (chemins filtrés), **release** GitHub ou **workflow_dispatch** ; packages sous **`@<owner_github_minuscule>/module-*`** ; uniquement `GITHUB_TOKEN`. Détail dans [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).
+- **npmjs** : [`.github/workflows/publish-npm.yml`](./.github/workflows/publish-npm.yml) — déclenchement manuel ; secret **`NPM_TOKEN`** ; scope **`@portaki`** inchangé.
 
 Licence : **AGPL-3.0** (cf. chaque `package.json`).
