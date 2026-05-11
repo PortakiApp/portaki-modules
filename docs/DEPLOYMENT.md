@@ -75,4 +75,6 @@ Workflow : [`.github/workflows/publish-maven-github-packages.yml`](../.github/wo
 
 Déclenchement : push sur **`develop`** qui modifie `modules/pre-arrival-form/backend/`, ou **workflow_dispatch** manuel.
 
-Dépendance **`app.portaki:portaki-module-sdk`** en **`0.1.0-SNAPSHOT`** : Maven prend la **dernière snapshot** publiée sur GPR (**portaki-sdk**), tant que les `<snapshots><enabled>true</enabled></snapshots>` restent dans le `pom.xml` (déjà le cas). Il faut que **portaki-sdk** publie bien ce **`0.1.0-SNAPSHOT`** vers `https://maven.pkg.github.com/PortakiApp/portaki-sdk` et que le package Maven autorise la lecture depuis **portaki-modules** (*Manage Actions access*, comme pour npm). Pour une release **sans** `-SNAPSHOT`, publier **`0.1.0`** côté SDK puis remplacer la version dans `modules/pre-arrival-form/backend/pom.xml`.
+Dépendance **`app.portaki:portaki-module-sdk`** en **`0.1.0-SNAPSHOT`** : idéalement résolue depuis GPR (**portaki-sdk**) une fois le JAR **`mvn deploy`** publié (`<snapshots>` activés dans le `pom.xml`). Si l’artefact **n’est pas encore sur GPR**, les workflows CI / Maven clone **PortakiApp/portaki-sdk** et exécutent **`mvn install`** du module SDK dans `~/.m2` local avant `verify` / `deploy` (voir `.github/scripts/ci-install-portaki-java-sdk.sh`). Les PRs ouvertes **depuis un fork** ne lancent pas le job Maven (pas d’accès au dépôt privé **portaki-sdk** avec le jeton par défaut).
+
+Pour une release **sans** `-SNAPSHOT`, publier **`0.1.0`** côté SDK puis fixer la version dans `modules/pre-arrival-form/backend/pom.xml`.
