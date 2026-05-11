@@ -29,9 +29,12 @@ jobs:
         with:
           node-version: "22"
           cache: "pnpm"
+          registry-url: "https://npm.pkg.github.com"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm install
 
       - name: Lint (workspace)
         run: pnpm lint

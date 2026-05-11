@@ -1,6 +1,6 @@
 # Schéma des README modules (landing + dépôt)
 
-Chaque module sous forme de package npm (`train/`, `events/`, …) utilise **les mêmes sections** dans son `README.md`. Cela permet :
+Chaque module sous forme de package npm (`modules/train/`, `modules/events/`, …) utilise **les mêmes sections** dans son `README.md`. Cela permet :
 
 - une lecture homogène dans le monorepo ;
 - un copier-coller rapide vers la **landing** (hero, cartes « fonctionnalités », FAQ).
@@ -51,7 +51,7 @@ Depuis la racine du monorepo :
 pnpm install
 ```
 
-Ce package dépend de **`@portakiapp/module-sdk`** (workspace). Voir le [README du SDK](../packages/module-sdk/README.md).
+Ce package dépend de **`@portakiapp/module-sdk`** (publié depuis [portaki-sdk](https://github.com/PortakiApp/portaki-sdk)).
 
 ## Licence
 
@@ -60,6 +60,6 @@ AGPL-3.0 — voir le fichier `LICENSE` à la racine du dépôt si présent, sino
 
 ---
 
-### Variante « SDK » (`packages/module-sdk`)
+### Documentation du SDK runtime
 
-Même principe, mais les sections **Ce que ça apporte** et **Fiche technique** décrivent le **contrat** (`definePortakiModule`, types) plutôt qu’une fonctionnalité métier. Référencer ce fichier pour garder la même hiérarchie de titres.
+Le contrat TypeScript (`definePortakiModule`, types) est maintenu dans le dépôt **[portaki-sdk](https://github.com/PortakiApp/portaki-sdk)** ; réutiliser la même hiérarchie de titres si tu documentes une évolution du SDK sur la landing.

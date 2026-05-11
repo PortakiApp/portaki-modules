@@ -1,6 +1,6 @@
 # Déploiement des packages npm
 
-Le dépôt utilise **pnpm** (`pnpm-lock.yaml` à committer). En local : `pnpm install --frozen-lockfile`.
+Le dépôt utilise **pnpm**. Tu peux committer un **`pnpm-lock.yaml`** après un `pnpm install` réussi (avec PAT GitHub `read:packages` pour GPR). Sans jeton en local, l’installation échoue tant que le SDK n’est pas résolu.
 
 Les paquets utilisent le scope **`@portakiapp`** (minuscules), conforme à **GitHub Packages** pour l’organisation GitHub **PortakiApp**.
 
@@ -15,7 +15,7 @@ Les paquets utilisent le scope **`@portakiapp`** (minuscules), conforme à **Git
 
 Republier **`@portakiapp/module-sdk`** depuis deux dépôts différents vers GitHub Packages provoque en général **`403 Forbidden` / `write_package`** : le nom de paquet est déjà attaché au dépôt source du SDK.
 
-Le dossier **`packages/module-sdk`** ici sert de **copie workspace** pour le développement local (`workspace:*`) ; il n’est **pas** publié par `.github/workflows/publish-github-packages.yml`.
+Les modules sous **`modules/`** déclarent **`@portakiapp/module-sdk`** comme dépendance semver (voir `.npmrc` à la racine pour le registre GitHub Packages).
 
 ---
 
@@ -25,12 +25,12 @@ Fichier : `.github/workflows/publish-github-packages.yml`.
 
 Comportement calqué sur **`publish-npm.yml`** de **portaki-sdk** :
 
-1. `pnpm install --frozen-lockfile`
+1. `pnpm install`
 2. Bump de version (push `develop` → préversion `…-develop.<run_number>`, release, ou `workflow_dispatch`)
 3. `pnpm install --no-frozen-lockfile`
 4. `pnpm publish` pour chaque module métier uniquement (**pas** `module-sdk`)
 
-Authentification : **`NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}`** sur l’étape de publication.
+Authentification : **`NODE_AUTH_TOKEN`** (`GITHUB_TOKEN`) sur tout le job — nécessaire aussi pour **`pnpm install`** (téléchargement du SDK depuis GPR).
 
 ### Permissions GitHub
 
@@ -65,10 +65,10 @@ Packages proposés : **`@portakiapp/module-*`** métier uniquement (pas le SDK d
 
 ## CI
 
-`.github/workflows/ci.yml` : `pnpm install --frozen-lockfile` + `pnpm lint`.
+`.github/workflows/ci.yml` : `pnpm install` + `pnpm lint`.
 
 ---
 
-## Backend Java (`pre-arrival-form/backend`)
+## Backend Java (`modules/pre-arrival-form/backend`)
 
 Non couvert par les workflows npm ci-dessus.

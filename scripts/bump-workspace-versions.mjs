@@ -8,13 +8,12 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const roots = [
-  'packages/module-sdk',
-  'train',
-  'events',
-  'rules',
-  'appliances',
-  'checklist',
-  'pre-arrival-form/frontend',
+  'modules/train',
+  'modules/events',
+  'modules/rules',
+  'modules/appliances',
+  'modules/checklist',
+  'modules/pre-arrival-form/frontend',
 ]
 
 const [mode, arg] = process.argv.slice(2)

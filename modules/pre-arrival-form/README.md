@@ -51,7 +51,7 @@ cd backend
 mvn -q compile
 ```
 
-Ce package dépend de **`@portakiapp/module-sdk`** côté frontend — voir le [README du SDK](../packages/module-sdk/README.md).
+Ce package dépend de **`@portakiapp/module-sdk`** côté frontend (publié depuis [portaki-sdk](https://github.com/PortakiApp/portaki-sdk)).
 
 ## Licence
 

@@ -10,7 +10,7 @@
 ## Liens utiles
 
 - README racine du dépôt : [../README.md](../README.md)
-- SDK partagé : [../packages/module-sdk/README.md](../packages/module-sdk/README.md)
+- SDK npm **`@portakiapp/module-sdk`** : dépôt **[portaki-sdk](https://github.com/PortakiApp/portaki-sdk)**
 
 ## Contenu orienté landing
 

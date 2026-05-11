@@ -1,7 +1,7 @@
 {
-  "name": "@portakiapp/module-events",
+  "name": "@portakiapp/module-checklist",
   "version": "0.1.0",
-  "description": "Module Portaki — événements locaux et carte",
+  "description": "Module Portaki — checklist de départ",
   "license": "AGPL-3.0",
   "type": "module",
   "main": "./src/index.tsx",
@@ -9,7 +9,7 @@
     "lint": "echo \"no lint yet\""
   },
   "dependencies": {
-    "@portakiapp/module-sdk": "workspace:*",
+    "@portakiapp/module-sdk": "^0.1.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
@@ -20,7 +20,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/PortakiApp/portaki-modules.git",
-    "directory": "events"
+    "directory": "modules/checklist"
   },
   "publishConfig": {
     "access": "public"

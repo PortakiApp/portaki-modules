@@ -38,7 +38,7 @@ Depuis la racine du monorepo :
 pnpm install
 ```
 
-Voir aussi le [README du SDK](../../packages/module-sdk/README.md).
+Voir aussi le dépôt **[portaki-sdk](https://github.com/PortakiApp/portaki-sdk)** pour `@portakiapp/module-sdk`.
 
 ## Licence
 
