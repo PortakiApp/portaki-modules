@@ -1,6 +1,6 @@
 # Portaki Modules
 
-[![CI](https://github.com/PortakiApp/portaki-modules/actions/workflows/ci.yml/badge.svg)](https://github.com/PortakiApp/portaki-modules/actions/workflows/ci.yml)
+[![CI](https://github.com/PortakiApp/portaki-modules/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/PortakiApp/portaki-modules/actions/workflows/ci.yml)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 Monorepo **pnpm** des modules UI guest Portaki : chaque dossier publie un package npm `@portaki/module-*` construit avec [`@portaki/module-sdk`](./packages/module-sdk). Les écrans sont des modules React consommés par l’application guest ; le backend Java vit à part (`pre-arrival-form/backend/`).
