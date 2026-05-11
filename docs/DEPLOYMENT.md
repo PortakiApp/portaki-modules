@@ -71,4 +71,8 @@ Packages proposés : **`@portakiapp/module-*`** métier uniquement (pas le SDK d
 
 ## Backend Java (`modules/pre-arrival-form/backend`)
 
-Non couvert par les workflows npm ci-dessus.
+Workflow : [`.github/workflows/publish-maven-github-packages.yml`](../.github/workflows/publish-maven-github-packages.yml) — `mvn deploy` vers **GitHub Packages Maven** (`https://maven.pkg.github.com/PortakiApp/portaki-modules`).
+
+Déclenchement : push sur **`develop`** qui modifie `modules/pre-arrival-form/backend/`, ou **workflow_dispatch** manuel.
+
+Dépendance **`app.portaki:portaki-module-sdk`** : résolue via le dépôt **`portaki-sdk`** sur GPR (`<url>https://maven.pkg.github.com/PortakiApp/portaki-sdk</url>` dans le `pom.xml`). Vérifie côté **portaki-sdk** que l’artefact Maven y est bien publié et que le package Maven autorise la lecture depuis **portaki-modules** (comme pour npm, *Manage Actions access* sur le package).

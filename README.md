@@ -62,8 +62,9 @@ Chaque sous-dossier de module contient un `README.md` qui suit ce schéma.
 
 ## Publication & CI
 
-- **CI** : workflow [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) — `pnpm install` + `pnpm lint` sur `develop` / `main` / PRs (jeton GitHub pour télécharger `@portakiapp/module-sdk` depuis GPR).
-- **GitHub Packages** (comme [portaki-sdk](https://github.com/PortakiApp/portaki-sdk)) : [`.github/workflows/publish-github-packages.yml`](./.github/workflows/publish-github-packages.yml) — push sur **`develop`**, **release** ou **workflow_dispatch** ; publie **`@portakiapp/module-*`** **sauf** `module-sdk` (déjà fourni par portaki-sdk). Détail dans [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).
+- **CI** : workflow [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) — `pnpm install` + `pnpm lint`, et **`mvn verify`** pour le backend Java `modules/pre-arrival-form/backend` (GPR Maven pour `portaki-module-sdk`).
+- **GitHub Packages npm** (comme [portaki-sdk](https://github.com/PortakiApp/portaki-sdk)) : [`.github/workflows/publish-github-packages.yml`](./.github/workflows/publish-github-packages.yml) — push sur **`develop`**, **release** ou **workflow_dispatch** ; publie **`@portakiapp/module-*`** **sauf** `module-sdk` (déjà fourni par portaki-sdk).
+- **GitHub Packages Maven** (backend pré-arrivée) : [`.github/workflows/publish-maven-github-packages.yml`](./.github/workflows/publish-maven-github-packages.yml) — `mvn deploy` pour **`app.portaki.module:pre-arrival-form-backend`**. Détail dans [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).
 - **npmjs** : [`.github/workflows/publish-npm.yml`](./.github/workflows/publish-npm.yml) — déclenchement manuel ; secret **`NPM_TOKEN`** ; packages **`@portakiapp/module-*`** (hors SDK).
 
 Licence : **AGPL-3.0** (cf. chaque `package.json`).

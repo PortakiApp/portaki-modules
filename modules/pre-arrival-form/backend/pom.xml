@@ -15,6 +15,33 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
+  <repositories>
+    <repository>
+      <id>github-portaki-sdk</id>
+      <name>Portaki Java SDK (GitHub Packages)</name>
+      <url>https://maven.pkg.github.com/PortakiApp/portaki-sdk</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <distributionManagement>
+    <repository>
+      <id>github</id>
+      <name>GitHub Packages — portaki-modules</name>
+      <url>https://maven.pkg.github.com/PortakiApp/portaki-modules</url>
+    </repository>
+    <snapshotRepository>
+      <id>github</id>
+      <name>GitHub Packages — portaki-modules (snapshots)</name>
+      <url>https://maven.pkg.github.com/PortakiApp/portaki-modules</url>
+    </snapshotRepository>
+  </distributionManagement>
+
   <dependencies>
     <dependency>
       <groupId>app.portaki</groupId>
