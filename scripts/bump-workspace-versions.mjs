@@ -1,6 +1,8 @@
 /**
  * Bump la version dans chaque package publishable.
  * Usage:
+ *   node scripts/bump-workspace-versions.mjs ci-run 42
+ *     → major.minor.<run> depuis la base semver du package.json (ex. 0.1.42)
  *   node scripts/bump-workspace-versions.mjs prerelease develop.42
  *   node scripts/bump-workspace-versions.mjs set 0.2.0
  */
@@ -29,7 +31,24 @@ function writeVersion(root, version) {
   fs.writeFileSync(p, `${JSON.stringify(j, null, 2)}\n`)
 }
 
-if (mode === 'prerelease') {
+if (mode === 'ci-run') {
+  const run = arg
+  if (!run || !/^\d+$/.test(run)) {
+    throw new Error('usage: ci-run <run_number> (entier)')
+  }
+  for (const root of roots) {
+    const p = path.join(root, 'package.json')
+    const j = JSON.parse(fs.readFileSync(p, 'utf8'))
+    const base = baseVersion(j.version)
+    const parts = base.split('.')
+    const major = parts[0]
+    const minor = parts[1]
+    if (major == null || minor == null) {
+      throw new Error(`Impossible de lire major.minor depuis "${base}" (${p})`)
+    }
+    writeVersion(root, `${major}.${minor}.${run}`)
+  }
+} else if (mode === 'prerelease') {
   if (!arg) {
     throw new Error('usage: prerelease <suffixe> ex. develop.42')
   }
@@ -47,6 +66,6 @@ if (mode === 'prerelease') {
     writeVersion(root, arg)
   }
 } else {
-  console.error('Usage: prerelease <suffixe> | set <semver>')
+  console.error('Usage: ci-run <run_number> | prerelease <suffixe> | set <semver>')
   process.exit(1)
 }

@@ -26,7 +26,7 @@ Fichier : `.github/workflows/publish-github-packages.yml`.
 Comportement calqué sur **`publish-npm.yml`** de **portaki-sdk** :
 
 1. `pnpm install`
-2. Bump de version (push `develop` → préversion `…-develop.<run_number>`, release, ou `workflow_dispatch`)
+2. Bump de version (push `develop` → **`major.minor.<run_number>`** depuis la base semver des `package.json`, ex. `0.1.42` ; release ou `workflow_dispatch`)
 3. `pnpm install --no-frozen-lockfile`
 4. `pnpm publish` pour chaque module métier uniquement (**pas** `module-sdk`)
 

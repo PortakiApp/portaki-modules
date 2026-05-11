@@ -55,9 +55,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Prerelease version (push sur develop)
+      - name: Version CI major.minor.run (push sur develop)
         if: github.event_name == 'push'
-        run: node scripts/bump-workspace-versions.mjs prerelease "develop.${{ github.run_number }}"
+        run: node scripts/bump-workspace-versions.mjs ci-run ${{ github.run_number }}
 
       - name: Version manuelle (workflow_dispatch)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.version != ''
