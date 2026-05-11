@@ -22,6 +22,19 @@ Le workflow **Publish modules (GitHub Packages)** (`.github/workflows/publish-gi
 | **Release GitHub** publiée | Tag parsé : préfixes acceptés `modules-v` ou `v` (ex. `modules-v0.2.0` → `0.2.0`). |
 | **workflow_dispatch** | Champ optionnel **version** : si renseigné, cette semver est appliquée à tous les `package.json` publishables ; si vide, les versions du dépôt sont utilisées telles quelles (échec si déjà publiée). |
 
+### Dépannage `403` / `permission_denied: write_package`
+
+GitHub renvoie cette erreur quand le jeton utilisé pour `npm publish` **n’a pas le droit d’écrire** dans GitHub Packages.
+
+1. **Réglage du dépôt (cause la plus fréquente)**  
+   **Settings → Actions → General → Workflow permissions** : choisir **Read and write permissions** (pas seulement lecture). Sans ça, `GITHUB_TOKEN` ne peut pas publier de packages même si le YAML contient `permissions: packages: write`.
+
+2. **Politique d’organisation**  
+   Si le dépôt est sous une org, vérifier que la policy n’impose pas « read-only » pour tous les workflows ; ajuster au niveau org ou dépôt.
+
+3. **Jeton de secours (optionnel)**  
+   Créer un PAT avec **`write:packages`** (et **`read:packages`**), l’ajouter comme secret **`GH_PACKAGES_PUBLISH_TOKEN`** sur le dépôt. Le workflow utilise `GH_PACKAGES_PUBLISH_TOKEN` s’il est défini, sinon `GITHUB_TOKEN`.
+
 ### Dépannage `ERR_PNPM_OUTDATED_LOCKFILE` en publication
 
 Après la réécriture des scopes (`@portaki/*` → `@owner/*`), le `pnpm-lock.yaml` du dépôt ne correspond plus aux `package.json` du runner. Le workflow utilise **`pnpm install --no-frozen-lockfile`** à cette étape uniquement. Sans ce flag, sous Actions (`CI=true`), pnpm applique un lockfile gelé par défaut et le job échoue.

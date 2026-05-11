@@ -2,6 +2,9 @@ name: Publish modules (GitHub Packages)
 
 # Même esprit que PortakiApp/portaki-sdk (.github/workflows/publish-npm.yml) :
 # registre npm.pkg.github.com, scope @<owner_github_minuscule>/..., préversions sur develop.
+#
+# Si publication → 403 write_package : Settings → Actions → General → Workflow permissions
+# doit être « Read and write » (sinon GITHUB_TOKEN est lecture seule). Voir docs/DEPLOYMENT.md.
 
 on:
   push:
@@ -39,6 +42,10 @@ jobs:
   publish:
     name: pnpm publish → GitHub Packages
     runs-on: ubuntu-latest
+    env:
+      # Secret optionnel avec write:packages si l’org impose un PAT ; sinon GITHUB_TOKEN suffit
+      # si les workflow permissions du dépôt autorisent l’écriture (packages).
+      NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_PUBLISH_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -79,6 +86,13 @@ jobs:
           cache: "pnpm"
           registry-url: "https://npm.pkg.github.com"
 
+      # pnpm lit .npmrc : sans ligne @<owner>:registry, la publication peut viser npmjs ou échouer (403).
+      - name: Configurer .npmrc pour le scope GitHub Packages
+        shell: bash
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
+          echo "@${OWNER_LOWER}:registry=https://npm.pkg.github.com" >> .npmrc
+
       # Après align-npm-scope-for-gpr.mjs, les package.json ne matchent plus le lockfile git.
       # Sous GitHub Actions, CI=true fait que pnpm impose --frozen-lockfile par défaut :
       # il faut explicitement désactiver le gel du lockfile.
@@ -86,8 +100,6 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Publish all workspace packages (ordre SDK → modules)
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
