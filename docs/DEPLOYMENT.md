@@ -22,6 +22,10 @@ Le workflow **Publish modules (GitHub Packages)** (`.github/workflows/publish-gi
 | **Release GitHub** publiée | Tag parsé : préfixes acceptés `modules-v` ou `v` (ex. `modules-v0.2.0` → `0.2.0`). |
 | **workflow_dispatch** | Champ optionnel **version** : si renseigné, cette semver est appliquée à tous les `package.json` publishables ; si vide, les versions du dépôt sont utilisées telles quelles (échec si déjà publiée). |
 
+### Dépannage `ERR_PNPM_OUTDATED_LOCKFILE` en publication
+
+Après la réécriture des scopes (`@portaki/*` → `@owner/*`), le `pnpm-lock.yaml` du dépôt ne correspond plus aux `package.json` du runner. Le workflow utilise **`pnpm install --no-frozen-lockfile`** à cette étape uniquement. Sans ce flag, sous Actions (`CI=true`), pnpm applique un lockfile gelé par défaut et le job échoue.
+
 ### Consommer les paquets (app ou CI)
 
 Comme pour `portaki-sdk`, ajoutez un `.npmrc` :

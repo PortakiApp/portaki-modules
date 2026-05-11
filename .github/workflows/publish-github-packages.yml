@@ -79,8 +79,11 @@ jobs:
           cache: "pnpm"
           registry-url: "https://npm.pkg.github.com"
 
+      # Après align-npm-scope-for-gpr.mjs, les package.json ne matchent plus le lockfile git.
+      # Sous GitHub Actions, CI=true fait que pnpm impose --frozen-lockfile par défaut :
+      # il faut explicitement désactiver le gel du lockfile.
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Publish all workspace packages (ordre SDK → modules)
         env:
