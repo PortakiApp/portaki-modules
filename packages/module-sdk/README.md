@@ -1,10 +1,12 @@
-# SDK modules Portaki (`@portaki/module-sdk`)
+# SDK modules Portaki (`@portakiapp/module-sdk`)
+
+> La **référence publiée** sur GitHub Packages est le dépôt **[portaki-sdk](https://github.com/PortakiApp/portaki-sdk)**. Ce dossier est une copie **workspace** pour le développement local du monorepo **portaki-modules** ; éviter de republier ce nom depuis deux dépôts.
 
 > **Contrat TypeScript pour tous les modules UI guest** — une seule fonction `definePortakiModule` et des types partagés pour garder le shell guest typé.
 
 ## Public cible
 
-Développeurs qui créent ou maintiennent des packages `@portaki/module-*` consommés par l’application guest React.
+Développeurs qui créent ou maintiennent des packages `@portakiapp/module-*` consommés par l’application guest React.
 
 ## Ce que ça apporte
 
@@ -16,7 +18,7 @@ Développeurs qui créent ou maintiennent des packages `@portaki/module-*` conso
 
 | Champ | Valeur |
 |--------|--------|
-| **Package npm** | `@portaki/module-sdk` |
+| **Package npm** | `@portakiapp/module-sdk` |
 | **Rôle** | Types + helper `definePortakiModule` |
 | **Pair dependency** | `react >= 18` |
 | **Point d’entrée** | `./src/index.ts` |
@@ -32,7 +34,7 @@ Développeurs qui créent ou maintiennent des packages `@portaki/module-*` conso
 Chaque module métier fait :
 
 ```ts
-import { definePortakiModule } from '@portaki/module-sdk'
+import { definePortakiModule } from '@portakiapp/module-sdk'
 
 export default definePortakiModule({
   id: '…',

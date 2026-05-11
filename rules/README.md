@@ -1,4 +1,4 @@
-# Règlement intérieur (`@portaki/module-rules`)
+# Règlement intérieur (`@portakiapp/module-rules`)
 
 > **Rendre accessibles les règles de la maison** — contenu riche (TipTap / éditeur) à connecter à votre CMS ou API.
 
@@ -16,7 +16,7 @@ Voyageurs qui doivent connaître le règlement (bruit, fumeur, tri, etc.) avant 
 
 | Champ | Valeur |
 |--------|--------|
-| **Package npm** | `@portaki/module-rules` |
+| **Package npm** | `@portakiapp/module-rules` |
 | **Identifiant `id`** | `rules` |
 | **Slot navigation** | `section` |
 | **Icône** | `scale` |
@@ -39,7 +39,7 @@ Depuis la racine du monorepo :
 pnpm install
 ```
 
-Ce package dépend de **`@portaki/module-sdk`** (workspace). Voir le [README du SDK](../packages/module-sdk/README.md).
+Ce package dépend de **`@portakiapp/module-sdk`** (workspace). Voir le [README du SDK](../packages/module-sdk/README.md).
 
 ## Licence
 

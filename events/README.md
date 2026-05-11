@@ -1,4 +1,4 @@
-# Événements (`@portaki/module-events`)
+# Événements (`@portakiapp/module-events`)
 
 > **Annoncer et localiser ce qui se passe autour du logement** — section dédiée + point d’accroche pour la carte.
 
@@ -16,7 +16,7 @@ Voyageurs en recherche d’activités, événements locaux, ou repères sur la c
 
 | Champ | Valeur |
 |--------|--------|
-| **Package npm** | `@portaki/module-events` |
+| **Package npm** | `@portakiapp/module-events` |
 | **Identifiant `id`** | `events` |
 | **Slot navigation** | `section` |
 | **Icône** | `calendar` |
@@ -39,7 +39,7 @@ Depuis la racine du monorepo :
 pnpm install
 ```
 
-Ce package dépend de **`@portaki/module-sdk`** (workspace). Voir le [README du SDK](../packages/module-sdk/README.md).
+Ce package dépend de **`@portakiapp/module-sdk`** (workspace). Voir le [README du SDK](../packages/module-sdk/README.md).
 
 ## Licence
 

@@ -1,4 +1,4 @@
-# Checklist départ (`@portaki/module-checklist`)
+# Checklist départ (`@portakiapp/module-checklist`)
 
 > **Accompagner le voyageur pour une sortie sans oubli** — liste issue de la configuration propriété et persistance via l’API guest.
 
@@ -16,7 +16,7 @@ Voyageurs en fin de séjour qui doivent valider les étapes de départ (clés, d
 
 | Champ | Valeur |
 |--------|--------|
-| **Package npm** | `@portaki/module-checklist` |
+| **Package npm** | `@portakiapp/module-checklist` |
 | **Identifiant `id`** | `checklist` |
 | **Slot navigation** | `section` |
 | **Icône** | `check-square` |
@@ -39,7 +39,7 @@ Depuis la racine du monorepo :
 pnpm install
 ```
 
-Ce package dépend de **`@portaki/module-sdk`** (workspace). Voir le [README du SDK](../packages/module-sdk/README.md).
+Ce package dépend de **`@portakiapp/module-sdk`** (workspace). Voir le [README du SDK](../packages/module-sdk/README.md).
 
 ## Licence
 

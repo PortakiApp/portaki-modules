@@ -16,7 +16,7 @@ Voyageurs en phase **pré-arrivée** ou **à venir**, et équipes ops qui décle
 
 | Champ | Valeur |
 |--------|--------|
-| **Package npm (UI)** | `@portaki/module-pre-arrival-form` (dossier `frontend/`) |
+| **Package npm (UI)** | `@portakiapp/module-pre-arrival-form` (dossier `frontend/`) |
 | **Identifiant `id`** | `pre-arrival-form` |
 | **Slot navigation** | `section` |
 | **Icône** | `clipboard-list` |
@@ -51,7 +51,7 @@ cd backend
 mvn -q compile
 ```
 
-Ce package dépend de **`@portaki/module-sdk`** côté frontend — voir le [README du SDK](../packages/module-sdk/README.md).
+Ce package dépend de **`@portakiapp/module-sdk`** côté frontend — voir le [README du SDK](../packages/module-sdk/README.md).
 
 ## Licence
 

@@ -1,5 +1,5 @@
 {
-  "name": "@portaki/module-sdk",
+  "name": "@portakiapp/module-sdk",
   "version": "0.1.0",
   "description": "Contrat et helpers pour les modules UI Portaki (guest app)",
   "license": "AGPL-3.0",

@@ -3,7 +3,7 @@
 [![CI](https://github.com/PortakiApp/portaki-modules/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/PortakiApp/portaki-modules/actions/workflows/ci.yml)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-Monorepo **pnpm** des modules UI guest Portaki : chaque dossier publie un package npm `@portaki/module-*` construit avec [`@portaki/module-sdk`](./packages/module-sdk). Les écrans sont des modules React consommés par l’application guest ; le backend Java vit à part (`pre-arrival-form/backend/`).
+Monorepo **pnpm** des modules UI guest Portaki : packages sous le scope **`@portakiapp`** (règle GitHub Packages pour l’org **PortakiApp**). Le SDK **`@portakiapp/module-sdk`** est publié depuis **[portaki-sdk](https://github.com/PortakiApp/portaki-sdk)** ; ce dépôt contient une copie workspace pour le dev local et **ne republie pas** le SDK sur GPR. Les écrans sont des modules React pour l’app guest ; le backend Java vit à part (`pre-arrival-form/backend/`).
 
 ## Sommaire
 
@@ -22,12 +22,12 @@ pnpm install
 pnpm lint
 ```
 
-Chaque module expose un **export par défaut** : `definePortakiModule({ ... })` depuis `@portaki/module-sdk`.
+Chaque module expose un **export par défaut** : `definePortakiModule({ ... })` depuis `@portakiapp/module-sdk`.
 
 ## Structure du dépôt
 
 ```text
-packages/module-sdk/     # Contrat TypeScript partagé (@portaki/module-sdk)
+packages/module-sdk/     # Copie locale du contrat (même nom que le paquet GPR publié depuis portaki-sdk)
 train/                   # Horaires trains (Navitia)
 events/                  # Événements + hooks carte
 rules/                   # Règlement intérieur
@@ -42,13 +42,13 @@ pre-arrival-form/
 
 | Package | Description |
 |--------|-------------|
-| [`@portaki/module-sdk`](./packages/module-sdk) | Types et `definePortakiModule` |
-| [`@portaki/module-train`](./train) | Horaires SNCF / Navitia |
-| [`@portaki/module-events`](./events) | Événements & carte |
-| [`@portaki/module-rules`](./rules) | Règlement |
-| [`@portaki/module-appliances`](./appliances) | Appareils |
-| [`@portaki/module-checklist`](./checklist) | Checklist départ |
-| [`@portaki/module-pre-arrival-form`](./pre-arrival-form/frontend) | Formulaire avant arrivée |
+| `@portakiapp/module-sdk` | Publié depuis **portaki-sdk** ; copie locale dans `./packages/module-sdk` |
+| [`@portakiapp/module-train`](./train) | Horaires SNCF / Navitia |
+| [`@portakiapp/module-events`](./events) | Événements & carte |
+| [`@portakiapp/module-rules`](./rules) | Règlement |
+| [`@portakiapp/module-appliances`](./appliances) | Appareils |
+| [`@portakiapp/module-checklist`](./checklist) | Checklist départ |
+| [`@portakiapp/module-pre-arrival-form`](./pre-arrival-form/frontend) | Formulaire avant arrivée |
 
 ## Documentation
 
@@ -63,7 +63,7 @@ Chaque sous-dossier de module contient un `README.md` qui suit ce schéma.
 ## Publication & CI
 
 - **CI** : workflow [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) — `pnpm install --frozen-lockfile` + `pnpm lint` sur `develop` / `main` / PRs.
-- **GitHub Packages** (flux principal, comme [portaki-sdk](https://github.com/PortakiApp/portaki-sdk)) : [`.github/workflows/publish-github-packages.yml`](./.github/workflows/publish-github-packages.yml) — push sur **`develop`** (chemins filtrés), **release** GitHub ou **workflow_dispatch** ; packages sous **`@<owner_github_minuscule>/module-*`** ; uniquement `GITHUB_TOKEN`. Détail dans [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).
-- **npmjs** : [`.github/workflows/publish-npm.yml`](./.github/workflows/publish-npm.yml) — déclenchement manuel ; secret **`NPM_TOKEN`** ; scope **`@portaki`** inchangé.
+- **GitHub Packages** (comme [portaki-sdk](https://github.com/PortakiApp/portaki-sdk)) : [`.github/workflows/publish-github-packages.yml`](./.github/workflows/publish-github-packages.yml) — push sur **`develop`**, **release** ou **workflow_dispatch** ; publie **`@portakiapp/module-*`** **sauf** `module-sdk` (déjà fourni par portaki-sdk). Détail dans [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).
+- **npmjs** : [`.github/workflows/publish-npm.yml`](./.github/workflows/publish-npm.yml) — déclenchement manuel ; secret **`NPM_TOKEN`** ; packages **`@portakiapp/module-*`** (hors SDK).
 
 Licence : **AGPL-3.0** (cf. chaque `package.json`).

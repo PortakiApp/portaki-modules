@@ -1,10 +1,8 @@
 name: Publish modules (GitHub Packages)
 
-# Même esprit que PortakiApp/portaki-sdk (.github/workflows/publish-npm.yml) :
-# registre npm.pkg.github.com, scope @<owner_github_minuscule>/..., préversions sur develop.
-#
-# Si publication → 403 write_package : Settings → Actions → General → Workflow permissions
-# doit être « Read and write » (sinon GITHUB_TOKEN est lecture seule). Voir docs/DEPLOYMENT.md.
+# Aligné sur PortakiApp/portaki-sdk : même registre, même schéma de versions.
+# Ne publie PAS @portakiapp/module-sdk : ce paquet est déjà publié depuis portaki-sdk ;
+# republier le même nom depuis un autre dépôt → 403 write_package.
 
 on:
   push:
@@ -42,24 +40,32 @@ jobs:
   publish:
     name: pnpm publish → GitHub Packages
     runs-on: ubuntu-latest
-    env:
-      # Secret optionnel avec write:packages si l’org impose un PAT ; sinon GITHUB_TOKEN suffit
-      # si les workflow permissions du dépôt autorisent l’écriture (packages).
-      NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_PUBLISH_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Align scopes npm (@portaki → propriétaire GitHub)
-        run: |
-          OWNER_LOWER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')
-          echo "OWNER_LOWER=$OWNER_LOWER" >> $GITHUB_ENV
-          export OWNER_LOWER
-          node scripts/align-npm-scope-for-gpr.mjs
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
 
-      - name: Préversion (push sur develop)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          registry-url: "https://npm.pkg.github.com"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prerelease version (push sur develop)
         if: github.event_name == 'push'
         run: node scripts/bump-workspace-versions.mjs prerelease "develop.${{ github.run_number }}"
+
+      - name: Version manuelle (workflow_dispatch)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.version != ''
+        run: node scripts/bump-workspace-versions.mjs set "${{ github.event.inputs.version }}"
 
       - name: Version depuis release GitHub
         if: github.event_name == 'release'
@@ -70,44 +76,18 @@ jobs:
           RAW="${RAW#v}"
           node scripts/bump-workspace-versions.mjs set "$RAW"
 
-      - name: Version manuelle (workflow_dispatch)
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.version != ''
-        run: node scripts/bump-workspace-versions.mjs set "${{ github.event.inputs.version }}"
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.4
-
-      - name: Setup Node.js (GitHub Packages)
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "pnpm"
-          registry-url: "https://npm.pkg.github.com"
-
-      # pnpm lit .npmrc : sans ligne @<owner>:registry, la publication peut viser npmjs ou échouer (403).
-      - name: Configurer .npmrc pour le scope GitHub Packages
-        shell: bash
-        run: |
-          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
-          echo "@${OWNER_LOWER}:registry=https://npm.pkg.github.com" >> .npmrc
-
-      # Après align-npm-scope-for-gpr.mjs, les package.json ne matchent plus le lockfile git.
-      # Sous GitHub Actions, CI=true fait que pnpm impose --frozen-lockfile par défaut :
-      # il faut explicitement désactiver le gel du lockfile.
-      - name: Install dependencies
+      - name: Install after version bump
         run: pnpm install --no-frozen-lockfile
 
-      - name: Publish all workspace packages (ordre SDK → modules)
+      - name: Publish packages (hors module-sdk — voir portaki-sdk)
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          O="${OWNER_LOWER:?}"
           publish_pkg() {
-            pnpm publish --filter "@${O}/$1" --access restricted --no-git-checks
+            pnpm publish --filter "@portakiapp/$1" --access restricted --no-git-checks
           }
-          publish_pkg module-sdk
           publish_pkg module-train
           publish_pkg module-events
           publish_pkg module-rules

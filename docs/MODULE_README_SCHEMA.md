@@ -28,7 +28,7 @@ Remplace les portions entre `⟨ ⟩`.
 
 | Champ | Valeur |
 |--------|--------|
-| **Package npm** | `⟨@portaki/module-…⟩` |
+| **Package npm** | `⟨@portakiapp/module-…⟩` |
 | **Identifiant `id`** | `⟨string unique⟩` |
 | **Slot navigation** | `section` (standard Portaki) |
 | **Icône** | `⟨nom icône⟩` |
@@ -51,7 +51,7 @@ Depuis la racine du monorepo :
 pnpm install
 ```
 
-Ce package dépend de **`@portaki/module-sdk`** (workspace). Voir le [README du SDK](../packages/module-sdk/README.md).
+Ce package dépend de **`@portakiapp/module-sdk`** (workspace). Voir le [README du SDK](../packages/module-sdk/README.md).
 
 ## Licence
 

@@ -1,4 +1,4 @@
-import { definePortakiModule } from '@portaki/module-sdk'
+import { definePortakiModule } from '@portakiapp/module-sdk'
 import TrainSection from './components/TrainSection'
 
 export default definePortakiModule({
