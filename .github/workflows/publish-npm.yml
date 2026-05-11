@@ -1,0 +1,64 @@
+name: Publish packages (npmjs)
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package npm à publier
+        required: true
+        type: choice
+        options:
+          - all
+          - "@portaki/module-sdk"
+          - "@portaki/module-train"
+          - "@portaki/module-events"
+          - "@portaki/module-rules"
+          - "@portaki/module-appliances"
+          - "@portaki/module-checklist"
+          - "@portaki/module-pre-arrival-form"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Setup Node.js (npm registry)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Publish selected package(s)
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          TARGET="${{ inputs.package }}"
+          publish_one() {
+            pnpm publish --filter "$1" --access public --no-git-checks
+          }
+          if [ "$TARGET" = "all" ]; then
+            publish_one "@portaki/module-sdk"
+            publish_one "@portaki/module-train"
+            publish_one "@portaki/module-events"
+            publish_one "@portaki/module-rules"
+            publish_one "@portaki/module-appliances"
+            publish_one "@portaki/module-checklist"
+            publish_one "@portaki/module-pre-arrival-form"
+          else
+            publish_one "$TARGET"
+          fi

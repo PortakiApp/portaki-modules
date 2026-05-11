@@ -1,0 +1,32 @@
+{
+  "name": "@portaki/module-sdk",
+  "version": "0.1.0",
+  "description": "Contrat et helpers pour les modules UI Portaki (guest app)",
+  "license": "AGPL-3.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "echo \"no lint yet\""
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src"
+  ],
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PortakiApp/portaki-modules.git",
+    "directory": "packages/module-sdk"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,8 @@
+packages:
+  - "packages/*"
+  - "train"
+  - "events"
+  - "rules"
+  - "appliances"
+  - "checklist"
+  - "pre-arrival-form/frontend"
