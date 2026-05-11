@@ -9,7 +9,7 @@
     "lint": "echo \"no lint yet\""
   },
   "dependencies": {
-    "@portakiapp/module-sdk": "^0.1.0",
+    "@portakiapp/module-sdk": "^0.1.0-0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
