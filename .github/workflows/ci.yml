@@ -36,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Assert no file: dependencies
+      - name: "Assert no file: dependencies"
         run: pnpm assert-no-file-deps
 
       - name: Validate module manifests
