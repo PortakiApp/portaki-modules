@@ -1,45 +1,90 @@
-# Appareils (`@portakiapp/module-appliances`)
+<div align="center">
 
-> **Guide des équipements du logement** — four, lave-linge, chauffage, etc., avec contenu éditorial.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PortakiApp/portaki-sdk/develop/docs/assets/portaki-wordmark-light.svg">
+  <img src="https://portaki.app/portaki-wordmark.svg" width="160" height="44" alt="Portaki" />
+</picture>
 
-## Public cible
+# 🔌 Module Appareils
 
-Voyageurs qui utilisent les équipements sur place et ont besoin d’instructions courtes et fiables.
+### `@portaki/module-appliances`
 
-## Ce que ça apporte
+[![npm](https://img.shields.io/npm/v/@portaki/module-appliances?label=npm&logo=npm&color=CB3837)](https://www.npmjs.com/package/@portaki/module-appliances)
+[![license](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://opensource.org/licenses/AGPL-3.0)
+[![SDK](https://img.shields.io/badge/built%20with-%40portaki%2Fmodule--sdk-181717?logo=github)](https://github.com/PortakiApp/portaki-sdk)
 
-- Section « Appareils » dans la navigation guest.
-- Structure prête pour un guide riche (TipTap, médias, FAQ courte par appareil).
+*Four, lave-linge, chauffage… guide éditorial par équipement*
 
-## Fiche technique
+</div>
 
-| Champ | Valeur |
-|--------|--------|
-| **Package npm** | `@portakiapp/module-appliances` |
-| **Identifiant `id`** | `appliances` |
-| **Slot navigation** | `section` |
-| **Icône** | `plug` |
-| **Visibilité** | Toujours affiché |
-| **Carte / carte overlay** | Non |
+---
 
-## Intégration Portaki
+> 🎯 **En une phrase** — Aide les voyageurs à **utiliser les équipements** avec consignes courtes et contenu enrichissable.
 
-Branchez votre source de vérité (CMS, JSON propriété) dans le JSX du module pour remplacer le texte de démonstration.
+## 👥 Pour qui ?
 
-## Données & API
+| Persona | Besoin |
+|---------|--------|
+| 🏠 **Voyageurs** | Mode d’emploi express sur place |
+| 📝 **Contenu** | Liste d’appareils + médias par propriété |
 
-Prévoir des contenus par propriété (liste d’appareils, notices, liens).
+## ✨ Ce que le module apporte
 
-## Développement local
+- [x] Section **« Appareils »** dans la nav guest
+- [x] Structure pour guide riche (**TipTap**, médias, FAQ courte)
 
-Depuis la racine du monorepo :
+---
 
-```bash
-pnpm install
+## 🧭 Fiche technique
+
+| Clé | Valeur |
+|-----|--------|
+| 📦 **npm** | `@portaki/module-appliances` |
+| 🆔 **`id`** | `appliances` |
+| 📍 **Slot nav** | `section` |
+| 🎨 **Icône** | `plug` |
+| 📄 **Manifeste** | [`../portaki.module.json`](../portaki.module.json) |
+| 👁️ **Visibilité** | Toujours affiché |
+| 🗺️ **Carte** | Non |
+
+---
+
+## 🔌 Intégration Portaki
+
+Branche CMS / JSON propriété dans le JSX pour remplacer la démo.
+
+## 📡 Données & API
+
+Contenus **par propriété** : le configurateur hôte enregistre `devices_json` (tableau JSON) et `safety_notice` (optionnel). Chaque appareil supporte `title` {fr,en}, `tips`, `manualUrl`, `icon`.
+
+### Exemple `devices_json`
+
+```json
+[
+  {
+    "id": "lave-vaisselle",
+    "title": { "fr": "Lave-vaisselle", "en": "Dishwasher" },
+    "tips": { "fr": "Programme Éco — pastilles dans le tiroir.", "en": "Eco cycle — tabs in the drawer." },
+    "manualUrl": "",
+    "icon": "utensils"
+  }
+]
 ```
 
-Ce package dépend de **`@portakiapp/module-sdk`** (publié depuis [portaki-sdk](https://github.com/PortakiApp/portaki-sdk)).
+La page invité reçoit la config déchiffrée via `GET /api/v1/guest/{slug}/{code}` (`moduleConfigs`).
 
-## Licence
+---
 
-AGPL-3.0 — voir le `package.json`.
+## 🛠️ Développement local
+
+```bash
+pnpm install   # racine du monorepo portaki-sdk
+```
+
+Dépend de **`@portaki/module-sdk`** → [**portaki-sdk**](https://github.com/PortakiApp/portaki-sdk).
+
+---
+
+## 📄 Licence
+
+**AGPL-3.0** — voir `package.json`.

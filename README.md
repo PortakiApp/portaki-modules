@@ -1,70 +1,93 @@
-# Portaki Modules
+<p align="center">
+  <a href="https://www.portaki.app" title="Portaki">
+    <img src="https://www.portaki.app/icon.svg" width="88" height="88" alt="Portaki">
+  </a>
+</p>
 
-[![CI](https://github.com/PortakiApp/portaki-modules/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/PortakiApp/portaki-modules/actions/workflows/ci.yml)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+<h1 align="center">Portaki Modules</h1>
 
-Monorepo **pnpm** des modules UI guest Portaki : packages sous le scope **`@portakiapp`** (règle GitHub Packages pour l’org **PortakiApp**). Le SDK **`@portakiapp/module-sdk`** est une **dépendance npm** publiée depuis **[portaki-sdk](https://github.com/PortakiApp/portaki-sdk)** (réglage dans `.npmrc`). Les modules vivent sous **`modules/`** ; le backend Java est sous **`modules/pre-arrival-form/backend/`**.
+<p align="center">
+  Monorepo <strong>pnpm</strong> des modules UI invités officiels — scope npm <strong><code>@portaki/module-*</code></strong><br/>
+  <sub>Publication sur <a href="https://www.npmjs.com/org/portaki">npmjs</a> · SDK JS dans <a href="https://github.com/PortakiApp/portaki-sdk">portaki-sdk</a></sub>
+</p>
 
-## Sommaire
+<p align="center">
+  <a href="https://github.com/PortakiApp/portaki-modules/actions/workflows/ci.yml"><img src="https://github.com/PortakiApp/portaki-modules/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI"></a>
+  <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg" alt="AGPL-3.0"></a>
+  <a href="https://github.com/PortakiApp/portaki-sdk"><img src="https://img.shields.io/badge/SDK-portaki--sdk-181717?logo=github" alt="SDK"></a>
+</p>
 
-- [Démarrage rapide](#démarrage-rapide)
-- [Structure du dépôt](#structure-du-dépôt)
-- [Packages publiés](#packages-publiés)
-- [Documentation](#documentation)
-- [Publication & CI](#publication--ci)
+---
+
+## Rôle de ce dépôt
+
+Les sources des paquets **`@portaki/module-*`** (invité) vivent sous **`modules/`**. Chaque module déclare **`@portaki/module-sdk": "^x.y.z"`** depuis le registre public (pas de `workspace:` ni `file:`). Le manifeste **`portaki.module.json`** est lu par l’API (**portaki-api**) via GitHub Contents sur ce dépôt, dossier **`modules/`**.
+
+Le SDK **`@portaki/module-sdk`** (types, `definePortakiModule`) est publié depuis **[portaki-sdk](https://github.com/PortakiApp/portaki-sdk)** uniquement.
+
+---
 
 ## Démarrage rapide
 
-Prérequis : **Node.js 22+**, **pnpm 9** (via Corepack ou `npx pnpm@9.15.4`). Pour résoudre **`@portakiapp/module-sdk`** depuis GitHub Packages en local, configure un jeton : par ex. `//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}` dans `~/.npmrc` (PAT avec `read:packages`).
+**Prérequis** : Node.js 22+, pnpm 9.
 
 ```bash
 pnpm install
+pnpm validate:modules
 pnpm lint
 ```
 
-Chaque module expose un **export par défaut** : `definePortakiModule({ ... })` depuis `@portakiapp/module-sdk`.
+---
 
-## Structure du dépôt
+## Structure
 
 ```text
 modules/
   train/                 # Horaires trains (Navitia)
-  events/                # Événements + hooks carte
-  rules/                 # Règlement intérieur
-  appliances/            # Guide appareils
-  checklist/             # Checklist départ
+  events/                # Événements + carte
+  …                      # Voir modules/ pour la liste complète
   pre-arrival-form/
-    frontend/            # Module npm formulaire avant arrivée
-    backend/             # Java / Axon (non npm)
+    frontend/            # paquet npm @portaki/module-pre-arrival-form
+    backend/             # Java / Axon (Maven)
 ```
 
-## Packages publiés
+---
+
+## Packages publiés (npmjs)
 
 | Package | Description |
-|--------|-------------|
-| `@portakiapp/module-sdk` | Dépendance — publiée depuis **[portaki-sdk](https://github.com/PortakiApp/portaki-sdk)** |
-| [`@portakiapp/module-train`](./modules/train) | Horaires SNCF / Navitia |
-| [`@portakiapp/module-events`](./modules/events) | Événements & carte |
-| [`@portakiapp/module-rules`](./modules/rules) | Règlement |
-| [`@portakiapp/module-appliances`](./modules/appliances) | Appareils |
-| [`@portakiapp/module-checklist`](./modules/checklist) | Checklist départ |
-| [`@portakiapp/module-pre-arrival-form`](./modules/pre-arrival-form/frontend) | Formulaire avant arrivée |
+|---------|-------------|
+| `@portaki/module-sdk` | Publié depuis [**portaki-sdk**](https://github.com/PortakiApp/portaki-sdk) |
+| `@portaki/module-train` | Horaires SNCF / Navitia |
+| `@portaki/module-events` | Événements & carte |
+| `@portaki/module-rules` | Règlement |
+| `@portaki/module-appliances` | Appareils |
+| `@portaki/module-checklist` | Checklist départ |
+| `@portaki/module-pre-arrival-form` | Formulaire avant arrivée |
+| … | Tout dossier sous `modules/` avec `package.json` + `portaki.module.json` |
+
+---
 
 ## Documentation
 
 | Fichier | Contenu |
 |---------|---------|
-| [docs/README.md](./docs/README.md) | Index de la doc produit / technique |
-| [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Prérequis registry, secrets GitHub, procédure de release |
-| [docs/MODULE_README_SCHEMA.md](./docs/MODULE_README_SCHEMA.md) | **Schéma unique** des README modules (réutilisable landing) |
+| [docs/README.md](./docs/README.md) | Index doc |
+| [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | npmjs, Trusted Publishing, Maven |
+| [docs/MODULE_README_SCHEMA.md](./docs/MODULE_README_SCHEMA.md) | Schéma README modules |
 
-Chaque sous-dossier de module contient un `README.md` qui suit ce schéma.
+---
 
-## Publication & CI
+## CI & publication
 
-- **CI** : workflow [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) — `pnpm install` + `pnpm lint`, et **`mvn verify`** pour le backend Java `modules/pre-arrival-form/backend` (GPR Maven pour `portaki-module-sdk`).
-- **GitHub Packages npm** (comme [portaki-sdk](https://github.com/PortakiApp/portaki-sdk)) : [`.github/workflows/publish-github-packages.yml`](./.github/workflows/publish-github-packages.yml) — push sur **`develop`**, **release** ou **workflow_dispatch** ; publie **`@portakiapp/module-*`** **sauf** `module-sdk` (déjà fourni par portaki-sdk).
-- **GitHub Packages Maven** (backend pré-arrivée) : [`.github/workflows/publish-maven-github-packages.yml`](./.github/workflows/publish-maven-github-packages.yml) — `mvn deploy` pour **`app.portaki.module:pre-arrival-form-backend`**. Détail dans [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).
-- **npmjs** : [`.github/workflows/publish-npm.yml`](./.github/workflows/publish-npm.yml) — déclenchement manuel ; secret **`NPM_TOKEN`** ; packages **`@portakiapp/module-*`** (hors SDK).
+- **CI** : [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) — `pnpm install`, `assert-no-file-deps`, `validate:modules`, `pnpm lint`, `mvn verify` sur le backend pré-arrivée.
+- **npmjs** : [`.github/workflows/publish-npm.yml`](./.github/workflows/publish-npm.yml) — Trusted Publishing (OIDC), matrice `@portaki/module-*`.
+- **Maven** (backend pré-arrivée) : [`.github/workflows/publish-maven-github-packages.yml`](./.github/workflows/publish-maven-github-packages.yml)
 
-Licence : **AGPL-3.0** (cf. chaque `package.json`).
+Détail : [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).
+
+---
+
+## Licence
+
+**AGPL-3.0** — cf. chaque `package.json`.

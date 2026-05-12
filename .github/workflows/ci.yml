@@ -32,12 +32,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          registry-url: "https://npm.pkg.github.com"
 
       - name: Install dependencies
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
+
+      - name: Assert no file: dependencies
+        run: pnpm assert-no-file-deps
+
+      - name: Validate module manifests
+        run: pnpm validate:modules
 
       - name: Lint (workspace)
         run: pnpm lint

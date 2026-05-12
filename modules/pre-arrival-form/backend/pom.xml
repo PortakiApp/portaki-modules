@@ -6,7 +6,7 @@
 
   <groupId>app.portaki.module</groupId>
   <artifactId>pre-arrival-form-backend</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.3.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>Pre-arrival form module (Java)</name>
 
@@ -15,19 +15,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <repositories>
-    <repository>
-      <id>github-portaki-sdk</id>
-      <name>Portaki Java SDK (GitHub Packages)</name>
-      <url>https://maven.pkg.github.com/PortakiApp/portaki-sdk</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
+  <!-- Résolution du SDK : installer depuis la racine du dépôt avec cd sdk/java && mvn install,
+       ou consommer une version publiée sur Maven Central quand disponible. -->
 
   <distributionManagement>
     <repository>
@@ -46,7 +35,7 @@
     <dependency>
       <groupId>app.portaki</groupId>
       <artifactId>portaki-module-sdk</artifactId>
-      <version>0.1.0-SNAPSHOT</version>
+      <version>0.3.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 

@@ -1,28 +1,66 @@
-name: Publish packages (npmjs)
+# Publie les @portaki/module-* sous modules/ — Trusted Publishing (OIDC), comme portaki-sdk.
+# Le SDK JS reste publié depuis portaki-sdk (job publish-npm-sdk).
+
+name: publish-npm-packages
+
+run-name: publish-npm-packages-${{ github.run_id }}
 
 on:
   workflow_dispatch:
     inputs:
-      package:
-        description: Package npm à publier
+      npm_package:
+        description: "Package à publier"
         required: true
         type: choice
         options:
           - all
-          - "@portakiapp/module-train"
-          - "@portakiapp/module-events"
-          - "@portakiapp/module-rules"
-          - "@portakiapp/module-appliances"
-          - "@portakiapp/module-checklist"
-          - "@portakiapp/module-pre-arrival-form"
+          - "@portaki/module-train"
+          - "@portaki/module-events"
+          - "@portaki/module-checklist"
+          - "@portaki/module-rules"
+          - "@portaki/module-appliances"
+          - "@portaki/module-facility-hours"
+          - "@portaki/module-wifi-guest"
+          - "@portaki/module-waste-recycling"
+          - "@portaki/module-local-guide"
+          - "@portaki/module-weather"
+          - "@portaki/module-access-guide"
+          - "@portaki/module-emergency-contacts"
+          - "@portaki/module-pre-arrival-form"
+          - "@portaki/module-ical-sync"
 
 permissions:
   contents: read
-  packages: read
+  id-token: write
+
+env:
+  NODE_VERSION: "24"
+  PNPM_VERSION: "9.15.4"
+  NPM_REGISTRY: https://registry.npmjs.org
 
 jobs:
   publish:
+    name: ${{ matrix.package }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - "@portaki/module-train"
+          - "@portaki/module-events"
+          - "@portaki/module-checklist"
+          - "@portaki/module-rules"
+          - "@portaki/module-appliances"
+          - "@portaki/module-facility-hours"
+          - "@portaki/module-wifi-guest"
+          - "@portaki/module-waste-recycling"
+          - "@portaki/module-local-guide"
+          - "@portaki/module-weather"
+          - "@portaki/module-access-guide"
+          - "@portaki/module-emergency-contacts"
+          - "@portaki/module-pre-arrival-form"
+          - "@portaki/module-ical-sync"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,35 +68,28 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9.15.4
+          version: ${{ env.PNPM_VERSION }}
 
-      - name: Setup Node.js (npm registry)
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          registry-url: "https://registry.npmjs.org"
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: ${{ env.NPM_REGISTRY }}
 
       - name: Install dependencies
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
-      - name: Publish selected package(s)
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Assert no file: dependencies
+        run: pnpm assert-no-file-deps
+
+      - name: Publish ${{ matrix.package }}
+        shell: bash
         run: |
           set -euo pipefail
-          TARGET="${{ inputs.package }}"
-          publish_one() {
-            pnpm publish --filter "$1" --access public --no-git-checks
-          }
-          if [ "$TARGET" = "all" ]; then
-            publish_one "@portakiapp/module-train"
-            publish_one "@portakiapp/module-events"
-            publish_one "@portakiapp/module-rules"
-            publish_one "@portakiapp/module-appliances"
-            publish_one "@portakiapp/module-checklist"
-            publish_one "@portakiapp/module-pre-arrival-form"
-          else
-            publish_one "$TARGET"
+          TARGET="${{ github.event.inputs.npm_package }}"
+          PKG="${{ matrix.package }}"
+          if [[ "$TARGET" != "all" && "$TARGET" != "$PKG" ]]; then
+            echo "Skip $PKG (sélection: $TARGET)"
+            exit 0
           fi
+          pnpm publish --filter "$PKG" --access public --no-git-checks
