@@ -21,7 +21,7 @@ importers:
   modules/access-guide:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.5.0
+        specifier: 0.5.0
         version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
@@ -40,7 +40,7 @@ importers:
   modules/appliances:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.5.0
+        specifier: 0.5.0
         version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
@@ -59,7 +59,7 @@ importers:
   modules/checklist:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.5.0
+        specifier: 0.5.0
         version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
@@ -78,7 +78,7 @@ importers:
   modules/emergency-contacts:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.5.0
+        specifier: 0.5.0
         version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
@@ -97,7 +97,7 @@ importers:
   modules/events:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.5.0
+        specifier: 0.5.0
         version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
@@ -116,7 +116,7 @@ importers:
   modules/facility-hours:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.5.0
+        specifier: 0.5.0
         version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
@@ -135,7 +135,7 @@ importers:
   modules/ical-sync:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.5.0
+        specifier: 0.5.0
         version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
@@ -154,7 +154,7 @@ importers:
   modules/local-guide:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.5.0
+        specifier: 0.5.0
         version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
@@ -173,7 +173,7 @@ importers:
   modules/pre-arrival-form/frontend:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.5.0
+        specifier: 0.5.0
         version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
@@ -192,7 +192,7 @@ importers:
   modules/rules:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.5.0
+        specifier: 0.5.0
         version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
@@ -211,7 +211,7 @@ importers:
   modules/train:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.5.0
+        specifier: 0.5.0
         version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
@@ -230,7 +230,7 @@ importers:
   modules/waste-recycling:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.5.0
+        specifier: 0.5.0
         version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
@@ -249,7 +249,7 @@ importers:
   modules/weather:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.5.0
+        specifier: 0.5.0
         version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
@@ -268,7 +268,7 @@ importers:
   modules/wifi-guest:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.5.0
+        specifier: 0.5.0
         version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
