@@ -48,22 +48,17 @@ public class IcalSyncHostModuleBackend implements PortakiHostModuleBackend {
         if (!(root instanceof ObjectNode obj)) {
             throw new ModuleBackendException("ical_sync_config_invalid", "root must be object");
         }
-        JsonNode feedsJsonNode = obj.get("feeds_json");
-        if (feedsJsonNode == null || !feedsJsonNode.isTextual() || feedsJsonNode.asText().isBlank()) {
-            throw new ModuleBackendException("feeds_json_required", "feeds_json required");
-        }
-        String feedsJson = feedsJsonNode.asText().trim();
         JsonNode feedsNode;
         try {
-            feedsNode = objectMapper.readTree(feedsJson);
+            feedsNode = IcalModuleFeedConfig.resolveFeedsNode(objectMapper, obj);
         } catch (JsonProcessingException e) {
-            throw new ModuleBackendException("feeds_json_invalid", e.getMessage(), e);
+            throw new ModuleBackendException("ical_feeds_invalid", e.getMessage(), e);
         }
         if (!feedsNode.isArray()) {
-            throw new ModuleBackendException("feeds_json_must_array", "feeds_json must be array");
+            throw new ModuleBackendException("ical_feeds_must_array", "feeds must be array");
         }
         if (feedsNode.isEmpty()) {
-            throw new ModuleBackendException("feeds_json_empty", "feeds_json empty");
+            throw new ModuleBackendException("ical_feeds_empty", "at least one calendar URL required");
         }
         int okFeeds = 0;
         int failFeeds = 0;
@@ -110,6 +105,9 @@ public class IcalSyncHostModuleBackend implements PortakiHostModuleBackend {
             }
         }
         ObjectNode merged = obj.deepCopy();
+        if (IcalModuleFeedConfig.hasExplicitIcalUrls(merged)) {
+            merged.remove("feeds_json");
+        }
         merged.put("last_sync_at", Instant.now().toString());
         merged.put("sync_summary", summary.toString().trim());
         String updatedPlain;

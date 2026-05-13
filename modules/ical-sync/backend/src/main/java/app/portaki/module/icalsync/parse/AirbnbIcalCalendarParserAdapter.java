@@ -25,9 +25,13 @@ public final class AirbnbIcalCalendarParserAdapter implements IcalCalendarParser
         List<ParsedCalendarEvent> out = new ArrayList<>();
         for (IcalTextParser.ParsedEvent e : IcalTextParser.parseEvents(body)) {
             ParsedCalendarEvent ev = GenericIcalCalendarParserAdapter.toDomain(e);
-            if (!ev.cancelled()) {
-                out.add(ev);
+            if (ev.cancelled()) {
+                continue;
             }
+            if (isAirbnbReservedBlock(ev)) {
+                continue;
+            }
+            out.add(ev);
         }
         return out;
     }
@@ -37,5 +41,18 @@ public final class AirbnbIcalCalendarParserAdapter implements IcalCalendarParser
             return s.substring(1);
         }
         return s;
+    }
+
+    /**
+     * Airbnb exporte les nuits fermées / indisponibles comme des VEVENT dont le SUMMARY vaut « Reserved »
+     * (ou variante) — ce ne sont pas des réservations à importer.
+     */
+    private static boolean isAirbnbReservedBlock(ParsedCalendarEvent ev) {
+        String s = ev.summary();
+        if (s == null) {
+            return false;
+        }
+        String t = s.trim();
+        return "reserved".equalsIgnoreCase(t) || "réservé".equalsIgnoreCase(t);
     }
 }

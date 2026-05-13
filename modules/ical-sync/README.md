@@ -6,7 +6,12 @@ La logique de fetch, parsing et fournisseurs vit dans le **backend Java** de ce 
 ## Portaki
 
 - Activer le module au niveau **Organisation → Modules**.
-- Par logement : **Modules** → flux JSON → **Synchroniser** (API hôte générique `POST /api/v1/properties/{id}/modules/ical-sync/sync` — `ical-sync` est l’identifiant du module).
+- Par logement : **Modules** → champs **Lien du calendrier principal** (et optionnellement second lien) → **Synchroniser** (`POST /api/v1/properties/{id}/modules/ical-sync/sync`).
+
+### Comportement Airbnb
+
+- Les créneaux bloqués / indisponibilités exportés avec le titre **Reserved** (ou **Réservé**) ne sont **pas** traités comme des réservations importées.
+- L’ancienne configuration en JSON (`feeds_json`) est encore lue si les nouveaux champs URL sont vides (migration).
 
 ## Développement
 

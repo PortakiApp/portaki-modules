@@ -23,7 +23,7 @@
       "link": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/ical-sync"
     }
   ],
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -41,21 +41,30 @@
     "globalAlert": {
       "type": "info",
       "message": {
-        "fr": "Module réservé à l’espace hôte : les voyageurs ne le voient pas.",
-        "en": "Host-only module: guests do not see it."
+        "fr": "Dans Airbnb : Calendrier → Disponibilité → Exporter le calendrier → copier le lien .ics. Collez-le dans « Lien du calendrier principal ». Un second lien est possible (Booking, etc.). Les créneaux Airbnb « Reserved » (indisponibilité) ne sont pas importés comme séjours.",
+        "en": "In Airbnb: Calendar → Availability → Export calendar → copy the .ics link. Paste it under “Primary calendar link”. A second link is optional (Booking, etc.). Airbnb “Reserved” blocks are not imported as stays."
       }
     },
     "fields": [
       {
-        "key": "feeds_json",
-        "label": { "fr": "Vos liens de calendrier", "en": "Your calendar links" },
+        "key": "ical_url_primary",
+        "label": { "fr": "Lien du calendrier principal", "en": "Primary calendar link" },
         "description": {
-          "fr": "Indiquez chaque calendrier avec un petit nom reconnaissable (ex. « Airbnb ») et le lien d’export fourni par la plateforme. Un exemple à copier-coller se trouve dans la documentation du module sur GitHub (onglet du dépôt, branche main).",
-          "en": "List each calendar with a short name you recognize (e.g. “Airbnb”) and the export link from the platform. A copy-paste example is in the module docs on GitHub (repo tab, main branch)."
+          "fr": "URL HTTPS du fichier .ics (ex. export Airbnb).",
+          "en": "HTTPS URL of the .ics file (e.g. Airbnb export)."
         },
-        "type": "textarea",
-        "required": true,
-        "helpUrl": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/ical-sync"
+        "type": "url",
+        "required": true
+      },
+      {
+        "key": "ical_url_secondary",
+        "label": { "fr": "Second calendrier (optionnel)", "en": "Second calendar (optional)" },
+        "description": {
+          "fr": "Autre lien .ics (Booking, Abritel, etc.).",
+          "en": "Another .ics link (Booking, Vrbo, etc.)."
+        },
+        "type": "url",
+        "required": false
       }
     ]
   },
