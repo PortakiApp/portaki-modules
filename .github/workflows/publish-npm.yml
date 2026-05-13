@@ -79,7 +79,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Assert no file: dependencies
+      - name: Assert workspace has no file-protocol dependencies
         run: pnpm assert-no-file-deps
 
       - name: Publish ${{ matrix.package }}

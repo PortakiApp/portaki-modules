@@ -1,26 +1,26 @@
 {
-  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/develop/schema/module.v1.json",
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
   "id": "train",
   "name": {
     "fr": "Horaires train",
     "en": "Train schedule"
   },
   "description": {
-    "fr": "Prochains départs SNCF depuis la gare du logement (Navitia).",
-    "en": "Upcoming SNCF departures from the property station (Navitia)."
+    "fr": "Prochains départs depuis la gare la plus utile pour vos voyageurs.",
+    "en": "Upcoming departures from the station that matters for your guests."
   },
   "details": {
-    "fr": "Le module interroge l’API Navitia avec la gare configurée (ou les valeurs par défaut ci-dessous). Sans clé API personnelle, un quota mutualisé avec cache d’environ une heure s’applique — ajoutez votre clé gratuite sur navitia.io pour lever la limitation.\n\nLes horaires affichés sont indicatifs ; vérifiez toujours auprès du transporteur.",
-    "en": "The module calls the Navitia API using the configured station (or the built-in defaults below). Without a personal API key, a shared quota with ~1h caching applies — add your free key at navitia.io to lift the limit.\n\nTimes are indicative; always confirm with the carrier."
+    "fr": "Choisissez la gare affichée (nom connu du grand public). Sans réglage avancé, Portaki utilise une mise à jour mutualisée des horaires ; pour un rafraîchissement plus fréquent, une inscription gratuite auprès du fournisseur de données suffit — lien dans l’aide du module.\n\nLes horaires restent indicatifs : les voyageurs doivent toujours confirmer auprès du transporteur.",
+    "en": "Pick the station guests actually use (a name they recognize). By default, Portaki uses a shared refresh of times; for more frequent updates, a free signup with the data provider is enough—link in the module help.\n\nTimes stay indicative; guests should always confirm with the carrier."
   },
   "examples": [
     {
       "title": { "fr": "Liste des départs", "en": "Departures list" },
       "description": {
-        "fr": "Heure, destination, voie et retard éventuel sur une ligne claire pour le voyageur.",
-        "en": "Time, destination, platform and delay on a clear line for guests."
+        "fr": "Heure, direction et voie sur une ligne lisible pour quelqu’un qui court prendre un train.",
+        "en": "Time, direction, and platform on one line for someone rushing to a train."
       },
-      "link": "https://github.com/PortakiApp/portaki-modules/tree/develop/modules/train"
+      "link": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/train"
     }
   ],
   "version": "1.0.0",
@@ -45,8 +45,8 @@
     "globalAlert": {
       "type": "info",
       "message": {
-        "fr": "Sans clé Navitia personnelle, Portaki utilise une clé mutualisée avec cache 1h.",
-        "en": "Without a personal Navitia key, Portaki uses a shared key with 1h cache."
+        "fr": "Sans clé personnelle du fournisseur d’horaires, les données sont rafraîchies environ une fois par heure pour tout le monde.",
+        "en": "Without your own key from the timetable provider, data refreshes about once an hour for everyone."
       },
       "helpUrl": "https://navitia.io/register"
     },
@@ -54,12 +54,12 @@
       {
         "key": "navitia_api_key",
         "label": {
-          "fr": "Clé API Navitia (optionnelle)",
-          "en": "Navitia API key (optional)"
+          "fr": "Clé optionnelle fournisseur d’horaires",
+          "en": "Optional timetable provider key"
         },
         "description": {
-          "fr": "Clé gratuite sur navitia.io. Sans clé, quota mutualisé.",
-          "en": "Free key at navitia.io. Without a key, shared quota."
+          "fr": "Gratuite sur navitia.io. Utile si vous voulez des mises à jour plus fréquentes.",
+          "en": "Free at navitia.io. Useful if you want fresher updates."
         },
         "type": "secret",
         "required": false,
@@ -68,12 +68,12 @@
       {
         "key": "departure_station_name",
         "label": {
-          "fr": "Gare de départ",
-          "en": "Departure station"
+          "fr": "Nom de la gare affiché",
+          "en": "Station name shown"
         },
         "description": {
-          "fr": "Nom affiché pour le voyageur. Peut être ajusté après activation.",
-          "en": "Label shown to guests. You can edit after activation."
+          "fr": "Le libellé que verront les voyageurs. Vous pouvez le modifier après activation.",
+          "en": "The label guests will see. You can edit it after activation."
         },
         "type": "text",
         "required": false,
@@ -85,12 +85,12 @@
       {
         "key": "departure_station_code",
         "label": {
-          "fr": "Code Navitia de la gare",
-          "en": "Navitia station code"
+          "fr": "Référence interne de la gare",
+          "en": "Internal station reference"
         },
         "description": {
-          "fr": "Identifiant stop_area Navitia. Une valeur d’exemple est préremplie — remplacez par votre gare sur navitia.io/explore.",
-          "en": "Navitia stop_area id. A sample value is prefilled — replace with your station via navitia.io/explore."
+          "fr": "Une valeur d’exemple est préremplie : laissez-la si c’est votre gare. Sinon, suivez la documentation du module pour trouver la bonne référence.",
+          "en": "A sample value is prefilled—keep it if that’s your station. Otherwise follow the module docs to find the right reference."
         },
         "type": "text",
         "required": false,
@@ -103,21 +103,21 @@
   },
   "catalog": {
     "tagline": {
-      "fr": "Horaires et infos voyageurs au départ de la gare configurée.",
-      "en": "Timetables and passenger info from your configured station."
+      "fr": "Les trains qui partent près de chez vous, en un coup d’œil.",
+      "en": "Trains leaving near you, at a glance."
     },
     "highlights": [
       {
-        "fr": "Entrée de navigation dédiée « Trains »",
-        "en": "Dedicated “Trains” navigation entry"
+        "fr": "Entrée « Trains » dans le carnet d’accueil",
+        "en": "A “Trains” entry in the welcome book"
       },
       {
-        "fr": "Lien avec le code gare du bien (`trainStationCode`)",
-        "en": "Uses the property station code (`trainStationCode`)"
+        "fr": "Peut reprendre la gare déjà indiquée sur la fiche du logement",
+        "en": "Can reuse the station already set on the property profile"
       },
       {
-        "fr": "UI prête pour vos appels API côté page invité",
-        "en": "UI ready for your guest-page API calls"
+        "fr": "Pensé pour rassurer avant un trajet",
+        "en": "Built to reassure before a trip"
       }
     ],
     "npmPackage": "@portaki/module-train",

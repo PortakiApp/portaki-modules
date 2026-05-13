@@ -1,7 +1,7 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PortakiApp/portaki-sdk/develop/docs/assets/portaki-wordmark-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/docs/assets/portaki-wordmark-light.svg">
   <img src="https://portaki.app/portaki-wordmark.svg" width="160" height="44" alt="Portaki" />
 </picture>
 

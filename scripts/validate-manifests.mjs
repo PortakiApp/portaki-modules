@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import * as lucide from "lucide-react";
 
 const SCHEMA_URL =
-    "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/develop/schema/module.v1.json";
+    "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");

@@ -1,26 +1,26 @@
 {
-  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/develop/schema/module.v1.json",
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
   "id": "facility-hours",
   "name": {
     "fr": "Horaires & accès",
     "en": "Hours & access"
   },
   "description": {
-    "fr": "Piscine, spa, salle de sport, local vélo… horaires par équipement.",
-    "en": "Pool, spa, gym, bike room… hours per facility."
+    "fr": "Piscine, spa, salle de sport, local vélo… les horaires de chaque lieu pour vos voyageurs.",
+    "en": "Pool, spa, gym, bike room… opening hours for each place your guests use."
   },
   "details": {
-    "fr": "Le champ JSON `facilities_json` décrit chaque zone (titre FR/EN, lignes d’horaires, note optionnelle). Parfait pour les horaires de piscine différents selon la saison — mettez à jour le JSON quand les créneaux changent.",
-    "en": "The `facilities_json` field describes each area (FR/EN title, schedule lines, optional note). Ideal for pool hours that change by season — update the JSON when slots change."
+    "fr": "Dans le configurateur, décrivez chaque espace avec un titre en français et en anglais, les plages d’ouverture, et une petite note si besoin (bracelet piscine, âge minimum, fermeture hivernale…). Quand les créneaux changent, mettez simplement le bloc à jour.\n\nUn modèle d’exemple est disponible sur la page GitHub du module (branche main).",
+    "en": "In the configurator, describe each area with French and English titles, opening hours, and a short note if needed (pool band, minimum age, winter closure…). When slots change, update the block.\n\nA sample template is on the module’s GitHub page (main branch)."
   },
   "examples": [
     {
       "title": { "fr": "Piscine + spa", "en": "Pool + spa" },
       "description": {
-        "fr": "Deux blocs dans le même JSON, chacun avec ses lignes Lun–Dim.",
-        "en": "Two blocks in one JSON, each with weekday lines."
+        "fr": "Deux blocs distincts : l’un pour la piscine, l’autre pour le spa, chacun avec ses jours et heures.",
+        "en": "Two separate blocks—one for the pool, one for the spa—each with its own days and times."
       },
-      "link": "https://github.com/PortakiApp/portaki-modules/tree/develop/modules/facility-hours"
+      "link": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/facility-hours"
     }
   ],
   "version": "1.0.0",
@@ -41,28 +41,29 @@
     "globalAlert": {
       "type": "info",
       "message": {
-        "fr": "Un JSON par logement : chaque équipement a un titre et des lignes d’horaires (FR/EN). Ajoutez une note (ex. bracelet, âge minimum).",
-        "en": "One JSON per property: each facility has a title and schedule lines (FR/EN). Add notes (wristband, minimum age)."
+        "fr": "Un même bloc regroupe tous vos équipements : titre, horaires et note pour chacun.",
+        "en": "One block lists all your facilities—title, hours, and a note for each."
       },
-      "helpUrl": "https://github.com/PortakiApp/portaki-modules/tree/develop/modules/facility-hours"
+      "helpUrl": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/facility-hours"
     },
     "fields": [
       {
         "key": "facilities_json",
-        "label": { "fr": "Équipements & horaires (JSON)", "en": "Facilities & hours (JSON)" },
+        "label": { "fr": "Équipements et horaires", "en": "Facilities and hours" },
         "description": {
-          "fr": "Exemple : [{\"id\":\"pool\",\"title\":{\"fr\":\"Piscine\",\"en\":\"Pool\"},\"lines\":[{\"fr\":\"Lun–Ven 9h–20h\",\"en\":\"Mon–Fri 9am–8pm\"},{\"fr\":\"Sam–Dim 10h–21h\",\"en\":\"Sat–Sun 10am–9pm\"}],\"note\":{\"fr\":\"Enfants sous surveillance.\",\"en\":\"Children must be supervised.\"}}]",
-          "en": "Example: [{\"id\":\"pool\",\"title\":{\"fr\":\"...\",\"en\":\"Pool\"},\"lines\":[{\"fr\":\"...\",\"en\":\"...\"}],\"note\":{\"fr\":\"...\",\"en\":\"...\"}}]"
+          "fr": "Copiez le modèle depuis la documentation du module sur GitHub (branche main), puis remplacez les textes par les vôtres.",
+          "en": "Copy the template from the module docs on GitHub (main branch), then replace the text with yours."
         },
         "type": "textarea",
-        "required": true
+        "required": true,
+        "helpUrl": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/facility-hours"
       },
       {
         "key": "general_note",
         "label": { "fr": "Note générale (optionnel)", "en": "General note (optional)" },
         "description": {
-          "fr": "Texte libre sous la liste (ex. fermeture hiver, travaux).",
-          "en": "Free text below the list (winter closure, works)."
+          "fr": "Message affiché sous la liste (ex. fermeture exceptionnelle, travaux).",
+          "en": "Message shown below the list (e.g. exceptional closure, works)."
         },
         "type": "textarea",
         "required": false
@@ -71,17 +72,17 @@
   },
   "catalog": {
     "tagline": {
-      "fr": "Horaires piscine, spa, salle de sport — par logement.",
-      "en": "Pool, spa, gym hours — per property."
+      "fr": "Que vos voyageurs sachent quand la piscine ou le spa est ouvert.",
+      "en": "So guests know when the pool or spa is open."
     },
     "highlights": [
       {
-        "fr": "JSON structuré FR/EN",
-        "en": "Structured FR/EN JSON"
+        "fr": "Texte bilingue pour chaque équipement",
+        "en": "Bilingual text for each facility"
       },
       {
-        "fr": "Note par équipement + note globale",
-        "en": "Per-facility note + global note"
+        "fr": "Note par lieu + message global si besoin",
+        "en": "Per-place notes plus an overall message if needed"
       }
     ],
     "npmPackage": "@portaki/module-facility-hours",

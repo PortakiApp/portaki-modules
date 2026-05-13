@@ -1,26 +1,26 @@
 {
-  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/develop/schema/module.v1.json",
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
   "id": "pre-arrival-form",
   "name": {
     "fr": "Formulaire pré-arrivée",
     "en": "Pre-arrival form"
   },
   "description": {
-    "fr": "Collecte heure d’arrivée, occasion, allergies — selon le statut du séjour.",
-    "en": "Collects arrival time, occasion, allergies — shown by stay status."
+    "fr": "Recueille les infos utiles avant l’arrivée : horaire, occasion, allergies, etc.",
+    "en": "Collects helpful details before arrival: timing, occasion, allergies, and more."
   },
   "details": {
-    "fr": "Le formulaire s’affiche aux voyageurs en phase pré-arrivée. Les réponses sont stockées côté Portaki pour préparer l’accueil.\n\nAucun champ à mapper : activez le module, puis personnalisez les libellés si votre offre l’exige (évolution produit).",
-    "en": "The form appears to guests in the pre-arrival phase. Responses are stored in Portaki to prepare the welcome.\n\nNo field mapping: enable the module, then adjust labels if your offer requires it (product evolution)."
+    "fr": "Le formulaire s’affiche aux voyageurs au bon moment (avant l’entrée dans les lieux). Les réponses restent dans Portaki pour que vous puissiez préparer l’accueil.\n\nActivez le module puis adaptez les libellés à votre ton : tout se fait depuis l’espace hôte.",
+    "en": "The form appears to guests at the right moment before check-in. Answers stay in Portaki so you can prepare the welcome.\n\nEnable the module, then adjust the wording from the host area—no technical setup."
   },
   "examples": [
     {
-      "title": { "fr": "Parcours mobile", "en": "Mobile flow" },
+      "title": { "fr": "Parcours sur téléphone", "en": "Phone-friendly flow" },
       "description": {
-        "fr": "Champs courts, validation douce, focus accessibilité.",
-        "en": "Short fields, gentle validation, accessibility-minded focus."
+        "fr": "Questions courtes, validation douce, pensé pour être lu en voiture ou en chemin.",
+        "en": "Short questions, gentle validation, easy to complete on the go."
       },
-      "link": "https://github.com/PortakiApp/portaki-modules/tree/develop/modules/pre-arrival-form"
+      "link": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/pre-arrival-form"
     }
   ],
   "version": "1.0.0",
@@ -42,21 +42,21 @@
   },
   "catalog": {
     "tagline": {
-      "fr": "Collecte des infos avant l’entrée dans les lieux — UI et socle backend.",
-      "en": "Collects information before check-in — UI and optional backend hooks."
+      "fr": "Anticiper l’arrivée des voyageurs sans échange de messages à rallonge.",
+      "en": "Anticipate guest arrival without endless back-and-forth messages."
     },
     "highlights": [
       {
-        "fr": "Affichage selon les statuts de séjour (ex. pré-arrivée, à venir)",
-        "en": "Shown based on stay status (e.g. pre-arrival, upcoming)"
+        "fr": "Affichage selon l’étape du séjour (avant l’arrivée, etc.)",
+        "en": "Shown at the right step of the stay (before arrival, etc.)"
       },
       {
-        "fr": "Front `definePortakiModule`, aligné sur le reste du catalogue",
-        "en": "Guest UI via `definePortakiModule`, consistent with the catalog"
+        "fr": "Une vue claire pour le voyageur, une synthèse pour vous",
+        "en": "A clear view for guests, a summary for you"
       },
       {
-        "fr": "Dépôt Java / Axon pour réactions aux événements séjour",
-        "en": "Optional Java / Axon module for stay event reactions"
+        "fr": "Personnalisable depuis l’espace hôte",
+        "en": "Customizable from the host area"
       }
     ],
     "npmPackage": "@portaki/module-pre-arrival-form",

@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - main
-      - develop
     paths:
       - "modules/pre-arrival-form/backend/**"
       - ".github/workflows/publish-maven-github-packages.yml"

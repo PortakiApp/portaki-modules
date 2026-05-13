@@ -1,26 +1,26 @@
 {
-  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/develop/schema/module.v1.json",
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
   "id": "rules",
   "name": {
     "fr": "Règlement intérieur",
     "en": "House rules"
   },
   "description": {
-    "fr": "Bloc riche bilingue pour les consignes du logement.",
-    "en": "Rich bilingual block for house rules on the guest page."
+    "fr": "Les consignes du logement, en français et en anglais, lisibles par les voyageurs.",
+    "en": "House rules in French and English, easy for guests to read."
   },
   "details": {
-    "fr": "Rédigez vos règles en français et en anglais dans l’éditeur hôte. Le module les affiche dans l’app voyageur sans configuration technique supplémentaire.\n\nAstuce : gardez des phrases courtes (bruit, fumeurs, animaux, déchets).",
-    "en": "Write your rules in French and English in the host editor. The module shows them in the guest app with no extra technical setup.\n\nTip: keep short sentences (noise, smoking, pets, waste)."
+    "fr": "Rédigez vos règles dans l’espace hôte : bruit, fumeurs, animaux, déchets, parties communes… Le module les présente proprement aux voyageurs dans l’app.\n\nPrivilégiez des phrases courtes et des titres clairs.",
+    "en": "Write your rules in the host area: noise, smoking, pets, waste, shared spaces… The module presents them neatly to guests in the app.\n\nShort sentences and clear headings work best."
   },
   "examples": [
     {
-      "title": { "fr": "Contenu prêt à lire", "en": "Ready-to-read content" },
+      "title": { "fr": "Prêt à lire sur mobile", "en": "Easy to read on mobile" },
       "description": {
-        "fr": "Titres, listes et emphases respectent la charte typographique Portaki.",
-        "en": "Headings, lists and emphasis follow Portaki typography."
+        "fr": "Titres, listes et mises en avant restent lisibles sur petit écran.",
+        "en": "Headings, lists, and emphasis stay readable on a small screen."
       },
-      "link": "https://github.com/PortakiApp/portaki-modules/tree/develop/modules/rules"
+      "link": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/rules"
     }
   ],
   "version": "1.0.0",
@@ -42,21 +42,21 @@
   },
   "catalog": {
     "tagline": {
-      "fr": "House rules claires — contenu riche (TipTap / CMS).",
-      "en": "Clear house rules — rich content (TipTap / CMS)."
+      "fr": "Les règles de la maison, rédigées par vous, comprises par les voyageurs.",
+      "en": "House rules you write, wording guests understand."
     },
     "highlights": [
       {
-        "fr": "Bloc dédié aux règles avant et pendant le séjour",
-        "en": "Dedicated block for rules before and during the stay"
+        "fr": "Bloc dédié avant et pendant le séjour",
+        "en": "Dedicated block before and during the stay"
       },
       {
-        "fr": "Prêt pour HTML ou contenu TipTap sanitisé depuis votre CMS",
-        "en": "Ready for HTML or sanitized TipTap content from your CMS"
+        "fr": "Mise en forme riche (titres, listes) sans ressaisir le texte ailleurs",
+        "en": "Rich formatting (headings, lists) without duplicating text elsewhere"
       },
       {
-        "fr": "Structure pensée analytics et cohérence visuelle",
-        "en": "Structure built for analytics and visual consistency"
+        "fr": "Même ton que le reste du carnet d’accueil numérique",
+        "en": "Consistent with the rest of the digital welcome book"
       }
     ],
     "npmPackage": "@portaki/module-rules",

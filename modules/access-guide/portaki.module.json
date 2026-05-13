@@ -1,26 +1,26 @@
 {
-  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/develop/schema/module.v1.json",
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
   "id": "access-guide",
   "name": {
     "fr": "Accès & parking",
     "en": "Access & parking"
   },
   "description": {
-    "fr": "Étapes jusqu’au logement : parking, porte, ascenseur, photos.",
-    "en": "Steps to the stay: parking, door, lift, photos."
+    "fr": "Du parking à la porte : étapes claires pour arriver sans stress.",
+    "en": "From parking to the door: clear steps to arrive without stress."
   },
   "details": {
-    "fr": "Le champ `steps_json` est un tableau JSON : `id`, `kind` (parking, door, elevator, other), `title` et `detail` en FR/EN.",
-    "en": "`steps_json` is a JSON array: `id`, `kind` (parking, door, elevator, other), localized `title` and `detail`."
+    "fr": "Décrivez le trajet comme vous l’expliqueriez à un ami : où se garer, quel code ou badge, quel ascenseur, quelle sonnette. Chaque étape a un titre et un détail en français et en anglais.\n\nUn modèle prêt à adapter figure sur la page GitHub du module (branche main). Vous pouvez ajouter un lien vers une carte ou une courte vidéo d’arrivée.",
+    "en": "Describe the route the way you’d tell a friend: where to park, which code or badge, which lift, which bell. Each step has French and English title and detail.\n\nA ready-to-adapt template is on the module’s GitHub page (main branch). You can add a map link or a short arrival video."
   },
   "examples": [
     {
       "title": { "fr": "Parking puis hall", "en": "Parking then lobby" },
       "description": {
-        "fr": "Deux étapes `kind`: parking puis door, avec lien Street View dans `parking_map_url`.",
-        "en": "Two `kind` steps: parking then door, plus Street View in `parking_map_url`."
+        "fr": "D’abord la place de parking, ensuite la porte avec le digicode — dans l’ordre où on marche.",
+        "en": "First the parking spot, then the door with the code—in walk order."
       },
-      "link": "https://github.com/PortakiApp/portaki-modules/tree/develop/modules/access-guide"
+      "link": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/access-guide"
     }
   ],
   "version": "1.0.0",
@@ -41,38 +41,39 @@
     "globalAlert": {
       "type": "info",
       "message": {
-        "fr": "Le champ JSON `steps_json` décrit chaque étape (titre + détail FR/EN). Utilisez `kind` pour regrouper visuellement : parking, door, elevator, other.",
-        "en": "The `steps_json` field lists each step (FR/EN title + detail). Use `kind` for grouping: parking, door, elevator, other."
+        "fr": "Regroupez les étapes par thème : parking, porte d’entrée, ascenseur, autre — pour que le voyageur visualise le chemin.",
+        "en": "Group steps by theme: parking, front door, lift, other—so guests picture the route."
       },
-      "helpUrl": "https://github.com/PortakiApp/portaki-modules/tree/develop/modules/access-guide"
+      "helpUrl": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/access-guide"
     },
     "fields": [
       {
         "key": "steps_json",
-        "label": { "fr": "Étapes d’accès (JSON)", "en": "Access steps (JSON)" },
+        "label": { "fr": "Étapes jusqu’au logement", "en": "Steps to the stay" },
         "description": {
-          "fr": "Exemple : [{\"id\":\"park\",\"kind\":\"parking\",\"title\":{\"fr\":\"Parking\",\"en\":\"Parking\"},\"detail\":{\"fr\":\"Place B12, niveau -1.\",\"en\":\"Spot B12, level -1.\"}},{\"id\":\"door\",\"kind\":\"door\",\"title\":{\"fr\":\"Porte\",\"en\":\"Door\"},\"detail\":{\"fr\":\"Digicode 1234 puis pousser.\",\"en\":\"Code 1234 then push.\"}}]",
-          "en": "Example: [{\"id\":\"park\",\"kind\":\"parking\",\"title\":{\"fr\":\"…\",\"en\":\"Parking\"},\"detail\":{\"fr\":\"…\",\"en\":\"Spot B12…\"}}]"
+          "fr": "Copiez le modèle depuis la documentation du module (GitHub, branche main) et remplacez par vos consignes réelles.",
+          "en": "Copy the template from the module docs (GitHub, main branch) and replace with your real instructions."
         },
         "type": "textarea",
-        "required": true
+        "required": true,
+        "helpUrl": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/access-guide"
       },
       {
         "key": "parking_map_url",
-        "label": { "fr": "Lien plan / Google Maps parking", "en": "Parking map / Google Maps URL" },
+        "label": { "fr": "Lien vers une carte du parking", "en": "Parking map link" },
         "description": {
-          "fr": "Lien vers une carte annotée ou Street View.",
-          "en": "Link to an annotated map or Street View."
+          "fr": "Google Maps, Street View ou plan annoté pour repérer l’entrée ou la place.",
+          "en": "Google Maps, Street View, or an annotated plan to find the entrance or spot."
         },
         "type": "url",
         "required": false
       },
       {
         "key": "arrival_video_url",
-        "label": { "fr": "Vidéo arrivée (optionnel)", "en": "Arrival video (optional)" },
+        "label": { "fr": "Vidéo « comment j’arrive » (optionnel)", "en": "“How I get in” video (optional)" },
         "description": {
-          "fr": "Lien YouTube / Loom montrant le trajet porte à porte.",
-          "en": "YouTube / Loom link for door-to-door walkthrough."
+          "fr": "Lien YouTube ou autre : un trajet filmé rassure souvent plus qu’un long texte.",
+          "en": "YouTube or similar—a filmed walkthrough often reassures more than long text."
         },
         "type": "url",
         "required": false
@@ -82,7 +83,7 @@
         "label": { "fr": "Note générale (optionnel)", "en": "General note (optional)" },
         "description": {
           "fr": "Ex. « Sonnette « Martin » au hall ».",
-          "en": "e.g. “Ring ‘Martin’ at lobby.”"
+          "en": "e.g. “Ring ‘Martin’ at the lobby.”"
         },
         "type": "textarea",
         "required": false
@@ -91,12 +92,12 @@
   },
   "catalog": {
     "tagline": {
-      "fr": "Du parking à la porte, sans ambiguïté.",
-      "en": "From parking to the door, without guesswork."
+      "fr": "Du parking à la porte, sans se perdre.",
+      "en": "From parking to the door—without getting lost."
     },
     "highlights": [
-      { "fr": "Étapes JSON", "en": "JSON steps" },
-      { "fr": "Liens carte / vidéo", "en": "Map / video links" }
+      { "fr": "Étapes numérotées pour le voyageur", "en": "Numbered steps for guests" },
+      { "fr": "Carte ou vidéo en complément", "en": "Map or video as backup" }
     ],
     "npmPackage": "@portaki/module-access-guide",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-access-guide"

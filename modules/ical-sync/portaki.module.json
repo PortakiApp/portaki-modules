@@ -1,26 +1,26 @@
 {
-  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/develop/schema/module.v1.json",
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
   "id": "ical-sync",
   "name": {
     "fr": "Calendriers (iCal / Airbnb)",
     "en": "Calendars (iCal / Airbnb)"
   },
   "description": {
-    "fr": "Synchronisez des flux iCal publics (Airbnb, etc.) côté hôte.",
-    "en": "Sync public iCal feeds (Airbnb, etc.) on the host side."
+    "fr": "Reliez vos calendriers exportés (Airbnb, autres plateformes) pour voir les séjours côté hôte.",
+    "en": "Connect exported calendars (Airbnb, other platforms) to see stays on the host side."
   },
   "details": {
-    "fr": "Collez l’URL d’export .ics (Airbnb : Calendrier → Exporter). Portaki télécharge le fichier, compte les évènements et met à jour un résumé dans la configuration du module.",
-    "en": "Paste the .ics export URL (Airbnb: Calendar → Export). Portaki downloads the file, counts events, and updates a summary in the module config."
+    "fr": "Dans Airbnb : Calendrier → Exporter, puis copiez le lien privé dans la configuration du module. Portaki met à jour un résumé des dates pour vous aider à suivre les entrées et sorties.\n\nNe partagez jamais ce lien en public : il donne accès à vos réservations.",
+    "en": "In Airbnb: Calendar → Export, then paste the private link into the module settings. Portaki refreshes a date summary so you can track comings and goings.\n\nNever share that link publicly—it exposes your bookings."
   },
   "examples": [
     {
       "title": { "fr": "Export Airbnb", "en": "Airbnb export" },
       "description": {
-        "fr": "Utilisez le lien secret fourni par Airbnb ; ne le partagez pas publiquement.",
-        "en": "Use the secret link from Airbnb; do not share it publicly."
+        "fr": "Gardez le lien secret comme un mot de passe ; seul votre compte hôte doit le voir.",
+        "en": "Treat the link like a password; only your host account should see it."
       },
-      "link": "https://github.com/PortakiApp/portaki-modules/tree/develop/modules/ical-sync"
+      "link": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/ical-sync"
     }
   ],
   "version": "1.0.0",
@@ -41,31 +41,32 @@
     "globalAlert": {
       "type": "info",
       "message": {
-        "fr": "Module réservé à l’espace hôte : invisible pour les voyageurs.",
-        "en": "Host-only module: not shown to guests."
+        "fr": "Module réservé à l’espace hôte : les voyageurs ne le voient pas.",
+        "en": "Host-only module: guests do not see it."
       }
     },
     "fields": [
       {
         "key": "feeds_json",
-        "label": { "fr": "Flux iCal (JSON)", "en": "iCal feeds (JSON)" },
+        "label": { "fr": "Vos liens de calendrier", "en": "Your calendar links" },
         "description": {
-          "fr": "Ex. [{\"id\":\"airbnb\",\"url\":\"https://www.airbnb.com/calendar/ical/….ics\"}]",
-          "en": "e.g. [{\"id\":\"airbnb\",\"url\":\"https://www.airbnb.com/calendar/ical/….ics\"}]"
+          "fr": "Indiquez chaque calendrier avec un petit nom reconnaissable (ex. « Airbnb ») et le lien d’export fourni par la plateforme. Un exemple à copier-coller se trouve dans la documentation du module sur GitHub (onglet du dépôt, branche main).",
+          "en": "List each calendar with a short name you recognize (e.g. “Airbnb”) and the export link from the platform. A copy-paste example is in the module docs on GitHub (repo tab, main branch)."
         },
         "type": "textarea",
-        "required": true
+        "required": true,
+        "helpUrl": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/ical-sync"
       }
     ]
   },
   "catalog": {
     "tagline": {
-      "fr": "Synchronisez Airbnb et autres flux .ics.",
-      "en": "Sync Airbnb and other .ics feeds."
+      "fr": "Airbnb et autres calendriers : une vision simple pour l’hôte.",
+      "en": "Airbnb and other calendars: a simple view for the host."
     },
     "highlights": [
-      { "fr": "Hôte uniquement", "en": "Host only" },
-      { "fr": "API Portaki", "en": "Portaki API" }
+      { "fr": "Pensé pour l’organisation du logement, pas pour le voyageur", "en": "Built for property planning, not the guest-facing stay guide" },
+      { "fr": "Mise à jour à partir des liens que vous fournissez", "en": "Refreshes from the links you provide" }
     ],
     "npmPackage": "@portaki/module-ical-sync",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-ical-sync"

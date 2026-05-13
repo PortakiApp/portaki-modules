@@ -1,26 +1,26 @@
 {
-  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/develop/schema/module.v1.json",
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
   "id": "wifi-guest",
   "name": {
     "fr": "Wi‑Fi invité",
     "en": "Guest Wi‑Fi"
   },
   "description": {
-    "fr": "Réseau dédié voyageurs : SSID, mot de passe chiffré côté stockage, aide à la connexion.",
-    "en": "Guest network: SSID, password stored encrypted, connection help."
+    "fr": "Nom du réseau, mot de passe et petites astuces pour se connecter sans appeler l’hôte.",
+    "en": "Network name, password, and quick tips to get online without calling the host."
   },
   "details": {
-    "fr": "Le mot de passe est **visible sur la page invité** après déchiffrement serveur. Utilisez un SSID/mot de passe dédié aux séjours, distinct de votre réseau personnel.\n\nLes champs optionnels permettent d’expliquer le 2,4 vs 5 GHz ou un portail captif.",
-    "en": "The password is **visible on the guest page** after server decrypt. Use guest-only SSID/password, separate from your home network.\n\nOptional fields explain 2.4 vs 5 GHz or a captive portal."
+    "fr": "Utilisez un réseau ou un mot de passe dédiés aux séjours, distincts de votre Wi‑Fi personnel. Le mot de passe est montré aux voyageurs dans l’app après ouverture de l’écran — comme sur une étiquette sur le frigo.\n\nVous pouvez expliquer la différence entre le réseau « loin » et « près » du box, ou comment passer un portail captif d’hôtel.",
+    "en": "Use a guest-only network or password, separate from your home Wi‑Fi. The password appears in the app after guests open the screen—like a sticker on the fridge.\n\nYou can explain the “far” vs “near” router band or how to get past a hotel-style captive portal."
   },
   "examples": [
     {
-      "title": { "fr": "Réseau mesh", "en": "Mesh network" },
+      "title": { "fr": "Deux noms de réseau", "en": "Two network names" },
       "description": {
-        "fr": "Indiquez dans « astuce » les deux SSID si le logement en a deux.",
-        "en": "Use the band hint for dual SSID mesh setups."
+        "fr": "Indiquez dans l’astuce lequel choisir au fond du jardin ou à l’étage.",
+        "en": "Use the hint to say which network works at the far end of the garden or upstairs."
       },
-      "link": "https://github.com/PortakiApp/portaki-modules/tree/develop/modules/wifi-guest"
+      "link": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/wifi-guest"
     }
   ],
   "version": "1.0.0",
@@ -41,17 +41,17 @@
     "globalAlert": {
       "type": "warning",
       "message": {
-        "fr": "Le mot de passe est visible sur la page invité. Utilisez un réseau ou mot de passe dédié aux séjours.",
-        "en": "The password is visible on the guest page. Use a guest-only network or password."
+        "fr": "Le mot de passe est visible dans l’app voyageur. Utilisez un réseau ou un mot de passe réservés aux locataires.",
+        "en": "The password is visible in the guest app. Use a network or password meant for renters."
       }
     },
     "fields": [
       {
         "key": "ssid",
-        "label": { "fr": "Nom du réseau (SSID)", "en": "Network name (SSID)" },
+        "label": { "fr": "Nom du réseau Wi‑Fi", "en": "Wi‑Fi network name" },
         "description": {
-          "fr": "Réseau recommandé pour les voyageurs (ex. Villa-Guest).",
-          "en": "Recommended guest network name."
+          "fr": "Le nom que les voyageurs choisissent dans la liste des réseaux (ex. Villa-Guest).",
+          "en": "The name guests pick from the Wi‑Fi list (e.g. Villa-Guest)."
         },
         "type": "text",
         "required": true,
@@ -61,18 +61,18 @@
         "key": "password",
         "label": { "fr": "Mot de passe Wi‑Fi", "en": "Wi‑Fi password" },
         "description": {
-          "fr": "Stocké chiffré côté serveur ; déchiffré pour l’affichage invité uniquement.",
-          "en": "Stored encrypted server-side; decrypted for guest display only."
+          "fr": "Stocké de façon sécurisée côté Portaki ; affiché aux voyageurs dans l’écran du module.",
+          "en": "Stored securely by Portaki; shown to guests inside this module’s screen."
         },
         "type": "secret",
         "required": true
       },
       {
         "key": "band_hint",
-        "label": { "fr": "Bande / astuce (optionnel)", "en": "Band / hint (optional)" },
+        "label": { "fr": "Astuce réseau (optionnel)", "en": "Network hint (optional)" },
         "description": {
-          "fr": "Ex. « Privilégiez le 2,4 GHz au fond du jardin ».",
-          "en": "e.g. “Prefer 2.4 GHz at the far end of the garden.”"
+          "fr": "Ex. « Utilisez le réseau “…-Guest” au fond du jardin ».",
+          "en": "e.g. “Use the ‘…-Guest’ network at the far end of the garden.”"
         },
         "type": "text",
         "required": false,
@@ -83,10 +83,10 @@
       },
       {
         "key": "connection_steps",
-        "label": { "fr": "Étapes de connexion (optionnel)", "en": "Connection steps (optional)" },
+        "label": { "fr": "Étapes pour se connecter (optionnel)", "en": "How to connect (optional)" },
         "description": {
-          "fr": "Courtes instructions (portail captif, bouton WPS, etc.).",
-          "en": "Short instructions (captive portal, WPS, etc.)."
+          "fr": "Page web à valider, bouton sur la box, mot de passe sur une étiquette… expliquez en deux phrases.",
+          "en": "Web page to confirm, button on the router, password on a sticker—explain in a couple of sentences."
         },
         "type": "textarea",
         "required": false
@@ -95,17 +95,17 @@
   },
   "catalog": {
     "tagline": {
-      "fr": "Wi‑Fi invité clair, sans passer par la fiche « Infos pratiques » seule.",
-      "en": "Clear guest Wi‑Fi beyond the practical info card alone."
+      "fr": "Le Wi‑Fi du séjour, clair comme sur une étiquette sur le frigo.",
+      "en": "Stay Wi‑Fi as clear as a fridge magnet."
     },
     "highlights": [
       {
-        "fr": "Secret chiffré au repos",
-        "en": "Secret encrypted at rest"
+        "fr": "Mot de passe affiché proprement aux voyageurs dans l’app",
+        "en": "Password shown neatly to guests in the app"
       },
       {
-        "fr": "Instructions longues (textarea)",
-        "en": "Long instructions (textarea)"
+        "fr": "Espace pour expliquer box, double réseau ou page d’accueil du FAI",
+        "en": "Room to explain router, dual networks, or ISP splash page"
       }
     ],
     "npmPackage": "@portaki/module-wifi-guest",

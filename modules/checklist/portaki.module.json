@@ -1,26 +1,26 @@
 {
-  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/develop/schema/module.v1.json",
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
   "id": "checklist",
   "name": {
     "fr": "Checklist départ",
     "en": "Checkout checklist"
   },
   "description": {
-    "fr": "Liste cochable pour le départ avec progression sauvegardée.",
-    "en": "Checkable departure list with saved progress."
+    "fr": "Liste à cocher pour le jour du départ, avec progression enregistrée pour le séjour.",
+    "en": "A checklist for checkout day, with progress saved for the stay."
   },
   "details": {
-    "fr": "Définissez les tâches (poubelles, lave-vaisselle, clés…) dans le configurateur hôte. Le voyageur coche sur son téléphone ; l’état est mémorisé pour le séjour.\n\nIdéal pour réduire les oublis en fin de location.",
-    "en": "Define tasks (bins, dishwasher, keys…) in the host configurator. Guests check off on their phone; state is remembered for the stay.\n\nGreat for reducing end-of-stay oversights."
+    "fr": "Vous définissez les tâches (poubelles, lave-vaisselle, clés…) dans l’espace hôte. Le voyageur coche sur son téléphone ; tout est mémorisé pour ce séjour.\n\nIdéal pour limiter les oublis en fin de location.",
+    "en": "You define tasks (bins, dishwasher, keys…) in the host area. Guests check items on their phone; everything is remembered for that stay.\n\nGreat for fewer oversights at the end of a booking."
   },
   "examples": [
     {
-      "title": { "fr": "Barre de progression", "en": "Progress bar" },
+      "title": { "fr": "Barre de progression", "en": "Progress at a glance" },
       "description": {
-        "fr": "Le voyageur voit combien d’étapes restent avant un départ sans stress.",
-        "en": "Guests see how many steps remain before a stress-free checkout."
+        "fr": "Le voyageur voit ce qu’il reste à faire avant de partir l’esprit tranquille.",
+        "en": "Guests see what’s left before they leave with peace of mind."
       },
-      "link": "https://github.com/PortakiApp/portaki-modules/tree/develop/modules/checklist"
+      "link": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/checklist"
     }
   ],
   "version": "1.0.0",
@@ -42,21 +42,21 @@
   },
   "catalog": {
     "tagline": {
-      "fr": "Liste de départ · persistance invité · FR / EN.",
-      "en": "Departure list · guest persistence · FR / EN."
+      "fr": "Le jour J : une liste claire, en français et en anglais.",
+      "en": "Checkout day: a clear list in French and English."
     },
     "highlights": [
       {
-        "fr": "Affichage sur séjour actif (selon statut configuré)",
-        "en": "Shown on active stay (per configured status)"
+        "fr": "S’affiche quand le séjour est en cours (selon vos réglages)",
+        "en": "Shows while the stay is active (per your settings)"
       },
       {
-        "fr": "Libellés FR / EN via la configuration propriété",
-        "en": "FR / EN labels via property configuration"
+        "fr": "Textes bilingues possibles depuis la configuration du logement",
+        "en": "Bilingual wording from the property settings"
       },
       {
-        "fr": "Hooks pour enregistrer l’état de chaque item",
-        "en": "Hooks to persist each item’s state"
+        "fr": "Chaque case cochée reste enregistrée pour ce séjour",
+        "en": "Each tick is kept for that stay"
       }
     ],
     "npmPackage": "@portaki/module-checklist",
