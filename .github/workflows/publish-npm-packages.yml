@@ -1,34 +1,21 @@
-# Publie les @portaki/module-* sous modules/ — Trusted Publishing (OIDC), comme portaki-sdk.
-# Publication groupée automatique sur push main : voir modules-release-main.yml.
+# Publie les @portaki/module-* — Trusted Publishing (OIDC), comme portaki-sdk.
+# Publication groupée automatique : voir modules-release-main.yml (déclenché après **Checks** vert sur main).
 # Le SDK JS reste publié depuis portaki-sdk (job publish-npm-sdk).
+#
+# La matrice npm est dérivée des package.json sous modules/ (plus de liste figée dans le YAML).
 
 name: Publish npm
 
-run-name: ${{ github.event.inputs.npm_package }}
+run-name: publish-npm-${{ github.event.inputs.npm_package }}-${{ github.run_id }}
 
 on:
   workflow_dispatch:
     inputs:
       npm_package:
-        description: "Package à publier"
+        description: 'all = tout le scope ; sinon nom exact (ex. @portaki/module-train)'
         required: true
-        type: choice
-        options:
-          - all
-          - "@portaki/module-train"
-          - "@portaki/module-events"
-          - "@portaki/module-checklist"
-          - "@portaki/module-rules"
-          - "@portaki/module-appliances"
-          - "@portaki/module-facility-hours"
-          - "@portaki/module-wifi-guest"
-          - "@portaki/module-waste-recycling"
-          - "@portaki/module-local-guide"
-          - "@portaki/module-weather"
-          - "@portaki/module-access-guide"
-          - "@portaki/module-emergency-contacts"
-          - "@portaki/module-pre-arrival-form"
-          - "@portaki/module-ical-sync"
+        default: all
+        type: string
 
 permissions:
   contents: read
@@ -40,28 +27,27 @@ env:
   NPM_REGISTRY: https://registry.npmjs.org
 
 jobs:
+  discover-packages:
+    name: Discover npm module matrix
+    runs-on: ubuntu-latest
+    outputs:
+      any: ${{ steps.set.outputs.any }}
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - id: set
+        run: bash .github/scripts/discover-npm-module-matrix.sh >> "$GITHUB_OUTPUT"
+
   publish:
-    name: ${{ matrix.package }}
+    name: ${{ matrix.job_label }}
+    needs: [discover-packages]
+    if: needs.discover-packages.outputs.any == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        package:
-          - "@portaki/module-train"
-          - "@portaki/module-events"
-          - "@portaki/module-checklist"
-          - "@portaki/module-rules"
-          - "@portaki/module-appliances"
-          - "@portaki/module-facility-hours"
-          - "@portaki/module-wifi-guest"
-          - "@portaki/module-waste-recycling"
-          - "@portaki/module-local-guide"
-          - "@portaki/module-weather"
-          - "@portaki/module-access-guide"
-          - "@portaki/module-emergency-contacts"
-          - "@portaki/module-pre-arrival-form"
-          - "@portaki/module-ical-sync"
-
+      matrix: ${{ fromJSON(needs.discover-packages.outputs.matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -82,8 +68,8 @@ jobs:
           set -euo pipefail
           TARGET="${{ github.event.inputs.npm_package }}"
           PKG="${{ matrix.package }}"
-          if [[ "$TARGET" != "all" && "$TARGET" != "$PKG" ]]; then
-            echo "Skip $PKG (sélection: $TARGET)"
+          if [[ "${TARGET}" != "all" && "${TARGET}" != "${PKG}" ]]; then
+            echo "Skip ${PKG} (sélection: ${TARGET})"
             exit 0
           fi
-          pnpm publish --filter "$PKG" --access public --no-git-checks
+          pnpm publish --filter "${PKG}" --access public --no-git-checks

@@ -1,26 +1,19 @@
-# Push main : vérifie le monorepo modules, crée une release GitHub unique modules-vX.Y.Z
-# (notes auto depuis les PR), publie tous les @portaki/module-* sur npm (Trusted Publishing).
+# Après un **Checks** vert sur `main` : si le commit touche les chemins release, vérifie le monorepo,
+# crée une release GitHub `modules-vX.Y.Z` (notes auto depuis les PR), publie tous les `@portaki/module-*` sur npm.
 #
 # Prérequis : même version dans tous les modules/*/package.json (+ pre-arrival-form/frontend) ;
 # bump cette version avant merge pour une nouvelle série.
 #
-# Le workflow publish-npm-packages.yml (workflow_dispatch) reste disponible pour publication ciblée.
+# Publication npm ciblée : publish-npm-packages.yml (workflow_dispatch).
 name: Module release
 
-run-name: ${{ github.ref_name }}
+run-name: module-release-${{ github.run_id }}
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "modules/**"
-      - "pnpm-lock.yaml"
-      - "package.json"
-      - "pnpm-workspace.yaml"
-      - ".github/workflows/modules-release-main.yml"
-      - ".github/workflows/publish-npm-packages.yml"
-      - ".github/scripts/modules_prev_release_tag.py"
-      - ".github/scripts/assert-unified-module-versions.sh"
+  workflow_run:
+    workflows: [Checks]
+    types: [completed]
+  workflow_dispatch:
 
 concurrency:
   group: modules-release-main-${{ github.ref }}
@@ -36,12 +29,72 @@ env:
   NPM_REGISTRY: https://registry.npmjs.org
 
 jobs:
+  gate:
+    name: Gate
+    runs-on: ubuntu-latest
+    outputs:
+      proceed: ${{ steps.pro.outputs.proceed }}
+      head_sha: ${{ steps.pro.outputs.head_sha }}
+      matched: ${{ steps.paths.outputs.matched }}
+    steps:
+      - id: pro
+        env:
+          WR_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          WR_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          WR_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+            echo "head_sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "${WR_CONCLUSION}" != "success" ] || [ "${WR_BRANCH}" != "main" ]; then
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+            echo "head_sha=" >> "$GITHUB_OUTPUT"
+            echo "matched=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "proceed=true" >> "$GITHUB_OUTPUT"
+          echo "head_sha=${WR_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout (for path filter)
+        if: steps.pro.outputs.proceed == 'true' && github.event_name == 'workflow_run'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pro.outputs.head_sha }}
+          fetch-depth: 1
+
+      - id: paths
+        if: steps.pro.outputs.proceed == 'true'
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "matched=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          matched=false
+          while IFS= read -r line; do
+            [ -z "${line}" ] && continue
+            case "${line}" in
+              modules/*|package.json|pnpm-lock.yaml|pnpm-workspace.yaml|.github/workflows/modules-release-main.yml|.github/workflows/publish-npm-packages.yml|.github/scripts/*)
+                matched=true
+                break
+                ;;
+            esac
+          done < <(git show --pretty="" --name-only HEAD)
+          echo "matched=${matched}" >> "$GITHUB_OUTPUT"
+
   verify:
     name: Verify
+    needs: [gate]
+    if: needs.gate.outputs.proceed == 'true' && needs.gate.outputs.matched == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.head_sha }}
 
       - name: Setup pnpm workspace
         uses: PortakiApp/portaki-sdk/.github/actions/pnpm-workspace-setup@main
@@ -60,13 +113,14 @@ jobs:
 
   release-publish:
     name: Publish npm
-    needs: [verify]
-    if: success()
+    needs: [gate, verify]
+    if: success() && needs.gate.outputs.proceed == 'true' && needs.gate.outputs.matched == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ needs.gate.outputs.head_sha }}
           fetch-depth: 0
 
       - name: Assert unified versions
@@ -121,7 +175,7 @@ jobs:
           V="${{ steps.ver.outputs.version }}"
           TAG="modules-v${V}"
           PREV="${{ steps.prev.outputs.prev_tag }}"
-          ARGS=(--target "${{ github.sha }}" --title "Modules invités ${TAG}" --generate-notes)
+          ARGS=(--target "${{ needs.gate.outputs.head_sha }}" --title "Modules invités ${TAG}" --generate-notes)
           if [ -n "${PREV}" ]; then
             ARGS+=(--notes-start-tag "${PREV}")
           fi

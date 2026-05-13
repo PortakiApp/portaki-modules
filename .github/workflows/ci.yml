@@ -17,64 +17,70 @@ permissions:
   packages: read
 
 jobs:
-  checks:
-    name: ${{ matrix.job_label }}
+  discover-java:
+    name: Discover Java backends
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - job_label: node-workspace
-            component: node-workspace
-          - job_label: java — pre-arrival-form
-            component: java-backend
-            java_dir: modules/pre-arrival-form/backend
-          - job_label: java — ical-sync
-            component: java-backend
-            java_dir: modules/ical-sync/backend
+    outputs:
+      any: ${{ steps.set.outputs.any }}
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - id: set
+        run: bash .github/scripts/discover-java-backend-matrix.sh ci >> "$GITHUB_OUTPUT"
+
+  node-workspace:
+    name: node-workspace
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup pnpm workspace
-        if: matrix.component == 'node-workspace'
         uses: PortakiApp/portaki-sdk/.github/actions/pnpm-workspace-setup@main
         with:
           node-version: "22"
           pnpm-version: "9.15.4"
 
       - name: Assert workspace has no file-protocol dependencies
-        if: matrix.component == 'node-workspace'
         run: pnpm assert-no-file-deps
 
       - name: Validate module manifests
-        if: matrix.component == 'node-workspace'
         run: pnpm validate:modules
 
       - name: Lint (workspace)
-        if: matrix.component == 'node-workspace'
         run: pnpm lint
+
+  java-backend:
+    name: ${{ matrix.job_label }}
+    needs: [discover-java]
+    if: needs.discover-java.outputs.any == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.discover-java.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Maven (GPR) + JDK — SDK depuis Maven Central
         if: >
-          matrix.component == 'java-backend' &&
-          (github.event_name != 'pull_request' ||
-           github.event.pull_request.head.repo.full_name == github.repository)
+          github.event_name != 'pull_request' ||
+          github.event.pull_request.head.repo.full_name == github.repository
         uses: PortakiApp/portaki-sdk/.github/actions/maven-gpr-install-java-sdk@main
         with:
           gpr-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify backend (Maven)
         if: >
-          matrix.component == 'java-backend' &&
-          (github.event_name != 'pull_request' ||
-           github.event.pull_request.head.repo.full_name == github.repository)
+          github.event_name != 'pull_request' ||
+          github.event.pull_request.head.repo.full_name == github.repository
         working-directory: ${{ matrix.java_dir }}
         run: mvn -B verify
 
       - name: Skip Java on fork pull_request
         if: >
-          matrix.component == 'java-backend' &&
           github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name != github.repository
         run: echo "Java backend checks skipped (fork PR without GPR)."

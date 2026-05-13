@@ -1,24 +1,22 @@
-# Publie les JAR backends (app.portaki.module:*) sur Maven Central — même mécanisme que portaki-sdk
-# (Central Portal + central-publishing-maven-plugin, profil central-deploy).
+# Publie les JAR backends (app.portaki.module:*) sur Maven Central — uniquement après un **Checks** vert sur `main**
+# (ou manuel). Même stack que portaki-sdk (OSSRH + GPG + central-publishing-maven-plugin).
 #
-# Secrets dépôt (ou organisation) : OSSRH_USERNAME, OSSRH_TOKEN, GPG_PRIVATE_KEY, GPG_PASSPHRASE
-# — identiques à ceux de portaki-sdk (https://central.sonatype.org/publish/generate-portal-token/).
+# Les modules `modules/*/backend` sont découverts par script ; un job matrix déploie en parallèle
+# uniquement les modules dont les fichiers ont changé sur le commit déclencheur (ou tout si
+# workflow_dispatch / workflow modifié).
 #
-# Le groupId app.portaki.module doit être autorisé sur le Central Portal pour votre compte
-# (namespace aligné sur app.portaki si besoin).
+# Secrets : OSSRH_USERNAME, OSSRH_TOKEN, GPG_PRIVATE_KEY, GPG_PASSPHRASE
+# Namespace `app.portaki.module` autorisé sur le Central Portal.
 
 name: Java to Central
 
-run-name: ${{ github.ref_name }}
+run-name: maven-central-${{ github.run_id }}
 
 on:
+  workflow_run:
+    workflows: [Checks]
+    types: [completed]
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - "modules/pre-arrival-form/backend/**"
-      - "modules/ical-sync/backend/**"
-      - ".github/workflows/publish-maven-central.yml"
 
 permissions:
   contents: read
@@ -34,12 +32,111 @@ env:
   MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
 jobs:
-  publish:
-    name: Deploy backends
+  gate:
+    name: Gate
     runs-on: ubuntu-latest
+    outputs:
+      proceed: ${{ steps.pro.outputs.proceed }}
+      head_sha: ${{ steps.pro.outputs.head_sha }}
+      matched: ${{ steps.paths.outputs.matched }}
+    steps:
+      - id: pro
+        env:
+          WR_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          WR_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          WR_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+            echo "head_sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "${WR_CONCLUSION}" != "success" ] || [ "${WR_BRANCH}" != "main" ]; then
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+            echo "head_sha=" >> "$GITHUB_OUTPUT"
+            echo "matched=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "proceed=true" >> "$GITHUB_OUTPUT"
+          echo "head_sha=${WR_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout (for path filter)
+        if: steps.pro.outputs.proceed == 'true' && github.event_name == 'workflow_run'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pro.outputs.head_sha }}
+          fetch-depth: 1
+
+      - id: paths
+        if: steps.pro.outputs.proceed == 'true'
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "matched=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          matched=false
+          while IFS= read -r line; do
+            [ -z "${line}" ] && continue
+            case "${line}" in
+              modules/*/backend/*|.github/workflows/publish-maven-central.yml)
+                matched=true
+                break
+                ;;
+            esac
+          done < <(git show --pretty="" --name-only HEAD)
+          echo "matched=${matched}" >> "$GITHUB_OUTPUT"
+
+  discover-maven:
+    name: Discover Maven deploy matrix
+    needs: [gate]
+    if: needs.gate.outputs.proceed == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      any: ${{ steps.set.outputs.any }}
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - name: Checkout
+        if: needs.gate.outputs.matched == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.head_sha }}
+
+      - id: set
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          MATCHED: ${{ needs.gate.outputs.matched }}
+        run: |
+          set -euo pipefail
+          DELIM="JAVA_MATRIX_JSON_EOF"
+          if [[ "${MATCHED}" != "true" ]]; then
+            echo "any=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "matrix<<${DELIM}"
+              echo '{"include":[]}'
+              echo "${DELIM}"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          bash .github/scripts/discover-java-backend-matrix.sh deploy >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: ${{ matrix.job_label }}
+    needs: [gate, discover-maven]
+    if: >
+      needs.gate.outputs.proceed == 'true' &&
+      needs.gate.outputs.matched == 'true' &&
+      needs.discover-maven.outputs.any == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.discover-maven.outputs.matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.gate.outputs.head_sha }}
 
       - name: Require Central Portal token
         run: |
@@ -70,23 +167,18 @@ jobs:
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
-      - name: Assert release versions (no SNAPSHOT)
+      - name: Assert release version (no SNAPSHOT)
+        working-directory: ${{ matrix.java_dir }}
         run: |
           set -euo pipefail
-          for d in modules/pre-arrival-form/backend modules/ical-sync/backend; do
-            V=$(mvn -B -ntp -q -f "$d/pom.xml" -DforceStdout help:evaluate -Dexpression=project.version | tr -d '\r\n')
-            echo "$d -> $V"
-            case "$V" in *-SNAPSHOT*)
-              echo "::error::$d : version must not be SNAPSHOT for Central (got ${V})."
-              exit 1
-              ;;
-            esac
-          done
+          V=$(mvn -B -ntp -q -DforceStdout help:evaluate -Dexpression=project.version | tr -d '\r\n')
+          echo "${{ matrix.java_dir }} -> ${V}"
+          case "${V}" in *-SNAPSHOT*)
+            echo "::error::Version must not be SNAPSHOT for Central (got ${V})."
+            exit 1
+            ;;
+          esac
 
-      - name: Deploy pre-arrival-form-backend
-        working-directory: modules/pre-arrival-form/backend
-        run: mvn --batch-mode -ntp deploy -DskipTests -P central-deploy
-
-      - name: Deploy ical-sync-backend
-        working-directory: modules/ical-sync/backend
+      - name: Deploy to Central
+        working-directory: ${{ matrix.java_dir }}
         run: mvn --batch-mode -ntp deploy -DskipTests -P central-deploy
