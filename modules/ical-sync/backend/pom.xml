@@ -6,7 +6,7 @@
 
   <groupId>app.portaki.module</groupId>
   <artifactId>ical-sync-backend</artifactId>
-  <version>0.4.1</version>
+  <version>0.5.0</version>
   <packaging>jar</packaging>
 
   <name>iCal sync module (Java)</name>
@@ -46,7 +46,7 @@
     <dependency>
       <groupId>app.portaki</groupId>
       <artifactId>portaki-module-sdk</artifactId>
-      <version>0.3.2</version>
+      <version>0.5.0</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
