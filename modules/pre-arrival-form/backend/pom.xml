@@ -15,8 +15,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <!-- Résolution du SDK : installer depuis la racine du dépôt avec cd sdk/java && mvn install,
-       ou consommer une version publiée sur Maven Central quand disponible. -->
+  <!-- SDK : version release résolue depuis Maven Central (app.portaki:portaki-module-sdk). -->
 
   <distributionManagement>
     <repository>

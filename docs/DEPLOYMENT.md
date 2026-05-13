@@ -24,11 +24,11 @@ Workflow : [`.github/workflows/publish-maven-github-packages.yml`](../.github/wo
 
 Déclenchement : push sur **`main`** qui modifie `modules/pre-arrival-form/backend/`, ou **workflow_dispatch**.
 
-Dépendance **`app.portaki:portaki-module-sdk`** : clone **portaki-sdk** puis installation locale via les actions composites du dépôt **portaki-sdk** (`.github/actions/checkout-portaki-sdk`, `.github/actions/maven-gpr-install-java-sdk`), référencées depuis les workflows de ce dépôt (`@main` ou tag figé).
+Dépendance **`app.portaki:portaki-module-sdk`** : version **release** attendue sur **Maven Central** (la CI et la publication GPR n’installent plus le SDK depuis un clone). L’action **`maven-gpr-install-java-sdk`** du dépôt **portaki-sdk** ne fait que JDK + `settings.xml` GPR ; l’option `install-sdk-from-source: true` + `checkout-portaki-sdk` reste possible pour un scénario hors Central.
 
 ---
 
 ## CI
 
-- [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) : job unique **`checks`** avec **`strategy.matrix`** (`node-workspace`, `java-backend`) — en parallèle, `fail-fast: false`. Réutilise les actions **`pnpm-workspace-setup`**, **`checkout-portaki-sdk`**, **`maven-gpr-install-java-sdk`** depuis [**portaki-sdk** `/.github/actions`](https://github.com/PortakiApp/portaki-sdk/tree/main/.github/actions) (`@main` ou tag). Le volet **Java** est ignoré sur les PR depuis un fork (pas d’accès GPR). Noms de checks GitHub : **`checks (node-workspace)`**, **`checks (java-backend)`** (à référencer dans les règles de branche si besoin).
+- [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) : job unique **`checks`** avec **`strategy.matrix`** (`node-workspace`, `java-backend`) — en parallèle, `fail-fast: false`. Réutilise **`pnpm-workspace-setup`** et **`maven-gpr-install-java-sdk`** depuis [**portaki-sdk** `/.github/actions`](https://github.com/PortakiApp/portaki-sdk/tree/main/.github/actions) (`@main` ou tag). Le volet **Java** est ignoré sur les PR depuis un fork (pas d’accès GPR). Noms de checks GitHub : **`checks (node-workspace)`**, **`checks (java-backend)`** (à référencer dans les règles de branche si besoin).
 - [`.github/workflows/modules-release-main.yml`](../.github/workflows/modules-release-main.yml) : sur **push `main`** (chemins `modules/**`, lockfile, etc.), **vérifie** puis **publie npm** + **release GitHub** `modules-v*` si la version unifiée n’a pas encore été releasée.

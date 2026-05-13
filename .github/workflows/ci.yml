@@ -47,16 +47,7 @@ jobs:
         if: matrix.component == 'node-workspace'
         run: pnpm lint
 
-      - name: Checkout portaki-sdk (Java SDK — GPR artefact often absent until published)
-        if: >
-          matrix.component == 'java-backend' &&
-          (github.event_name != 'pull_request' ||
-           github.event.pull_request.head.repo.full_name == github.repository)
-        uses: PortakiApp/portaki-sdk/.github/actions/checkout-portaki-sdk@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Maven (GPR) + install Java SDK locally
+      - name: Maven (GPR) + JDK — SDK depuis Maven Central
         if: >
           matrix.component == 'java-backend' &&
           (github.event_name != 'pull_request' ||

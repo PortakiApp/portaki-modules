@@ -25,12 +25,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Checkout portaki-sdk (Java SDK)
-        uses: PortakiApp/portaki-sdk/.github/actions/checkout-portaki-sdk@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Maven (GPR) + install Java SDK locally
+      - name: Maven (GPR) + JDK — SDK depuis Maven Central
         uses: PortakiApp/portaki-sdk/.github/actions/maven-gpr-install-java-sdk@main
         with:
           gpr-token: ${{ secrets.GITHUB_TOKEN }}
