@@ -14,7 +14,7 @@ public final class IcalTextParser {
 
     private IcalTextParser() {}
 
-    public record ParsedEvent(String uid, String summary, String dtStart, String dtEnd) {}
+    public record ParsedEvent(String uid, String summary, String dtStart, String dtEnd, String status) {}
 
     public static List<ParsedEvent> parseEvents(String raw) {
         if (raw == null || raw.isBlank()) {
@@ -37,8 +37,9 @@ public final class IcalTextParser {
             String summary = firstProp(block, "SUMMARY");
             String dtStart = firstProp(block, "DTSTART");
             String dtEnd = firstProp(block, "DTEND");
+            String status = firstProp(block, "STATUS");
             if (!dtStart.isEmpty() || !summary.isEmpty() || !uid.isEmpty()) {
-                out.add(new ParsedEvent(uid, summary, dtStart, dtEnd));
+                out.add(new ParsedEvent(uid, summary, dtStart, dtEnd, status));
             }
             cursor = end + "END:VEVENT".length();
         }

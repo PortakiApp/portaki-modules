@@ -6,7 +6,7 @@
 
   <groupId>app.portaki.module</groupId>
   <artifactId>ical-sync-backend</artifactId>
-  <version>0.3.0</version>
+  <version>0.4.1</version>
   <packaging>jar</packaging>
 
   <name>iCal sync module (Java)</name>

@@ -1,0 +1,13 @@
+---
+description: Logique métier d’un module — uniquement dans son backend JAR (pas dans portaki-api)
+globs: ["modules/**/backend/**/*.java", "modules/**/backend/pom.xml"]
+alwaysApply: false
+---
+
+# Backend module — lieu du code métier
+
+Implémenter ici toute logique **spécifique au module** (formats, parseurs, règles de sync, intégrations fournisseur). Exposer une **API publique claire** du JAR (`app.portaki.module.<id>`) pour que `portaki-api` ne fasse qu’**orchestrer** (config, persistance, cron) via dépendance Maven.
+
+Si le besoin est **transversal** (contrat hôte/guest partagé), l’ajouter dans **`portaki-module-sdk`** puis consommer la nouvelle version — pas de duplication dans l’API monolithique.
+
+Voir aussi : `portaki-api/.cursor/rules/portaki-module-boundary.mdc`.

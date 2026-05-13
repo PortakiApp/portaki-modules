@@ -8,7 +8,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import app.portaki.module.icalsync.internal.IcalTextParser;
+import app.portaki.module.icalsync.calendar.IcalProviderType;
+import app.portaki.module.icalsync.calendar.ParsedCalendarEvent;
 import app.portaki.sdk.module.backend.HostModuleAction;
 import app.portaki.sdk.module.backend.HostModuleRunResult;
 import app.portaki.sdk.module.backend.ModuleBackendException;
@@ -83,7 +84,8 @@ public class IcalSyncHostModuleBackend implements PortakiHostModuleBackend {
             }
             try {
                 String body = SafeHttpsUtf8Fetcher.fetch(url);
-                List<IcalTextParser.ParsedEvent> ev = IcalTextParser.parseEvents(body);
+                IcalProviderType provider = IcalFeedEventExtractor.providerFromFeed(feed);
+                List<ParsedCalendarEvent> ev = IcalFeedEventExtractor.parseBody(body, provider);
                 events += ev.size();
                 okFeeds++;
                 summary.append("[")
