@@ -18,13 +18,23 @@ Script utilitaire : `node scripts/bump-workspace-versions.mjs ci-run <run>` pour
 
 ---
 
-## Maven — backends Java (`pre-arrival-form`, `ical-sync`)
+## Maven — backends Java → **Maven Central**
 
-Workflow : [`.github/workflows/publish-maven-github-packages.yml`](../.github/workflows/publish-maven-github-packages.yml) (**Java packages** dans l’onglet Actions) — `mvn deploy` vers **GitHub Packages Maven** pour chaque backend (matrice).
+Workflow : [`.github/workflows/publish-maven-central.yml`](../.github/workflows/publish-maven-central.yml) — dans Actions : **Java to Central**. **`mvn deploy -P central-deploy`** pour **`pre-arrival-form-backend`** puis **`ical-sync-backend`** (versions **release** sans `-SNAPSHOT`).
 
-Déclenchement : push sur **`main`** qui modifie un dossier `modules/*/backend/`, ou **workflow_dispatch**.
+Déclenchement : push sur **`main`** qui modifie un `modules/*/backend/**`, ou **`workflow_dispatch`**.
 
-Dépendance **`app.portaki:portaki-module-sdk`** : version **release** attendue sur **Maven Central** (la CI et la publication GPR n’installent plus le SDK depuis un clone). L’action **`maven-gpr-install-java-sdk`** du dépôt **portaki-sdk** ne fait que JDK + `settings.xml` GPR ; l’option `install-sdk-from-source: true` + `checkout-portaki-sdk` reste possible pour un scénario hors Central.
+### Secrets (même jeu que **portaki-sdk**)
+
+Configurer sur le dépôt **portaki-modules** (ou en secrets d’organisation) : **`OSSRH_USERNAME`**, **`OSSRH_TOKEN`**, **`GPG_PRIVATE_KEY`**, **`GPG_PASSPHRASE`** — voir [Central Portal](https://central.sonatype.org/publish/generate-portal-token/) et [exigences GPG](https://central.sonatype.org/publish/requirements/gpg/).
+
+### Namespace Maven
+
+Les coordonnées **`app.portaki.module:*`** doivent être **autorisées** sur votre compte Central Portal (ajout du namespace si besoin, comme pour **`app.portaki`**).
+
+### Dépendance SDK
+
+**`app.portaki:portaki-module-sdk`** : release sur **Maven Central** uniquement (plus de dépôt GPR pour ces JAR).
 
 ### Backend `ical-sync`
 

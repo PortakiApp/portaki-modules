@@ -14,7 +14,7 @@ alwaysApply: false
 | **Minor** | `x.(y+1).0` | nouvelle option de config **rétrocompatible**, nouvelle surface UI sans casser l’existant |
 | **Major** | `(x+1).0.0` | schéma ou config **cassants**, suppression de propriété, changement d’API hôte attendue |
 
-- **Backend Maven** (`modules/*/backend/pom.xml`) : si l’artefact publié change (API, comportement), bump la version de l’artefact ; rester aligné avec la politique de release (GPR / tags).
+- **Backend Maven** (`modules/*/backend/pom.xml`) : si l’artefact publié change (API, comportement), bump la version de l’artefact ; publication **release** sur **Maven Central** via le workflow **Java to Central** (pas de `-SNAPSHOT` sur Central).
 - **Dépendance `portaki-module-sdk`** : si le code module nécessite une capacité ou un correctif **nouveau** du SDK Java publié sur Maven Central, monter la version du SDK dans le `pom.xml` **et** respecter le versionnement du dépôt **portaki-sdk** (patch / minor / major selon le SDK).
 
 Ne pas merger de changement **consommable** (npm ou Maven) sans bump de version explicite dans les manifests concernés.

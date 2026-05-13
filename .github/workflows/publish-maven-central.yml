@@ -1,0 +1,92 @@
+# Publie les JAR backends (app.portaki.module:*) sur Maven Central — même mécanisme que portaki-sdk
+# (Central Portal + central-publishing-maven-plugin, profil central-deploy).
+#
+# Secrets dépôt (ou organisation) : OSSRH_USERNAME, OSSRH_TOKEN, GPG_PRIVATE_KEY, GPG_PASSPHRASE
+# — identiques à ceux de portaki-sdk (https://central.sonatype.org/publish/generate-portal-token/).
+#
+# Le groupId app.portaki.module doit être autorisé sur le Central Portal pour votre compte
+# (namespace aligné sur app.portaki si besoin).
+
+name: Java to Central
+
+run-name: ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "modules/pre-arrival-form/backend/**"
+      - "modules/ical-sync/backend/**"
+      - ".github/workflows/publish-maven-central.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maven-central-modules-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: "21"
+  MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+  MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+  MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+jobs:
+  publish:
+    name: Deploy backends
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Require Central Portal token
+        run: |
+          if [ -z "${MAVEN_USERNAME}" ] || [ -z "${MAVEN_PASSWORD}" ]; then
+            echo "::error::Configure OSSRH_USERNAME and OSSRH_TOKEN (Central Portal user token)."
+            exit 1
+          fi
+
+      - name: Require GPG signing secrets
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE_CHECK: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          if [ -z "${GPG_PRIVATE_KEY}" ] || [ -z "${GPG_PASSPHRASE_CHECK}" ]; then
+            echo "::error::Configure GPG_PRIVATE_KEY (armored) and GPG_PASSPHRASE."
+            exit 1
+          fi
+
+      - name: Set up JDK and Maven Central
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+          server-id: central
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+
+      - name: Assert release versions (no SNAPSHOT)
+        run: |
+          set -euo pipefail
+          for d in modules/pre-arrival-form/backend modules/ical-sync/backend; do
+            V=$(mvn -B -ntp -q -f "$d/pom.xml" -DforceStdout help:evaluate -Dexpression=project.version | tr -d '\r\n')
+            echo "$d -> $V"
+            case "$V" in *-SNAPSHOT*)
+              echo "::error::$d : version must not be SNAPSHOT for Central (got ${V})."
+              exit 1
+              ;;
+            esac
+          done
+
+      - name: Deploy pre-arrival-form-backend
+        working-directory: modules/pre-arrival-form/backend
+        run: mvn --batch-mode -ntp deploy -DskipTests -P central-deploy
+
+      - name: Deploy ical-sync-backend
+        working-directory: modules/ical-sync/backend
+        run: mvn --batch-mode -ntp deploy -DskipTests -P central-deploy
