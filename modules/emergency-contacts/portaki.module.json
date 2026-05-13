@@ -1,26 +1,26 @@
 {
-  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/develop/schema/module.v1.json",
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
   "id": "emergency-contacts",
   "name": {
     "fr": "Urgences & utiles",
     "en": "Emergency & useful"
   },
   "description": {
-    "fr": "Numéros d’urgence, pharmacie de garde, ligne hôte.",
-    "en": "Emergency numbers, duty pharmacy, host line."
+    "fr": "Numéros d’urgence, pharmacie, médecin, ligne directe vers vous.",
+    "en": "Emergency numbers, pharmacy, doctor, direct line to you."
   },
   "details": {
-    "fr": "Le tableau `contacts_json` contient `id`, `label` FR/EN, `phone`, `note` optionnelle, `category` libre.",
-    "en": "`contacts_json` array: `id`, localized `label`, `phone`, optional `note`, free-form `category`."
+    "fr": "Listez les numéros vraiment utiles pour vos voyageurs : urgences, police, garde-malade, taxi de nuit, etc. Chaque ligne peut avoir un libellé en français et en anglais, un numéro cliquable et une courte remarque.\n\nLe modèle de saisie est expliqué sur la page GitHub du module (branche main).",
+    "en": "List numbers guests actually need: emergencies, police, on-call doctor, night taxi, etc. Each line can have French and English labels, a tappable number, and a short note.\n\nThe entry template is explained on the module’s GitHub page (main branch)."
   },
   "examples": [
     {
-      "title": { "fr": "Pharmacie + hôte", "en": "Pharmacy + host" },
+      "title": { "fr": "Pharmacie et hôte", "en": "Pharmacy and host" },
       "description": {
-        "fr": "Une ligne `category: pharmacy` et `host_visible_phone` pour la ligne directe.",
-        "en": "One `category: pharmacy` row plus `host_visible_phone` for the direct host line."
+        "fr": "Une ligne pour la pharmacie de garde et un numéro séparé pour vous joindre rapidement.",
+        "en": "One line for the duty pharmacy and a separate number to reach you quickly."
       },
-      "link": "https://github.com/PortakiApp/portaki-modules/tree/develop/modules/emergency-contacts"
+      "link": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/emergency-contacts"
     }
   ],
   "version": "1.0.0",
@@ -41,27 +41,28 @@
     "globalAlert": {
       "type": "warning",
       "message": {
-        "fr": "En cas d’urgence vitale, composez le **112** (UE) ou le **15** (SAMU) selon les consignes locales.",
-        "en": "For life-threatening emergencies, dial **112** (EU) or your local emergency number."
+        "fr": "En cas d’urgence vitale, composez le **112** (Europe) ou le numéro indiqué localement.",
+        "en": "For life-threatening emergencies, dial **112** (Europe) or your local emergency number."
       }
     },
     "fields": [
       {
         "key": "contacts_json",
-        "label": { "fr": "Contacts (JSON)", "en": "Contacts (JSON)" },
+        "label": { "fr": "Liste des numéros utiles", "en": "Useful numbers list" },
         "description": {
-          "fr": "Tableau : id, label {fr,en}, phone (E.164 ou local), note {fr,en} optionnel, category (ex. police, pharmacy, host).",
-          "en": "Array: id, label {fr,en}, phone, optional note {fr,en}, category (police, pharmacy, host, …)."
+          "fr": "Suivez le modèle de la documentation du module (GitHub, branche main) : nom du service, numéro, petite note optionnelle.",
+          "en": "Follow the template in the module docs (GitHub, main branch): service name, number, optional short note."
         },
         "type": "textarea",
-        "required": true
+        "required": true,
+        "helpUrl": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/emergency-contacts"
       },
       {
         "key": "host_visible_phone",
-        "label": { "fr": "Téléphone hôte affiché (optionnel)", "en": "Visible host phone (optional)" },
+        "label": { "fr": "Votre numéro affiché en évidence (optionnel)", "en": "Your highlighted number (optional)" },
         "description": {
-          "fr": "Ligne directe affichée en plus du JSON (texte simple, non chiffré).",
-          "en": "Extra line shown besides JSON (plain text, not encrypted)."
+          "fr": "Une ligne simple en plus de la liste, pour que les voyageurs vous appellent sans chercher.",
+          "en": "One simple extra line so guests can call you without hunting."
         },
         "type": "text",
         "required": false
@@ -70,12 +71,12 @@
   },
   "catalog": {
     "tagline": {
-      "fr": "Les bons numéros, au bon endroit.",
-      "en": "The right numbers in one place."
+      "fr": "Les bons numéros, au bon endroit, avant d’avoir besoin d’eux.",
+      "en": "The right numbers in one place before they’re needed."
     },
     "highlights": [
-      { "fr": "JSON structuré", "en": "Structured JSON" },
-      { "fr": "Lien tel:", "en": "tel: links" }
+      { "fr": "Appels en un toucher depuis le téléphone du voyageur", "en": "One-tap calls from the guest’s phone" },
+      { "fr": "Organisé par type d’aide (santé, police, vous…)", "en": "Grouped by kind of help (health, police, you…)" }
     ],
     "npmPackage": "@portaki/module-emergency-contacts",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-emergency-contacts"

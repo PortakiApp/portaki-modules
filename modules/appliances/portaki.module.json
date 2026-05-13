@@ -1,26 +1,26 @@
 {
-  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/develop/schema/module.v1.json",
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
   "id": "appliances",
   "name": {
     "fr": "Guide appareils",
     "en": "Appliance guide"
   },
   "description": {
-    "fr": "Accordéon par appareil : consignes, notices PDF, sécurité.",
-    "en": "Per-appliance tips, PDF manuals, safety notes."
+    "fr": "Four, lave-linge, clim : consignes courtes et liens vers les notices pour vos voyageurs.",
+    "en": "Oven, washer, AC: short tips and manual links for your guests."
   },
   "details": {
-    "fr": "Renseignez la liste en JSON depuis le configurateur hôte (champ « Liste des appareils »). Chaque entrée peut inclure un lien vers une notice hébergée (PDF ou page fabricant).\n\nUn bloc « sécurité » optionnel s’affiche en tête (coupure eau, extincteur…).",
-    "en": "Fill the JSON list from the host configurator (“Appliance list” field). Each entry can link to a manual (PDF or vendor page).\n\nAn optional safety block appears at the top (water shutoff, extinguisher…)."
+    "fr": "Listez vos appareils avec un titre en français et en anglais, des astuces simples (programme rapide, adoucissant…) et un lien vers une notice PDF ou la page du fabricant.\n\nVous pouvez ajouter un encart sécurité en tête (coupure eau, extincteur…). Le modèle de liste est sur la page GitHub du module (branche main).",
+    "en": "List appliances with French and English titles, simple tips (quick cycle, softener…) and a link to a PDF manual or vendor page.\n\nYou can add a safety banner at the top (water shutoff, extinguisher…). The list template is on the module’s GitHub page (main branch)."
   },
   "examples": [
     {
-      "title": { "fr": "Fiches appareil", "en": "Appliance cards" },
+      "title": { "fr": "Fiches par appareil", "en": "One card per appliance" },
       "description": {
-        "fr": "Titre FR/EN, astuces courtes, lien notice.",
-        "en": "FR/EN title, short tips, manual link."
+        "fr": "Titre clair, deux lignes d’astuce, bouton vers la notice : ce qu’il faut en cuisine ou buanderie.",
+        "en": "Clear title, two tip lines, manual button—what guests need in kitchen or laundry."
       },
-      "link": "https://github.com/PortakiApp/portaki-modules/tree/develop/modules/appliances"
+      "link": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/appliances"
     }
   ],
   "version": "1.0.0",
@@ -41,28 +41,29 @@
     "globalAlert": {
       "type": "info",
       "message": {
-        "fr": "Collez un tableau JSON conforme au modèle du configurateur.",
-        "en": "Paste a JSON array as documented in the host configurator."
+        "fr": "Copiez le modèle depuis la documentation du module (GitHub, branche main), puis remplacez les exemples par vos appareils réels.",
+        "en": "Copy the template from the module docs (GitHub, main branch), then replace examples with your real appliances."
       },
-      "helpUrl": "https://github.com/PortakiApp/portaki-modules/tree/develop/modules/appliances"
+      "helpUrl": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/appliances"
     },
     "fields": [
       {
         "key": "devices_json",
-        "label": { "fr": "Liste des appareils (JSON)", "en": "Appliance list (JSON)" },
+        "label": { "fr": "Liste des appareils", "en": "Appliance list" },
         "description": {
-          "fr": "Tableau JSON : id, title {fr,en}, tips {fr,en}?, manualUrl?, icon?",
-          "en": "JSON array: id, title {fr,en}, tips?, manualUrl?, icon?"
+          "fr": "Même modèle que dans la doc du module : un bloc par appareil avec titre bilingue, conseils et lien notice.",
+          "en": "Same shape as in the module docs: one block per appliance with bilingual title, tips, and manual link."
         },
         "type": "textarea",
-        "required": true
+        "required": true,
+        "helpUrl": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/appliances"
       },
       {
         "key": "safety_notice",
         "label": { "fr": "Consignes de sécurité", "en": "Safety notice" },
         "description": {
-          "fr": "Optionnel — affiché en tête.",
-          "en": "Optional — shown at the top."
+          "fr": "Optionnel — affiché en haut de la page pour les voyageurs.",
+          "en": "Optional—shown at the top for guests."
         },
         "type": "textarea",
         "required": false
@@ -71,21 +72,21 @@
   },
   "catalog": {
     "tagline": {
-      "fr": "Four, lave-linge, clim… données par logement.",
-      "en": "Oven, washer, AC… per-property data."
+      "fr": "Moins de messages « comment marche le four ? ».",
+      "en": "Fewer “how does the oven work?” messages."
     },
     "highlights": [
       {
-        "fr": "JSON structuré + notices PDF",
-        "en": "Structured JSON + PDF manuals"
+        "fr": "Conseils courts + lien vers la notice",
+        "en": "Short tips plus a manual link"
       },
       {
-        "fr": "Bloc sécurité optionnel",
-        "en": "Optional safety banner"
+        "fr": "Encart sécurité possible en tête",
+        "en": "Optional safety banner at the top"
       },
       {
-        "fr": "Affichage invité après activation logement",
-        "en": "Guest view after property activation"
+        "fr": "Visible aux voyageurs une fois le module activé sur le logement",
+        "en": "Visible to guests once the module is on for the property"
       }
     ],
     "npmPackage": "@portaki/module-appliances",

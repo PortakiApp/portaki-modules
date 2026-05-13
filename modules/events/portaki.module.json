@@ -1,26 +1,26 @@
 {
-  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/develop/schema/module.v1.json",
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
   "id": "events",
   "name": {
     "fr": "Événements locaux",
     "en": "Local events"
   },
   "description": {
-    "fr": "Événements à proximité du logement via OpenAgenda.",
-    "en": "Events near the property via OpenAgenda."
+    "fr": "Sorties, concerts et animations près du logement.",
+    "en": "Concerts, outings, and things to do near the stay."
   },
   "details": {
-    "fr": "Les données proviennent d’OpenAgenda (France). Le rayon et les sources peuvent être affinés côté produit ; une clé API optionnelle augmente les quotas.\n\nPensez à vérifier les horaires sur les sites des organisateurs.",
-    "en": "Data comes from OpenAgenda (France). Radius and sources may be tuned in the product; an optional API key increases quotas.\n\nAlways double-check times on organizer websites."
+    "fr": "Les suggestions viennent d’agendas publics en France. Les horaires peuvent bouger : invitez les voyageurs à vérifier sur le site de l’organisateur avant de se déplacer.\n\nUne option avancée permet d’augmenter le volume de données si vous recevez beaucoup de monde.",
+    "en": "Suggestions come from public listings in France. Times can change—ask guests to confirm on the organizer’s site before heading out.\n\nAn optional advanced setting can increase data volume for busy properties."
   },
   "examples": [
     {
       "title": { "fr": "Carte + liste", "en": "Map + list" },
       "description": {
-        "fr": "Repères sur la carte invité et liste des événements à venir.",
-        "en": "Pins on the guest map plus a list of upcoming happenings."
+        "fr": "Repères sur la carte et liste des prochaines idées de sortie.",
+        "en": "Map pins plus a list of upcoming ideas."
       },
-      "link": "https://github.com/PortakiApp/portaki-modules/tree/develop/modules/events"
+      "link": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/events"
     }
   ],
   "version": "1.0.0",
@@ -44,12 +44,12 @@
       {
         "key": "openagenda_api_key",
         "label": {
-          "fr": "Clé API OpenAgenda (optionnelle)",
-          "en": "OpenAgenda API key (optional)"
+          "fr": "Clé optionnelle (grande affluence)",
+          "en": "Optional key (high traffic)"
         },
         "description": {
-          "fr": "Augmente les quotas. Sans clé, usage mutualisé selon disponibilité.",
-          "en": "Increases quotas. Without a key, shared usage when available."
+          "fr": "Laissez vide pour l’usage courant. Renseignez une clé seulement si vous avez besoin de plus de réponses simultanées — voir openagenda.com.",
+          "en": "Leave empty for normal use. Add a key only if you need more simultaneous lookups—see openagenda.com."
         },
         "type": "secret",
         "required": false,
@@ -59,21 +59,21 @@
   },
   "catalog": {
     "tagline": {
-      "fr": "Annonce locale et carte pour tout ce qui bouge autour du logement.",
-      "en": "Local listings and a map for everything happening around the property."
+      "fr": "Donnez des idées de sortie autour du logement, sans ouvrir dix sites différents.",
+      "en": "Give guests outing ideas nearby without juggling ten websites."
     },
     "highlights": [
       {
-        "fr": "Point de menu « Événements » sur la page voyageur",
-        "en": "“Events” menu entry on the guest page"
+        "fr": "Rubrique « Événements » lisible sur le téléphone du voyageur",
+        "en": "An “Events” section guests can read on their phone"
       },
       {
-        "fr": "Carte : overlay et hook `mapMarkers` pour vos données",
-        "en": "Map: overlay and `mapMarkers` hook for your data"
+        "fr": "Carte et liste pour se repérer rapidement",
+        "en": "Map and list to get oriented quickly"
       },
       {
-        "fr": "Composant prêt à brancher sur votre API locale",
-        "en": "Component ready to wire to your local API"
+        "fr": "Pensé comme une vitrine locale, pas un agenda contractuel",
+        "en": "A local showcase, not a binding schedule"
       }
     ],
     "npmPackage": "@portaki/module-events",

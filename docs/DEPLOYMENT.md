@@ -14,7 +14,7 @@ Script utilitaire : `node scripts/bump-workspace-versions.mjs ci-run <run>` pour
 
 ## Schéma JSON des manifestes
 
-`pnpm validate:modules` télécharge **`schema/module.v1.json`** depuis la branche **develop** de **portaki-sdk** (source de vérité du schéma).
+`pnpm validate:modules` télécharge **`schema/module.v1.json`** depuis la branche **main** de **portaki-sdk** (source de vérité du schéma).
 
 ---
 
@@ -22,7 +22,7 @@ Script utilitaire : `node scripts/bump-workspace-versions.mjs ci-run <run>` pour
 
 Workflow : [`.github/workflows/publish-maven-github-packages.yml`](../.github/workflows/publish-maven-github-packages.yml) — `mvn deploy` vers **GitHub Packages Maven**.
 
-Déclenchement : push sur **`develop`** qui modifie `modules/pre-arrival-form/backend/`, ou **workflow_dispatch**.
+Déclenchement : push sur **`main`** qui modifie `modules/pre-arrival-form/backend/`, ou **workflow_dispatch**.
 
 Dépendance **`app.portaki:portaki-module-sdk`** : résolue via GPR / clone **portaki-sdk** (voir script CI du workflow).
 

@@ -1,26 +1,26 @@
 {
-  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/develop/schema/module.v1.json",
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
   "id": "waste-recycling",
   "name": {
     "fr": "Tri & déchets",
     "en": "Recycling & waste"
   },
   "description": {
-    "fr": "Bac par bac : où jeter quoi, jours de collecte.",
-    "en": "Bin by bin: what goes where, collection days."
+    "fr": "Bac par bac : quoi jeter où, et quand passe la collecte.",
+    "en": "Bin by bin: what goes where, and when collection runs."
   },
   "details": {
-    "fr": "`bins_json` est un tableau : chaque bac a un `id`, un `title` {fr,en} et une liste `items` (lignes FR/EN). Utilisez `collection_schedule` pour les jours de passage, liens mairie, etc.",
-    "en": "`bins_json` is an array: each bin has `id`, `title` {fr,en}, and `items` lines. Use `collection_schedule` for pickup days and town links."
+    "fr": "Décrivez chaque bac (couleur ou nom), ce qu’il accepte, et ce qu’il ne faut pas y mettre. Ajoutez en texte libre les jours de passage ou un lien vers la mairie.\n\nLe modèle de remplissage est sur la page GitHub du module (branche main).",
+    "en": "Describe each bin (colour or name), what it accepts, and what not to put in. Add pickup days or a town hall link in free text.\n\nThe fill-in template is on the module’s GitHub page (main branch)."
   },
   "examples": [
     {
-      "title": { "fr": "Jaune + vert", "en": "Yellow + green" },
+      "title": { "fr": "Emballages et verre", "en": "Recycling and glass" },
       "description": {
-        "fr": "Deux entrées JSON pour emballages et verre.",
-        "en": "Two JSON entries for packaging and glass."
+        "fr": "Deux fiches séparées : une pour le bac jaune, une pour le verre, avec des exemples concrets.",
+        "en": "Two separate cards—one for recycling, one for glass—with concrete examples."
       },
-      "link": "https://github.com/PortakiApp/portaki-modules/tree/develop/modules/waste-recycling"
+      "link": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/waste-recycling"
     }
   ],
   "version": "1.0.0",
@@ -41,28 +41,29 @@
     "globalAlert": {
       "type": "info",
       "message": {
-        "fr": "Le JSON décrit les bacs (couleur ou nom) et ce qu’ils acceptent. Complétez avec les jours de passage en texte libre.",
-        "en": "JSON describes bins (colour or name) and what they accept. Add pickup days in the free-text field."
+        "fr": "Pour chaque bac : nom ou couleur, ce qui est accepté, et une zone texte pour les jours de collecte.",
+        "en": "For each bin: name or colour, what’s accepted, and a text area for pickup days."
       },
-      "helpUrl": "https://github.com/PortakiApp/portaki-modules/tree/develop/modules/waste-recycling"
+      "helpUrl": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/waste-recycling"
     },
     "fields": [
       {
         "key": "bins_json",
-        "label": { "fr": "Bacs & consignes (JSON)", "en": "Bins & rules (JSON)" },
+        "label": { "fr": "Bacs et consignes", "en": "Bins and instructions" },
         "description": {
-          "fr": "Exemple : [{\"id\":\"yellow\",\"title\":{\"fr\":\"Emballages\",\"en\":\"Recycling\"},\"items\":[{\"fr\":\"Plastique, carton, métal\",\"en\":\"Plastic, cardboard, metal\"}]},{\"id\":\"green\",\"title\":{\"fr\":\"Verre\",\"en\":\"Glass\"},\"items\":[{\"fr\":\"Bouteilles sans bouchon\",\"en\":\"Bottles, no lids\"}]}]",
-          "en": "Example: [{\"id\":\"yellow\",\"title\":{\"fr\":\"...\",\"en\":\"Recycling\"},\"items\":[{\"fr\":\"...\",\"en\":\"...\"}]}]"
+          "fr": "Utilisez le modèle de la documentation (GitHub, branche main) : un bloc par type de bac avec exemples en français et en anglais.",
+          "en": "Use the template in the docs (GitHub, main branch): one block per bin type with FR/EN examples."
         },
         "type": "textarea",
-        "required": true
+        "required": true,
+        "helpUrl": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/waste-recycling"
       },
       {
         "key": "collection_schedule",
-        "label": { "fr": "Jours de collecte (optionnel)", "en": "Collection schedule (optional)" },
+        "label": { "fr": "Jours de collecte (optionnel)", "en": "Collection days (optional)" },
         "description": {
-          "fr": "Texte libre : « Poubelles jaunes le mardi », liens mairie, etc.",
-          "en": "Free text: “Yellow bin Tuesdays”, town hall links, etc."
+          "fr": "Texte libre : « Poubelles jaunes le mardi », lien vers la commune, etc.",
+          "en": "Free text: “Yellow bins on Tuesdays”, link to the town site, etc."
         },
         "type": "textarea",
         "required": false
@@ -71,17 +72,17 @@
   },
   "catalog": {
     "tagline": {
-      "fr": "Tri local clair pour éviter les erreurs de bac.",
-      "en": "Clear local sorting for guests."
+      "fr": "Le tri local expliqué simplement pour éviter les erreurs.",
+      "en": "Local sorting explained simply to avoid mistakes."
     },
     "highlights": [
       {
-        "fr": "JSON + texte libre calendrier",
-        "en": "JSON + free-text schedule"
+        "fr": "Une fiche par bac + rappel des jours de passage",
+        "en": "One card per bin plus pickup-day reminders"
       },
       {
-        "fr": "Alerte hôte intégrée au configurateur",
-        "en": "Host-facing alert in configurator"
+        "fr": "Rappel visible pour vous dans le configurateur",
+        "en": "A clear reminder for you in the configurator"
       }
     ],
     "npmPackage": "@portaki/module-waste-recycling",
