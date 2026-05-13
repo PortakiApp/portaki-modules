@@ -1,0 +1,128 @@
+# Push main : vérifie le monorepo modules, crée une release GitHub unique modules-vX.Y.Z
+# (notes auto depuis les PR), publie tous les @portaki/module-* sur npm (Trusted Publishing).
+#
+# Prérequis : même version dans tous les modules/*/package.json (+ pre-arrival-form/frontend) ;
+# bump cette version avant merge pour une nouvelle série.
+#
+# Le workflow publish-npm.yml (workflow_dispatch) reste disponible pour publication ciblée.
+name: Modules release (main)
+
+run-name: modules-release-main-${{ github.ref_name }}
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "modules/**"
+      - "pnpm-lock.yaml"
+      - "package.json"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/modules-release-main.yml"
+      - ".github/workflows/publish-npm.yml"
+      - ".github/scripts/modules_prev_release_tag.py"
+      - ".github/scripts/assert-unified-module-versions.sh"
+
+concurrency:
+  group: modules-release-main-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  NODE_VERSION: "24"
+  PNPM_VERSION: "9.15.4"
+  NPM_REGISTRY: https://registry.npmjs.org
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm workspace
+        uses: PortakiApp/portaki-sdk/.github/actions/pnpm-workspace-setup@main
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+
+      - name: Assert workspace has no file-protocol dependencies
+        run: pnpm assert-no-file-deps
+
+      - name: Validate module manifests
+        run: pnpm validate:modules
+
+      - name: Lint (workspace)
+        run: pnpm lint
+
+  release-publish:
+    name: release-publish-npm
+    needs: [verify]
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Assert unified versions
+        id: ver
+        run: |
+          V="$(bash .github/scripts/assert-unified-module-versions.sh)"
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Skip if GitHub release already exists
+        id: skip
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          TAG="modules-v${V}"
+          if gh release view "${TAG}" --json name >/dev/null 2>&1; then
+            echo "Release ${TAG} déjà présente — bump les versions package.json pour une nouvelle série."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Previous tag for release notes
+        if: steps.skip.outputs.skip != 'true'
+        id: prev
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          PREV="$(python3 "$GITHUB_WORKSPACE/.github/scripts/modules_prev_release_tag.py" "modules-v" "${V}")"
+          echo "prev_tag=${PREV}" >> "$GITHUB_OUTPUT"
+
+      - name: Setup pnpm workspace
+        if: steps.skip.outputs.skip != 'true'
+        uses: PortakiApp/portaki-sdk/.github/actions/pnpm-workspace-setup@main
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          registry-url: ${{ env.NPM_REGISTRY }}
+
+      - name: Assert workspace has no file-protocol dependencies
+        if: steps.skip.outputs.skip != 'true'
+        run: pnpm assert-no-file-deps
+
+      - name: Publish all @portaki/module-* to npmjs
+        if: steps.skip.outputs.skip != 'true'
+        run: pnpm publish -r --access public --no-git-checks --filter "@portaki/*"
+
+      - name: Create GitHub Release
+        if: steps.skip.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          TAG="modules-v${V}"
+          PREV="${{ steps.prev.outputs.prev_tag }}"
+          ARGS=(--target "${{ github.sha }}" --title "Modules invités ${TAG}" --generate-notes)
+          if [ -n "${PREV}" ]; then
+            ARGS+=(--notes-start-tag "${PREV}")
+          fi
+          gh release create "${TAG}" "${ARGS[@]}"

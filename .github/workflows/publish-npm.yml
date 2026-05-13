@@ -1,4 +1,5 @@
 # Publie les @portaki/module-* sous modules/ — Trusted Publishing (OIDC), comme portaki-sdk.
+# Publication groupée automatique sur push main : voir modules-release-main.yml.
 # Le SDK JS reste publié depuis portaki-sdk (job publish-npm-sdk).
 
 name: publish-npm-packages
@@ -65,19 +66,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup pnpm workspace
+        uses: PortakiApp/portaki-sdk/.github/actions/pnpm-workspace-setup@main
         with:
           node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
           registry-url: ${{ env.NPM_REGISTRY }}
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
 
       - name: Assert workspace has no file-protocol dependencies
         run: pnpm assert-no-file-deps

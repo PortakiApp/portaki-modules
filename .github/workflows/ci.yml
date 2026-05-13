@@ -17,65 +17,65 @@ permissions:
   packages: read
 
 jobs:
-  workspace:
+  checks:
+    name: ${{ matrix.component }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        component: [node-workspace, java-backend]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup pnpm workspace
+        if: matrix.component == 'node-workspace'
+        uses: PortakiApp/portaki-sdk/.github/actions/pnpm-workspace-setup@main
         with:
           node-version: "22"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          pnpm-version: "9.15.4"
 
       - name: Assert workspace has no file-protocol dependencies
+        if: matrix.component == 'node-workspace'
         run: pnpm assert-no-file-deps
 
       - name: Validate module manifests
+        if: matrix.component == 'node-workspace'
         run: pnpm validate:modules
 
       - name: Lint (workspace)
+        if: matrix.component == 'node-workspace'
         run: pnpm lint
 
-  pre-arrival-form-backend:
-    name: Maven verify (pre-arrival-form backend)
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Checkout portaki-sdk (Java SDK — GPR artefact often absent until published)
-        uses: actions/checkout@v4
+        if: >
+          matrix.component == 'java-backend' &&
+          (github.event_name != 'pull_request' ||
+           github.event.pull_request.head.repo.full_name == github.repository)
+        uses: PortakiApp/portaki-sdk/.github/actions/checkout-portaki-sdk@main
         with:
-          repository: PortakiApp/portaki-sdk
-          path: .deps/portaki-sdk
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+      - name: Maven (GPR) + install Java SDK locally
+        if: >
+          matrix.component == 'java-backend' &&
+          (github.event_name != 'pull_request' ||
+           github.event.pull_request.head.repo.full_name == github.repository)
+        uses: PortakiApp/portaki-sdk/.github/actions/maven-gpr-install-java-sdk@main
         with:
-          distribution: temurin
-          java-version: "21"
-          cache: maven
-
-      - name: Maven settings.xml (GitHub Packages)
-        env:
-          GPR_ACTOR: ${{ github.actor }}
-          GPR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bash .github/scripts/configure-maven-gpr.sh
-
-      - name: Install portaki-module-sdk into local Maven repo
-        run: bash .github/scripts/ci-install-portaki-java-sdk.sh
+          gpr-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify backend (Maven)
+        if: >
+          matrix.component == 'java-backend' &&
+          (github.event_name != 'pull_request' ||
+           github.event.pull_request.head.repo.full_name == github.repository)
         working-directory: modules/pre-arrival-form/backend
         run: mvn -B verify
+
+      - name: Skip Java on fork pull_request
+        if: >
+          matrix.component == 'java-backend' &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name != github.repository
+        run: echo "Java backend checks skipped (fork PR without GPR)."
