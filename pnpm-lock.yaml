@@ -21,8 +21,8 @@ importers:
   modules/access-guide:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.3.2
-        version: 0.3.2(react@19.2.6)
+        specifier: ^0.5.0
+        version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -40,8 +40,8 @@ importers:
   modules/appliances:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.3.2
-        version: 0.3.2(react@19.2.6)
+        specifier: ^0.5.0
+        version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -59,8 +59,8 @@ importers:
   modules/checklist:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.3.2
-        version: 0.3.2(react@19.2.6)
+        specifier: ^0.5.0
+        version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -78,8 +78,8 @@ importers:
   modules/emergency-contacts:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.3.2
-        version: 0.3.2(react@19.2.6)
+        specifier: ^0.5.0
+        version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -97,8 +97,8 @@ importers:
   modules/events:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.3.2
-        version: 0.3.2(react@19.2.6)
+        specifier: ^0.5.0
+        version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -116,8 +116,8 @@ importers:
   modules/facility-hours:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.3.2
-        version: 0.3.2(react@19.2.6)
+        specifier: ^0.5.0
+        version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -135,8 +135,8 @@ importers:
   modules/ical-sync:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.3.2
-        version: 0.3.2(react@19.2.6)
+        specifier: ^0.5.0
+        version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -154,8 +154,8 @@ importers:
   modules/local-guide:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.3.2
-        version: 0.3.2(react@19.2.6)
+        specifier: ^0.5.0
+        version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -173,8 +173,8 @@ importers:
   modules/pre-arrival-form/frontend:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.3.2
-        version: 0.3.2(react@19.2.6)
+        specifier: ^0.5.0
+        version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -192,8 +192,8 @@ importers:
   modules/rules:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.3.2
-        version: 0.3.2(react@19.2.6)
+        specifier: ^0.5.0
+        version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -211,8 +211,8 @@ importers:
   modules/train:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.3.2
-        version: 0.3.2(react@19.2.6)
+        specifier: ^0.5.0
+        version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -230,8 +230,8 @@ importers:
   modules/waste-recycling:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.3.2
-        version: 0.3.2(react@19.2.6)
+        specifier: ^0.5.0
+        version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -249,8 +249,8 @@ importers:
   modules/weather:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.3.2
-        version: 0.3.2(react@19.2.6)
+        specifier: ^0.5.0
+        version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -268,8 +268,8 @@ importers:
   modules/wifi-guest:
     dependencies:
       '@portaki/module-sdk':
-        specifier: ^0.3.2
-        version: 0.3.2(react@19.2.6)
+        specifier: ^0.5.0
+        version: 0.5.0(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -286,8 +286,8 @@ importers:
 
 packages:
 
-  '@portaki/module-sdk@0.3.2':
-    resolution: {integrity: sha512-Oyg+qEBj6t4yfcudUASXrn3vDUS27DdDvf4oiTIgrxXLtvYOnQSb7PhfpN49/UH/1GLQncKCaPMuWqIaajHFkw==}
+  '@portaki/module-sdk@0.5.0':
+    resolution: {integrity: sha512-nhKFW/6KYzAkyBE/bo9CRX4LfXUrsLdM+eQH7kUEk+4eAz6NiWUYN3erkyL8FAcS0KdGiRYoElNme6ibIEdG1A==}
     peerDependencies:
       react: '>=18'
 
@@ -345,7 +345,7 @@ packages:
 
 snapshots:
 
-  '@portaki/module-sdk@0.3.2(react@19.2.6)':
+  '@portaki/module-sdk@0.5.0(react@19.2.6)':
     dependencies:
       react: 19.2.6
 
