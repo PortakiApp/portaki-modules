@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
-# Vérifie que tous les package.json @portaki/module-* partagent la même version ; affiche la version sur stdout.
+# Vérifie que les package.json @portaki/module-* (hors exceptions) partagent la même version ; affiche la version sur stdout.
 set -euo pipefail
+
+# Versions npm indépendantes (correctifs sans bump de toute la grille).
+EXCLUDE_FROM_UNIFIED_VERSION=(
+  "modules/ical-sync/package.json"
+)
+
+is_excluded_from_unified_check() {
+  local f="$1"
+  local ex
+  for ex in "${EXCLUDE_FROM_UNIFIED_VERSION[@]}"; do
+    [[ "$f" == "$ex" ]] && return 0
+  done
+  return 1
+}
 
 FILES=(
   modules/*/package.json
@@ -10,6 +24,9 @@ FILES=(
 REF=""
 for f in "${FILES[@]}"; do
   if [[ ! -f "$f" ]]; then
+    continue
+  fi
+  if is_excluded_from_unified_check "$f"; then
     continue
   fi
   name="$(jq -r .name "$f")"
