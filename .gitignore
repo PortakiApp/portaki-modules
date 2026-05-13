@@ -3,4 +3,4 @@ node_modules/
 .pnpm-store/
 dist/
 *.log
-modules/pre-arrival-form/backend/target/
+**/backend/target/

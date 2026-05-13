@@ -1,0 +1,20 @@
+---
+description: Bump semver (patch / minor / major) à chaque changement module ou backend
+globs: ["modules/**/*", "package.json", "pnpm-lock.yaml", ".github/**/*"]
+alwaysApply: false
+---
+
+# Versionnement — portaki-modules
+
+À **chaque modification** d’un module (`modules/<id>/package.json`, `portaki.module.json`, frontend `src/`, backend `pom.xml` / sources Java), **bump la version** selon la gravité :
+
+| Gravité | Bump | Exemples |
+|---------|------|----------|
+| **Patch** | `x.y.(z+1)` | correctif, doc, bugfix sans nouveau contrat hôte / guest |
+| **Minor** | `x.(y+1).0` | nouvelle option de config **rétrocompatible**, nouvelle surface UI sans casser l’existant |
+| **Major** | `(x+1).0.0` | schéma ou config **cassants**, suppression de propriété, changement d’API hôte attendue |
+
+- **Backend Maven** (`modules/*/backend/pom.xml`) : si l’artefact publié change (API, comportement), bump la version de l’artefact ; rester aligné avec la politique de release (GPR / tags).
+- **Dépendance `portaki-module-sdk`** : si le code module nécessite une capacité ou un correctif **nouveau** du SDK Java publié sur Maven Central, monter la version du SDK dans le `pom.xml` **et** respecter le versionnement du dépôt **portaki-sdk** (patch / minor / major selon le SDK).
+
+Ne pas merger de changement **consommable** (npm ou Maven) sans bump de version explicite dans les manifests concernés.

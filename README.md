@@ -80,9 +80,9 @@ modules/
 
 ## CI & publication
 
-- **CI** : [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) — `pnpm install`, `assert-no-file-deps`, `validate:modules`, `pnpm lint`, `mvn verify` sur le backend pré-arrivée.
-- **npmjs** : [`.github/workflows/publish-npm.yml`](./.github/workflows/publish-npm.yml) — Trusted Publishing (OIDC), matrice `@portaki/module-*`.
-- **Maven** (backend pré-arrivée) : [`.github/workflows/publish-maven-github-packages.yml`](./.github/workflows/publish-maven-github-packages.yml)
+- **CI** : [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) — workflow **Checks** : `pnpm install`, `assert-no-file-deps`, `validate:modules`, `pnpm lint`, `mvn verify` sur les backends Java **pré-arrivée** et **ical-sync**.
+- **npmjs** : [`.github/workflows/publish-npm-packages.yml`](./.github/workflows/publish-npm-packages.yml) — workflow **Publish npm** (Trusted Publishing OIDC), matrice `@portaki/module-*`.
+- **Maven** (backends Java) : [`.github/workflows/publish-maven-github-packages.yml`](./.github/workflows/publish-maven-github-packages.yml) — workflow **Java packages**.
 
 Détail : [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).
 

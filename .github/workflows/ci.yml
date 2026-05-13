@@ -1,4 +1,4 @@
-name: CI
+name: Checks
 
 on:
   push:
@@ -18,12 +18,20 @@ permissions:
 
 jobs:
   checks:
-    name: ${{ matrix.component }}
+    name: ${{ matrix.job_label }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        component: [node-workspace, java-backend]
+        include:
+          - job_label: node-workspace
+            component: node-workspace
+          - job_label: java — pre-arrival-form
+            component: java-backend
+            java_dir: modules/pre-arrival-form/backend
+          - job_label: java — ical-sync
+            component: java-backend
+            java_dir: modules/ical-sync/backend
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,7 +69,7 @@ jobs:
           matrix.component == 'java-backend' &&
           (github.event_name != 'pull_request' ||
            github.event.pull_request.head.repo.full_name == github.repository)
-        working-directory: modules/pre-arrival-form/backend
+        working-directory: ${{ matrix.java_dir }}
         run: mvn -B verify
 
       - name: Skip Java on fork pull_request

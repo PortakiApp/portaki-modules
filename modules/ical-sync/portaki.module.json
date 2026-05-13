@@ -69,6 +69,7 @@
       { "fr": "Mise à jour à partir des liens que vous fournissez", "en": "Refreshes from the links you provide" }
     ],
     "npmPackage": "@portaki/module-ical-sync",
-    "npmUrl": "https://www.npmjs.com/package/@portaki/module-ical-sync"
+    "npmUrl": "https://www.npmjs.com/package/@portaki/module-ical-sync",
+    "javaArtifact": "app.portaki.module:ical-sync-backend"
   }
 }

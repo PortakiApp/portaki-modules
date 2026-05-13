@@ -1,4 +1,4 @@
-name: Publish Java (GitHub Packages)
+name: Java packages
 
 on:
   workflow_dispatch:
@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - "modules/pre-arrival-form/backend/**"
+      - "modules/ical-sync/backend/**"
       - ".github/workflows/publish-maven-github-packages.yml"
 
 permissions:
@@ -18,9 +19,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy-pre-arrival-form-backend:
-    name: mvn deploy → GPR (pre-arrival-form backend)
+  deploy-module-backend:
+    name: mvn deploy → GPR (${{ matrix.module }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - module: pre-arrival-form
+            working_dir: modules/pre-arrival-form/backend
+          - module: ical-sync
+            working_dir: modules/ical-sync/backend
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,5 +40,5 @@ jobs:
           gpr-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy JAR
-        working-directory: modules/pre-arrival-form/backend
+        working-directory: ${{ matrix.working_dir }}
         run: mvn -B deploy

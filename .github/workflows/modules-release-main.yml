@@ -4,10 +4,10 @@
 # Prérequis : même version dans tous les modules/*/package.json (+ pre-arrival-form/frontend) ;
 # bump cette version avant merge pour une nouvelle série.
 #
-# Le workflow publish-npm.yml (workflow_dispatch) reste disponible pour publication ciblée.
-name: Modules release (main)
+# Le workflow publish-npm-packages.yml (workflow_dispatch) reste disponible pour publication ciblée.
+name: Module release
 
-run-name: modules-release-main-${{ github.ref_name }}
+run-name: ${{ github.ref_name }}
 
 on:
   push:
@@ -18,7 +18,7 @@ on:
       - "package.json"
       - "pnpm-workspace.yaml"
       - ".github/workflows/modules-release-main.yml"
-      - ".github/workflows/publish-npm.yml"
+      - ".github/workflows/publish-npm-packages.yml"
       - ".github/scripts/modules_prev_release_tag.py"
       - ".github/scripts/assert-unified-module-versions.sh"
 
@@ -37,7 +37,7 @@ env:
 
 jobs:
   verify:
-    name: verify
+    name: Verify
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -59,7 +59,7 @@ jobs:
         run: pnpm lint
 
   release-publish:
-    name: release-publish-npm
+    name: Publish npm
     needs: [verify]
     if: success()
     runs-on: ubuntu-latest

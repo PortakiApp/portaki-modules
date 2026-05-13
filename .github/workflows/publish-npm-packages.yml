@@ -2,9 +2,9 @@
 # Publication groupée automatique sur push main : voir modules-release-main.yml.
 # Le SDK JS reste publié depuis portaki-sdk (job publish-npm-sdk).
 
-name: publish-npm-packages
+name: Publish npm
 
-run-name: publish-npm-packages-${{ github.run_id }}
+run-name: ${{ github.event.inputs.npm_package }}
 
 on:
   workflow_dispatch:
