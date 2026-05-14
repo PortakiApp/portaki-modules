@@ -46,7 +46,7 @@
     <dependency>
       <groupId>app.portaki</groupId>
       <artifactId>portaki-module-sdk</artifactId>
-      <version>0.5.0</version>
+      <version>0.5.1</version>
     </dependency>
   </dependencies>
 

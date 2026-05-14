@@ -16,11 +16,18 @@ import app.portaki.sdk.module.backend.ModuleBackendException;
 import app.portaki.sdk.module.backend.ModuleHostContext;
 import app.portaki.sdk.module.backend.PortakiHostModuleBackend;
 import app.portaki.sdk.module.backend.http.SafeHttpsUtf8Fetcher;
+import app.portaki.sdk.module.backend.run.ModuleRunContext;
+import app.portaki.sdk.module.backend.run.ModuleRunPipeline;
+import app.portaki.sdk.module.backend.run.ModuleRunStep;
+import app.portaki.sdk.module.backend.run.ModuleRunStepResult;
 
 /**
  * Backend hôte iCal : fetch des flux HTTPS, parsing VEVENT, mise à jour du résumé dans la config module.
  */
 public class IcalSyncHostModuleBackend implements PortakiHostModuleBackend {
+
+    private static final ModuleRunPipeline<IcalSyncCarry> SYNC_PIPELINE =
+            ModuleRunPipeline.of(new ParseAndValidateFeedsStep(), new FetchAndSummarizeFeedsStep());
 
     private final ObjectMapper objectMapper;
 
@@ -39,83 +46,185 @@ public class IcalSyncHostModuleBackend implements PortakiHostModuleBackend {
         if (!action.equals(HostModuleAction.SYNC)) {
             throw new ModuleBackendException("unsupported_action", action.value());
         }
-        JsonNode root;
-        try {
-            root = objectMapper.readTree(plainConfigJson);
-        } catch (JsonProcessingException e) {
-            throw new ModuleBackendException("ical_sync_config_parse_failed", e.getMessage(), e);
-        }
-        if (!(root instanceof ObjectNode obj)) {
-            throw new ModuleBackendException("ical_sync_config_invalid", "root must be object");
-        }
-        JsonNode feedsNode;
-        try {
-            feedsNode = IcalModuleFeedConfig.resolveFeedsNode(objectMapper, obj);
-        } catch (JsonProcessingException e) {
-            throw new ModuleBackendException("ical_feeds_invalid", e.getMessage(), e);
-        }
-        if (!feedsNode.isArray()) {
-            throw new ModuleBackendException("ical_feeds_must_array", "feeds must be array");
-        }
-        if (feedsNode.isEmpty()) {
-            throw new ModuleBackendException("ical_feeds_empty", "at least one calendar URL required");
-        }
-        int okFeeds = 0;
-        int failFeeds = 0;
-        int events = 0;
-        StringBuilder summary = new StringBuilder();
-        for (JsonNode feed : feedsNode) {
-            if (!feed.isObject()) {
-                failFeeds++;
-                summary.append("[invalid feed object]\n");
-                continue;
-            }
-            String feedId = feed.path("id").asText("feed");
-            String url = feed.path("url").asText("").trim();
-            if (url.isEmpty()) {
-                failFeeds++;
-                summary.append("[").append(feedId).append("] empty url\n");
-                continue;
-            }
-            try {
-                String body = SafeHttpsUtf8Fetcher.fetch(url);
-                IcalProviderType provider = IcalFeedEventExtractor.providerFromFeed(feed);
-                List<ParsedCalendarEvent> ev = IcalFeedEventExtractor.parseBody(body, provider);
-                events += ev.size();
-                okFeeds++;
-                summary.append("[")
-                        .append(feedId)
-                        .append("] ok — ")
-                        .append(ev.size())
-                        .append(" events\n");
-            } catch (ModuleBackendException e) {
-                failFeeds++;
-                summary.append("[")
-                        .append(feedId)
-                        .append("] error: ")
-                        .append(e.code())
-                        .append("\n");
-            } catch (Exception e) {
-                failFeeds++;
-                summary.append("[")
-                        .append(feedId)
-                        .append("] error: ")
-                        .append(e.getClass().getSimpleName())
-                        .append("\n");
-            }
-        }
-        ObjectNode merged = obj.deepCopy();
+        ModuleRunContext runCtx = ModuleRunContext.start(ctx);
+        IcalSyncCarry carry = new IcalSyncCarry(objectMapper, plainConfigJson);
+        SYNC_PIPELINE.execute(runCtx, carry);
+        ObjectNode merged = carry.root().deepCopy();
         if (IcalModuleFeedConfig.hasExplicitIcalUrls(merged)) {
             merged.remove("feeds_json");
         }
         merged.put("last_sync_at", Instant.now().toString());
-        merged.put("sync_summary", summary.toString().trim());
+        merged.put("sync_summary", carry.summary().toString().trim());
         String updatedPlain;
         try {
             updatedPlain = objectMapper.writeValueAsString(merged);
         } catch (JsonProcessingException e) {
             throw new ModuleBackendException("ical_sync_serialize_failed", e.getMessage(), e);
         }
-        return new HostModuleRunResult(true, okFeeds, failFeeds, events, summary.toString().trim(), updatedPlain);
+        return new HostModuleRunResult(
+                true,
+                carry.okFeeds(),
+                carry.failFeeds(),
+                carry.events(),
+                carry.summary().toString().trim(),
+                updatedPlain);
+    }
+
+    private static final class IcalSyncCarry {
+
+        private final ObjectMapper objectMapper;
+        private final String plainConfigJson;
+        private ObjectNode root;
+        private int okFeeds;
+        private int failFeeds;
+        private int events;
+        private final StringBuilder summary = new StringBuilder();
+
+        private IcalSyncCarry(ObjectMapper objectMapper, String plainConfigJson) {
+            this.objectMapper = objectMapper;
+            this.plainConfigJson = plainConfigJson;
+        }
+
+        ObjectMapper objectMapper() {
+            return objectMapper;
+        }
+
+        String plainConfigJson() {
+            return plainConfigJson;
+        }
+
+        ObjectNode root() {
+            return root;
+        }
+
+        void setRoot(ObjectNode root) {
+            this.root = root;
+        }
+
+        int okFeeds() {
+            return okFeeds;
+        }
+
+        void incOkFeeds() {
+            okFeeds++;
+        }
+
+        int failFeeds() {
+            return failFeeds;
+        }
+
+        void incFailFeeds() {
+            failFeeds++;
+        }
+
+        int events() {
+            return events;
+        }
+
+        void addEvents(int n) {
+            events += n;
+        }
+
+        StringBuilder summary() {
+            return summary;
+        }
+    }
+
+    private static final class ParseAndValidateFeedsStep implements ModuleRunStep<IcalSyncCarry> {
+
+        @Override
+        public String id() {
+            return "parse_and_validate_feeds";
+        }
+
+        @Override
+        public ModuleRunStepResult run(ModuleRunContext ctx, IcalSyncCarry carry) throws ModuleBackendException {
+            JsonNode root;
+            try {
+                root = carry.objectMapper().readTree(carry.plainConfigJson());
+            } catch (JsonProcessingException e) {
+                throw new ModuleBackendException("ical_sync_config_parse_failed", e.getMessage(), e);
+            }
+            if (!(root instanceof ObjectNode obj)) {
+                throw new ModuleBackendException("ical_sync_config_invalid", "root must be object");
+            }
+            JsonNode feedsNode;
+            try {
+                feedsNode = IcalModuleFeedConfig.resolveFeedsNode(carry.objectMapper(), obj);
+            } catch (JsonProcessingException e) {
+                throw new ModuleBackendException("ical_feeds_invalid", e.getMessage(), e);
+            }
+            if (!feedsNode.isArray()) {
+                throw new ModuleBackendException("ical_feeds_must_array", "feeds must be array");
+            }
+            if (feedsNode.isEmpty()) {
+                throw new ModuleBackendException("ical_feeds_empty", "at least one calendar URL required");
+            }
+            carry.setRoot(obj);
+            return ModuleRunStepResult.ok(id(), "feeds=" + feedsNode.size());
+        }
+    }
+
+    private static final class FetchAndSummarizeFeedsStep implements ModuleRunStep<IcalSyncCarry> {
+
+        @Override
+        public String id() {
+            return "fetch_and_summarize_feeds";
+        }
+
+        @Override
+        public ModuleRunStepResult run(ModuleRunContext ctx, IcalSyncCarry carry) throws ModuleBackendException {
+            ObjectNode obj = carry.root();
+            JsonNode feedsNode;
+            try {
+                feedsNode = IcalModuleFeedConfig.resolveFeedsNode(carry.objectMapper(), obj);
+            } catch (JsonProcessingException e) {
+                throw new ModuleBackendException("ical_feeds_invalid", e.getMessage(), e);
+            }
+            for (JsonNode feed : feedsNode) {
+                if (!feed.isObject()) {
+                    carry.incFailFeeds();
+                    carry.summary().append("[invalid feed object]\n");
+                    continue;
+                }
+                String feedId = feed.path("id").asText("feed");
+                String url = feed.path("url").asText("").trim();
+                if (url.isEmpty()) {
+                    carry.incFailFeeds();
+                    carry.summary().append("[").append(feedId).append("] empty url\n");
+                    continue;
+                }
+                try {
+                    String body = SafeHttpsUtf8Fetcher.fetch(url);
+                    IcalProviderType provider = IcalFeedEventExtractor.providerFromFeed(feed);
+                    List<ParsedCalendarEvent> ev = IcalFeedEventExtractor.parseBody(body, provider);
+                    carry.addEvents(ev.size());
+                    carry.incOkFeeds();
+                    carry.summary()
+                            .append("[")
+                            .append(feedId)
+                            .append("] ok — ")
+                            .append(ev.size())
+                            .append(" events\n");
+                } catch (ModuleBackendException e) {
+                    carry.incFailFeeds();
+                    carry.summary()
+                            .append("[")
+                            .append(feedId)
+                            .append("] error: ")
+                            .append(e.code())
+                            .append("\n");
+                } catch (Exception e) {
+                    carry.incFailFeeds();
+                    carry.summary()
+                            .append("[")
+                            .append(feedId)
+                            .append("] error: ")
+                            .append(e.getClass().getSimpleName())
+                            .append("\n");
+                }
+            }
+            return ModuleRunStepResult.ok(id(), "okFeeds=" + carry.okFeeds() + " failFeeds=" + carry.failFeeds());
+        }
     }
 }
