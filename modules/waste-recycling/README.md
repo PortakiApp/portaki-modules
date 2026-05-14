@@ -19,6 +19,14 @@
 
 ---
 
+## Aperçu (illustration)
+
+> Rendu **factice** pour la documentation — aligné sur la maquette [`guest-modules-section.jsx`](../../portaki-web/public/design-handoff/guest-modules-section.jsx), pas une capture du build npm actuel.
+
+<p align="center">
+  <img src="../../../portaki-web/public/module-previews/waste-recycling.svg" width="220" alt="Aperçu factice du module côté voyageur" />
+</p>
+
 > **En une phrase** — **`bins_json`** décrit chaque bac (titre FR/EN + lignes « quoi jeter ») ; **`collection_schedule`** regroupe jours de passage, liens mairie, consignes libres.
 
 ## Fiche technique

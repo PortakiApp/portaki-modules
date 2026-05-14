@@ -19,6 +19,14 @@
 
 ---
 
+## Aperçu (illustration)
+
+> Rendu **factice** pour la documentation — aligné sur la maquette [`guest-modules-section.jsx`](../../portaki-web/public/design-handoff/guest-modules-section.jsx), pas une capture du build npm actuel.
+
+<p align="center">
+  <img src="../../../portaki-web/public/module-previews/local-guide.svg" width="220" alt="Aperçu factice du module côté voyageur" />
+</p>
+
 > **En une phrase** — Liste **curatée** par l’hôte : `spots_json` (id, titre FR/EN, URL, catégorie, note) + **`disclaimer`** optionnel.
 
 ## Fiche technique

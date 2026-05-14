@@ -19,6 +19,14 @@
 
 ---
 
+## Aperçu (illustration)
+
+> Rendu **factice** pour la documentation — aligné sur la maquette [`guest-modules-section.jsx`](../../portaki-web/public/design-handoff/guest-modules-section.jsx), pas une capture du build npm actuel.
+
+<p align="center">
+  <img src="../../../portaki-web/public/module-previews/events.svg" width="220" alt="Aperçu factice du module côté voyageur" />
+</p>
+
 > 🎯 **En une phrase** — Section **Événements** avec support **carte** (`mapOverlay`, marqueurs async) pour tout ce qui bouge autour du logement.
 
 ## 👥 Pour qui ?

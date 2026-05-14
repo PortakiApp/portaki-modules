@@ -1,5 +1,13 @@
 # @portaki/module-ical-sync
 
+## Aperçu (illustration)
+
+> Rendu **factice** pour la documentation — aligné sur la maquette [`guest-modules-section.jsx`](../../portaki-web/public/design-handoff/guest-modules-section.jsx), pas une capture du build npm actuel.
+
+<p align="center">
+  <img src="../../../portaki-web/public/module-previews/ical-sync.svg" width="220" alt="Aperçu factice du module côté voyageur" />
+</p>
+
 Module **hôte** : synchronisation de flux iCal (lien d’export Airbnb, Booking, etc.).  
 La logique de fetch, parsing et fournisseurs vit dans le **backend Java** de ce module (`ical-sync-backend`) ; ce paquet npm expose le manifeste et un panneau `renderHost` optionnel.
 

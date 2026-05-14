@@ -6,7 +6,8 @@
   "scripts": {
     "lint": "pnpm -r lint",
     "assert-no-file-deps": "node scripts/assert-no-file-deps.mjs",
-    "validate:modules": "node scripts/validate-manifests.mjs"
+    "validate:modules": "node scripts/validate-manifests.mjs",
+    "readme:inject-previews": "node scripts/inject-readme-previews.mjs"
   },
   "devDependencies": {
     "ajv": "^8.17.1",

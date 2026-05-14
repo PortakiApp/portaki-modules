@@ -19,6 +19,14 @@
 
 ---
 
+## Aperçu (illustration)
+
+> Rendu **factice** pour la documentation — aligné sur la maquette [`guest-modules-section.jsx`](../../portaki-web/public/design-handoff/guest-modules-section.jsx), pas une capture du build npm actuel.
+
+<p align="center">
+  <img src="../../../portaki-web/public/module-previews/weather.svg" width="220" alt="Aperçu factice du module côté voyageur" />
+</p>
+
 > **En une phrase** — Affiche **1 à 7 jours** de températures (min/max) via **Open-Meteo** ; coordonnées = champs module **ou** `property.lat` / `property.lng` passés par l’app invité.
 
 ## Fiche technique

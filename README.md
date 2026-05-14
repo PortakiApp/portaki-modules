@@ -25,6 +25,10 @@ Les sources des paquets **`@portaki/module-*`** (invité) vivent sous **`modules
 
 Le SDK **`@portaki/module-sdk`** (types, `definePortakiModule`) est publié depuis **[portaki-sdk](https://github.com/PortakiApp/portaki-sdk)** uniquement.
 
+## Aperçus documentation
+
+Les README sous `modules/*/README.md` embarquent une **illustration factice** (SVG type capture mobile) référencée depuis le dépôt **portaki-web** (`../portaki-web/public/module-previews/`). Régénération des visuels : `cd ../portaki-web && pnpm run generate:module-previews`. Réinjection des sections « Aperçu » dans les README : `node scripts/inject-readme-previews.mjs`.
+
 ---
 
 ## Démarrage rapide

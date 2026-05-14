@@ -19,6 +19,14 @@
 
 ---
 
+## Aperçu (illustration)
+
+> Rendu **factice** pour la documentation — aligné sur la maquette [`guest-modules-section.jsx`](../../portaki-web/public/design-handoff/guest-modules-section.jsx), pas une capture du build npm actuel.
+
+<p align="center">
+  <img src="../../../portaki-web/public/module-previews/emergency-contacts.svg" width="220" alt="Aperçu factice du module côté voyageur" />
+</p>
+
 > **En une phrase** — **`contacts_json`** structure les lignes (libellé FR/EN, téléphone, catégorie, note) ; **`host_visible_phone`** ajoute une ligne hôte en texte simple.
 
 ## Fiche technique

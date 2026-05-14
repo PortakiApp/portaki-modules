@@ -19,6 +19,14 @@
 
 ---
 
+## Aperçu (illustration)
+
+> Rendu **factice** pour la documentation — aligné sur la maquette [`guest-modules-section.jsx`](../../portaki-web/public/design-handoff/guest-modules-section.jsx), pas une capture du build npm actuel.
+
+<p align="center">
+  <img src="../../../portaki-web/public/module-previews/rules.svg" width="220" alt="Aperçu factice du module côté voyageur" />
+</p>
+
 > 🎯 **En une phrase** — Une section **Règlement** claire pour bruit, fumeur, tri… avec **`data-module="rules"`** pour style & analytics.
 
 ## 👥 Pour qui ?

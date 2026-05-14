@@ -19,6 +19,14 @@
 
 ---
 
+## Aperçu (illustration)
+
+> Rendu **factice** pour la documentation — aligné sur la maquette [`guest-modules-section.jsx`](../../portaki-web/public/design-handoff/guest-modules-section.jsx), pas une capture du build npm actuel.
+
+<p align="center">
+  <img src="../../../portaki-web/public/module-previews/wifi-guest.svg" width="220" alt="Aperçu factice du module côté voyageur" />
+</p>
+
 > **En une phrase** — Affiche le **réseau invité** sur la page séjour : le mot de passe est **déchiffré côté serveur** puis montré à l’invité ; prévoir un SSID / mot de passe **distincts** du réseau personnel.
 
 ## Fiche technique

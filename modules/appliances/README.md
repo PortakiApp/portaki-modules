@@ -19,6 +19,14 @@
 
 ---
 
+## Aperçu (illustration)
+
+> Rendu **factice** pour la documentation — aligné sur la maquette [`guest-modules-section.jsx`](../../portaki-web/public/design-handoff/guest-modules-section.jsx), pas une capture du build npm actuel.
+
+<p align="center">
+  <img src="../../../portaki-web/public/module-previews/appliances.svg" width="220" alt="Aperçu factice du module côté voyageur" />
+</p>
+
 > 🎯 **En une phrase** — Aide les voyageurs à **utiliser les équipements** avec consignes courtes et contenu enrichissable.
 
 ## 👥 Pour qui ?

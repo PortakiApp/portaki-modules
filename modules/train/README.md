@@ -19,6 +19,14 @@
 
 ---
 
+## Aperçu (illustration)
+
+> Rendu **factice** pour la documentation — aligné sur la maquette [`guest-modules-section.jsx`](../../portaki-web/public/design-handoff/guest-modules-section.jsx), pas une capture du build npm actuel.
+
+<p align="center">
+  <img src="../../../portaki-web/public/module-previews/train.svg" width="220" alt="Aperçu factice du module côté voyageur" />
+</p>
+
 > 🎯 **En une phrase** — Donne aux voyageurs une vue **Trains** branchée sur **Navitia / données voyageurs**, contextualisée avec le **code gare** de la propriété.
 
 ## 👥 Pour qui ?

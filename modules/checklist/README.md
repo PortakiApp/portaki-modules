@@ -19,6 +19,14 @@
 
 ---
 
+## Aperçu (illustration)
+
+> Rendu **factice** pour la documentation — aligné sur la maquette [`guest-modules-section.jsx`](../../portaki-web/public/design-handoff/guest-modules-section.jsx), pas une capture du build npm actuel.
+
+<p align="center">
+  <img src="../../../portaki-web/public/module-previews/checklist.svg" width="220" alt="Aperçu factice du module côté voyageur" />
+</p>
+
 > 🎯 **En une phrase** — Accompagne la **sortie du séjour** avec une checklist pilotée par la config propriété et les **`POST`** guest.
 
 ## 👥 Pour qui ?
