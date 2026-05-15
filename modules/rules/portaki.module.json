@@ -15,7 +15,10 @@
   },
   "examples": [
     {
-      "title": { "fr": "Prêt à lire sur mobile", "en": "Easy to read on mobile" },
+      "title": {
+        "fr": "Prêt à lire sur mobile",
+        "en": "Easy to read on mobile"
+      },
       "description": {
         "fr": "Titres, listes et mises en avant restent lisibles sur petit écran.",
         "en": "Headings, lists, and emphasis stay readable on a small screen."
@@ -31,11 +34,19 @@
   },
   "icon": "scroll-text",
   "type": "official",
-  "tags": ["editorial", "rules", "legal", "content"],
+  "tags": [
+    "editorial",
+    "rules",
+    "legal",
+    "content"
+  ],
   "portakiVersionMin": "1.0.0",
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
-  "screenshots": [],
+  "screenshots": [
+    "modules/rules/screenshots/guest.png",
+    "modules/rules/screenshots/host.png"
+  ],
   "config": {
     "defaults": {},
     "fields": []

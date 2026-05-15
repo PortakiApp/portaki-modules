@@ -15,7 +15,10 @@
   },
   "examples": [
     {
-      "title": { "fr": "Piscine + spa", "en": "Pool + spa" },
+      "title": {
+        "fr": "Piscine + spa",
+        "en": "Pool + spa"
+      },
       "description": {
         "fr": "Deux blocs distincts : l’un pour la piscine, l’autre pour le spa, chacun avec ses jours et heures.",
         "en": "Two separate blocks—one for the pool, one for the spa—each with its own days and times."
@@ -31,11 +34,20 @@
   },
   "icon": "waves",
   "type": "official",
-  "tags": ["pool", "hours", "spa", "gym", "guest"],
+  "tags": [
+    "pool",
+    "hours",
+    "spa",
+    "gym",
+    "guest"
+  ],
   "portakiVersionMin": "1.0.0",
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
-  "screenshots": [],
+  "screenshots": [
+    "modules/facility-hours/screenshots/guest.png",
+    "modules/facility-hours/screenshots/host.png"
+  ],
   "config": {
     "defaults": {},
     "globalAlert": {
@@ -49,7 +61,10 @@
     "fields": [
       {
         "key": "facilities_json",
-        "label": { "fr": "Équipements et horaires", "en": "Facilities and hours" },
+        "label": {
+          "fr": "Équipements et horaires",
+          "en": "Facilities and hours"
+        },
         "description": {
           "fr": "Copiez le modèle depuis la documentation du module sur GitHub (branche main), puis remplacez les textes par les vôtres.",
           "en": "Copy the template from the module docs on GitHub (main branch), then replace the text with yours."
@@ -60,7 +75,10 @@
       },
       {
         "key": "general_note",
-        "label": { "fr": "Note générale (optionnel)", "en": "General note (optional)" },
+        "label": {
+          "fr": "Note générale (optionnel)",
+          "en": "General note (optional)"
+        },
         "description": {
           "fr": "Message affiché sous la liste (ex. fermeture exceptionnelle, travaux).",
           "en": "Message shown below the list (e.g. exceptional closure, works)."

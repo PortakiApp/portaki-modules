@@ -15,7 +15,10 @@
   },
   "examples": [
     {
-      "title": { "fr": "Pharmacie et hôte", "en": "Pharmacy and host" },
+      "title": {
+        "fr": "Pharmacie et hôte",
+        "en": "Pharmacy and host"
+      },
       "description": {
         "fr": "Une ligne pour la pharmacie de garde et un numéro séparé pour vous joindre rapidement.",
         "en": "One line for the duty pharmacy and a separate number to reach you quickly."
@@ -31,11 +34,18 @@
   },
   "icon": "phone",
   "type": "official",
-  "tags": ["emergency", "contacts", "host"],
+  "tags": [
+    "emergency",
+    "contacts",
+    "host"
+  ],
   "portakiVersionMin": "1.0.0",
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
-  "screenshots": [],
+  "screenshots": [
+    "modules/emergency-contacts/screenshots/guest.png",
+    "modules/emergency-contacts/screenshots/host.png"
+  ],
   "config": {
     "defaults": {},
     "globalAlert": {
@@ -48,7 +58,10 @@
     "fields": [
       {
         "key": "contacts_json",
-        "label": { "fr": "Liste des numéros utiles", "en": "Useful numbers list" },
+        "label": {
+          "fr": "Liste des numéros utiles",
+          "en": "Useful numbers list"
+        },
         "description": {
           "fr": "Suivez le modèle de la documentation du module (GitHub, branche main) : nom du service, numéro, petite note optionnelle.",
           "en": "Follow the template in the module docs (GitHub, main branch): service name, number, optional short note."
@@ -59,7 +72,10 @@
       },
       {
         "key": "host_visible_phone",
-        "label": { "fr": "Votre numéro affiché en évidence (optionnel)", "en": "Your highlighted number (optional)" },
+        "label": {
+          "fr": "Votre numéro affiché en évidence (optionnel)",
+          "en": "Your highlighted number (optional)"
+        },
         "description": {
           "fr": "Une ligne simple en plus de la liste, pour que les voyageurs vous appellent sans chercher.",
           "en": "One simple extra line so guests can call you without hunting."
@@ -75,8 +91,14 @@
       "en": "The right numbers in one place before they’re needed."
     },
     "highlights": [
-      { "fr": "Appels en un toucher depuis le téléphone du voyageur", "en": "One-tap calls from the guest’s phone" },
-      { "fr": "Organisé par type d’aide (santé, police, vous…)", "en": "Grouped by kind of help (health, police, you…)" }
+      {
+        "fr": "Appels en un toucher depuis le téléphone du voyageur",
+        "en": "One-tap calls from the guest’s phone"
+      },
+      {
+        "fr": "Organisé par type d’aide (santé, police, vous…)",
+        "en": "Grouped by kind of help (health, police, you…)"
+      }
     ],
     "npmPackage": "@portaki/module-emergency-contacts",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-emergency-contacts"

@@ -15,7 +15,10 @@
   },
   "examples": [
     {
-      "title": { "fr": "Parcours sur téléphone", "en": "Phone-friendly flow" },
+      "title": {
+        "fr": "Parcours sur téléphone",
+        "en": "Phone-friendly flow"
+      },
       "description": {
         "fr": "Questions courtes, validation douce, pensé pour être lu en voiture ou en chemin.",
         "en": "Short questions, gentle validation, easy to complete on the go."
@@ -31,11 +34,19 @@
   },
   "icon": "clipboard-list",
   "type": "official",
-  "tags": ["form", "pre-arrival", "guest", "onboarding"],
+  "tags": [
+    "form",
+    "pre-arrival",
+    "guest",
+    "onboarding"
+  ],
   "portakiVersionMin": "1.0.0",
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
-  "screenshots": [],
+  "screenshots": [
+    "modules/pre-arrival-form/screenshots/guest.png",
+    "modules/pre-arrival-form/screenshots/host.png"
+  ],
   "config": {
     "defaults": {},
     "fields": []

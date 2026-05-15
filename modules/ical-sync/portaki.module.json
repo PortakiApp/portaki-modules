@@ -15,7 +15,10 @@
   },
   "examples": [
     {
-      "title": { "fr": "Export Airbnb", "en": "Airbnb export" },
+      "title": {
+        "fr": "Export Airbnb",
+        "en": "Airbnb export"
+      },
       "description": {
         "fr": "Gardez le lien secret comme un mot de passe ; seul votre compte hôte doit le voir.",
         "en": "Treat the link like a password; only your host account should see it."
@@ -31,11 +34,19 @@
   },
   "icon": "calendar-range",
   "type": "official",
-  "tags": ["ical", "airbnb", "calendar", "host"],
+  "tags": [
+    "ical",
+    "airbnb",
+    "calendar",
+    "host"
+  ],
   "portakiVersionMin": "1.0.0",
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
-  "screenshots": [],
+  "screenshots": [
+    "modules/ical-sync/screenshots/guest.png",
+    "modules/ical-sync/screenshots/host.png"
+  ],
   "config": {
     "defaults": {},
     "globalAlert": {
@@ -48,7 +59,10 @@
     "fields": [
       {
         "key": "ical_url_primary",
-        "label": { "fr": "Lien du calendrier principal", "en": "Primary calendar link" },
+        "label": {
+          "fr": "Lien du calendrier principal",
+          "en": "Primary calendar link"
+        },
         "description": {
           "fr": "URL HTTPS du fichier .ics (ex. export Airbnb).",
           "en": "HTTPS URL of the .ics file (e.g. Airbnb export)."
@@ -58,7 +72,10 @@
       },
       {
         "key": "ical_url_secondary",
-        "label": { "fr": "Second calendrier (optionnel)", "en": "Second calendar (optional)" },
+        "label": {
+          "fr": "Second calendrier (optionnel)",
+          "en": "Second calendar (optional)"
+        },
         "description": {
           "fr": "Autre lien .ics (Booking, Abritel, etc.).",
           "en": "Another .ics link (Booking, Vrbo, etc.)."
@@ -74,8 +91,14 @@
       "en": "Airbnb and other calendars: a simple view for the host."
     },
     "highlights": [
-      { "fr": "Pensé pour l’organisation du logement, pas pour le voyageur", "en": "Built for property planning, not the guest-facing stay guide" },
-      { "fr": "Mise à jour à partir des liens que vous fournissez", "en": "Refreshes from the links you provide" }
+      {
+        "fr": "Pensé pour l’organisation du logement, pas pour le voyageur",
+        "en": "Built for property planning, not the guest-facing stay guide"
+      },
+      {
+        "fr": "Mise à jour à partir des liens que vous fournissez",
+        "en": "Refreshes from the links you provide"
+      }
     ],
     "npmPackage": "@portaki/module-ical-sync",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-ical-sync",

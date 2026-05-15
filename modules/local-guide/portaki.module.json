@@ -15,7 +15,10 @@
   },
   "examples": [
     {
-      "title": { "fr": "Lien vers Maps", "en": "Maps link" },
+      "title": {
+        "fr": "Lien vers Maps",
+        "en": "Maps link"
+      },
       "description": {
         "fr": "Collez un lien qui ouvre directement l’itinéraire sur le téléphone du voyageur.",
         "en": "Paste a link that opens directions straight on the guest’s phone."
@@ -31,11 +34,19 @@
   },
   "icon": "map-pin",
   "type": "official",
-  "tags": ["local", "map", "guest", "tips"],
+  "tags": [
+    "local",
+    "map",
+    "guest",
+    "tips"
+  ],
   "portakiVersionMin": "1.0.0",
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
-  "screenshots": [],
+  "screenshots": [
+    "modules/local-guide/screenshots/guest.png",
+    "modules/local-guide/screenshots/host.png"
+  ],
   "config": {
     "defaults": {},
     "globalAlert": {
@@ -49,7 +60,10 @@
     "fields": [
       {
         "key": "spots_json",
-        "label": { "fr": "Lieux et liens", "en": "Places and links" },
+        "label": {
+          "fr": "Lieux et liens",
+          "en": "Places and links"
+        },
         "description": {
           "fr": "Utilisez le modèle de la documentation du module (GitHub, branche main) : une ligne par adresse avec titre, lien et remarque optionnelle.",
           "en": "Use the template in the module docs (GitHub, main branch): one entry per place with title, link, and optional remark."
@@ -60,7 +74,10 @@
       },
       {
         "key": "disclaimer",
-        "label": { "fr": "Rappel pour les voyageurs (optionnel)", "en": "Reminder for guests (optional)" },
+        "label": {
+          "fr": "Rappel pour les voyageurs (optionnel)",
+          "en": "Reminder for guests (optional)"
+        },
         "description": {
           "fr": "Ex. « Horaires à confirmer sur place ».",
           "en": "e.g. “Please confirm hours on site.”"

@@ -15,7 +15,10 @@
   },
   "examples": [
     {
-      "title": { "fr": "Fiches par appareil", "en": "One card per appliance" },
+      "title": {
+        "fr": "Fiches par appareil",
+        "en": "One card per appliance"
+      },
       "description": {
         "fr": "Titre clair, deux lignes d’astuce, bouton vers la notice : ce qu’il faut en cuisine ou buanderie.",
         "en": "Clear title, two tip lines, manual button—what guests need in kitchen or laundry."
@@ -31,11 +34,20 @@
   },
   "icon": "plug",
   "type": "official",
-  "tags": ["howto", "devices", "home", "guest", "manual"],
+  "tags": [
+    "howto",
+    "devices",
+    "home",
+    "guest",
+    "manual"
+  ],
   "portakiVersionMin": "1.0.0",
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
-  "screenshots": [],
+  "screenshots": [
+    "modules/appliances/screenshots/guest.png",
+    "modules/appliances/screenshots/host.png"
+  ],
   "config": {
     "defaults": {},
     "globalAlert": {
@@ -49,7 +61,10 @@
     "fields": [
       {
         "key": "devices_json",
-        "label": { "fr": "Liste des appareils", "en": "Appliance list" },
+        "label": {
+          "fr": "Liste des appareils",
+          "en": "Appliance list"
+        },
         "description": {
           "fr": "Même modèle que dans la doc du module : un bloc par appareil avec titre bilingue, conseils et lien notice.",
           "en": "Same shape as in the module docs: one block per appliance with bilingual title, tips, and manual link."
@@ -60,7 +75,10 @@
       },
       {
         "key": "safety_notice",
-        "label": { "fr": "Consignes de sécurité", "en": "Safety notice" },
+        "label": {
+          "fr": "Consignes de sécurité",
+          "en": "Safety notice"
+        },
         "description": {
           "fr": "Optionnel — affiché en haut de la page pour les voyageurs.",
           "en": "Optional—shown at the top for guests."

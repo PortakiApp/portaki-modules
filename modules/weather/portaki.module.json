@@ -15,7 +15,10 @@
   },
   "examples": [
     {
-      "title": { "fr": "Trois jours d’un coup", "en": "Three days at a glance" },
+      "title": {
+        "fr": "Trois jours d’un coup",
+        "en": "Three days at a glance"
+      },
       "description": {
         "fr": "Idéal pour un week-end ou une courte semaine sans changer d’écran.",
         "en": "Handy for a weekend or short stay without flipping screens."
@@ -31,11 +34,17 @@
   },
   "icon": "cloud-sun",
   "type": "official",
-  "tags": ["weather", "forecast"],
+  "tags": [
+    "weather",
+    "forecast"
+  ],
   "portakiVersionMin": "1.0.0",
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
-  "screenshots": [],
+  "screenshots": [
+    "modules/weather/screenshots/guest.png",
+    "modules/weather/screenshots/host.png"
+  ],
   "config": {
     "defaults": {},
     "globalAlert": {
@@ -49,7 +58,10 @@
     "fields": [
       {
         "key": "latitude",
-        "label": { "fr": "Latitude (optionnel)", "en": "Latitude (optional)" },
+        "label": {
+          "fr": "Latitude (optionnel)",
+          "en": "Latitude (optional)"
+        },
         "description": {
           "fr": "Pour cadrer la météo sur un point précis ; sinon position du logement.",
           "en": "To pin the forecast to a spot; otherwise the property location."
@@ -59,7 +71,10 @@
       },
       {
         "key": "longitude",
-        "label": { "fr": "Longitude (optionnel)", "en": "Longitude (optional)" },
+        "label": {
+          "fr": "Longitude (optionnel)",
+          "en": "Longitude (optional)"
+        },
         "description": {
           "fr": "À utiliser avec la latitude si vous voulez un secteur différent du bien.",
           "en": "Use with latitude if you want a different area than the property."
@@ -69,18 +84,27 @@
       },
       {
         "key": "location_label",
-        "label": { "fr": "Titre affiché", "en": "Title shown" },
+        "label": {
+          "fr": "Titre affiché",
+          "en": "Title shown"
+        },
         "description": {
           "fr": "Ex. « Vue mer · secteur Mandelieu ».",
           "en": "e.g. “Sea view · Mandelieu area”."
         },
         "type": "text",
         "required": false,
-        "placeholder": { "fr": "Secteur météo", "en": "Forecast area" }
+        "placeholder": {
+          "fr": "Secteur météo",
+          "en": "Forecast area"
+        }
       },
       {
         "key": "forecast_days",
-        "label": { "fr": "Nombre de jours (1 à 7)", "en": "Number of days (1–7)" },
+        "label": {
+          "fr": "Nombre de jours (1 à 7)",
+          "en": "Number of days (1–7)"
+        },
         "description": {
           "fr": "Combien de jours les voyageurs voient d’un coup (maximum 7).",
           "en": "How many days guests see at once (up to 7)."
@@ -93,7 +117,10 @@
       },
       {
         "key": "intro",
-        "label": { "fr": "Message d’accroche (optionnel)", "en": "Short intro (optional)" },
+        "label": {
+          "fr": "Message d’accroche (optionnel)",
+          "en": "Short intro (optional)"
+        },
         "description": {
           "fr": "Une phrase au-dessus des températures (ex. « Prévoir un coupe-vent »).",
           "en": "A line above the temperatures (e.g. “Pack a windbreaker”)."
@@ -109,8 +136,14 @@
       "en": "The next few days’ weather, readable on mobile."
     },
     "highlights": [
-      { "fr": "Jusqu’à sept jours d’affilée", "en": "Up to seven days in a row" },
-      { "fr": "Repli automatique sur l’emplacement du logement", "en": "Falls back to the property location" }
+      {
+        "fr": "Jusqu’à sept jours d’affilée",
+        "en": "Up to seven days in a row"
+      },
+      {
+        "fr": "Repli automatique sur l’emplacement du logement",
+        "en": "Falls back to the property location"
+      }
     ],
     "npmPackage": "@portaki/module-weather",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-weather"

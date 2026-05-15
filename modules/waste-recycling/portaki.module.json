@@ -15,7 +15,10 @@
   },
   "examples": [
     {
-      "title": { "fr": "Emballages et verre", "en": "Recycling and glass" },
+      "title": {
+        "fr": "Emballages et verre",
+        "en": "Recycling and glass"
+      },
       "description": {
         "fr": "Deux fiches séparées : une pour le bac jaune, une pour le verre, avec des exemples concrets.",
         "en": "Two separate cards—one for recycling, one for glass—with concrete examples."
@@ -31,11 +34,19 @@
   },
   "icon": "recycle",
   "type": "official",
-  "tags": ["waste", "recycling", "guest", "city"],
+  "tags": [
+    "waste",
+    "recycling",
+    "guest",
+    "city"
+  ],
   "portakiVersionMin": "1.0.0",
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
-  "screenshots": [],
+  "screenshots": [
+    "modules/waste-recycling/screenshots/guest.png",
+    "modules/waste-recycling/screenshots/host.png"
+  ],
   "config": {
     "defaults": {},
     "globalAlert": {
@@ -49,7 +60,10 @@
     "fields": [
       {
         "key": "bins_json",
-        "label": { "fr": "Bacs et consignes", "en": "Bins and instructions" },
+        "label": {
+          "fr": "Bacs et consignes",
+          "en": "Bins and instructions"
+        },
         "description": {
           "fr": "Utilisez le modèle de la documentation (GitHub, branche main) : un bloc par type de bac avec exemples en français et en anglais.",
           "en": "Use the template in the docs (GitHub, main branch): one block per bin type with FR/EN examples."
@@ -60,7 +74,10 @@
       },
       {
         "key": "collection_schedule",
-        "label": { "fr": "Jours de collecte (optionnel)", "en": "Collection days (optional)" },
+        "label": {
+          "fr": "Jours de collecte (optionnel)",
+          "en": "Collection days (optional)"
+        },
         "description": {
           "fr": "Texte libre : « Poubelles jaunes le mardi », lien vers la commune, etc.",
           "en": "Free text: “Yellow bins on Tuesdays”, link to the town site, etc."

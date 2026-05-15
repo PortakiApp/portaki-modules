@@ -15,7 +15,10 @@
   },
   "examples": [
     {
-      "title": { "fr": "Parking puis hall", "en": "Parking then lobby" },
+      "title": {
+        "fr": "Parking puis hall",
+        "en": "Parking then lobby"
+      },
       "description": {
         "fr": "D’abord la place de parking, ensuite la porte avec le digicode — dans l’ordre où on marche.",
         "en": "First the parking spot, then the door with the code—in walk order."
@@ -31,11 +34,18 @@
   },
   "icon": "car-front",
   "type": "official",
-  "tags": ["access", "parking", "arrival"],
+  "tags": [
+    "access",
+    "parking",
+    "arrival"
+  ],
   "portakiVersionMin": "1.0.0",
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
-  "screenshots": [],
+  "screenshots": [
+    "modules/access-guide/screenshots/guest.png",
+    "modules/access-guide/screenshots/host.png"
+  ],
   "config": {
     "defaults": {},
     "globalAlert": {
@@ -49,7 +59,10 @@
     "fields": [
       {
         "key": "steps_json",
-        "label": { "fr": "Étapes jusqu’au logement", "en": "Steps to the stay" },
+        "label": {
+          "fr": "Étapes jusqu’au logement",
+          "en": "Steps to the stay"
+        },
         "description": {
           "fr": "Copiez le modèle depuis la documentation du module (GitHub, branche main) et remplacez par vos consignes réelles.",
           "en": "Copy the template from the module docs (GitHub, main branch) and replace with your real instructions."
@@ -60,7 +73,10 @@
       },
       {
         "key": "parking_map_url",
-        "label": { "fr": "Lien vers une carte du parking", "en": "Parking map link" },
+        "label": {
+          "fr": "Lien vers une carte du parking",
+          "en": "Parking map link"
+        },
         "description": {
           "fr": "Google Maps, Street View ou plan annoté pour repérer l’entrée ou la place.",
           "en": "Google Maps, Street View, or an annotated plan to find the entrance or spot."
@@ -70,7 +86,10 @@
       },
       {
         "key": "arrival_video_url",
-        "label": { "fr": "Vidéo « comment j’arrive » (optionnel)", "en": "“How I get in” video (optional)" },
+        "label": {
+          "fr": "Vidéo « comment j’arrive » (optionnel)",
+          "en": "“How I get in” video (optional)"
+        },
         "description": {
           "fr": "Lien YouTube ou autre : un trajet filmé rassure souvent plus qu’un long texte.",
           "en": "YouTube or similar—a filmed walkthrough often reassures more than long text."
@@ -80,7 +99,10 @@
       },
       {
         "key": "global_note",
-        "label": { "fr": "Note générale (optionnel)", "en": "General note (optional)" },
+        "label": {
+          "fr": "Note générale (optionnel)",
+          "en": "General note (optional)"
+        },
         "description": {
           "fr": "Ex. « Sonnette « Martin » au hall ».",
           "en": "e.g. “Ring ‘Martin’ at the lobby.”"
@@ -96,8 +118,14 @@
       "en": "From parking to the door—without getting lost."
     },
     "highlights": [
-      { "fr": "Étapes numérotées pour le voyageur", "en": "Numbered steps for guests" },
-      { "fr": "Carte ou vidéo en complément", "en": "Map or video as backup" }
+      {
+        "fr": "Étapes numérotées pour le voyageur",
+        "en": "Numbered steps for guests"
+      },
+      {
+        "fr": "Carte ou vidéo en complément",
+        "en": "Map or video as backup"
+      }
     ],
     "npmPackage": "@portaki/module-access-guide",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-access-guide"

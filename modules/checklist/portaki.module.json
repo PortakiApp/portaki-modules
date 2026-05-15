@@ -15,7 +15,10 @@
   },
   "examples": [
     {
-      "title": { "fr": "Barre de progression", "en": "Progress at a glance" },
+      "title": {
+        "fr": "Barre de progression",
+        "en": "Progress at a glance"
+      },
       "description": {
         "fr": "Le voyageur voit ce qu’il reste à faire avant de partir l’esprit tranquille.",
         "en": "Guests see what’s left before they leave with peace of mind."
@@ -31,11 +34,19 @@
   },
   "icon": "list-checks",
   "type": "official",
-  "tags": ["checklist", "departure", "guest", "tasks"],
+  "tags": [
+    "checklist",
+    "departure",
+    "guest",
+    "tasks"
+  ],
   "portakiVersionMin": "1.0.0",
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
-  "screenshots": [],
+  "screenshots": [
+    "modules/checklist/screenshots/guest.png",
+    "modules/checklist/screenshots/host.png"
+  ],
   "config": {
     "defaults": {},
     "fields": []

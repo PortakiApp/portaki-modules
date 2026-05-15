@@ -15,7 +15,10 @@
   },
   "examples": [
     {
-      "title": { "fr": "Liste des départs", "en": "Departures list" },
+      "title": {
+        "fr": "Liste des départs",
+        "en": "Departures list"
+      },
       "description": {
         "fr": "Heure, direction et voie sur une ligne lisible pour quelqu’un qui court prendre un train.",
         "en": "Time, direction, and platform on one line for someone rushing to a train."
@@ -31,11 +34,19 @@
   },
   "icon": "train-front",
   "type": "official",
-  "tags": ["transport", "sncf", "train", "navitia"],
+  "tags": [
+    "transport",
+    "sncf",
+    "train",
+    "navitia"
+  ],
   "portakiVersionMin": "1.0.0",
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
-  "screenshots": [],
+  "screenshots": [
+    "modules/train/screenshots/guest.png",
+    "modules/train/screenshots/host.png"
+  ],
   "config": {
     "defaults": {
       "navitia_api_key": "",

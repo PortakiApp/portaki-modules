@@ -15,7 +15,10 @@
   },
   "examples": [
     {
-      "title": { "fr": "Carte + liste", "en": "Map + list" },
+      "title": {
+        "fr": "Carte + liste",
+        "en": "Map + list"
+      },
       "description": {
         "fr": "Repères sur la carte et liste des prochaines idées de sortie.",
         "en": "Map pins plus a list of upcoming ideas."
@@ -31,11 +34,19 @@
   },
   "icon": "calendar-days",
   "type": "official",
-  "tags": ["events", "openagenda", "culture", "map"],
+  "tags": [
+    "events",
+    "openagenda",
+    "culture",
+    "map"
+  ],
   "portakiVersionMin": "1.0.0",
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
-  "screenshots": [],
+  "screenshots": [
+    "modules/events/screenshots/guest.png",
+    "modules/events/screenshots/host.png"
+  ],
   "config": {
     "defaults": {
       "openagenda_api_key": ""

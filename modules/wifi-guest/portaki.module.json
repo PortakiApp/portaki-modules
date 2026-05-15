@@ -15,7 +15,10 @@
   },
   "examples": [
     {
-      "title": { "fr": "Deux noms de réseau", "en": "Two network names" },
+      "title": {
+        "fr": "Deux noms de réseau",
+        "en": "Two network names"
+      },
       "description": {
         "fr": "Indiquez dans l’astuce lequel choisir au fond du jardin ou à l’étage.",
         "en": "Use the hint to say which network works at the far end of the garden or upstairs."
@@ -31,11 +34,18 @@
   },
   "icon": "wifi",
   "type": "official",
-  "tags": ["wifi", "network", "guest"],
+  "tags": [
+    "wifi",
+    "network",
+    "guest"
+  ],
   "portakiVersionMin": "1.0.0",
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
-  "screenshots": [],
+  "screenshots": [
+    "modules/wifi-guest/screenshots/guest.png",
+    "modules/wifi-guest/screenshots/host.png"
+  ],
   "config": {
     "defaults": {},
     "globalAlert": {
@@ -48,18 +58,27 @@
     "fields": [
       {
         "key": "ssid",
-        "label": { "fr": "Nom du réseau Wi‑Fi", "en": "Wi‑Fi network name" },
+        "label": {
+          "fr": "Nom du réseau Wi‑Fi",
+          "en": "Wi‑Fi network name"
+        },
         "description": {
           "fr": "Le nom que les voyageurs choisissent dans la liste des réseaux (ex. Villa-Guest).",
           "en": "The name guests pick from the Wi‑Fi list (e.g. Villa-Guest)."
         },
         "type": "text",
         "required": true,
-        "placeholder": { "fr": "MonLogement-Guest", "en": "MyPlace-Guest" }
+        "placeholder": {
+          "fr": "MonLogement-Guest",
+          "en": "MyPlace-Guest"
+        }
       },
       {
         "key": "password",
-        "label": { "fr": "Mot de passe Wi‑Fi", "en": "Wi‑Fi password" },
+        "label": {
+          "fr": "Mot de passe Wi‑Fi",
+          "en": "Wi‑Fi password"
+        },
         "description": {
           "fr": "Stocké de façon sécurisée côté Portaki ; affiché aux voyageurs dans l’écran du module.",
           "en": "Stored securely by Portaki; shown to guests inside this module’s screen."
@@ -69,7 +88,10 @@
       },
       {
         "key": "band_hint",
-        "label": { "fr": "Astuce réseau (optionnel)", "en": "Network hint (optional)" },
+        "label": {
+          "fr": "Astuce réseau (optionnel)",
+          "en": "Network hint (optional)"
+        },
         "description": {
           "fr": "Ex. « Utilisez le réseau “…-Guest” au fond du jardin ».",
           "en": "e.g. “Use the ‘…-Guest’ network at the far end of the garden.”"
@@ -83,7 +105,10 @@
       },
       {
         "key": "connection_steps",
-        "label": { "fr": "Étapes pour se connecter (optionnel)", "en": "How to connect (optional)" },
+        "label": {
+          "fr": "Étapes pour se connecter (optionnel)",
+          "en": "How to connect (optional)"
+        },
         "description": {
           "fr": "Page web à valider, bouton sur la box, mot de passe sur une étiquette… expliquez en deux phrases.",
           "en": "Web page to confirm, button on the router, password on a sticker—explain in a couple of sentences."
