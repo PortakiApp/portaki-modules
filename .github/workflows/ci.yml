@@ -16,9 +16,8 @@ permissions:
   contents: read
   packages: read
 
-# Publication npm / Maven Central : jobs publish-* en fin de workflow (push main uniquement),
-# basés sur scripts/registry-publish.mjs (semver local > registry). Plus de workflow_run séparé
-# pour la publication automatique — voir modules-release-main.yml (dispatch manuel, release GitHub).
+# Publication npm / Maven Central : jobs publish-* (push main, repo PortakiApp/portaki-modules),
+# via scripts/registry-publish.mjs (semver local > registry).
 
 jobs:
   discover-java:
@@ -34,8 +33,8 @@ jobs:
       - id: set
         run: bash .github/scripts/discover-java-backend-matrix.sh ci >> "$GITHUB_OUTPUT"
 
-  node-workspace:
-    name: node-workspace
+  workspace-assert-file-deps:
+    name: "Node — assert (no file: deps)"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -50,8 +49,34 @@ jobs:
       - name: Assert workspace has no file-protocol dependencies
         run: pnpm assert-no-file-deps
 
+  workspace-validate-manifests:
+    name: "Node — validate manifests"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm workspace
+        uses: PortakiApp/portaki-sdk/.github/actions/pnpm-workspace-setup@main
+        with:
+          node-version: "22"
+          pnpm-version: "9.15.4"
+
       - name: Validate module manifests
         run: pnpm validate:modules
+
+  workspace-lint:
+    name: "Node — lint"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm workspace
+        uses: PortakiApp/portaki-sdk/.github/actions/pnpm-workspace-setup@main
+        with:
+          node-version: "22"
+          pnpm-version: "9.15.4"
 
       - name: Lint (workspace)
         run: pnpm lint
@@ -91,13 +116,20 @@ jobs:
 
   publish-npm-registry:
     name: Publish npm (semver gate)
-    needs: [node-workspace, discover-java, java-backend]
+    needs:
+      - discover-java
+      - java-backend
+      - workspace-assert-file-deps
+      - workspace-validate-manifests
+      - workspace-lint
     if: |
       always() &&
       github.repository == 'PortakiApp/portaki-modules' &&
       github.ref == 'refs/heads/main' &&
       github.event_name == 'push' &&
-      needs.node-workspace.result == 'success' &&
+      needs.workspace-assert-file-deps.result == 'success' &&
+      needs.workspace-validate-manifests.result == 'success' &&
+      needs.workspace-lint.result == 'success' &&
       needs.discover-java.result == 'success' &&
       (needs.java-backend.result == 'success' || needs.java-backend.result == 'skipped')
     runs-on: ubuntu-latest
@@ -115,21 +147,25 @@ jobs:
           pnpm-version: "9.15.4"
           registry-url: https://registry.npmjs.org
 
-      - name: Assert workspace has no file-protocol dependencies
-        run: pnpm assert-no-file-deps
-
       - name: Publish @portaki/module-* when local version > npm
         run: pnpm registry-publish:npm
 
   publish-maven-registry:
     name: Publish Maven Central (semver gate)
-    needs: [node-workspace, discover-java, java-backend]
+    needs:
+      - discover-java
+      - java-backend
+      - workspace-assert-file-deps
+      - workspace-validate-manifests
+      - workspace-lint
     if: |
       always() &&
       github.repository == 'PortakiApp/portaki-modules' &&
       github.ref == 'refs/heads/main' &&
       github.event_name == 'push' &&
-      needs.node-workspace.result == 'success' &&
+      needs.workspace-assert-file-deps.result == 'success' &&
+      needs.workspace-validate-manifests.result == 'success' &&
+      needs.workspace-lint.result == 'success' &&
       needs.discover-java.result == 'success' &&
       (needs.java-backend.result == 'success' || needs.java-backend.result == 'skipped')
     runs-on: ubuntu-latest

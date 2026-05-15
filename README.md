@@ -84,7 +84,7 @@ modules/
 
 ## CI & publication
 
-- **Checks** : [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) — lint, validation des manifestes, `mvn verify` sur **tous** les `modules/*/backend` découverts par script, puis sur un **push `main`** (dépôt `PortakiApp/portaki-modules` uniquement) :
+- **Checks** : [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) — workflow **Checks** : découverte des backends Java, **trois jobs Node en parallèle** (`assert-no-file-deps`, `validate:modules`, `lint`), matrice `mvn verify` sur les `modules/*/backend`, puis sur un **push `main`** (`PortakiApp/portaki-modules`) publication semver npm / Maven (voir ci-dessous).
   - **npm** : `pnpm registry-publish:npm` — chaque `@portaki/module-*` est publié seulement si `package.json#version` est **strictement supérieure** (semver) à la dernière version sur npmjs.
   - **Maven** : `pnpm registry-publish:maven` — chaque backend est déployé sur Central seulement si la version du `pom.xml` est **strictement supérieure** à `<latest>` dans `maven-metadata.xml` (secrets OSSRH + GPG requis ; sinon le job skip avec une notice).
 - **Manuel** : [`.github/workflows/publish-npm-packages.yml`](./.github/workflows/publish-npm-packages.yml) (npm ciblé), [`.github/workflows/publish-maven-central.yml`](./.github/workflows/publish-maven-central.yml) (tous les JAR sans gate semver), [`.github/workflows/modules-release-main.yml`](./.github/workflows/modules-release-main.yml) (release GitHub + npm version unifiée historique).

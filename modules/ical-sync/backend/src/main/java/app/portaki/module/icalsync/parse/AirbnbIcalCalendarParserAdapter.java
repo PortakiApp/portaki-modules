@@ -2,6 +2,7 @@ package app.portaki.module.icalsync.parse;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import app.portaki.module.icalsync.calendar.IcalCalendarParserPort;
 import app.portaki.module.icalsync.calendar.IcalProviderType;
@@ -10,7 +11,8 @@ import app.portaki.module.icalsync.internal.IcalTextParser;
 
 /**
  * Parseur orienté flux Airbnb : même extraction VEVENT que le générique, avec normalisation minimale du corps
- * (BOM UTF-8) et filtrage des séjours annulés.
+ * (BOM UTF-8). Exclut les blocs « disponibilité » sans réservation (ex. SUMMARY « Airbnb (Not available) »). Conserve
+ * les séjours (ex. « Reserved » / « Réservé ») ainsi que les autres VEVENT non annulés.
  */
 public final class AirbnbIcalCalendarParserAdapter implements IcalCalendarParserPort {
 
@@ -28,7 +30,7 @@ public final class AirbnbIcalCalendarParserAdapter implements IcalCalendarParser
             if (ev.cancelled()) {
                 continue;
             }
-            if (isAirbnbReservedBlock(ev)) {
+            if (isAirbnbAvailabilityNoise(ev)) {
                 continue;
             }
             out.add(ev);
@@ -44,15 +46,15 @@ public final class AirbnbIcalCalendarParserAdapter implements IcalCalendarParser
     }
 
     /**
-     * Airbnb exporte les nuits fermées / indisponibles comme des VEVENT dont le SUMMARY vaut « Reserved »
-     * (ou variante) — ce ne sont pas des réservations à importer.
+     * Blocs calendrier Airbnb sans réservation associée (fermetures / indisponibilités), à ne pas traiter comme un
+     * séjour importé.
      */
-    private static boolean isAirbnbReservedBlock(ParsedCalendarEvent ev) {
+    private static boolean isAirbnbAvailabilityNoise(ParsedCalendarEvent ev) {
         String s = ev.summary();
         if (s == null) {
             return false;
         }
-        String t = s.trim();
-        return "reserved".equalsIgnoreCase(t) || "réservé".equalsIgnoreCase(t);
+        String t = s.trim().toLowerCase(Locale.ROOT);
+        return t.contains("not available") || t.contains("non disponible");
     }
 }
