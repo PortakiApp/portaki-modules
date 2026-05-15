@@ -7,11 +7,14 @@
     "lint": "pnpm -r lint",
     "assert-no-file-deps": "node scripts/assert-no-file-deps.mjs",
     "validate:modules": "node scripts/validate-manifests.mjs",
-    "readme:inject-previews": "node scripts/inject-readme-previews.mjs"
+    "readme:inject-previews": "node scripts/inject-readme-previews.mjs",
+    "registry-publish:npm": "node scripts/registry-publish.mjs npm",
+    "registry-publish:maven": "node scripts/registry-publish.mjs maven"
   },
   "devDependencies": {
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
-    "lucide-react": "^0.468.0"
+    "lucide-react": "^0.468.0",
+    "semver": "^7.7.1"
   }
 }

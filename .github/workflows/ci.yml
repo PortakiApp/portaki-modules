@@ -16,6 +16,10 @@ permissions:
   contents: read
   packages: read
 
+# Publication npm / Maven Central : jobs publish-* en fin de workflow (push main uniquement),
+# basés sur scripts/registry-publish.mjs (semver local > registry). Plus de workflow_run séparé
+# pour la publication automatique — voir modules-release-main.yml (dispatch manuel, release GitHub).
+
 jobs:
   discover-java:
     name: Discover Java backends
@@ -84,3 +88,108 @@ jobs:
           github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name != github.repository
         run: echo "Java backend checks skipped (fork PR without GPR)."
+
+  publish-npm-registry:
+    name: Publish npm (semver gate)
+    needs: [node-workspace, discover-java, java-backend]
+    if: |
+      always() &&
+      github.repository == 'PortakiApp/portaki-modules' &&
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'push' &&
+      needs.node-workspace.result == 'success' &&
+      needs.discover-java.result == 'success' &&
+      (needs.java-backend.result == 'success' || needs.java-backend.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm workspace
+        uses: PortakiApp/portaki-sdk/.github/actions/pnpm-workspace-setup@main
+        with:
+          node-version: "22"
+          pnpm-version: "9.15.4"
+          registry-url: https://registry.npmjs.org
+
+      - name: Assert workspace has no file-protocol dependencies
+        run: pnpm assert-no-file-deps
+
+      - name: Publish @portaki/module-* when local version > npm
+        run: pnpm registry-publish:npm
+
+  publish-maven-registry:
+    name: Publish Maven Central (semver gate)
+    needs: [node-workspace, discover-java, java-backend]
+    if: |
+      always() &&
+      github.repository == 'PortakiApp/portaki-modules' &&
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'push' &&
+      needs.node-workspace.result == 'success' &&
+      needs.discover-java.result == 'success' &&
+      (needs.java-backend.result == 'success' || needs.java-backend.result == 'skipped')
+    runs-on: ubuntu-latest
+    env:
+      MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+      MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+      MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Skip when no Java backends
+        if: needs.discover-java.outputs.any != 'true'
+        run: echo "No modules/*/backend — skip Maven publish."
+
+      - name: Require Central + GPG secrets
+        if: needs.discover-java.outputs.any == 'true'
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          if [ -z "${MAVEN_USERNAME}" ] || [ -z "${MAVEN_PASSWORD}" ]; then
+            echo "::notice::OSSRH_USERNAME / OSSRH_TOKEN absents — skip Maven Central publish."
+            echo "has_secrets=false" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          if [ -z "${GPG_PRIVATE_KEY}" ] || [ -z "${MAVEN_GPG_PASSPHRASE}" ]; then
+            echo "::notice::GPG secrets absents — skip Maven Central publish."
+            echo "has_secrets=false" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          echo "has_secrets=true" >> "$GITHUB_ENV"
+
+      - name: Set up JDK and Maven Central
+        if: needs.discover-java.outputs.any == 'true' && env.has_secrets == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          server-id: central
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+
+      - name: Maven (GPR) + JDK — SDK pour évaluation versions
+        if: >
+          needs.discover-java.outputs.any == 'true' &&
+          env.has_secrets == 'true'
+        uses: PortakiApp/portaki-sdk/.github/actions/maven-gpr-install-java-sdk@main
+        with:
+          gpr-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup pnpm (semver script)
+        if: needs.discover-java.outputs.any == 'true' && env.has_secrets == 'true'
+        uses: PortakiApp/portaki-sdk/.github/actions/pnpm-workspace-setup@main
+        with:
+          node-version: "22"
+          pnpm-version: "9.15.4"
+
+      - name: Publish backends when local version > Central
+        if: needs.discover-java.outputs.any == 'true' && env.has_secrets == 'true'
+        run: pnpm registry-publish:maven

@@ -1,8 +1,5 @@
-# Publie les @portaki/module-* — Trusted Publishing (OIDC), comme portaki-sdk.
-# Publication groupée automatique : voir modules-release-main.yml (déclenché après **Checks** vert sur main).
-# Le SDK JS reste publié depuis portaki-sdk (job publish-npm-sdk).
-#
-# La matrice npm est dérivée des package.json sous modules/ (plus de liste figée dans le YAML).
+# Publication **manuelle** d’un paquet (ou tous) — débogage / hotfix.
+# Publication automatique semver : workflow **Checks** (`ci.yml`), job `publish-npm-registry`.
 
 name: Publish npm
 

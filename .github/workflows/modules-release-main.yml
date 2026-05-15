@@ -1,18 +1,14 @@
-# Après un **Checks** vert sur `main` : si le commit touche les chemins release, vérifie le monorepo,
-# crée une release GitHub `modules-vX.Y.Z` (notes auto depuis les PR), publie tous les `@portaki/module-*` sur npm.
+# ⚠️ Publication npm automatique : désormais dans le workflow **Checks** (`ci.yml`) après un push
+# sur `main` (semver local > npmjs). Ce fichier ne sert plus qu’à une **release GitHub** manuelle
+# (version unifiée historique) ou maintenance ponctuelle.
 #
-# Prérequis : même version dans tous les modules/*/package.json (+ pre-arrival-form/frontend) ;
-# bump cette version avant merge pour une nouvelle série.
-#
-# Publication npm ciblée : publish-npm-packages.yml (workflow_dispatch).
+# Déclenché uniquement par workflow_dispatch.
+
 name: Module release
 
 run-name: module-release-${{ github.run_id }}
 
 on:
-  workflow_run:
-    workflows: [Checks]
-    types: [completed]
   workflow_dispatch:
 
 concurrency:
@@ -38,28 +34,13 @@ jobs:
       matched: ${{ steps.paths.outputs.matched }}
     steps:
       - id: pro
-        env:
-          WR_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
-          WR_BRANCH: ${{ github.event.workflow_run.head_branch }}
-          WR_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "proceed=true" >> "$GITHUB_OUTPUT"
-            echo "head_sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if [ "${WR_CONCLUSION}" != "success" ] || [ "${WR_BRANCH}" != "main" ]; then
-            echo "proceed=false" >> "$GITHUB_OUTPUT"
-            echo "head_sha=" >> "$GITHUB_OUTPUT"
-            echo "matched=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
           echo "proceed=true" >> "$GITHUB_OUTPUT"
-          echo "head_sha=${WR_SHA}" >> "$GITHUB_OUTPUT"
+          echo "head_sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
 
-      - name: Checkout (for path filter)
-        if: steps.pro.outputs.proceed == 'true' && github.event_name == 'workflow_run'
+      - name: Checkout
+        if: steps.pro.outputs.proceed == 'true'
         uses: actions/checkout@v4
         with:
           ref: ${{ steps.pro.outputs.head_sha }}
@@ -69,21 +50,7 @@ jobs:
         if: steps.pro.outputs.proceed == 'true'
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "matched=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          matched=false
-          while IFS= read -r line; do
-            [ -z "${line}" ] && continue
-            case "${line}" in
-              modules/*|package.json|pnpm-lock.yaml|pnpm-workspace.yaml|.github/workflows/modules-release-main.yml|.github/workflows/publish-npm-packages.yml|.github/scripts/*)
-                matched=true
-                break
-                ;;
-            esac
-          done < <(git show --pretty="" --name-only HEAD)
-          echo "matched=${matched}" >> "$GITHUB_OUTPUT"
+          echo "matched=true" >> "$GITHUB_OUTPUT"
 
   verify:
     name: Verify

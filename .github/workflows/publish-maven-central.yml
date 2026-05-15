@@ -1,21 +1,13 @@
-# Publie les JAR backends (app.portaki.module:*) sur Maven Central — uniquement après un **Checks** vert sur `main**
-# (ou manuel). Même stack que portaki-sdk (OSSRH + GPG + central-publishing-maven-plugin).
-#
-# Les modules `modules/*/backend` sont découverts par script ; un job matrix déploie en parallèle
-# uniquement les modules dont les fichiers ont changé sur le commit déclencheur (ou tout si
-# workflow_dispatch / workflow modifié).
+# Déploiement **manuel** de tous les backends `modules/*/backend` sur Maven Central (sans gate semver).
+# La publication semver automatique vit dans **Checks** (`ci.yml`) via `scripts/registry-publish.mjs maven`.
 #
 # Secrets : OSSRH_USERNAME, OSSRH_TOKEN, GPG_PRIVATE_KEY, GPG_PASSPHRASE
-# Namespace `app.portaki.module` autorisé sur le Central Portal.
 
 name: Java to Central
 
 run-name: maven-central-${{ github.run_id }}
 
 on:
-  workflow_run:
-    workflows: [Checks]
-    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -41,28 +33,13 @@ jobs:
       matched: ${{ steps.paths.outputs.matched }}
     steps:
       - id: pro
-        env:
-          WR_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
-          WR_BRANCH: ${{ github.event.workflow_run.head_branch }}
-          WR_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "proceed=true" >> "$GITHUB_OUTPUT"
-            echo "head_sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if [ "${WR_CONCLUSION}" != "success" ] || [ "${WR_BRANCH}" != "main" ]; then
-            echo "proceed=false" >> "$GITHUB_OUTPUT"
-            echo "head_sha=" >> "$GITHUB_OUTPUT"
-            echo "matched=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
           echo "proceed=true" >> "$GITHUB_OUTPUT"
-          echo "head_sha=${WR_SHA}" >> "$GITHUB_OUTPUT"
+          echo "head_sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
 
-      - name: Checkout (for path filter)
-        if: steps.pro.outputs.proceed == 'true' && github.event_name == 'workflow_run'
+      - name: Checkout
+        if: steps.pro.outputs.proceed == 'true'
         uses: actions/checkout@v4
         with:
           ref: ${{ steps.pro.outputs.head_sha }}
@@ -70,23 +47,7 @@ jobs:
 
       - id: paths
         if: steps.pro.outputs.proceed == 'true'
-        run: |
-          set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "matched=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          matched=false
-          while IFS= read -r line; do
-            [ -z "${line}" ] && continue
-            case "${line}" in
-              modules/*/backend/*|.github/workflows/publish-maven-central.yml)
-                matched=true
-                break
-                ;;
-            esac
-          done < <(git show --pretty="" --name-only HEAD)
-          echo "matched=${matched}" >> "$GITHUB_OUTPUT"
+        run: echo "matched=true" >> "$GITHUB_OUTPUT"
 
   discover-maven:
     name: Discover Maven deploy matrix
