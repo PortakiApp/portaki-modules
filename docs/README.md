@@ -17,6 +17,8 @@
 | Document | Description |
 |----------|-------------|
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | npmjs (Trusted Publishing), Maven backend |
+| [MODULE_PLATFORM_ARCHITECTURE_MEMO.md](./MODULE_PLATFORM_ARCHITECTURE_MEMO.md) | Mémo long Wasm / runtime / DB / coûts / K8s (reprise discussion) |
+| [MODULE_PLATFORM_PREPARATION.md](./MODULE_PLATFORM_PREPARATION.md) | Préparation long terme (Wasm, schémas DB, runtime, coûts, règles) |
 | [MODULE_README_SCHEMA.md](./MODULE_README_SCHEMA.md) | Modèle unique des README par module (réutilisable sur le site vitrine) |
 
 ---

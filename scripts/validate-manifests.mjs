@@ -82,6 +82,14 @@ for (const dir of listModuleDirs()) {
         console.error(`[error] ${manifestPath}: version must be semver X.Y.Z`);
         failed = true;
     }
+    if (data.requiresHostSdk != null && data.requiresHostSdk !== "") {
+        if (!semver.test(data.requiresHostSdk)) {
+            console.error(
+                `[error] ${manifestPath}: requiresHostSdk must be semver X.Y.Z (current @portaki/module-sdk in portaki-sdk/sdk/module-sdk/package.json)`,
+            );
+            failed = true;
+        }
+    }
     if (data.type === "official" && !AGPLISH.has(data.license)) {
         console.error(
             `[error] ${manifestPath}: official modules must use AGPL-3.0 (got ${data.license})`,

@@ -23,7 +23,7 @@
 
 Les sources des paquets **`@portaki/module-*`** (invité) vivent sous **`modules/`**. Chaque module déclare **`@portaki/module-sdk": "^x.y.z"`** depuis le registre public (pas de `workspace:` ni `file:`). Le manifeste **`portaki.module.json`** est lu par l’API (**portaki-api**) via GitHub Contents sur ce dépôt, dossier **`modules/`**.
 
-Le SDK **`@portaki/module-sdk`** (types, `definePortakiModule`) est publié depuis **[portaki-sdk](https://github.com/PortakiApp/portaki-sdk)** uniquement.
+Le SDK **`@portaki/module-sdk`** (types, `definePortakiModule`) est publié depuis **[portaki-sdk](https://github.com/PortakiApp/portaki-sdk)** uniquement. Feuille de route architecture (Wasm, runtime, DB, coûts) : **[docs/MODULE_PLATFORM_PREPARATION.md](docs/MODULE_PLATFORM_PREPARATION.md)**.
 
 ## Aperçus documentation
 
