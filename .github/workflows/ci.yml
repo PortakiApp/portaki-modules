@@ -17,7 +17,7 @@ permissions:
   packages: read
 
 # Publication semver : matrices décrites par .github/scripts/discover-*-publish-matrix.sh ;
-# comparaison + publish dans les steps GitHub Actions (pas de mvn/npm publish depuis Node).
+# npm ne dépend pas des jobs Java ; Maven reste après verify + découvertes coordonnées.
 
 jobs:
   discover-java:
@@ -144,8 +144,6 @@ jobs:
     name: ${{ matrix.job_label }}
     needs:
       - discover-npm-publish
-      - discover-java
-      - java-backend
       - workspace-assert-file-deps
       - workspace-validate-manifests
       - workspace-lint
@@ -157,9 +155,7 @@ jobs:
       needs.discover-npm-publish.outputs.any == 'true' &&
       needs.workspace-assert-file-deps.result == 'success' &&
       needs.workspace-validate-manifests.result == 'success' &&
-      needs.workspace-lint.result == 'success' &&
-      needs.discover-java.result == 'success' &&
-      (needs.java-backend.result == 'success' || needs.java-backend.result == 'skipped')
+      needs.workspace-lint.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: read

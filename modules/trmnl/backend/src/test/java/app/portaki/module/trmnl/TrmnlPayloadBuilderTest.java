@@ -1,4 +1,4 @@
-package dev.cyrilcolinet.portaki.module.trmnl;
+package app.portaki.module.trmnl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,7 +10,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import dev.cyrilcolinet.portaki.module.trmnl.model.DisplayMode;
+import app.portaki.module.trmnl.model.DisplayMode;
 
 import app.portaki.sdk.gateway.GatewayModuleContext;
 import app.portaki.sdk.gateway.ModuleManifestSnapshot;

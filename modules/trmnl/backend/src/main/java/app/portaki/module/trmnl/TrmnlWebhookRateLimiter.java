@@ -1,4 +1,4 @@
-package dev.cyrilcolinet.portaki.module.trmnl;
+package app.portaki.module.trmnl;
 
 import java.time.Duration;
 import java.time.Instant;

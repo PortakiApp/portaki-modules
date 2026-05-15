@@ -4,7 +4,7 @@ Module communautaire Portaki pour afficher les informations de séjour sur un é
 
 **Auteur** : [Cyril Colinet](https://github.com/cyrilcolinet) (@cyrilcolinet)  
 **Paquet npm** : `@portaki/module-trmnl`  
-**Artefact Java** : `dev.cyrilcolinet.portaki.module:trmnl-backend`  
+**Artefact Java** : `app.portaki.module:trmnl-backend`  
 **License** : MIT  
 **Portaki** : v1.0.0+
 
@@ -23,7 +23,7 @@ Sources : [PortakiApp/portaki-modules](https://github.com/PortakiApp/portaki-mod
 ## Installation
 
 1. Activez le module depuis le dashboard Portaki (**Logement → Modules → TRMNL ePaper**) lorsqu’il sera enregistré dans le catalogue.
-2. Côté Java, ajoutez la dépendance `dev.cyrilcolinet.portaki.module:trmnl-backend` et exposez un bean `TrmnlModule` (voir ci-dessous).
+2. Côté Java, ajoutez la dépendance `app.portaki.module:trmnl-backend` et exposez un bean `TrmnlModule` (voir ci-dessous).
 
 ---
 
@@ -34,6 +34,8 @@ Le SDK Portaki fournit `GatewayModuleContext` et les annotations `@PortakiModule
 Instanciation minimale :
 
 ```java
+import app.portaki.module.trmnl.TrmnlModule;
+
 TrmnlModule trmnl = TrmnlModule.createDefault();
 // puis, pour un événement donné :
 trmnl.onStayCreated(eventMap, gatewayModuleContext);

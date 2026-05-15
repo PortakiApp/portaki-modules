@@ -1,4 +1,4 @@
-package dev.cyrilcolinet.portaki.module.trmnl;
+package app.portaki.module.trmnl;
 
 import java.util.Map;
 
@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import dev.cyrilcolinet.portaki.module.trmnl.model.DisplayMode;
+import app.portaki.module.trmnl.model.DisplayMode;
 
 import app.portaki.sdk.gateway.GatewayModuleContext;
 import app.portaki.sdk.gateway.PortakiEventHandler;

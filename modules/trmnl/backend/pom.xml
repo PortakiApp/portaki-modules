@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>dev.cyrilcolinet.portaki.module</groupId>
+  <groupId>app.portaki.module</groupId>
   <artifactId>trmnl-backend</artifactId>
   <version>1.0.0</version>
   <packaging>jar</packaging>
@@ -23,8 +23,10 @@
 
   <developers>
     <developer>
-      <name>Cyril Colinet</name>
-      <url>https://github.com/cyrilcolinet</url>
+      <name>PortakiApp</name>
+      <url>https://github.com/PortakiApp</url>
+      <organization>PortakiApp</organization>
+      <organizationUrl>https://github.com/PortakiApp</organizationUrl>
     </developer>
   </developers>
 

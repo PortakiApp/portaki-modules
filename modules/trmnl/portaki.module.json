@@ -140,6 +140,6 @@
     ],
     "npmPackage": "@portaki/module-trmnl",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-trmnl",
-    "javaArtifact": "dev.cyrilcolinet.portaki.module:trmnl-backend"
+    "javaArtifact": "app.portaki.module:trmnl-backend"
   }
 }

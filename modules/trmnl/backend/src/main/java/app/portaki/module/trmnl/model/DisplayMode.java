@@ -1,4 +1,4 @@
-package dev.cyrilcolinet.portaki.module.trmnl.model;
+package app.portaki.module.trmnl.model;
 
 public enum DisplayMode {
 

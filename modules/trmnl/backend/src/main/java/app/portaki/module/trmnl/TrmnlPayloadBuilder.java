@@ -1,4 +1,4 @@
-package dev.cyrilcolinet.portaki.module.trmnl;
+package app.portaki.module.trmnl;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -8,8 +8,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-import dev.cyrilcolinet.portaki.module.trmnl.model.DisplayMode;
-import dev.cyrilcolinet.portaki.module.trmnl.model.TrmnlStayData;
+import app.portaki.module.trmnl.model.DisplayMode;
+import app.portaki.module.trmnl.model.TrmnlStayData;
 
 import app.portaki.sdk.gateway.GatewayModuleContext;
 
