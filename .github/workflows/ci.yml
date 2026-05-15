@@ -252,13 +252,23 @@ jobs:
           fi
           echo "has_secrets=true" >> "$GITHUB_ENV"
 
+      - name: Cache bucket UTC (validité 1 h)
+        if: env.has_secrets == 'true'
+        id: cache_ttl
+        run: echo "hour=$(date -u +%Y%m%d%H)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        if: env.has_secrets == 'true'
+        with:
+          path: ~/.m2/repository
+          key: m2-portaki-modules-ci-${{ runner.os }}-${{ hashFiles(format('{0}/pom.xml', matrix.java_dir)) }}-${{ steps.cache_ttl.outputs.hour }}
+
       - name: Set up JDK and Maven Central
         if: env.has_secrets == 'true'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
-          cache: maven
           server-id: central
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
