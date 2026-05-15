@@ -227,6 +227,25 @@ importers:
         specifier: ^5
         version: 5.9.3
 
+  modules/trmnl:
+    dependencies:
+      '@portaki/module-sdk':
+        specifier: 0.5.0
+        version: 0.5.0(react@19.2.6)
+      react:
+        specifier: ^19.1.0
+        version: 19.2.6
+      react-dom:
+        specifier: ^19.1.0
+        version: 19.2.6(react@19.2.6)
+    devDependencies:
+      '@types/react':
+        specifier: ^19
+        version: 19.2.14
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
   modules/waste-recycling:
     dependencies:
       '@portaki/module-sdk':
