@@ -112,7 +112,10 @@ function mavenLatestRelease(groupId, artifactId) {
   const path = `${groupId.replaceAll('.', '/')}/${artifactId}/maven-metadata.xml`
   const url = `https://repo1.maven.org/maven2/${path}`
   try {
-    const xml = execFileSync('curl', ['-fsSL', url], { encoding: 'utf8' })
+    const xml = execFileSync('curl', ['-fsSL', url], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
     const m = xml.match(/<latest>([^<]+)<\/latest>/)
     if (!m) return '0.0.0'
     const v = semver.valid(semver.coerce(m[1]))
