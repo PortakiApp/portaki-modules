@@ -85,8 +85,8 @@ modules/
 ## CI & publication
 
 - **Checks** : [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) — workflow **Checks** : découverte des backends Java, **trois jobs Node en parallèle** (`assert-no-file-deps`, `validate:modules`, `lint`), matrice `mvn verify` sur les `modules/*/backend`, puis sur un **push `main`** (`PortakiApp/portaki-modules`) publication semver npm / Maven (voir ci-dessous).
-  - **npm** : `pnpm registry-publish:npm` — chaque `@portaki/module-*` est publié seulement si `package.json#version` est **strictement supérieure** (semver) à la dernière version sur npmjs.
-  - **Maven** : `pnpm registry-publish:maven` — chaque backend est déployé sur Central seulement si la version du `pom.xml` est **strictement supérieure** à `<latest>` dans `maven-metadata.xml` (secrets OSSRH + GPG requis ; sinon le job skip avec une notice).
+  - **npm** : scripts `.github/scripts/discover-npm-publish-matrix.sh` + jobs matrix **`publish-npm-registry`** : chaque `@portaki/module-*` est publié avec `pnpm publish --filter …` seulement si `package.json#version` est **strictement supérieure** à la dernière version sur npmjs (Trusted Publishing OIDC, `id-token: write`).
+  - **Maven** : `.github/scripts/discover-maven-publish-matrix.sh` + jobs matrix **`publish-maven-registry`** : chaque backend release est déployé avec `mvn deploy -P central-deploy` seulement si la version du `pom.xml` est **strictement supérieure** à `<latest>` sur repo1.maven.org (secrets OSSRH + GPG ; sinon le job affiche une notice et ne déploie pas).
 - **Manuel** : [`.github/workflows/publish-npm-packages.yml`](./.github/workflows/publish-npm-packages.yml) (npm ciblé), [`.github/workflows/publish-maven-central.yml`](./.github/workflows/publish-maven-central.yml) (tous les JAR sans gate semver), [`.github/workflows/modules-release-main.yml`](./.github/workflows/modules-release-main.yml) (release GitHub + npm version unifiée historique).
 
 Détail : [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).
