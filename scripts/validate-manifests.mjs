@@ -28,6 +28,16 @@ const validate = ajv.compile(schema);
 
 const AGPLISH = new Set(["AGPL-3.0", "AGPL-3.0-only", "AGPL-3.0-or-later"]);
 
+/** Licences additionnelles acceptées pour les modules communautaires (hors AGPL). */
+const COMMUNITY_LICENSES = new Set([
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "MPL-2.0",
+]);
+
 function toPascalFromKebab(icon) {
     return icon
         .split("-")
@@ -72,8 +82,20 @@ for (const dir of listModuleDirs()) {
         console.error(`[error] ${manifestPath}: version must be semver X.Y.Z`);
         failed = true;
     }
-    if (!AGPLISH.has(data.license)) {
-        console.error(`[error] ${manifestPath}: license must be AGPL-3.0 (got ${data.license})`);
+    if (data.type === "official" && !AGPLISH.has(data.license)) {
+        console.error(
+            `[error] ${manifestPath}: official modules must use AGPL-3.0 (got ${data.license})`,
+        );
+        failed = true;
+    }
+    if (
+        data.type === "community" &&
+        !AGPLISH.has(data.license) &&
+        !COMMUNITY_LICENSES.has(data.license)
+    ) {
+        console.error(
+            `[error] ${manifestPath}: community license must be AGPL-3.0 or one of: ${[...COMMUNITY_LICENSES].sort().join(", ")} (got ${data.license})`,
+        );
         failed = true;
     }
     if (data.type === "official" && data.author?.name !== "Portaki") {
