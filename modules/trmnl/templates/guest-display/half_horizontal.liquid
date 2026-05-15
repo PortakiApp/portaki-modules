@@ -1,0 +1,29 @@
+<!-- trmnl: guest_display — half_horizontal -->
+<div class="layout">
+  <div class="label label--small">{{ property_name | upcase }}</div>
+
+  <div class="title" style="font-size: 24px; margin: 6px 0;">
+    {% if guest_name != "Bienvenue" %}Bonjour, {{ guest_name }} !{% else %}Bienvenue{% endif %}
+  </div>
+
+  <div style="display: flex; gap: 16px; margin-top: 10px;">
+    {% if wifi_ssid %}
+    <div>
+      <div class="label label--small">WIFI</div>
+      <div style="font-family: monospace; font-size: 13px; font-weight: 600;">{{ wifi_ssid }}</div>
+    </div>
+    {% endif %}
+
+    {% if door_code %}
+    <div>
+      <div class="label label--small">CODE</div>
+      <div style="font-family: monospace; font-size: 13px; font-weight: 600;">{{ door_code }}</div>
+    </div>
+    {% endif %}
+
+    <div>
+      <div class="label label--small">DÉPART</div>
+      <div style="font-size: 13px;">{{ checkout_date }} {{ checkout_time }}</div>
+    </div>
+  </div>
+</div>

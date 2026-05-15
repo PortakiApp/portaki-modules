@@ -1,0 +1,67 @@
+<!-- trmnl: host_dashboard — full -->
+<div class="layout layout--full">
+  <div class="columns">
+
+    <div class="column" style="width: 55%; padding-right: 16px; border-right: 1px solid #eee;">
+
+      <div class="label label--small" style="margin-bottom: 8px;">
+        {% if current_stay_guest %}EN COURS{% else %}AUCUN SÉJOUR ACTIF{% endif %}
+      </div>
+
+      {% if current_stay_guest %}
+        <div class="title" style="font-size: 22px; font-weight: 700; margin-bottom: 4px;">
+          {{ current_stay_guest }}
+        </div>
+        <div class="description" style="margin-bottom: 12px;">
+          Départ le {{ current_stay_checkout }}
+        </div>
+
+        {% if checklist_progress %}
+          <div class="label label--small" style="margin-bottom: 4px;">
+            CHECKLIST — {{ checklist_progress }}%
+          </div>
+          <div class="progress-bar">
+            <div class="progress-bar__fill" style="width: {{ checklist_progress }}%;"></div>
+          </div>
+        {% endif %}
+
+      {% else %}
+        <div class="description" style="color: #999; margin-top: 8px;">
+          Pas de voyageur en ce moment.
+        </div>
+      {% endif %}
+
+    </div>
+
+    <div class="column" style="width: 45%; padding-left: 16px;">
+
+      <div class="label label--small" style="margin-bottom: 8px;">PROCHAIN SÉJOUR</div>
+
+      {% if next_stay_guest %}
+        <div class="title" style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">
+          {{ next_stay_guest }}
+        </div>
+        <div class="description">{{ next_stay_checkin }}</div>
+        {% if next_stay_countdown_days %}
+          <div class="label label--small" style="margin-top: 6px;">
+            dans {{ next_stay_countdown_days }} jours
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="description" style="color: #999;">Aucun séjour à venir.</div>
+      {% endif %}
+
+      {% if has_alerts %}
+        <div style="margin-top: 16px; padding: 8px; border: 1px solid #000; border-radius: 4px;">
+          <div class="label label--small">⚠ {{ alerts_count }} alerte{% if alerts_count > 1 %}s{% endif %}</div>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  <div style="position: absolute; bottom: 12px; right: 12px;">
+    <span class="portaki-logo">portaki.</span>
+    <span class="label label--small" style="margin-left: 6px;">{{ property_name }}</span>
+  </div>
+</div>

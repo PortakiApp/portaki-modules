@@ -1,0 +1,16 @@
+<!-- trmnl: guest_display — quadrant -->
+<div class="layout">
+  <div class="label label--small">{{ property_name | upcase }}</div>
+
+  {% if guest_name != "Bienvenue" %}
+    <div class="title" style="font-size: 18px; margin: 4px 0;">{{ guest_name }}</div>
+  {% endif %}
+
+  {% if wifi_ssid %}
+    <div class="description" style="font-family: monospace;">{{ wifi_ssid }}</div>
+  {% endif %}
+
+  {% if door_code %}
+    <div class="description" style="font-family: monospace;">{{ door_code }}</div>
+  {% endif %}
+</div>

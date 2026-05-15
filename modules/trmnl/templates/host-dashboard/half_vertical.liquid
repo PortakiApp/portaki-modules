@@ -1,0 +1,26 @@
+<!-- trmnl: host_dashboard — half_vertical (bande latérale) -->
+<div class="layout" style="display: flex; flex-direction: column; gap: 10px;">
+  <div class="label label--small">{{ property_name | upcase }}</div>
+
+  {% if current_stay_guest %}
+    <div>
+      <div class="label label--small">EN COURS</div>
+      <div class="title" style="font-size: 16px;">{{ current_stay_guest }}</div>
+      <div class="description">{{ current_stay_checkout }}</div>
+    </div>
+  {% endif %}
+
+  {% if next_stay_guest %}
+    <div>
+      <div class="label label--small">SUIVANT</div>
+      <div class="title" style="font-size: 15px;">{{ next_stay_guest }}</div>
+      <div class="description">{{ next_stay_checkin }}</div>
+    </div>
+  {% endif %}
+
+  {% if checklist_progress %}
+    <div class="progress-bar" style="margin-top: 4px;">
+      <div class="progress-bar__fill" style="width: {{ checklist_progress }}%;"></div>
+    </div>
+  {% endif %}
+</div>

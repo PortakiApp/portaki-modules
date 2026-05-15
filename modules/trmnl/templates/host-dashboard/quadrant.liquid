@@ -1,0 +1,18 @@
+<!-- trmnl: host_dashboard — quadrant -->
+<div class="layout">
+  <div class="label label--small">{{ property_name | upcase }}</div>
+
+  {% if current_stay_guest %}
+    <div class="title" style="font-size: 16px; margin: 4px 0;">{{ current_stay_guest }}</div>
+    <div class="description">→ {{ current_stay_checkout }}</div>
+  {% elsif next_stay_guest %}
+    <div class="title" style="font-size: 16px; margin: 4px 0;">{{ next_stay_guest }}</div>
+    <div class="description">J-{{ next_stay_countdown_days }}</div>
+  {% else %}
+    <div class="description" style="color: #999;">Aucun séjour</div>
+  {% endif %}
+
+  {% if has_alerts %}
+    <div class="label label--small" style="margin-top: 6px;">⚠ {{ alerts_count }}</div>
+  {% endif %}
+</div>

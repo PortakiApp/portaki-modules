@@ -1,0 +1,145 @@
+{
+  "$schema": "https://portaki.app/schemas/module.v1.json",
+  "id": "trmnl",
+  "name": {
+    "fr": "TRMNL ePaper",
+    "en": "TRMNL ePaper"
+  },
+  "description": {
+    "fr": "Affiche les informations de séjour Portaki sur un écran ePaper TRMNL. Dashboard hôte ou affichage dans le logement.",
+    "en": "Displays Portaki stay information on a TRMNL ePaper screen. Host dashboard or in-property guest display."
+  },
+  "version": "1.0.0",
+  "author": {
+    "name": "Cyril Colinet",
+    "url": "https://github.com/cyrilcolinet",
+    "type": "community"
+  },
+  "icon": "monitor",
+  "type": "community",
+  "tags": ["trmnl", "epaper", "display", "dashboard", "iot"],
+  "portakiVersionMin": "1.0.0",
+  "license": "MIT",
+  "repository": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/trmnl",
+  "screenshots": [
+    "assets/screenshot-host-dashboard.png",
+    "assets/screenshot-guest-display.png"
+  ],
+  "readme": "README.md",
+  "scopes": ["stay:read", "property:read"],
+  "dependencies": {
+    "required": [],
+    "optional": ["events", "checklist"]
+  },
+  "queries": [],
+  "commands": [],
+  "events": {
+    "published": [],
+    "subscribed": [
+      "stay.created",
+      "stay.status-changed",
+      "stay.deleted",
+      "checklist.progress-updated",
+      "checklist.completed"
+    ]
+  },
+  "config": {
+    "defaults": {},
+    "globalAlert": {
+      "type": "info",
+      "message": {
+        "fr": "Vous avez besoin d'un appareil TRMNL et du plan Developer Edition pour utiliser les webhooks. Créez un Private Plugin dans votre dashboard TRMNL pour obtenir l'URL webhook.",
+        "en": "You need a TRMNL device with Developer Edition to use webhooks. Create a Private Plugin in your TRMNL dashboard to get the webhook URL."
+      },
+      "helpUrl": "https://help.trmnl.com/en/articles/9510536-private-plugins"
+    },
+    "fields": [
+      {
+        "key": "webhook_url",
+        "label": {
+          "fr": "URL Webhook TRMNL",
+          "en": "TRMNL Webhook URL"
+        },
+        "description": {
+          "fr": "L'URL webhook de votre Private Plugin TRMNL. Format : https://usetrmnl.com/api/custom_plugins/[UUID]",
+          "en": "The webhook URL of your TRMNL Private Plugin. Format: https://usetrmnl.com/api/custom_plugins/[UUID]"
+        },
+        "type": "secret",
+        "required": true,
+        "placeholder": {
+          "fr": "https://usetrmnl.com/api/custom_plugins/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+          "en": "https://usetrmnl.com/api/custom_plugins/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+        },
+        "helpUrl": "https://help.trmnl.com/en/articles/9510536-private-plugins"
+      },
+      {
+        "key": "display_mode",
+        "label": {
+          "fr": "Mode d'affichage",
+          "en": "Display mode"
+        },
+        "description": {
+          "fr": "Dashboard hôte : affiché sur votre bureau. Affichage logement : TRMNL placé dans le logement pour vos voyageurs.",
+          "en": "Host dashboard: displayed on your desk. Guest display: TRMNL placed in the property for your guests."
+        },
+        "type": "select",
+        "required": true,
+        "options": [
+          {
+            "value": "host_dashboard",
+            "label": { "fr": "Dashboard hôte", "en": "Host dashboard" }
+          },
+          {
+            "value": "guest_display",
+            "label": { "fr": "Affichage dans le logement", "en": "In-property guest display" }
+          }
+        ],
+        "default": "host_dashboard"
+      },
+      {
+        "key": "property_name_override",
+        "label": {
+          "fr": "Nom affiché sur l'écran (optionnel)",
+          "en": "Name displayed on screen (optional)"
+        },
+        "description": {
+          "fr": "Par défaut, le nom du logement est utilisé. Saisissez une valeur pour la remplacer.",
+          "en": "By default, the property name is used. Enter a value to override it."
+        },
+        "type": "text",
+        "required": false,
+        "placeholder": {
+          "fr": "Ex: Villa Rosa",
+          "en": "Ex: Villa Rosa"
+        }
+      }
+    ]
+  },
+  "slots": [],
+  "audit": {
+    "events": []
+  },
+  "catalog": {
+    "tagline": {
+      "fr": "Vos séjours Portaki sur un écran e-ink TRMNL.",
+      "en": "Your Portaki stays on a TRMNL e-ink screen."
+    },
+    "highlights": [
+      {
+        "fr": "Webhook Private Plugin TRMNL (Developer Edition)",
+        "en": "TRMNL Private Plugin webhook (Developer Edition)"
+      },
+      {
+        "fr": "Dashboard hôte ou affichage voyageur dans le logement",
+        "en": "Host desk dashboard or in-property guest display"
+      },
+      {
+        "fr": "Templates Liquid fournis (full, demi, quadrant)",
+        "en": "Liquid templates included (full, half, quadrant)"
+      }
+    ],
+    "npmPackage": "@portaki/module-trmnl",
+    "npmUrl": "https://www.npmjs.com/package/@portaki/module-trmnl",
+    "javaArtifact": "dev.cyrilcolinet.portaki.module:trmnl-backend"
+  }
+}

@@ -1,0 +1,59 @@
+<!-- trmnl: guest_display — full -->
+<div class="layout layout--full">
+
+  <div style="margin-bottom: 20px;">
+    <div class="label label--small" style="margin-bottom: 6px;">
+      {% if stay_active %}BIENVENUE{% else %}À BIENTÔT{% endif %}
+    </div>
+    <div class="title" style="font-size: 32px; font-weight: 700; line-height: 1.1;">
+      {{ guest_name }}
+    </div>
+    <div class="description" style="margin-top: 6px;">
+      {{ checkin_date }} → {{ checkout_date }}
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+
+    {% if wifi_ssid %}
+    <div style="border: 1px solid #eee; border-radius: 6px; padding: 10px;">
+      <div class="label label--small" style="margin-bottom: 4px;">WIFI</div>
+      <div class="value value--medium" style="font-family: monospace; font-size: 14px; font-weight: 600;">
+        {{ wifi_ssid }}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if door_code %}
+    <div style="border: 1px solid #eee; border-radius: 6px; padding: 10px;">
+      <div class="label label--small" style="margin-bottom: 4px;">CODE PORTE</div>
+      <div class="value value--medium" style="font-family: monospace; font-size: 14px; font-weight: 600;">
+        {{ door_code }}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <div style="display: flex; gap: 20px;">
+    <div>
+      <div class="label label--small">ARRIVÉE</div>
+      <div class="value value--medium">{{ checkin_time }}</div>
+    </div>
+    <div>
+      <div class="label label--small">DÉPART</div>
+      <div class="value value--medium">{{ checkout_time }}</div>
+    </div>
+  </div>
+
+  {% if next_local_event != blank %}
+  <div class="description" style="margin-top: 16px;">
+    {{ next_local_event }}
+  </div>
+  {% endif %}
+
+  <div style="position: absolute; bottom: 12px; right: 12px;">
+    <span class="portaki-logo">{{ property_name }}</span>
+  </div>
+
+</div>

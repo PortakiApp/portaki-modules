@@ -1,0 +1,41 @@
+<!-- trmnl: host_dashboard — half_horizontal -->
+<div class="layout">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+
+    <div>
+      <div class="label label--small">EN COURS</div>
+      {% if current_stay_guest %}
+        <div class="title">{{ current_stay_guest }}</div>
+        <div class="description">↳ {{ current_stay_checkout }}</div>
+      {% else %}
+        <div class="description" style="color: #999;">Aucun séjour</div>
+      {% endif %}
+    </div>
+
+    <div style="text-align: right;">
+      <div class="label label--small">SUIVANT</div>
+      {% if next_stay_guest %}
+        <div class="title">{{ next_stay_guest }}</div>
+        <div class="description">{{ next_stay_checkin }}</div>
+      {% else %}
+        <div class="description" style="color: #999;">—</div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  {% if checklist_progress %}
+    <div style="margin-top: 10px;">
+      <div class="progress-bar">
+        <div class="progress-bar__fill" style="width: {{ checklist_progress }}%;"></div>
+      </div>
+      <div class="label label--small" style="margin-top: 4px; color: #999;">
+        checklist {{ checklist_progress }}%
+      </div>
+    </div>
+  {% endif %}
+
+  <div style="margin-top: 8px; text-align: right;">
+    <span class="portaki-logo">portaki. {{ property_name }}</span>
+  </div>
+</div>
