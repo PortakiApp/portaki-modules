@@ -33,17 +33,17 @@ function contentToHtml(raw: unknown): string {
 }
 
 export function SectionsGuestView({ lang }: { lang: LangCode }) {
-  const { data, isLoading, isError } = usePortakiQuery<ListResponse>('sections.list', {})
+  const { data, loading, error } = usePortakiQuery<ListResponse>('sections.list', {})
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <ModuleSection>
+      <ModuleSection title={lang === 'fr' ? 'Sections' : 'Sections'}>
         <p className="text-sm opacity-70">{lang === 'fr' ? 'Chargement…' : 'Loading…'}</p>
       </ModuleSection>
     )
   }
 
-  if (isError || !data?.sections?.length) {
+  if (error != null || !data?.sections?.length) {
     return null
   }
 

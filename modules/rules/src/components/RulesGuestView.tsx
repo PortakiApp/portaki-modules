@@ -25,9 +25,9 @@ function contentToHtml(raw: unknown): string {
 }
 
 export function RulesGuestView({ lang }: { lang: LangCode }) {
-  const { data, isLoading, isError } = usePortakiQuery<ContentResponse>('rules.content', {})
+  const { data, loading, error } = usePortakiQuery<ContentResponse>('rules.content', {})
 
-  if (isLoading) {
+  if (loading) {
     return (
       <ModuleSection title={lang === 'fr' ? 'Règlement' : 'House rules'}>
         <p className="text-sm opacity-70">{lang === 'fr' ? 'Chargement…' : 'Loading…'}</p>
@@ -35,7 +35,7 @@ export function RulesGuestView({ lang }: { lang: LangCode }) {
     )
   }
 
-  if (isError) {
+  if (error != null) {
     return null
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "@portaki/module-sections",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Portaki module — editorial sections (TipTap)",
   "license": "AGPL-3.0",
   "type": "module",
