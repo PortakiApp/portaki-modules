@@ -1,0 +1,33 @@
+---
+description: Module — déclarer emails dans manifeste + @PortakiModuleEmail (pas d'envoi SMTP)
+globs:
+  - modules/**/portaki.module.json
+  - modules/**/backend/**/*.java
+alwaysApply: false
+---
+
+# Module — e-mails transactionnels
+
+## Obligatoire
+
+1. Entrée dans `portaki.module.json` → `emails[]` (`id`, `trigger`, `skipWhen`, …).
+2. Handler `Optional<ModuleEmailContent> …(StayEmailContext ctx)` avec `@PortakiModuleEmail("< même id >")`.
+3. Si CTA : `guestActions[]` + `ModuleGuestEmailAction.openModule(…)`.
+4. `requiresHostSdk` ≥ **0.7.0** si utilisation e-mails.
+
+## Interdit dans `backend/`
+
+- Resend, JavaMail, fichiers `.html` e-mail, dépendance Thymeleaf.
+- Planification (cron) — c’est `portaki-api`.
+
+## Exemple CTA
+
+```java
+ModuleEmailCta.of(
+    LocalizedText.of("Remplir le formulaire", "Fill in the form"),
+    ModuleGuestEmailAction.openModule("pre-arrival-form", "fill-form"));
+```
+
+Le npm invité gère `actionId` (`fill-form`) dans `render()` si besoin.
+
+Spec : `portaki-sdk/docs/module-emails.md`.

@@ -41,7 +41,35 @@
     "onboarding"
   ],
   "portakiVersionMin": "1.0.0",
-  "requiresHostSdk": "0.5.0",
+  "requiresHostSdk": "0.7.0",
+  "emails": [
+    {
+      "id": "reminder-day-before-arrival",
+      "description": {
+        "fr": "Rappel la veille du check-in pour remplir le formulaire.",
+        "en": "Reminder the day before check-in to complete the form."
+      },
+      "audience": "guest",
+      "requiresGuestEmail": true,
+      "trigger": {
+        "type": "relativeToCheckIn",
+        "offset": "-P1D",
+        "atLocalTime": "10:00"
+      },
+      "skipWhen": ["guest.email.missing", "stay.preArrivalCompleted"]
+    }
+  ],
+  "guestActions": [
+    {
+      "id": "fill-form",
+      "description": {
+        "fr": "Ouvre le module pré-arrivée sur le formulaire.",
+        "en": "Opens the pre-arrival module on the form."
+      },
+      "kind": "open-module",
+      "moduleId": "pre-arrival-form"
+    }
+  ],
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
   "screenshots": [

@@ -10,7 +10,7 @@ Toute **persistance**, **mutation** et **handler gateway** (`@PortakiQueryHandle
 
 ## Obligatoire
 
-- Classe `@PortakiModule("<id>")` avec handlers query/command déclarés dans `portaki.module.json` (`queries`, `commands`, `scopes`).
+- Classe `@PortakiModule("<id>")` avec handlers query/command + optionnel `@PortakiModuleEmail` (`emails[]` manifeste).
 - Repositories / entités JPA (ou accès DB) dans `app.portaki.module.<id>.*` — tables `t_e_module_<id>_…` (DDL source : `portaki-sdk/packages/<id>/db/`).
 - `PortakiHostModuleBackend` pour sync / actions config chiffrée si besoin (ex. `ical-sync`).
 
@@ -24,4 +24,4 @@ Toute **persistance**, **mutation** et **handler gateway** (`@PortakiQueryHandle
 - **Invité** : `@portaki/module-*` → `usePortakiQuery` / command via bridge.
 - **Hôte** : `portaki-web` → BFF `/api/portaki/command` (générique) ; **pas** d’endpoint core nommé après le module.
 
-Voir : `.cursor/rules/portaki-module-data-not-in-api.mdc` (workspace), `portaki-api/.cursor/rules/portaki-module-boundary.mdc`.
+Voir : `module-emails.mdc`, workspace `portaki-module-email-contract.mdc`, `portaki-module-data-not-in-api.mdc`, `portaki-api/.cursor/rules/portaki-module-boundary.mdc`.
