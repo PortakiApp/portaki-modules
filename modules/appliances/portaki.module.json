@@ -42,7 +42,33 @@
     "manual"
   ],
   "portakiVersionMin": "1.0.0",
-  "requiresHostSdk": "0.5.0",
+  "requiresHostSdk": "0.6.0",
+  "scopes": [
+    "stay:read",
+    "property:read",
+    "host:property:read",
+    "host:property:write"
+  ],
+  "queries": [
+    {
+      "name": "appliances.content",
+      "description": {
+        "fr": "Contenu guide appareils (FR/EN).",
+        "en": "Appliance guide content (FR/EN)."
+      },
+      "scope": "property:read"
+    }
+  ],
+  "commands": [
+    {
+      "name": "appliances.content.save",
+      "description": {
+        "fr": "Enregistrer le guide appareils.",
+        "en": "Save appliance guide."
+      },
+      "scope": "host:property:write"
+    }
+  ],
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
   "screenshots": [

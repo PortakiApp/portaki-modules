@@ -1,0 +1,88 @@
+{
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
+  "id": "sections",
+  "name": {
+    "fr": "Sections éditoriales",
+    "en": "Editorial sections"
+  },
+  "description": {
+    "fr": "Blocs de contenu riches (TipTap) pour le carnet d’accueil invité.",
+    "en": "Rich content blocks (TipTap) for the guest welcome book."
+  },
+  "version": "1.0.0",
+  "author": {
+    "name": "Portaki",
+    "url": "https://portaki.app",
+    "type": "official"
+  },
+  "icon": "file-text",
+  "type": "official",
+  "tags": ["editorial", "content", "sections"],
+  "portakiVersionMin": "1.0.0",
+  "requiresHostSdk": "0.6.0",
+  "license": "AGPL-3.0",
+  "repository": "https://github.com/PortakiApp/portaki-modules",
+  "scopes": [
+    "stay:read",
+    "property:read",
+    "host:property:read",
+    "host:property:write"
+  ],
+  "queries": [
+    {
+      "name": "sections.list",
+      "description": {
+        "fr": "Liste des sections du logement.",
+        "en": "Property editorial sections."
+      },
+      "scope": "property:read"
+    }
+  ],
+  "commands": [
+    {
+      "name": "sections.section.save",
+      "description": {
+        "fr": "Créer ou mettre à jour une section.",
+        "en": "Create or update a section."
+      },
+      "scope": "host:property:write"
+    },
+    {
+      "name": "sections.section.delete",
+      "description": {
+        "fr": "Supprimer une section.",
+        "en": "Delete a section."
+      },
+      "scope": "host:property:write"
+    },
+    {
+      "name": "sections.reorder",
+      "description": {
+        "fr": "Réordonner les sections.",
+        "en": "Reorder sections."
+      },
+      "scope": "host:property:write"
+    }
+  ],
+  "hostSurfaces": [
+    {
+      "type": "property-workspace-tab",
+      "pathSegment": "sections",
+      "label": { "fr": "Sections", "en": "Sections" },
+      "icon": "file-text"
+    }
+  ],
+  "config": {
+    "defaults": {},
+    "fields": []
+  },
+  "catalog": {
+    "tagline": {
+      "fr": "Composez votre carnet section par section.",
+      "en": "Build your welcome book section by section."
+    },
+    "npmPackage": "@portaki/module-sections",
+    "npmUrl": "https://www.npmjs.com/package/@portaki/module-sections",
+    "javaArtifact": "app.portaki.module:sections-backend:0.1.0"
+  }
+}

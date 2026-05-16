@@ -1,13 +1,27 @@
 ---
-description: Logique métier d’un module — uniquement dans son backend JAR (pas dans portaki-api)
-globs: ["modules/**/backend/**/*.java", "modules/**/backend/pom.xml"]
-alwaysApply: false
+description: Données, writes et gateway handlers — uniquement dans le backend JAR du module
+globs: ["modules/**/backend/**/*.java", "modules/**/backend/pom.xml", "modules/**/portaki.module.json"]
+alwaysApply: true
 ---
 
-# Backend module — lieu du code métier
+# Backend module — propriété données & writes
 
-Implémenter ici toute logique **spécifique au module** (formats, parseurs, règles de sync, intégrations fournisseur). Exposer une **API publique claire** du JAR (`app.portaki.module.<id>`) pour que `portaki-api` ne fasse qu’**orchestrer** (config, persistance, cron) via dépendance Maven.
+Toute **persistance**, **mutation** et **handler gateway** (`@PortakiQueryHandler`, `@PortakiCommandHandler`) pour ce module vit ici — **pas** dans `portaki-api`.
 
-Si le besoin est **transversal** (contrat hôte/guest partagé), l’ajouter dans **`portaki-module-sdk`** puis consommer la nouvelle version — pas de duplication dans l’API monolithique.
+## Obligatoire
 
-Voir aussi : `portaki-api/.cursor/rules/portaki-module-boundary.mdc`.
+- Classe `@PortakiModule("<id>")` avec handlers query/command déclarés dans `portaki.module.json` (`queries`, `commands`, `scopes`).
+- Repositories / entités JPA (ou accès DB) dans `app.portaki.module.<id>.*` — tables `t_e_module_<id>_…` (DDL source : `portaki-sdk/packages/<id>/db/`).
+- `PortakiHostModuleBackend` pour sync / actions config chiffrée si besoin (ex. `ical-sync`).
+
+## Interdit
+
+- Demander une route REST ou un use case dédié dans `portaki-api` pour le contenu du module.
+- Laisser la logique métier uniquement dans le package npm invité (le npm = `render` + types UI invité).
+
+## Consommation
+
+- **Invité** : `@portaki/module-*` → `usePortakiQuery` / command via bridge.
+- **Hôte** : `portaki-web` → BFF `/api/portaki/command` (générique) ; **pas** d’endpoint core nommé après le module.
+
+Voir : `.cursor/rules/portaki-module-data-not-in-api.mdc` (workspace), `portaki-api/.cursor/rules/portaki-module-boundary.mdc`.

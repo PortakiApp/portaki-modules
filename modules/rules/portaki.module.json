@@ -41,7 +41,33 @@
     "content"
   ],
   "portakiVersionMin": "1.0.0",
-  "requiresHostSdk": "0.5.0",
+  "requiresHostSdk": "0.6.0",
+  "scopes": [
+    "stay:read",
+    "property:read",
+    "host:property:read",
+    "host:property:write"
+  ],
+  "queries": [
+    {
+      "name": "rules.content",
+      "description": {
+        "fr": "Contenu du règlement (FR/EN).",
+        "en": "House rules content (FR/EN)."
+      },
+      "scope": "property:read"
+    }
+  ],
+  "commands": [
+    {
+      "name": "rules.content.save",
+      "description": {
+        "fr": "Enregistrer le règlement.",
+        "en": "Save house rules."
+      },
+      "scope": "host:property:write"
+    }
+  ],
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
   "screenshots": [
