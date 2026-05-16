@@ -9,6 +9,11 @@
     "validate:modules": "node scripts/validate-manifests.mjs",
     "readme:inject-previews": "node scripts/inject-readme-previews.mjs"
   },
+  "pnpm": {
+    "overrides": {
+      "@portaki/module-sdk": "file:../portaki-sdk/sdk/module-sdk"
+    }
+  },
   "devDependencies": {
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",

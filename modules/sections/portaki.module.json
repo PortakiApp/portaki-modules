@@ -19,7 +19,10 @@
   "type": "official",
   "tags": ["editorial", "content", "sections"],
   "portakiVersionMin": "1.0.0",
-  "requiresHostSdk": "0.6.0",
+  "requiresHostSdk": "1.0.0",
+  "database": {
+    "schemaVersion": "1.0.0"
+  },
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
   "scopes": [

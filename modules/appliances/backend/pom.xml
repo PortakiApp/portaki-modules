@@ -46,7 +46,7 @@
     <dependency>
       <groupId>app.portaki</groupId>
       <artifactId>portaki-module-sdk</artifactId>
-      <version>0.7.0</version>
+      <version>1.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
@@ -68,6 +68,12 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>../db/migrations</directory>
+        <targetPath>portaki/db/appliances</targetPath>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

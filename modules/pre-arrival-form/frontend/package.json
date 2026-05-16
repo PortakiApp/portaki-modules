@@ -1,7 +1,7 @@
 {
   "name": "@portaki/module-pre-arrival-form",
   "version": "0.5.0",
-  "description": "Module Portaki — formulaire avant arrivée (séjour)",
+  "description": "Module Portaki \u2014 formulaire avant arriv\u00e9e (s\u00e9jour)",
   "license": "AGPL-3.0",
   "type": "module",
   "main": "./src/index.tsx",
@@ -9,7 +9,7 @@
     "lint": "echo \"no lint yet\""
   },
   "dependencies": {
-    "@portaki/module-sdk": "0.5.0",
+    "@portaki/module-sdk": "1.0.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

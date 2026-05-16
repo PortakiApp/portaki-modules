@@ -41,7 +41,7 @@
     "onboarding"
   ],
   "portakiVersionMin": "1.0.0",
-  "requiresHostSdk": "0.7.0",
+  "requiresHostSdk": "1.0.0",
   "emails": [
     {
       "id": "reminder-day-before-arrival",

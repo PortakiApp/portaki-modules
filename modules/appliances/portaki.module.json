@@ -42,7 +42,18 @@
     "manual"
   ],
   "portakiVersionMin": "1.0.0",
-  "requiresHostSdk": "0.6.0",
+  "requiresHostSdk": "1.0.0",
+  "database": {
+    "schemaVersion": "1.0.0"
+  },
+  "hostSurfaces": [
+    {
+      "type": "property-workspace-tab",
+      "pathSegment": "appliances",
+      "label": { "fr": "Appareils", "en": "Appliances" },
+      "icon": "plug"
+    }
+  ],
   "scopes": [
     "stay:read",
     "property:read",

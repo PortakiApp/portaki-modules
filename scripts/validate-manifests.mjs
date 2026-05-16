@@ -15,13 +15,19 @@ const SCHEMA_URL =
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
 const modulesDir = join(root, "modules");
+const localSchema = resolve(root, "../portaki-sdk/schema/module.v1.json");
 
-const res = await fetch(SCHEMA_URL);
-if (!res.ok) {
-    console.error(`[validate-manifests] failed to fetch schema: ${res.status} ${SCHEMA_URL}`);
-    process.exit(1);
+let schema;
+if (existsSync(localSchema)) {
+    schema = JSON.parse(readFileSync(localSchema, "utf8"));
+} else {
+    const res = await fetch(SCHEMA_URL);
+    if (!res.ok) {
+        console.error(`[validate-manifests] failed to fetch schema: ${res.status} ${SCHEMA_URL}`);
+        process.exit(1);
+    }
+    schema = await res.json();
 }
-const schema = await res.json();
 const ajv = new Ajv({ allErrors: true, strict: false });
 addFormats(ajv);
 const validate = ajv.compile(schema);
