@@ -7,16 +7,24 @@
   "main": "./src/index.tsx",
   "author": "Cyril Colinet (https://github.com/cyrilcolinet)",
   "scripts": {
-    "lint": "echo \"no lint yet\""
+    "lint": "echo \"no lint yet\"",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@portaki/module-sdk": "file:../../../portaki-sdk/sdk/module-sdk",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "@portaki/sdk": "file:../../../portaki-sdk/sdk/guest"
   },
   "devDependencies": {
     "@types/react": "^19",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@portaki/module-test-support": "file:../../../portaki-sdk/sdk/module-test-support",
+    "vitest": "^3.0.5",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "jsdom": "^26.0.0"
   },
   "repository": {
     "type": "git",
