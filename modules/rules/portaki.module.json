@@ -49,7 +49,10 @@
     {
       "type": "property-workspace-tab",
       "pathSegment": "rules",
-      "label": { "fr": "Règlement", "en": "House rules" },
+      "label": {
+        "fr": "Règlement",
+        "en": "House rules"
+      },
       "icon": "scroll-text"
     }
   ],
@@ -110,5 +113,14 @@
     ],
     "npmPackage": "@portaki/module-rules",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-rules"
+  },
+  "runtime": {
+    "backend": "jar",
+    "guest": "bundled"
+  },
+  "artifacts": {
+    "guestEsmUrl": "https://esm.sh/@portaki/module-rules@1.0.0",
+    "wasmUrl": "",
+    "jarMaven": ""
   }
 }

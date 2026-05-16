@@ -104,5 +104,14 @@
     "npmPackage": "@portaki/module-ical-sync",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-ical-sync",
     "javaArtifact": "app.portaki.module:ical-sync-backend"
+  },
+  "runtime": {
+    "backend": "jar",
+    "guest": "bundled"
+  },
+  "artifacts": {
+    "guestEsmUrl": "https://esm.sh/@portaki/module-ical-sync@1.0.1",
+    "wasmUrl": "",
+    "jarMaven": "app.portaki.module:ical-sync-backend"
   }
 }

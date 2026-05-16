@@ -90,5 +90,14 @@
     ],
     "npmPackage": "@portaki/module-events",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-events"
+  },
+  "runtime": {
+    "backend": "none",
+    "guest": "remote-esm"
+  },
+  "artifacts": {
+    "guestEsmUrl": "https://esm.sh/@portaki/module-events@1.0.0",
+    "wasmUrl": "",
+    "jarMaven": ""
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "@portaki/module-sections",
   "version": "1.0.1",
-  "description": "Portaki module \u2014 editorial sections (TipTap)",
+  "description": "Portaki module — editorial sections (TipTap)",
   "license": "AGPL-3.0",
   "type": "module",
   "main": "./src/index.tsx",
@@ -9,7 +9,7 @@
     "lint": "echo \"no lint yet\""
   },
   "dependencies": {
-    "@portaki/module-sdk": "1.0.0",
+    "@portaki/module-sdk": "file:../../../portaki-sdk/sdk/module-sdk",
     "@portaki/sdk": "^0.5.0",
     "@tiptap/core": "^3.0.0",
     "@tiptap/html": "^3.0.0",

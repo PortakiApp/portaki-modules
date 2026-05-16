@@ -148,5 +148,14 @@
     ],
     "npmPackage": "@portaki/module-weather",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-weather"
+  },
+  "runtime": {
+    "backend": "none",
+    "guest": "remote-esm"
+  },
+  "artifacts": {
+    "guestEsmUrl": "https://esm.sh/@portaki/module-weather@1.0.0",
+    "wasmUrl": "",
+    "jarMaven": ""
   }
 }

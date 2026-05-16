@@ -130,5 +130,14 @@
     ],
     "npmPackage": "@portaki/module-access-guide",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-access-guide"
+  },
+  "runtime": {
+    "backend": "none",
+    "guest": "remote-esm"
+  },
+  "artifacts": {
+    "guestEsmUrl": "https://esm.sh/@portaki/module-access-guide@1.0.0",
+    "wasmUrl": "",
+    "jarMaven": ""
   }
 }

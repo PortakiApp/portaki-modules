@@ -134,5 +134,14 @@
     ],
     "npmPackage": "@portaki/module-train",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-train"
+  },
+  "runtime": {
+    "backend": "none",
+    "guest": "remote-esm"
+  },
+  "artifacts": {
+    "guestEsmUrl": "https://esm.sh/@portaki/module-train@1.0.0",
+    "wasmUrl": "",
+    "jarMaven": ""
   }
 }

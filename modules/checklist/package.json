@@ -1,7 +1,7 @@
 {
   "name": "@portaki/module-checklist",
   "version": "0.5.0",
-  "description": "Module Portaki \u2014 checklist de d\u00e9part",
+  "description": "Module Portaki — checklist de départ",
   "license": "AGPL-3.0",
   "type": "module",
   "main": "./src/index.tsx",
@@ -9,7 +9,7 @@
     "lint": "echo \"no lint yet\""
   },
   "dependencies": {
-    "@portaki/module-sdk": "1.0.0",
+    "@portaki/module-sdk": "file:../../../portaki-sdk/sdk/module-sdk",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

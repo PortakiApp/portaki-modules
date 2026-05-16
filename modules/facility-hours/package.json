@@ -1,7 +1,7 @@
 {
   "name": "@portaki/module-facility-hours",
   "version": "0.5.0",
-  "description": "Portaki module \u2014 facility hours (pool, spa, gym\u2026)",
+  "description": "Portaki module — facility hours (pool, spa, gym…)",
   "license": "AGPL-3.0",
   "type": "module",
   "main": "./src/index.tsx",
@@ -9,7 +9,7 @@
     "lint": "echo \"no lint yet\""
   },
   "dependencies": {
-    "@portaki/module-sdk": "1.0.0",
+    "@portaki/module-sdk": "file:../../../portaki-sdk/sdk/module-sdk",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

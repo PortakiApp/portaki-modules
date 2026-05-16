@@ -73,5 +73,14 @@
     ],
     "npmPackage": "@portaki/module-checklist",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-checklist"
+  },
+  "runtime": {
+    "backend": "none",
+    "guest": "remote-esm"
+  },
+  "artifacts": {
+    "guestEsmUrl": "https://esm.sh/@portaki/module-checklist@1.0.0",
+    "wasmUrl": "",
+    "jarMaven": ""
   }
 }

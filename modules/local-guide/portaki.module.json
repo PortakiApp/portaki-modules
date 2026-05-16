@@ -105,5 +105,14 @@
     ],
     "npmPackage": "@portaki/module-local-guide",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-local-guide"
+  },
+  "runtime": {
+    "backend": "none",
+    "guest": "remote-esm"
+  },
+  "artifacts": {
+    "guestEsmUrl": "https://esm.sh/@portaki/module-local-guide@1.0.0",
+    "wasmUrl": "",
+    "jarMaven": ""
   }
 }
