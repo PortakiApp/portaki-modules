@@ -1,6 +1,6 @@
 {
   "name": "@portaki/module-train",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "Module Portaki — horaires trains (Navitia / SNCF)",
   "license": "AGPL-3.0",
   "type": "module",

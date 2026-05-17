@@ -1,6 +1,6 @@
 {
   "name": "@portaki/module-weather",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "Portaki module — local weather (Open-Meteo)",
   "license": "AGPL-3.0",
   "type": "module",

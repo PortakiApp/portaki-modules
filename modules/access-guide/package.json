@@ -1,6 +1,6 @@
 {
   "name": "@portaki/module-access-guide",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "Portaki module — access, parking, door steps",
   "license": "AGPL-3.0",
   "type": "module",
