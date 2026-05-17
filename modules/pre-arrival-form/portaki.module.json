@@ -106,12 +106,12 @@
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-pre-arrival-form"
   },
   "runtime": {
-    "backend": "jar",
+    "backend": "wasm",
     "guest": "remote-esm"
   },
   "artifacts": {
     "guestEsmUrl": "https://esm.sh/@portaki/module-pre-arrival-form@1.0.0",
-    "wasmUrl": "",
+    "wasmUrl": "artifacts://pre-arrival-form/1.0.0.wasm",
     "jarMaven": ""
   }
 }

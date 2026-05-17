@@ -103,12 +103,12 @@
     "javaArtifact": "app.portaki.module:events-backend:1.0.0"
   },
   "runtime": {
-    "backend": "jar",
+    "backend": "wasm",
     "guest": "remote-esm"
   },
   "artifacts": {
     "guestEsmUrl": "https://esm.sh/@portaki/module-events@1.0.0",
-    "wasmUrl": "",
+    "wasmUrl": "artifacts://events/1.0.0.wasm",
     "jarMaven": "app.portaki.module:events-backend:1.0.0"
   }
 }

@@ -147,12 +147,12 @@
     "javaArtifact": "app.portaki.module:train-backend:1.0.0"
   },
   "runtime": {
-    "backend": "jar",
+    "backend": "wasm",
     "guest": "remote-esm"
   },
   "artifacts": {
     "guestEsmUrl": "https://esm.sh/@portaki/module-train@1.0.0",
-    "wasmUrl": "",
+    "wasmUrl": "artifacts://train/1.0.0.wasm",
     "jarMaven": "app.portaki.module:train-backend:1.0.0"
   }
 }

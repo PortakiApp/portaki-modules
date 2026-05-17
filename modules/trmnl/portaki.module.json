@@ -162,12 +162,12 @@
     "javaArtifact": "app.portaki.module:trmnl-backend"
   },
   "runtime": {
-    "backend": "jar",
+    "backend": "wasm",
     "guest": "remote-esm"
   },
   "artifacts": {
     "guestEsmUrl": "https://esm.sh/@portaki/module-trmnl@1.0.0",
-    "wasmUrl": "",
+    "wasmUrl": "artifacts://trmnl/1.0.0.wasm",
     "jarMaven": "app.portaki.module:trmnl-backend"
   }
 }

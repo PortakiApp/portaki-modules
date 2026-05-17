@@ -10,10 +10,22 @@ const BACKEND_IDS = new Set([
   'ical-sync',
   'trmnl',
   'pre-arrival-form',
+  'checklist',
+  'train',
+  'events',
 ])
-const GATEWAY_IDS = new Set(['sections', 'rules', 'appliances'])
+const GATEWAY_IDS = new Set([
+  'sections',
+  'rules',
+  'appliances',
+  'checklist',
+  'train',
+  'events',
+  'trmnl',
+])
 const WASM_BACKEND_IDS = new Set(
-  (process.env.PORTAKI_WASM_BACKEND_MODULES ?? 'sections')
+  (process.env.PORTAKI_WASM_BACKEND_MODULES ??
+    [...BACKEND_IDS].join(','))
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean),
@@ -28,9 +40,8 @@ for (const dir of fs.readdirSync(root)) {
   const version = raw.version ?? '1.0.0'
   const npmPackage = raw.catalog?.npmPackage ?? `@portaki/module-${raw.id}`
   const hasBackend = BACKEND_IDS.has(raw.id)
-  const hasGateway = GATEWAY_IDS.has(raw.id)
-
   const wasmBackend = WASM_BACKEND_IDS.has(raw.id)
+
   raw.runtime = {
     backend: wasmBackend ? 'wasm' : hasBackend ? 'jar' : 'none',
     guest: 'remote-esm',
@@ -42,5 +53,5 @@ for (const dir of fs.readdirSync(root)) {
   }
 
   fs.writeFileSync(manifestPath, JSON.stringify(raw, null, 2) + '\n')
-  console.log('patched', raw.id, raw.runtime)
+  console.log('patched', raw.id, raw.runtime, hasBackend && GATEWAY_IDS.has(raw.id) ? '(gateway)' : '')
 }
