@@ -60,8 +60,9 @@ public class ChecklistGatewayModule {
     public void completeItem(Map<String, Object> params, GatewayModuleContext ctx) {
         UUID stayId = UUID.fromString(ctx.stayId());
         UUID tenantId = ctx.tenantIdInternal();
+        UUID propertyId = UUID.fromString(ctx.propertyId());
         UUID itemId = UUID.fromString(String.valueOf(params.get("itemId")));
-        assertStayAndItem(tenantId, stayId, itemId);
+        assertItemForProperty(tenantId, propertyId, itemId);
         Boolean exists =
                 jdbc.queryForObject(
                         """
@@ -84,7 +85,7 @@ public class ChecklistGatewayModule {
                 stayId,
                 itemId,
                 Instant.now());
-        int pct = refreshProgress(stayId, tenantId);
+        int pct = computeProgress(stayId, tenantId, propertyId);
         ctx.publish(new PortakiModuleEvent("checklist.progress-updated", Map.of("percentage", pct)));
         if (pct == 100) {
             ctx.publish(new PortakiModuleEvent("checklist.completed", Map.of("stayId", ctx.stayId())));
@@ -95,8 +96,9 @@ public class ChecklistGatewayModule {
     public void uncompleteItem(Map<String, Object> params, GatewayModuleContext ctx) {
         UUID stayId = UUID.fromString(ctx.stayId());
         UUID tenantId = ctx.tenantIdInternal();
+        UUID propertyId = UUID.fromString(ctx.propertyId());
         UUID itemId = UUID.fromString(String.valueOf(params.get("itemId")));
-        assertStayAndItem(tenantId, stayId, itemId);
+        assertItemForProperty(tenantId, propertyId, itemId);
         jdbc.update(
                 """
                 DELETE FROM t_j_module_checklist_completions
@@ -104,23 +106,11 @@ public class ChecklistGatewayModule {
                 """,
                 stayId,
                 itemId);
-        int pct = refreshProgress(stayId, tenantId);
+        int pct = computeProgress(stayId, tenantId, propertyId);
         ctx.publish(new PortakiModuleEvent("checklist.progress-updated", Map.of("percentage", pct)));
     }
 
-    private void assertStayAndItem(UUID tenantId, UUID stayId, UUID itemId) {
-        UUID propertyId =
-                jdbc.queryForObject(
-                        """
-                        SELECT property_id FROM t_e_stays
-                        WHERE id = ? AND tenant_id = ?
-                        """,
-                        UUID.class,
-                        stayId,
-                        tenantId);
-        if (propertyId == null) {
-            throw new IllegalArgumentException("stay_not_found");
-        }
+    private void assertItemForProperty(UUID tenantId, UUID propertyId, UUID itemId) {
         Boolean itemOk =
                 jdbc.queryForObject(
                         """
@@ -138,13 +128,7 @@ public class ChecklistGatewayModule {
         }
     }
 
-    private int refreshProgress(UUID stayId, UUID tenantId) {
-        UUID propertyId =
-                jdbc.queryForObject(
-                        "SELECT property_id FROM t_e_stays WHERE id = ? AND tenant_id = ?",
-                        UUID.class,
-                        stayId,
-                        tenantId);
+    private int computeProgress(UUID stayId, UUID tenantId, UUID propertyId) {
         Long total =
                 jdbc.queryForObject(
                         """
@@ -161,13 +145,7 @@ public class ChecklistGatewayModule {
                         stayId);
         long totalCount = total == null ? 0L : total;
         long doneCount = done == null ? 0L : done;
-        int pct = totalCount == 0 ? 0 : (int) (doneCount * 100 / totalCount);
-        jdbc.update(
-                "UPDATE t_e_stays SET checklist_progress = ? WHERE id = ? AND tenant_id = ?",
-                pct,
-                stayId,
-                tenantId);
-        return pct;
+        return totalCount == 0 ? 0 : (int) (doneCount * 100 / totalCount);
     }
 
     private static Map<String, Object> toItemMap(ResultSet rs) throws SQLException {
