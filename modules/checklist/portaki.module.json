@@ -42,6 +42,36 @@
   ],
   "portakiVersionMin": "1.0.0",
   "requiresHostSdk": "1.0.0",
+  "scopes": [
+    "stay:read",
+    "property:read",
+    "checklist:write",
+    "stay:events:write"
+  ],
+  "queries": [
+    {
+      "name": "checklist.items",
+      "scope": "stay:read"
+    },
+    {
+      "name": "checklist.completions",
+      "scope": "stay:read"
+    }
+  ],
+  "commands": [
+    {
+      "name": "checklist.complete-item",
+      "scope": "checklist:write"
+    },
+    {
+      "name": "checklist.uncomplete-item",
+      "scope": "checklist:write"
+    }
+  ],
+  "events": [
+  "checklist.progress-updated",
+  "checklist.completed"
+  ],
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
   "screenshots": [
@@ -72,15 +102,16 @@
       }
     ],
     "npmPackage": "@portaki/module-checklist",
-    "npmUrl": "https://www.npmjs.com/package/@portaki/module-checklist"
+    "npmUrl": "https://www.npmjs.com/package/@portaki/module-checklist",
+    "javaArtifact": "app.portaki.module:checklist-backend:1.0.0"
   },
   "runtime": {
-    "backend": "none",
+    "backend": "jar",
     "guest": "remote-esm"
   },
   "artifacts": {
     "guestEsmUrl": "https://esm.sh/@portaki/module-checklist@1.0.0",
     "wasmUrl": "",
-    "jarMaven": ""
+    "jarMaven": "app.portaki.module:checklist-backend:1.0.0"
   }
 }

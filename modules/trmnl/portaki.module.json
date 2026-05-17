@@ -163,7 +163,7 @@
   },
   "runtime": {
     "backend": "jar",
-    "guest": "bundled"
+    "guest": "remote-esm"
   },
   "artifacts": {
     "guestEsmUrl": "https://esm.sh/@portaki/module-trmnl@1.0.0",

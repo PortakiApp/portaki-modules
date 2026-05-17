@@ -12,6 +12,12 @@ const BACKEND_IDS = new Set([
   'pre-arrival-form',
 ])
 const GATEWAY_IDS = new Set(['sections', 'rules', 'appliances'])
+const WASM_BACKEND_IDS = new Set(
+  (process.env.PORTAKI_WASM_BACKEND_MODULES ?? 'sections')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
+)
 
 for (const dir of fs.readdirSync(root)) {
   const manifestPath = path.join(root, dir, 'portaki.module.json')
@@ -24,17 +30,15 @@ for (const dir of fs.readdirSync(root)) {
   const hasBackend = BACKEND_IDS.has(raw.id)
   const hasGateway = GATEWAY_IDS.has(raw.id)
 
+  const wasmBackend = WASM_BACKEND_IDS.has(raw.id)
   raw.runtime = {
-    backend: hasBackend ? 'jar' : 'none',
-    guest: 'bundled',
+    backend: wasmBackend ? 'wasm' : hasBackend ? 'jar' : 'none',
+    guest: 'remote-esm',
   }
   raw.artifacts = {
     guestEsmUrl: `https://esm.sh/${npmPackage}@${version}`,
-    wasmUrl: '',
+    wasmUrl: wasmBackend ? `artifacts://${raw.id}/${version}.wasm` : '',
     jarMaven: raw.catalog?.javaArtifact ?? '',
-  }
-  if (!hasGateway && !hasBackend) {
-    raw.runtime.guest = 'remote-esm'
   }
 
   fs.writeFileSync(manifestPath, JSON.stringify(raw, null, 2) + '\n')

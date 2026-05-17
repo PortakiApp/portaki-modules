@@ -153,7 +153,7 @@
   },
   "runtime": {
     "backend": "jar",
-    "guest": "bundled"
+    "guest": "remote-esm"
   },
   "artifacts": {
     "guestEsmUrl": "https://esm.sh/@portaki/module-appliances@1.0.0",
