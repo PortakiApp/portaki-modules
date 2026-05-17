@@ -8,16 +8,7 @@
     "assert-no-file-deps": "node scripts/assert-no-file-deps.mjs",
     "validate:modules": "node scripts/validate-manifests.mjs",
     "scaffold:tests": "node scripts/scaffold-module-unit-tests.mjs",
-    "build:test-support": "pnpm --dir ../portaki-sdk build:test-support",
-    "test": "pnpm build:test-support && pnpm -r --if-present test",
     "readme:inject-previews": "node scripts/inject-readme-previews.mjs"
-  },
-  "pnpm": {
-    "overrides": {
-      "@portaki/module-sdk": "file:../portaki-sdk/sdk/module-sdk",
-      "@portaki/module-test-support": "file:../portaki-sdk/sdk/module-test-support",
-      "@portaki/sdk": "file:../portaki-sdk/sdk/guest"
-    }
   },
   "devDependencies": {
     "ajv": "^8.17.1",

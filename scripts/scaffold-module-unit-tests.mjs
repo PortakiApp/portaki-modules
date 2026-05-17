@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const modulesDir = join(root, 'modules')
-const testSupportPath = 'file:../../../portaki-sdk/sdk/module-test-support'
+const testSupportVersion = '^1.0.0'
 
 const vitestConfig = `import { portakiModuleVitestConfig } from '@portaki/module-test-support/vitest'
 
@@ -64,11 +64,18 @@ function patchPackageJson(dir, id) {
   pkg.scripts.test = 'vitest run'
   pkg.scripts['test:watch'] = 'vitest'
   pkg.dependencies = pkg.dependencies ?? {}
+  pkg.dependencies = pkg.dependencies ?? {}
+  if (
+    !pkg.dependencies['@portaki/module-sdk'] ||
+    String(pkg.dependencies['@portaki/module-sdk']).startsWith('file:')
+  ) {
+    pkg.dependencies['@portaki/module-sdk'] = '^1.0.0'
+  }
   if (!pkg.dependencies['@portaki/sdk']) {
-    pkg.dependencies['@portaki/sdk'] = 'file:../../../portaki-sdk/sdk/guest'
+    pkg.dependencies['@portaki/sdk'] = '^0.5.1'
   }
   pkg.devDependencies = pkg.devDependencies ?? {}
-  pkg.devDependencies['@portaki/module-test-support'] = testSupportPath
+  pkg.devDependencies['@portaki/module-test-support'] = testSupportVersion
   pkg.devDependencies.vitest = '^3.0.5'
   if (existsSync(join(dir, 'src', 'index.tsx')) || existsSync(join(dir, 'src', 'index.ts'))) {
     pkg.devDependencies['@testing-library/react'] = '^16.3.0'

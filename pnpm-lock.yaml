@@ -4,11 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@portaki/module-sdk': file:../portaki-sdk/sdk/module-sdk
-  '@portaki/module-test-support': file:../portaki-sdk/sdk/module-test-support
-  '@portaki/sdk': file:../portaki-sdk/sdk/guest
-
 importers:
 
   .:
@@ -26,11 +21,11 @@ importers:
   modules/access-guide:
     dependencies:
       '@portaki/module-sdk':
-        specifier: file:../../../portaki-sdk/sdk/module-sdk
-        version: file:../portaki-sdk/sdk/module-sdk(react@19.2.6)
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.2.6)
       '@portaki/sdk':
-        specifier: file:../../../portaki-sdk/sdk/guest
-        version: file:../portaki-sdk/sdk/guest(react@19.2.6)
+        specifier: ^0.5.1
+        version: 0.5.1(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -38,9 +33,6 @@ importers:
         specifier: ^19.1.0
         version: 19.2.6(react@19.2.6)
     devDependencies:
-      '@portaki/module-test-support':
-        specifier: file:../../../portaki-sdk/sdk/module-test-support
-        version: file:../portaki-sdk/sdk/module-test-support(@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk(react@19.2.6))(@portaki/sdk@file:../portaki-sdk/sdk/guest(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -63,11 +55,11 @@ importers:
   modules/appliances:
     dependencies:
       '@portaki/module-sdk':
-        specifier: file:../../../portaki-sdk/sdk/module-sdk
-        version: file:../portaki-sdk/sdk/module-sdk(react@19.2.6)
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.2.6)
       '@portaki/sdk':
-        specifier: file:../../../portaki-sdk/sdk/guest
-        version: file:../portaki-sdk/sdk/guest(react@19.2.6)
+        specifier: ^0.5.1
+        version: 0.5.1(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -75,9 +67,6 @@ importers:
         specifier: ^19.1.0
         version: 19.2.6(react@19.2.6)
     devDependencies:
-      '@portaki/module-test-support':
-        specifier: file:../../../portaki-sdk/sdk/module-test-support
-        version: file:../portaki-sdk/sdk/module-test-support(@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk(react@19.2.6))(@portaki/sdk@file:../portaki-sdk/sdk/guest(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -100,11 +89,11 @@ importers:
   modules/checklist:
     dependencies:
       '@portaki/module-sdk':
-        specifier: file:../../../portaki-sdk/sdk/module-sdk
-        version: file:../portaki-sdk/sdk/module-sdk(react@19.2.6)
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.2.6)
       '@portaki/sdk':
-        specifier: file:../../../portaki-sdk/sdk/guest
-        version: file:../portaki-sdk/sdk/guest(react@19.2.6)
+        specifier: ^0.5.1
+        version: 0.5.1(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -112,9 +101,6 @@ importers:
         specifier: ^19.1.0
         version: 19.2.6(react@19.2.6)
     devDependencies:
-      '@portaki/module-test-support':
-        specifier: file:../../../portaki-sdk/sdk/module-test-support
-        version: file:../portaki-sdk/sdk/module-test-support(@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk(react@19.2.6))(@portaki/sdk@file:../portaki-sdk/sdk/guest(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -137,11 +123,11 @@ importers:
   modules/emergency-contacts:
     dependencies:
       '@portaki/module-sdk':
-        specifier: file:../../../portaki-sdk/sdk/module-sdk
-        version: file:../portaki-sdk/sdk/module-sdk(react@19.2.6)
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.2.6)
       '@portaki/sdk':
-        specifier: file:../../../portaki-sdk/sdk/guest
-        version: file:../portaki-sdk/sdk/guest(react@19.2.6)
+        specifier: ^0.5.1
+        version: 0.5.1(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -149,9 +135,6 @@ importers:
         specifier: ^19.1.0
         version: 19.2.6(react@19.2.6)
     devDependencies:
-      '@portaki/module-test-support':
-        specifier: file:../../../portaki-sdk/sdk/module-test-support
-        version: file:../portaki-sdk/sdk/module-test-support(@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk(react@19.2.6))(@portaki/sdk@file:../portaki-sdk/sdk/guest(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -174,11 +157,11 @@ importers:
   modules/events:
     dependencies:
       '@portaki/module-sdk':
-        specifier: file:../../../portaki-sdk/sdk/module-sdk
-        version: file:../portaki-sdk/sdk/module-sdk(react@19.2.6)
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.2.6)
       '@portaki/sdk':
-        specifier: file:../../../portaki-sdk/sdk/guest
-        version: file:../portaki-sdk/sdk/guest(react@19.2.6)
+        specifier: ^0.5.1
+        version: 0.5.1(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -186,9 +169,6 @@ importers:
         specifier: ^19.1.0
         version: 19.2.6(react@19.2.6)
     devDependencies:
-      '@portaki/module-test-support':
-        specifier: file:../../../portaki-sdk/sdk/module-test-support
-        version: file:../portaki-sdk/sdk/module-test-support(@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk(react@19.2.6))(@portaki/sdk@file:../portaki-sdk/sdk/guest(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -211,11 +191,11 @@ importers:
   modules/facility-hours:
     dependencies:
       '@portaki/module-sdk':
-        specifier: file:../../../portaki-sdk/sdk/module-sdk
-        version: file:../portaki-sdk/sdk/module-sdk(react@19.2.6)
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.2.6)
       '@portaki/sdk':
-        specifier: file:../../../portaki-sdk/sdk/guest
-        version: file:../portaki-sdk/sdk/guest(react@19.2.6)
+        specifier: ^0.5.1
+        version: 0.5.1(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -223,9 +203,6 @@ importers:
         specifier: ^19.1.0
         version: 19.2.6(react@19.2.6)
     devDependencies:
-      '@portaki/module-test-support':
-        specifier: file:../../../portaki-sdk/sdk/module-test-support
-        version: file:../portaki-sdk/sdk/module-test-support(@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk(react@19.2.6))(@portaki/sdk@file:../portaki-sdk/sdk/guest(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -248,11 +225,11 @@ importers:
   modules/ical-sync:
     dependencies:
       '@portaki/module-sdk':
-        specifier: file:../../../portaki-sdk/sdk/module-sdk
-        version: file:../portaki-sdk/sdk/module-sdk(react@19.2.6)
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.2.6)
       '@portaki/sdk':
-        specifier: file:../../../portaki-sdk/sdk/guest
-        version: file:../portaki-sdk/sdk/guest(react@19.2.6)
+        specifier: ^0.5.1
+        version: 0.5.1(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -260,9 +237,6 @@ importers:
         specifier: ^19.1.0
         version: 19.2.6(react@19.2.6)
     devDependencies:
-      '@portaki/module-test-support':
-        specifier: file:../../../portaki-sdk/sdk/module-test-support
-        version: file:../portaki-sdk/sdk/module-test-support(@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk(react@19.2.6))(@portaki/sdk@file:../portaki-sdk/sdk/guest(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -285,11 +259,11 @@ importers:
   modules/local-guide:
     dependencies:
       '@portaki/module-sdk':
-        specifier: file:../../../portaki-sdk/sdk/module-sdk
-        version: file:../portaki-sdk/sdk/module-sdk(react@19.2.6)
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.2.6)
       '@portaki/sdk':
-        specifier: file:../../../portaki-sdk/sdk/guest
-        version: file:../portaki-sdk/sdk/guest(react@19.2.6)
+        specifier: ^0.5.1
+        version: 0.5.1(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -297,9 +271,6 @@ importers:
         specifier: ^19.1.0
         version: 19.2.6(react@19.2.6)
     devDependencies:
-      '@portaki/module-test-support':
-        specifier: file:../../../portaki-sdk/sdk/module-test-support
-        version: file:../portaki-sdk/sdk/module-test-support(@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk(react@19.2.6))(@portaki/sdk@file:../portaki-sdk/sdk/guest(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -322,8 +293,8 @@ importers:
   modules/pre-arrival-form/frontend:
     dependencies:
       '@portaki/module-sdk':
-        specifier: file:../../../../portaki-sdk/sdk/module-sdk
-        version: file:../portaki-sdk/sdk/module-sdk(react@19.2.6)
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -341,11 +312,11 @@ importers:
   modules/rules:
     dependencies:
       '@portaki/module-sdk':
-        specifier: file:../../../portaki-sdk/sdk/module-sdk
-        version: file:../portaki-sdk/sdk/module-sdk(react@19.2.6)
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.2.6)
       '@portaki/sdk':
-        specifier: file:../../../portaki-sdk/sdk/guest
-        version: file:../portaki-sdk/sdk/guest(react@19.2.6)
+        specifier: ^0.5.0
+        version: 0.5.1(react@19.2.6)
       '@tiptap/core':
         specifier: ^3.0.0
         version: 3.23.4(@tiptap/pm@3.23.4)
@@ -362,9 +333,6 @@ importers:
         specifier: ^19.1.0
         version: 19.2.6(react@19.2.6)
     devDependencies:
-      '@portaki/module-test-support':
-        specifier: file:../../../portaki-sdk/sdk/module-test-support
-        version: file:../portaki-sdk/sdk/module-test-support(@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk(react@19.2.6))(@portaki/sdk@file:../portaki-sdk/sdk/guest(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -387,11 +355,11 @@ importers:
   modules/sections:
     dependencies:
       '@portaki/module-sdk':
-        specifier: file:../../../portaki-sdk/sdk/module-sdk
-        version: file:../portaki-sdk/sdk/module-sdk(react@19.2.6)
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.2.6)
       '@portaki/sdk':
-        specifier: file:../../../portaki-sdk/sdk/guest
-        version: file:../portaki-sdk/sdk/guest(react@19.2.6)
+        specifier: ^0.5.0
+        version: 0.5.1(react@19.2.6)
       '@tiptap/core':
         specifier: ^3.0.0
         version: 3.23.4(@tiptap/pm@3.23.4)
@@ -408,9 +376,6 @@ importers:
         specifier: ^19.1.0
         version: 19.2.6(react@19.2.6)
     devDependencies:
-      '@portaki/module-test-support':
-        specifier: file:../../../portaki-sdk/sdk/module-test-support
-        version: file:../portaki-sdk/sdk/module-test-support(@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk(react@19.2.6))(@portaki/sdk@file:../portaki-sdk/sdk/guest(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -433,11 +398,11 @@ importers:
   modules/train:
     dependencies:
       '@portaki/module-sdk':
-        specifier: file:../../../portaki-sdk/sdk/module-sdk
-        version: file:../portaki-sdk/sdk/module-sdk(react@19.2.6)
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.2.6)
       '@portaki/sdk':
-        specifier: file:../../../portaki-sdk/sdk/guest
-        version: file:../portaki-sdk/sdk/guest(react@19.2.6)
+        specifier: ^0.5.1
+        version: 0.5.1(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -445,9 +410,6 @@ importers:
         specifier: ^19.1.0
         version: 19.2.6(react@19.2.6)
     devDependencies:
-      '@portaki/module-test-support':
-        specifier: file:../../../portaki-sdk/sdk/module-test-support
-        version: file:../portaki-sdk/sdk/module-test-support(@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk(react@19.2.6))(@portaki/sdk@file:../portaki-sdk/sdk/guest(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -470,11 +432,11 @@ importers:
   modules/trmnl:
     dependencies:
       '@portaki/module-sdk':
-        specifier: file:../../../portaki-sdk/sdk/module-sdk
-        version: file:../portaki-sdk/sdk/module-sdk(react@19.2.6)
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.2.6)
       '@portaki/sdk':
-        specifier: file:../../../portaki-sdk/sdk/guest
-        version: file:../portaki-sdk/sdk/guest(react@19.2.6)
+        specifier: ^0.5.1
+        version: 0.5.1(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -482,9 +444,6 @@ importers:
         specifier: ^19.1.0
         version: 19.2.6(react@19.2.6)
     devDependencies:
-      '@portaki/module-test-support':
-        specifier: file:../../../portaki-sdk/sdk/module-test-support
-        version: file:../portaki-sdk/sdk/module-test-support(@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk(react@19.2.6))(@portaki/sdk@file:../portaki-sdk/sdk/guest(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -507,11 +466,11 @@ importers:
   modules/waste-recycling:
     dependencies:
       '@portaki/module-sdk':
-        specifier: file:../../../portaki-sdk/sdk/module-sdk
-        version: file:../portaki-sdk/sdk/module-sdk(react@19.2.6)
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.2.6)
       '@portaki/sdk':
-        specifier: file:../../../portaki-sdk/sdk/guest
-        version: file:../portaki-sdk/sdk/guest(react@19.2.6)
+        specifier: ^0.5.1
+        version: 0.5.1(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -519,9 +478,6 @@ importers:
         specifier: ^19.1.0
         version: 19.2.6(react@19.2.6)
     devDependencies:
-      '@portaki/module-test-support':
-        specifier: file:../../../portaki-sdk/sdk/module-test-support
-        version: file:../portaki-sdk/sdk/module-test-support(@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk(react@19.2.6))(@portaki/sdk@file:../portaki-sdk/sdk/guest(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -544,11 +500,11 @@ importers:
   modules/weather:
     dependencies:
       '@portaki/module-sdk':
-        specifier: file:../../../portaki-sdk/sdk/module-sdk
-        version: file:../portaki-sdk/sdk/module-sdk(react@19.2.6)
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.2.6)
       '@portaki/sdk':
-        specifier: file:../../../portaki-sdk/sdk/guest
-        version: file:../portaki-sdk/sdk/guest(react@19.2.6)
+        specifier: ^0.5.1
+        version: 0.5.1(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -556,9 +512,6 @@ importers:
         specifier: ^19.1.0
         version: 19.2.6(react@19.2.6)
     devDependencies:
-      '@portaki/module-test-support':
-        specifier: file:../../../portaki-sdk/sdk/module-test-support
-        version: file:../portaki-sdk/sdk/module-test-support(@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk(react@19.2.6))(@portaki/sdk@file:../portaki-sdk/sdk/guest(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -581,11 +534,11 @@ importers:
   modules/wifi-guest:
     dependencies:
       '@portaki/module-sdk':
-        specifier: file:../../../portaki-sdk/sdk/module-sdk
-        version: file:../portaki-sdk/sdk/module-sdk(react@19.2.6)
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.2.6)
       '@portaki/sdk':
-        specifier: file:../../../portaki-sdk/sdk/guest
-        version: file:../portaki-sdk/sdk/guest(react@19.2.6)
+        specifier: ^0.5.1
+        version: 0.5.1(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -593,9 +546,6 @@ importers:
         specifier: ^19.1.0
         version: 19.2.6(react@19.2.6)
     devDependencies:
-      '@portaki/module-test-support':
-        specifier: file:../../../portaki-sdk/sdk/module-test-support
-        version: file:../portaki-sdk/sdk/module-test-support(@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk(react@19.2.6))(@portaki/sdk@file:../portaki-sdk/sdk/guest(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.9.1
@@ -822,21 +772,13 @@ packages:
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
 
-  '@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk':
-    resolution: {directory: ../portaki-sdk/sdk/module-sdk, type: directory}
+  '@portaki/module-sdk@1.0.0':
+    resolution: {integrity: sha512-j8p5Azb1DZKQVglwKE5Ho1ac8LHhzKBYiORB63s87ZkGrvSijyDOe7ENxSzdebYlaNYW83AABrm2JjvGq9Edaw==}
     peerDependencies:
       react: '>=18'
 
-  '@portaki/module-test-support@file:../portaki-sdk/sdk/module-test-support':
-    resolution: {directory: ../portaki-sdk/sdk/module-test-support, type: directory}
-    peerDependencies:
-      '@portaki/module-sdk': file:/Users/cyrilcolinet/Documents/Projects/PortakiApp/Repositories/portaki-sdk/sdk/module-sdk
-      '@portaki/sdk': file:/Users/cyrilcolinet/Documents/Projects/PortakiApp/Repositories/portaki-sdk/sdk/guest
-      react: '>=18'
-      react-dom: '>=18'
-
-  '@portaki/sdk@file:../portaki-sdk/sdk/guest':
-    resolution: {directory: ../portaki-sdk/sdk/guest, type: directory}
+  '@portaki/sdk@0.5.1':
+    resolution: {integrity: sha512-W9s5p3NSWsjROQfuPo2UMs2rpB20j1pwzVi0ilPJ5/VT3zDeCJH/k6zxEG9Ibu3Ia8OsS2TGUsruS/ys69Gb2Q==}
     peerDependencies:
       react: '>=18'
 
@@ -1811,20 +1753,11 @@ snapshots:
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
 
-  '@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk(react@19.2.6)':
+  '@portaki/module-sdk@1.0.0(react@19.2.6)':
     dependencies:
       react: 19.2.6
 
-  '@portaki/module-test-support@file:../portaki-sdk/sdk/module-test-support(@portaki/module-sdk@file:../portaki-sdk/sdk/module-sdk(react@19.2.6))(@portaki/sdk@file:../portaki-sdk/sdk/guest(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)':
-    dependencies:
-      '@portaki/module-sdk': file:../portaki-sdk/sdk/module-sdk(react@19.2.6)
-      '@portaki/sdk': file:../portaki-sdk/sdk/guest(react@19.2.6)
-      ajv: 8.20.0
-      ajv-formats: 3.0.1(ajv@8.20.0)
-      react: 19.2.6
-      react-dom: 19.2.6(react@19.2.6)
-
-  '@portaki/sdk@file:../portaki-sdk/sdk/guest(react@19.2.6)':
+  '@portaki/sdk@0.5.1(react@19.2.6)':
     dependencies:
       react: 19.2.6
 
