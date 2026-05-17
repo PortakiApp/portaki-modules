@@ -17,7 +17,19 @@ BACKEND_MODULES=(
   trmnl
 )
 
-for module_id in "${BACKEND_MODULES[@]}"; do
+requested_module="${PORTAKI_MODULE_ID:-${1:-}}"
+if [[ -n "${requested_module}" ]]; then
+  backend_dir="$ROOT/modules/${requested_module}/backend"
+  if [[ ! -f "$backend_dir/pom.xml" ]]; then
+    echo "unknown or missing backend for module: ${requested_module}" >&2
+    exit 1
+  fi
+  target_modules=("${requested_module}")
+else
+  target_modules=("${BACKEND_MODULES[@]}")
+fi
+
+for module_id in "${target_modules[@]}"; do
   backend_dir="$ROOT/modules/$module_id/backend"
   manifest="$ROOT/modules/$module_id/portaki.module.json"
   if [[ ! -f "$backend_dir/pom.xml" ]]; then

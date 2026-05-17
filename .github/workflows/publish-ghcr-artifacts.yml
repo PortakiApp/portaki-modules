@@ -75,14 +75,17 @@ jobs:
         with:
           targets: wasm32-wasip1
 
-      - name: Build backend JARs
+      - name: Build backend JAR
+        env:
+          PORTAKI_MODULE_ID: ${{ matrix.module_slug }}
         run: |
           chmod +x scripts/install-backend-artifacts.sh
           ./scripts/install-backend-artifacts.sh
 
-      - name: Build gateway Wasm shims
+      - name: Build gateway Wasm shim
         env:
           PORTAKI_MODULES_ARTIFACTS: ${{ github.workspace }}/artifacts
+          PORTAKI_WASM_BACKEND_MODULES: ${{ matrix.module_slug }}
         run: |
           chmod +x portaki-module-runtime/scripts/build-wasm-shim.sh
           portaki-module-runtime/scripts/build-wasm-shim.sh
