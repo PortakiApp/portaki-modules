@@ -136,6 +136,16 @@ jobs:
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
+      - name: Checkout portaki-sdk (java-test-support)
+        uses: actions/checkout@v4
+        with:
+          repository: PortakiApp/portaki-sdk
+          path: .deps/portaki-sdk
+          ref: main
+
+      - name: Install portaki-module-sdk-test
+        run: bash .github/scripts/install-portaki-java-test-support.sh
+
       - name: Assert release version (no SNAPSHOT)
         working-directory: ${{ matrix.java_dir }}
         run: |
@@ -150,4 +160,4 @@ jobs:
 
       - name: Deploy to Central
         working-directory: ${{ matrix.java_dir }}
-        run: mvn --batch-mode -ntp deploy -DskipTests -P central-deploy
+        run: mvn --batch-mode -ntp deploy -Dmaven.test.skip=true -P central-deploy

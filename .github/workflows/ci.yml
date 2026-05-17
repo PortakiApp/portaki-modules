@@ -141,7 +141,7 @@ jobs:
         if: >
           github.event_name != 'pull_request' ||
           github.event.pull_request.head.repo.full_name == github.repository
-        run: mvn -B install -f .deps/portaki-sdk/sdk/java-test-support/pom.xml -DskipTests
+        run: bash .github/scripts/install-portaki-java-test-support.sh
 
       - name: Verify backend (Maven)
         if: >
@@ -316,7 +316,19 @@ jobs:
             echo "should_publish=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Checkout portaki-sdk (java-test-support)
+        if: env.has_secrets == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: PortakiApp/portaki-sdk
+          path: .deps/portaki-sdk
+          ref: main
+
+      - name: Install portaki-module-sdk-test
+        if: env.has_secrets == 'true'
+        run: bash .github/scripts/install-portaki-java-test-support.sh
+
       - name: Deploy to Maven Central
         if: env.has_secrets == 'true' && steps.gate.outputs.should_publish == 'true'
         working-directory: ${{ matrix.java_dir }}
-        run: mvn --batch-mode -ntp deploy -DskipTests -P central-deploy
+        run: mvn --batch-mode -ntp deploy -Dmaven.test.skip=true -P central-deploy

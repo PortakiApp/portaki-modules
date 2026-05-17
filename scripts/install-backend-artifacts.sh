@@ -29,7 +29,7 @@ for module_id in "${BACKEND_MODULES[@]}"; do
     version="$(node -e "const m=require('$manifest'); process.stdout.write(m.version||'1.0.0')")"
   fi
   echo "==> mvn package $module_id-backend @ $version"
-  (cd "$backend_dir" && mvn -q package -DskipTests)
+  (cd "$backend_dir" && mvn -q package -Dmaven.test.skip=true)
   jar="$(find "$backend_dir/target" -maxdepth 1 -name '*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' | head -1)"
   if [[ -z "$jar" ]]; then
     echo "no jar produced for $module_id" >&2
