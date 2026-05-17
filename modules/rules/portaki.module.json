@@ -41,7 +41,21 @@
     "content"
   ],
   "portakiVersionMin": "1.0.0",
-  "requiresHostSdk": "0.6.0",
+  "requiresHostSdk": "1.0.0",
+  "database": {
+    "schemaVersion": "1.0.0"
+  },
+  "hostSurfaces": [
+    {
+      "type": "property-workspace-tab",
+      "pathSegment": "rules",
+      "label": {
+        "fr": "Règlement",
+        "en": "House rules"
+      },
+      "icon": "scroll-text"
+    }
+  ],
   "scopes": [
     "stay:read",
     "property:read",
@@ -99,5 +113,14 @@
     ],
     "npmPackage": "@portaki/module-rules",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-rules"
+  },
+  "runtime": {
+    "backend": "wasm",
+    "guest": "remote-esm"
+  },
+  "artifacts": {
+    "guestEsmUrl": "https://esm.sh/@portaki/module-rules@1.0.0",
+    "wasmUrl": "oci://ghcr.io/portakiapp/portaki-module-rules:1.0.0",
+    "jarMaven": ""
   }
 }

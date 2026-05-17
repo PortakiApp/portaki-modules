@@ -17,9 +17,16 @@
   },
   "icon": "file-text",
   "type": "official",
-  "tags": ["editorial", "content", "sections"],
+  "tags": [
+    "editorial",
+    "content",
+    "sections"
+  ],
   "portakiVersionMin": "1.0.0",
-  "requiresHostSdk": "0.6.0",
+  "requiresHostSdk": "1.0.0",
+  "database": {
+    "schemaVersion": "1.0.0"
+  },
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
   "scopes": [
@@ -68,7 +75,10 @@
     {
       "type": "property-workspace-tab",
       "pathSegment": "sections",
-      "label": { "fr": "Sections", "en": "Sections" },
+      "label": {
+        "fr": "Sections",
+        "en": "Sections"
+      },
       "icon": "file-text"
     }
   ],
@@ -84,5 +94,14 @@
     "npmPackage": "@portaki/module-sections",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-sections",
     "javaArtifact": "app.portaki.module:sections-backend:0.1.0"
+  },
+  "runtime": {
+    "backend": "wasm",
+    "guest": "remote-esm"
+  },
+  "artifacts": {
+    "guestEsmUrl": "https://esm.sh/@portaki/module-sections@1.0.0",
+    "wasmUrl": "oci://ghcr.io/portakiapp/portaki-module-sections:1.0.0",
+    "jarMaven": "app.portaki.module:sections-backend:0.1.0"
   }
 }

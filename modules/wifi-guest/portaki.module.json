@@ -40,7 +40,7 @@
     "guest"
   ],
   "portakiVersionMin": "1.0.0",
-  "requiresHostSdk": "0.5.0",
+  "requiresHostSdk": "1.0.0",
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
   "screenshots": [
@@ -136,5 +136,14 @@
     ],
     "npmPackage": "@portaki/module-wifi-guest",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-wifi-guest"
+  },
+  "runtime": {
+    "backend": "none",
+    "guest": "remote-esm"
+  },
+  "artifacts": {
+    "guestEsmUrl": "https://esm.sh/@portaki/module-wifi-guest@1.0.0",
+    "wasmUrl": "",
+    "jarMaven": ""
   }
 }

@@ -17,9 +17,15 @@
   },
   "icon": "monitor",
   "type": "community",
-  "tags": ["trmnl", "epaper", "display", "dashboard", "iot"],
+  "tags": [
+    "trmnl",
+    "epaper",
+    "display",
+    "dashboard",
+    "iot"
+  ],
   "portakiVersionMin": "1.0.0",
-  "requiresHostSdk": "0.5.0",
+  "requiresHostSdk": "1.0.0",
   "license": "MIT",
   "repository": "https://github.com/PortakiApp/portaki-modules/tree/main/modules/trmnl",
   "screenshots": [
@@ -27,10 +33,16 @@
     "assets/screenshot-guest-display.png"
   ],
   "readme": "README.md",
-  "scopes": ["stay:read", "property:read"],
+  "scopes": [
+    "stay:read",
+    "property:read"
+  ],
   "dependencies": {
     "required": [],
-    "optional": ["events", "checklist"]
+    "optional": [
+      "events",
+      "checklist"
+    ]
   },
   "queries": [],
   "commands": [],
@@ -88,11 +100,17 @@
         "options": [
           {
             "value": "host_dashboard",
-            "label": { "fr": "Dashboard hôte", "en": "Host dashboard" }
+            "label": {
+              "fr": "Dashboard hôte",
+              "en": "Host dashboard"
+            }
           },
           {
             "value": "guest_display",
-            "label": { "fr": "Affichage dans le logement", "en": "In-property guest display" }
+            "label": {
+              "fr": "Affichage dans le logement",
+              "en": "In-property guest display"
+            }
           }
         ],
         "default": "host_dashboard"
@@ -142,5 +160,14 @@
     "npmPackage": "@portaki/module-trmnl",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-trmnl",
     "javaArtifact": "app.portaki.module:trmnl-backend"
+  },
+  "runtime": {
+    "backend": "wasm",
+    "guest": "remote-esm"
+  },
+  "artifacts": {
+    "guestEsmUrl": "https://esm.sh/@portaki/module-trmnl@1.0.0",
+    "wasmUrl": "oci://ghcr.io/portakiapp/portaki-module-trmnl:1.0.0",
+    "jarMaven": "app.portaki.module:trmnl-backend"
   }
 }

@@ -46,7 +46,7 @@
     <dependency>
       <groupId>app.portaki</groupId>
       <artifactId>portaki-module-sdk</artifactId>
-      <version>0.7.0</version>
+      <version>1.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
@@ -65,9 +65,27 @@
       <artifactId>jackson-databind</artifactId>
       <version>2.18.2</version>
     </dependency>
+    <dependency>
+      <groupId>app.portaki</groupId>
+      <artifactId>portaki-module-sdk-test</artifactId>
+      <version>1.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.12.2</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>../db/migrations</directory>
+        <targetPath>portaki/db/appliances</targetPath>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -76,6 +94,11 @@
         <configuration>
           <release>${java.version}</release>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.2</version>
       </plugin>
     </plugins>
   </build>

@@ -41,7 +41,21 @@
     "navitia"
   ],
   "portakiVersionMin": "1.0.0",
-  "requiresHostSdk": "0.5.0",
+  "requiresHostSdk": "1.0.0",
+  "scopes": [
+    "stay:read",
+    "property:read"
+  ],
+  "queries": [
+    {
+      "name": "train.departures",
+      "description": {
+        "fr": "Prochains départs depuis la gare configurée.",
+        "en": "Upcoming departures from the configured station."
+      },
+      "scope": "stay:read"
+    }
+  ],
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
   "screenshots": [
@@ -133,6 +147,16 @@
       }
     ],
     "npmPackage": "@portaki/module-train",
-    "npmUrl": "https://www.npmjs.com/package/@portaki/module-train"
+    "npmUrl": "https://www.npmjs.com/package/@portaki/module-train",
+    "javaArtifact": "app.portaki.module:train-backend:1.0.0"
+  },
+  "runtime": {
+    "backend": "wasm",
+    "guest": "remote-esm"
+  },
+  "artifacts": {
+    "guestEsmUrl": "https://esm.sh/@portaki/module-train@1.0.0",
+    "wasmUrl": "oci://ghcr.io/portakiapp/portaki-module-train:1.0.0",
+    "jarMaven": "app.portaki.module:train-backend:1.0.0"
   }
 }

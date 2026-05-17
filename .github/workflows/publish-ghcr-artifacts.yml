@@ -1,0 +1,136 @@
+# Publishes module backend OCI bundles (gateway.wasm + backend.jar) to GHCR.
+# Image: ghcr.io/<owner>/portaki-module-<id>:<semver>
+# Manifest wasmUrl: oci://ghcr.io/<owner>/portaki-module-<id>:<semver>
+
+name: Publish module artifacts (GHCR)
+
+run-name: ghcr-modules-${{ github.run_id }}
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      force_all:
+        description: Publish all backend modules (not only changed)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ghcr-module-artifacts-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  JAVA_VERSION: "21"
+  RUST_TOOLCHAIN: stable
+
+jobs:
+  discover:
+    name: Discover OCI publish matrix
+    runs-on: ubuntu-latest
+    outputs:
+      any: ${{ steps.set.outputs.any }}
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - id: set
+        env:
+          FORCE_ALL_OCI: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force_all && '1' || '0' }}
+        run: bash .github/scripts/discover-oci-publish-matrix.sh >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: ${{ matrix.job_label }}
+    needs: [discover]
+    if: needs.discover.outputs.any == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.discover.outputs.matrix) }}
+    steps:
+      - name: Checkout portaki-modules
+        uses: actions/checkout@v4
+
+      - name: Checkout portaki-module-runtime (wasm shim build)
+        uses: actions/checkout@v4
+        with:
+          repository: PortakiApp/portaki-module-runtime
+          path: portaki-module-runtime
+          ref: main
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Install Rust (wasm32-wasip1)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasip1
+
+      - name: Build backend JAR
+        run: |
+          chmod +x scripts/install-backend-artifacts.sh
+          ./scripts/install-backend-artifacts.sh
+
+      - name: Build gateway Wasm shims
+        env:
+          PORTAKI_MODULES_ARTIFACTS: ${{ github.workspace }}/artifacts
+        run: |
+          chmod +x portaki-module-runtime/scripts/build-wasm-shim.sh
+          portaki-module-runtime/scripts/build-wasm-shim.sh
+
+      - name: GHCR registry
+        id: registry
+        run: |
+          owner="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          echo "owner=${owner}" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/${owner}/portaki-module-${{ matrix.module_slug }}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish OCI bundle
+        env:
+          PORTAKI_MODULES_ARTIFACTS: ${{ github.workspace }}/artifacts
+          PORTAKI_GHCR_REGISTRY: ghcr.io/${{ steps.registry.outputs.owner }}
+          MODULE_SLUG: ${{ matrix.module_slug }}
+        run: |
+          set -euo pipefail
+          manifest="modules/${MODULE_SLUG}/portaki.module.json"
+          version="1.0.0"
+          if [[ -f "${manifest}" ]]; then
+            version="$(node -e "const m=require('./${manifest}'); process.stdout.write(m.version||'1.0.0')")"
+          fi
+          wasm="artifacts/${MODULE_SLUG}/${version}.wasm"
+          jar="artifacts/${MODULE_SLUG}/${version}.jar"
+          image="${PORTAKI_GHCR_REGISTRY}/portaki-module-${MODULE_SLUG}:${version}"
+          if [[ ! -f "${wasm}" || ! -f "${jar}" ]]; then
+            echo "::warning::skip ${MODULE_SLUG} — missing ${wasm} or ${jar}"
+            exit 0
+          fi
+          build_dir="$(mktemp -d)"
+          cp "${wasm}" "${build_dir}/gateway.wasm"
+          cp "${jar}" "${build_dir}/backend.jar"
+          printf '%s\n' \
+            'FROM scratch' \
+            'COPY gateway.wasm /gateway.wasm' \
+            'COPY backend.jar /backend.jar' > "${build_dir}/Dockerfile"
+          docker build -t "${image}" "${build_dir}"
+          docker push "${image}"
+          if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/master" ]]; then
+            docker tag "${image}" "${PORTAKI_GHCR_REGISTRY}/portaki-module-${MODULE_SLUG}:latest"
+            docker push "${PORTAKI_GHCR_REGISTRY}/portaki-module-${MODULE_SLUG}:latest"
+          fi
+          echo "published ${image}"

@@ -41,7 +41,69 @@
     "tasks"
   ],
   "portakiVersionMin": "1.0.0",
-  "requiresHostSdk": "0.5.0",
+  "requiresHostSdk": "1.0.0",
+  "scopes": [
+    "stay:read",
+    "property:read",
+    "checklist:write",
+    "stay:events:write"
+  ],
+  "queries": [
+    {
+      "name": "checklist.items",
+      "description": {
+        "fr": "Liste des tâches de départ configurées pour le logement.",
+        "en": "Checkout tasks configured for the property."
+      },
+      "scope": "stay:read"
+    },
+    {
+      "name": "checklist.completions",
+      "description": {
+        "fr": "État des cases cochées pour le séjour en cours.",
+        "en": "Checked items for the active stay."
+      },
+      "scope": "stay:read"
+    }
+  ],
+  "commands": [
+    {
+      "name": "checklist.complete-item",
+      "description": {
+        "fr": "Cocher une tâche pour le séjour.",
+        "en": "Mark a task as done for the stay."
+      },
+      "scope": "checklist:write"
+    },
+    {
+      "name": "checklist.uncomplete-item",
+      "description": {
+        "fr": "Décocher une tâche pour le séjour.",
+        "en": "Mark a task as not done for the stay."
+      },
+      "scope": "checklist:write"
+    }
+  ],
+  "events": {
+    "published": [
+      {
+        "name": "checklist.progress-updated",
+        "description": {
+          "fr": "Progression de la checklist mise à jour pour le séjour.",
+          "en": "Checklist progress updated for the stay."
+        },
+        "severity": "INFO"
+      },
+      {
+        "name": "checklist.completed",
+        "description": {
+          "fr": "Toutes les tâches de la checklist sont cochées.",
+          "en": "All checklist tasks are completed."
+        },
+        "severity": "INFO"
+      }
+    ]
+  },
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
   "screenshots": [
@@ -72,6 +134,16 @@
       }
     ],
     "npmPackage": "@portaki/module-checklist",
-    "npmUrl": "https://www.npmjs.com/package/@portaki/module-checklist"
+    "npmUrl": "https://www.npmjs.com/package/@portaki/module-checklist",
+    "javaArtifact": "app.portaki.module:checklist-backend:1.0.0"
+  },
+  "runtime": {
+    "backend": "wasm",
+    "guest": "remote-esm"
+  },
+  "artifacts": {
+    "guestEsmUrl": "https://esm.sh/@portaki/module-checklist@1.0.0",
+    "wasmUrl": "oci://ghcr.io/portakiapp/portaki-module-checklist:1.0.0",
+    "jarMaven": "app.portaki.module:checklist-backend:1.0.0"
   }
 }

@@ -42,7 +42,7 @@
     "guest"
   ],
   "portakiVersionMin": "1.0.0",
-  "requiresHostSdk": "0.5.0",
+  "requiresHostSdk": "1.0.0",
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
   "screenshots": [
@@ -106,5 +106,14 @@
     ],
     "npmPackage": "@portaki/module-facility-hours",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-facility-hours"
+  },
+  "runtime": {
+    "backend": "none",
+    "guest": "remote-esm"
+  },
+  "artifacts": {
+    "guestEsmUrl": "https://esm.sh/@portaki/module-facility-hours@1.0.0",
+    "wasmUrl": "",
+    "jarMaven": ""
   }
 }

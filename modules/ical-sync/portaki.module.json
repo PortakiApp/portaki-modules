@@ -41,7 +41,7 @@
     "host"
   ],
   "portakiVersionMin": "1.0.0",
-  "requiresHostSdk": "0.5.0",
+  "requiresHostSdk": "1.0.0",
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
   "screenshots": [
@@ -104,5 +104,14 @@
     "npmPackage": "@portaki/module-ical-sync",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-ical-sync",
     "javaArtifact": "app.portaki.module:ical-sync-backend"
+  },
+  "runtime": {
+    "backend": "wasm",
+    "guest": "remote-esm"
+  },
+  "artifacts": {
+    "guestEsmUrl": "https://esm.sh/@portaki/module-ical-sync@1.0.1",
+    "wasmUrl": "oci://ghcr.io/portakiapp/portaki-module-ical-sync:1.0.1",
+    "jarMaven": "app.portaki.module:ical-sync-backend"
   }
 }

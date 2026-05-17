@@ -42,7 +42,21 @@
     "manual"
   ],
   "portakiVersionMin": "1.0.0",
-  "requiresHostSdk": "0.6.0",
+  "requiresHostSdk": "1.0.0",
+  "database": {
+    "schemaVersion": "1.0.0"
+  },
+  "hostSurfaces": [
+    {
+      "type": "property-workspace-tab",
+      "pathSegment": "appliances",
+      "label": {
+        "fr": "Appareils",
+        "en": "Appliances"
+      },
+      "icon": "plug"
+    }
+  ],
   "scopes": [
     "stay:read",
     "property:read",
@@ -136,5 +150,14 @@
     ],
     "npmPackage": "@portaki/module-appliances",
     "npmUrl": "https://www.npmjs.com/package/@portaki/module-appliances"
+  },
+  "runtime": {
+    "backend": "wasm",
+    "guest": "remote-esm"
+  },
+  "artifacts": {
+    "guestEsmUrl": "https://esm.sh/@portaki/module-appliances@1.0.0",
+    "wasmUrl": "oci://ghcr.io/portakiapp/portaki-module-appliances:1.0.0",
+    "jarMaven": ""
   }
 }
