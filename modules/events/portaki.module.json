@@ -49,6 +49,10 @@
   "queries": [
     {
       "name": "events.nearby",
+      "description": {
+        "fr": "Événements et sorties à proximité du logement.",
+        "en": "Events and outings near the property."
+      },
       "scope": "stay:read"
     }
   ],

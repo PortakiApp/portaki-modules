@@ -51,27 +51,59 @@
   "queries": [
     {
       "name": "checklist.items",
+      "description": {
+        "fr": "Liste des tâches de départ configurées pour le logement.",
+        "en": "Checkout tasks configured for the property."
+      },
       "scope": "stay:read"
     },
     {
       "name": "checklist.completions",
+      "description": {
+        "fr": "État des cases cochées pour le séjour en cours.",
+        "en": "Checked items for the active stay."
+      },
       "scope": "stay:read"
     }
   ],
   "commands": [
     {
       "name": "checklist.complete-item",
+      "description": {
+        "fr": "Cocher une tâche pour le séjour.",
+        "en": "Mark a task as done for the stay."
+      },
       "scope": "checklist:write"
     },
     {
       "name": "checklist.uncomplete-item",
+      "description": {
+        "fr": "Décocher une tâche pour le séjour.",
+        "en": "Mark a task as not done for the stay."
+      },
       "scope": "checklist:write"
     }
   ],
-  "events": [
-    "checklist.progress-updated",
-    "checklist.completed"
-  ],
+  "events": {
+    "published": [
+      {
+        "name": "checklist.progress-updated",
+        "description": {
+          "fr": "Progression de la checklist mise à jour pour le séjour.",
+          "en": "Checklist progress updated for the stay."
+        },
+        "severity": "INFO"
+      },
+      {
+        "name": "checklist.completed",
+        "description": {
+          "fr": "Toutes les tâches de la checklist sont cochées.",
+          "en": "All checklist tasks are completed."
+        },
+        "severity": "INFO"
+      }
+    ]
+  },
   "license": "AGPL-3.0",
   "repository": "https://github.com/PortakiApp/portaki-modules",
   "screenshots": [

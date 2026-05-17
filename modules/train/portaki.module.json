@@ -49,6 +49,10 @@
   "queries": [
     {
       "name": "train.departures",
+      "description": {
+        "fr": "Prochains départs depuis la gare configurée.",
+        "en": "Upcoming departures from the configured station."
+      },
       "scope": "stay:read"
     }
   ],
