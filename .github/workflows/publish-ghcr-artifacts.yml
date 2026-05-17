@@ -57,12 +57,13 @@ jobs:
       - name: Checkout portaki-modules
         uses: actions/checkout@v4
 
-      - name: Checkout portaki-module-runtime (wasm shim build)
+      - name: Checkout portaki-module-runtime (wasm shim — private repo)
         uses: actions/checkout@v4
         with:
           repository: PortakiApp/portaki-module-runtime
           path: portaki-module-runtime
           ref: main
+          token: ${{ secrets.PORTAKI_MODULE_RUNTIME_CHECKOUT_TOKEN }}
 
       - uses: actions/setup-java@v4
         with:
@@ -74,7 +75,7 @@ jobs:
         with:
           targets: wasm32-wasip1
 
-      - name: Build backend JAR
+      - name: Build backend JARs
         run: |
           chmod +x scripts/install-backend-artifacts.sh
           ./scripts/install-backend-artifacts.sh
