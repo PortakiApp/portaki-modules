@@ -148,7 +148,7 @@ jobs:
           github.event_name != 'pull_request' ||
           github.event.pull_request.head.repo.full_name == github.repository
         working-directory: ${{ matrix.java_dir }}
-        run: mvn -B verify
+        run: mvn -B verify -Punit-tests
 
       - name: Skip Java on fork pull_request
         if: >
