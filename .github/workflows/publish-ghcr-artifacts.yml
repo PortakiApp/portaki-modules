@@ -57,13 +57,6 @@ jobs:
       - name: Checkout portaki-modules
         uses: actions/checkout@v4
 
-      - name: Checkout portaki-module-runtime (wasm shim build)
-        uses: actions/checkout@v4
-        with:
-          repository: PortakiApp/portaki-module-runtime
-          path: portaki-module-runtime
-          ref: main
-
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -74,7 +67,7 @@ jobs:
         with:
           targets: wasm32-wasip1
 
-      - name: Build backend JAR
+      - name: Build backend JARs
         run: |
           chmod +x scripts/install-backend-artifacts.sh
           ./scripts/install-backend-artifacts.sh
@@ -83,8 +76,8 @@ jobs:
         env:
           PORTAKI_MODULES_ARTIFACTS: ${{ github.workspace }}/artifacts
         run: |
-          chmod +x portaki-module-runtime/scripts/build-wasm-shim.sh
-          portaki-module-runtime/scripts/build-wasm-shim.sh
+          chmod +x scripts/build-wasm-shim.sh
+          ./scripts/build-wasm-shim.sh
 
       - name: GHCR registry
         id: registry
