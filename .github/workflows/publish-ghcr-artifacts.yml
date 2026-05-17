@@ -123,11 +123,10 @@ jobs:
           build_dir="$(mktemp -d)"
           cp "${wasm}" "${build_dir}/gateway.wasm"
           cp "${jar}" "${build_dir}/backend.jar"
-          cat > "${build_dir}/Dockerfile" <<'DOCKERFILE'
-FROM scratch
-COPY gateway.wasm /gateway.wasm
-COPY backend.jar /backend.jar
-DOCKERFILE
+          printf '%s\n' \
+            'FROM scratch' \
+            'COPY gateway.wasm /gateway.wasm' \
+            'COPY backend.jar /backend.jar' > "${build_dir}/Dockerfile"
           docker build -t "${image}" "${build_dir}"
           docker push "${image}"
           if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/master" ]]; then
