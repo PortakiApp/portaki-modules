@@ -101,7 +101,7 @@
   },
   "artifacts": {
     "guestEsmUrl": "https://esm.sh/@portaki/module-sections@1.0.0",
-    "wasmUrl": "artifacts://sections/1.0.0.wasm",
+    "wasmUrl": "oci://ghcr.io/portakiapp/portaki-module-sections:1.0.0",
     "jarMaven": "app.portaki.module:sections-backend:0.1.0"
   }
 }

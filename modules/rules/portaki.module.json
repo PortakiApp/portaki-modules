@@ -120,7 +120,7 @@
   },
   "artifacts": {
     "guestEsmUrl": "https://esm.sh/@portaki/module-rules@1.0.0",
-    "wasmUrl": "artifacts://rules/1.0.0.wasm",
+    "wasmUrl": "oci://ghcr.io/portakiapp/portaki-module-rules:1.0.0",
     "jarMaven": ""
   }
 }

@@ -31,6 +31,26 @@ const WASM_BACKEND_IDS = new Set(
     .filter(Boolean),
 )
 
+const ghcrOwner = (process.env.PORTAKI_GHCR_OWNER ?? 'portakiapp').toLowerCase()
+/** oci (GHCR default) | artifacts (local volume) | https (CDN base URL) */
+const artifactsScheme = process.env.PORTAKI_ARTIFACTS_SCHEME ?? 'oci'
+
+function resolveWasmUrl(moduleId, version, wasmBackend) {
+  if (!wasmBackend) {
+    return ''
+  }
+  if (artifactsScheme === 'https') {
+    const wasmCdnBase = (process.env.PORTAKI_WASM_CDN_BASE_URL ?? '').replace(/\/$/, '')
+    return wasmCdnBase
+      ? `${wasmCdnBase}/${moduleId}/${version}.wasm`
+      : `artifacts://${moduleId}/${version}.wasm`
+  }
+  if (artifactsScheme === 'artifacts') {
+    return `artifacts://${moduleId}/${version}.wasm`
+  }
+  return `oci://ghcr.io/${ghcrOwner}/portaki-module-${moduleId}:${version}`
+}
+
 for (const dir of fs.readdirSync(root)) {
   const manifestPath = path.join(root, dir, 'portaki.module.json')
   if (!fs.existsSync(manifestPath)) {
@@ -46,12 +66,7 @@ for (const dir of fs.readdirSync(root)) {
     backend: wasmBackend ? 'wasm' : hasBackend ? 'jar' : 'none',
     guest: 'remote-esm',
   }
-  const wasmCdnBase = (process.env.PORTAKI_WASM_CDN_BASE_URL ?? '').replace(/\/$/, '')
-  const wasmUrl = !wasmBackend
-    ? ''
-    : wasmCdnBase
-      ? `${wasmCdnBase}/${raw.id}/${version}.wasm`
-      : `artifacts://${raw.id}/${version}.wasm`
+  const wasmUrl = resolveWasmUrl(raw.id, version, wasmBackend)
   raw.artifacts = {
     guestEsmUrl: `https://esm.sh/${npmPackage}@${version}`,
     wasmUrl,

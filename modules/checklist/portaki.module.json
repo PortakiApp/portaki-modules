@@ -111,7 +111,7 @@
   },
   "artifacts": {
     "guestEsmUrl": "https://esm.sh/@portaki/module-checklist@1.0.0",
-    "wasmUrl": "artifacts://checklist/1.0.0.wasm",
+    "wasmUrl": "oci://ghcr.io/portakiapp/portaki-module-checklist:1.0.0",
     "jarMaven": "app.portaki.module:checklist-backend:1.0.0"
   }
 }
