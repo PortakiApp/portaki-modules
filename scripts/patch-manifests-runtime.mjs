@@ -46,9 +46,15 @@ for (const dir of fs.readdirSync(root)) {
     backend: wasmBackend ? 'wasm' : hasBackend ? 'jar' : 'none',
     guest: 'remote-esm',
   }
+  const wasmCdnBase = (process.env.PORTAKI_WASM_CDN_BASE_URL ?? '').replace(/\/$/, '')
+  const wasmUrl = !wasmBackend
+    ? ''
+    : wasmCdnBase
+      ? `${wasmCdnBase}/${raw.id}/${version}.wasm`
+      : `artifacts://${raw.id}/${version}.wasm`
   raw.artifacts = {
     guestEsmUrl: `https://esm.sh/${npmPackage}@${version}`,
-    wasmUrl: wasmBackend ? `artifacts://${raw.id}/${version}.wasm` : '',
+    wasmUrl,
     jarMaven: raw.catalog?.javaArtifact ?? '',
   }
 
