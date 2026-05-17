@@ -16,7 +16,7 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 
 if [[ ! -d "${ARTIFACTS_ROOT}" ]]; then
-  echo "artifacts root missing: ${ARTIFACTS_ROOT} — run install-backend-artifacts.sh and build-wasm-shim.sh first" >&2
+  echo "artifacts root missing: ${ARTIFACTS_ROOT} — run install-backend-artifacts.sh and portaki-module-runtime/scripts/build-wasm-shim.sh first" >&2
   exit 1
 fi
 
