@@ -1,6 +1,6 @@
 {
   "name": "@portaki/module-pre-arrival-form",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "Module Portaki — formulaire avant arrivée (séjour)",
   "license": "AGPL-3.0",
   "type": "module",

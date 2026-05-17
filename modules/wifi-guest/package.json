@@ -1,6 +1,6 @@
 {
   "name": "@portaki/module-wifi-guest",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "Portaki module — guest Wi‑Fi credentials",
   "license": "AGPL-3.0",
   "type": "module",
