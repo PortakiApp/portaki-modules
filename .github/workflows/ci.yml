@@ -42,16 +42,11 @@ jobs:
       - name: Install portaki CLI
         run: cargo install --git https://github.com/PortakiApp/portaki-sdk-rust --branch fix/macro-expand-emissions --locked portaki-cli
 
-      - name: Lint all modules
-        run: |
-          for module in modules/*/; do
-            echo "=== portaki lint: $module ==="
-            (cd "$module" && portaki lint)
-          done
-
-      - name: Build all modules (wasm)
+      - name: Build and lint all modules (wasm)
         run: |
           for module in modules/*/; do
             echo "=== portaki build: $module ==="
             (cd "$module" && portaki build --release)
+            echo "=== portaki lint: $module ==="
+            (cd "$module" && portaki lint)
           done
