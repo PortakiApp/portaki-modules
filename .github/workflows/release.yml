@@ -37,9 +37,19 @@ jobs:
       - name: Install portaki CLI
         run: cargo install --git https://github.com/PortakiApp/portaki-sdk-rust --branch main --locked portaki-cli
 
+      - name: Update Portaki SDK lockfile to latest main
+        run: |
+          cargo update -p portaki-sdk -p portaki-sdk-macros -p portaki-connectors -p portaki-test-utils
+          grep -q 'portaki-sdk-macros' Cargo.lock
+          echo "portaki-sdk-macros revision:"
+          awk '/^name = "portaki-sdk-macros"/{getline; getline; print}' Cargo.lock
+
       - name: Build module
         working-directory: modules/${{ steps.parse.outputs.module }}
-        run: portaki build --release
+        run: |
+          MODULE=${{ steps.parse.outputs.module }}
+          rm -rf "target/wasm32-unknown-unknown/release/build/${MODULE}-"*
+          portaki build --release
 
       - name: Verify publish manifest matches git tag
         working-directory: modules/${{ steps.parse.outputs.module }}
