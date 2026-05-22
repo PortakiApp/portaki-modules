@@ -41,6 +41,30 @@ jobs:
         working-directory: modules/${{ steps.parse.outputs.module }}
         run: portaki build --release
 
+      - name: Verify publish manifest matches git tag
+        working-directory: modules/${{ steps.parse.outputs.module }}
+        env:
+          EXPECTED_MODULE: ${{ steps.parse.outputs.module }}
+          EXPECTED_VERSION: ${{ steps.parse.outputs.version }}
+        run: |
+          set -euo pipefail
+          PUBLISH_MANIFEST=target/portaki/publish-manifest.json
+          if [ ! -f "$PUBLISH_MANIFEST" ]; then
+            echo "::error::missing $PUBLISH_MANIFEST — portaki build must produce it"
+            exit 1
+          fi
+          MANIFEST_ID=$(jq -r '.id' "$PUBLISH_MANIFEST")
+          MANIFEST_VERSION=$(jq -r '.version' "$PUBLISH_MANIFEST")
+          if [ "$MANIFEST_ID" != "$EXPECTED_MODULE" ]; then
+            echo "::error::publish-manifest id=$MANIFEST_ID expected module=$EXPECTED_MODULE"
+            exit 1
+          fi
+          if [ "$MANIFEST_VERSION" != "$EXPECTED_VERSION" ]; then
+            echo "::error::publish-manifest version=$MANIFEST_VERSION does not match git tag *-v$EXPECTED_VERSION (OCI would be tagged :$MANIFEST_VERSION). Update portaki-sdk-macros / reinstall portaki CLI from main."
+            exit 1
+          fi
+          echo "OCI reference will be ${EXPECTED_MODULE}:${EXPECTED_VERSION}"
+
       - name: Lint
         working-directory: modules/${{ steps.parse.outputs.module }}
         run: portaki lint
@@ -63,6 +87,7 @@ jobs:
         working-directory: modules/${{ steps.parse.outputs.module }}
         env:
           SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY || secrets.SCALEWAY_API_KEY || secrets.SCALEWAY_REGISTRY_TOKEN }}
+          PORTAKI_PUBLISH_VERSION: ${{ steps.parse.outputs.version }}
         run: portaki publish --registry "$REGISTRY"
 
       - name: Install oras (fallback)
@@ -85,12 +110,18 @@ jobs:
             exit 1
           fi
 
-          MODULE_ID=$(jq -r .id target/portaki/manifest.json)
+          PUBLISH_MANIFEST=target/portaki/publish-manifest.json
+          MODULE_ID=$(jq -r .id "$PUBLISH_MANIFEST")
+          MANIFEST_VERSION=$(jq -r .version "$PUBLISH_MANIFEST")
+          if [ "$MANIFEST_VERSION" != "$MODULE_VERSION" ]; then
+            echo "::error::publish-manifest version=$MANIFEST_VERSION does not match tag version=$MODULE_VERSION"
+            exit 1
+          fi
           REF="${REGISTRY}/${MODULE_ID}:${MODULE_VERSION}"
           echo "Pushing $REF (oras fallback)"
 
           ORAS_ARGS=(
-            "target/portaki/manifest.json:application/vnd.portaki.manifest+json"
+            "$PUBLISH_MANIFEST:application/vnd.portaki.manifest+json"
             "${WASM}:application/wasm"
           )
           for bundle in i18n/*.json; do
