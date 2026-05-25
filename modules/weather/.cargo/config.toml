@@ -1,3 +1,6 @@
 # Workspace members share deps at repo root; portaki CLI expects emissions under module/target/.
 [build]
 target-dir = "target"
+
+[target.wasm32-unknown-unknown]
+rustflags = ['--cfg', 'getrandom_backend="custom"']

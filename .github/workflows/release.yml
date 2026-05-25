@@ -51,6 +51,20 @@ jobs:
           rm -rf "target/wasm32-unknown-unknown/release/build/${MODULE}-"*
           portaki build --release
 
+      - name: Verify wasm has no browser wasm-bindgen imports
+        working-directory: modules/${{ steps.parse.outputs.module }}
+        run: |
+          set -euo pipefail
+          WASM="target/wasm32-unknown-unknown/release/${{ steps.parse.outputs.module }}.wasm"
+          if [ ! -f "$WASM" ]; then
+            WASM=$(find target/wasm32-unknown-unknown/release -maxdepth 1 -name '*.wasm' | head -1)
+          fi
+          if strings "$WASM" | grep -q '__wbindgen'; then
+            echo "::error::wasm artifact contains wasm-bindgen imports (Extism cannot load it). Remove uuid/chrono js or wasmbind features."
+            strings "$WASM" | grep '__wbindgen' | head -20
+            exit 1
+          fi
+
       - name: Verify publish manifest matches git tag
         working-directory: modules/${{ steps.parse.outputs.module }}
         env:
