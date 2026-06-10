@@ -24,7 +24,11 @@ fn sample_current_json() -> String {
 
 fn sample_forecast_json() -> String {
     let dates = [
-        "2026-05-22", "2026-05-23", "2026-05-24", "2026-05-25", "2026-05-26",
+        "2026-05-22",
+        "2026-05-23",
+        "2026-05-24",
+        "2026-05-25",
+        "2026-05-26",
     ];
     let conditions = ["Clear", "Clouds", "Rain", "Clouds", "Clear"];
     let list: Vec<serde_json::Value> = dates
