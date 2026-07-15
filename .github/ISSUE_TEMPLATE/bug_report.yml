@@ -1,0 +1,36 @@
+name: Bug report
+description: Report a bug in an official Portaki module
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Security issues? See [SECURITY.md](https://github.com/PortakiApp/portaki-modules/blob/main/SECURITY.md).
+  - type: dropdown
+    id: module
+    attributes:
+      label: Module
+      options:
+        - weather
+        - other / workspace
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Module version / OCI tag
+      placeholder: "0.3.4"
+    validations:
+      required: true

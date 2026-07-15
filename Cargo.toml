@@ -6,7 +6,12 @@ members = ["modules/*"]
 edition = "2021"
 license = "Apache-2.0"
 repository = "https://github.com/PortakiApp/portaki-modules"
+homepage = "https://portaki.app"
+documentation = "https://github.com/PortakiApp/portaki-modules#readme"
+readme = "README.md"
 authors = ["Syntax Labs <support@syntax-labs.fr>"]
+categories = ["wasm"]
+keywords = ["portaki", "wasm", "extism", "oci", "module"]
 rust-version = "1.75"
 
 [workspace.dependencies]

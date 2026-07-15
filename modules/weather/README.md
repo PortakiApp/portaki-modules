@@ -1,12 +1,14 @@
 # weather
 
-Portaki official weather module — current conditions and 5-day forecast for guest booklets and the host dashboard.
+Official Portaki weather module — current conditions and a 5-day forecast for guest booklets and the host dashboard.
 
-Part of [portaki-modules](https://github.com/PortakiApp/portaki-modules) monorepo (migrated from standalone `portaki-module-weather`).
+Part of the [`portaki-modules`](https://github.com/PortakiApp/portaki-modules) monorepo.
 
 ## Module id
 
-`weather` — OCI image `ghcr.io/portakiapp/portaki-modules-weather:<semver>`
+`weather`
+
+OCI image: `ghcr.io/portakiapp/portaki-modules-weather:<semver>`
 
 ## Capabilities
 
@@ -16,27 +18,27 @@ Part of [portaki-modules](https://github.com/PortakiApp/portaki-modules) monorep
 | `external.open-weather.pool` | No | Platform OpenWeather pool token |
 | `external.open-weather.byok` | No | Property BYOK OpenWeather key |
 
-Without pool or BYOK, guest surfaces render an `EmptyState` with upgrade/BYOK guidance.
+Without pool or BYOK access, guest surfaces render an empty state with upgrade / BYOK guidance.
 
 ## Surfaces
 
 | Shell | Surface id | Description |
 |-------|------------|-------------|
-| guest | `home.card` | Current temperature + condition + optional UV badge |
+| guest | `home.card` | Current temperature, condition, optional UV badge |
 | guest | `explore.forecast` | 5-day forecast grid |
 | host | `main` | Units and refresh interval form |
 
-## Queries & commands
+## Queries and commands
 
 - `getCurrent` — cache TTL 1h
 - `getForecast` — cache TTL 6h (5 days)
 - `refreshForecast` — invalidates cache for property coordinates
 - `updateConfig` — persists host settings in KV
-- Event `core.booking.confirmed` — pre-warms cache
+- Event `core.booking.confirmed` — pre-warms the cache
 
 ## Development
 
-From monorepo root:
+From the monorepo root:
 
 ```bash
 cargo test -p weather
@@ -47,8 +49,8 @@ portaki lint
 
 ## Publishing
 
-Bump `version` in `Cargo.toml`, merge to `main` — CI publishes `ghcr.io/portakiapp/portaki-modules/weather:<semver>`. See root README.
+Bump `version` in `Cargo.toml`, merge to `main`. CI publishes `ghcr.io/portakiapp/portaki-modules-weather:<semver>`. See the [root README](../../README.md).
 
 ## License
 
-Apache-2.0
+Apache-2.0 — see [LICENSE](../../LICENSE).

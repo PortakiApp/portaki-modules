@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 description = "Portaki weather module — current conditions and 5-day forecast"
 repository.workspace = true
+homepage.workspace = true
 publish = false
 
 [lib]
