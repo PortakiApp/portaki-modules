@@ -17,7 +17,7 @@ portaki-modules-rust/
 
 | Module | OCI image | Description |
 |--------|-----------|-------------|
-| `weather` | `ghcr.io/portakiapp/portaki-modules/weather:<semver>` | Current weather + 5-day forecast |
+| `weather` | `ghcr.io/portakiapp/portaki-modules-weather:<semver>` | Current weather + 5-day forecast |
 
 ## Development
 
@@ -37,7 +37,7 @@ portaki lint
 
 ## Publishing
 
-Push to **`main`** with an updated `version` in `modules/<id>/Cargo.toml`. CI runs quality gates, then publishes every module to `ghcr.io/portakiapp/portaki-modules/<id>:<semver>`.
+Push to **`main`** with an updated `version` in `modules/<id>/Cargo.toml`. CI runs quality gates, then publishes every module to `ghcr.io/portakiapp/portaki-modules-<id>:<semver>`.
 
 No git tags for now — **release-please** later.
 

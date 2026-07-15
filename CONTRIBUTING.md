@@ -29,7 +29,7 @@ All user-facing strings via `i18n:` keys in bundle files under `i18n/`. No inlin
 ## Publishing
 
 - Bump `version` in `modules/<module-id>/Cargo.toml`, merge to **`main`**.
-- CI publishes to `ghcr.io/portakiapp/portaki-modules/<module-id>:<semver>` (`packages: write` via `GITHUB_TOKEN`).
+- CI publishes to `ghcr.io/portakiapp/portaki-modules-<module-id>:<semver>` (`packages: write` via `GITHUB_TOKEN`).
 - GHCR packages are public — runtime pulls from that OCI path.
 - Git tags / release-please — later.
 
