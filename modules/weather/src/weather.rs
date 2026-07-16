@@ -148,7 +148,7 @@ pub fn is_uv_high(uv_index: Option<f64>) -> bool {
     uv_index.is_some_and(|value| value >= 6.0)
 }
 
-/// Short strip label: weekday + day-of-month (`jeu. 17` / `Thu 17`).
+/// Short strip / table label: weekday + day-of-month (`jeu. 17` / `Thu 17`).
 pub fn format_day_strip_label(date: &str, locale: &str) -> String {
     let Some(parsed) = parse_forecast_date(date) else {
         return date.to_string();
@@ -167,41 +167,10 @@ pub fn format_day_strip_label(date: &str, locale: &str) -> String {
     }
 }
 
-/// Longer sheet label: weekday + day + month (`jeudi 17 juil.` / `Thu, Jul 17`).
-pub fn format_day_detail_label(date: &str, locale: &str) -> String {
-    let Some(parsed) = parse_forecast_date(date) else {
-        return date.to_string();
-    };
-    let day = parsed.day();
-    let month = parsed.month() as usize;
-    if locale_is_fr(locale) {
-        format!(
-            "{} {day} {}",
-            weekday_long_fr(parsed.weekday().number_from_monday()),
-            month_short_fr(month)
-        )
-    } else {
-        format!(
-            "{}, {} {day}",
-            weekday_short_en(parsed.weekday().number_from_monday()),
-            month_short_en(month)
-        )
-    }
-}
-
 /// Wind speed label in km/h for guest display.
 pub fn format_wind_kmh(wind_speed_ms: f64) -> String {
     let kmh = (wind_speed_ms * 3.6).round() as i64;
     format!("{kmh} km/h")
-}
-
-/// Precipitation chance label (`Précip. 60%` / `Precip 60%`).
-pub fn format_precip_label(pct: u8, locale: &str) -> String {
-    if locale_is_fr(locale) {
-        format!("Précip. {pct}%")
-    } else {
-        format!("Precip {pct}%")
-    }
 }
 
 /// Converts API current weather into module snapshot.
@@ -292,18 +261,6 @@ fn weekday_short_fr(from_monday: u32) -> &'static str {
     }
 }
 
-fn weekday_long_fr(from_monday: u32) -> &'static str {
-    match from_monday {
-        1 => "lundi",
-        2 => "mardi",
-        3 => "mercredi",
-        4 => "jeudi",
-        5 => "vendredi",
-        6 => "samedi",
-        _ => "dimanche",
-    }
-}
-
 fn weekday_short_en(from_monday: u32) -> &'static str {
     match from_monday {
         1 => "Mon",
@@ -313,42 +270,6 @@ fn weekday_short_en(from_monday: u32) -> &'static str {
         5 => "Fri",
         6 => "Sat",
         _ => "Sun",
-    }
-}
-
-fn month_short_fr(month: usize) -> &'static str {
-    match month {
-        1 => "janv.",
-        2 => "févr.",
-        3 => "mars",
-        4 => "avr.",
-        5 => "mai",
-        6 => "juin",
-        7 => "juil.",
-        8 => "août",
-        9 => "sept.",
-        10 => "oct.",
-        11 => "nov.",
-        12 => "déc.",
-        _ => "",
-    }
-}
-
-fn month_short_en(month: usize) -> &'static str {
-    match month {
-        1 => "Jan",
-        2 => "Feb",
-        3 => "Mar",
-        4 => "Apr",
-        5 => "May",
-        6 => "Jun",
-        7 => "Jul",
-        8 => "Aug",
-        9 => "Sep",
-        10 => "Oct",
-        11 => "Nov",
-        12 => "Dec",
-        _ => "",
     }
 }
 
@@ -388,12 +309,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn formats_french_strip_and_detail_labels() {
+    fn formats_french_strip_label() {
         assert_eq!(format_day_strip_label("2026-07-16", "fr-FR"), "jeu. 16");
-        assert_eq!(
-            format_day_detail_label("2026-07-16", "fr-FR"),
-            "jeudi 16 juil."
-        );
     }
 
     #[test]
