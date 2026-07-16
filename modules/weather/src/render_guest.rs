@@ -12,9 +12,8 @@ use serde_json::json;
 use crate::config::load_config;
 use crate::queries::{get_current, get_forecast, GetCurrentArgs, GetForecastArgs};
 use crate::weather::{
-    convert_temp, format_day_detail_label, format_day_strip_label, format_precip_label,
-    format_temp_label, format_wind_kmh, has_open_weather, icon_name_for_condition, is_uv_high,
-    uv_label_key, WeatherCurrent, WeatherForecast,
+    convert_temp, format_day_strip_label, format_temp_label, format_wind_kmh, has_open_weather,
+    icon_name_for_condition, is_uv_high, uv_label_key, WeatherCurrent, WeatherForecast,
 };
 
 /// Guest home booklet card with current conditions.
@@ -83,31 +82,7 @@ fn build_weather_body(
     city: &str,
     locale: &str,
 ) -> Vec<Component> {
-    let temp = convert_temp(current.temp_c, *units);
-    let unit = units.sdui_unit();
-    let description = json!(format!("i18n:{}", current.description_key));
-
-    let mut children: Vec<Component> = vec![Component::Stack(
-        Stack::new()
-            .direction(json!("horizontal"))
-            .gap(json!(14))
-            .child(
-                Icon::new()
-                    .name(json!(icon_name_for_condition(&current.condition)))
-                    .size(json!(44)),
-            )
-            .child(Component::Stack(
-                Stack::new()
-                    .gap(json!(4))
-                    .child(
-                        Text::new()
-                            .text(json!(format_temp_label(temp, unit, false)))
-                            .variant(json!("display")),
-                    )
-                    .child(Text::new().text(description).variant(json!("caption")))
-                    .child(Text::new().text(json!(city)).variant(json!("caption"))),
-            )),
-    )];
+    let mut children = vec![build_current_hero(current, units, city)];
 
     if is_uv_high(current.uv_index) {
         let uv_key = current
@@ -124,6 +99,38 @@ fn build_weather_body(
     children.push(Component::Divider(Divider::new()));
     children.push(build_forecast_strip(forecast, units, locale));
     children
+}
+
+fn build_current_hero(
+    current: &WeatherCurrent,
+    units: &crate::entities::WeatherUnits,
+    city: &str,
+) -> Component {
+    let temp = convert_temp(current.temp_c, *units);
+    let unit = units.sdui_unit();
+    let description = json!(format!("i18n:{}", current.description_key));
+
+    Component::Stack(
+        Stack::new()
+            .direction(json!("horizontal"))
+            .gap(json!(16))
+            .child(
+                Icon::new()
+                    .name(json!(icon_name_for_condition(&current.condition)))
+                    .size(json!(56)),
+            )
+            .child(Component::Stack(
+                Stack::new()
+                    .gap(json!(4))
+                    .child(
+                        Text::new()
+                            .text(json!(format_temp_label(temp, unit, false)))
+                            .variant(json!("display")),
+                    )
+                    .child(Text::new().text(description).variant(json!("caption")))
+                    .child(Text::new().text(json!(city)).variant(json!("caption"))),
+            )),
+    )
 }
 
 fn build_home_card(
@@ -169,7 +176,7 @@ fn build_forecast_day_column(
             .child(
                 Icon::new()
                     .name(json!(icon_name_for_condition(&day.condition)))
-                    .size(json!(18)),
+                    .size(json!(28)),
             )
             .child(
                 Text::new()
@@ -327,7 +334,18 @@ fn build_sheet_surface(
     city: &str,
     locale: &str,
 ) -> Surface {
-    let mut children = build_weather_body(current, forecast, units, city, locale);
+    let mut children = vec![build_current_hero(current, units, city)];
+    if is_uv_high(current.uv_index) {
+        let uv_key = current
+            .uv_index
+            .map(uv_label_key)
+            .unwrap_or("weather.uv.high");
+        children.push(Component::Badge(
+            Badge::new()
+                .label(json!(format!("i18n:{uv_key}")))
+                .tone(Tone::Warning),
+        ));
+    }
     children.push(Component::Divider(Divider::new()));
     children.push(build_current_details(current));
     children.push(Component::Divider(Divider::new()));
@@ -336,7 +354,7 @@ fn build_sheet_surface(
             .text(json!("i18n:explore.forecast.hint"))
             .variant(json!("caption")),
     ));
-    children.push(build_forecast_detail_list(forecast, units, locale));
+    children.push(build_forecast_table(forecast, units, locale));
     children.push(Component::InfoBanner(
         InfoBanner::new().message(json!("i18n:sheet.assistant.tip")),
     ));
@@ -348,86 +366,78 @@ fn build_sheet_surface(
 }
 
 fn build_current_details(current: &WeatherCurrent) -> Component {
-    let mut rows: Vec<Component> = vec![detail_row(
-        "i18n:weather.humidity",
-        &format!("{}%", current.humidity),
-    )];
+    let mut cells: Vec<Component> = vec![
+        table_header_cell("i18n:weather.humidity"),
+        table_value_cell(&format!("{}%", current.humidity)),
+    ];
 
     if let Some(uv) = current.uv_index {
-        rows.push(detail_row(
-            "i18n:weather.uv",
-            &format!("i18n:{}", uv_label_key(uv)),
-        ));
+        cells.push(table_header_cell("i18n:weather.uv"));
+        cells.push(table_value_cell(&format!("i18n:{}", uv_label_key(uv))));
     }
     if let Some(wind) = current.wind_speed_ms {
-        rows.push(detail_row("i18n:weather.wind", &format_wind_kmh(wind)));
+        cells.push(table_header_cell("i18n:weather.wind"));
+        cells.push(table_value_cell(&format_wind_kmh(wind)));
     }
 
-    Component::Stack(Stack::new().gap(json!(6)).children(rows))
+    Component::Grid(Grid::new().columns(json!(2)).gap(json!(8)).children(cells))
 }
 
-fn build_forecast_detail_list(
+/// 4-column forecast table: day · icon · temps · precip.
+fn build_forecast_table(
     forecast: &WeatherForecast,
     units: &crate::entities::WeatherUnits,
     locale: &str,
 ) -> Component {
     let unit = units.sdui_unit();
-    let rows: Vec<Component> = forecast
-        .days
-        .iter()
-        .map(|day| {
-            let min = format_temp_label(convert_temp(day.min_c, *units), unit, false);
-            let max = format_temp_label(convert_temp(day.max_c, *units), unit, false);
-            let mut day_children = vec![Component::Stack(
-                Stack::new()
-                    .direction(json!("horizontal"))
-                    .gap(json!(10))
-                    .child(
-                        Icon::new()
-                            .name(json!(icon_name_for_condition(&day.condition)))
-                            .size(json!(22)),
-                    )
-                    .child(Component::Stack(
-                        Stack::new()
-                            .gap(json!(2))
-                            .child(
-                                Text::new()
-                                    .text(json!(format_day_detail_label(&day.date, locale)))
-                                    .variant(json!("body"))
-                                    .emphasis(Emphasis::Strong),
-                            )
-                            .child(
-                                Text::new()
-                                    .text(json!(format!("{min} → {max}")))
-                                    .variant(json!("caption")),
-                            ),
-                    )),
-            )];
-            if let Some(precip) = day.precip_chance_pct {
-                day_children.push(Component::Text(
-                    Text::new()
-                        .text(json!(format_precip_label(precip, locale)))
-                        .variant(json!("caption")),
-                ));
-            }
-            Component::Stack(Stack::new().gap(json!(6)).children(day_children))
-        })
-        .collect();
+    let mut cells: Vec<Component> = vec![
+        table_header_cell("i18n:weather.col.day"),
+        table_header_cell(""),
+        table_header_cell("i18n:weather.col.temp"),
+        table_header_cell("i18n:weather.col.precip"),
+    ];
 
-    Component::Stack(Stack::new().gap(json!(14)).children(rows))
+    for day in &forecast.days {
+        let min = format_temp_label(convert_temp(day.min_c, *units), unit, false);
+        let max = format_temp_label(convert_temp(day.max_c, *units), unit, false);
+        let precip = day
+            .precip_chance_pct
+            .map(|pct| format!("{pct}%"))
+            .unwrap_or_else(|| "—".to_string());
+
+        cells.push(Component::Text(
+            Text::new()
+                .text(json!(format_day_strip_label(&day.date, locale)))
+                .variant(json!("caption"))
+                .emphasis(Emphasis::Strong),
+        ));
+        cells.push(Component::Icon(
+            Icon::new()
+                .name(json!(icon_name_for_condition(&day.condition)))
+                .size(json!(28)),
+        ));
+        cells.push(Component::Text(
+            Text::new()
+                .text(json!(format!("{min} / {max}")))
+                .variant(json!("caption")),
+        ));
+        cells.push(Component::Text(
+            Text::new().text(json!(precip)).variant(json!("caption")),
+        ));
+    }
+
+    Component::Grid(Grid::new().columns(json!(4)).gap(json!(10)).children(cells))
 }
 
-fn detail_row(label: &str, value: &str) -> Component {
-    Component::Stack(
-        Stack::new()
-            .direction(json!("horizontal"))
-            .gap(json!(12))
-            .child(Text::new().text(json!(label)).variant(json!("caption")))
-            .child(
-                Text::new()
-                    .text(json!(value))
-                    .variant(json!("caption"))
-                    .emphasis(Emphasis::Strong),
-            ),
+fn table_header_cell(label: &str) -> Component {
+    Component::Text(
+        Text::new()
+            .text(json!(label))
+            .variant(json!("caption"))
+            .emphasis(Emphasis::Strong),
     )
+}
+
+fn table_value_cell(value: &str) -> Component {
+    Component::Text(Text::new().text(json!(value)).variant(json!("caption")))
 }
