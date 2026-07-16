@@ -100,6 +100,9 @@ fn home_card_and_detail_with_content() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    devices: Vec::new(),
+                    safety_notice_fr: String::new(),
+                    safety_notice_en: String::new(),
                     content_fr: sample_payload(),
                     content_en: sample_payload(),
                 },
@@ -128,6 +131,9 @@ fn get_content_returns_devices() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    devices: Vec::new(),
+                    safety_notice_fr: String::new(),
+                    safety_notice_en: String::new(),
                     content_fr: sample_payload(),
                     content_en: String::new(),
                 },

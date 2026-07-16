@@ -12,7 +12,7 @@ Part of the [`portaki-modules`](https://github.com/PortakiApp/portaki-modules) m
 
 | Capability | Required | Purpose |
 |------------|----------|---------|
-| `core.storage` | Yes | KV config (`contacts_json`, `host_visible_phone`) |
+| `core.storage` | Yes | KV config (`contacts`, `host_visible_phone`) |
 
 ## Surfaces
 
@@ -20,7 +20,7 @@ Part of the [`portaki-modules`](https://github.com/PortakiApp/portaki-modules) m
 |-------|------------|-------------|
 | guest | `home.card` | Phone rows |
 | guest | `explore.detail` | Rows + 112 banner (bottom sheet) |
-| host | `main` | Host phone + contacts JSON form |
+| host | `main` | Host phone + contact slots |
 
 ## Development
 

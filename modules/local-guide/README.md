@@ -10,7 +10,7 @@ Official Portaki local guide module — nearby spots and host picks.
 
 | Capability | Required | Purpose |
 |------------|----------|---------|
-| `core.storage` | Yes | KV config (`spots_json`, `disclaimer`) |
+| `core.storage` | Yes | KV config (`spots`, `disclaimer`) |
 
 ## Surfaces
 
@@ -18,7 +18,7 @@ Official Portaki local guide module — nearby spots and host picks.
 |-------|------------|-------------|
 | guest | `home.card` | Spot rows + tags |
 | guest | `explore.detail` | Enriched spots (bottom sheet) |
-| host | `main` | Spots JSON + disclaimer form |
+| host | `main` | Spot slots + disclaimer form |
 
 ## Development
 

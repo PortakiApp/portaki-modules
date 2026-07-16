@@ -88,6 +88,7 @@ fn home_card_renders_list_items_with_content() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    items: Vec::new(),
                     content_fr: sample_payload(),
                     content_en: sample_payload(),
                 },
@@ -110,6 +111,7 @@ fn explore_detail_renders_full_list() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    items: Vec::new(),
                     content_fr: sample_payload(),
                     content_en: sample_payload(),
                 },
@@ -134,6 +136,7 @@ fn get_content_returns_saved_items() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    items: Vec::new(),
                     content_fr: sample_payload(),
                     content_en: String::new(),
                 },

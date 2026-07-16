@@ -102,7 +102,8 @@ fn update_config_roundtrip() {
             update_config(
                 ctx.clone(),
                 UpdateConfigArgs {
-                    contacts_json: "[]".into(),
+                    contacts: Vec::new(),
+                    contacts_json: String::new(),
                     host_visible_phone: "+331234".into(),
                 },
             )

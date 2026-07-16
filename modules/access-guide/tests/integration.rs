@@ -112,7 +112,8 @@ fn update_config_roundtrip() {
             update_config(
                 ctx.clone(),
                 UpdateConfigArgs {
-                    steps_json: "[]".into(),
+                    steps: Vec::new(),
+                    steps_json: String::new(),
                     parking_map_url: "".into(),
                     arrival_video_url: "".into(),
                     global_note: "".into(),

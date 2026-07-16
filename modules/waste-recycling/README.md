@@ -14,7 +14,7 @@ OCI image: `ghcr.io/portakiapp/portaki-modules-waste-recycling:<semver>`
 
 | Capability | Required | Purpose |
 |------------|----------|---------|
-| `core.storage` | Yes | KV config (`bins_json`, `collection_schedule`) |
+| `core.storage` | Yes | KV config (`bins`, `collection_schedule`) |
 
 ## Surfaces
 
@@ -22,7 +22,7 @@ OCI image: `ghcr.io/portakiapp/portaki-modules-waste-recycling:<semver>`
 |-------|------------|-------------|
 | guest | `home.card` | Bin rows + collection banner |
 | guest | `explore.detail` | Enriched bins (bottom sheet) |
-| host | `main` | JSON bins + schedule form |
+| host | `main` | Structured bin slots + schedule form |
 
 ## Queries and commands
 

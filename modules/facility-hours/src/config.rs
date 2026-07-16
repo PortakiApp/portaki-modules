@@ -9,6 +9,8 @@ const CONFIG_KEY: &str = "config";
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct ModuleConfig {
     #[serde(default)]
+    pub facilities: Vec<FacilityRow>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub facilities_json: String,
     #[serde(default)]
     pub general_note: String,
@@ -20,16 +22,28 @@ impl ModuleConfig {
     }
 
     pub fn parse_facilities(&self) -> Vec<FacilityRow> {
+        self.facilities
+            .iter()
+            .filter(|f| !f.id.trim().is_empty())
+            .cloned()
+            .collect()
+    }
+
+    pub fn migrate_legacy(&mut self) {
+        if !self.facilities.is_empty() {
+            return;
+        }
         let raw = self.facilities_json.trim();
         if raw.is_empty() {
-            return Vec::new();
+            return;
         }
-        let Ok(data) = serde_json::from_str::<Vec<FacilityRow>>(raw) else {
-            return Vec::new();
-        };
-        data.into_iter()
-            .filter(|f| !f.id.trim().is_empty())
-            .collect()
+        if let Ok(data) = serde_json::from_str::<Vec<FacilityRow>>(raw) {
+            self.facilities = data
+                .into_iter()
+                .filter(|f| !f.id.trim().is_empty())
+                .collect();
+            self.facilities_json.clear();
+        }
     }
 }
 
@@ -39,7 +53,6 @@ pub struct FacilityRow {
     pub title: Localized,
     #[serde(default)]
     pub lines: Vec<Localized>,
-    /// Optional compact hours string for KeyValue glance (e.g. `08:00 – 20:00`).
     #[serde(default)]
     pub hours: Option<String>,
     #[serde(default)]
@@ -74,9 +87,11 @@ pub fn load_config() -> Result<ModuleConfig> {
     let Some(bytes) = host::kv::get(CONFIG_KEY)? else {
         return Ok(ModuleConfig::default());
     };
-    serde_json::from_slice(&bytes).map_err(|error| {
+    let mut config: ModuleConfig = serde_json::from_slice(&bytes).map_err(|error| {
         portaki_sdk::PortakiError::Storage(format!("invalid config JSON: {error}"))
-    })
+    })?;
+    config.migrate_legacy();
+    Ok(config)
 }
 
 pub fn save_config(config: &ModuleConfig) -> Result<()> {

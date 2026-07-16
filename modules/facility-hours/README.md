@@ -10,7 +10,7 @@ Official Portaki facility hours module — pool, spa, and shared amenity schedul
 
 | Capability | Required | Purpose |
 |------------|----------|---------|
-| `core.storage` | Yes | KV config (`facilities_json`, `general_note`) |
+| `core.storage` | Yes | KV config (`facilities`, `general_note`) |
 
 ## Surfaces
 
@@ -18,7 +18,7 @@ Official Portaki facility hours module — pool, spa, and shared amenity schedul
 |-------|------------|-------------|
 | guest | `home.card` | KeyValue hour rows |
 | guest | `explore.detail` | Enriched list (page overlay) |
-| host | `main` | Facilities JSON + note form |
+| host | `main` | Facility slots + note form |
 
 ## Development
 

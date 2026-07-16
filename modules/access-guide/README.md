@@ -18,7 +18,7 @@ Official Portaki access guide module — arrival steps, codes, and parking.
 |-------|------------|-------------|
 | guest | `home.card` | Address / codes / parking + Maps CTA |
 | guest | `explore.detail` | Steps + links (page overlay) |
-| host | `main` | Codes + steps JSON form |
+| host | `main` | Codes + structured step slots |
 
 ## Development
 

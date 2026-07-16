@@ -1,6 +1,6 @@
 # checklist
 
-Official Portaki checkout checklist — stay-scoped toggles for guests, JSON item editor for hosts.
+Official Portaki checkout checklist — stay-scoped toggles for guests, structured item editor for hosts.
 
 Part of the [`portaki-modules`](https://github.com/PortakiApp/portaki-modules) monorepo.
 
@@ -23,13 +23,13 @@ Host workspace tab: `pathSegment = checklist` (surface `main`).
 | Shell | Surface id | Description |
 |-------|------------|-------------|
 | guest | `home.card` | Progress caption + inline toggles (no overlay) |
-| host | `main` | JSON form → `replaceItems` |
+| host | `main` | Item slots → `replaceItems` |
 
 ## Queries and commands
 
 - `listItems` — property checklist items
 - `listCompletions` — completed item ids for the current stay
-- `replaceItems` — host replace-all (`items` or `itemsJson`)
+- `replaceItems` — host replace-all (`items` array; legacy `itemsJson` fallback)
 - `completeItem` / `uncompleteItem` — guest toggles (`itemId`)
 
 ## Development

@@ -105,7 +105,8 @@ fn update_config_roundtrip() {
             update_config(
                 ctx.clone(),
                 UpdateConfigArgs {
-                    spots_json: "[]".into(),
+                    spots: Vec::new(),
+                    spots_json: String::new(),
                     disclaimer: "d".into(),
                 },
             )

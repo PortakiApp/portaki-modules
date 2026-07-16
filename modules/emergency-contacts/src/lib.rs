@@ -6,7 +6,7 @@ mod guest;
 mod queries;
 mod render_host;
 
-pub use commands::{update_config, UpdateConfigArgs};
+pub use commands::{update_config, ContactInput, UpdateConfigArgs};
 pub use config::{load_config, ModuleConfig};
 pub use guest::{render_explore_detail, render_home_card};
 pub use queries::get_config;

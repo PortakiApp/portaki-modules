@@ -101,7 +101,8 @@ fn update_config_roundtrip() {
             update_config(
                 ctx.clone(),
                 UpdateConfigArgs {
-                    facilities_json: "[]".into(),
+                    facilities: Vec::new(),
+                    facilities_json: String::new(),
                     general_note: "note".into(),
                 },
             )

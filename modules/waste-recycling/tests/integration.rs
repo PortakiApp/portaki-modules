@@ -8,19 +8,25 @@ use portaki_test_utils::MockContext;
 use serde_json::json;
 
 use waste_recycling::{
-    get_config, render_explore_detail, render_home_card, update_config, UpdateConfigArgs,
+    get_config, render_explore_detail, render_home_card, update_config, BinInput, UpdateConfigArgs,
 };
 
 fn sample_config_bytes() -> Vec<u8> {
-    let bins = concat!(
-        r#"[{"id":"yellow","title":{"fr":"Bac jaune","en":"Yellow bin"},"items":[{"fr":"Emballages, plastique","en":"Packaging, plastic"}],"color":""#,
-        "#f4c020",
-        r#""},{"id":"green","title":{"fr":"Bac vert","en":"Green bin"},"items":[{"fr":"Verre","en":"Glass"}],"color":""#,
-        "#3a8a4d",
-        r#""}]"#
-    );
     serde_json::to_vec(&json!({
-        "bins_json": bins,
+        "bins": [
+            {
+                "id": "yellow",
+                "title": {"fr": "Bac jaune", "en": "Yellow bin"},
+                "items": [{"fr": "Emballages, plastique", "en": "Packaging, plastic"}],
+                "color": "#f4c020"
+            },
+            {
+                "id": "green",
+                "title": {"fr": "Bac vert", "en": "Green bin"},
+                "items": [{"fr": "Verre", "en": "Glass"}],
+                "color": "#3a8a4d"
+            }
+        ],
         "collection_schedule": "Mardi & vendredi matin"
     }))
     .expect("config json")
@@ -115,13 +121,20 @@ fn update_config_persists_and_get_config_reads() {
             update_config(
                 ctx.clone(),
                 UpdateConfigArgs {
-                    bins_json: r#"[{"id":"a","title":{"fr":"A","en":"A"},"items":[]}]"#.into(),
+                    bins: vec![BinInput {
+                        title_fr: "A".into(),
+                        title_en: "A".into(),
+                        items_fr: String::new(),
+                        color: String::new(),
+                    }],
+                    bins_json: String::new(),
                     collection_schedule: "Lundi".into(),
                 },
             )
             .expect("updateConfig");
             let config = get_config(ctx).expect("getConfig");
-            assert!(config.bins_json.contains("\"id\":\"a\""));
+            assert_eq!(config.bins.len(), 1);
+            assert_eq!(config.bins[0].title.fr, "A");
             assert_eq!(config.collection_schedule, "Lundi");
         });
 }

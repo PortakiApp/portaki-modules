@@ -42,9 +42,11 @@ OCI image: `ghcr.io/portakiapp/portaki-modules-appliances:<semver>`
 | guest | `home.card` | Device list glance |
 | guest | `explore.detail` | Full list (page) |
 | guest | `explore.item` | Device how-to detail |
-| host | `main` | Bilingual JSON editor |
+| host | `main` | Structured device slots + safety notices |
 
 Host workspace tab: `pathSegment = "appliances"`.
+
+Host edits fields; storage still keeps `content_fr` / `content_en` as structured JSON internally.
 
 ## Queries and commands
 

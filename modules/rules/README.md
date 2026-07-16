@@ -34,9 +34,11 @@ OCI image: `ghcr.io/portakiapp/portaki-modules-rules:<semver>`
 |-------|------------|-------------|
 | guest | `home.card` | Glance of up to 4 rules |
 | guest | `explore.detail` | Full rules list (page body) |
-| host | `main` | Bilingual JSON editor form |
+| host | `main` | Structured bilingual rule slots |
 
 Host workspace tab: `pathSegment = "rules"` (see `portaki.module.json`).
+
+Host edits fields (icon, titles, subtitles). Storage still keeps `content_fr` / `content_en` as structured JSON internally.
 
 ## Queries and commands
 

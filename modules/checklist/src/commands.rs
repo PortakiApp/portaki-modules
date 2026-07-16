@@ -10,23 +10,23 @@ use crate::storage;
 
 /// Single item payload for `replaceItems`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ChecklistItemInput {
+    #[serde(default, alias = "labelFr")]
     pub label_fr: String,
+    #[serde(default, alias = "labelEn")]
     pub label_en: String,
-    #[serde(default)]
+    #[serde(default, alias = "sortOrder")]
     pub sort_order: i32,
 }
 
 /// Arguments for `replaceItems`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ReplaceItemsArgs {
     /// Structured items array (preferred).
     #[serde(default)]
     pub items: Vec<ChecklistItemInput>,
-    /// Optional JSON string of items (host TextArea).
-    #[serde(default)]
+    /// Optional JSON string of items (legacy host TextArea).
+    #[serde(default, alias = "itemsJson")]
     pub items_json: Option<String>,
 }
 
@@ -39,8 +39,27 @@ pub struct ItemIdArgs {
 
 impl ReplaceItemsArgs {
     fn resolve_items(&self) -> Result<Vec<ChecklistItemInput>> {
-        if !self.items.is_empty() {
-            return Ok(self.items.clone());
+        let from_array: Vec<ChecklistItemInput> = self
+            .items
+            .iter()
+            .enumerate()
+            .filter_map(|(index, item)| {
+                if item.label_fr.trim().is_empty() && item.label_en.trim().is_empty() {
+                    return None;
+                }
+                Some(ChecklistItemInput {
+                    label_fr: item.label_fr.trim().to_string(),
+                    label_en: item.label_en.trim().to_string(),
+                    sort_order: if item.sort_order == 0 {
+                        index as i32
+                    } else {
+                        item.sort_order
+                    },
+                })
+            })
+            .collect();
+        if !from_array.is_empty() || self.items_json.is_none() {
+            return Ok(from_array);
         }
         let Some(raw) = self.items_json.as_ref() else {
             return Ok(Vec::new());

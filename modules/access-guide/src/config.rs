@@ -9,6 +9,8 @@ const CONFIG_KEY: &str = "config";
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct ModuleConfig {
     #[serde(default)]
+    pub steps: Vec<AccessStep>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub steps_json: String,
     #[serde(default)]
     pub parking_map_url: String,
@@ -16,7 +18,6 @@ pub struct ModuleConfig {
     pub arrival_video_url: String,
     #[serde(default)]
     pub global_note: String,
-    /// Design glance fields (optional — shown as KeyValue rows).
     #[serde(default)]
     pub address: String,
     #[serde(default)]
@@ -40,16 +41,28 @@ impl ModuleConfig {
     }
 
     pub fn parse_steps(&self) -> Vec<AccessStep> {
+        self.steps
+            .iter()
+            .filter(|s| !s.id.trim().is_empty())
+            .cloned()
+            .collect()
+    }
+
+    pub fn migrate_legacy(&mut self) {
+        if !self.steps.is_empty() {
+            return;
+        }
         let raw = self.steps_json.trim();
         if raw.is_empty() {
-            return Vec::new();
+            return;
         }
-        let Ok(data) = serde_json::from_str::<Vec<AccessStep>>(raw) else {
-            return Vec::new();
-        };
-        data.into_iter()
-            .filter(|s| !s.id.trim().is_empty())
-            .collect()
+        if let Ok(data) = serde_json::from_str::<Vec<AccessStep>>(raw) {
+            self.steps = data
+                .into_iter()
+                .filter(|s| !s.id.trim().is_empty())
+                .collect();
+            self.steps_json.clear();
+        }
     }
 }
 
@@ -91,9 +104,11 @@ pub fn load_config() -> Result<ModuleConfig> {
     let Some(bytes) = host::kv::get(CONFIG_KEY)? else {
         return Ok(ModuleConfig::default());
     };
-    serde_json::from_slice(&bytes).map_err(|error| {
+    let mut config: ModuleConfig = serde_json::from_slice(&bytes).map_err(|error| {
         portaki_sdk::PortakiError::Storage(format!("invalid config JSON: {error}"))
-    })
+    })?;
+    config.migrate_legacy();
+    Ok(config)
 }
 
 pub fn save_config(config: &ModuleConfig) -> Result<()> {
