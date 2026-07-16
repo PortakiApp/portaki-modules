@@ -4,7 +4,7 @@ use serial_test::serial;
 
 use portaki_sdk::sdui::component::Component;
 use portaki_sdk::sdui::surface::Surface;
-use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
+use portaki_test_utils::{MockContext, Property};
 use serde_json::json;
 use std::sync::atomic::Ordering;
 
@@ -53,9 +53,13 @@ fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
     fn walk(node: &Component, type_name: &str) -> bool {
         let matches = match node {
             Component::Card(_) if type_name == "Card" => true,
-            Component::Temperature(_) if type_name == "Temperature" => true,
-            Component::WeatherIcon(_) if type_name == "WeatherIcon" => true,
+            Component::Icon(_) if type_name == "Icon" => true,
+            Component::Text(_) if type_name == "Text" => true,
             Component::EmptyState(_) if type_name == "EmptyState" => true,
+            Component::Stack(_) if type_name == "Stack" => true,
+            Component::Divider(_) if type_name == "Divider" => true,
+            Component::InfoBanner(_) if type_name == "InfoBanner" => true,
+            Component::Button(_) if type_name == "Button" => true,
             Component::Grid(_) if type_name == "Grid" => true,
             _ => false,
         };
@@ -75,6 +79,7 @@ fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
 fn child_components(node: &Component) -> Vec<&Component> {
     match node {
         Component::Stack(inner) => inner.children.iter().collect(),
+        Component::Divider(_) => Vec::new(),
         Component::Card(inner) => inner.children.iter().collect(),
         Component::Grid(inner) => inner.children.iter().collect(),
         Component::EmptyState(inner) => inner.children.iter().collect(),
@@ -96,10 +101,12 @@ fn home_card_renders_with_capability_pool() {
         .with_connector_response("open-weather", "forecast", sample_forecast_json())
         .run(|ctx| {
             let surface = render_home_card(ctx);
-            let assertions = SurfaceAssertions::new(&surface);
-            assertions.assert_contains::<portaki_sdk::sdui::primitives::Card>();
-            assert!(contains_component_type(&surface, "Temperature"));
-            assert!(contains_component_type(&surface, "WeatherIcon"));
+            assert!(contains_component_type(&surface, "Card"));
+            assert!(contains_component_type(&surface, "Stack"));
+            assert!(contains_component_type(&surface, "Text"));
+            assert!(contains_component_type(&surface, "Icon"));
+            assert!(contains_component_type(&surface, "Grid"));
+            assert!(contains_component_type(&surface, "Divider"));
         });
 }
 
@@ -208,8 +215,11 @@ fn forecast_renders_5_days() {
         .run(|ctx| {
             let surface = render_explore_forecast(ctx);
             assert!(contains_component_type(&surface, "Grid"));
+            assert!(contains_component_type(&surface, "InfoBanner"));
+            assert!(contains_component_type(&surface, "Button"));
             let json = serde_json::to_string(&surface).expect("surface json");
-            assert!(json.matches("\"Temperature\"").count() >= 5);
+            // now icon + 5 day icons
+            assert!(json.matches("\"Icon\"").count() >= 6);
         });
 }
 

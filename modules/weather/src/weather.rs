@@ -94,6 +94,39 @@ pub fn description_key_for_condition(condition: &str) -> String {
     }
 }
 
+/// Maps OpenWeather condition → Lucide / pk-icon name (generic `Icon` primitive).
+pub fn icon_name_for_condition(condition: &str) -> &'static str {
+    let normalized = condition.to_ascii_lowercase();
+    if normalized.contains("storm") || normalized.contains("thunder") {
+        "cloud-lightning"
+    } else if normalized.contains("snow") {
+        "cloud-snow"
+    } else if normalized.contains("rain") || normalized.contains("drizzle") {
+        "cloud-rain"
+    } else if normalized.contains("fog") || normalized.contains("mist") {
+        "cloud-fog"
+    } else if normalized.contains("clear") || normalized.contains("sun") {
+        "sun"
+    } else if normalized.contains("cloud") {
+        "cloud-sun"
+    } else {
+        "cloud-sun"
+    }
+}
+
+/// Formats a temperature for `Text` (hero omits unit letter — design shows `24°`).
+pub fn format_temp_label(temp: f64, unit: &str, include_unit: bool) -> String {
+    let rounded = temp.round() as i64;
+    if !include_unit {
+        return format!("{rounded}°");
+    }
+    let letter = match unit {
+        "fahrenheit" | "F" | "f" => "F",
+        _ => "C",
+    };
+    format!("{rounded}°{letter}")
+}
+
 /// UV badge i18n key from index.
 pub fn uv_label_key(uv_index: f64) -> &'static str {
     if uv_index < 3.0 {

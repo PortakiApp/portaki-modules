@@ -2,9 +2,9 @@
 
 use portaki_sdk::host::module;
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::common::{TempVariant, Tone};
+use portaki_sdk::sdui::common::{Emphasis, Tone};
 use portaki_sdk::sdui::primitives::{
-    Badge, Card, EmptyState, Grid, Stack, Temperature, Text, WeatherIcon,
+    Badge, Button, Card, Divider, EmptyState, Grid, Icon, InfoBanner, Stack, Text,
 };
 use portaki_sdk::sdui::surface::Surface;
 use serde_json::json;
@@ -12,7 +12,8 @@ use serde_json::json;
 use crate::config::load_config;
 use crate::queries::{get_current, get_forecast, GetCurrentArgs, GetForecastArgs};
 use crate::weather::{
-    convert_temp, has_open_weather, is_uv_high, uv_label_key, WeatherCurrent, WeatherForecast,
+    convert_temp, format_temp_label, has_open_weather, icon_name_for_condition, is_uv_high,
+    uv_label_key, WeatherCurrent, WeatherForecast,
 };
 
 /// Guest home booklet card with current conditions.
@@ -40,52 +41,135 @@ fn render_home_card_inner(ctx: &GuestContext) -> Result<Surface> {
             lng: None,
         },
     )?;
-    Ok(build_home_card(&current, &config.units))
+    let forecast = get_forecast(
+        ctx.clone(),
+        GetForecastArgs {
+            lat: None,
+            lng: None,
+            days: Some(5),
+        },
+    )?;
+    Ok(build_home_card(&current, &forecast, &config.units))
 }
 
-fn build_home_card(current: &WeatherCurrent, units: &crate::entities::WeatherUnits) -> Surface {
+/// Same glance body as the card (now + 5-day strip) — shared with the sheet surface.
+fn build_weather_body(
+    current: &WeatherCurrent,
+    forecast: &WeatherForecast,
+    units: &crate::entities::WeatherUnits,
+) -> Vec<Component> {
     let temp = convert_temp(current.temp_c, *units);
     let unit = units.sdui_unit();
     let description = json!(format!("i18n:{}", current.description_key));
 
-    let mut card_children: Vec<Component> = vec![Component::Stack(
-        Stack::new()
-            .child(
-                WeatherIcon::new()
-                    .condition(json!(current.condition.clone()))
-                    .size(json!("large")),
-            )
-            .child(Component::Stack(
-                Stack::new()
-                    .child(
-                        Temperature::new()
-                            .value(json!(temp))
-                            .unit(json!(unit))
-                            .variant(TempVariant::Hero),
-                    )
-                    .child(Text::new().text(description).variant(json!("caption"))),
-            )),
-    )];
+    let mut children: Vec<Component> = vec![
+        Component::Stack(
+            Stack::new()
+                .direction(json!("horizontal"))
+                .gap(json!(14))
+                .child(
+                    Icon::new()
+                        .name(json!(icon_name_for_condition(&current.condition)))
+                        .size(json!(44)),
+                )
+                .child(Component::Stack(
+                    Stack::new()
+                        .gap(json!(4))
+                        .child(
+                            Text::new()
+                                .text(json!(format_temp_label(temp, unit, false)))
+                                .variant(json!("display")),
+                        )
+                        .child(Text::new().text(description).variant(json!("caption"))),
+                )),
+        ),
+    ];
 
     if is_uv_high(current.uv_index) {
         let uv_key = current
             .uv_index
             .map(uv_label_key)
             .unwrap_or("weather.uv.high");
-        card_children.push(Component::Badge(
+        children.push(Component::Badge(
             Badge::new()
                 .label(json!(format!("i18n:{uv_key}")))
                 .tone(Tone::Warning),
         ));
     }
 
+    children.push(Component::Divider(Divider::new()));
+    children.push(build_forecast_strip(forecast, units));
+    children
+}
+
+fn build_home_card(
+    current: &WeatherCurrent,
+    forecast: &WeatherForecast,
+    units: &crate::entities::WeatherUnits,
+) -> Surface {
     Surface::new(
         Card::new()
-            .tone(Tone::Accent)
+            .icon(json!("cloud-sun"))
             .title(json!("i18n:home.card.title"))
-            .children(card_children),
+            .action(json!({
+                "type": "openOverlay",
+                "presentation": "bottomSheet",
+                "surfaceRender": "explore.forecast",
+                "args": {
+                    "icon": "cloud-sun",
+                    "title": "i18n:home.card.title"
+                }
+            }))
+            .children(build_weather_body(current, forecast, units)),
     )
     .with_id("home.card")
+}
+
+fn build_forecast_day_column(
+    day: &crate::weather::ForecastDayView,
+    unit: &str,
+    units: &crate::entities::WeatherUnits,
+) -> Component {
+    let display_temp = convert_temp(day.display_temp_c, *units);
+    Component::Stack(
+        Stack::new()
+            .gap(json!(6))
+            .child(
+                Text::new()
+                    .text(json!(format!("i18n:{}", day.weekday_key)))
+                    .variant(json!("caption")),
+            )
+            .child(
+                Icon::new()
+                    .name(json!(icon_name_for_condition(&day.condition)))
+                    .size(json!(18)),
+            )
+            .child(
+                Text::new()
+                    .text(json!(format_temp_label(display_temp, unit, false)))
+                    .variant(json!("caption"))
+                    .emphasis(Emphasis::Strong),
+            ),
+    )
+}
+
+fn build_forecast_strip(
+    forecast: &WeatherForecast,
+    units: &crate::entities::WeatherUnits,
+) -> Component {
+    let unit = units.sdui_unit();
+    let day_columns: Vec<Component> = forecast
+        .days
+        .iter()
+        .map(|day| build_forecast_day_column(day, unit, units))
+        .collect();
+
+    Component::Grid(
+        Grid::new()
+            .columns(json!(5))
+            .gap(json!(6))
+            .children(day_columns),
+    )
 }
 
 fn empty_weather_state() -> Surface {
@@ -144,7 +228,7 @@ fn empty_state_if_module_not_ready(surface_id: &str) -> Result<Option<Surface>> 
     Ok(None)
 }
 
-/// Guest explore section with a 5-day forecast grid.
+/// Sheet / explore detail — same weather body as the card (design `block("weather")` in sheet).
 #[portaki_sdk::surface(guest, id = "explore.forecast")]
 pub fn render_explore_forecast(ctx: GuestContext) -> Surface {
     match render_explore_forecast_inner(&ctx) {
@@ -161,7 +245,14 @@ fn render_explore_forecast_inner(ctx: &GuestContext) -> Result<Surface> {
         return Ok(empty_weather_state_with_id("explore.forecast"));
     }
 
-    let _config = load_config()?;
+    let config = load_config()?;
+    let current = get_current(
+        ctx.clone(),
+        GetCurrentArgs {
+            lat: None,
+            lng: None,
+        },
+    )?;
     let forecast = get_forecast(
         ctx.clone(),
         GetForecastArgs {
@@ -170,47 +261,22 @@ fn render_explore_forecast_inner(ctx: &GuestContext) -> Result<Surface> {
             days: Some(5),
         },
     )?;
-    Ok(build_forecast_surface(&forecast))
+    Ok(build_sheet_surface(&current, &forecast, &config.units))
 }
 
-fn build_forecast_surface(forecast: &WeatherForecast) -> Surface {
-    let unit = forecast.units.sdui_unit();
-    let day_columns: Vec<Component> = forecast
-        .days
-        .iter()
-        .map(|day| {
-            Component::Stack(
-                Stack::new()
-                    .child(
-                        Text::new()
-                            .text(json!(format!("i18n:{}", day.weekday_key)))
-                            .variant(json!("caption")),
-                    )
-                    .child(
-                        WeatherIcon::new()
-                            .condition(json!(day.condition.clone()))
-                            .size(json!("medium")),
-                    )
-                    .child(
-                        Temperature::new()
-                            .value(json!(day.display_temp_c))
-                            .unit(json!(unit))
-                            .variant(TempVariant::Compact),
-                    ),
-            )
-        })
-        .collect();
+/// Body-only tree for the bottom sheet (shell supplies header chrome).
+fn build_sheet_surface(
+    current: &WeatherCurrent,
+    forecast: &WeatherForecast,
+    units: &crate::entities::WeatherUnits,
+) -> Surface {
+    let mut children = build_weather_body(current, forecast, units);
+    children.push(Component::InfoBanner(
+        InfoBanner::new().message(json!("i18n:sheet.assistant.tip")),
+    ));
+    children.push(Component::Button(
+        Button::new().label(json!("i18n:sheet.contactHost")),
+    ));
 
-    Surface::new(
-        Card::new()
-            .title(json!("i18n:explore.forecast.title"))
-            .child(
-                Grid::new().columns(json!(5)).children(day_columns).child(
-                    Text::new()
-                        .text(json!("i18n:explore.forecast.hint"))
-                        .variant(json!("caption")),
-                ),
-            ),
-    )
-    .with_id("explore.forecast")
+    Surface::new(Stack::new().gap(json!(12)).children(children)).with_id("explore.forecast")
 }

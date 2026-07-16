@@ -40,5 +40,7 @@
   "module.status.inactive.title": "Module météo désactivé",
   "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
   "explore.forecast.title": "Prévisions",
-  "explore.forecast.hint": "Prévisions sur 5 jours"
+  "explore.forecast.hint": "Prévisions sur 5 jours",
+  "sheet.assistant.tip": "Une question sur ce point ? Demandez à l'assistant ou contactez votre hôte.",
+  "sheet.contactHost": "Contacter l'hôte"
 }

@@ -40,5 +40,7 @@
   "module.status.inactive.title": "Weather module disabled",
   "module.status.inactive.description": "This module is not active on this property",
   "explore.forecast.title": "Forecast",
-  "explore.forecast.hint": "5-day outlook"
+  "explore.forecast.hint": "5-day outlook",
+  "sheet.assistant.tip": "A question about this? Ask the assistant or contact your host.",
+  "sheet.contactHost": "Contact host"
 }
