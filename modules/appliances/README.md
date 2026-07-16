@@ -55,7 +55,7 @@ Host edits fields; storage still keeps `content_fr` / `content_en` as structured
 
 ## Known gap
 
-`explore.item` openOverlay passes `deviceId` in args, but surface renderers currently receive only `Context` (no input params). Until the guest shell forwards overlay args, the item surface shows the first device.
+`explore.item` receives `deviceId` via guest route params (`appliances/:deviceId` → surface render `input`).
 
 ## Development
 

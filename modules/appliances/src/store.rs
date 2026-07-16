@@ -34,6 +34,22 @@ pub fn load_content() -> Result<Option<AppliancesContent>> {
     Ok(page.items.into_iter().next())
 }
 
+pub fn load_payload() -> Result<crate::content::AppliancesPayload> {
+    let row = load_content()?;
+    Ok(match row {
+        Some(row) => crate::content::load_from_locale_slots(&row.content_fr, &row.content_en),
+        None => crate::content::AppliancesPayload::default(),
+    })
+}
+
+/// Persist canonical single-language JSON in `content_fr` (`content_en` cleared).
+pub fn save_payload(payload: &crate::content::AppliancesPayload) -> Result<AppliancesContent> {
+    let json = payload
+        .to_json_string()
+        .map_err(|e| PortakiError::Host(format!("appliances payload: {e}")))?;
+    save_content_row(json, String::new())
+}
+
 pub fn save_content_row(content_fr: String, content_en: String) -> Result<AppliancesContent> {
     let now = time::now()?;
     if let Some(mut row) = load_content()? {

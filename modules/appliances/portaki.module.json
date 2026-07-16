@@ -2,14 +2,14 @@
   "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
   "id": "appliances",
   "name": {
-    "fr": "Guide appareils",
-    "en": "Appliance guide"
+    "fr": "Appareils",
+    "en": "Appliances"
   },
   "description": {
     "fr": "Four, lave-linge, clim : consignes courtes pour vos voyageurs.",
     "en": "Oven, washer, AC: short tips for your guests."
   },
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Syntax Labs",
     "url": "https://syntax-labs.fr",
@@ -29,6 +29,18 @@
       "hostUi": {
         "designId": "appliances-editor-v1"
       }
+    }
+  ],
+  "guestSurfaces": [
+    {
+      "surfaceId": "explore.detail",
+      "path": "appliances",
+      "labelKey": "nav.appliances"
+    },
+    {
+      "surfaceId": "explore.item",
+      "path": "appliances/:deviceId",
+      "labelKey": "nav.appliance"
     }
   ]
 }

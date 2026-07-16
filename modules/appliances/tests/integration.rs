@@ -9,7 +9,7 @@ use serde_json::json;
 
 use appliances::{
     get_content, render_explore_detail, render_explore_item, render_home_card, reset_test_store,
-    save_content, GetContentArgs, SaveContentArgs,
+    save_appliance, ApplianceStatus, GetContentArgs, SaveApplianceArgs,
 };
 
 fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
@@ -22,6 +22,8 @@ fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
             Component::Stack(_) if type_name == "Stack" => true,
             Component::InfoBanner(_) if type_name == "InfoBanner" => true,
             Component::Text(_) if type_name == "Text" => true,
+            Component::RichText(_) if type_name == "RichText" => true,
+            Component::Link(_) if type_name == "Link" => true,
             _ => false,
         };
         if matches {
@@ -51,29 +53,59 @@ fn child_components(node: &Component) -> Vec<&Component> {
     }
 }
 
-fn sample_payload() -> String {
-    json!({
-        "safety_notice": "Coupez l'eau en cas de fuite.",
-        "devices": [
-            {
-                "id": "tv",
-                "icon": "📺",
-                "title": "Télévision",
-                "subtitle": "Salon · Samsung 55\"",
-                "steps": ["Allumez avec la télécommande noire.", "HDMI 1 pour Apple TV."],
-                "tip": "Télécommande sur le meuble TV."
-            },
-            {
-                "id": "washer",
-                "icon": "🌀",
-                "title": "Lave-linge",
-                "subtitle": "Salle de bain · Bosch",
-                "steps": ["Chargez le linge.", "ECO 30° puis Départ."],
-                "tip": "Pas de machine après 21 h."
-            }
-        ]
-    })
-    .to_string()
+fn seed_two_devices(ctx: portaki_sdk::prelude::Context) {
+    save_appliance(
+        ctx.clone(),
+        SaveApplianceArgs {
+            id: Some("tv".into()),
+            name: "Télévision".into(),
+            emoji: "📺".into(),
+            description: json!({
+                "type": "doc",
+                "content": [{
+                    "type": "bulletList",
+                    "content": [{
+                        "type": "listItem",
+                        "content": [{
+                            "type": "paragraph",
+                            "content": [{ "type": "text", "text": "Allumez avec la télécommande." }]
+                        }]
+                    }]
+                }]
+            })
+            .to_string(),
+            featured: true,
+            order: Some(0),
+            location: "Salon · Samsung 55\"".into(),
+            manual_url: "https://example.com/tv-manual".into(),
+            safety_note: String::new(),
+            status: ApplianceStatus::Active,
+        },
+    )
+    .expect("save tv");
+    save_appliance(
+        ctx,
+        SaveApplianceArgs {
+            id: Some("washer".into()),
+            name: "Lave-linge".into(),
+            emoji: "🌀".into(),
+            description: json!({
+                "type": "doc",
+                "content": [{
+                    "type": "paragraph",
+                    "content": [{ "type": "text", "text": "ECO 30°" }]
+                }]
+            })
+            .to_string(),
+            featured: false,
+            order: Some(1),
+            location: "Salle de bain · Bosch".into(),
+            manual_url: String::new(),
+            safety_note: "Pas de machine après 21 h.".into(),
+            status: ApplianceStatus::Active,
+        },
+    )
+    .expect("save washer");
 }
 
 #[test]
@@ -91,32 +123,79 @@ fn home_card_empty_without_content() {
 
 #[test]
 #[serial]
-fn home_card_and_detail_with_content() {
+fn home_card_featured_only_and_detail_list() {
     reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .with_capabilities(&["core.storage"])
         .run(|ctx| {
-            save_content(
-                ctx.clone(),
-                SaveContentArgs {
-                    devices: Vec::new(),
-                    safety_notice_fr: String::new(),
-                    safety_notice_en: String::new(),
-                    content_fr: sample_payload(),
-                    content_en: sample_payload(),
-                },
-            )
-            .expect("save");
+            seed_two_devices(ctx.clone());
             let card = render_home_card(ctx.clone());
             assert!(contains_component_type(&card, "Card"));
             assert!(contains_component_type(&card, "ListItem"));
+            let card_json = serde_json::to_string(&card).expect("json");
+            assert!(card_json.contains("Télévision"));
+            assert!(!card_json.contains("Lave-linge"));
+            assert!(card_json.contains("\"type\":\"navigate\""));
+            assert!(card_json.contains("\"to\":\"appliances\""));
+            assert!(card_json.contains("appliances/tv"));
+
             let detail = render_explore_detail(ctx.clone());
+            assert!(contains_component_type(&detail, "Card"));
             assert!(contains_component_type(&detail, "ListItem"));
+            let detail_json = serde_json::to_string(&detail).expect("json");
+            assert!(detail_json.contains("Télévision"));
+            assert!(detail_json.contains("Lave-linge"));
+            assert!(detail_json.contains("appliances/washer"));
+        });
+}
+
+#[test]
+#[serial]
+fn explore_item_uses_device_id_and_rich_text() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&["core.storage"])
+        .run(|ctx| {
+            seed_two_devices(ctx.clone());
+
+            let mut tv_ctx = ctx.clone();
+            tv_ctx.input = json!({ "deviceId": "tv" });
+            let tv = render_explore_item(tv_ctx);
+            assert!(contains_component_type(&tv, "RichText"));
+            assert!(contains_component_type(&tv, "Link"));
+            let tv_json = serde_json::to_string(&tv).expect("json");
+            assert!(tv_json.contains("Télévision"));
+            assert!(tv_json.contains("appliance-steps"));
+            assert!(tv_json.contains("Allumez avec la télécommande."));
+            assert!(tv_json.contains("https://example.com/tv-manual"));
+            assert!(!tv_json.contains("Lave-linge"));
+
+            let mut washer_ctx = ctx.clone();
+            washer_ctx.input = json!({ "deviceId": "washer" });
+            let washer = render_explore_item(washer_ctx);
+            assert!(contains_component_type(&washer, "InfoBanner"));
+            let washer_json = serde_json::to_string(&washer).expect("json");
+            assert!(washer_json.contains("Lave-linge"));
+            assert!(washer_json.contains("Pas de machine après 21 h."));
+            assert!(washer_json.contains("ECO 30"));
+        });
+}
+
+#[test]
+#[serial]
+fn explore_item_missing_device_id_is_not_found() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&["core.storage"])
+        .run(|ctx| {
+            seed_two_devices(ctx.clone());
             let item = render_explore_item(ctx);
-            assert!(contains_component_type(&item, "Text"));
             let json = serde_json::to_string(&item).expect("json");
-            assert!(json.contains("Télévision"));
+            assert!(json.contains("explore.item.notFound"));
+            assert!(!json.contains("Télévision"));
         });
 }
 
@@ -128,17 +207,7 @@ fn get_content_returns_devices() {
         .with_property(Property::default())
         .with_capabilities(&["core.storage"])
         .run(|ctx| {
-            save_content(
-                ctx.clone(),
-                SaveContentArgs {
-                    devices: Vec::new(),
-                    safety_notice_fr: String::new(),
-                    safety_notice_en: String::new(),
-                    content_fr: sample_payload(),
-                    content_en: String::new(),
-                },
-            )
-            .expect("save");
+            seed_two_devices(ctx.clone());
             let view = get_content(
                 ctx,
                 GetContentArgs {
@@ -148,6 +217,46 @@ fn get_content_returns_devices() {
             )
             .expect("get");
             assert_eq!(view.devices.len(), 2);
-            assert!(view.safety_notice.contains("eau"));
+            assert!(view.devices.iter().any(|d| d.name.contains("Télévision")));
+        });
+}
+
+#[test]
+#[serial]
+fn migrates_legacy_payload_on_read() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&["core.storage"])
+        .run(|ctx| {
+            let legacy = json!({
+                "safety_notice": "Coupez l'eau en cas de fuite.",
+                "devices": [{
+                    "id": "tv",
+                    "icon": "📺",
+                    "title": "Télévision",
+                    "subtitle": "Salon",
+                    "steps": ["Allumez", "HDMI 1"],
+                    "tip": "Remote on stand"
+                }]
+            })
+            .to_string();
+            appliances::store_save_legacy_for_tests(legacy).expect("seed legacy");
+            let view = get_content(
+                ctx.clone(),
+                GetContentArgs {
+                    locale: Some("fr-FR".into()),
+                    device_id: None,
+                },
+            )
+            .expect("get");
+            assert_eq!(view.devices.len(), 1);
+            assert_eq!(view.devices[0].name, "Télévision");
+            assert_eq!(view.devices[0].emoji, "📺");
+            assert!(!view.devices[0].featured);
+            assert!(view.devices[0].description.contains("bulletList"));
+            let card = render_home_card(ctx);
+            // featured=false after migration → empty featured card children, still Card
+            assert!(contains_component_type(&card, "Card"));
         });
 }

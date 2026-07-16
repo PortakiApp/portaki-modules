@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
+  "id": "weather",
+  "name": {
+    "fr": "Météo",
+    "en": "Weather"
+  },
+  "description": {
+    "fr": "Conditions actuelles et prévisions sur 5 jours pour vos voyageurs.",
+    "en": "Current conditions and a 5-day forecast for your guests."
+  },
+  "version": "0.3.14",
+  "author": {
+    "name": "Syntax Labs",
+    "url": "https://syntax-labs.fr",
+    "type": "official"
+  },
+  "icon": "cloud-sun",
+  "type": "official",
+  "guestSurfaces": [
+    {
+      "surfaceId": "explore.forecast",
+      "path": "weather/forecast",
+      "labelKey": "nav.forecast"
+    }
+  ]
+}
