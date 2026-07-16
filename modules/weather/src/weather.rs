@@ -155,9 +155,15 @@ pub fn format_day_strip_label(date: &str, locale: &str) -> String {
     };
     let day = parsed.day();
     if locale_is_fr(locale) {
-        format!("{} {day}", weekday_short_fr(parsed.weekday().number_from_monday()))
+        format!(
+            "{} {day}",
+            weekday_short_fr(parsed.weekday().number_from_monday())
+        )
     } else {
-        format!("{} {day}", weekday_short_en(parsed.weekday().number_from_monday()))
+        format!(
+            "{} {day}",
+            weekday_short_en(parsed.weekday().number_from_monday())
+        )
     }
 }
 

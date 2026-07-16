@@ -105,11 +105,7 @@ fn build_weather_body(
                             .variant(json!("display")),
                     )
                     .child(Text::new().text(description).variant(json!("caption")))
-                    .child(
-                        Text::new()
-                            .text(json!(city))
-                            .variant(json!("caption")),
-                    ),
+                    .child(Text::new().text(json!(city)).variant(json!("caption"))),
             )),
     )];
 
@@ -150,9 +146,7 @@ fn build_home_card(
                     "title": "i18n:home.card.title"
                 }
             }))
-            .children(build_weather_body(
-                current, forecast, units, city, locale,
-            )),
+            .children(build_weather_body(current, forecast, units, city, locale)),
     )
     .with_id("home.card")
 }
@@ -384,33 +378,31 @@ fn build_forecast_detail_list(
         .map(|day| {
             let min = format_temp_label(convert_temp(day.min_c, *units), unit, false);
             let max = format_temp_label(convert_temp(day.max_c, *units), unit, false);
-            let mut day_children = vec![
-                Component::Stack(
-                    Stack::new()
-                        .direction(json!("horizontal"))
-                        .gap(json!(10))
-                        .child(
-                            Icon::new()
-                                .name(json!(icon_name_for_condition(&day.condition)))
-                                .size(json!(22)),
-                        )
-                        .child(Component::Stack(
-                            Stack::new()
-                                .gap(json!(2))
-                                .child(
-                                    Text::new()
-                                        .text(json!(format_day_detail_label(&day.date, locale)))
-                                        .variant(json!("body"))
-                                        .emphasis(Emphasis::Strong),
-                                )
-                                .child(
-                                    Text::new()
-                                        .text(json!(format!("{min} → {max}")))
-                                        .variant(json!("caption")),
-                                ),
-                        )),
-                ),
-            ];
+            let mut day_children = vec![Component::Stack(
+                Stack::new()
+                    .direction(json!("horizontal"))
+                    .gap(json!(10))
+                    .child(
+                        Icon::new()
+                            .name(json!(icon_name_for_condition(&day.condition)))
+                            .size(json!(22)),
+                    )
+                    .child(Component::Stack(
+                        Stack::new()
+                            .gap(json!(2))
+                            .child(
+                                Text::new()
+                                    .text(json!(format_day_detail_label(&day.date, locale)))
+                                    .variant(json!("body"))
+                                    .emphasis(Emphasis::Strong),
+                            )
+                            .child(
+                                Text::new()
+                                    .text(json!(format!("{min} → {max}")))
+                                    .variant(json!("caption")),
+                            ),
+                    )),
+            )];
             if let Some(precip) = day.precip_chance_pct {
                 day_children.push(Component::Text(
                     Text::new()
@@ -430,11 +422,7 @@ fn detail_row(label: &str, value: &str) -> Component {
         Stack::new()
             .direction(json!("horizontal"))
             .gap(json!(12))
-            .child(
-                Text::new()
-                    .text(json!(label))
-                    .variant(json!("caption")),
-            )
+            .child(Text::new().text(json!(label)).variant(json!("caption")))
             .child(
                 Text::new()
                     .text(json!(value))
