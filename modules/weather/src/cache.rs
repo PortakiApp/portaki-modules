@@ -126,6 +126,7 @@ pub fn read_current(
         condition: condition.clone(),
         humidity: payload.humidity,
         uv_index: payload.uv_index,
+        wind_speed_ms: payload.wind_speed_ms,
         description_key: crate::weather::description_key_for_condition(&condition),
         units,
         fetched_at: row.fetched_at,
@@ -167,6 +168,7 @@ pub fn store_current(
         condition: current.condition.clone(),
         humidity: current.humidity,
         uv_index: current.uv_index,
+        wind_speed_ms: current.wind_speed_ms,
     };
     let forecast_payload = CachedForecastPayload {
         days: forecast_days.to_vec(),

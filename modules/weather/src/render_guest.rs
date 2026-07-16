@@ -12,7 +12,8 @@ use serde_json::json;
 use crate::config::load_config;
 use crate::queries::{get_current, get_forecast, GetCurrentArgs, GetForecastArgs};
 use crate::weather::{
-    convert_temp, format_temp_label, has_open_weather, icon_name_for_condition, is_uv_high,
+    convert_temp, format_day_detail_label, format_day_strip_label, format_precip_label,
+    format_temp_label, format_wind_kmh, has_open_weather, icon_name_for_condition, is_uv_high,
     uv_label_key, WeatherCurrent, WeatherForecast,
 };
 
@@ -52,7 +53,26 @@ fn render_home_card_inner(ctx: &GuestContext) -> Result<Surface> {
             days: Some(5),
         },
     )?;
-    Ok(build_home_card(&current, &forecast, &config.units))
+    Ok(build_home_card(
+        &current,
+        &forecast,
+        &config.units,
+        property_city(ctx),
+        &ctx.locale,
+    ))
+}
+
+fn property_city(ctx: &GuestContext) -> &str {
+    let name = ctx.property.name.trim();
+    if !name.is_empty() && name != "Property" {
+        return name;
+    }
+    ctx.property
+        .address
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or(name)
 }
 
 /// Same glance body as the card (now + 5-day strip) — shared with the sheet surface.
@@ -60,6 +80,8 @@ fn build_weather_body(
     current: &WeatherCurrent,
     forecast: &WeatherForecast,
     units: &crate::entities::WeatherUnits,
+    city: &str,
+    locale: &str,
 ) -> Vec<Component> {
     let temp = convert_temp(current.temp_c, *units);
     let unit = units.sdui_unit();
@@ -82,7 +104,12 @@ fn build_weather_body(
                             .text(json!(format_temp_label(temp, unit, false)))
                             .variant(json!("display")),
                     )
-                    .child(Text::new().text(description).variant(json!("caption"))),
+                    .child(Text::new().text(description).variant(json!("caption")))
+                    .child(
+                        Text::new()
+                            .text(json!(city))
+                            .variant(json!("caption")),
+                    ),
             )),
     )];
 
@@ -99,7 +126,7 @@ fn build_weather_body(
     }
 
     children.push(Component::Divider(Divider::new()));
-    children.push(build_forecast_strip(forecast, units));
+    children.push(build_forecast_strip(forecast, units, locale));
     children
 }
 
@@ -107,6 +134,8 @@ fn build_home_card(
     current: &WeatherCurrent,
     forecast: &WeatherForecast,
     units: &crate::entities::WeatherUnits,
+    city: &str,
+    locale: &str,
 ) -> Surface {
     Surface::new(
         Card::new()
@@ -121,7 +150,9 @@ fn build_home_card(
                     "title": "i18n:home.card.title"
                 }
             }))
-            .children(build_weather_body(current, forecast, units)),
+            .children(build_weather_body(
+                current, forecast, units, city, locale,
+            )),
     )
     .with_id("home.card")
 }
@@ -130,6 +161,7 @@ fn build_forecast_day_column(
     day: &crate::weather::ForecastDayView,
     unit: &str,
     units: &crate::entities::WeatherUnits,
+    locale: &str,
 ) -> Component {
     let display_temp = convert_temp(day.display_temp_c, *units);
     Component::Stack(
@@ -137,7 +169,7 @@ fn build_forecast_day_column(
             .gap(json!(6))
             .child(
                 Text::new()
-                    .text(json!(format!("i18n:{}", day.weekday_key)))
+                    .text(json!(format_day_strip_label(&day.date, locale)))
                     .variant(json!("caption")),
             )
             .child(
@@ -157,12 +189,13 @@ fn build_forecast_day_column(
 fn build_forecast_strip(
     forecast: &WeatherForecast,
     units: &crate::entities::WeatherUnits,
+    locale: &str,
 ) -> Component {
     let unit = units.sdui_unit();
     let day_columns: Vec<Component> = forecast
         .days
         .iter()
-        .map(|day| build_forecast_day_column(day, unit, units))
+        .map(|day| build_forecast_day_column(day, unit, units, locale))
         .collect();
 
     Component::Grid(
@@ -283,7 +316,13 @@ fn render_explore_forecast_inner(ctx: &GuestContext) -> Result<Surface> {
             days: Some(5),
         },
     )?;
-    Ok(build_sheet_surface(&current, &forecast, &config.units))
+    Ok(build_sheet_surface(
+        &current,
+        &forecast,
+        &config.units,
+        property_city(ctx),
+        &ctx.locale,
+    ))
 }
 
 /// Body-only tree for the bottom sheet (shell supplies header chrome).
@@ -291,8 +330,19 @@ fn build_sheet_surface(
     current: &WeatherCurrent,
     forecast: &WeatherForecast,
     units: &crate::entities::WeatherUnits,
+    city: &str,
+    locale: &str,
 ) -> Surface {
-    let mut children = build_weather_body(current, forecast, units);
+    let mut children = build_weather_body(current, forecast, units, city, locale);
+    children.push(Component::Divider(Divider::new()));
+    children.push(build_current_details(current));
+    children.push(Component::Divider(Divider::new()));
+    children.push(Component::Text(
+        Text::new()
+            .text(json!("i18n:explore.forecast.hint"))
+            .variant(json!("caption")),
+    ));
+    children.push(build_forecast_detail_list(forecast, units, locale));
     children.push(Component::InfoBanner(
         InfoBanner::new().message(json!("i18n:sheet.assistant.tip")),
     ));
@@ -301,4 +351,95 @@ fn build_sheet_surface(
     ));
 
     Surface::new(Stack::new().gap(json!(12)).children(children)).with_id("explore.forecast")
+}
+
+fn build_current_details(current: &WeatherCurrent) -> Component {
+    let mut rows: Vec<Component> = vec![detail_row(
+        "i18n:weather.humidity",
+        &format!("{}%", current.humidity),
+    )];
+
+    if let Some(uv) = current.uv_index {
+        rows.push(detail_row(
+            "i18n:weather.uv",
+            &format!("i18n:{}", uv_label_key(uv)),
+        ));
+    }
+    if let Some(wind) = current.wind_speed_ms {
+        rows.push(detail_row("i18n:weather.wind", &format_wind_kmh(wind)));
+    }
+
+    Component::Stack(Stack::new().gap(json!(6)).children(rows))
+}
+
+fn build_forecast_detail_list(
+    forecast: &WeatherForecast,
+    units: &crate::entities::WeatherUnits,
+    locale: &str,
+) -> Component {
+    let unit = units.sdui_unit();
+    let rows: Vec<Component> = forecast
+        .days
+        .iter()
+        .map(|day| {
+            let min = format_temp_label(convert_temp(day.min_c, *units), unit, false);
+            let max = format_temp_label(convert_temp(day.max_c, *units), unit, false);
+            let mut day_children = vec![
+                Component::Stack(
+                    Stack::new()
+                        .direction(json!("horizontal"))
+                        .gap(json!(10))
+                        .child(
+                            Icon::new()
+                                .name(json!(icon_name_for_condition(&day.condition)))
+                                .size(json!(22)),
+                        )
+                        .child(Component::Stack(
+                            Stack::new()
+                                .gap(json!(2))
+                                .child(
+                                    Text::new()
+                                        .text(json!(format_day_detail_label(&day.date, locale)))
+                                        .variant(json!("body"))
+                                        .emphasis(Emphasis::Strong),
+                                )
+                                .child(
+                                    Text::new()
+                                        .text(json!(format!("{min} → {max}")))
+                                        .variant(json!("caption")),
+                                ),
+                        )),
+                ),
+            ];
+            if let Some(precip) = day.precip_chance_pct {
+                day_children.push(Component::Text(
+                    Text::new()
+                        .text(json!(format_precip_label(precip, locale)))
+                        .variant(json!("caption")),
+                ));
+            }
+            Component::Stack(Stack::new().gap(json!(6)).children(day_children))
+        })
+        .collect();
+
+    Component::Stack(Stack::new().gap(json!(14)).children(rows))
+}
+
+fn detail_row(label: &str, value: &str) -> Component {
+    Component::Stack(
+        Stack::new()
+            .direction(json!("horizontal"))
+            .gap(json!(12))
+            .child(
+                Text::new()
+                    .text(json!(label))
+                    .variant(json!("caption")),
+            )
+            .child(
+                Text::new()
+                    .text(json!(value))
+                    .variant(json!("caption"))
+                    .emphasis(Emphasis::Strong),
+            ),
+    )
 }

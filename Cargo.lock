@@ -401,7 +401,7 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 [[package]]
 name = "portaki-connectors"
 version = "0.2.1"
-source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#c93479d7ad22f71c047ac5c6d12b5b895228d14d"
+source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#78f7f85630cffdb4cf2f8257d75f14c7eb93031a"
 dependencies = [
  "portaki-sdk",
  "serde",
@@ -412,7 +412,7 @@ dependencies = [
 [[package]]
 name = "portaki-sdk"
 version = "0.2.1"
-source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#c93479d7ad22f71c047ac5c6d12b5b895228d14d"
+source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#78f7f85630cffdb4cf2f8257d75f14c7eb93031a"
 dependencies = [
  "base64",
  "chrono",
@@ -429,7 +429,7 @@ dependencies = [
 [[package]]
 name = "portaki-sdk-macros"
 version = "0.2.1"
-source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#c93479d7ad22f71c047ac5c6d12b5b895228d14d"
+source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#78f7f85630cffdb4cf2f8257d75f14c7eb93031a"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -440,7 +440,7 @@ dependencies = [
 [[package]]
 name = "portaki-test-utils"
 version = "0.2.1"
-source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#c93479d7ad22f71c047ac5c6d12b5b895228d14d"
+source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#78f7f85630cffdb4cf2f8257d75f14c7eb93031a"
 dependencies = [
  "chrono",
  "portaki-sdk",
@@ -793,7 +793,7 @@ dependencies = [
 
 [[package]]
 name = "weather"
-version = "0.3.7"
+version = "0.3.8"
 dependencies = [
  "chrono",
  "extism-pdk",
