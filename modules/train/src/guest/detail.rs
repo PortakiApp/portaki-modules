@@ -3,15 +3,16 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::{Emphasis, SurfaceLevel};
-use portaki_sdk::sdui::primitives::{Card, FilterBar, FilterChip, KeyValue, Stack, Text, TimedEntry};
+use portaki_sdk::sdui::primitives::{
+    Card, FilterBar, FilterChip, KeyValue, Stack, Text, TimedEntry,
+};
 use portaki_sdk::sdui::surface::Surface;
 use serde_json::json;
 
 use crate::content::{schedule_for, station_caption, DESTINATIONS};
 
 pub fn build_detail_page(ctx: &GuestContext, selected: &str) -> Surface {
-    Surface::new(
-        Stack::new().gap(json!(12)).children(vec![
+    Surface::new(Stack::new().gap(json!(12)).children(vec![
             Component::Card(from_to_card(ctx, selected)),
             Component::FilterBar(destination_filter_bar(selected)),
             Component::Text(
@@ -26,8 +27,7 @@ pub fn build_detail_page(ctx: &GuestContext, selected: &str) -> Surface {
                     .variant(json!("caption"))
                     .emphasis(Emphasis::Subtle),
             ),
-        ]),
-    )
+        ]))
     .with_id("explore.detail")
 }
 
@@ -77,9 +77,14 @@ fn schedule_card(selected: &str) -> Card {
                 TimedEntry::new()
                     .time(json!(departure.time))
                     .title(json!(selected))
-                    .subtitle(json!(format!("{} · {}", departure.platform, departure.note))),
+                    .subtitle(json!(format!(
+                        "{} · {}",
+                        departure.platform, departure.note
+                    ))),
             )
         })
         .collect();
-    Card::new().surface(SurfaceLevel::Elevated).children(children)
+    Card::new()
+        .surface(SurfaceLevel::Elevated)
+        .children(children)
 }

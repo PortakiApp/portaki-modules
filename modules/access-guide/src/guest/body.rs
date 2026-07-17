@@ -79,9 +79,7 @@ fn property_map(data: &GuestData) -> Option<Component> {
 }
 
 fn kv_row(key_i18n: &str, value: &str, mono: bool) -> Component {
-    let mut row = KeyValue::new()
-        .key(json!(key_i18n))
-        .value(json!(value));
+    let mut row = KeyValue::new().key(json!(key_i18n)).value(json!(value));
     if mono {
         row = row.mono(json!(true));
     }
