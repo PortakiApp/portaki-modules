@@ -1,13 +1,13 @@
 {
   "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
-  "id": "rules",
+  "id": "access-guide",
   "name": {
-    "fr": "Règlement intérieur",
-    "en": "House rules"
+    "fr": "Accès & parking",
+    "en": "Access & parking"
   },
   "description": {
-    "fr": "Les consignes du logement, en français et en anglais, lisibles par les voyageurs.",
-    "en": "House rules in French and English, easy for guests to read."
+    "fr": "Adresse, codes d'accès, parking et étapes d'arrivée.",
+    "en": "Address, access codes, parking, and arrival steps."
   },
   "version": "0.1.0",
   "author": {
@@ -15,27 +15,27 @@
     "url": "https://syntax-labs.fr",
     "type": "official"
   },
-  "icon": "scale",
+  "icon": "car",
   "type": "official",
   "hostSurfaces": [
     {
       "type": "property-workspace-tab",
-      "pathSegment": "rules",
+      "pathSegment": "access-guide",
       "label": {
-        "fr": "Règlement",
-        "en": "House rules"
+        "fr": "Accès",
+        "en": "Access"
       },
-      "icon": "scale",
+      "icon": "car",
       "hostUi": {
-        "designId": "rules-editor-v1"
+        "designId": "access-guide-editor-v1"
       }
     }
   ],
   "guestSurfaces": [
     {
       "surfaceId": "explore.detail",
-      "path": "rules",
-      "labelKey": "nav.rules"
+      "path": "access-guide",
+      "labelKey": "nav.accessGuide"
     }
   ]
 }

@@ -2,7 +2,9 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::primitives::{Badge, Button, InfoBanner, KeyValue, Link, ListItem, Text};
+use portaki_sdk::sdui::primitives::{
+    Badge, Button, InfoBanner, KeyValue, Link, ListItem, Map, Text,
+};
 use serde_json::json;
 
 use super::load::GuestData;
@@ -42,43 +44,76 @@ fn external_action(url: &str) -> serde_json::Value {
     .unwrap_or(json!({}))
 }
 
+fn maps_url(data: &GuestData) -> Option<String> {
+    let configured = data.parking_map_url.trim();
+    if !configured.is_empty() {
+        return Some(configured.to_string());
+    }
+    if data.lat != 0.0 || data.lng != 0.0 {
+        return Some(format!(
+            "https://www.google.com/maps/search/?api=1&query={},{}",
+            data.lat, data.lng
+        ));
+    }
+    None
+}
+
+fn property_map(data: &GuestData) -> Option<Component> {
+    if data.lat == 0.0 && data.lng == 0.0 {
+        return None;
+    }
+    Some(Component::Map(
+        Map::new()
+            .viewport(json!({
+                "center": { "lat": data.lat, "lng": data.lng },
+                "zoom": 14
+            }))
+            .markers(json!([{
+                "lat": data.lat,
+                "lng": data.lng,
+                "tone": "primary"
+            }]))
+            .isStatic(json!(true))
+            .interactionMode(json!("none")),
+    ))
+}
+
+fn kv_row(key_i18n: &str, value: &str, mono: bool) -> Component {
+    let mut row = KeyValue::new()
+        .key(json!(key_i18n))
+        .value(json!(value));
+    if mono {
+        row = row.mono(json!(true));
+    }
+    Component::KeyValue(row)
+}
+
 pub fn build_access_glance(data: &GuestData) -> Vec<Component> {
     let mut children = Vec::new();
 
-    if !data.address.is_empty() {
-        children.push(Component::KeyValue(
-            KeyValue::new()
-                .key(json!("i18n:guest.address"))
-                .value(json!(data.address.clone())),
-        ));
-    }
-    if !data.gate_code.is_empty() {
-        children.push(Component::KeyValue(
-            KeyValue::new()
-                .key(json!("i18n:guest.gate"))
-                .value(json!(data.gate_code.clone())),
-        ));
-    }
-    if !data.keybox_code.is_empty() {
-        children.push(Component::KeyValue(
-            KeyValue::new()
-                .key(json!("i18n:guest.keybox"))
-                .value(json!(data.keybox_code.clone())),
-        ));
-    }
-    if !data.parking_info.is_empty() {
-        children.push(Component::KeyValue(
-            KeyValue::new()
-                .key(json!("i18n:guest.parking"))
-                .value(json!(data.parking_info.clone())),
-        ));
+    if let Some(map) = property_map(data) {
+        children.push(map);
     }
 
-    if !data.parking_map_url.is_empty() {
+    if !data.address.is_empty() {
+        children.push(kv_row("i18n:guest.address", &data.address, false));
+    }
+    if !data.gate_code.is_empty() {
+        children.push(kv_row("i18n:guest.gate", &data.gate_code, true));
+    }
+    if !data.keybox_code.is_empty() {
+        children.push(kv_row("i18n:guest.keybox", &data.keybox_code, true));
+    }
+    if !data.parking_info.is_empty() {
+        children.push(kv_row("i18n:guest.parking", &data.parking_info, false));
+    }
+
+    if let Some(url) = maps_url(data) {
         children.push(Component::Button(
             Button::new()
                 .label(json!("i18n:guest.openMaps"))
-                .action(external_action(&data.parking_map_url)),
+                .variant(json!("outline"))
+                .action(external_action(&url)),
         ));
     }
 

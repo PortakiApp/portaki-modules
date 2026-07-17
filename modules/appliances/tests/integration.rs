@@ -24,6 +24,8 @@ fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
             Component::Text(_) if type_name == "Text" => true,
             Component::RichText(_) if type_name == "RichText" => true,
             Component::Link(_) if type_name == "Link" => true,
+            Component::Eyebrow(_) if type_name == "Eyebrow" => true,
+            Component::Button(_) if type_name == "Button" => true,
             _ => false,
         };
         if matches {
@@ -152,7 +154,7 @@ fn home_card_featured_only_and_detail_list() {
 
 #[test]
 #[serial]
-fn explore_item_uses_device_id_and_rich_text() {
+fn explore_item_uses_device_id_and_howto_steps() {
     reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
@@ -163,13 +165,15 @@ fn explore_item_uses_device_id_and_rich_text() {
             let mut tv_ctx = ctx.clone();
             tv_ctx.input = json!({ "deviceId": "tv" });
             let tv = render_explore_item(tv_ctx);
-            assert!(contains_component_type(&tv, "RichText"));
+            assert!(contains_component_type(&tv, "ListItem"));
+            assert!(contains_component_type(&tv, "Eyebrow"));
+            assert!(contains_component_type(&tv, "Button"));
             assert!(contains_component_type(&tv, "Link"));
             let tv_json = serde_json::to_string(&tv).expect("json");
             assert!(tv_json.contains("Télévision"));
-            assert!(tv_json.contains("appliance-steps"));
             assert!(tv_json.contains("Allumez avec la télécommande."));
             assert!(tv_json.contains("https://example.com/tv-manual"));
+            assert!(tv_json.contains("openHostChat"));
             assert!(!tv_json.contains("Lave-linge"));
 
             let mut washer_ctx = ctx.clone();

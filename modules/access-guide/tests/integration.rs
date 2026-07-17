@@ -36,6 +36,7 @@ fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
             Component::EmptyState(_) if type_name == "EmptyState" => true,
             Component::Link(_) if type_name == "Link" => true,
             Component::Stack(_) if type_name == "Stack" => true,
+            Component::Map(_) if type_name == "Map" => true,
             _ => false,
         };
         if matches {
@@ -76,7 +77,7 @@ fn home_card_empty_without_config() {
 
 #[test]
 #[serial]
-fn home_card_key_values_and_page() {
+fn home_card_key_values_and_navigate() {
     MockContext::guest()
         .with_capabilities(&["core.storage"])
         .with_kv("config", sample_config_bytes())
@@ -84,8 +85,11 @@ fn home_card_key_values_and_page() {
             let surface = render_home_card(ctx);
             assert!(contains_component_type(&surface, "KeyValue"));
             assert!(contains_component_type(&surface, "Button"));
+            assert!(contains_component_type(&surface, "Map"));
             let json = serde_json::to_string(&surface).expect("json");
-            assert!(json.contains("page"));
+            assert!(json.contains("navigate"));
+            assert!(json.contains("access-guide"));
+            assert!(json.contains("\"mono\":true") || json.contains("\"mono\": true"));
         });
 }
 

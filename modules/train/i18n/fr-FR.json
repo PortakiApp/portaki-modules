@@ -1,0 +1,12 @@
+{
+  "module.displayName": "Horaires trains",
+  "module.description": "Prochains départs depuis la gare la plus proche.",
+  "nav.train": "Trains",
+  "home.card.title": "Horaires trains",
+  "explore.detail.from": "Départ",
+  "explore.detail.to": "Destination",
+  "explore.detail.upcoming": "Prochains départs",
+  "explore.detail.disclaimer": "Horaires indicatifs · TER SUD PACA",
+  "module.status.inactive.title": "Horaires trains désactivés",
+  "module.status.inactive.description": "Ce module n'est pas actif sur ce logement"
+}

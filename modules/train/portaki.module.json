@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
+  "id": "train",
+  "name": {
+    "fr": "Horaires trains",
+    "en": "Train times"
+  },
+  "description": {
+    "fr": "Prochains départs depuis la gare la plus proche du logement.",
+    "en": "Upcoming departures from the property's nearest station."
+  },
+  "version": "0.1.0",
+  "author": {
+    "name": "Syntax Labs",
+    "url": "https://syntax-labs.fr",
+    "type": "official"
+  },
+  "icon": "train",
+  "type": "official",
+  "guestSurfaces": [
+    {
+      "surfaceId": "explore.detail",
+      "path": "train",
+      "labelKey": "nav.train"
+    }
+  ]
+}

@@ -17,6 +17,8 @@ pub struct GuestData {
     pub keybox_code: String,
     pub parking_info: String,
     pub locale: String,
+    pub lat: f64,
+    pub lng: f64,
 }
 
 pub enum GuestLoad {
@@ -50,5 +52,7 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: &str) -> Result<GuestLoad
         keybox_code: config.keybox_code.trim().to_string(),
         parking_info: config.parking_info.trim().to_string(),
         locale: ctx.locale.clone(),
+        lat: ctx.property.lat,
+        lng: ctx.property.lng,
     })))
 }

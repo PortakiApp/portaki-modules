@@ -280,6 +280,42 @@ pub fn description_to_html(description: &str) -> String {
     out
 }
 
+/// Extract ordered how-to steps from TipTap bullet/ordered lists (guest detail SDUI).
+pub fn extract_howto_steps(description: &str) -> Vec<String> {
+    let trimmed = description.trim();
+    if trimmed.is_empty() {
+        return Vec::new();
+    }
+    let Ok(value) = serde_json::from_str::<Value>(trimmed) else {
+        return Vec::new();
+    };
+    if value.get("type").and_then(|t| t.as_str()) != Some("doc") {
+        return Vec::new();
+    }
+    let mut steps = Vec::new();
+    let Some(children) = value.get("content").and_then(|c| c.as_array()) else {
+        return steps;
+    };
+    for child in children {
+        let node_type = child.get("type").and_then(|t| t.as_str()).unwrap_or("");
+        if node_type != "bulletList" && node_type != "orderedList" {
+            continue;
+        }
+        let Some(items) = child.get("content").and_then(|c| c.as_array()) else {
+            continue;
+        };
+        for item in items {
+            let mut parts = Vec::new();
+            collect_text(item, &mut parts);
+            let text = parts.join(" ").trim().to_string();
+            if !text.is_empty() {
+                steps.push(text);
+            }
+        }
+    }
+    steps
+}
+
 fn wrap_paragraph(text: &str) -> String {
     format!("<p>{}</p>", escape_html(text))
 }

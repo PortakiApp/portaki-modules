@@ -1,0 +1,12 @@
+{
+  "module.displayName": "Train times",
+  "module.description": "Upcoming departures from the nearest station.",
+  "nav.train": "Trains",
+  "home.card.title": "Train times",
+  "explore.detail.from": "Departure",
+  "explore.detail.to": "Destination",
+  "explore.detail.upcoming": "Next departures",
+  "explore.detail.disclaimer": "Indicative times · TER SUD PACA",
+  "module.status.inactive.title": "Train times disabled",
+  "module.status.inactive.description": "This module is not active on this property"
+}

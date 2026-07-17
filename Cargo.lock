@@ -496,7 +496,7 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 [[package]]
 name = "portaki-connectors"
 version = "0.2.1"
-source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#f8c82732933ebfb3ae8fc82af10c6fd5ca11777d"
+source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#a80793f1e3d72aeae6e903c1263ae39fe9242043"
 dependencies = [
  "portaki-sdk",
  "serde",
@@ -507,7 +507,7 @@ dependencies = [
 [[package]]
 name = "portaki-sdk"
 version = "0.2.1"
-source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#f8c82732933ebfb3ae8fc82af10c6fd5ca11777d"
+source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#a80793f1e3d72aeae6e903c1263ae39fe9242043"
 dependencies = [
  "base64",
  "chrono",
@@ -524,7 +524,7 @@ dependencies = [
 [[package]]
 name = "portaki-sdk-macros"
 version = "0.2.1"
-source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#f8c82732933ebfb3ae8fc82af10c6fd5ca11777d"
+source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#a80793f1e3d72aeae6e903c1263ae39fe9242043"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -535,7 +535,7 @@ dependencies = [
 [[package]]
 name = "portaki-test-utils"
 version = "0.2.1"
-source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#f8c82732933ebfb3ae8fc82af10c6fd5ca11777d"
+source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#a80793f1e3d72aeae6e903c1263ae39fe9242043"
 dependencies = [
  "chrono",
  "portaki-sdk",
@@ -847,6 +847,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2abe9b86193656635d2411dc43050282ca48aa31c2451210f4202550afb7526"
 dependencies = [
  "winnow",
+]
+
+[[package]]
+name = "train"
+version = "0.1.0"
+dependencies = [
+ "extism-pdk",
+ "portaki-sdk",
+ "portaki-sdk-macros",
+ "portaki-test-utils",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
