@@ -19,7 +19,7 @@ pub fn build_home_card(payload: &AppliancesPayload) -> Surface {
     Surface::new(
         Card::new()
             .icon(json!("plug"))
-            .title(json!("i18n:home.card.title"))
+            .title(json!("i18n:nav.appliances"))
             .action(json!({
                 "type": "navigate",
                 "to": "appliances"

@@ -11,14 +11,14 @@ pub fn build_home_card(data: &GuestWeatherData) -> Surface {
     Surface::new(
         Card::new()
             .icon(json!("cloud-sun"))
-            .title(json!("i18n:home.card.title"))
+            .title(json!("i18n:nav.weather"))
             .action(json!({
                 "type": "openOverlay",
                 "presentation": "bottomSheet",
                 "surfaceRender": "explore.forecast",
                 "args": {
                     "icon": "cloud-sun",
-                    "title": "i18n:home.card.title"
+                    "title": "i18n:nav.weather"
                 }
             }))
             .children(build_weather_glance(
