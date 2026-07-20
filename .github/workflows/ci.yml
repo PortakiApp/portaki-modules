@@ -11,6 +11,7 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   REGISTRY: ghcr.io/portakiapp
+  CI_ARTIFACT_RETENTION_DAYS: "1"
 
 jobs:
   changes:
@@ -39,24 +40,48 @@ jobs:
         id: detect
         run: bash .github/scripts/changed-modules.sh "${{ steps.base.outputs.ref }}"
 
-  quality:
-    name: quality
+  fmt:
+    name: fmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt, clippy
-          targets: wasm32-unknown-unknown
+          components: rustfmt
 
       - uses: Swatinem/rust-cache@v2
 
       - name: Format
         run: cargo fmt --all -- --check
 
+  clippy:
+    name: clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
 
       - name: Unit tests
         run: cargo test --workspace --lib
@@ -67,15 +92,11 @@ jobs:
       - name: Doc tests
         run: cargo test --workspace --doc
 
-  # Matrix: only modules touched by the push/PR (or all if workspace/CI shared).
-  module:
-    name: module (${{ matrix.module }})
-    needs: [changes, quality]
+  wasm:
+    name: wasm (${{ matrix.module }})
+    needs: [changes]
     if: needs.changes.outputs.any == 'true'
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     strategy:
       fail-fast: false
       max-parallel: 3
@@ -110,17 +131,7 @@ jobs:
           cargo update
           grep -q 'portaki-sdk-macros' Cargo.lock
 
-      - name: Login to GitHub Container Registry
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      # PR / feature branches: build+lint only. main: publish script rebuilds once.
       - name: Build and lint (wasm)
-        if: ${{ !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
         run: |
           set -euo pipefail
           module="${{ matrix.module }}"
@@ -129,8 +140,110 @@ jobs:
           echo "=== portaki lint: modules/${module} ==="
           (cd "modules/${module}" && portaki lint)
 
-      - name: Publish to GHCR
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: Upload wasm artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-${{ matrix.module }}
+          path: |
+            modules/${{ matrix.module }}/target/wasm32-unknown-unknown/release/*.wasm
+            modules/${{ matrix.module }}/target/portaki/
+          if-no-files-found: error
+          retention-days: ${{ env.CI_ARTIFACT_RETENTION_DAYS }}
+
+  publish:
+    name: publish (${{ matrix.module }})
+    needs: [changes, wasm]
+    if: >-
+      needs.changes.outputs.any == 'true' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        module: ${{ fromJson(needs.changes.outputs.modules) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache portaki CLI
+        id: cache-cli
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/portaki
+          key: portaki-cli-${{ runner.os }}-sdk-main
+
+      - name: Install portaki CLI
+        if: steps.cache-cli.outputs.cache-hit != 'true'
+        run: cargo install --git https://github.com/PortakiApp/portaki-sdk --branch main --locked portaki-cli
+
+      - name: Download wasm artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: wasm-${{ matrix.module }}
+          path: .
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to GHCR (from artifact)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISH_FROM_ARTIFACT: "1"
         run: bash .github/scripts/publish-module.sh "${{ matrix.module }}"
+
+  quality:
+    name: quality
+    needs: [changes, fmt, clippy, test, wasm, publish]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Quality gate
+        env:
+          ANY: ${{ needs.changes.outputs.any }}
+          FMT: ${{ needs.fmt.result }}
+          CLIPPY: ${{ needs.clippy.result }}
+          TEST: ${{ needs.test.result }}
+          WASM: ${{ needs.wasm.result }}
+          PUBLISH: ${{ needs.publish.result }}
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+
+          for job in FMT CLIPPY TEST; do
+            result="$(eval echo \$$job)"
+            if [ "$result" != "success" ]; then
+              echo "Quality gate failed: $job=$result"
+              exit 1
+            fi
+          done
+
+          if [ "$ANY" = "true" ]; then
+            if [ "$WASM" != "success" ]; then
+              echo "Quality gate failed: WASM=$WASM"
+              exit 1
+            fi
+            if [ "$EVENT" = "push" ] && [ "$REF" = "refs/heads/main" ]; then
+              if [ "$PUBLISH" != "success" ]; then
+                echo "Quality gate failed: PUBLISH=$PUBLISH"
+                exit 1
+              fi
+            fi
+          else
+            echo "No module changes — wasm/publish not required."
+          fi
+
+          echo "Quality gate passed."
