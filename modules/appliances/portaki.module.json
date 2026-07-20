@@ -9,7 +9,7 @@
     "fr": "Four, lave-linge, clim : consignes courtes pour vos voyageurs.",
     "en": "Oven, washer, AC: short tips for your guests."
   },
-  "version": "0.2.3",
+  "version": "0.2.5",
   "author": {
     "name": "Syntax Labs",
     "url": "https://syntax-labs.fr",
@@ -25,10 +25,7 @@
         "fr": "Appareils",
         "en": "Appliances"
       },
-      "icon": "plug",
-      "hostUi": {
-        "designId": "appliances-editor-v1"
-      }
+      "icon": "plug"
     }
   ],
   "guestSurfaces": [
