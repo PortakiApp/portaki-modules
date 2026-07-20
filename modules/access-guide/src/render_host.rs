@@ -40,27 +40,19 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         serde_json::to_value(Action::command("access-guide", "updateConfig", submit_args))
             .unwrap_or(json!({}));
 
-    let mut form_children: Vec<Component> = Vec::new();
-
-    form_children.push(
+    let form_children: Vec<Component> = vec![
         Card::new()
             .title(json!("i18n:host.section.primary"))
             .subtitle(json!("i18n:host.section.primary.help"))
             .icon(json!("key"))
             .children(vec![method_choice_list(draft_method).into()])
             .into(),
-    );
-
-    form_children.push(
         Card::new()
             .title(json!("i18n:host.section.methodDetails"))
             .subtitle(json!("i18n:host.section.methodDetails.help"))
             .icon(json!("lock"))
             .children(method_detail_children(draft_method, &config))
             .into(),
-    );
-
-    form_children.push(
         Grid::new()
             .columns(json!(2))
             .gap(json!(16))
@@ -69,39 +61,28 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                 layer_card_parking(parking_enabled, &config),
             ])
             .into(),
-    );
-
-    form_children.push(
         Card::new()
             .title(json!("i18n:host.section.arrival"))
             .subtitle(json!("i18n:host.section.arrival.help"))
             .icon(json!("map-pin"))
             .children(arrival_children(&config, steps_count))
             .into(),
-    );
-
-    form_children.push(
         Card::new()
             .title(json!("i18n:host.section.reveal"))
             .subtitle(json!("i18n:host.section.reveal.help"))
             .icon(json!("clock-circle"))
             .children(vec![reveal_choice_list(config.reveal_policy).into()])
             .into(),
-    );
-
-    form_children.push(
         Text::new()
             .text(json!("i18n:host.main.help"))
             .variant(json!("caption"))
             .into(),
-    );
-    form_children.push(
         Button::new()
             .label(json!("i18n:host.save"))
             .action(save_action)
             .tone(Tone::Primary)
             .into(),
-    );
+    ];
 
     Surface::new(
         Page::new()
