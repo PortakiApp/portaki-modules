@@ -1,24 +1,26 @@
 //! Load config for guest surfaces.
 
+use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{load_config, AccessStep, ModuleConfig};
+use crate::config::{load_config, ModuleConfig};
+use crate::reveal::{
+    evaluate_reveal, format_available_from, locked_message, RevealDecision,
+};
 
 use super::empty::{empty_content_state, empty_state_if_module_not_ready};
 
 pub struct GuestData {
-    pub steps: Vec<AccessStep>,
-    pub parking_map_url: String,
-    pub arrival_video_url: String,
-    pub global_note: String,
+    pub config: ModuleConfig,
     pub address: String,
-    pub gate_code: String,
-    pub keybox_code: String,
-    pub parking_info: String,
     pub locale: String,
     pub lat: f64,
     pub lng: f64,
+    pub secrets_revealed: bool,
+    /// Preformatted guest message when secrets are locked (dated when possible).
+    pub reveal_locked_message: Option<String>,
+    pub stay_id: Option<Uuid>,
 }
 
 pub enum GuestLoad {
@@ -36,23 +38,58 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: &str) -> Result<GuestLoad
         return Ok(GuestLoad::Empty(Box::new(empty_content_state(surface_id))));
     }
 
-    let address = if config.address.trim().is_empty() {
+    let configured_address = config.address().trim();
+    let address = if configured_address.is_empty() {
         ctx.property.address.clone().unwrap_or_default()
     } else {
-        config.address.trim().to_string()
+        configured_address.to_string()
     };
 
+    let property_timezone = property_timezone(ctx);
+    let checkin_at = ctx.stay.as_ref().and_then(|s| s.checkin_at);
+    let stay_id = ctx.stay.as_ref().map(|s| s.stay_id);
+    let now = time::now().unwrap_or_else(|_| Utc::now());
+    let decision = evaluate_reveal(
+        config.reveal_policy,
+        now,
+        checkin_at,
+        &property_timezone,
+    );
+
     Ok(GuestLoad::Ready(Box::new(GuestData {
-        steps: config.parse_steps(),
-        parking_map_url: config.parking_map_url.trim().to_string(),
-        arrival_video_url: config.arrival_video_url.trim().to_string(),
-        global_note: config.global_note.trim().to_string(),
+        config,
         address,
-        gate_code: config.gate_code.trim().to_string(),
-        keybox_code: config.keybox_code.trim().to_string(),
-        parking_info: config.parking_info.trim().to_string(),
         locale: ctx.locale.clone(),
         lat: ctx.property.lat,
         lng: ctx.property.lng,
+        secrets_revealed: decision.revealed,
+        reveal_locked_message: locked_banner(&decision, &property_timezone, &ctx.locale),
+        stay_id,
     })))
+}
+
+fn property_timezone(ctx: &GuestContext) -> String {
+    let from_property = ctx.property.timezone.trim();
+    if !from_property.is_empty() {
+        return from_property.to_string();
+    }
+    let from_ctx = ctx.timezone.trim();
+    if !from_ctx.is_empty() {
+        return from_ctx.to_string();
+    }
+    "Europe/Paris".to_string()
+}
+
+fn locked_banner(
+    decision: &RevealDecision,
+    property_timezone: &str,
+    locale: &str,
+) -> Option<String> {
+    if decision.revealed {
+        return None;
+    }
+    let when = decision
+        .available_from
+        .map(|at| format_available_from(at, property_timezone, locale));
+    Some(locked_message(locale, when.as_deref()))
 }

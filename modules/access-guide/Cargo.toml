@@ -14,6 +14,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 portaki-sdk = { workspace = true }
 portaki-sdk-macros = { workspace = true }
+chrono = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 
@@ -23,3 +24,5 @@ extism-pdk = { workspace = true }
 [dev-dependencies]
 portaki-test-utils = { workspace = true }
 serial_test = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }

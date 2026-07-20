@@ -5,9 +5,13 @@ mod config;
 mod guest;
 mod queries;
 mod render_host;
+mod reveal;
 
 pub use commands::{update_config, StepInput, UpdateConfigArgs};
-pub use config::{load_config, ModuleConfig};
+pub use config::{
+    load_config, ArrivalGuide, BuildingAccess, MethodFields, ModuleConfig, ParkingLayer,
+    PrimaryMethod, RevealPolicy,
+};
 pub use guest::{render_explore_detail, render_home_card};
 pub use queries::get_config;
 pub use render_host::render_host_main;

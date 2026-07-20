@@ -6,8 +6,8 @@
     "en": "Access & parking"
   },
   "description": {
-    "fr": "Adresse, codes d'accès, parking et étapes d'arrivée.",
-    "en": "Address, access codes, parking, and arrival steps."
+    "fr": "Moyen d'entrée, couches optionnelles et révélation des codes.",
+    "en": "Entry method, optional layers, and when codes are revealed."
   },
   "version": "0.1.0",
   "author": {
