@@ -8,3 +8,14 @@
 *.swo
 portaki-out/
 dist/
+
+# AI agent / Cursor tooling (local only — never commit)
+.cursor/
+.claude/
+.cursorrules
+AGENTS.md
+CLAUDE.md
+.codex/
+.continue/
+.windsurf/
+.aider*
