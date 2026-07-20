@@ -25,10 +25,7 @@
         "fr": "Accès",
         "en": "Access"
       },
-      "icon": "car",
-      "hostUi": {
-        "designId": "access-guide-editor-v1"
-      }
+      "icon": "car"
     }
   ],
   "guestSurfaces": [
