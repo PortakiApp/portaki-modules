@@ -280,7 +280,12 @@ fn push_primary_method(children: &mut Vec<Component>, data: &GuestData, detailed
                 push_smart_lock_ctas(children, data);
             }
             if let Some(manual_code) = manual_code {
-                push_secret_row(children, data, "i18n:guest.smartLock.manualCode", manual_code);
+                push_secret_row(
+                    children,
+                    data,
+                    "i18n:guest.smartLock.manualCode",
+                    manual_code,
+                );
             }
             if detailed || !has_provider {
                 if let Some(instructions) = instructions {
@@ -324,7 +329,11 @@ fn push_primary_method(children: &mut Vec<Component>, data: &GuestData, detailed
             hours,
             contact,
         } => {
-            children.push(kv_row("i18n:guest.method", staff_kind_key(*staff_kind), false));
+            children.push(kv_row(
+                "i18n:guest.method",
+                staff_kind_key(*staff_kind),
+                false,
+            ));
             push_text_row(
                 children,
                 "i18n:guest.buildingStaff.deskLocation",

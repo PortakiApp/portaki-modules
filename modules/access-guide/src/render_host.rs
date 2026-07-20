@@ -222,7 +222,10 @@ fn push_method_picker(children: &mut Vec<Component>, selected: PrimaryMethod) {
         (PrimaryMethod::DoorCode, "i18n:host.method.door_code"),
         (PrimaryMethod::SmartLock, "i18n:host.method.smart_lock"),
         (PrimaryMethod::InPerson, "i18n:host.method.in_person"),
-        (PrimaryMethod::BuildingStaff, "i18n:host.method.building_staff"),
+        (
+            PrimaryMethod::BuildingStaff,
+            "i18n:host.method.building_staff",
+        ),
         (PrimaryMethod::HostGreets, "i18n:host.method.host_greets"),
         (PrimaryMethod::Other, "i18n:host.method.other"),
     ];
@@ -230,9 +233,9 @@ fn push_method_picker(children: &mut Vec<Component>, selected: PrimaryMethod) {
     let buttons: Vec<Component> = options
         .into_iter()
         .map(|(method, label)| {
-            let mut button = Button::new()
-                .label(json!(label))
-                .action(emit_input(json!({ "primary_method": primary_method_str(method) })));
+            let mut button = Button::new().label(json!(label)).action(emit_input(
+                json!({ "primary_method": primary_method_str(method) }),
+            ));
             if method == selected {
                 button = button.tone(Tone::Primary);
             }
@@ -272,11 +275,7 @@ fn push_layer_toggle(children: &mut Vec<Component>, key: &str, enabled: bool, la
 
 // ── Method fields ────────────────────────────────────────────────────────────
 
-fn push_method_fields(
-    children: &mut Vec<Component>,
-    method: PrimaryMethod,
-    config: &ModuleConfig,
-) {
+fn push_method_fields(children: &mut Vec<Component>, method: PrimaryMethod, config: &ModuleConfig) {
     match method {
         PrimaryMethod::Keybox => push_keybox_fields(children, config),
         PrimaryMethod::DoorCode => push_door_code_fields(children, config),
@@ -301,7 +300,11 @@ fn push_keybox_fields(children: &mut Vec<Component>, config: &ModuleConfig) {
         ),
         _ => ("", "", ""),
     };
-    children.push(text_field("keybox_location", "i18n:host.keybox.location", location));
+    children.push(text_field(
+        "keybox_location",
+        "i18n:host.keybox.location",
+        location,
+    ));
     children.push(text_field("keybox_code", "i18n:host.keybox.code", code));
     children.push(text_area_field(
         "keybox_instructions",
@@ -463,9 +466,7 @@ fn push_in_person_fields(children: &mut Vec<Component>, config: &ModuleConfig) {
 }
 
 fn format_coord(value: Option<f64>) -> String {
-    value
-        .map(|v| format!("{v:.6}"))
-        .unwrap_or_default()
+    value.map(|v| format!("{v:.6}")).unwrap_or_default()
 }
 
 fn push_building_staff_fields(children: &mut Vec<Component>, config: &ModuleConfig) {
@@ -602,7 +603,11 @@ fn push_parking_fields(children: &mut Vec<Component>, config: &ModuleConfig) {
         .and_then(|p| p.code.as_deref())
         .unwrap_or("");
     children.push(text_field("parking_info", "i18n:host.parking.info", info));
-    children.push(text_field("parking_map_url", "i18n:host.parking.mapUrl", map_url));
+    children.push(text_field(
+        "parking_map_url",
+        "i18n:host.parking.mapUrl",
+        map_url,
+    ));
     children.push(text_field("parking_code", "i18n:host.parking.code", code));
 }
 

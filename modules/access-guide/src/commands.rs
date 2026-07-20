@@ -4,8 +4,9 @@ use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::config::{
-    config_from_update_parts, save_config, AccessStep, ArrivalGuide, BuildingAccess, DoorCodeTarget,
-    Localized, MethodFields, ModuleConfig, ParkingLayer, PrimaryMethod, RevealPolicy, StaffKind,
+    config_from_update_parts, save_config, AccessStep, ArrivalGuide, BuildingAccess,
+    DoorCodeTarget, Localized, MethodFields, ModuleConfig, ParkingLayer, PrimaryMethod,
+    RevealPolicy, StaffKind,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

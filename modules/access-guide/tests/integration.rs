@@ -179,7 +179,9 @@ fn smart_lock_provider_emits_unlock_commands_when_revealed() {
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
             let json = serde_json::to_string(&surface).expect("json");
-            assert!(json.contains("\"type\":\"command\"") || json.contains("\"type\": \"command\""));
+            assert!(
+                json.contains("\"type\":\"command\"") || json.contains("\"type\": \"command\"")
+            );
             assert!(json.contains("nuki"));
             assert!(json.contains("unlock"));
             assert!(json.contains("getGuestCredential"));

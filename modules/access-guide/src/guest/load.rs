@@ -5,9 +5,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{load_config, ModuleConfig};
-use crate::reveal::{
-    evaluate_reveal, format_available_from, locked_message, RevealDecision,
-};
+use crate::reveal::{evaluate_reveal, format_available_from, locked_message, RevealDecision};
 
 use super::empty::{empty_content_state, empty_state_if_module_not_ready};
 
@@ -49,12 +47,7 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: &str) -> Result<GuestLoad
     let checkin_at = ctx.stay.as_ref().and_then(|s| s.checkin_at);
     let stay_id = ctx.stay.as_ref().map(|s| s.stay_id);
     let now = time::now().unwrap_or_else(|_| Utc::now());
-    let decision = evaluate_reveal(
-        config.reveal_policy,
-        now,
-        checkin_at,
-        &property_timezone,
-    );
+    let decision = evaluate_reveal(config.reveal_policy, now, checkin_at, &property_timezone);
 
     Ok(GuestLoad::Ready(Box::new(GuestData {
         config,

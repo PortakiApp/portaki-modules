@@ -537,11 +537,7 @@ fn method_from_legacy_codes(
     (None, None)
 }
 
-fn parking_from_legacy(
-    info: &str,
-    map_url: &str,
-    code: Option<String>,
-) -> Option<ParkingLayer> {
+fn parking_from_legacy(info: &str, map_url: &str, code: Option<String>) -> Option<ParkingLayer> {
     let layer = ParkingLayer {
         info: info.trim().to_string(),
         map_url: map_url.trim().to_string(),
@@ -599,13 +595,9 @@ fn method_is_empty(method: &MethodFields) -> bool {
             location,
             code,
             instructions,
-        } => {
-            location.trim().is_empty() && opt_empty(code) && opt_empty(instructions)
-        }
+        } => location.trim().is_empty() && opt_empty(code) && opt_empty(instructions),
         MethodFields::DoorCode {
-            code,
-            instructions,
-            ..
+            code, instructions, ..
         } => code.trim().is_empty() && opt_empty(instructions),
         MethodFields::SmartLock {
             instructions,
@@ -639,10 +631,7 @@ fn method_is_empty(method: &MethodFields) -> bool {
 }
 
 fn opt_empty(value: &Option<String>) -> bool {
-    value
-        .as_ref()
-        .map(|s| s.trim().is_empty())
-        .unwrap_or(true)
+    value.as_ref().map(|s| s.trim().is_empty()).unwrap_or(true)
 }
 
 fn nonempty_opt(value: Option<String>) -> Option<String> {
@@ -753,7 +742,9 @@ mod tests {
         assert_eq!(cfg.primary_method, PrimaryMethod::Keybox);
         assert_eq!(cfg.keybox_code(), Some("4821"));
         assert_eq!(
-            cfg.building_access.as_ref().and_then(|b| b.gate_code.as_deref()),
+            cfg.building_access
+                .as_ref()
+                .and_then(|b| b.gate_code.as_deref()),
             Some("A17B")
         );
         assert_eq!(cfg.parking.as_ref().map(|p| p.info.as_str()), Some("Rue A"));
