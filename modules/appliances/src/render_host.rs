@@ -4,50 +4,37 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
-    Button, Card, EmptyState, Field, Form, List, ListItem, Page, RichTextEditor, Select, Stack,
-    Text, TextInput, Toggle,
+    Accordion, Button, Card, EmptyState, Field, Form, List, ListItem, Page, RichTextEditor, Select,
+    Stack, Text, TextInput, Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
 use serde_json::{json, Value};
 
-use crate::content::{Appliance, ApplianceStatus, MAX_APPLIANCES};
+use crate::content::{description_plain_text, Appliance, ApplianceStatus, MAX_APPLIANCES};
 use crate::store;
 
 const SELECT_NEW: &str = "__new__";
 const EMIT_SURFACE_INPUT: &str = "host.surface.input";
 
-/// Host appliances editor — device list + one editor panel + safety notice.
+/// Host appliances editor — safety accordion (col-12) + list (col-3) / detail (col-9).
 #[portaki_sdk::surface(host, id = "main")]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let payload = store::load_payload().unwrap_or_default();
     let selected_id = selected_id_from_input(&ctx.input);
 
-    let list_panel = build_device_list(&payload.devices, &selected_id);
+    let safety = build_safety_accordion(&payload.safety_notice);
+    let list_card = build_list_card(&payload.devices, &selected_id);
     let detail_panel = build_detail_panel(&payload.devices, &selected_id);
-    let safety_card = build_safety_card(&payload.safety_notice);
 
-    Surface::new(
-        Page::new().child(
-            Stack::new()
-                .direction(json!("horizontal"))
-                .gap(json!(24))
-                .children(vec![
-                    Component::Stack(Stack::new().gap(json!(12)).children(vec![
-                                Component::Text(
-                                    Text::new()
-                                        .text(json!("i18n:host.list.title"))
-                                        .variant(json!("caption")),
-                                ),
-                                list_panel,
-                            ])),
-                    Component::Stack(
-                        Stack::new()
-                            .gap(json!(16))
-                            .children(vec![detail_panel, safety_card]),
-                    ),
-                ]),
-        ),
-    )
+    Surface::new(Page::new().children(vec![
+            safety,
+            Component::Stack(
+                Stack::new()
+                    .direction(json!("horizontal"))
+                    .gap(json!(24))
+                    .children(vec![list_card, detail_panel]),
+            ),
+        ]))
     .with_id("main")
 }
 
@@ -69,7 +56,7 @@ fn emit_select(selected_id: &str) -> Value {
     .unwrap_or(json!({}))
 }
 
-fn build_device_list(devices: &[Appliance], selected_id: &str) -> Component {
+fn build_list_card(devices: &[Appliance], selected_id: &str) -> Component {
     let mut stack_children: Vec<Component> = Vec::new();
 
     if devices.is_empty() {
@@ -111,16 +98,24 @@ fn build_device_list(devices: &[Appliance], selected_id: &str) -> Component {
         stack_children.push(Component::Button(add));
     }
 
-    Component::Stack(Stack::new().gap(json!(8)).children(stack_children))
+    Component::Card(
+        Card::new()
+            .title(json!("i18n:host.list.title"))
+            .child(Stack::new().gap(json!(10)).children(stack_children)),
+    )
 }
 
 fn build_detail_panel(devices: &[Appliance], selected_id: &str) -> Component {
     if selected_id.is_empty() {
-        return Component::EmptyState(
-            EmptyState::new()
-                .title(json!("i18n:host.detail.empty.title"))
-                .description(json!("i18n:host.detail.empty.description"))
-                .icon(json!("plug")),
+        return Component::Card(
+            Card::new()
+                .title(json!("i18n:host.detail.card.title"))
+                .child(
+                    EmptyState::new()
+                        .title(json!("i18n:host.detail.empty.title"))
+                        .description(json!("i18n:host.detail.empty.description"))
+                        .icon(json!("plug")),
+                ),
         );
     }
 
@@ -132,11 +127,15 @@ fn build_detail_panel(devices: &[Appliance], selected_id: &str) -> Component {
     };
 
     if !is_new && device.is_none() {
-        return Component::EmptyState(
-            EmptyState::new()
-                .title(json!("i18n:host.detail.missing.title"))
-                .description(json!("i18n:host.detail.missing.description"))
-                .icon(json!("plug")),
+        return Component::Card(
+            Card::new()
+                .title(json!("i18n:host.detail.card.title"))
+                .child(
+                    EmptyState::new()
+                        .title(json!("i18n:host.detail.missing.title"))
+                        .description(json!("i18n:host.detail.missing.description"))
+                        .icon(json!("plug")),
+                ),
         );
     }
 
@@ -256,18 +255,29 @@ fn build_detail_panel(devices: &[Appliance], selected_id: &str) -> Component {
     )
 }
 
-fn build_safety_card(safety_notice: &str) -> Component {
+fn build_safety_accordion(safety_notice: &str) -> Component {
     let save_action =
         serde_json::to_value(Action::command("appliances", "saveSafetyNotice", json!({})))
             .unwrap_or(json!({}));
+    let has_value = !description_plain_text(safety_notice).trim().is_empty();
+    // Shell Accordion: `:collapsed` → closed by default; otherwise open.
+    let accordion_id = if has_value {
+        "host.safety:collapsed"
+    } else {
+        "host.safety:expanded"
+    };
 
-    Component::Card(
-        Card::new()
-            .title(json!("i18n:host.safety"))
-            .child(Form::new().children(vec![
+    Component::Accordion(
+        Accordion::new().id(accordion_id).child(
+            Card::new()
+                .title(json!("i18n:host.safety"))
+                .child(Form::new().children(vec![
+                    Text::new()
+                        .text(json!("i18n:host.safety.hint"))
+                        .variant(json!("caption"))
+                        .into(),
                     Field::new()
                         .name(json!("safetyNotice"))
-                        .label(json!("i18n:host.safety"))
                         .child(
                             RichTextEditor::new()
                                 .name(json!("safetyNotice"))
@@ -277,8 +287,10 @@ fn build_safety_card(safety_notice: &str) -> Component {
                     Button::new()
                         .label(json!("i18n:host.safety.save"))
                         .action(save_action)
+                        .tone(Tone::Primary)
                         .into(),
                 ])),
+        ),
     )
 }
 
@@ -287,5 +299,6 @@ fn editor_value(raw: &str) -> String {
     if trimmed.is_empty() {
         return r#"{"type":"doc","content":[{"type":"paragraph"}]}"#.to_string();
     }
+    // Already TipTap JSON — keep as-is; plain text is wrapped by the shell parser.
     trimmed.to_string()
 }
