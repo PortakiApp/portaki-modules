@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::{
     config_from_update_parts, save_config, AccessStep, ArrivalGuide, BuildingAccess,
-    DoorCodeTarget, Localized, MethodFields, ModuleConfig, ParkingLayer, PrimaryMethod,
+    DoorCodeTarget, Localized, MethodFields, ModuleConfig, ParkingLayer, PrimaryMethod, RawConfig,
     RevealPolicy, StaffKind,
 };
 
@@ -154,46 +154,46 @@ impl UpdateConfigArgs {
 
     fn into_structured_config(self) -> ModuleConfig {
         let steps = self.resolve_steps();
-        config_from_update_parts(
-            self.primary_method,
-            self.method,
-            self.building_access,
-            self.parking,
-            self.arrival,
-            self.reveal_policy,
-            self.smart_lock_provider_module_id,
+        config_from_update_parts(RawConfig {
+            primary_method: self.primary_method,
+            method: self.method,
+            building_access: self.building_access,
+            parking: self.parking,
+            arrival: self.arrival,
+            reveal_policy: self.reveal_policy,
+            smart_lock_provider_module_id: self.smart_lock_provider_module_id,
             steps,
-            self.steps_json,
-            self.parking_map_url,
-            self.arrival_video_url,
-            self.global_note,
-            self.address,
-            self.gate_code,
-            self.keybox_code,
-            self.parking_info,
-        )
+            steps_json: self.steps_json,
+            parking_map_url: self.parking_map_url,
+            arrival_video_url: self.arrival_video_url,
+            global_note: self.global_note,
+            address: self.address,
+            gate_code: self.gate_code,
+            keybox_code: self.keybox_code,
+            parking_info: self.parking_info,
+        })
     }
 
     fn into_legacy_config(self) -> ModuleConfig {
         let steps = self.resolve_steps();
-        config_from_update_parts(
-            None,
-            None,
-            None,
-            None,
-            None,
-            self.reveal_policy,
-            self.smart_lock_provider_module_id,
+        config_from_update_parts(RawConfig {
+            primary_method: None,
+            method: None,
+            building_access: None,
+            parking: None,
+            arrival: None,
+            reveal_policy: self.reveal_policy,
+            smart_lock_provider_module_id: self.smart_lock_provider_module_id,
             steps,
-            self.steps_json,
-            self.parking_map_url,
-            self.arrival_video_url,
-            self.global_note,
-            self.address,
-            self.gate_code,
-            self.keybox_code,
-            self.parking_info,
-        )
+            steps_json: self.steps_json,
+            parking_map_url: self.parking_map_url,
+            arrival_video_url: self.arrival_video_url,
+            global_note: self.global_note,
+            address: self.address,
+            gate_code: self.gate_code,
+            keybox_code: self.keybox_code,
+            parking_info: self.parking_info,
+        })
     }
 
     fn assemble_host_form(self, primary: PrimaryMethod) -> ModuleConfig {

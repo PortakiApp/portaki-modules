@@ -348,24 +348,24 @@ impl Localized {
 #[derive(Debug, Clone, Deserialize, Default)]
 #[serde(default)]
 pub(crate) struct RawConfig {
-    primary_method: Option<PrimaryMethod>,
-    method: Option<MethodFields>,
-    building_access: Option<BuildingAccess>,
-    parking: Option<ParkingLayer>,
-    arrival: Option<ArrivalGuide>,
-    reveal_policy: Option<RevealPolicy>,
-    smart_lock_provider_module_id: Option<String>,
+    pub(crate) primary_method: Option<PrimaryMethod>,
+    pub(crate) method: Option<MethodFields>,
+    pub(crate) building_access: Option<BuildingAccess>,
+    pub(crate) parking: Option<ParkingLayer>,
+    pub(crate) arrival: Option<ArrivalGuide>,
+    pub(crate) reveal_policy: Option<RevealPolicy>,
+    pub(crate) smart_lock_provider_module_id: Option<String>,
 
     // Legacy flat fields (pre-redesign)
-    steps: Vec<AccessStep>,
-    steps_json: String,
-    parking_map_url: String,
-    arrival_video_url: String,
-    global_note: String,
-    address: String,
-    gate_code: String,
-    keybox_code: String,
-    parking_info: String,
+    pub(crate) steps: Vec<AccessStep>,
+    pub(crate) steps_json: String,
+    pub(crate) parking_map_url: String,
+    pub(crate) arrival_video_url: String,
+    pub(crate) global_note: String,
+    pub(crate) address: String,
+    pub(crate) gate_code: String,
+    pub(crate) keybox_code: String,
+    pub(crate) parking_info: String,
 }
 
 impl RawConfig {
@@ -681,43 +681,8 @@ pub fn save_config(config: &ModuleConfig) -> Result<()> {
 }
 
 /// Build [`ModuleConfig`] from host `updateConfig` args (new + legacy fields).
-pub fn config_from_update_parts(
-    primary_method: Option<PrimaryMethod>,
-    method: Option<MethodFields>,
-    building_access: Option<BuildingAccess>,
-    parking: Option<ParkingLayer>,
-    arrival: Option<ArrivalGuide>,
-    reveal_policy: Option<RevealPolicy>,
-    smart_lock_provider_module_id: Option<String>,
-    // legacy
-    steps: Vec<AccessStep>,
-    steps_json: String,
-    parking_map_url: String,
-    arrival_video_url: String,
-    global_note: String,
-    address: String,
-    gate_code: String,
-    keybox_code: String,
-    parking_info: String,
-) -> ModuleConfig {
-    migrate_legacy(RawConfig {
-        primary_method,
-        method,
-        building_access,
-        parking,
-        arrival,
-        reveal_policy,
-        smart_lock_provider_module_id,
-        steps,
-        steps_json,
-        parking_map_url,
-        arrival_video_url,
-        global_note,
-        address,
-        gate_code,
-        keybox_code,
-        parking_info,
-    })
+pub fn config_from_update_parts(raw: RawConfig) -> ModuleConfig {
+    migrate_legacy(raw)
 }
 
 #[cfg(test)]
