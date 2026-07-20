@@ -31,10 +31,10 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     let steps_count = draft_steps_count(&ctx.input, &config);
 
     let submit_args = json!({
-        "primary_method": primary_method_str(draft_method),
+        "primary_method": draft_method.as_wire(),
         "building_access_enabled": building_enabled,
         "parking_enabled": parking_enabled,
-        "reveal_policy": reveal_policy_str(config.reveal_policy),
+        "reveal_policy": config.reveal_policy.as_wire(),
     });
     let save_action =
         serde_json::to_value(Action::command("access-guide", "updateConfig", submit_args))
@@ -132,38 +132,11 @@ fn emit_input(payload: Value) -> Value {
     .unwrap_or(json!({}))
 }
 
-fn primary_method_str(method: PrimaryMethod) -> &'static str {
-    match method {
-        PrimaryMethod::Keybox => "keybox",
-        PrimaryMethod::DoorCode => "door_code",
-        PrimaryMethod::SmartLock => "smart_lock",
-        PrimaryMethod::InPerson => "in_person",
-        PrimaryMethod::BuildingStaff => "building_staff",
-        PrimaryMethod::HostGreets => "host_greets",
-        PrimaryMethod::Other => "other",
-    }
-}
-
 fn parse_primary_method(raw: &str) -> Option<PrimaryMethod> {
-    match raw.trim() {
-        "keybox" => Some(PrimaryMethod::Keybox),
-        "door_code" => Some(PrimaryMethod::DoorCode),
-        "smart_lock" => Some(PrimaryMethod::SmartLock),
-        "in_person" => Some(PrimaryMethod::InPerson),
-        "building_staff" => Some(PrimaryMethod::BuildingStaff),
-        "host_greets" => Some(PrimaryMethod::HostGreets),
-        "other" => Some(PrimaryMethod::Other),
-        _ => None,
-    }
-}
-
-fn reveal_policy_str(policy: RevealPolicy) -> &'static str {
-    match policy {
-        RevealPolicy::Always => "always",
-        RevealPolicy::HoursBefore24 => "hours_before_24",
-        RevealPolicy::DayBefore16h => "day_before_16h",
-        RevealPolicy::AtCheckin => "at_checkin",
-    }
+    PrimaryMethod::ALL
+        .iter()
+        .copied()
+        .find(|m| m.as_wire() == raw.trim())
 }
 
 fn door_target_str(target: DoorCodeTarget) -> &'static str {
@@ -186,48 +159,48 @@ fn staff_kind_str(kind: StaffKind) -> &'static str {
 fn method_choice_list(selected: PrimaryMethod) -> ChoiceList {
     ChoiceList::new()
         .name(json!("primary_method"))
-        .value(json!(primary_method_str(selected)))
+        .value(json!(selected.as_wire()))
         .emitOnChange(json!(true))
         .layout(json!("cards"))
         .choices(json!([
             {
-                "value": "keybox",
+                "value": PrimaryMethod::Keybox.as_wire(),
                 "label": "i18n:host.method.keybox",
                 "description": "i18n:host.method.keybox.desc",
                 "icon": "key"
             },
             {
-                "value": "door_code",
+                "value": PrimaryMethod::DoorCode.as_wire(),
                 "label": "i18n:host.method.door_code",
                 "description": "i18n:host.method.door_code.desc",
                 "icon": "grid"
             },
             {
-                "value": "smart_lock",
+                "value": PrimaryMethod::SmartLock.as_wire(),
                 "label": "i18n:host.method.smart_lock",
                 "description": "i18n:host.method.smart_lock.desc",
                 "icon": "lock"
             },
             {
-                "value": "in_person",
+                "value": PrimaryMethod::InPerson.as_wire(),
                 "label": "i18n:host.method.in_person",
                 "description": "i18n:host.method.in_person.desc",
                 "icon": "users"
             },
             {
-                "value": "building_staff",
+                "value": PrimaryMethod::BuildingStaff.as_wire(),
                 "label": "i18n:host.method.building_staff",
                 "description": "i18n:host.method.building_staff.desc",
                 "icon": "building"
             },
             {
-                "value": "host_greets",
+                "value": PrimaryMethod::HostGreets.as_wire(),
                 "label": "i18n:host.method.host_greets",
                 "description": "i18n:host.method.host_greets.desc",
                 "icon": "smile"
             },
             {
-                "value": "other",
+                "value": PrimaryMethod::Other.as_wire(),
                 "label": "i18n:host.method.other",
                 "description": "i18n:host.method.other.desc",
                 "icon": "more-horizontal"
@@ -238,29 +211,29 @@ fn method_choice_list(selected: PrimaryMethod) -> ChoiceList {
 fn reveal_choice_list(policy: RevealPolicy) -> ChoiceList {
     ChoiceList::new()
         .name(json!("reveal_policy"))
-        .value(json!(reveal_policy_str(policy)))
+        .value(json!(policy.as_wire()))
         .layout(json!("compact"))
         .choices(json!([
             {
-                "value": "always",
+                "value": RevealPolicy::Always.as_wire(),
                 "label": "i18n:host.reveal.always",
                 "description": "i18n:host.reveal.always.desc",
                 "icon": "clock-circle"
             },
             {
-                "value": "hours_before_24",
+                "value": RevealPolicy::HoursBefore24.as_wire(),
                 "label": "i18n:host.reveal.hoursBefore24",
                 "description": "i18n:host.reveal.hoursBefore24.desc",
                 "icon": "clock-circle"
             },
             {
-                "value": "day_before_16h",
+                "value": RevealPolicy::DayBefore16h.as_wire(),
                 "label": "i18n:host.reveal.dayBefore16h",
                 "description": "i18n:host.reveal.dayBefore16h.desc",
                 "icon": "clock-circle"
             },
             {
-                "value": "at_checkin",
+                "value": RevealPolicy::AtCheckin.as_wire(),
                 "label": "i18n:host.reveal.atCheckin",
                 "description": "i18n:host.reveal.atCheckin.desc",
                 "icon": "clock-circle"

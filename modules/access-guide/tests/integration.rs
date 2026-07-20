@@ -246,6 +246,21 @@ fn smart_lock_provider_hides_cta_when_not_revealed() {
 }
 
 #[test]
+fn update_config_args_choice_list_reveal_policy_wires() {
+    // Host ChoiceList posts as_wire() strings; command deserialize must accept them.
+    for wire in RevealPolicy::CHOICE_LIST_WIRE_VALUES {
+        let args: UpdateConfigArgs = serde_json::from_value(json!({
+            "primary_method": "keybox",
+            "reveal_policy": wire,
+            "keybox_location": "door",
+            "keybox_code": "1234",
+        }))
+        .unwrap_or_else(|e| panic!("reveal_policy={wire:?}: {e}"));
+        assert_eq!(args.reveal_policy.map(|p| p.as_wire()), Some(*wire));
+    }
+}
+
+#[test]
 #[serial]
 fn update_config_legacy_args_migrate_to_new_shape() {
     MockContext::host()

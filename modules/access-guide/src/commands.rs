@@ -430,3 +430,67 @@ fn step_from_input(input: &StepInput, index: usize) -> Option<AccessStep> {
 pub fn update_config(_ctx: Context, args: UpdateConfigArgs) -> Result<()> {
     save_config(&args.into_config())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn update_config_args_accepts_choice_list_reveal_policies() {
+        for wire in RevealPolicy::CHOICE_LIST_WIRE_VALUES {
+            let args: UpdateConfigArgs = serde_json::from_value(json!({
+                "primary_method": "keybox",
+                "reveal_policy": wire,
+                "keybox_location": "À droite",
+            }))
+            .unwrap_or_else(|e| {
+                panic!("updateConfig must accept reveal_policy={wire:?}: {e}")
+            });
+            assert_eq!(args.reveal_policy.map(|p| p.as_wire()), Some(*wire));
+        }
+    }
+
+    #[test]
+    fn update_config_args_day_before_16h_and_hours_before_24() {
+        // Regression: wasm_params_invalid unknown variant day_before_16h.
+        let day: UpdateConfigArgs = serde_json::from_value(json!({
+            "reveal_policy": "day_before_16h",
+            "primary_method": "other",
+            "other_instructions": "Sonner"
+        }))
+        .expect("day_before_16h");
+        assert_eq!(day.reveal_policy, Some(RevealPolicy::DayBefore16h));
+
+        let hours: UpdateConfigArgs = serde_json::from_value(json!({
+            "reveal_policy": "hours_before_24",
+            "primary_method": "keybox",
+            "keybox_code": "4821"
+        }))
+        .expect("hours_before_24");
+        assert_eq!(hours.reveal_policy, Some(RevealPolicy::HoursBefore24));
+    }
+
+    #[test]
+    fn update_config_args_accepts_choice_list_primary_methods() {
+        for wire in PrimaryMethod::CHOICE_LIST_WIRE_VALUES {
+            let args: UpdateConfigArgs = serde_json::from_value(json!({
+                "primary_method": wire,
+                "reveal_policy": RevealPolicy::DayBefore16h.as_wire(),
+            }))
+            .unwrap_or_else(|e| {
+                panic!("updateConfig must accept primary_method={wire:?}: {e}")
+            });
+            assert_eq!(args.primary_method.map(|m| m.as_wire()), Some(*wire));
+        }
+    }
+
+    #[test]
+    fn method_fields_kind_matches_primary_method_wire() {
+        for wire in PrimaryMethod::CHOICE_LIST_WIRE_VALUES {
+            let method: MethodFields = serde_json::from_value(json!({ "kind": wire }))
+                .unwrap_or_else(|e| panic!("MethodFields kind={wire:?} must deserialize: {e}"));
+            assert_eq!(method.primary_method().as_wire(), *wire);
+        }
+    }
+}

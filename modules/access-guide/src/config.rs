@@ -21,6 +21,42 @@ pub enum PrimaryMethod {
     Other,
 }
 
+impl PrimaryMethod {
+    /// Wire string for host ChoiceList / `updateConfig` (must match serde `snake_case`).
+    pub const fn as_wire(self) -> &'static str {
+        match self {
+            Self::Keybox => "keybox",
+            Self::DoorCode => "door_code",
+            Self::SmartLock => "smart_lock",
+            Self::InPerson => "in_person",
+            Self::BuildingStaff => "building_staff",
+            Self::HostGreets => "host_greets",
+            Self::Other => "other",
+        }
+    }
+
+    /// Every `value` emitted by the host primary-method ChoiceList.
+    pub const CHOICE_LIST_WIRE_VALUES: &[&str] = &[
+        "keybox",
+        "door_code",
+        "smart_lock",
+        "in_person",
+        "building_staff",
+        "host_greets",
+        "other",
+    ];
+
+    pub const ALL: &[PrimaryMethod] = &[
+        Self::Keybox,
+        Self::DoorCode,
+        Self::SmartLock,
+        Self::InPerson,
+        Self::BuildingStaff,
+        Self::HostGreets,
+        Self::Other,
+    ];
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum DoorCodeTarget {
@@ -50,6 +86,33 @@ pub enum RevealPolicy {
     #[serde(rename = "day_before_16h", alias = "day_before16h")]
     DayBefore16h,
     AtCheckin,
+}
+
+impl RevealPolicy {
+    /// Wire string for host ChoiceList / `updateConfig` (must match serde rename).
+    pub const fn as_wire(self) -> &'static str {
+        match self {
+            Self::Always => "always",
+            Self::HoursBefore24 => "hours_before_24",
+            Self::DayBefore16h => "day_before_16h",
+            Self::AtCheckin => "at_checkin",
+        }
+    }
+
+    /// Every `value` emitted by the host reveal-policy ChoiceList.
+    pub const CHOICE_LIST_WIRE_VALUES: &[&str] = &[
+        "always",
+        "hours_before_24",
+        "day_before_16h",
+        "at_checkin",
+    ];
+
+    pub const ALL: &[RevealPolicy] = &[
+        Self::Always,
+        Self::HoursBefore24,
+        Self::DayBefore16h,
+        Self::AtCheckin,
+    ];
 }
 
 /// Fields for the selected primary access method (tagged by `kind`).
@@ -771,23 +834,39 @@ mod tests {
     }
 
     #[test]
-    fn reveal_policy_wire_names_and_legacy_aliases() {
+    fn reveal_policy_choice_list_values_deserialize() {
+        // Catches drift: ChoiceList posts these strings; updateConfig must accept them.
         assert_eq!(
-            serde_json::to_value(RevealPolicy::HoursBefore24).unwrap(),
-            json!("hours_before_24")
+            RevealPolicy::CHOICE_LIST_WIRE_VALUES.len(),
+            RevealPolicy::ALL.len()
         );
-        assert_eq!(
-            serde_json::to_value(RevealPolicy::DayBefore16h).unwrap(),
-            json!("day_before_16h")
-        );
-        assert_eq!(
-            serde_json::from_value::<RevealPolicy>(json!("hours_before_24")).unwrap(),
-            RevealPolicy::HoursBefore24
-        );
-        assert_eq!(
-            serde_json::from_value::<RevealPolicy>(json!("day_before_16h")).unwrap(),
-            RevealPolicy::DayBefore16h
-        );
+        for wire in RevealPolicy::CHOICE_LIST_WIRE_VALUES {
+            let parsed: RevealPolicy = serde_json::from_value(json!(wire)).unwrap_or_else(|e| {
+                panic!("ChoiceList reveal_policy value {wire:?} must deserialize: {e}")
+            });
+            assert_eq!(parsed.as_wire(), *wire);
+        }
+        for policy in RevealPolicy::ALL {
+            assert!(
+                RevealPolicy::CHOICE_LIST_WIRE_VALUES.contains(&policy.as_wire()),
+                "variant {policy:?} wire {:?} missing from ChoiceList list",
+                policy.as_wire()
+            );
+        }
+    }
+
+    #[test]
+    fn reveal_policy_serde_round_trip_all_variants() {
+        for &policy in RevealPolicy::ALL {
+            let value = serde_json::to_value(policy).expect("serialize");
+            assert_eq!(value.as_str(), Some(policy.as_wire()));
+            let back: RevealPolicy = serde_json::from_value(value).expect("deserialize");
+            assert_eq!(back, policy);
+        }
+    }
+
+    #[test]
+    fn reveal_policy_legacy_aliases_still_parse() {
         // Legacy rename_all snake_case (no underscore before digits).
         assert_eq!(
             serde_json::from_value::<RevealPolicy>(json!("hours_before24")).unwrap(),
@@ -797,6 +876,37 @@ mod tests {
             serde_json::from_value::<RevealPolicy>(json!("day_before16h")).unwrap(),
             RevealPolicy::DayBefore16h
         );
+    }
+
+    #[test]
+    fn primary_method_choice_list_values_deserialize() {
+        assert_eq!(
+            PrimaryMethod::CHOICE_LIST_WIRE_VALUES.len(),
+            PrimaryMethod::ALL.len()
+        );
+        for wire in PrimaryMethod::CHOICE_LIST_WIRE_VALUES {
+            let parsed: PrimaryMethod = serde_json::from_value(json!(wire)).unwrap_or_else(|e| {
+                panic!("ChoiceList primary_method value {wire:?} must deserialize: {e}")
+            });
+            assert_eq!(parsed.as_wire(), *wire);
+        }
+        for method in PrimaryMethod::ALL {
+            assert!(
+                PrimaryMethod::CHOICE_LIST_WIRE_VALUES.contains(&method.as_wire()),
+                "variant {method:?} wire {:?} missing from ChoiceList list",
+                method.as_wire()
+            );
+        }
+    }
+
+    #[test]
+    fn primary_method_serde_round_trip_all_variants() {
+        for &method in PrimaryMethod::ALL {
+            let value = serde_json::to_value(method).expect("serialize");
+            assert_eq!(value.as_str(), Some(method.as_wire()));
+            let back: PrimaryMethod = serde_json::from_value(value).expect("deserialize");
+            assert_eq!(back, method);
+        }
     }
 
     #[test]
