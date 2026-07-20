@@ -444,9 +444,7 @@ mod tests {
                 "reveal_policy": wire,
                 "keybox_location": "À droite",
             }))
-            .unwrap_or_else(|e| {
-                panic!("updateConfig must accept reveal_policy={wire:?}: {e}")
-            });
+            .unwrap_or_else(|e| panic!("updateConfig must accept reveal_policy={wire:?}: {e}"));
             assert_eq!(args.reveal_policy.map(|p| p.as_wire()), Some(*wire));
         }
     }
@@ -478,9 +476,7 @@ mod tests {
                 "primary_method": wire,
                 "reveal_policy": RevealPolicy::DayBefore16h.as_wire(),
             }))
-            .unwrap_or_else(|e| {
-                panic!("updateConfig must accept primary_method={wire:?}: {e}")
-            });
+            .unwrap_or_else(|e| panic!("updateConfig must accept primary_method={wire:?}: {e}"));
             assert_eq!(args.primary_method.map(|m| m.as_wire()), Some(*wire));
         }
     }

@@ -100,12 +100,8 @@ impl RevealPolicy {
     }
 
     /// Every `value` emitted by the host reveal-policy ChoiceList.
-    pub const CHOICE_LIST_WIRE_VALUES: &[&str] = &[
-        "always",
-        "hours_before_24",
-        "day_before_16h",
-        "at_checkin",
-    ];
+    pub const CHOICE_LIST_WIRE_VALUES: &[&str] =
+        &["always", "hours_before_24", "day_before_16h", "at_checkin"];
 
     pub const ALL: &[RevealPolicy] = &[
         Self::Always,
