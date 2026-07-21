@@ -1,8 +1,8 @@
 {
-  "modules/access-guide": "0.1.2",
-  "modules/appliances": "0.2.7",
-  "modules/rules": "0.1.1",
-  "modules/sections": "0.1.0",
+  "modules/access-guide": "0.2.0",
+  "modules/appliances": "0.3.0",
+  "modules/rules": "0.2.0",
+  "modules/sections": "0.2.0",
   "modules/train": "0.1.0",
   "modules/weather": "0.3.18"
 }

@@ -9,7 +9,7 @@
     "fr": "Blocs de contenu markdown pour le carnet d'accueil invité.",
     "en": "Markdown content blocks for the guest welcome book."
   },
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Syntax Labs",
     "url": "https://syntax-labs.fr",
