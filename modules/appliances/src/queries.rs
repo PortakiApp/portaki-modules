@@ -3,7 +3,7 @@
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::content::{AppliancesBundle, Appliance, AppliancesPayload};
+use crate::content::{Appliance, AppliancesBundle, AppliancesPayload};
 use crate::store;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -34,8 +34,8 @@ pub fn get_content(ctx: Context, args: GetContentArgs) -> Result<AppliancesConte
         Some(row) => (row.content_fr, row.content_en),
         None => (String::new(), String::new()),
     };
-    let payload = AppliancesBundle::from_row(&content_fr, &content_en)
-        .pick(&locale, &ctx.property.locale);
+    let payload =
+        AppliancesBundle::from_row(&content_fr, &content_en).pick(&locale, &ctx.property.locale);
     let content = payload
         .to_json_string()
         .unwrap_or_else(|_| content_fr.clone());

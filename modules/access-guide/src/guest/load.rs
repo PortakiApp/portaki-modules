@@ -34,8 +34,7 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: &str) -> Result<GuestLoad
     }
 
     let config = load_config().unwrap_or_else(|_| ModuleConfig::default());
-    let texts = load_texts_for_guest(&ctx.locale, &ctx.property.locale)
-        .unwrap_or_default();
+    let texts = load_texts_for_guest(&ctx.locale, &ctx.property.locale).unwrap_or_default();
     if !has_content(&config, &texts) {
         return Ok(GuestLoad::Empty(Box::new(empty_content_state(surface_id))));
     }

@@ -176,13 +176,12 @@ impl UpdateConfigArgs {
                 .map(str::trim)
                 .filter(|s| !s.is_empty())
                 .map(str::to_string);
-            skeletons.push(AccessStep { id: id.clone(), kind });
+            skeletons.push(AccessStep {
+                id: id.clone(),
+                kind,
+            });
             if !title.is_empty() || detail.is_some() {
-                texts.push(StepText {
-                    id,
-                    title,
-                    detail,
-                });
+                texts.push(StepText { id, title, detail });
             }
         }
         (skeletons, texts)
@@ -329,10 +328,7 @@ fn merge_flat_texts(texts: &mut ModuleTexts, args: &UpdateConfigArgs) {
         let from_keybox = nonempty_owned(&args.keybox_instructions);
         let from_door = nonempty_owned(&args.door_code_instructions);
         let from_smart = nonempty_owned(&args.smart_lock_instructions);
-        texts.method_instructions = from_other
-            .or(from_keybox)
-            .or(from_door)
-            .or(from_smart);
+        texts.method_instructions = from_other.or(from_keybox).or(from_door).or(from_smart);
     }
 }
 

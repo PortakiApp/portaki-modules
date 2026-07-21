@@ -18,10 +18,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     let (title, body) = sections
         .first()
         .map(|section| {
-            let row = section
-                .locales
-                .iter()
-                .find(|l| lang_code(&l.lang) == lang);
+            let row = section.locales.iter().find(|l| lang_code(&l.lang) == lang);
             (
                 row.map(|l| l.title.clone())
                     .filter(|t| !t.trim().is_empty())

@@ -58,11 +58,7 @@ impl RulesBundle {
             return "fr".to_string();
         }
         let lower = trimmed.to_ascii_lowercase();
-        let base = lower
-            .split(['-', '_'])
-            .next()
-            .unwrap_or("fr")
-            .trim();
+        let base = lower.split(['-', '_']).next().unwrap_or("fr").trim();
         if base.is_empty() {
             "fr".to_string()
         } else {

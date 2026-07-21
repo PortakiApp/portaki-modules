@@ -51,28 +51,13 @@ pub fn save_section(ctx: Context, args: SaveSectionArgs) -> Result<SectionView> 
         } else {
             lang_code(&args.lang)
         };
-        upsert_locale(
-            &mut locales,
-            &lang,
-            args.title,
-            args.body_markdown,
-        );
+        upsert_locale(&mut locales, &lang, args.title, args.body_markdown);
     }
     if !args.title_fr.trim().is_empty() || !args.body_markdown_fr.trim().is_empty() {
-        upsert_locale(
-            &mut locales,
-            "fr",
-            args.title_fr,
-            args.body_markdown_fr,
-        );
+        upsert_locale(&mut locales, "fr", args.title_fr, args.body_markdown_fr);
     }
     if !args.title_en.trim().is_empty() || !args.body_markdown_en.trim().is_empty() {
-        upsert_locale(
-            &mut locales,
-            "en",
-            args.title_en,
-            args.body_markdown_en,
-        );
+        upsert_locale(&mut locales, "en", args.title_en, args.body_markdown_en);
     }
     store::save_section(args.id, args.sort_order, locales)
 }

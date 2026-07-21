@@ -55,4 +55,3 @@ pub fn build_home_card(data: &GuestChecklistData) -> Surface {
     )
     .with_id("home.card")
 }
-

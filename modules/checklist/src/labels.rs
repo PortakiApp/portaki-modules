@@ -12,11 +12,7 @@ pub fn lang_code(locale: &str) -> String {
         return "fr".to_string();
     }
     let lower = trimmed.to_ascii_lowercase();
-    let base = lower
-        .split(['-', '_'])
-        .next()
-        .unwrap_or("fr")
-        .trim();
+    let base = lower.split(['-', '_']).next().unwrap_or("fr").trim();
     if base.is_empty() {
         "fr".to_string()
     } else {
@@ -95,8 +91,5 @@ pub fn pick_label(
 
 pub fn get_label(item: &ChecklistItem, locale: &str) -> String {
     let labels = labels_from_item(item);
-    labels
-        .get(&lang_code(locale))
-        .cloned()
-        .unwrap_or_default()
+    labels.get(&lang_code(locale)).cloned().unwrap_or_default()
 }

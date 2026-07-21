@@ -89,12 +89,7 @@ fn bins_to_submit(bins: &[BinRow], lang: &str) -> Vec<serde_json::Value> {
         .collect()
 }
 
-fn push_bin_slot(
-    children: &mut Vec<Component>,
-    index: usize,
-    bin: Option<&BinRow>,
-    lang: &str,
-) {
+fn push_bin_slot(children: &mut Vec<Component>, index: usize, bin: Option<&BinRow>, lang: &str) {
     let slot = index + 1;
     let title = bin.map(|b| b.title.get(lang)).unwrap_or("");
     let items = bin

@@ -82,12 +82,7 @@ fn spots_to_submit(spots: &[SpotRow], lang: &str) -> Vec<serde_json::Value> {
         .collect()
 }
 
-fn push_spot_slot(
-    children: &mut Vec<Component>,
-    index: usize,
-    spot: Option<&SpotRow>,
-    lang: &str,
-) {
+fn push_spot_slot(children: &mut Vec<Component>, index: usize, spot: Option<&SpotRow>, lang: &str) {
     let slot = index + 1;
     let name = spot.map(|s| s.title.get(lang)).unwrap_or("");
     let category = spot.and_then(|s| s.category.as_deref()).unwrap_or("");

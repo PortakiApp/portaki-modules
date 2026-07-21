@@ -40,8 +40,7 @@ pub fn list_all(locale: &str, property_locale: &str) -> Result<Vec<SectionView>>
                     body_markdown: l.body_markdown.clone(),
                 })
                 .collect();
-            let (title, body_markdown) =
-                pick_locale_fields(&item_locales, locale, property_locale);
+            let (title, body_markdown) = pick_locale_fields(&item_locales, locale, property_locale);
             SectionView {
                 id: item.id,
                 sort_order: item.sort_order,

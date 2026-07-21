@@ -76,11 +76,13 @@ fn merge_spot(
     let mut title = previous.map(|p| p.title.clone()).unwrap_or_default();
     title.set(lang, name.to_string());
 
-    let mut detail = previous
-        .and_then(|p| p.detail.clone())
-        .unwrap_or_default();
+    let mut detail = previous.and_then(|p| p.detail.clone()).unwrap_or_default();
     detail.set(lang, input.description.trim().to_string());
-    let detail = if detail.is_empty() { None } else { Some(detail) };
+    let detail = if detail.is_empty() {
+        None
+    } else {
+        Some(detail)
+    };
 
     Some(SpotRow {
         id: previous

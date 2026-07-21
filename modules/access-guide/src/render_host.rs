@@ -261,17 +261,10 @@ fn method_detail_children(
 }
 
 fn method_instructions<'a>(texts: &'a ModuleTexts) -> &'a str {
-    texts
-        .method_instructions
-        .as_deref()
-        .unwrap_or("")
+    texts.method_instructions.as_deref().unwrap_or("")
 }
 
-fn push_keybox_fields(
-    children: &mut Vec<Component>,
-    config: &ModuleConfig,
-    texts: &ModuleTexts,
-) {
+fn push_keybox_fields(children: &mut Vec<Component>, config: &ModuleConfig, texts: &ModuleTexts) {
     let (location, code) = match &config.method {
         MethodFields::Keybox { location, code } => {
             (location.as_str(), code.as_deref().unwrap_or(""))
@@ -391,7 +384,8 @@ fn push_smart_lock_binding(children: &mut Vec<Component>, config: &ModuleConfig)
                         })];
                         let mut seen = std::collections::BTreeSet::new();
                         for peer in &peers {
-                            if peer.module_id.trim().is_empty() || !seen.insert(peer.module_id.clone())
+                            if peer.module_id.trim().is_empty()
+                                || !seen.insert(peer.module_id.clone())
                             {
                                 continue;
                             }
@@ -555,11 +549,7 @@ fn push_other_fields(children: &mut Vec<Component>, texts: &ModuleTexts) {
 
 // ── Layers ───────────────────────────────────────────────────────────────────
 
-fn layer_card_building(
-    enabled: bool,
-    config: &ModuleConfig,
-    texts: &ModuleTexts,
-) -> Component {
+fn layer_card_building(enabled: bool, config: &ModuleConfig, texts: &ModuleTexts) -> Component {
     let mut children: Vec<Component> = vec![ToggleRow::new()
         .name(json!("building_access_enabled"))
         .label(json!("i18n:host.building.enabled"))
@@ -608,11 +598,7 @@ fn layer_card_building(
         .into()
 }
 
-fn layer_card_parking(
-    enabled: bool,
-    config: &ModuleConfig,
-    texts: &ModuleTexts,
-) -> Component {
+fn layer_card_parking(enabled: bool, config: &ModuleConfig, texts: &ModuleTexts) -> Component {
     let mut children: Vec<Component> = vec![ToggleRow::new()
         .name(json!("parking_enabled"))
         .label(json!("i18n:host.parking.enabled"))

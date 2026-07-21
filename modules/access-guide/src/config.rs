@@ -484,7 +484,11 @@ fn migrate_new_shape(mut raw: RawConfig) -> ModuleConfig {
 
     let mut parking = raw.parking.take();
     if parking.is_none() {
-        parking = parking_from_legacy(&raw.parking_map_url, None, !raw.parking_info.trim().is_empty());
+        parking = parking_from_legacy(
+            &raw.parking_map_url,
+            None,
+            !raw.parking_info.trim().is_empty(),
+        );
     }
 
     let (derived_method, derived_building) =
@@ -527,8 +531,11 @@ fn migrate_from_legacy_fields(raw: RawConfig) -> ModuleConfig {
     let method = derived_method.unwrap_or(MethodFields::Other {});
     let primary_method = method.primary_method();
 
-    let parking =
-        parking_from_legacy(&raw.parking_map_url, None, !raw.parking_info.trim().is_empty());
+    let parking = parking_from_legacy(
+        &raw.parking_map_url,
+        None,
+        !raw.parking_info.trim().is_empty(),
+    );
 
     let arrival = ArrivalGuide {
         address: raw.address.trim().to_string(),
@@ -644,9 +651,7 @@ fn default_method_for(primary: PrimaryMethod) -> MethodFields {
 
 fn method_is_empty(method: &MethodFields) -> bool {
     match method {
-        MethodFields::Keybox { location, code } => {
-            location.trim().is_empty() && opt_empty(code)
-        }
+        MethodFields::Keybox { location, code } => location.trim().is_empty() && opt_empty(code),
         MethodFields::DoorCode { code, .. } => code.trim().is_empty(),
         MethodFields::SmartLock { manual_code } => opt_empty(manual_code),
         MethodFields::InPerson {

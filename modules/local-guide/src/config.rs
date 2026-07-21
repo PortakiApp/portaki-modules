@@ -87,11 +87,7 @@ impl Localized {
             return "fr".to_string();
         }
         let lower = trimmed.to_ascii_lowercase();
-        let base = lower
-            .split(['-', '_'])
-            .next()
-            .unwrap_or("fr")
-            .trim();
+        let base = lower.split(['-', '_']).next().unwrap_or("fr").trim();
         if base.is_empty() {
             "fr".to_string()
         } else {
@@ -110,11 +106,7 @@ impl Localized {
         match code.as_str() {
             "fr" => self.fr.as_str(),
             "en" => self.en.as_str(),
-            other => self
-                .other
-                .get(other)
-                .map(String::as_str)
-                .unwrap_or(""),
+            other => self.other.get(other).map(String::as_str).unwrap_or(""),
         }
     }
 

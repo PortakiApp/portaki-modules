@@ -62,11 +62,7 @@ pub fn lang_code(locale: &str) -> String {
         return "fr".to_string();
     }
     let lower = trimmed.to_ascii_lowercase();
-    let base = lower
-        .split(['-', '_'])
-        .next()
-        .unwrap_or("fr")
-        .trim();
+    let base = lower.split(['-', '_']).next().unwrap_or("fr").trim();
     if base.is_empty() {
         "fr".to_string()
     } else {
@@ -147,7 +143,11 @@ pub(crate) fn extract_embedded_texts(root: &Value) -> (ModuleTexts, ModuleTexts)
     let mut en = ModuleTexts::default();
 
     if let Some(instr) = root.pointer("/method/instructions") {
-        assign_localized_opt(instr, &mut fr.method_instructions, &mut en.method_instructions);
+        assign_localized_opt(
+            instr,
+            &mut fr.method_instructions,
+            &mut en.method_instructions,
+        );
     }
 
     if let Some(note) = root.pointer("/building_access/note") {
@@ -325,10 +325,7 @@ mod tests {
             }
         });
         let (fr, en) = extract_embedded_texts(&root);
-        assert_eq!(
-            fr.method_instructions.as_deref(),
-            Some("Tourner à droite")
-        );
+        assert_eq!(fr.method_instructions.as_deref(), Some("Tourner à droite"));
         assert!(en.method_instructions.is_none());
         assert_eq!(fr.building_note.as_deref(), Some("Sonnette"));
         assert_eq!(en.building_note.as_deref(), Some("Bell"));

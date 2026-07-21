@@ -79,14 +79,10 @@ pub fn replace_items(items: Vec<(String, String, i32)>) -> Result<()> {
 }
 
 /// Replace items while keeping IDs when provided (preserves stay completions + other langs).
-pub fn replace_items_preserving_ids(
-    items: Vec<(Option<Uuid>, String, String, i32)>,
-) -> Result<()> {
+pub fn replace_items_preserving_ids(items: Vec<(Option<Uuid>, String, String, i32)>) -> Result<()> {
     let existing = list_items()?;
-    let keep_ids: std::collections::HashSet<Uuid> = items
-        .iter()
-        .filter_map(|(id, _, _, _)| *id)
-        .collect();
+    let keep_ids: std::collections::HashSet<Uuid> =
+        items.iter().filter_map(|(id, _, _, _)| *id).collect();
     for row in &existing {
         if !keep_ids.contains(&row.id) {
             delete_item(row.id)?;
