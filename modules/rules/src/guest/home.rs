@@ -1,7 +1,6 @@
 //! Guest home booklet card.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::primitives::{Card, ListItem, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 use serde_json::json;
@@ -23,17 +22,19 @@ pub fn build_home_card(payload: &RulesPayload) -> Surface {
         children.push(rule_list_item(item));
     }
 
-    let navigate = serde_json::to_value(Action::Navigate {
-        to: "rules".to_string(),
-        params: None,
-    })
-    .unwrap_or(json!({}));
-
     Surface::new(
         Card::new()
             .icon(json!("scale"))
             .title(json!("i18n:home.card.title"))
-            .action(navigate)
+            .action(json!({
+                "type": "openOverlay",
+                "presentation": "fullscreen",
+                "surfaceRender": "explore.detail",
+                "args": {
+                    "icon": "scale",
+                    "title": "i18n:home.card.title"
+                }
+            }))
             .children(children),
     )
     .with_id("home.card")

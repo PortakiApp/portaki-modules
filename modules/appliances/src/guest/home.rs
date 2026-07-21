@@ -21,8 +21,13 @@ pub fn build_home_card(payload: &AppliancesPayload) -> Surface {
             .icon(json!("plug"))
             .title(json!("i18n:nav.appliances"))
             .action(json!({
-                "type": "navigate",
-                "to": "appliances"
+                "type": "openOverlay",
+                "presentation": "fullscreen",
+                "surfaceRender": "explore.detail",
+                "args": {
+                    "icon": "plug",
+                    "title": "i18n:nav.appliances"
+                }
             }))
             .children(if children.is_empty() {
                 vec![Component::EmptyState(

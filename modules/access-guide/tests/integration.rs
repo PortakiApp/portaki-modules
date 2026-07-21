@@ -148,8 +148,9 @@ fn home_card_masks_secrets_without_stay() {
             assert!(contains_component_type(&surface, "Map"));
             assert!(contains_component_type(&surface, "InfoBanner"));
             let json = serde_json::to_string(&surface).expect("json");
-            assert!(json.contains("navigate"));
-            assert!(json.contains("access-guide/detail"));
+            assert!(json.contains("openOverlay"));
+            assert!(json.contains("explore.detail"));
+            assert!(json.contains("fullscreen"));
             assert!(
                 json.contains("i18n:nav.access-guide"),
                 "card title must use access-guide nav key, not another module's home.card.title"

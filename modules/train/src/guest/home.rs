@@ -1,7 +1,6 @@
 //! Guest home booklet card — mixed-destination departure board glance.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::Emphasis;
 use portaki_sdk::sdui::primitives::{Card, Text, TimedEntry};
 use portaki_sdk::sdui::surface::Surface;
@@ -10,12 +9,6 @@ use serde_json::json;
 use crate::content::{home_board, station_caption, MODULE_ICON};
 
 pub fn build_home_card(ctx: &GuestContext) -> Surface {
-    let navigate = serde_json::to_value(Action::Navigate {
-        to: "train".to_string(),
-        params: None,
-    })
-    .unwrap_or(json!({}));
-
     let mut children: Vec<Component> = vec![Component::Text(
         Text::new()
             .text(json!(station_caption(&ctx.locale)))
@@ -28,7 +21,15 @@ pub fn build_home_card(ctx: &GuestContext) -> Surface {
         Card::new()
             .icon(json!(MODULE_ICON))
             .title(json!("i18n:home.card.title"))
-            .action(navigate)
+            .action(json!({
+                "type": "openOverlay",
+                "presentation": "fullscreen",
+                "surfaceRender": "explore.detail",
+                "args": {
+                    "icon": MODULE_ICON,
+                    "title": "i18n:home.card.title"
+                }
+            }))
             .children(children),
     )
     .with_id("home.card")

@@ -9,7 +9,7 @@
     "fr": "Prochains départs depuis la gare la plus proche du logement.",
     "en": "Upcoming departures from the property's nearest station."
   },
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": {
     "name": "Syntax Labs",
     "url": "https://syntax-labs.fr",

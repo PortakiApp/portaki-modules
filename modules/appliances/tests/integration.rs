@@ -138,8 +138,8 @@ fn home_card_featured_only_and_detail_list() {
             let card_json = serde_json::to_string(&card).expect("json");
             assert!(card_json.contains("Télévision"));
             assert!(!card_json.contains("Lave-linge"));
-            assert!(card_json.contains("\"type\":\"navigate\""));
-            assert!(card_json.contains("\"to\":\"appliances\""));
+            assert!(card_json.contains("\"type\":\"openOverlay\""));
+            assert!(card_json.contains("explore.detail"));
             assert!(card_json.contains("appliances/tv"));
 
             let detail = render_explore_detail(ctx.clone());

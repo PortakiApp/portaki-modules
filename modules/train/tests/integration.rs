@@ -53,8 +53,8 @@ fn home_card_shows_board_glance() {
             assert!(contains_component_type(&card, "TimedEntry"));
 
             let card_json = serde_json::to_string(&card).expect("json");
-            assert!(card_json.contains("\"type\":\"navigate\""));
-            assert!(card_json.contains("\"to\":\"train\""));
+            assert!(card_json.contains("\"type\":\"openOverlay\""));
+            assert!(card_json.contains("explore.detail"));
             assert!(card_json.contains("Nice-Ville"));
         });
 }
