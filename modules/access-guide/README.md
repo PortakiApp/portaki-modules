@@ -60,6 +60,30 @@ Guest resolves texts: guest locale → property default → `fr` → first avail
 
 Reveal logic lives **in this module**. Stay timing comes from generic SDK host fields (`checkinAt`, `checkoutAt`, `propertyTimezone`) — the platform does not encode access-guide rules.
 
+### Email context (`emailContext`)
+
+Stay-scoped query for Portaki guest emails (`arrival`, `arrival-day`, `new-code`).
+
+Args (camelCase):
+
+```json
+{ "templateKey": "arrival", "checkinTimeFormatted": "16:00", "locale": "fr" }
+```
+
+Response (camelCase):
+
+```json
+{
+  "arrivalCallout": "…",
+  "entryAccessCode": "4821",
+  "accessCodeLabel": "Code boîte à clés",
+  "secretsRevealed": true,
+  "revealAvailableFrom": null
+}
+```
+
+Applies the same reveal policy as guest SDUI — plaintext codes are omitted while locked.
+
 ### Smart-lock hook
 
 When `primary_method = smart_lock` and `smart_lock_provider_module_id` is set, guest SDUI emits `Action::command` (`unlock` / `getGuestCredential`) toward that module. Otherwise guests see `manual_code` / instructions only.
