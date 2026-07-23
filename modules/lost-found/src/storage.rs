@@ -23,7 +23,7 @@ fn in_memory_enabled() -> bool {
 }
 
 fn sort_newest_first(rows: &mut [LostFoundReport]) {
-    rows.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+    rows.sort_by_key(|row| std::cmp::Reverse(row.created_at));
 }
 
 /// Lists reports for a stay, newest first.
