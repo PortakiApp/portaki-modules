@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
+  "id": "ical-sync",
+  "name": {
+    "fr": "Calendriers iCal / Airbnb",
+    "en": "iCal / Airbnb calendars"
+  },
+  "description": {
+    "fr": "Importe les séjours depuis un export calendrier Airbnb, Booking ou autre lien .ics.",
+    "en": "Import stays from an Airbnb, Booking, or other .ics calendar export URL."
+  },
+  "version": "0.1.0",
+  "author": {
+    "name": "Syntax Labs",
+    "url": "https://syntax-labs.fr",
+    "type": "official"
+  },
+  "icon": "calendar",
+  "type": "official",
+  "audience": "host",
+  "hostSurfaces": [
+    {
+      "type": "property-module-sheet",
+      "pathSegment": "ical-sync",
+      "label": {
+        "fr": "Calendriers",
+        "en": "Calendars"
+      },
+      "icon": "calendar"
+    }
+  ],
+  "hostScheduledSync": {
+    "platformFetch": true,
+    "sourcesQuery": "listSources",
+    "applyQuery": "applyFeeds"
+  }
+}

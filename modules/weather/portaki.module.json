@@ -17,6 +17,17 @@
   },
   "icon": "cloud-sun",
   "type": "official",
+  "hostSurfaces": [
+    {
+      "type": "property-module-sheet",
+      "pathSegment": "weather",
+      "label": {
+        "fr": "Météo",
+        "en": "Weather"
+      },
+      "icon": "cloud-sun"
+    }
+  ],
   "guestSurfaces": [
     {
       "surfaceId": "explore.forecast",

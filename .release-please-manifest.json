@@ -3,6 +3,7 @@
   "modules/appliances": "0.3.1",
   "modules/ev-parking": "0.1.0",
   "modules/events": "0.1.0",
+  "modules/ical-sync": "0.1.0",
   "modules/issue-report": "0.1.0",
   "modules/lost-found": "0.1.0",
   "modules/nuki": "0.1.0",

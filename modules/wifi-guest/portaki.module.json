@@ -19,7 +19,7 @@
   "type": "official",
   "hostSurfaces": [
     {
-      "type": "property-workspace-tab",
+      "type": "property-module-sheet",
       "pathSegment": "wifi-guest",
       "label": {
         "fr": "Wi-Fi",

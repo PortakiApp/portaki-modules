@@ -108,7 +108,6 @@ fn reveal_choice_list(policy: RevealPolicy) -> ChoiceList {
     ChoiceList::new()
         .name("reveal_policy")
         .value(policy.as_wire())
-        .layout(ChoiceListLayout::Compact)
         .choices(vec![
             ChoiceOption::new(RevealPolicy::Always.as_wire(), "i18n:host.reveal.always")
                 .description("i18n:host.reveal.always.desc")
@@ -130,6 +129,6 @@ fn reveal_choice_list(policy: RevealPolicy) -> ChoiceList {
                 "i18n:host.reveal.atCheckin",
             )
             .description("i18n:host.reveal.atCheckin.desc")
-            .icon("clock-circle"),
+            .icon("key"),
         ])
 }

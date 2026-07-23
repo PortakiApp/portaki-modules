@@ -1,7 +1,7 @@
 //! Host dashboard surfaces.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Button, Field, Form, Page, SecretInput, Text, TextInput};
+use portaki_sdk::sdui::primitives::{Button, Card, Field, Form, Page, SecretInput, Text, TextInput};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::load_config;
@@ -20,35 +20,47 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
     );
 
     let form_children: Vec<Component> = vec![
-        Field::new()
-            .name("smartlock_id")
-            .label("i18n:host.smartlockId.label")
-            .child(
-                TextInput::new()
+        Card::new()
+            .title("i18n:host.section.device")
+            .subtitle("i18n:host.section.device.help")
+            .icon("lock")
+            .children(vec![
+                Field::new()
                     .name("smartlock_id")
-                    .value(config.smartlock_id)
-                    .placeholder("i18n:host.smartlockId.placeholder"),
-            )
-            .into(),
-        Field::new()
-            .name("keypad_code")
-            .label("i18n:host.keypadCode.label")
-            .child(
-                SecretInput::new()
-                    .name("keypad_code")
-                    .value(config.keypad_code)
-                    .placeholder("i18n:host.keypadCode.placeholder"),
-            )
-            .into(),
-        Field::new()
-            .name("device_name")
-            .label("i18n:host.deviceName.label")
-            .child(
-                TextInput::new()
+                    .label("i18n:host.smartlockId.label")
+                    .child(
+                        TextInput::new()
+                            .name("smartlock_id")
+                            .value(config.smartlock_id)
+                            .placeholder("i18n:host.smartlockId.placeholder"),
+                    )
+                    .into(),
+                Field::new()
                     .name("device_name")
-                    .value(config.device_name)
-                    .placeholder("i18n:host.deviceName.placeholder"),
-            )
+                    .label("i18n:host.deviceName.label")
+                    .child(
+                        TextInput::new()
+                            .name("device_name")
+                            .value(config.device_name)
+                            .placeholder("i18n:host.deviceName.placeholder"),
+                    )
+                    .into(),
+            ])
+            .into(),
+        Card::new()
+            .title("i18n:host.section.keypad")
+            .subtitle("i18n:host.section.keypad.help")
+            .icon("key")
+            .children(vec![Field::new()
+                .name("keypad_code")
+                .label("i18n:host.keypadCode.label")
+                .child(
+                    SecretInput::new()
+                        .name("keypad_code")
+                        .value(config.keypad_code)
+                        .placeholder("i18n:host.keypadCode.placeholder"),
+                )
+                .into()])
             .into(),
         Text::new()
             .text("i18n:host.main.help")

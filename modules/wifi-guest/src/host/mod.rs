@@ -1,4 +1,4 @@
-//! Host dashboard surfaces.
+//! Host dashboard surfaces — config cards embedded in the module sheet.
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::Tone;
@@ -22,35 +22,47 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
     let save_action = crate::ids::module_id().command(crate::ids::UPDATE_CONFIG, submit_args);
 
     let form_children: Vec<Component> = vec![
-        Field::new()
-            .name("ssid")
-            .label("i18n:host.ssid.label")
-            .child(
-                TextInput::new()
+        Card::new()
+            .title("i18n:host.section.network")
+            .subtitle("i18n:host.section.network.help")
+            .icon("wifi")
+            .children(vec![
+                Field::new()
                     .name("ssid")
-                    .value(config.ssid.clone())
-                    .placeholder("i18n:host.ssid.placeholder"),
-            )
-            .into(),
-        Field::new()
-            .name("password")
-            .label("i18n:host.password.label")
-            .child(
-                SecretInput::new()
+                    .label("i18n:host.ssid.label")
+                    .child(
+                        TextInput::new()
+                            .name("ssid")
+                            .value(config.ssid.clone())
+                            .placeholder("i18n:host.ssid.placeholder"),
+                    )
+                    .into(),
+                Field::new()
                     .name("password")
-                    .value(String::new())
-                    .placeholder("i18n:host.password.placeholder"),
-            )
+                    .label("i18n:host.password.label")
+                    .child(
+                        SecretInput::new()
+                            .name("password")
+                            .value(String::new())
+                            .placeholder("i18n:host.password.placeholder"),
+                    )
+                    .into(),
+            ])
             .into(),
-        Field::new()
-            .name("hint")
-            .label("i18n:host.hint.label")
-            .child(
-                TextInput::new()
-                    .name("hint")
-                    .value(config.hint.clone().unwrap_or_default())
-                    .placeholder("i18n:host.hint.placeholder"),
-            )
+        Card::new()
+            .title("i18n:host.section.hint")
+            .subtitle("i18n:host.section.hint.help")
+            .icon("info-circle")
+            .children(vec![Field::new()
+                .name("hint")
+                .label("i18n:host.hint.label")
+                .child(
+                    TextInput::new()
+                        .name("hint")
+                        .value(config.hint.clone().unwrap_or_default())
+                        .placeholder("i18n:host.hint.placeholder"),
+                )
+                .into()])
             .into(),
         Card::new()
             .title("i18n:host.section.reveal")
@@ -86,7 +98,6 @@ fn reveal_choice_list(policy: RevealPolicy) -> ChoiceList {
     ChoiceList::new()
         .name("reveal_policy")
         .value(policy.as_wire())
-        .layout(ChoiceListLayout::Compact)
         .choices(vec![
             ChoiceOption::new(RevealPolicy::Always.as_wire(), "i18n:host.reveal.always")
                 .description("i18n:host.reveal.always.desc")
@@ -108,6 +119,6 @@ fn reveal_choice_list(policy: RevealPolicy) -> ChoiceList {
                 "i18n:host.reveal.atCheckin",
             )
             .description("i18n:host.reveal.atCheckin.desc")
-            .icon("clock-circle"),
+            .icon("key"),
         ])
 }

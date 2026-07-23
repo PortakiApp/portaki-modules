@@ -306,6 +306,80 @@
         }
       ]
     },
+    "modules/ical-sync": {
+      "package-name": "ical-sync",
+      "component": "ical-sync",
+      "release-type": "simple",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": true,
+      "include-v-in-tag": true,
+      "include-v-in-release-name": true,
+      "extra-files": [
+        {
+          "type": "toml",
+          "path": "Cargo.toml",
+          "jsonpath": "$.package.version"
+        },
+        {
+          "type": "json",
+          "path": "portaki.module.json",
+          "jsonpath": "$.version"
+        }
+      ],
+      "changelog-sections": [
+        {
+          "type": "feat",
+          "section": "Features"
+        },
+        {
+          "type": "fix",
+          "section": "Bug Fixes"
+        },
+        {
+          "type": "perf",
+          "section": "Performance"
+        },
+        {
+          "type": "revert",
+          "section": "Reverts"
+        },
+        {
+          "type": "docs",
+          "section": "Documentation",
+          "hidden": true
+        },
+        {
+          "type": "style",
+          "section": "Styling",
+          "hidden": true
+        },
+        {
+          "type": "chore",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "refactor",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "test",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "build",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "ci",
+          "section": "Miscellaneous",
+          "hidden": true
+        }
+      ]
+    },
     "modules/issue-report": {
       "package-name": "issue-report",
       "component": "issue-report",

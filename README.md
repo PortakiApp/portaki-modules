@@ -57,6 +57,7 @@ On every push to **`main`**, CI builds and publishes:
 | [`events`](./modules/events) | `ghcr.io/portakiapp/portaki-modules-events:<semver>` | Host-curated local events and map |
 | [`facility-hours`](./modules/facility-hours) | `ghcr.io/portakiapp/portaki-modules-facility-hours:<semver>` | Pool, spa, and shared amenity schedules |
 | [`guest-reviews`](./modules/guest-reviews) | `ghcr.io/portakiapp/portaki-modules-guest-reviews:<semver>` | Post-stay thank-you and review CTAs |
+| [`ical-sync`](./modules/ical-sync) | `ghcr.io/portakiapp/portaki-modules-ical-sync:<semver>` | Host iCal / Airbnb calendar feed import |
 | [`issue-report`](./modules/issue-report) | `ghcr.io/portakiapp/portaki-modules-issue-report:<semver>` | In-stay problem reports for the host |
 | [`local-guide`](./modules/local-guide) | `ghcr.io/portakiapp/portaki-modules-local-guide:<semver>` | Nearby spots and host picks |
 | [`lost-found`](./modules/lost-found) | `ghcr.io/portakiapp/portaki-modules-lost-found:<semver>` | Guest lost / found item reports |
@@ -83,6 +84,7 @@ portaki-modules/
 │   ├── events/
 │   ├── facility-hours/
 │   ├── guest-reviews/
+│   ├── ical-sync/
 │   ├── issue-report/
 │   ├── local-guide/
 │   ├── lost-found/

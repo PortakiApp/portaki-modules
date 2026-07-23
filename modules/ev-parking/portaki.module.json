@@ -19,7 +19,7 @@
   "type": "official",
   "hostSurfaces": [
     {
-      "type": "property-workspace-tab",
+      "type": "property-module-sheet",
       "pathSegment": "ev-parking",
       "label": {
         "fr": "Parking VE",

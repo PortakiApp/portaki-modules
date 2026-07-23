@@ -373,6 +373,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "ical-sync"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "extism-pdk",
+ "portaki-sdk",
+ "portaki-sdk-macros",
+ "portaki-test-utils",
+ "serde",
+ "serde_json",
+ "serial_test",
+]
+
+[[package]]
 name = "indexmap"
 version = "2.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
