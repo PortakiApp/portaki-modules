@@ -4,6 +4,7 @@ mod cache;
 mod commands;
 mod config;
 mod connectors;
+mod email_context;
 mod entities;
 mod events;
 mod guest;
@@ -12,6 +13,7 @@ mod render_host;
 mod weather;
 
 pub use commands::{refresh_forecast, update_config};
+pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use entities::{WeatherCache, WeatherUnits};
 pub use events::{on_booking_confirmed, BookingConfirmedEvent};
 pub use guest::{render_explore_forecast, render_home_card};

@@ -9,10 +9,11 @@ use serde_json::json;
 use std::sync::atomic::Ordering;
 
 use weather::{
-    get_current, get_forecast, on_booking_confirmed, refresh_forecast, render_explore_forecast,
-    render_home_card, reset_test_harness, CONNECTOR_CURRENT_CALLS, CONNECTOR_FORECAST_CALLS,
+    email_context, get_current, get_forecast, on_booking_confirmed, refresh_forecast,
+    render_explore_forecast, render_home_card, reset_test_harness, CONNECTOR_CURRENT_CALLS,
+    CONNECTOR_FORECAST_CALLS,
 };
-use weather::{BookingConfirmedEvent, GetCurrentArgs, GetForecastArgs};
+use weather::{BookingConfirmedEvent, EmailContextArgs, GetCurrentArgs, GetForecastArgs};
 
 fn sample_current_json() -> String {
     json!({
@@ -107,6 +108,31 @@ fn home_card_renders_with_capability_pool() {
             assert!(contains_component_type(&surface, "Icon"));
             assert!(contains_component_type(&surface, "Grid"));
             assert!(contains_component_type(&surface, "Divider"));
+        });
+}
+
+#[test]
+#[serial]
+fn email_context_returns_french_summary() {
+    reset_test_harness();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&["core.storage", "external.open-weather.pool"])
+        .with_connector_response("open-weather", "current", sample_current_json())
+        .with_connector_response("open-weather", "forecast", sample_forecast_json())
+        .run(|ctx| {
+            let response = email_context(
+                ctx,
+                EmailContextArgs {
+                    template_key: Some("arrival-day".into()),
+                    address_hint: Some("Cap d'Antibes, France".into()),
+                    locale: Some("fr".into()),
+                },
+            )
+            .expect("emailContext");
+            let summary = response.weather_summary.expect("summary");
+            assert!(summary.contains("aujourd'hui"));
+            assert!(summary.contains("°C"));
         });
 }
 

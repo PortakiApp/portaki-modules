@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "access-guide"
-version = "0.1.2"
+version = "0.2.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -34,7 +34,7 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
 name = "appliances"
-version = "0.2.7"
+version = "0.3.1"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -664,7 +664,7 @@ dependencies = [
 
 [[package]]
 name = "rules"
-version = "0.1.1"
+version = "0.2.1"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -691,7 +691,7 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "sections"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -864,7 +864,7 @@ dependencies = [
 
 [[package]]
 name = "train"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "extism-pdk",
  "portaki-sdk",
@@ -971,7 +971,7 @@ dependencies = [
 
 [[package]]
 name = "weather"
-version = "0.3.18"
+version = "0.3.19"
 dependencies = [
  "chrono",
  "extism-pdk",

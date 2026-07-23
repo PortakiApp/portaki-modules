@@ -43,6 +43,7 @@ Author guide: [portaki-sdk — connectors and credentials](https://github.com/Po
 
 - `getCurrent` — cache TTL 1h
 - `getForecast` — cache TTL 6h (5 days)
+- `emailContext` — email-ready `weatherSummary` for Portaki guest templates (`arrival-day`)
 - `refreshForecast` — invalidates cache for property coordinates
 - `updateConfig` — persists host settings in KV
 - Event `core.booking.confirmed` — pre-warms the cache
