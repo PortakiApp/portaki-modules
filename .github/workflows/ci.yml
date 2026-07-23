@@ -105,12 +105,21 @@ jobs:
           workspaces: modules/${{ matrix.module }} -> target
           shared-key: module-${{ matrix.module }}
 
+      # Pin cache to SDK main tip — flat `sdk-main` kept a pre-2.x CLI that
+      # rejected newer catalog ids (e.g. access.smart_lock).
+      - name: Resolve SDK main tip
+        id: sdk
+        run: |
+          set -euo pipefail
+          rev=$(git ls-remote https://github.com/PortakiApp/portaki-sdk.git refs/heads/main | cut -f1)
+          echo "rev=${rev}" >>"$GITHUB_OUTPUT"
+
       - name: Cache portaki CLI
         id: cache-cli
         uses: actions/cache@v5
         with:
           path: ~/.cargo/bin/portaki
-          key: portaki-cli-${{ runner.os }}-sdk-main
+          key: portaki-cli-${{ runner.os }}-${{ steps.sdk.outputs.rev }}
 
       - name: Install portaki CLI
         if: steps.cache-cli.outputs.cache-hit != 'true'
@@ -164,12 +173,19 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
+      - name: Resolve SDK main tip
+        id: sdk
+        run: |
+          set -euo pipefail
+          rev=$(git ls-remote https://github.com/PortakiApp/portaki-sdk.git refs/heads/main | cut -f1)
+          echo "rev=${rev}" >>"$GITHUB_OUTPUT"
+
       - name: Cache portaki CLI
         id: cache-cli
         uses: actions/cache@v5
         with:
           path: ~/.cargo/bin/portaki
-          key: portaki-cli-${{ runner.os }}-sdk-main
+          key: portaki-cli-${{ runner.os }}-${{ steps.sdk.outputs.rev }}
 
       - name: Install portaki CLI
         if: steps.cache-cli.outputs.cache-hit != 'true'
