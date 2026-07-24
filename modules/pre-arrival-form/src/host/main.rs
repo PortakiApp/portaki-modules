@@ -104,12 +104,8 @@ fn question_toggle_rows(questions: &FormQuestions) -> Vec<Component> {
 }
 
 fn toggle_row(name: &str, label: &str, icon: &str, checked: bool) -> Component {
-    // `icon` is accepted for design parity; set once SDK ToggleRow.icon lands on main
-    // (PortakiApp/portaki-sdk#27). Until then the dashboard still renders label + switch.
+    // Leading icons need SDK ToggleRow.icon (portaki-sdk#27). Wire `.icon(icon)` after merge.
+    let row = ToggleRow::new().name(name).label(label).checked(checked);
     let _ = icon;
-    ToggleRow::new()
-        .name(name)
-        .label(label)
-        .checked(checked)
-        .into()
+    row.into()
 }

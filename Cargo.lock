@@ -634,7 +634,7 @@ dependencies = [
 
 [[package]]
 name = "pre-arrival-form"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "chrono",
  "extism-pdk",
