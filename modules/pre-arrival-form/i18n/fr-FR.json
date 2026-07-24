@@ -40,7 +40,6 @@
   "home.card.error.title": "Formulaire temporairement indisponible",
   "home.card.error.description": "Le formulaire n’a pas pu être chargé. Réessayez dans un instant.",
   "home.formalities.pending": "Formalités avant votre séjour",
-  "home.formalities.pendingGate": "Le formulaire s’ouvrira bientôt — la fiche police reste disponible si requise.",
   "home.formalities.allReady": "Tout est prêt pour votre séjour.",
   "home.formalities.doneTitle": "Formalités terminées — merci !",
   "home.formalities.progress": "{done} sur {total} complétée",

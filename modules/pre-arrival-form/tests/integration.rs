@@ -136,7 +136,7 @@ fn submit_then_status_and_thanks_card() {
 
 #[test]
 #[serial]
-fn home_card_hides_when_form_not_yet_available() {
+fn home_card_gated_omits_form_teaser_keeps_police_fragment() {
     reset_test_store();
     let config_bytes = serde_json::to_vec(&json!({
         "show_when": "before",
@@ -169,10 +169,13 @@ fn home_card_hides_when_form_not_yet_available() {
             let surface = render_home_card(ctx);
             assert!(contains_component_type(&surface, "Card"));
             assert!(contains_component_type(&surface, "HostFragment"));
-            assert!(contains_component_type(&surface, "ListItem"));
+            // Gated: no form ListItem / soon teaser — police fragment only.
+            assert!(!contains_component_type(&surface, "ListItem"));
             let json = serde_json::to_string(&surface).expect("surface json");
-            assert!(json.contains("home.formalities.pendingGate"));
-            assert!(json.contains("home.card.notYet"));
+            assert!(!json.contains("home.formalities.pendingGate"));
+            assert!(!json.contains("home.card.notYet"));
+            assert!(!json.contains("home.task.preArrival"));
+            assert!(json.contains("home.formalities.pending"));
             assert!(!json.contains("home.card.intro"));
             assert!(!json.contains("TimePicker"));
             assert!(!json.contains("\"type\":\"Form\"") && !json.contains("\"type\": \"Form\""));

@@ -17,6 +17,10 @@ pub enum FormTaskState {
 }
 
 /// Accueil card matching design « Avant votre arrivée » formalities banner.
+///
+/// When the form is gated (`NotYet`), omit the form row / soon teaser entirely —
+/// keep only the host police fragment. Guest shell hides the card if neither task
+/// is visible (police not required).
 pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
     let open_form = Action::open_overlay(
         OverlayPresentation::Fullscreen,
@@ -28,8 +32,8 @@ pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
 
     let subtitle = match form_state {
         FormTaskState::Done => "i18n:home.formalities.allReady",
-        FormTaskState::NotYet => "i18n:home.formalities.pendingGate",
-        FormTaskState::Pending => "i18n:home.formalities.pending",
+        // Gated: no form teaser — shell progress subtitle covers police-only case.
+        FormTaskState::NotYet | FormTaskState::Pending => "i18n:home.formalities.pending",
     };
 
     let icon = match form_state {
@@ -58,16 +62,8 @@ pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
                     .into(),
             );
         }
-        FormTaskState::NotYet => {
-            children.push(
-                ListItem::new()
-                    .title("i18n:home.task.preArrival.label")
-                    .subtitle("i18n:home.card.notYet")
-                    .leading("clipboard")
-                    .chevron(false)
-                    .into(),
-            );
-        }
+        // Gated: no ListItem / notYet copy — police fragment may still show.
+        FormTaskState::NotYet => {}
         FormTaskState::Pending => {
             children.push(
                 ListItem::new()

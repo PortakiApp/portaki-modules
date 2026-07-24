@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2]
+
+### Fixed
+
+- Guest Accueil: when the form is gated by `show_when`, omit the form row / « s’ouvrira bientôt »
+  teaser entirely. Police `HostFragment` stays; guest shell hides the card if neither task is visible.
+
 ## [0.4.0]
 
 ### Added

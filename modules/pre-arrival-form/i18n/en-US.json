@@ -40,7 +40,6 @@
   "home.card.error.title": "Form temporarily unavailable",
   "home.card.error.description": "The form could not be loaded. Try again in a moment.",
   "home.formalities.pending": "Formalities before your stay",
-  "home.formalities.pendingGate": "The form opens soon — the police form stays available when required.",
   "home.formalities.allReady": "Everything is ready for your stay.",
   "home.formalities.doneTitle": "Formalities complete — thank you!",
   "home.formalities.progress": "{done} of {total} completed",
