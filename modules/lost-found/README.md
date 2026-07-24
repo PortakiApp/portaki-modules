@@ -33,9 +33,11 @@ OCI image: `ghcr.io/portakiapp/portaki-modules-lost-found:<semver>`
 |-------|------------|-------------|
 | guest | `home.card` | Kind + description form; optional host tip banner; stay report list after submit |
 | host | `main` | Design editor: info banner, TipTap guest note (`host_note`), recent reports with status pills + update |
-| host | `stay` | Design declare modal: header (`guestName` · `stayDates`), description TextArea, send CTA; stay report list + status |
+| host | `create` | Stay-action modal body: TipTap description (`RichTextEditor`), hint, « Envoyer au voyageur » |
+| host | `stay` | Stay-detail Card list + status when reports exist; empty tree when none (no empty-state copy) |
 
 Host apps only embed `HostSurfacePanel` (or equivalent). No module-named React create modal.
+Stay-action « Déclarer un objet trouvé » stays available even when the stay list is empty.
 Create always defaults status to `to_collect` — no status field on create.
 
 ## Queries and commands

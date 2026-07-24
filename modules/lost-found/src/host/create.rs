@@ -5,7 +5,9 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::Tone;
-use portaki_sdk::sdui::primitives::{Button, Field, FieldHint, Form, Page, Stack, Text, TextArea};
+use portaki_sdk::sdui::primitives::{
+    Button, Field, FieldHint, Form, Page, RichTextEditor, Stack, Text,
+};
 use portaki_sdk::sdui::surface::Surface;
 use uuid::Uuid;
 
@@ -16,6 +18,7 @@ use crate::commands::SubmitFoundArgs;
 /// - `input.stayId` — required target stay.
 /// - Status is never shown; [`submit_found`](crate::submit_found) always uses
 ///   `to_collect`.
+/// - Description is TipTap [`RichTextEditor`] (same host primitive as main note).
 pub(crate) fn build_create_found_form(ctx: &HostContext) -> Component {
     let stay_id = ctx
         .input_str("stayId")
@@ -23,9 +26,9 @@ pub(crate) fn build_create_found_form(ctx: &HostContext) -> Component {
 
     let Some(stay_id) = stay_id else {
         return Component::Stack(Stack::new().gap(12.0).children(vec![Text::new()
-                .text("i18n:host.stay.missingStay")
-                .variant(TextVariant::Caption)
-                .into()]));
+            .text("i18n:host.stay.missingStay")
+            .variant(TextVariant::Caption)
+            .into()]));
     };
 
     let submit_action = crate::ids::module_id().command(
@@ -44,11 +47,7 @@ pub(crate) fn build_create_found_form(ctx: &HostContext) -> Component {
                 .name("description")
                 .label("i18n:host.create.description.label")
                 .required(true)
-                .child(
-                    TextArea::new()
-                        .name("description")
-                        .placeholder("i18n:host.create.description.placeholder"),
-                ),
+                .child(RichTextEditor::new().name("description").value("")),
         )
         .child(FieldHint::new().text("i18n:host.create.hint"))
         .child(

@@ -346,7 +346,7 @@ fn host_create_surface_renders_declare_form() {
             let surface = render_host_create(ctx);
             assert!(contains_component_type(&surface, "Page"));
             assert!(contains_component_type(&surface, "Form"));
-            assert!(contains_component_type(&surface, "TextArea"));
+            assert!(contains_component_type(&surface, "RichTextEditor"));
             assert!(contains_component_type(&surface, "FieldHint"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("submitFound") || json.contains("host.create.submit"));
@@ -354,12 +354,13 @@ fn host_create_surface_renders_declare_form() {
             // Modal chrome owns title / Annuler — form body has no HeaderTitle.
             assert!(!json.contains("HeaderTitle"));
             assert!(!json.contains("host.main.status.label"));
+            assert!(!json.contains("TextArea"));
         });
 }
 
 #[test]
 #[serial]
-fn host_stay_surface_is_list_only() {
+fn host_stay_surface_empty_when_no_reports() {
     reset_test_store();
     let stay_id = Uuid::new_v4();
 
@@ -370,10 +371,47 @@ fn host_stay_surface_is_list_only() {
             let surface = render_host_stay(ctx);
             assert!(contains_component_type(&surface, "Page"));
             let json = serde_json::to_string(&surface).expect("surface json");
-            assert!(json.contains("host.stay.empty") || json.contains("host.stay.listTitle"));
+            assert!(!json.contains("host.stay.empty"));
+            assert!(!json.contains("host.stay.listTitle"));
+            assert!(!contains_component_type(&surface, "Card"));
             assert!(!json.contains("submitFound"));
             assert!(!json.contains("host.create.submit"));
             assert!(!json.contains("TextArea"));
+            assert!(!json.contains("RichTextEditor"));
+        });
+}
+
+#[test]
+#[serial]
+fn host_stay_surface_card_when_reports_exist() {
+    reset_test_store();
+    let stay_id = Uuid::new_v4();
+
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|mut ctx| {
+            submit_found(
+                ctx.clone(),
+                SubmitFoundArgs {
+                    stay_ids: vec![stay_id],
+                    stay_id: None,
+                    description: "Chargeur oublié".into(),
+                    status: None,
+                },
+            )
+            .expect("submitFound");
+
+            ctx.input = serde_json::json!({ "stayId": stay_id.to_string() });
+            let surface = render_host_stay(ctx);
+            assert!(contains_component_type(&surface, "Page"));
+            assert!(contains_component_type(&surface, "Card"));
+            assert!(contains_component_type(&surface, "List"));
+            assert!(contains_component_type(&surface, "Select"));
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("host.stay.listTitle"));
+            assert!(!json.contains("host.stay.empty"));
+            assert!(!json.contains("submitFound"));
+            assert!(!json.contains("host.create.submit"));
         });
 }
 

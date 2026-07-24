@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1]
+
+### Changed
+
+- Host `create` description field uses TipTap `RichTextEditor` (not plain `TextArea`).
+- Host `stay` hides when empty (no « Aucun objet déclaré… »); non-empty stay shows a
+  Card with the declared-objects list and status controls.
+
 ## [0.3.0]
 
 ### Added
