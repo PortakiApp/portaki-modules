@@ -1,0 +1,52 @@
+{
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
+  "id": "consumables",
+  "name": {
+    "fr": "Consommables & stocks",
+    "en": "Consumables & stock"
+  },
+  "description": {
+    "fr": "Liste des consommables du logement, signalements voyageurs (manque / bientôt vide), et suivi des restocks.",
+    "en": "Property consumables list, guest shortage reports (missing / running low), and restock tracking."
+  },
+  "version": "0.1.0",
+  "author": {
+    "name": "Portaki",
+    "url": "https://portaki.app",
+    "type": "official"
+  },
+  "icon": "package",
+  "type": "official",
+  "hostSurfaces": [
+    {
+      "type": "property-workspace-tab",
+      "pathSegment": "consumables",
+      "label": {
+        "fr": "Consommables",
+        "en": "Consumables"
+      },
+      "icon": "package",
+      "hostUi": {
+        "designId": "consumables-editor-v1"
+      }
+    },
+    {
+      "type": "stay-detail",
+      "pathSegment": "stay",
+      "label": {
+        "fr": "Consommables",
+        "en": "Consumables"
+      },
+      "icon": "package"
+    },
+    {
+      "type": "property-stats-card",
+      "pathSegment": "stock",
+      "label": {
+        "fr": "Stocks",
+        "en": "Stock"
+      },
+      "icon": "package"
+    }
+  ]
+}

@@ -52,6 +52,7 @@ On every push to **`main`**, CI builds and publishes:
 | [`access-guide`](./modules/access-guide) | `ghcr.io/portakiapp/portaki-modules-access-guide:<semver>` | Arrival steps, codes, and parking |
 | [`appliances`](./modules/appliances) | `ghcr.io/portakiapp/portaki-modules-appliances:<semver>` | Device guides and safety notice |
 | [`checklist`](./modules/checklist) | `ghcr.io/portakiapp/portaki-modules-checklist:<semver>` | Checkout checklist with guest toggles |
+| [`consumables`](./modules/consumables) | `ghcr.io/portakiapp/portaki-modules-consumables:<semver>` | Consumables catalog, guest shortages, restock tracking |
 | [`emergency-contacts`](./modules/emergency-contacts) | `ghcr.io/portakiapp/portaki-modules-emergency-contacts:<semver>` | Useful numbers and host line |
 | [`ev-parking`](./modules/ev-parking) | `ghcr.io/portakiapp/portaki-modules-ev-parking:<semver>` | EV spot, gate code, charger PIN with timed reveal |
 | [`events`](./modules/events) | `ghcr.io/portakiapp/portaki-modules-events:<semver>` | Host-curated local events and map |
@@ -79,6 +80,7 @@ portaki-modules/
 │   ├── access-guide/          # each crate: ids.rs, guest/, host/, …
 │   ├── appliances/
 │   ├── checklist/
+│   ├── consumables/
 │   ├── emergency-contacts/
 │   ├── ev-parking/
 │   ├── events/
