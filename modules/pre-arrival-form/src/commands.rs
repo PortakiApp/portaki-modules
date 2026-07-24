@@ -5,9 +5,7 @@ use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::config::{
-    load_config, save_config, FormQuestions, ModuleConfig, ShowWhen,
-};
+use crate::config::{load_config, save_config, FormQuestions, ModuleConfig, ShowWhen};
 use crate::storage;
 
 #[portaki_sdk::wire(serialize)]

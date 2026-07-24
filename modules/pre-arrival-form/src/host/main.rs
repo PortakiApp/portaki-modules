@@ -4,9 +4,7 @@
 //! Save chrome is owned by the workspace tab (`updateConfig`).
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{
-    Card, ChoiceList, Form, Grid, Page, Stack, ToggleRow,
-};
+use portaki_sdk::sdui::primitives::{Card, ChoiceList, Form, Grid, Page, Stack, ToggleRow};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{load_config, FormQuestions, ShowWhen};
