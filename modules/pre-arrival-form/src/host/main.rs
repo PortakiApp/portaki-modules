@@ -1,60 +1,115 @@
-//! Host property surface — design `editorPrearrival` informational layout.
+//! Host property surface — design `editorPrearrival` / `prearrival-editor-v1`.
 //!
-//! Runtime has no host config for when/question toggles yet — cards mirror the
-//! fixed guest fields (arrival, occasion, allergies, message) as read-only rows.
+//! Choice cards for when to show + toggle grid for form questions.
+//! Save chrome is owned by the workspace tab (`updateConfig`).
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Card, InfoBanner, ListItem, Page, Stack, Text};
+use portaki_sdk::sdui::primitives::{
+    Card, ChoiceList, Form, Grid, Page, Stack, ToggleRow,
+};
 use portaki_sdk::sdui::surface::Surface;
 
-/// Host main — explains the guest pre-arrival form (no editable config keys).
+use crate::config::{load_config, FormQuestions, ShowWhen};
+
+/// Host main — editable pre-arrival timing + question toggles.
 #[portaki_sdk::surface(host, id = "main")]
-pub fn render_host_main(ctx: HostContext) -> Surface {
-    let _ = ctx;
+pub fn render_host_main(_ctx: HostContext) -> Surface {
+    let config = load_config().unwrap_or_default();
+    let questions = &config.questions;
 
-    let question_rows: Vec<Component> = vec![
-        ListItem::new()
-            .title("i18n:form.arrival.label")
-            .leading("clock-circle")
-            .chevron(false)
-            .into(),
-        ListItem::new()
-            .title("i18n:form.occasion.label")
-            .leading("gift")
-            .chevron(false)
-            .into(),
-        ListItem::new()
-            .title("i18n:form.allergies.label")
-            .leading("info-circle")
-            .chevron(false)
-            .into(),
-        ListItem::new()
-            .title("i18n:form.message.label")
-            .leading("message")
-            .chevron(false)
-            .into(),
-    ];
-
-    let children: Vec<Component> = vec![
-        InfoBanner::new().message("i18n:host.main.banner").into(),
+    let form_children: Vec<Component> = vec![
         Card::new()
             .title("i18n:host.section.when")
             .subtitle("i18n:host.section.when.help")
             .icon("clock-circle")
-            .child(
-                Text::new()
-                    .text("i18n:host.section.when.body")
-                    .variant(TextVariant::Body),
-            )
+            .children(vec![when_choice_list(config.show_when).into()])
             .into(),
         Card::new()
             .title("i18n:host.section.questions")
             .subtitle("i18n:host.section.questions.help")
             .icon("clipboard")
-            .children(question_rows)
+            .children(vec![Grid::new()
+                .columns(2)
+                .gap(8.0)
+                .minColumnWidth(300.0)
+                .children(question_toggle_rows(questions))
+                .into()])
             .into(),
     ];
 
-    Surface::new(Page::new().child(Stack::new().gap(16.0).children(children)))
-        .with_id(crate::ids::HOST_MAIN)
+    // No Page title / Save — workspace tab owns chrome + footer Save.
+    Surface::new(
+        Page::new().child(Form::new().child(Stack::new().gap(16.0).children(form_children))),
+    )
+    .with_id(crate::ids::HOST_MAIN)
+}
+
+fn when_choice_list(selected: ShowWhen) -> ChoiceList {
+    ChoiceList::new()
+        .name("show_when")
+        .value(selected.as_wire())
+        .layout(ChoiceListLayout::Cards)
+        .choices(vec![
+            ChoiceOption::new("confirm", "i18n:host.when.confirm")
+                .description("i18n:host.when.confirm.desc")
+                .icon("check-circle"),
+            ChoiceOption::new("before", "i18n:host.when.before")
+                .description("i18n:host.when.before.desc")
+                .icon("clock-circle"),
+            ChoiceOption::new("checkin", "i18n:host.when.checkin")
+                .description("i18n:host.when.checkin.desc")
+                .icon("key"),
+        ])
+}
+
+fn question_toggle_rows(questions: &FormQuestions) -> Vec<Component> {
+    vec![
+        toggle_row(
+            "ask_arrival_time",
+            "i18n:host.question.arrival",
+            "clock-circle",
+            questions.ask_arrival_time,
+        ),
+        toggle_row(
+            "ask_occasion",
+            "i18n:host.question.occasion",
+            "gift",
+            questions.ask_occasion,
+        ),
+        toggle_row(
+            "ask_allergies",
+            "i18n:host.question.allergies",
+            "info-circle",
+            questions.ask_allergies,
+        ),
+        toggle_row(
+            "ask_guest_count",
+            "i18n:host.question.guestCount",
+            "users",
+            questions.ask_guest_count,
+        ),
+        toggle_row(
+            "ask_special_needs",
+            "i18n:host.question.specialNeeds",
+            "home",
+            questions.ask_special_needs,
+        ),
+        toggle_row(
+            "ask_id_document",
+            "i18n:host.question.idDocument",
+            "clipboard",
+            questions.ask_id_document,
+        ),
+    ]
+}
+
+fn toggle_row(name: &str, label: &str, icon: &str, checked: bool) -> Component {
+    // `icon` is accepted for design parity; set once SDK ToggleRow.icon lands on main
+    // (PortakiApp/portaki-sdk#27). Until then the dashboard still renders label + switch.
+    let _ = icon;
+    ToggleRow::new()
+        .name(name)
+        .label(label)
+        .checked(checked)
+        .into()
 }

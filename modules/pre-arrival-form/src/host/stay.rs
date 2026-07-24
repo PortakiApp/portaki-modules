@@ -1,8 +1,7 @@
 //! Stay-scoped host surface — design stay detail « Formulaire de pré-arrivée ».
 //!
 //! Layout (Dashboard.dc.html): title + status pill in the card header, then either
-//! pending copy or detail rows (arrival / occasion / allergies). Guest message is
-//! an extra row when present (not in the design mock).
+//! pending copy or detail rows for enabled / answered questions.
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::Tone;
@@ -10,6 +9,7 @@ use portaki_sdk::sdui::primitives::{Card, ListItem, Page, Pill, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 use uuid::Uuid;
 
+use crate::config::load_config;
 use crate::entities::PreArrivalResponse;
 use crate::storage;
 
@@ -45,7 +45,6 @@ fn missing_stay_card() -> Component {
 }
 
 fn pending_card() -> Component {
-    // First child Pill is hoisted into the Card header by the host renderer.
     let status = Pill::new()
         .label("i18n:host.stay.status.pending")
         .tone(Tone::Neutral);
@@ -67,34 +66,67 @@ fn completed_card(row: &PreArrivalResponse) -> Component {
     let status = Pill::new()
         .label("i18n:host.stay.status.done")
         .tone(Tone::Success);
+    let questions = load_config().unwrap_or_default().questions;
 
-    let arrival = display_or_dash(row.arrival_time.as_deref());
-    let occasion = display_or_dash(row.occasion.as_deref());
-    let allergies_raw = row
-        .allergies
-        .as_ref()
-        .map(|value| value.trim())
-        .filter(|value| !value.is_empty());
-    let allergies = allergies_raw
-        .map(|value| value.to_string())
-        .unwrap_or_else(|| "i18n:host.stay.allergies.none".to_string());
-    let allergies_tone = allergies_raw.map(|_| Tone::Warning);
+    let mut rows: Vec<Component> = Vec::new();
 
-    let mut rows: Vec<Component> = vec![
-        detail_row(
+    if questions.ask_arrival_time {
+        rows.push(detail_row(
             "clock-circle",
             "i18n:host.stay.arrival.label",
-            arrival,
+            display_or_dash(row.arrival_time.as_deref()),
             None,
-        ),
-        detail_row("star", "i18n:host.stay.occasion.label", occasion, None),
-        detail_row(
+        ));
+    }
+    if questions.ask_occasion {
+        rows.push(detail_row(
+            "star",
+            "i18n:host.stay.occasion.label",
+            display_or_dash(row.occasion.as_deref()),
+            None,
+        ));
+    }
+    if questions.ask_allergies {
+        let allergies_raw = row
+            .allergies
+            .as_ref()
+            .map(|value| value.trim())
+            .filter(|value| !value.is_empty());
+        let allergies = allergies_raw
+            .map(|value| value.to_string())
+            .unwrap_or_else(|| "i18n:host.stay.allergies.none".to_string());
+        let allergies_tone = allergies_raw.map(|_| Tone::Warning);
+        rows.push(detail_row(
             "danger-triangle",
             "i18n:host.stay.allergies.label",
             allergies,
             allergies_tone,
-        ),
-    ];
+        ));
+    }
+    if questions.ask_guest_count {
+        rows.push(detail_row(
+            "users",
+            "i18n:host.stay.guestCount.label",
+            display_or_dash(row.guest_count.as_deref()),
+            None,
+        ));
+    }
+    if questions.ask_special_needs {
+        rows.push(detail_row(
+            "home",
+            "i18n:host.stay.specialNeeds.label",
+            display_or_dash(row.special_needs.as_deref()),
+            None,
+        ));
+    }
+    if questions.ask_id_document {
+        rows.push(detail_row(
+            "clipboard",
+            "i18n:host.stay.idDocument.label",
+            display_or_dash(row.id_document.as_deref()),
+            None,
+        ));
+    }
 
     if let Some(message) = row
         .guest_message

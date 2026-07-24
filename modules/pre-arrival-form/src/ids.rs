@@ -11,6 +11,7 @@ define_surface_ids! {
 define_operation_names! {
     GET_STATUS = "getStatus",
     SUBMIT = "submit",
+    UPDATE_CONFIG = "updateConfig",
 }
 
 define_event_types! {

@@ -18,6 +18,12 @@ pub struct PreArrivalStatus {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub guest_allergies: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub guest_count: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub special_needs: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id_document: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub message_to_host: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub completed_at: Option<DateTime<Utc>>,
@@ -30,6 +36,9 @@ impl PreArrivalStatus {
             arrival_time_estimated: None,
             guest_occasion: None,
             guest_allergies: None,
+            guest_count: None,
+            special_needs: None,
+            id_document: None,
             message_to_host: None,
             completed_at: None,
         }
@@ -47,6 +56,9 @@ pub fn get_status(ctx: Context) -> Result<PreArrivalStatus> {
         arrival_time_estimated: row.arrival_time,
         guest_occasion: row.occasion,
         guest_allergies: row.allergies,
+        guest_count: row.guest_count,
+        special_needs: row.special_needs,
+        id_document: row.id_document,
         message_to_host: row.guest_message,
         completed_at: Some(row.completed_at),
     })

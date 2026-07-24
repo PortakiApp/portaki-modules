@@ -1,14 +1,17 @@
-//! Portaki pre-arrival form module — ETA, occasion, allergies, message.
+//! Portaki pre-arrival form module — ETA, occasion, allergies, and host-configurable questions.
 
 mod commands;
+mod config;
 mod entities;
 mod guest;
 mod host;
 mod ids;
 mod queries;
+mod show_when;
 mod storage;
 
-pub use commands::{submit, SubmitArgs};
+pub use commands::{submit, update_config, SubmitArgs, UpdateConfigArgs};
+pub use config::{load_config, FormQuestions, ModuleConfig, ShowWhen};
 pub use entities::PreArrivalResponse;
 pub use guest::render_home_card;
 pub use host::{render_host_main, render_host_stay};
