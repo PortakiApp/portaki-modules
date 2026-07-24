@@ -1,7 +1,10 @@
-//! Host dashboard surfaces.
+//! Host dashboard surface — design `rules-editor-v1` (Wasm SDUI for mobile + fallback).
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Button, Field, Form, Page, Select, Text, TextInput};
+use portaki_sdk::sdui::common::Tone;
+use portaki_sdk::sdui::primitives::{
+    Button, Card, Field, Form, Page, Select, Stack, Text, TextInput,
+};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::content::{RuleItem, RulesBundle, RulesPayload};
@@ -9,7 +12,7 @@ use crate::store;
 
 const ITEM_SLOTS: usize = 6;
 
-/// Host editor — structured rule slots for the active `ctx.locale`.
+/// Host editor — rule cards for the active `ctx.locale`.
 #[portaki_sdk::surface(host, id = "main")]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = RulesBundle::lang_code(&ctx.locale);
@@ -34,32 +37,32 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     };
     let save_action = crate::ids::module_id().command(crate::ids::SAVE_CONTENT, submit_args);
 
-    let mut form_children: Vec<Component> = Vec::new();
+    let mut cards: Vec<Component> = Vec::new();
     for index in 0..ITEM_SLOTS {
-        push_rule_slot(&mut form_children, index, payload.items.get(index));
+        cards.push(rule_card(index, payload.items.get(index)));
     }
-    form_children.push(
-        Text::new()
-            .text("i18n:host.main.help")
-            .variant(TextVariant::Caption)
-            .into(),
-    );
-    form_children.push(
+    cards.push(
         Button::new()
             .label("i18n:host.save")
+            .tone(Tone::Primary)
             .action(save_action)
             .into(),
     );
 
     Surface::new(
-        Page::new()
-            .title("i18n:surface.host.main.title")
-            .child(
-                Text::new()
-                    .text("i18n:surface.host.main.subtitle")
-                    .variant(TextVariant::Body),
-            )
-            .child(Form::new().children(form_children)),
+        Page::new().child(
+            Form::new().child(
+                Stack::new()
+                    .gap(16.0)
+                    .children(vec![
+                        Text::new()
+                            .text("i18n:surface.host.main.subtitle")
+                            .variant(TextVariant::Body)
+                            .into(),
+                        Component::Stack(Stack::new().gap(16.0).children(cards)),
+                    ]),
+            ),
+        ),
     )
     .with_id(crate::ids::HOST_MAIN)
 }
@@ -111,58 +114,52 @@ fn items_to_submit(payload: &RulesPayload) -> Vec<crate::commands::RuleItemInput
         .collect()
 }
 
-fn push_rule_slot(children: &mut Vec<Component>, index: usize, item: Option<&RuleItem>) {
+fn rule_card(index: usize, item: Option<&RuleItem>) -> Component {
     let slot = index + 1;
     let icon = item
         .map(|r| r.icon.as_str())
         .filter(|s| !s.is_empty())
         .unwrap_or("check-circle");
 
-    children.push(
-        Text::new()
-            .text(format!("i18n:host.rule.slot{slot}"))
-            .variant(TextVariant::Caption)
-            .into(),
-    );
-    children.push(
-        Field::new()
-            .name(format!("items.{index}.icon"))
-            .label("i18n:host.rule.icon")
-            .child(
-                Select::new()
-                    .name(format!("items.{index}.icon"))
-                    .options(vec![
-                        ChoiceOption::new("clock-circle", "i18n:host.rule.icon.quiet"),
-                        ChoiceOption::new("x", "i18n:host.rule.icon.no"),
-                        ChoiceOption::new("users", "i18n:host.rule.icon.guests"),
-                        ChoiceOption::new("check-circle", "i18n:host.rule.icon.ok"),
-                        ChoiceOption::new("paw-print", "i18n:host.rule.icon.pets"),
-                        ChoiceOption::new("volume-x", "i18n:host.rule.icon.noise"),
-                    ])
-                    .value(icon),
-            )
-            .into(),
-    );
-    children.push(
-        Field::new()
-            .name(format!("items.{index}.title"))
-            .label("i18n:host.rule.title")
-            .child(
-                TextInput::new()
-                    .name(format!("items.{index}.title"))
-                    .value(item.map(|r| r.title.as_str()).unwrap_or("")),
-            )
-            .into(),
-    );
-    children.push(
-        Field::new()
-            .name(format!("items.{index}.subtitle"))
-            .label("i18n:host.rule.subtitle")
-            .child(
-                TextInput::new()
-                    .name(format!("items.{index}.subtitle"))
-                    .value(item.map(|r| r.subtitle.as_str()).unwrap_or("")),
-            )
-            .into(),
-    );
+    Card::new()
+        .title(format!("i18n:host.rule.slot{slot}"))
+        .icon(icon)
+        .children(vec![
+            Field::new()
+                .name(format!("items.{index}.icon"))
+                .label("i18n:host.rule.icon")
+                .child(
+                    Select::new()
+                        .name(format!("items.{index}.icon"))
+                        .options(vec![
+                            ChoiceOption::new("clock-circle", "i18n:host.rule.icon.quiet"),
+                            ChoiceOption::new("x", "i18n:host.rule.icon.no"),
+                            ChoiceOption::new("users", "i18n:host.rule.icon.guests"),
+                            ChoiceOption::new("check-circle", "i18n:host.rule.icon.ok"),
+                            ChoiceOption::new("paw-print", "i18n:host.rule.icon.pets"),
+                            ChoiceOption::new("volume-x", "i18n:host.rule.icon.noise"),
+                        ])
+                        .value(icon),
+                )
+                .into(),
+            Field::new()
+                .name(format!("items.{index}.title"))
+                .label("i18n:host.rule.title")
+                .child(
+                    TextInput::new()
+                        .name(format!("items.{index}.title"))
+                        .value(item.map(|r| r.title.as_str()).unwrap_or("")),
+                )
+                .into(),
+            Field::new()
+                .name(format!("items.{index}.subtitle"))
+                .label("i18n:host.rule.subtitle")
+                .child(
+                    TextInput::new()
+                        .name(format!("items.{index}.subtitle"))
+                        .value(item.map(|r| r.subtitle.as_str()).unwrap_or("")),
+                )
+                .into(),
+        ])
+        .into()
 }

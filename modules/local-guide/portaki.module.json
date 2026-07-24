@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
+  "id": "local-guide",
+  "name": {
+    "fr": "Bons plans du coin",
+    "en": "Local picks"
+  },
+  "description": {
+    "fr": "Adresses et liens utiles rangés par thème.",
+    "en": "Useful places and links, grouped by theme."
+  },
+  "version": "0.2.1",
+  "author": {
+    "name": "Portaki",
+    "url": "https://portaki.app",
+    "type": "official"
+  },
+  "icon": "map-pin",
+  "type": "official",
+  "hostSurfaces": [
+    {
+      "type": "property-workspace-tab",
+      "pathSegment": "local-guide",
+      "label": {
+        "fr": "Bons plans",
+        "en": "Local picks"
+      },
+      "icon": "map-pin",
+      "hostUi": {
+        "designId": "guide-editor-v1"
+      }
+    }
+  ],
+  "guestSurfaces": [
+    {
+      "surfaceId": "explore.detail",
+      "path": "local-guide/detail",
+      "labelKey": "nav.local-guide"
+    }
+  ]
+}

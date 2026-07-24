@@ -1,8 +1,8 @@
-//! Host dashboard surfaces — config cards embedded in the module sheet.
+//! Host dashboard surface — design `editorEvParking` / `evparking-editor-v1`.
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{
-    Card, ChoiceList, Field, Form, Page, SecretInput, Text, TextInput,
+    Card, ChoiceList, Field, Form, Page, SecretInput, Stack, TextArea, TextInput,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -16,7 +16,7 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
         Card::new()
             .title("i18n:host.section.spot")
             .subtitle("i18n:host.section.spot.help")
-            .icon("parking")
+            .icon("zap")
             .children(vec![
                 Field::new()
                     .name("spot_label")
@@ -48,13 +48,6 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
                             .placeholder("i18n:host.chargerPin.placeholder"),
                     )
                     .into(),
-            ])
-            .into(),
-        Card::new()
-            .title("i18n:host.section.directions")
-            .subtitle("i18n:host.section.directions.help")
-            .icon("map-pin")
-            .children(vec![
                 Field::new()
                     .name("map_url")
                     .label("i18n:host.mapUrl.label")
@@ -65,17 +58,23 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
                             .placeholder("i18n:host.mapUrl.placeholder"),
                     )
                     .into(),
-                Field::new()
-                    .name("instructions")
-                    .label("i18n:host.instructions.label")
-                    .child(
-                        TextInput::new()
-                            .name("instructions")
-                            .value(config.instructions.clone().unwrap_or_default())
-                            .placeholder("i18n:host.instructions.placeholder"),
-                    )
-                    .into(),
             ])
+            .into(),
+        Card::new()
+            .title("i18n:host.section.instructions")
+            .subtitle("i18n:host.section.instructions.help")
+            .icon("info-circle")
+            .children(vec![Field::new()
+                .name("instructions")
+                .label("i18n:host.instructions.label")
+                .child(
+                    // TipTap preferred in design; TextArea until guest renders rich HTML.
+                    TextArea::new()
+                        .name("instructions")
+                        .value(config.instructions.clone().unwrap_or_default())
+                        .placeholder("i18n:host.instructions.placeholder"),
+                )
+                .into()])
             .into(),
         Card::new()
             .title("i18n:host.section.reveal")
@@ -83,15 +82,13 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
             .icon("clock-circle")
             .children(vec![reveal_choice_list(config.reveal_policy).into()])
             .into(),
-        Text::new()
-            .text("i18n:host.main.help")
-            .variant(TextVariant::Caption)
-            .into(),
     ];
 
     // No Page title / Save — the modules sheet owns chrome + footer Save.
-    Surface::new(Page::new().child(Form::new().children(form_children)))
-        .with_id(crate::ids::HOST_MAIN)
+    Surface::new(
+        Page::new().child(Form::new().child(Stack::new().gap(16.0).children(form_children))),
+    )
+    .with_id(crate::ids::HOST_MAIN)
 }
 
 fn reveal_choice_list(policy: RevealPolicy) -> ChoiceList {

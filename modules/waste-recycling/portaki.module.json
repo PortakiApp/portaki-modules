@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
+  "id": "waste-recycling",
+  "name": {
+    "fr": "Tri & déchets",
+    "en": "Recycling & waste"
+  },
+  "description": {
+    "fr": "Bac par bac : quoi jeter où, et jours de collecte.",
+    "en": "Bin by bin: what goes where, and collection days."
+  },
+  "version": "0.2.1",
+  "author": {
+    "name": "Portaki",
+    "url": "https://portaki.app",
+    "type": "official"
+  },
+  "icon": "recycle",
+  "type": "official",
+  "hostSurfaces": [
+    {
+      "type": "property-workspace-tab",
+      "pathSegment": "waste-recycling",
+      "label": {
+        "fr": "Tri",
+        "en": "Recycling"
+      },
+      "icon": "recycle",
+      "hostUi": {
+        "designId": "waste-editor-v1"
+      }
+    }
+  ],
+  "guestSurfaces": [
+    {
+      "surfaceId": "explore.detail",
+      "path": "waste-recycling/detail",
+      "labelKey": "nav.waste-recycling"
+    }
+  ]
+}

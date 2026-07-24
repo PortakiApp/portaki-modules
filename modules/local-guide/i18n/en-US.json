@@ -1,5 +1,6 @@
 {
   "module.displayName": "Local picks",
+  "nav.local-guide": "Local picks",
   "module.description": "Nearby addresses and useful links",
   "surface.host.main.title": "Local picks",
   "surface.host.main.subtitle": "Add addresses and tips for guests",
@@ -31,5 +32,6 @@
   "module.status.incomplete.description": "Finish local picks setup in the host dashboard",
   "module.status.incomplete.hint": "Required fields missing — open Modules → Local picks",
   "module.status.inactive.title": "Local picks module disabled",
-  "module.status.inactive.description": "This module is not active on this property"
+  "module.status.inactive.description": "This module is not active on this property",
+  "host.section.disclaimer": "Disclaimer"
 }

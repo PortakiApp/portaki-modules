@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
+  "id": "emergency-contacts",
+  "name": {
+    "fr": "Urgences & utiles",
+    "en": "Emergency & useful"
+  },
+  "description": {
+    "fr": "Numéros d'urgence, pharmacie, médecin, ligne directe.",
+    "en": "Emergency numbers, pharmacy, doctor, and your direct line."
+  },
+  "version": "0.2.1",
+  "author": {
+    "name": "Portaki",
+    "url": "https://portaki.app",
+    "type": "official"
+  },
+  "icon": "phone",
+  "type": "official",
+  "hostSurfaces": [
+    {
+      "type": "property-workspace-tab",
+      "pathSegment": "emergency-contacts",
+      "label": {
+        "fr": "Urgences",
+        "en": "Emergency"
+      },
+      "icon": "phone",
+      "hostUi": {
+        "designId": "emergency-editor-v1"
+      }
+    }
+  ],
+  "guestSurfaces": [
+    {
+      "surfaceId": "explore.detail",
+      "path": "emergency-contacts/detail",
+      "labelKey": "nav.emergency-contacts"
+    }
+  ]
+}

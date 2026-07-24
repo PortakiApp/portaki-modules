@@ -1,7 +1,10 @@
-//! Host dashboard surfaces.
+//! Host dashboard surface — design `facility-editor-v1` (Wasm SDUI).
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Button, Field, Form, Page, Text, TextArea, TextInput};
+use portaki_sdk::sdui::common::Tone;
+use portaki_sdk::sdui::primitives::{
+    Button, Card, Field, Form, Page, Stack, Text, TextArea, TextInput,
+};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{load_config, FacilityRow, Localized};
@@ -22,44 +25,46 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     };
     let save_action = crate::ids::module_id().command(crate::ids::UPDATE_CONFIG, submit_args);
 
-    let mut form_children: Vec<Component> = Vec::new();
+    let mut cards: Vec<Component> = Vec::new();
     for index in 0..FACILITY_SLOTS {
-        push_facility_slot(&mut form_children, index, facilities.get(index), &lang);
+        cards.push(facility_card(index, facilities.get(index), &lang));
     }
-    form_children.push(
-        Field::new()
-            .name("general_note")
-            .label("i18n:host.note.label")
-            .child(
-                TextArea::new()
-                    .name("general_note")
-                    .value(general_note)
-                    .placeholder("i18n:host.note.placeholder"),
-            )
+    cards.push(
+        Card::new()
+            .title("i18n:host.section.note")
+            .icon("info-circle")
+            .children(vec![Field::new()
+                .name("general_note")
+                .label("i18n:host.note.label")
+                .child(
+                    TextArea::new()
+                        .name("general_note")
+                        .value(general_note)
+                        .placeholder("i18n:host.note.placeholder"),
+                )
+                .into()])
             .into(),
     );
-    form_children.push(
-        Text::new()
-            .text("i18n:host.main.help")
-            .variant(TextVariant::Caption)
-            .into(),
-    );
-    form_children.push(
+    cards.push(
         Button::new()
             .label("i18n:host.save")
+            .tone(Tone::Primary)
             .action(save_action)
             .into(),
     );
 
     Surface::new(
-        Page::new()
-            .title("i18n:surface.host.main.title")
-            .child(
-                Text::new()
-                    .text("i18n:surface.host.main.subtitle")
-                    .variant(TextVariant::Body),
-            )
-            .child(Form::new().children(form_children)),
+        Page::new().child(
+            Form::new().child(
+                Stack::new().gap(16.0).children(vec![
+                    Text::new()
+                        .text("i18n:surface.host.main.subtitle")
+                        .variant(TextVariant::Body)
+                        .into(),
+                    Component::Stack(Stack::new().gap(16.0).children(cards)),
+                ]),
+            ),
+        ),
     )
     .with_id(crate::ids::HOST_MAIN)
 }
@@ -79,43 +84,34 @@ fn facilities_to_submit(
         .collect()
 }
 
-fn push_facility_slot(
-    children: &mut Vec<Component>,
-    index: usize,
-    facility: Option<&FacilityRow>,
-    lang: &str,
-) {
+fn facility_card(index: usize, facility: Option<&FacilityRow>, lang: &str) -> Component {
     let slot = index + 1;
     let name = facility.map(|f| f.title.get(lang)).unwrap_or("");
     let hours = facility.and_then(|f| f.hours.as_deref()).unwrap_or("");
 
-    children.push(
-        Text::new()
-            .text(format!("i18n:host.facility.slot{slot}"))
-            .variant(TextVariant::Caption)
-            .into(),
-    );
-    children.push(
-        Field::new()
-            .name(format!("facilities.{index}.name"))
-            .label("i18n:host.facility.name")
-            .child(
-                TextInput::new()
-                    .name(format!("facilities.{index}.name"))
-                    .value(name),
-            )
-            .into(),
-    );
-    children.push(
-        Field::new()
-            .name(format!("facilities.{index}.hours"))
-            .label("i18n:host.facility.hours")
-            .child(
-                TextInput::new()
-                    .name(format!("facilities.{index}.hours"))
-                    .value(hours)
-                    .placeholder("i18n:host.facility.hours.placeholder"),
-            )
-            .into(),
-    );
+    Card::new()
+        .title(format!("i18n:host.facility.slot{slot}"))
+        .icon("clock-circle")
+        .children(vec![
+            Field::new()
+                .name(format!("facilities.{index}.name"))
+                .label("i18n:host.facility.name")
+                .child(
+                    TextInput::new()
+                        .name(format!("facilities.{index}.name"))
+                        .value(name),
+                )
+                .into(),
+            Field::new()
+                .name(format!("facilities.{index}.hours"))
+                .label("i18n:host.facility.hours")
+                .child(
+                    TextInput::new()
+                        .name(format!("facilities.{index}.hours"))
+                        .value(hours)
+                        .placeholder("i18n:host.facility.hours.placeholder"),
+                )
+                .into(),
+        ])
+        .into()
 }

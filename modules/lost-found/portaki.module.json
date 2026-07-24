@@ -9,7 +9,7 @@
     "fr": "Ajoute un bouton « Déclarer un objet trouvé » au détail du séjour et prévient le voyageur.",
     "en": "Adds a “Declare a found item” action on stay detail and notifies the guest."
   },
-  "version": "0.3.1",
+  "version": "0.3.2",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -25,7 +25,10 @@
         "fr": "Objets perdus / trouvés",
         "en": "Lost & found"
       },
-      "icon": "search"
+      "icon": "search",
+      "hostUi": {
+        "designId": "lostfound-editor-v1"
+      }
     },
     {
       "type": "stay-action",

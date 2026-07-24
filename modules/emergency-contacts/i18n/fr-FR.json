@@ -1,6 +1,7 @@
 {
   "module.displayName": "Urgences & utiles",
   "module.description": "Numéros utiles et ligne hôte",
+  "nav.emergency-contacts": "Urgences & utiles",
   "surface.host.main.title": "Urgences & utiles",
   "surface.host.main.subtitle": "Configurez les contacts et le téléphone hôte visibles dans le livret",
   "host.phone.label": "Téléphone hôte (visible)",
@@ -31,5 +32,7 @@
   "module.status.incomplete.description": "Finalisez la configuration contacts dans le tableau de bord hôte",
   "module.status.incomplete.hint": "Champs requis manquants — ouvrez Modules → Urgences & utiles",
   "module.status.inactive.title": "Module contacts désactivé",
-  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement"
+  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
+  "host.section.hostPhone": "Téléphone hôte",
+  "host.section.hostPhone.help": "Affiché dans le livret si renseigné."
 }

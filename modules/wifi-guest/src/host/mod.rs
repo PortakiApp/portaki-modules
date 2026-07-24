@@ -2,7 +2,7 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{
-    Card, ChoiceList, Field, Form, Page, SecretInput, Text, TextInput,
+    Card, ChoiceList, Field, Form, InfoBanner, Page, SecretInput, Stack, TextInput,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -13,6 +13,7 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
     let config = load_config().unwrap_or_default();
 
     let form_children: Vec<Component> = vec![
+        InfoBanner::new().message("i18n:host.main.warning").into(),
         Card::new()
             .title("i18n:host.section.network")
             .subtitle("i18n:host.section.network.help")
@@ -61,15 +62,13 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
             .icon("clock-circle")
             .children(vec![reveal_choice_list(config.reveal_policy).into()])
             .into(),
-        Text::new()
-            .text("i18n:host.main.help")
-            .variant(TextVariant::Caption)
-            .into(),
     ];
 
     // No Page title / Save — the modules sheet owns chrome + footer Save.
-    Surface::new(Page::new().child(Form::new().children(form_children)))
-        .with_id(crate::ids::HOST_MAIN)
+    Surface::new(
+        Page::new().child(Form::new().child(Stack::new().gap(16.0).children(form_children))),
+    )
+    .with_id(crate::ids::HOST_MAIN)
 }
 
 fn reveal_choice_list(policy: RevealPolicy) -> ChoiceList {

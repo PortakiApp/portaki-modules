@@ -1,10 +1,8 @@
-//! Host dashboard surfaces.
-//!
-//! Declares workspace tab pathSegment `checklist` via host surface `main`
-//! (dashboard resolves module id when `hostSurfaces` pathSegment matches).
+//! Host dashboard surface — design `checklist-editor-v1` (Wasm SDUI).
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Button, Field, Form, Page, Text, TextInput};
+use portaki_sdk::sdui::common::Tone;
+use portaki_sdk::sdui::primitives::{Button, Card, Field, Form, Page, Stack, Text, TextInput};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::labels::{self, lang_code};
@@ -12,7 +10,7 @@ use crate::storage;
 
 const ITEM_SLOTS: usize = 6;
 
-/// Host checklist editor — indexed item slots → `replaceItems` for active locale.
+/// Host checklist editor — item cards → `replaceItems` for active locale.
 #[portaki_sdk::surface(host, id = "main")]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = lang_code(&ctx.locale);
@@ -36,7 +34,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         },
     );
 
-    let mut form_children: Vec<Component> = Vec::new();
+    let mut cards: Vec<Component> = Vec::new();
     for index in 0..ITEM_SLOTS {
         let item = items.get(index);
         let slot = index + 1;
@@ -44,47 +42,42 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
             .map(|i| labels::get_label(i, &lang))
             .unwrap_or_default();
 
-        form_children.push(
-            Text::new()
-                .text(format!("i18n:host.item.slot{slot}"))
-                .variant(TextVariant::Caption)
-                .into(),
-        );
-        form_children.push(
-            Field::new()
-                .name(format!("items.{index}.label"))
-                .label("i18n:host.item.label")
-                .child(
-                    TextInput::new()
-                        .name(format!("items.{index}.label"))
-                        .value(label),
-                )
+        cards.push(
+            Card::new()
+                .title(format!("i18n:host.item.slot{slot}"))
+                .icon("check-circle")
+                .children(vec![Field::new()
+                    .name(format!("items.{index}.label"))
+                    .label("i18n:host.item.label")
+                    .child(
+                        TextInput::new()
+                            .name(format!("items.{index}.label"))
+                            .value(label),
+                    )
+                    .into()])
                 .into(),
         );
     }
-
-    form_children.push(
-        Text::new()
-            .text("i18n:host.main.help")
-            .variant(TextVariant::Caption)
-            .into(),
-    );
-    form_children.push(
+    cards.push(
         Button::new()
             .label("i18n:host.save")
+            .tone(Tone::Primary)
             .action(save_action)
             .into(),
     );
 
     Surface::new(
-        Page::new()
-            .title("i18n:surface.host.main.title")
-            .child(
-                Text::new()
-                    .text("i18n:surface.host.main.subtitle")
-                    .variant(TextVariant::Body),
-            )
-            .child(Form::new().children(form_children)),
+        Page::new().child(
+            Form::new().child(
+                Stack::new().gap(16.0).children(vec![
+                    Text::new()
+                        .text("i18n:surface.host.main.subtitle")
+                        .variant(TextVariant::Body)
+                        .into(),
+                    Component::Stack(Stack::new().gap(16.0).children(cards)),
+                ]),
+            ),
+        ),
     )
     .with_id(crate::ids::HOST_MAIN)
 }

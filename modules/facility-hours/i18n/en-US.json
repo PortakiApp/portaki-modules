@@ -1,5 +1,6 @@
 {
   "module.displayName": "Hours & access",
+  "nav.facility-hours": "Hours & access",
   "module.description": "Pool, spa, shared amenities",
   "surface.host.main.title": "Hours & access",
   "surface.host.main.subtitle": "Configure amenity hours for the property",
@@ -28,5 +29,6 @@
   "module.status.incomplete.description": "Finish hours setup in the host dashboard",
   "module.status.incomplete.hint": "Required fields missing — open Modules → Hours & access",
   "module.status.inactive.title": "Hours module disabled",
-  "module.status.inactive.description": "This module is not active on this property"
+  "module.status.inactive.description": "This module is not active on this property",
+  "host.section.note": "General note"
 }
