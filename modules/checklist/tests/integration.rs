@@ -4,7 +4,8 @@ use serial_test::serial;
 
 use checklist::{
     complete_item, list_completions, list_items, render_home_card, render_host_main, replace_items,
-    reset_test_store, uncomplete_item, ChecklistItemInput, ItemIdArgs, ReplaceItemsArgs,
+    reset_test_store, uncomplete_item, update_config, ChecklistItemInput, ItemIdArgs,
+    ReplaceItemsArgs, UpdateConfigArgs,
 };
 use portaki_sdk::sdui::component::Component;
 use portaki_sdk::sdui::surface::Surface;
@@ -154,9 +155,71 @@ fn host_main_renders_form() {
             assert!(contains_component_type(&surface, "Card"));
             assert!(contains_component_type(&surface, "Grid"));
             assert!(contains_component_type(&surface, "IndexedInput"));
-            assert!(contains_component_type(&surface, "Button"));
+            // Workspace header Save owns persistence — no in-form Enregistrer.
+            assert!(!contains_component_type(&surface, "Button"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("host.item.empty"));
+            // Empty list → length + 1 = one slot only.
             assert!(json.contains("items.0.label"));
+            assert!(!json.contains("items.1.label"));
         });
+}
+
+#[test]
+#[serial]
+fn host_main_shows_filled_plus_one_slot() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            replace_items(
+                ctx.clone(),
+                ReplaceItemsArgs {
+                    items: vec![ChecklistItemInput {
+                        label: "Fermer les volets".into(),
+                        label_fr: String::new(),
+                        label_en: String::new(),
+                        sort_order: 0,
+                    }],
+                    items_json: None,
+                },
+            )
+            .expect("replace");
+
+            let json = serde_json::to_string(&render_host_main(ctx)).expect("surface json");
+            assert!(json.contains("items.0.label"));
+            assert!(json.contains("items.1.label"));
+            assert!(!json.contains("items.2.label"));
+        });
+}
+
+#[test]
+#[serial]
+fn update_config_replaces_items_from_form() {
+    reset_test_store();
+    MockContext::host().run(|ctx| {
+        update_config(
+            ctx.clone(),
+            UpdateConfigArgs {
+                items: vec![
+                    ChecklistItemInput {
+                        label: "Clés".into(),
+                        label_fr: String::new(),
+                        label_en: String::new(),
+                        sort_order: 0,
+                    },
+                    ChecklistItemInput {
+                        label: String::new(),
+                        label_fr: String::new(),
+                        label_en: String::new(),
+                        sort_order: 1,
+                    },
+                ],
+            },
+        )
+        .expect("updateConfig");
+
+        let items = list_items(ctx).expect("list");
+        assert_eq!(items.len(), 1);
+    });
 }

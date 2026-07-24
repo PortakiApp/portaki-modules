@@ -11,7 +11,8 @@ mod queries;
 mod storage;
 
 pub use commands::{
-    complete_item, replace_items, uncomplete_item, ChecklistItemInput, ItemIdArgs, ReplaceItemsArgs,
+    complete_item, replace_items, uncomplete_item, update_config, ChecklistItemInput, ItemIdArgs,
+    ReplaceItemsArgs, UpdateConfigArgs,
 };
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use entities::{ChecklistCompletion, ChecklistItem};

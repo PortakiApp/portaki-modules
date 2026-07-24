@@ -78,6 +78,25 @@ impl ReplaceItemsArgs {
     }
 }
 
+/// Workspace header Save → nested form `{ items: [{ label }] }`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateConfigArgs {
+    #[serde(default)]
+    pub items: Vec<ChecklistItemInput>,
+}
+
+/// Persists checklist items from the host workspace Save chrome.
+#[portaki_sdk::command(name = "updateConfig")]
+pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
+    replace_items(
+        ctx,
+        ReplaceItemsArgs {
+            items: args.items,
+            items_json: None,
+        },
+    )
+}
+
 #[portaki_sdk::command(name = "replaceItems")]
 pub fn replace_items(ctx: Context, args: ReplaceItemsArgs) -> Result<()> {
     let lang = lang_code(&ctx.locale);

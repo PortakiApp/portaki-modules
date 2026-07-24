@@ -14,6 +14,7 @@ define_operation_names! {
     LIST_ITEMS = "listItems",
     REPLACE_ITEMS = "replaceItems",
     UNCOMPLETE_ITEM = "uncompleteItem",
+    UPDATE_CONFIG = "updateConfig",
 }
 
 define_event_types! {
