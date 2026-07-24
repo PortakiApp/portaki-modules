@@ -60,9 +60,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     let save_action = crate::ids::module_id().command(crate::ids::SAVE_SECTION, submit_args);
 
     Surface::new(
-        Page::new().child(
-            Form::new().child(
-                Stack::new().gap(16.0).children(vec![
+        Page::new().child(Form::new().child(Stack::new().gap(16.0).children(vec![
                     Text::new()
                         .text("i18n:surface.host.main.subtitle")
                         .variant(TextVariant::Body)
@@ -89,9 +87,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                         .tone(Tone::Primary)
                         .action(save_action)
                         .into(),
-                ]),
-            ),
-        ),
+                ]))),
     )
     .with_id(crate::ids::HOST_MAIN)
 }
