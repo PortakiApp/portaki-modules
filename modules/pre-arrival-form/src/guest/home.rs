@@ -1,18 +1,112 @@
-//! Guest home booklet card — pre-arrival form or thank-you state.
+//! Guest Accueil formalities card — composes host police fragment + pre-arrival task.
+//!
+//! Design (`Portaki Guest.dc.html` `policeBanner` / `arrivalTasks`): one card with
+//! checklist rows. Police UI is a host fragment; this module never owns regulatory fields.
 
+use portaki_sdk::contracts::host_fragments;
 use portaki_sdk::prelude::*;
-
 use portaki_sdk::sdui::primitives::{
-    Button, Card, Field, Form, Text, TextArea, TextInput, TimePicker,
+    Card, ChecklistItem, HostFragment, ListItem, Stack, Text,
 };
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::FormQuestions;
 
-pub fn build_form_card(questions: &FormQuestions) -> Surface {
-    let submit_action = crate::ids::module_id().command_empty(crate::ids::SUBMIT);
+pub enum FormTaskState {
+    NotYet,
+    Pending,
+    Done,
+}
 
+/// Accueil card matching design « Avant votre arrivée » formalities banner.
+pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
+    let open_form = Action::open_overlay(
+        OverlayPresentation::Fullscreen,
+        crate::ids::GUEST_FORM,
+        OverlayArgs::new()
+            .icon("clipboard")
+            .title("i18n:home.card.title"),
+    );
+
+    let mut children: Vec<Component> = Vec::new();
+
+    let subtitle = match form_state {
+        FormTaskState::Done => "i18n:home.formalities.allReady",
+        FormTaskState::NotYet => "i18n:home.formalities.pendingGate",
+        FormTaskState::Pending => "i18n:home.formalities.pending",
+    };
+
+    children.push(
+        Text::new()
+            .text(subtitle)
+            .variant(TextVariant::Caption)
+            .into(),
+    );
+
+    // Host-owned police task row — shell renders or omits when not required.
+    children.push(
+        HostFragment::new()
+            .fragmentId(host_fragments::POLICE_FORM.as_str())
+            .mode("taskRow")
+            .into(),
+    );
+
+    match form_state {
+        FormTaskState::Done => {
+            children.push(
+                ChecklistItem::new()
+                    .label("i18n:home.task.preArrival.label")
+                    .checked(true)
+                    .into(),
+            );
+        }
+        FormTaskState::NotYet => {
+            children.push(
+                ListItem::new()
+                    .title("i18n:home.task.preArrival.label")
+                    .subtitle("i18n:home.card.notYet")
+                    .leading("clipboard")
+                    .chevron(false)
+                    .into(),
+            );
+        }
+        FormTaskState::Pending => {
+            children.push(
+                ListItem::new()
+                    .title("i18n:home.task.preArrival.label")
+                    .subtitle("i18n:home.task.preArrival.sub")
+                    .leading("clipboard")
+                    .chevron(true)
+                    .action(open_form)
+                    .into(),
+            );
+        }
+    }
+
+    Surface::new(
+        Card::new()
+            .icon("clock-circle")
+            .title("i18n:home.card.title")
+            .child(Stack::new().gap(0.0).children(children)),
+    )
+    .with_id(crate::ids::HOME_CARD)
+}
+
+/// Fullscreen overlay form body (design `prearrivalBody`).
+pub fn build_form_surface(questions: &FormQuestions) -> Surface {
+    use portaki_sdk::sdui::primitives::{
+        Button, Card, Field, Form, Text, TextArea, TextInput, TimePicker,
+    };
+
+    let submit_action = crate::ids::module_id().command_empty(crate::ids::SUBMIT);
     let mut form_children: Vec<Component> = Vec::new();
+
+    form_children.push(
+        Text::new()
+            .text("i18n:home.card.intro")
+            .variant(TextVariant::Body)
+            .into(),
+    );
 
     if questions.ask_arrival_time {
         form_children.push(
@@ -110,28 +204,9 @@ pub fn build_form_card(questions: &FormQuestions) -> Surface {
 
     Surface::new(
         Card::new()
-            .icon("clipboard-list")
+            .icon("clipboard")
             .title("i18n:home.card.title")
-            .child(
-                Text::new()
-                    .text("i18n:home.card.intro")
-                    .variant(TextVariant::Body),
-            )
             .child(Form::new().children(form_children)),
     )
-    .with_id(crate::ids::HOME_CARD)
-}
-
-pub fn build_completed_card() -> Surface {
-    Surface::new(
-        Card::new()
-            .icon("clipboard-list")
-            .title("i18n:home.card.title")
-            .child(
-                Text::new()
-                    .text("i18n:home.card.thanks")
-                    .variant(TextVariant::Body),
-            ),
-    )
-    .with_id(crate::ids::HOME_CARD)
+    .with_id(crate::ids::GUEST_FORM)
 }

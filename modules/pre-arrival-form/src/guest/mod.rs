@@ -1,19 +1,20 @@
 //! Guest booklet surfaces.
 
 mod empty;
+mod form;
 mod home;
 mod load;
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 
-use empty::{empty_not_yet_state, empty_runtime_error_state, log_render_failure};
-use home::{build_completed_card, build_form_card};
+use empty::{empty_runtime_error_state, log_render_failure};
+use home::{build_formalities_card, FormTaskState};
 use load::{load_guest_pre_arrival, GuestLoad};
 
-use crate::config::load_config;
+pub use form::render_guest_form;
 
-/// Guest home card — short pre-arrival form (inline, no overlay).
+/// Guest home card — Accueil formalities composer (police HostFragment + form task).
 #[portaki_sdk::surface(guest, id = "home.card")]
 pub fn render_home_card(ctx: GuestContext) -> Surface {
     match render_with_data(&ctx) {
@@ -28,11 +29,8 @@ pub fn render_home_card(ctx: GuestContext) -> Surface {
 fn render_with_data(ctx: &GuestContext) -> Result<Surface> {
     match load_guest_pre_arrival(ctx)? {
         GuestLoad::Empty(surface) => Ok(*surface),
-        GuestLoad::NotYet => Ok(empty_not_yet_state(crate::ids::HOME_CARD)),
-        GuestLoad::Form => {
-            let config = load_config().unwrap_or_default();
-            Ok(build_form_card(&config.questions))
-        }
-        GuestLoad::Completed => Ok(build_completed_card()),
+        GuestLoad::NotYet => Ok(build_formalities_card(FormTaskState::NotYet)),
+        GuestLoad::Form => Ok(build_formalities_card(FormTaskState::Pending)),
+        GuestLoad::Completed => Ok(build_formalities_card(FormTaskState::Done)),
     }
 }

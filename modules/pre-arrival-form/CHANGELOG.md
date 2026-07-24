@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.4.0]
+
+### Added
+
+- Accueil formalities card composes host `regulatory.police-form` via SDUI
+  `HostFragment` (no module-named branching in guest/platform).
+- Guest surface `guest.form` — fullscreen overlay for the questionnaire.
+- Manifest `guestSurfaces`: `role: arrival-formality` +
+  `embedsHostFragments: [regulatory.police-form]`.
+
+### Changed
+
+- `home.card` is a checklist composer (design banner) instead of an inline form.
+
 ## [0.3.3]
 
 ### Fixed
