@@ -8,9 +8,10 @@ use uuid::Uuid;
 
 use portaki_test_utils::{MockContext, Property};
 use pre_arrival_form::{
-    get_status, render_home_card, render_host_main, render_host_stay, reset_test_store, submit,
-    SubmitArgs,
+    get_status, load_config, render_home_card, render_host_main, render_host_stay, reset_test_store,
+    submit, update_config, ShowWhen, SubmitArgs, UpdateConfigArgs,
 };
+use serde_json::json;
 
 fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
     fn walk(node: &Component, type_name: &str) -> bool {
@@ -23,6 +24,9 @@ fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
             Component::Button(_) if type_name == "Button" => true,
             Component::TimePicker(_) if type_name == "TimePicker" => true,
             Component::TextArea(_) if type_name == "TextArea" => true,
+            Component::ChoiceList(_) if type_name == "ChoiceList" => true,
+            Component::ToggleRow(_) if type_name == "ToggleRow" => true,
+            Component::Grid(_) if type_name == "Grid" => true,
             Component::Pill(_) if type_name == "Pill" => true,
             Component::ListItem(_) if type_name == "ListItem" => true,
             Component::Stack(_) if type_name == "Stack" => true,
@@ -51,7 +55,20 @@ fn child_components(node: &Component) -> Vec<&Component> {
         Component::Page(inner) => inner.children.iter().collect(),
         Component::Field(inner) => inner.children.iter().collect(),
         Component::ListItem(inner) => inner.children.iter().collect(),
+        Component::Grid(inner) => inner.children.iter().collect(),
         _ => Vec::new(),
+    }
+}
+
+fn sample_submit() -> SubmitArgs {
+    SubmitArgs {
+        arrival_time_estimated: Some("17:30".into()),
+        guest_occasion: Some("Anniversaire".into()),
+        guest_allergies: None,
+        guest_count: Some("2".into()),
+        special_needs: None,
+        id_document: None,
+        message_to_host: Some("Merci !".into()),
     }
 }
 
@@ -84,16 +101,7 @@ fn submit_then_status_and_thanks_card() {
             let before = get_status(ctx.clone()).expect("status");
             assert!(!before.completed);
 
-            submit(
-                ctx.clone(),
-                SubmitArgs {
-                    arrival_time_estimated: Some("17:30".into()),
-                    guest_occasion: Some("Anniversaire".into()),
-                    guest_allergies: None,
-                    message_to_host: Some("Merci !".into()),
-                },
-            )
-            .expect("submit");
+            submit(ctx.clone(), sample_submit()).expect("submit");
 
             let after = get_status(ctx.clone()).expect("status after");
             assert!(after.completed);
@@ -109,14 +117,84 @@ fn submit_then_status_and_thanks_card() {
 
 #[test]
 #[serial]
-fn host_main_renders_page() {
+fn host_main_renders_config_editor() {
     reset_test_store();
     MockContext::host()
         .with_property(Property::default())
         .run(|ctx| {
             let surface = render_host_main(ctx);
             assert!(contains_component_type(&surface, "Page"));
-            assert!(contains_component_type(&surface, "Text"));
+            assert!(contains_component_type(&surface, "Form"));
+            assert!(contains_component_type(&surface, "ChoiceList"));
+            assert!(contains_component_type(&surface, "ToggleRow"));
+            assert!(contains_component_type(&surface, "Grid"));
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("show_when"));
+            assert!(json.contains("ask_arrival_time"));
+            assert!(json.contains("ask_id_document"));
+            assert!(json.contains("host.section.when"));
+            assert!(json.contains("host.section.questions"));
+        });
+}
+
+#[test]
+#[serial]
+fn update_config_persists_show_when_and_questions() {
+    reset_test_store();
+    MockContext::host().run(|ctx| {
+            update_config(
+                ctx,
+                UpdateConfigArgs {
+                    show_when: "checkin".into(),
+                    ask_arrival_time: true,
+                    ask_occasion: false,
+                    ask_allergies: true,
+                    ask_guest_count: false,
+                    ask_special_needs: true,
+                    ask_id_document: true,
+                },
+            )
+            .expect("updateConfig");
+
+        let cfg = load_config().expect("config");
+        assert_eq!(cfg.show_when, ShowWhen::Checkin);
+        assert!(cfg.questions.ask_arrival_time);
+        assert!(!cfg.questions.ask_occasion);
+        assert!(cfg.questions.ask_allergies);
+        assert!(!cfg.questions.ask_guest_count);
+        assert!(cfg.questions.ask_special_needs);
+        assert!(cfg.questions.ask_id_document);
+    });
+}
+
+#[test]
+#[serial]
+fn guest_form_respects_question_toggles() {
+    reset_test_store();
+    let config_bytes = serde_json::to_vec(&json!({
+        "show_when": "confirm",
+        "questions": {
+            "ask_arrival_time": true,
+            "ask_occasion": false,
+            "ask_allergies": true,
+            "ask_guest_count": false,
+            "ask_special_needs": true,
+            "ask_id_document": true
+        }
+    }))
+    .expect("config json");
+
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_kv("config", config_bytes)
+        .run(|ctx| {
+            let surface = render_home_card(ctx);
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("form.arrival.label"));
+            assert!(!json.contains("form.occasion.label"));
+            assert!(json.contains("form.specialNeeds.label"));
+            assert!(json.contains("form.idDocument.label"));
+            assert!(!json.contains("form.guestCount.label"));
         });
 }
 
@@ -164,6 +242,9 @@ fn host_stay_surface_shows_completed_response() {
                     arrival_time_estimated: Some("17:30".into()),
                     guest_occasion: Some("Lune de miel".into()),
                     guest_allergies: Some("Fruits à coque".into()),
+                    guest_count: None,
+                    special_needs: None,
+                    id_document: None,
                     message_to_host: Some("Champagne au frais".into()),
                 },
             )

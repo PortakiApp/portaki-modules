@@ -1,9 +1,9 @@
 [package]
 name = "pre-arrival-form"
-version = "0.2.2"
+version = "0.3.0"
 edition.workspace = true
 license.workspace = true
-description = "Portaki pre-arrival form — ETA, occasion, allergies, message to host"
+description = "Portaki pre-arrival form — host-configurable ETA, occasion, allergies, and more"
 repository.workspace = true
 homepage.workspace = true
 publish = false

@@ -41,11 +41,15 @@ pub fn find_by_stay(stay_id: Uuid) -> Result<Option<PreArrivalResponse>> {
 }
 
 /// Upserts the response for a stay.
+#[allow(clippy::too_many_arguments)]
 pub fn upsert(
     stay_id: Uuid,
     arrival_time: Option<String>,
     occasion: Option<String>,
     allergies: Option<String>,
+    guest_count: Option<String>,
+    special_needs: Option<String>,
+    id_document: Option<String>,
     guest_message: Option<String>,
 ) -> Result<PreArrivalResponse> {
     let now = time::now()?;
@@ -57,6 +61,9 @@ pub fn upsert(
             arrival_time,
             occasion,
             allergies,
+            guest_count,
+            special_needs,
+            id_document,
             guest_message,
             completed_at: now,
         };
@@ -69,6 +76,9 @@ pub fn upsert(
         arrival_time,
         occasion,
         allergies,
+        guest_count,
+        special_needs,
+        id_document,
         guest_message,
         completed_at: now,
     };
