@@ -19,13 +19,21 @@ fn status_tone(wire: &str) -> Tone {
 /// Visual row — label, level (+ note), status pill, relative age.
 pub(crate) fn build_report_list_item(report: &ConsumableReport, locale: &str) -> Component {
     let level_label = level_label_plain(report.level.as_str(), locale);
-    let subtitle = match report.note.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
+    let subtitle = match report
+        .note
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+    {
         Some(note) => format!("{level_label} · {note}"),
         None => level_label,
     };
     let when = format_relative_when(report.created_at, locale);
     let pill = Pill::new()
-        .label(format!("i18n:{}", status::status_label_key(report.status.as_str())))
+        .label(format!(
+            "i18n:{}",
+            status::status_label_key(report.status.as_str())
+        ))
         .tone(status_tone(report.status.as_str()));
 
     Component::ListItem(

@@ -46,9 +46,7 @@ pub fn list_items() -> Result<Vec<ConsumableItem>> {
 /// Loads a catalog item by id.
 pub fn find_item(id: Uuid) -> Result<Option<ConsumableItem>> {
     if in_memory_enabled() {
-        return Ok(TEST_ITEMS.with(|store| {
-            store.borrow().iter().find(|row| row.id == id).cloned()
-        }));
+        return Ok(TEST_ITEMS.with(|store| store.borrow().iter().find(|row| row.id == id).cloned()));
     }
     repo::find_by_id::<ConsumableItem, ConsumableItem>(id)
 }
@@ -85,8 +83,9 @@ pub fn list_recent() -> Result<Vec<ConsumableReport>> {
     let mut rows = if in_memory_enabled() {
         TEST_REPORTS.with(|store| store.borrow().clone())
     } else {
-        let page =
-            find::<ConsumableReport, ConsumableReport>(Query::<ConsumableReport>::new().limit(200))?;
+        let page = find::<ConsumableReport, ConsumableReport>(
+            Query::<ConsumableReport>::new().limit(200),
+        )?;
         page.items
     };
     sort_newest_first(&mut rows);
@@ -136,9 +135,9 @@ pub fn create_report(
 /// Loads a report by id.
 pub fn find_report(id: Uuid) -> Result<Option<ConsumableReport>> {
     if in_memory_enabled() {
-        return Ok(TEST_REPORTS.with(|store| {
-            store.borrow().iter().find(|row| row.id == id).cloned()
-        }));
+        return Ok(
+            TEST_REPORTS.with(|store| store.borrow().iter().find(|row| row.id == id).cloned())
+        );
     }
     repo::find_by_id::<ConsumableReport, ConsumableReport>(id)
 }
@@ -168,7 +167,8 @@ pub fn replace_items_preserving_ids(
         }
     }
     let now = time::now()?;
-    for (index, (id, label_fr, label_en, sort_order, low_threshold)) in items.into_iter().enumerate()
+    for (index, (id, label_fr, label_en, sort_order, low_threshold)) in
+        items.into_iter().enumerate()
     {
         let order = if sort_order == 0 && index > 0 {
             index as i32

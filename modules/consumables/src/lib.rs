@@ -21,8 +21,8 @@ pub use guest::render_home_card;
 pub use host::{render_host_main, render_host_stats, render_host_stay};
 pub use level::DEFAULT as LEVEL_DEFAULT;
 pub use queries::{
-    list_for_stay, list_items, list_open_count, list_recent, ConsumableItemDto, ConsumableReportRow,
-    ListForStayArgs, OpenCountDto,
+    list_for_stay, list_items, list_open_count, list_recent, ConsumableItemDto,
+    ConsumableReportRow, ListForStayArgs, OpenCountDto,
 };
 pub use status::DEFAULT as STATUS_DEFAULT;
 pub use storage::reset_test_store;
