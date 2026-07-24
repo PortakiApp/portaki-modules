@@ -22,6 +22,7 @@
   "host.create.description.placeholder": "Ex. Chargeur MacBook oublié dans le tiroir du bureau, doudou enfant sous le lit…",
   "host.create.hint": "Le voyageur reçoit un email pour organiser le renvoi. Vous retrouvez l'objet dans l'historique du séjour.",
   "host.create.submit": "Envoyer au voyageur",
+  "host.create.cancel": "Annuler",
   "host.stay.listTitle": "Objets déclarés",
   "host.stay.empty": "Aucun objet déclaré pour ce séjour.",
   "host.stay.missingStay": "Séjour manquant — rechargez la page.",

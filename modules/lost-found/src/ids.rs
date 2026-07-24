@@ -6,6 +6,7 @@ define_surface_ids! {
     HOME_CARD = "home.card",
     HOST_MAIN = "main",
     HOST_STAY = "stay",
+    HOST_CREATE = "create",
 }
 
 define_operation_names! {

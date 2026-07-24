@@ -4,10 +4,10 @@ use serial_test::serial;
 use uuid::Uuid;
 
 use lost_found::{
-    build_email_context, list_for_stay, list_recent, render_home_card, render_host_main,
-    render_host_stay, reset_test_store, submit, submit_found, update_config, update_status,
-    EmailContextArgs, ListForStayArgs, SubmitArgs, SubmitFoundArgs, UpdateConfigArgs,
-    UpdateStatusArgs, STATUS_DEFAULT,
+    build_email_context, list_for_stay, list_recent, render_home_card, render_host_create,
+    render_host_main, render_host_stay, reset_test_store, submit, submit_found, update_config,
+    update_status, EmailContextArgs, ListForStayArgs, SubmitArgs, SubmitFoundArgs,
+    UpdateConfigArgs, UpdateStatusArgs, STATUS_DEFAULT,
 };
 use portaki_sdk::prelude::EmailTemplateKey;
 use portaki_sdk::sdui::component::Component;
@@ -331,7 +331,7 @@ fn host_submit_found_always_defaults_status_to_collect() {
 
 #[test]
 #[serial]
-fn host_stay_surface_renders_create_form() {
+fn host_create_surface_renders_declare_form() {
     reset_test_store();
     let stay_id = Uuid::new_v4();
 
@@ -343,18 +343,37 @@ fn host_stay_surface_renders_create_form() {
                 "guestName": "Marie Dupont",
                 "stayDates": "12–15 juil.",
             });
-            let surface = render_host_stay(ctx);
+            let surface = render_host_create(ctx);
             assert!(contains_component_type(&surface, "Page"));
             assert!(contains_component_type(&surface, "Form"));
-            assert!(contains_component_type(&surface, "HeaderTitle"));
             assert!(contains_component_type(&surface, "TextArea"));
             assert!(contains_component_type(&surface, "FieldHint"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("submitFound") || json.contains("host.create.submit"));
-            assert!(json.contains("Marie Dupont"));
             assert!(json.contains("host.create.description.label") || json.contains("description"));
-            // Create form has no status picker; empty stay list has no status Select either.
+            // Modal chrome owns title / Annuler — form body has no HeaderTitle.
+            assert!(!json.contains("HeaderTitle"));
             assert!(!json.contains("host.main.status.label"));
+        });
+}
+
+#[test]
+#[serial]
+fn host_stay_surface_is_list_only() {
+    reset_test_store();
+    let stay_id = Uuid::new_v4();
+
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|mut ctx| {
+            ctx.input = serde_json::json!({ "stayId": stay_id.to_string() });
+            let surface = render_host_stay(ctx);
+            assert!(contains_component_type(&surface, "Page"));
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("host.stay.empty") || json.contains("host.stay.listTitle"));
+            assert!(!json.contains("submitFound"));
+            assert!(!json.contains("host.create.submit"));
+            assert!(!json.contains("TextArea"));
         });
 }
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0]
+
+### Added
+
+- Host surface `create` declared as `stay-action` — dashboard shows « Déclarer un
+  objet trouvé » as a stay action button that opens a modal (form body only).
+- Create form submits via `submitFound`; modal shell owns title / dismiss chrome.
+
+### Changed
+
+- Host `stay` is list/status only (no always-visible create form).
+
 ## [0.2.1]
 
 ### Fixed

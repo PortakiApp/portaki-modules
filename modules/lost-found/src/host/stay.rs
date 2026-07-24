@@ -1,4 +1,4 @@
-//! Stay-scoped host surface — design `foundObjectModal` / mobile `sheetFound`.
+//! Stay-scoped host surface — list / status for one stay (create is stay-action).
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{List, Page, Text};
@@ -7,10 +7,9 @@ use uuid::Uuid;
 
 use crate::storage;
 
-use super::create::build_create_found_form;
 use super::status_ui::build_report_block;
 
-/// Stay detail embed — declare found (modal layout) + stay reports / status.
+/// Stay detail embed — reports / status for the stay (no create form).
 #[portaki_sdk::surface(host, id = "stay")]
 pub fn render_host_stay(ctx: HostContext) -> Surface {
     let stay_id = ctx
@@ -18,35 +17,33 @@ pub fn render_host_stay(ctx: HostContext) -> Surface {
         .and_then(|raw| Uuid::parse_str(raw).ok());
     let locale = ctx.locale.as_str();
 
-    let mut children: Vec<Component> = vec![build_create_found_form(&ctx)];
-
-    match stay_id {
-        None => {}
+    let children: Vec<Component> = match stay_id {
+        None => vec![Text::new()
+            .text("i18n:host.stay.missingStay")
+            .variant(TextVariant::Caption)
+            .into()],
         Some(stay_id) => {
             let reports = storage::list_by_stay(stay_id).unwrap_or_default();
             if reports.is_empty() {
-                children.push(
-                    Text::new()
-                        .text("i18n:host.stay.empty")
-                        .variant(TextVariant::Caption)
-                        .into(),
-                );
+                vec![Text::new()
+                    .text("i18n:host.stay.empty")
+                    .variant(TextVariant::Caption)
+                    .into()]
             } else {
-                children.push(
-                    Text::new()
-                        .text("i18n:host.stay.listTitle")
-                        .variant(TextVariant::Title)
-                        .into(),
-                );
                 let items: Vec<Component> = reports
                     .iter()
                     .map(|report| build_report_block(report, locale))
                     .collect();
-                children.push(Component::List(List::new().children(items)));
+                vec![
+                    Text::new()
+                        .text("i18n:host.stay.listTitle")
+                        .variant(TextVariant::Title)
+                        .into(),
+                    Component::List(List::new().children(items)),
+                ]
             }
         }
-    }
+    };
 
-    // No Page title — HeaderTitle inside the create block owns the modal chrome.
     Surface::new(Page::new().children(children)).with_id(crate::ids::HOST_STAY)
 }

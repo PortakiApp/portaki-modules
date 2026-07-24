@@ -22,6 +22,7 @@
   "host.create.description.placeholder": "e.g. MacBook charger left in the desk drawer, child’s soft toy under the bed…",
   "host.create.hint": "The guest receives an email to arrange return. You’ll find the item in the stay history.",
   "host.create.submit": "Send to guest",
+  "host.create.cancel": "Cancel",
   "host.stay.listTitle": "Declared items",
   "host.stay.empty": "No items declared for this stay.",
   "host.stay.missingStay": "Missing stay — reload the page.",
