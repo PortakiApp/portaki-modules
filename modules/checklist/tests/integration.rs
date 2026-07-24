@@ -17,6 +17,8 @@ fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
             Component::Text(_) if type_name == "Text" => true,
             Component::EmptyState(_) if type_name == "EmptyState" => true,
             Component::ChecklistItem(_) if type_name == "ChecklistItem" => true,
+            Component::IndexedInput(_) if type_name == "IndexedInput" => true,
+            Component::Grid(_) if type_name == "Grid" => true,
             Component::Pressable(_) if type_name == "Pressable" => true,
             Component::Form(_) if type_name == "Form" => true,
             Component::Page(_) if type_name == "Page" => true,
@@ -39,6 +41,7 @@ fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
 fn child_components(node: &Component) -> Vec<&Component> {
     match node {
         Component::Stack(inner) => inner.children.iter().collect(),
+        Component::Grid(inner) => inner.children.iter().collect(),
         Component::Card(inner) => inner.children.iter().collect(),
         Component::EmptyState(inner) => inner.children.iter().collect(),
         Component::Group(inner) => inner.children.iter().collect(),
@@ -148,6 +151,12 @@ fn host_main_renders_form() {
             let surface = render_host_main(ctx);
             assert!(contains_component_type(&surface, "Page"));
             assert!(contains_component_type(&surface, "Form"));
+            assert!(contains_component_type(&surface, "Card"));
+            assert!(contains_component_type(&surface, "Grid"));
+            assert!(contains_component_type(&surface, "IndexedInput"));
             assert!(contains_component_type(&surface, "Button"));
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("host.item.empty"));
+            assert!(json.contains("items.0.label"));
         });
 }
