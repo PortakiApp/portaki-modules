@@ -41,7 +41,11 @@ mod tests {
 
     #[test]
     fn confirm_always_available() {
-        assert!(is_form_available(ShowWhen::Confirm, utc("2026-07-01T10:00:00Z"), None));
+        assert!(is_form_available(
+            ShowWhen::Confirm,
+            utc("2026-07-01T10:00:00Z"),
+            None
+        ));
     }
 
     #[test]

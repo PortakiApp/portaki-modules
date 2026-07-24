@@ -40,8 +40,7 @@ impl ShowWhen {
         }
     }
 
-    pub const CHOICE_LIST_WIRE_VALUES: &'static [&'static str] =
-        &["confirm", "before", "checkin"];
+    pub const CHOICE_LIST_WIRE_VALUES: &'static [&'static str] = &["confirm", "before", "checkin"];
 }
 
 /// Which guest form questions are active.

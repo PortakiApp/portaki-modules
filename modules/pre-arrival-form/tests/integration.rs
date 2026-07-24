@@ -8,8 +8,8 @@ use uuid::Uuid;
 
 use portaki_test_utils::{MockContext, Property};
 use pre_arrival_form::{
-    get_status, load_config, render_home_card, render_host_main, render_host_stay, reset_test_store,
-    submit, update_config, ShowWhen, SubmitArgs, UpdateConfigArgs,
+    get_status, load_config, render_home_card, render_host_main, render_host_stay,
+    reset_test_store, submit, update_config, ShowWhen, SubmitArgs, UpdateConfigArgs,
 };
 use serde_json::json;
 
@@ -142,19 +142,19 @@ fn host_main_renders_config_editor() {
 fn update_config_persists_show_when_and_questions() {
     reset_test_store();
     MockContext::host().run(|ctx| {
-            update_config(
-                ctx,
-                UpdateConfigArgs {
-                    show_when: "checkin".into(),
-                    ask_arrival_time: true,
-                    ask_occasion: false,
-                    ask_allergies: true,
-                    ask_guest_count: false,
-                    ask_special_needs: true,
-                    ask_id_document: true,
-                },
-            )
-            .expect("updateConfig");
+        update_config(
+            ctx,
+            UpdateConfigArgs {
+                show_when: "checkin".into(),
+                ask_arrival_time: true,
+                ask_occasion: false,
+                ask_allergies: true,
+                ask_guest_count: false,
+                ask_special_needs: true,
+                ask_id_document: true,
+            },
+        )
+        .expect("updateConfig");
 
         let cfg = load_config().expect("config");
         assert_eq!(cfg.show_when, ShowWhen::Checkin);
