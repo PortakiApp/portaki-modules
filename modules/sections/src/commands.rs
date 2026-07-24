@@ -9,7 +9,9 @@ use crate::store;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SaveSectionArgs {
-    pub id: Option<Uuid>,
+    /// Section id from host form (`""` / missing → create).
+    #[serde(default)]
+    pub id: Option<String>,
     pub sort_order: Option<i32>,
     #[serde(default)]
     pub locales: Vec<SectionLocaleInput>,
@@ -59,7 +61,17 @@ pub fn save_section(ctx: Context, args: SaveSectionArgs) -> Result<SectionView> 
     if !args.title_en.trim().is_empty() || !args.body_markdown_en.trim().is_empty() {
         upsert_locale(&mut locales, "en", args.title_en, args.body_markdown_en);
     }
-    store::save_section(args.id, args.sort_order, locales)
+    let id = parse_optional_uuid(args.id.as_deref())?;
+    store::save_section(id, args.sort_order, locales)
+}
+
+fn parse_optional_uuid(raw: Option<&str>) -> Result<Option<Uuid>> {
+    let Some(value) = raw.map(str::trim).filter(|s| !s.is_empty()) else {
+        return Ok(None);
+    };
+    Uuid::parse_str(value)
+        .map(Some)
+        .map_err(|error| PortakiError::Host(format!("invalid section id: {error}")))
 }
 
 #[portaki_sdk::command(name = "deleteSection")]

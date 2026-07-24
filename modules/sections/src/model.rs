@@ -25,7 +25,10 @@ pub struct SectionView {
 
 impl SectionView {
     pub fn is_blank(&self) -> bool {
-        self.title.trim().is_empty() && self.body_markdown.trim().is_empty()
+        self.title.trim().is_empty()
+            && crate::content::body_plain_text(&self.body_markdown)
+                .trim()
+                .is_empty()
     }
 }
 
