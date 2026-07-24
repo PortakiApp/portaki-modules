@@ -206,5 +206,6 @@ pub fn build_form_surface(questions: &FormQuestions) -> Surface {
     );
 
     // Page chrome owns the title; body is a single surface card (design `prearrivalBody`).
-    Surface::new(Card::new().child(Form::new().children(form_children))).with_id(crate::ids::GUEST_FORM)
+    Surface::new(Card::new().child(Form::new().children(form_children)))
+        .with_id(crate::ids::GUEST_FORM)
 }
