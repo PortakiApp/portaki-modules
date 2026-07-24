@@ -10,9 +10,9 @@ use chrono::{Duration, Utc};
 use portaki_sdk::prelude::StayContext;
 use portaki_test_utils::{MockContext, Property};
 use pre_arrival_form::{
-    get_status, load_config, render_home_card, render_host_main, render_host_stay,
-    reset_test_store, send_form_available, submit, update_config, ShowWhen, SubmitArgs,
-    UpdateConfigArgs,
+    get_status, load_config, render_guest_form, render_home_card, render_host_main,
+    render_host_stay, reset_test_store, send_form_available, submit, update_config, ShowWhen,
+    SubmitArgs, UpdateConfigArgs,
 };
 use serde_json::json;
 
@@ -33,6 +33,8 @@ fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
             Component::Pill(_) if type_name == "Pill" => true,
             Component::ListItem(_) if type_name == "ListItem" => true,
             Component::Stack(_) if type_name == "Stack" => true,
+            Component::HostFragment(_) if type_name == "HostFragment" => true,
+            Component::ChecklistItem(_) if type_name == "ChecklistItem" => true,
             _ => false,
         };
         if matches {
@@ -82,15 +84,24 @@ fn home_card_renders_form_when_incomplete() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx.clone());
             assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "Form"));
-            assert!(contains_component_type(&surface, "TimePicker"));
-            assert!(contains_component_type(&surface, "TextArea"));
-            assert!(contains_component_type(&surface, "Button"));
+            assert!(contains_component_type(&surface, "HostFragment"));
+            assert!(contains_component_type(&surface, "ListItem"));
             let json = serde_json::to_string(&surface).expect("surface json");
-            assert!(json.contains("home.card.intro"));
-            assert!(json.contains("submit"));
+            assert!(json.contains("home.formalities.pending"));
+            assert!(json.contains("home.task.preArrival.label"));
+            assert!(json.contains("guest.form"));
+            assert!(!json.contains("TimePicker"));
+
+            let form = render_guest_form(ctx);
+            assert!(contains_component_type(&form, "Form"));
+            assert!(contains_component_type(&form, "TimePicker"));
+            assert!(contains_component_type(&form, "TextArea"));
+            assert!(contains_component_type(&form, "Button"));
+            let form_json = serde_json::to_string(&form).expect("form json");
+            assert!(form_json.contains("home.card.intro"));
+            assert!(form_json.contains("submit"));
         });
 }
 
@@ -112,8 +123,11 @@ fn submit_then_status_and_thanks_card() {
             assert_eq!(after.guest_occasion.as_deref(), Some("Anniversaire"));
 
             let surface = render_home_card(ctx);
+            assert!(contains_component_type(&surface, "ChecklistItem"));
+            assert!(contains_component_type(&surface, "HostFragment"));
             let json = serde_json::to_string(&surface).expect("surface json");
-            assert!(json.contains("home.card.thanks"));
+            assert!(json.contains("home.formalities.allReady"));
+            assert!(json.contains("home.task.preArrival.label"));
             assert!(!json.contains("TimePicker"));
         });
 }
@@ -151,8 +165,11 @@ fn home_card_hides_when_form_not_yet_available() {
             });
 
             let surface = render_home_card(ctx);
-            assert!(contains_component_type(&surface, "EmptyState"));
+            assert!(contains_component_type(&surface, "Card"));
+            assert!(contains_component_type(&surface, "HostFragment"));
+            assert!(contains_component_type(&surface, "ListItem"));
             let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("home.formalities.pendingGate"));
             assert!(json.contains("home.card.notYet"));
             assert!(!json.contains("home.card.intro"));
             assert!(!json.contains("TimePicker"));
@@ -347,7 +364,7 @@ fn guest_form_respects_question_toggles() {
         .with_property(Property::default())
         .with_kv("config", config_bytes)
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_guest_form(ctx);
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("form.arrival.label"));
             assert!(!json.contains("form.occasion.label"));
