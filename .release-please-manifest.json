@@ -17,6 +17,6 @@
   "modules/waste-recycling": "0.2.1",
   "modules/emergency-contacts": "0.2.1",
   "modules/local-guide": "0.2.1",
-  "modules/checklist": "0.2.1",
+  "modules/checklist": "0.2.2",
   "modules/facility-hours": "0.2.1"
 }
