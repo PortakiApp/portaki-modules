@@ -67,17 +67,13 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     );
 
     Surface::new(
-        Page::new().child(
-            Form::new().child(
-                Stack::new().gap(16.0).children(vec![
+        Page::new().child(Form::new().child(Stack::new().gap(16.0).children(vec![
                     Text::new()
                         .text("i18n:surface.host.main.subtitle")
                         .variant(TextVariant::Body)
                         .into(),
                     Component::Stack(Stack::new().gap(16.0).children(cards)),
-                ]),
-            ),
-        ),
+                ]))),
     )
     .with_id(crate::ids::HOST_MAIN)
 }
