@@ -159,15 +159,16 @@ fn host_main_renders_form() {
             assert!(!contains_component_type(&surface, "Button"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("host.item.empty"));
-            // Empty list → length + 1 = one slot only.
+            // Wasm emits all slots; host binding keeps one trailing empty while typing.
             assert!(json.contains("items.0.label"));
-            assert!(!json.contains("items.1.label"));
+            assert!(json.contains("items.5.label"));
+            assert!(!json.contains("items.6.label"));
         });
 }
 
 #[test]
 #[serial]
-fn host_main_shows_filled_plus_one_slot() {
+fn host_main_emits_all_item_slots() {
     reset_test_store();
     MockContext::host()
         .with_property(Property::default())
@@ -189,7 +190,8 @@ fn host_main_shows_filled_plus_one_slot() {
             let json = serde_json::to_string(&render_host_main(ctx)).expect("surface json");
             assert!(json.contains("items.0.label"));
             assert!(json.contains("items.1.label"));
-            assert!(!json.contains("items.2.label"));
+            assert!(json.contains("items.5.label"));
+            assert!(!json.contains("items.6.label"));
         });
 }
 

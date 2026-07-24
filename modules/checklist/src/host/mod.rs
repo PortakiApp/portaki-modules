@@ -13,20 +13,15 @@ const ITEM_SLOTS: usize = 6;
 
 /// Host checklist editor — indexed tiles → `updateConfig` / `replaceItems`.
 ///
-/// Shows `filled + 1` slots (capped at [`ITEM_SLOTS`]) so an empty list renders
-/// a single input to start typing.
+/// Emits all [`ITEM_SLOTS`] inputs. The host `IndexedInput` binding keeps one
+/// trailing empty slot from draft form values (empty → 1 blank; typing → +1).
 #[portaki_sdk::surface(host, id = "main")]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = lang_code(&ctx.locale);
     let items = storage::list_items().unwrap_or_default();
-    let filled = items
-        .iter()
-        .filter(|item| !labels::get_label(item, &lang).trim().is_empty())
-        .count();
-    let slot_count = (filled + 1).min(ITEM_SLOTS);
 
-    let mut tiles: Vec<Component> = Vec::with_capacity(slot_count);
-    for index in 0..slot_count {
+    let mut tiles: Vec<Component> = Vec::with_capacity(ITEM_SLOTS);
+    for index in 0..ITEM_SLOTS {
         let label = items
             .get(index)
             .map(|item| labels::get_label(item, &lang))

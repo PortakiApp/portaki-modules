@@ -23,7 +23,7 @@ Host workspace tab: `pathSegment = checklist` (surface `main`).
 | Shell | Surface id | Description |
 |-------|------------|-------------|
 | guest | `home.card` | Progress caption + inline toggles (no overlay) |
-| host | `main` | Item slots (`filled + 1`, max 6) → workspace Save → `updateConfig` |
+| host | `main` | Item slots (max 6; host keeps one trailing empty while typing) → workspace Save → `updateConfig` |
 
 ## Queries and commands
 
