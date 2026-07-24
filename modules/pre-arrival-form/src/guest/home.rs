@@ -1,11 +1,11 @@
 //! Guest Accueil formalities card — composes host police fragment + pre-arrival task.
 //!
-//! Design (`Portaki Guest.dc.html` `policeBanner` / `arrivalTasks`): one card with
+//! Design (`Portaki Guest.dc.html` `policeBanner` / `arrivalTasks`): one tinted banner with
 //! checklist rows. Police UI is a host fragment; this module never owns regulatory fields.
 
 use portaki_sdk::contracts::host_fragments;
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Card, ChecklistItem, HostFragment, ListItem, Stack, Text};
+use portaki_sdk::sdui::primitives::{Card, HostFragment, ListItem, Stack};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::FormQuestions;
@@ -26,20 +26,18 @@ pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
             .title("i18n:home.card.title"),
     );
 
-    let mut children: Vec<Component> = Vec::new();
-
     let subtitle = match form_state {
         FormTaskState::Done => "i18n:home.formalities.allReady",
         FormTaskState::NotYet => "i18n:home.formalities.pendingGate",
         FormTaskState::Pending => "i18n:home.formalities.pending",
     };
 
-    children.push(
-        Text::new()
-            .text(subtitle)
-            .variant(TextVariant::Caption)
-            .into(),
-    );
+    let icon = match form_state {
+        FormTaskState::Done => "check-circle",
+        FormTaskState::NotYet | FormTaskState::Pending => "clock-circle",
+    };
+
+    let mut children: Vec<Component> = Vec::new();
 
     // Host-owned police task row — shell renders or omits when not required.
     children.push(
@@ -52,9 +50,11 @@ pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
     match form_state {
         FormTaskState::Done => {
             children.push(
-                ChecklistItem::new()
-                    .label("i18n:home.task.preArrival.label")
-                    .checked(true)
+                ListItem::new()
+                    .title("i18n:home.task.preArrival.label")
+                    .subtitle("i18n:home.task.completed")
+                    .leading("clipboard")
+                    .chevron(false)
                     .into(),
             );
         }
@@ -83,8 +83,13 @@ pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
 
     Surface::new(
         Card::new()
-            .icon("clock-circle")
+            .icon(icon)
             .title("i18n:home.card.title")
+            .subtitle(subtitle)
+            .tone(match form_state {
+                FormTaskState::Done => Tone::Success,
+                FormTaskState::NotYet | FormTaskState::Pending => Tone::Primary,
+            })
             .child(Stack::new().gap(0.0).children(children)),
     )
     .with_id(crate::ids::HOME_CARD)
@@ -200,11 +205,6 @@ pub fn build_form_surface(questions: &FormQuestions) -> Surface {
             .into(),
     );
 
-    Surface::new(
-        Card::new()
-            .icon("clipboard")
-            .title("i18n:home.card.title")
-            .child(Form::new().children(form_children)),
-    )
-    .with_id(crate::ids::GUEST_FORM)
+    // Page chrome owns the title; body is a single surface card (design `prearrivalBody`).
+    Surface::new(Card::new().child(Form::new().children(form_children))).with_id(crate::ids::GUEST_FORM)
 }

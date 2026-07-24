@@ -27,14 +27,11 @@ fn render_form(ctx: &GuestContext) -> Result<Surface> {
         GuestLoad::Empty(surface) => Ok(*surface),
         GuestLoad::NotYet => Ok(empty_not_yet_state(crate::ids::GUEST_FORM)),
         GuestLoad::Completed => Ok(Surface::new(
-            Card::new()
-                .icon("clipboard")
-                .title("i18n:home.card.title")
-                .child(
-                    Text::new()
-                        .text("i18n:home.card.thanks")
-                        .variant(TextVariant::Body),
-                ),
+            Card::new().child(
+                Text::new()
+                    .text("i18n:home.card.thanks")
+                    .variant(TextVariant::Body),
+            ),
         )
         .with_id(crate::ids::GUEST_FORM)),
         GuestLoad::Form => {

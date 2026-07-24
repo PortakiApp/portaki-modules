@@ -123,11 +123,13 @@ fn submit_then_status_and_thanks_card() {
             assert_eq!(after.guest_occasion.as_deref(), Some("Anniversaire"));
 
             let surface = render_home_card(ctx);
-            assert!(contains_component_type(&surface, "ChecklistItem"));
+            assert!(contains_component_type(&surface, "ListItem"));
             assert!(contains_component_type(&surface, "HostFragment"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("home.formalities.allReady"));
+            assert!(json.contains("home.task.completed"));
             assert!(json.contains("home.task.preArrival.label"));
+            assert!(json.contains("check-circle"));
             assert!(!json.contains("TimePicker"));
         });
 }
