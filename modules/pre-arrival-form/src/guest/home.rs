@@ -5,9 +5,7 @@
 
 use portaki_sdk::contracts::host_fragments;
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{
-    Card, ChecklistItem, HostFragment, ListItem, Stack, Text,
-};
+use portaki_sdk::sdui::primitives::{Card, ChecklistItem, HostFragment, ListItem, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::FormQuestions;
