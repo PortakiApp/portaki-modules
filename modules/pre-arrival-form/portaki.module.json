@@ -9,7 +9,7 @@
     "fr": "Recueille horaire, occasion, allergies avant l'arrivée.",
     "en": "Collects ETA, occasion, and allergies before arrival."
   },
-  "version": "0.4.2",
+  "version": "0.4.3",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",

@@ -91,10 +91,10 @@ pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
     .with_id(crate::ids::HOME_CARD)
 }
 
-/// Fullscreen overlay form body (design `prearrivalBody`).
+/// Fullscreen overlay form body (design `prearrivalBody` — no nested Card chrome).
 pub fn build_form_surface(questions: &FormQuestions) -> Surface {
     use portaki_sdk::sdui::primitives::{
-        Button, Card, Field, Form, Text, TextArea, TextInput, TimePicker,
+        Button, Field, Form, Text, TextArea, TextInput, TimePicker,
     };
 
     let submit_action = crate::ids::module_id().command_empty(crate::ids::SUBMIT);
@@ -201,7 +201,6 @@ pub fn build_form_surface(questions: &FormQuestions) -> Surface {
             .into(),
     );
 
-    // Page chrome owns the title; body is a single surface card (design `prearrivalBody`).
-    Surface::new(Card::new().child(Form::new().children(form_children)))
-        .with_id(crate::ids::GUEST_FORM)
+    // Page chrome owns the title; body is the form only (no nested Card).
+    Surface::new(Form::new().children(form_children)).with_id(crate::ids::GUEST_FORM)
 }

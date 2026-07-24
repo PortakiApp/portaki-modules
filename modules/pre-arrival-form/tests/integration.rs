@@ -99,6 +99,8 @@ fn home_card_renders_form_when_incomplete() {
             assert!(contains_component_type(&form, "TimePicker"));
             assert!(contains_component_type(&form, "TextArea"));
             assert!(contains_component_type(&form, "Button"));
+            // Overlay chrome owns framing — no nested Card around the form.
+            assert!(!contains_component_type(&form, "Card"));
             let form_json = serde_json::to_string(&form).expect("form json");
             assert!(form_json.contains("home.card.intro"));
             assert!(form_json.contains("submit"));

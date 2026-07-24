@@ -3,7 +3,7 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 
-use portaki_sdk::sdui::primitives::{Card, Text};
+use portaki_sdk::sdui::primitives::Text;
 
 use super::empty::{empty_not_yet_state, empty_runtime_error_state, log_render_failure};
 use super::home::build_form_surface;
@@ -27,11 +27,9 @@ fn render_form(ctx: &GuestContext) -> Result<Surface> {
         GuestLoad::Empty(surface) => Ok(*surface),
         GuestLoad::NotYet => Ok(empty_not_yet_state(crate::ids::GUEST_FORM)),
         GuestLoad::Completed => Ok(Surface::new(
-            Card::new().child(
-                Text::new()
-                    .text("i18n:home.card.thanks")
-                    .variant(TextVariant::Body),
-            ),
+            Text::new()
+                .text("i18n:home.card.thanks")
+                .variant(TextVariant::Body),
         )
         .with_id(crate::ids::GUEST_FORM)),
         GuestLoad::Form => {
