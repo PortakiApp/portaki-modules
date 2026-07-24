@@ -1,7 +1,10 @@
-//! Host dashboard surfaces.
+//! Host dashboard surface — design `sections-editor-v1` (Wasm SDUI).
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Button, Field, Form, Page, Text, TextArea, TextInput};
+use portaki_sdk::sdui::common::Tone;
+use portaki_sdk::sdui::primitives::{
+    Button, Card, Field, Form, Page, Stack, Text, TextArea, TextInput,
+};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::model::lang_code;
@@ -57,34 +60,38 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     let save_action = crate::ids::module_id().command(crate::ids::SAVE_SECTION, submit_args);
 
     Surface::new(
-        Page::new()
-            .title("i18n:surface.host.main.title")
-            .child(
-                Text::new()
-                    .text("i18n:surface.host.main.subtitle")
-                    .variant(TextVariant::Body),
-            )
-            .child(
-                Form::new()
-                    .child(
-                        Field::new()
-                            .name("title")
-                            .label("i18n:host.title.label")
-                            .child(TextInput::new().name("title").value(title)),
-                    )
-                    .child(
-                        Field::new()
-                            .name("body_markdown")
-                            .label("i18n:host.body.label")
-                            .child(TextArea::new().name("body_markdown").value(body)),
-                    )
-                    .child(
-                        Text::new()
-                            .text("i18n:host.main.help")
-                            .variant(TextVariant::Caption),
-                    )
-                    .child(Button::new().label("i18n:host.save").action(save_action)),
+        Page::new().child(
+            Form::new().child(
+                Stack::new().gap(16.0).children(vec![
+                    Text::new()
+                        .text("i18n:surface.host.main.subtitle")
+                        .variant(TextVariant::Body)
+                        .into(),
+                    Card::new()
+                        .title("i18n:host.section.content")
+                        .subtitle("i18n:host.section.content.help")
+                        .icon("file-text")
+                        .children(vec![
+                            Field::new()
+                                .name("title")
+                                .label("i18n:host.title.label")
+                                .child(TextInput::new().name("title").value(title))
+                                .into(),
+                            Field::new()
+                                .name("body_markdown")
+                                .label("i18n:host.body.label")
+                                .child(TextArea::new().name("body_markdown").value(body))
+                                .into(),
+                        ])
+                        .into(),
+                    Button::new()
+                        .label("i18n:host.save")
+                        .tone(Tone::Primary)
+                        .action(save_action)
+                        .into(),
+                ]),
             ),
+        ),
     )
     .with_id(crate::ids::HOST_MAIN)
 }

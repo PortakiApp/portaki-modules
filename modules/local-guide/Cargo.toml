@@ -1,6 +1,6 @@
 [package]
 name = "local-guide"
-version = "0.1.1"
+version = "0.2.1"
 edition.workspace = true
 license.workspace = true
 description = "Portaki local guide module — nearby spots and host picks"

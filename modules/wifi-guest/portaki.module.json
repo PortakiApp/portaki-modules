@@ -9,7 +9,7 @@
     "fr": "SSID et mot de passe Wi-Fi pour le livret, avec révélation programmée.",
     "en": "Guest Wi-Fi SSID and password for the booklet, with timed reveal."
   },
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",

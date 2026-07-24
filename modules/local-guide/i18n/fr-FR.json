@@ -1,5 +1,6 @@
 {
   "module.displayName": "Bons plans",
+  "nav.local-guide": "Bons plans",
   "module.description": "Adresses et liens utiles autour du logement",
   "surface.host.main.title": "Bons plans",
   "surface.host.main.subtitle": "Ajoutez vos adresses et bons plans pour les voyageurs",
@@ -31,5 +32,6 @@
   "module.status.incomplete.description": "Finalisez la configuration bons plans dans le tableau de bord hôte",
   "module.status.incomplete.hint": "Champs requis manquants — ouvrez Modules → Bons plans",
   "module.status.inactive.title": "Module bons plans désactivé",
-  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement"
+  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
+  "host.section.disclaimer": "Avertissement"
 }

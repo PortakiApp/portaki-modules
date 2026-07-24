@@ -17,5 +17,7 @@
   "module.status.incomplete.description": "Terminez la configuration des sections dans le tableau de bord hôte",
   "module.status.incomplete.hint": "Ouvrez Modules → Sections",
   "module.status.inactive.title": "Sections désactivées",
-  "module.status.inactive.description": "Ce module n'est pas actif sur ce logement"
+  "module.status.inactive.description": "Ce module n'est pas actif sur ce logement",
+  "host.section.content": "Contenu",
+  "host.section.content.help": "Titre et texte de la section."
 }

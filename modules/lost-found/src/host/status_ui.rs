@@ -161,7 +161,7 @@ pub(crate) fn build_report_list_item(report: &LostFoundReport, locale: &str) -> 
         ListItem::new()
             .title(title)
             .subtitle(subtitle)
-            .leading("🔎")
+            .leading("search")
             .chevron(false)
             .child(pill)
             .child(Text::new().text(when).variant(TextVariant::Caption)),

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
+  "id": "facility-hours",
+  "name": {
+    "fr": "Horaires & accès",
+    "en": "Hours & access"
+  },
+  "description": {
+    "fr": "Piscine, spa, salle de sport : horaires par lieu.",
+    "en": "Pool, spa, gym: hours per facility."
+  },
+  "version": "0.2.1",
+  "author": {
+    "name": "Portaki",
+    "url": "https://portaki.app",
+    "type": "official"
+  },
+  "icon": "clock-circle",
+  "type": "official",
+  "hostSurfaces": [
+    {
+      "type": "property-workspace-tab",
+      "pathSegment": "facility-hours",
+      "label": {
+        "fr": "Horaires",
+        "en": "Hours"
+      },
+      "icon": "clock-circle",
+      "hostUi": {
+        "designId": "facility-editor-v1"
+      }
+    }
+  ],
+  "guestSurfaces": [
+    {
+      "surfaceId": "explore.detail",
+      "path": "facility-hours/detail",
+      "labelKey": "nav.facility-hours"
+    }
+  ]
+}

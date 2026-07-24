@@ -1,5 +1,6 @@
 {
   "module.displayName": "Recycling & waste",
+  "nav.waste-recycling": "Recycling & waste",
   "module.description": "Bins and collection days",
   "surface.host.main.title": "Recycling & waste",
   "surface.host.main.subtitle": "Configure bins and collection days for the guest booklet",
@@ -34,5 +35,6 @@
   "module.status.incomplete.description": "Finish recycling setup in the host dashboard",
   "module.status.incomplete.hint": "Required fields missing — open Modules → Recycling & waste",
   "module.status.inactive.title": "Recycling module disabled",
-  "module.status.inactive.description": "This module is not active on this property"
+  "module.status.inactive.description": "This module is not active on this property",
+  "host.section.schedule": "Collection"
 }

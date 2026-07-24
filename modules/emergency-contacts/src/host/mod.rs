@@ -1,7 +1,8 @@
-//! Host dashboard surfaces.
+//! Host dashboard surface — design `emergency-editor-v1` (Wasm SDUI).
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Button, Field, Form, Page, Text, TextInput};
+use portaki_sdk::sdui::common::Tone;
+use portaki_sdk::sdui::primitives::{Button, Card, Field, Form, Page, Stack, Text, TextInput};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{load_config, ContactRow, Localized};
@@ -21,43 +22,45 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     };
     let save_action = crate::ids::module_id().command(crate::ids::UPDATE_CONFIG, submit_args);
 
-    let mut form_children: Vec<Component> = vec![Field::new()
-        .name("host_visible_phone")
-        .label("i18n:host.phone.label")
-        .child(
-            TextInput::new()
-                .name("host_visible_phone")
-                .value(config.host_visible_phone)
-                .placeholder("i18n:host.phone.placeholder"),
-        )
+    let mut cards: Vec<Component> = vec![Card::new()
+        .title("i18n:host.section.hostPhone")
+        .subtitle("i18n:host.section.hostPhone.help")
+        .icon("info-circle")
+        .children(vec![Field::new()
+            .name("host_visible_phone")
+            .label("i18n:host.phone.label")
+            .child(
+                TextInput::new()
+                    .name("host_visible_phone")
+                    .value(config.host_visible_phone)
+                    .placeholder("i18n:host.phone.placeholder"),
+            )
+            .into()])
         .into()];
 
     for index in 0..CONTACT_SLOTS {
-        push_contact_slot(&mut form_children, index, contacts.get(index), &lang);
+        cards.push(contact_card(index, contacts.get(index), &lang));
     }
-
-    form_children.push(
-        Text::new()
-            .text("i18n:host.main.help")
-            .variant(TextVariant::Caption)
-            .into(),
-    );
-    form_children.push(
+    cards.push(
         Button::new()
             .label("i18n:host.save")
+            .tone(Tone::Primary)
             .action(save_action)
             .into(),
     );
 
     Surface::new(
-        Page::new()
-            .title("i18n:surface.host.main.title")
-            .child(
-                Text::new()
-                    .text("i18n:surface.host.main.subtitle")
-                    .variant(TextVariant::Body),
-            )
-            .child(Form::new().children(form_children)),
+        Page::new().child(
+            Form::new().child(
+                Stack::new().gap(16.0).children(vec![
+                    Text::new()
+                        .text("i18n:surface.host.main.subtitle")
+                        .variant(TextVariant::Body)
+                        .into(),
+                    Component::Stack(Stack::new().gap(16.0).children(cards)),
+                ]),
+            ),
+        ),
     )
     .with_id(crate::ids::HOST_MAIN)
 }
@@ -74,42 +77,33 @@ fn contacts_to_submit(contacts: &[ContactRow], lang: &str) -> Vec<crate::command
         .collect()
 }
 
-fn push_contact_slot(
-    children: &mut Vec<Component>,
-    index: usize,
-    contact: Option<&ContactRow>,
-    lang: &str,
-) {
+fn contact_card(index: usize, contact: Option<&ContactRow>, lang: &str) -> Component {
     let slot = index + 1;
     let label = contact.map(|c| c.label.get(lang)).unwrap_or("");
     let phone = contact.map(|c| c.phone.as_str()).unwrap_or("");
 
-    children.push(
-        Text::new()
-            .text(format!("i18n:host.contact.slot{slot}"))
-            .variant(TextVariant::Caption)
-            .into(),
-    );
-    children.push(
-        Field::new()
-            .name(format!("contacts.{index}.label"))
-            .label("i18n:host.contact.label")
-            .child(
-                TextInput::new()
-                    .name(format!("contacts.{index}.label"))
-                    .value(label),
-            )
-            .into(),
-    );
-    children.push(
-        Field::new()
-            .name(format!("contacts.{index}.phone"))
-            .label("i18n:host.contact.phone")
-            .child(
-                TextInput::new()
-                    .name(format!("contacts.{index}.phone"))
-                    .value(phone),
-            )
-            .into(),
-    );
+    Card::new()
+        .title(format!("i18n:host.contact.slot{slot}"))
+        .icon("users")
+        .children(vec![
+            Field::new()
+                .name(format!("contacts.{index}.label"))
+                .label("i18n:host.contact.label")
+                .child(
+                    TextInput::new()
+                        .name(format!("contacts.{index}.label"))
+                        .value(label),
+                )
+                .into(),
+            Field::new()
+                .name(format!("contacts.{index}.phone"))
+                .label("i18n:host.contact.phone")
+                .child(
+                    TextInput::new()
+                        .name(format!("contacts.{index}.phone"))
+                        .value(phone),
+                )
+                .into(),
+        ])
+        .into()
 }

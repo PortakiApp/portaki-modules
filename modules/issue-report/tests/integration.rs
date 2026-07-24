@@ -21,6 +21,9 @@ fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
             Component::Button(_) if type_name == "Button" => true,
             Component::ListItem(_) if type_name == "ListItem" => true,
             Component::List(_) if type_name == "List" => true,
+            Component::Pill(_) if type_name == "Pill" => true,
+            Component::InfoBanner(_) if type_name == "InfoBanner" => true,
+            Component::Stack(_) if type_name == "Stack" => true,
             _ => false,
         };
         if matches {
@@ -136,7 +139,12 @@ fn host_main_lists_recent_after_guest_submit() {
 
             let surface = render_host_main(ctx);
             assert!(contains_component_type(&surface, "Page"));
+            assert!(contains_component_type(&surface, "Card"));
             assert!(contains_component_type(&surface, "List"));
             assert!(contains_component_type(&surface, "ListItem"));
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("host.main.banner"));
+            assert!(json.contains("host.main.status.open"));
+            assert!(json.contains("danger-triangle") || json.contains("sparkles"));
         });
 }

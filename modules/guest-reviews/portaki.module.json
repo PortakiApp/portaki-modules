@@ -1,0 +1,34 @@
+{
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
+  "id": "guest-reviews",
+  "name": {
+    "fr": "Merci & avis",
+    "en": "Thanks & reviews"
+  },
+  "description": {
+    "fr": "Lien d'avis Airbnb / QR ou notation sur Portaki.",
+    "en": "Airbnb review link / QR or in-booklet Portaki rating."
+  },
+  "version": "0.1.2",
+  "author": {
+    "name": "Portaki",
+    "url": "https://portaki.app",
+    "type": "official"
+  },
+  "icon": "star",
+  "type": "official",
+  "hostSurfaces": [
+    {
+      "type": "property-workspace-tab",
+      "pathSegment": "guest-reviews",
+      "label": {
+        "fr": "Merci & avis",
+        "en": "Thanks & reviews"
+      },
+      "icon": "star",
+      "hostUi": {
+        "designId": "reviews-editor-v1"
+      }
+    }
+  ]
+}

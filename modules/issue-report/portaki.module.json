@@ -9,13 +9,13 @@
     "fr": "Les voyageurs signalent un souci pendant le séjour — sans WhatsApp.",
     "en": "Guests report a problem during the stay — no WhatsApp needed."
   },
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
     "type": "official"
   },
-  "icon": "triangle-alert",
+  "icon": "danger-triangle",
   "type": "official",
   "hostSurfaces": [
     {
@@ -25,7 +25,10 @@
         "fr": "Signalements",
         "en": "Issue reports"
       },
-      "icon": "triangle-alert"
+      "icon": "danger-triangle",
+      "hostUi": {
+        "designId": "issuereport-editor-v1"
+      }
     }
   ]
 }

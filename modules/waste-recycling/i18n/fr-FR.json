@@ -1,5 +1,6 @@
 {
   "module.displayName": "Tri & déchets",
+  "nav.waste-recycling": "Tri & déchets",
   "module.description": "Bacs et jours de collecte",
   "surface.host.main.title": "Tri & déchets",
   "surface.host.main.subtitle": "Configurez les bacs et les jours de collecte pour le livret invité",
@@ -34,5 +35,6 @@
   "module.status.incomplete.description": "Finalisez la configuration tri dans le tableau de bord hôte",
   "module.status.incomplete.hint": "Champs requis manquants — ouvrez Modules → Tri & déchets",
   "module.status.inactive.title": "Module tri désactivé",
-  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement"
+  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
+  "host.section.schedule": "Collecte"
 }

@@ -180,6 +180,13 @@ fn host_stay_surface_shows_completed_response() {
             assert!(contains_component_type(&surface, "ListItem"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("host.stay.status.done"));
+            assert!(
+                json.contains("\"icon\":\"clipboard\"") || json.contains("\"icon\": \"clipboard\"")
+            );
+            assert!(json.contains("host.stay.arrival.label"));
+            assert!(json.contains("host.stay.occasion.label"));
+            assert!(json.contains("host.stay.allergies.label"));
+            assert!(json.contains("clock-circle"));
             assert!(json.contains("17:30"));
             assert!(json.contains("Lune de miel"));
             assert!(json.contains("Fruits à coque"));

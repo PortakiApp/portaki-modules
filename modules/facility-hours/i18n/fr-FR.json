@@ -1,5 +1,6 @@
 {
   "module.displayName": "Horaires & accès",
+  "nav.facility-hours": "Horaires & accès",
   "module.description": "Piscine, spa, équipements partagés",
   "surface.host.main.title": "Horaires & accès",
   "surface.host.main.subtitle": "Configurez les horaires des équipements du logement",
@@ -28,5 +29,6 @@
   "module.status.incomplete.description": "Finalisez la configuration horaires dans le tableau de bord hôte",
   "module.status.incomplete.hint": "Champs requis manquants — ouvrez Modules → Horaires & accès",
   "module.status.inactive.title": "Module horaires désactivé",
-  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement"
+  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
+  "host.section.note": "Note générale"
 }
