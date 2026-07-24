@@ -1072,7 +1072,7 @@ dependencies = [
 
 [[package]]
 name = "weather"
-version = "0.3.19"
+version = "0.3.20"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -1088,7 +1088,7 @@ dependencies = [
 
 [[package]]
 name = "wifi-guest"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "extism-pdk",

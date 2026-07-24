@@ -41,7 +41,7 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Gues
     Ok(GuestLoad::Ready(GuestData {
         config,
         password_revealed: decision.revealed,
-        reveal_locked_message: locked_banner(&decision, &property_timezone),
+        reveal_locked_message: locked_banner(&decision, &property_timezone, &ctx.locale),
     }))
 }
 
@@ -69,12 +69,16 @@ fn property_timezone(ctx: &GuestContext) -> String {
     "Europe/Paris".to_string()
 }
 
-fn locked_banner(decision: &RevealDecision, property_timezone: &str) -> Option<String> {
+fn locked_banner(
+    decision: &RevealDecision,
+    property_timezone: &str,
+    locale: &str,
+) -> Option<String> {
     if decision.revealed {
         return None;
     }
     let when = decision
         .available_from
         .map(|at| format_available_from(at, property_timezone));
-    Some(locked_message(when.as_deref()))
+    Some(locked_message(when.as_deref(), locale))
 }

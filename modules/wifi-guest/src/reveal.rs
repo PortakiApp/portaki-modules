@@ -192,24 +192,57 @@ pub fn format_available_from(available_from: DateTime<Utc>, property_timezone: &
     let year = local.year().to_string();
     let hour = format!("{:02}", local.hour());
     let minute = format!("{:02}", local.minute());
-    t!(
+    let fallback = format!("{day}/{month}/{year} {hour}:{minute}");
+    match t!(
         "reveal.availableFrom.datetime",
         day = &day,
         month = &month,
         year = &year,
         hour = &hour,
         minute = &minute
-    )
-    .unwrap_or_else(|_| format!("{day}/{month}/{year} {hour}:{minute}"))
+    ) {
+        Ok(text) if !looks_like_i18n_key(&text) => text,
+        Ok(text) if text.contains('{') => apply_vars(
+            &text,
+            &[
+                ("day", day.as_str()),
+                ("month", month.as_str()),
+                ("year", year.as_str()),
+                ("hour", hour.as_str()),
+                ("minute", minute.as_str()),
+            ],
+        ),
+        _ => fallback,
+    }
 }
 
-pub fn locked_message(available_from_label: Option<&str>) -> String {
+pub fn locked_message(available_from_label: Option<&str>, locale: &str) -> String {
+    let is_fr = locale.to_ascii_lowercase().starts_with("fr");
     match available_from_label {
-        Some(when) => t!("reveal.locked.withWhen", when = when)
-            .unwrap_or_else(|_| format!("Available from {when}")),
-        None => t!("reveal.locked.generic")
-            .unwrap_or_else(|_| "Password will be available closer to check-in.".into()),
+        Some(when) => match t!("reveal.locked.withWhen", when = when) {
+            Ok(text) if text.contains(when) && !looks_like_i18n_key(&text) => text,
+            Ok(text) if text.contains("{when}") => text.replace("{when}", when),
+            _ if is_fr => format!("Disponible à partir du {when}"),
+            _ => format!("Available from {when}"),
+        },
+        None => match t!("reveal.locked.generic") {
+            Ok(text) if !looks_like_i18n_key(&text) => text,
+            _ if is_fr => "Le mot de passe sera disponible à l’approche du check-in.".into(),
+            _ => "The password will be available closer to check-in.".into(),
+        },
     }
+}
+
+fn looks_like_i18n_key(text: &str) -> bool {
+    !text.contains(' ') && text.contains('.')
+}
+
+fn apply_vars(template: &str, vars: &[(&str, &str)]) -> String {
+    let mut text = template.to_string();
+    for (name, value) in vars {
+        text = text.replace(&format!("{{{name}}}"), value);
+    }
+    text
 }
 
 #[cfg(test)]
