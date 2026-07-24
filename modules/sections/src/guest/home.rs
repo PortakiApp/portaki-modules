@@ -1,9 +1,10 @@
 //! Guest home booklet card — teaser + first sections.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Card, Divider, Markdown, Stack, Text};
+use portaki_sdk::sdui::primitives::{Card, Divider, Markdown, RichText, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
+use crate::content::is_tiptap_doc;
 use crate::model::SectionView;
 
 const CARD_SECTION_LIMIT: usize = 2;
@@ -38,10 +39,8 @@ pub fn section_blocks(sections: &[SectionView], limit: usize) -> Vec<Component> 
                     .variant(TextVariant::Caption),
             ));
         }
-        if !section.body_markdown.trim().is_empty() {
-            children.push(Component::Markdown(
-                Markdown::new().content(section.body_markdown.clone()),
-            ));
+        if let Some(body) = body_component(&section.body_markdown) {
+            children.push(body);
         }
     }
     if children.is_empty() {
@@ -60,4 +59,16 @@ pub fn full_sections_stack(sections: &[SectionView]) -> Component {
             .gap(12.0)
             .children(section_blocks(sections, sections.len())),
     )
+}
+
+fn body_component(body: &str) -> Option<Component> {
+    let trimmed = body.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    if is_tiptap_doc(trimmed) {
+        Some(Component::RichText(RichText::new().content(trimmed)))
+    } else {
+        Some(Component::Markdown(Markdown::new().content(trimmed)))
+    }
 }
