@@ -32,10 +32,11 @@ OCI image: `ghcr.io/portakiapp/portaki-modules-lost-found:<semver>`
 | Shell | Surface id | Description |
 |-------|------------|-------------|
 | guest | `home.card` | Kind + description form; optional host tip banner; stay report list after submit |
-| host | `main` | Banner, TipTap host note, create-found form (multi-stay via `input.stays` / `stayIds`), recent reports + status |
-| host | `stay` | Stay-scoped create + list/status (`input.stayId`) — embedded by host shells via manifest `stay-detail` |
+| host | `main` | Design editor: info banner, TipTap guest note (`host_note`), recent reports with status pills + update |
+| host | `stay` | Design declare modal: header (`guestName` · `stayDates`), description TextArea, send CTA; stay report list + status |
 
 Host apps only embed `HostSurfacePanel` (or equivalent). No module-named React create modal.
+Create always defaults status to `to_collect` — no status field on create.
 
 ## Queries and commands
 

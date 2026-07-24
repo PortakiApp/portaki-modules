@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Host SDUI aligned with design `lostfound-editor-v1` / `foundObjectModal`:
+  - `main` — info banner, TipTap guest note card, recent list with status pills (no create form).
+  - `stay` — modal header (`guestName` · `stayDates`), TextArea description, FieldHint, « Envoyer au voyageur ».
+  - Status labels: À récupérer / Envoyé / Récupéré; create always `to_collect`.
+
 ### Added
 
 - Host `submitFound` command (multi-stay) + `lost-found.host-found` event for guest email.

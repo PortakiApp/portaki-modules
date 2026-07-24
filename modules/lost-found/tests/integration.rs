@@ -27,6 +27,11 @@ fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
             Component::List(_) if type_name == "List" => true,
             Component::InfoBanner(_) if type_name == "InfoBanner" => true,
             Component::Select(_) if type_name == "Select" => true,
+            Component::Pill(_) if type_name == "Pill" => true,
+            Component::HeaderTitle(_) if type_name == "HeaderTitle" => true,
+            Component::TextArea(_) if type_name == "TextArea" => true,
+            Component::RichTextEditor(_) if type_name == "RichTextEditor" => true,
+            Component::FieldHint(_) if type_name == "FieldHint" => true,
             _ => false,
         };
         if matches {
@@ -52,6 +57,7 @@ fn child_components(node: &Component) -> Vec<&Component> {
         Component::Page(inner) => inner.children.iter().collect(),
         Component::Field(inner) => inner.children.iter().collect(),
         Component::List(inner) => inner.children.iter().collect(),
+        Component::ListItem(inner) => inner.children.iter().collect(),
         _ => Vec::new(),
     }
 }
@@ -149,10 +155,17 @@ fn host_main_lists_recent_after_guest_submit() {
             assert!(contains_component_type(&surface, "Page"));
             assert!(contains_component_type(&surface, "Form"));
             assert!(contains_component_type(&surface, "InfoBanner"));
+            assert!(contains_component_type(&surface, "Card"));
             assert!(contains_component_type(&surface, "List"));
+            assert!(contains_component_type(&surface, "ListItem"));
+            assert!(contains_component_type(&surface, "Pill"));
             assert!(contains_component_type(&surface, "Select"));
             let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("host.main.banner"));
+            assert!(json.contains("host.main.recentTitle"));
             assert!(json.contains("updateStatus") || json.contains("host.main.updateStatus"));
+            // Create lives on stay surface — not the property editor.
+            assert!(!json.contains("host.create.submit"));
         });
 }
 
@@ -325,12 +338,21 @@ fn host_stay_surface_renders_create_form() {
     MockContext::host()
         .with_property(Property::default())
         .run(|mut ctx| {
-            ctx.input = serde_json::json!({ "stayId": stay_id.to_string() });
+            ctx.input = serde_json::json!({
+                "stayId": stay_id.to_string(),
+                "guestName": "Marie Dupont",
+                "stayDates": "12–15 juil.",
+            });
             let surface = render_host_stay(ctx);
             assert!(contains_component_type(&surface, "Page"));
             assert!(contains_component_type(&surface, "Form"));
+            assert!(contains_component_type(&surface, "HeaderTitle"));
+            assert!(contains_component_type(&surface, "TextArea"));
+            assert!(contains_component_type(&surface, "FieldHint"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("submitFound") || json.contains("host.create.submit"));
+            assert!(json.contains("Marie Dupont"));
+            assert!(json.contains("host.create.description.label") || json.contains("description"));
             // Create form has no status picker; empty stay list has no status Select either.
             assert!(!json.contains("host.main.status.label"));
         });
@@ -338,15 +360,20 @@ fn host_stay_surface_renders_create_form() {
 
 #[test]
 #[serial]
-fn host_main_includes_create_form_without_status_picker() {
+fn host_main_editor_has_note_not_create_form() {
     reset_test_store();
     MockContext::host()
         .with_property(Property::default())
         .run(|ctx| {
             let surface = render_host_main(ctx);
+            assert!(contains_component_type(&surface, "InfoBanner"));
+            assert!(contains_component_type(&surface, "RichTextEditor"));
+            assert!(contains_component_type(&surface, "EmptyState"));
             let json = serde_json::to_string(&surface).expect("surface json");
-            assert!(json.contains("host.create.title") || json.contains("submitFound"));
-            assert!(json.contains("RichTextEditor") || json.contains("description"));
+            assert!(json.contains("host.hostNote.label") || json.contains("host_note"));
+            assert!(json.contains("host.main.banner"));
+            assert!(!json.contains("host.create.submit"));
+            assert!(!json.contains("submitFound"));
         });
 }
 

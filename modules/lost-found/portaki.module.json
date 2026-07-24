@@ -6,8 +6,8 @@
     "en": "Lost & found"
   },
   "description": {
-    "fr": "Déclarez un objet trouvé depuis un séjour — le voyageur est prévenu. Les voyageurs peuvent aussi signaler un objet depuis le livret.",
-    "en": "Declare a found item from a stay — the guest is notified. Guests can also report items from the booklet."
+    "fr": "Ajoute un bouton « Déclarer un objet trouvé » au détail du séjour et prévient le voyageur.",
+    "en": "Adds a “Declare a found item” action on stay detail and notifies the guest."
   },
   "version": "0.2.0",
   "author": {

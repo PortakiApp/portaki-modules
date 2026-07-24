@@ -1,102 +1,60 @@
-//! Host create-found form (TipTap description, stay picker, no status).
+//! Stay declare-found form — mirrors design `foundObjectModal` / `sheetFound`.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::Tone;
-use portaki_sdk::sdui::primitives::{Button, Field, Form, ListItem, RichTextEditor, Stack, Text};
-use serde::Serialize;
-use serde_json::Value;
+use portaki_sdk::sdui::primitives::{
+    Button, Field, FieldHint, Form, HeaderTitle, Stack, Text, TextArea,
+};
 use uuid::Uuid;
 
 use crate::commands::SubmitFoundArgs;
 
-/// Stay option passed by the host shell via `HostContext.input.stays`.
-#[derive(Debug, Clone)]
-struct StayOption {
-    id: Uuid,
-    label: String,
-}
-
-/// Builds the declare-found form.
+/// Builds the declare-found form (stay modal layout).
 ///
-/// - `input.stayId` — fixed stay (stay detail); picker hidden.
-/// - `input.stays` + `input.stayIds` — multi-select via surface input emits.
+/// - `input.stayId` — required target stay.
+/// - `input.guestName` / `input.stayDates` — header context (optional).
 /// - Status is never shown; [`submit_found`](crate::submit_found) always uses
 ///   `to_collect`.
 pub(crate) fn build_create_found_form(ctx: &HostContext) -> Component {
-    let fixed_stay = ctx
+    let stay_id = ctx
         .input_str("stayId")
         .and_then(|raw| Uuid::parse_str(raw).ok());
-    let catalog = stay_catalog(ctx);
-    let mut selected = selected_stay_ids(ctx);
 
-    if let Some(stay_id) = fixed_stay {
-        selected = vec![stay_id];
+    let guest_name = ctx.input_str("guestName").unwrap_or("");
+    let stay_dates = ctx.input_str("stayDates").unwrap_or("");
+    let header_sub = match (guest_name.is_empty(), stay_dates.is_empty()) {
+        (true, true) => None,
+        (false, true) => Some(guest_name.to_string()),
+        (true, false) => Some(stay_dates.to_string()),
+        (false, false) => Some(format!("{guest_name} · {stay_dates}")),
+    };
+
+    let mut header = HeaderTitle::new().title("i18n:host.create.title");
+    if let Some(sub) = header_sub {
+        header = header.subtitle(sub);
     }
 
-    let mut children: Vec<Component> = vec![
-        Text::new()
-            .text("i18n:host.create.title")
-            .variant(TextVariant::Title)
-            .into(),
-        Text::new()
-            .text("i18n:host.create.help")
-            .variant(TextVariant::Caption)
-            .into(),
-    ];
+    let mut children: Vec<Component> = vec![header.into()];
 
-    if fixed_stay.is_none() {
-        if catalog.is_empty() {
-            children.push(
-                Text::new()
-                    .text("i18n:host.create.noStays")
-                    .variant(TextVariant::Caption)
-                    .into(),
-            );
-        } else {
-            children.push(
-                Text::new()
-                    .text("i18n:host.create.stays.label")
-                    .variant(TextVariant::Caption)
-                    .into(),
-            );
-            let items: Vec<Component> = catalog
-                .iter()
-                .map(|stay| {
-                    let checked = selected.contains(&stay.id);
-                    let mut item = ListItem::new()
-                        .title(stay.label.clone())
-                        .chevron(false)
-                        .action(emit_toggle_stay(stay.id, &selected));
-                    if checked {
-                        item = item.tone(Tone::Primary);
-                    }
-                    Component::ListItem(item)
-                })
-                .collect();
-            children.push(Component::List(
-                portaki_sdk::sdui::primitives::List::new().children(items),
-            ));
-        }
-    }
+    let Some(stay_id) = stay_id else {
+        children.push(
+            Text::new()
+                .text("i18n:host.stay.missingStay")
+                .variant(TextVariant::Caption)
+                .into(),
+        );
+        return Component::Stack(Stack::new().gap(12.0).children(children));
+    };
 
     let submit_action = crate::ids::module_id().command(
         crate::ids::SUBMIT_FOUND,
         SubmitFoundArgs {
-            stay_ids: selected.clone(),
-            stay_id: None,
+            stay_ids: vec![stay_id],
+            stay_id: Some(stay_id),
             description: String::new(),
             status: None,
         },
     );
-
-    let can_submit = !selected.is_empty();
-    let mut submit = Button::new()
-        .label("i18n:host.create.submit")
-        .action(submit_action);
-    if can_submit {
-        submit = submit.tone(Tone::Primary);
-    }
 
     children.push(
         Form::new()
@@ -105,85 +63,21 @@ pub(crate) fn build_create_found_form(ctx: &HostContext) -> Component {
                     .name("description")
                     .label("i18n:host.create.description.label")
                     .required(true)
-                    .child(RichTextEditor::new().name("description")),
+                    .child(
+                        TextArea::new()
+                            .name("description")
+                            .placeholder("i18n:host.create.description.placeholder"),
+                    ),
             )
-            .child(submit)
+            .child(FieldHint::new().text("i18n:host.create.hint"))
+            .child(
+                Button::new()
+                    .label("i18n:host.create.submit")
+                    .tone(Tone::Primary)
+                    .action(submit_action),
+            )
             .into(),
     );
 
     Component::Stack(Stack::new().gap(12.0).children(children))
-}
-
-fn stay_catalog(ctx: &HostContext) -> Vec<StayOption> {
-    let Some(raw) = ctx.input.get("stays") else {
-        return Vec::new();
-    };
-    let Some(arr) = raw.as_array() else {
-        return Vec::new();
-    };
-
-    arr.iter()
-        .filter_map(|entry| {
-            let id = entry
-                .get("id")
-                .and_then(Value::as_str)
-                .and_then(|s| Uuid::parse_str(s).ok())?;
-            let label = entry
-                .get("label")
-                .and_then(Value::as_str)
-                .unwrap_or("")
-                .trim()
-                .to_string();
-            let label = if label.is_empty() {
-                id.to_string()
-            } else {
-                label
-            };
-            Some(StayOption { id, label })
-        })
-        .collect()
-}
-
-fn selected_stay_ids(ctx: &HostContext) -> Vec<Uuid> {
-    if let Some(id) = ctx
-        .input_str("stayId")
-        .and_then(|raw| Uuid::parse_str(raw).ok())
-    {
-        return vec![id];
-    }
-
-    match ctx.input.get("stayIds") {
-        Some(Value::Array(items)) => items
-            .iter()
-            .filter_map(|v| v.as_str())
-            .filter_map(|s| Uuid::parse_str(s).ok())
-            .collect(),
-        Some(Value::String(raw)) => raw
-            .split(',')
-            .filter_map(|s| Uuid::parse_str(s.trim()).ok())
-            .collect(),
-        _ => Vec::new(),
-    }
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct StayIdsInput {
-    stay_ids: Vec<String>,
-}
-
-fn emit_toggle_stay(stay_id: Uuid, selected: &[Uuid]) -> Action {
-    let mut next: Vec<Uuid> = selected.to_vec();
-    if let Some(pos) = next.iter().position(|id| *id == stay_id) {
-        next.remove(pos);
-    } else {
-        next.push(stay_id);
-    }
-    next.sort_unstable();
-    next.dedup();
-
-    let payload = StayIdsInput {
-        stay_ids: next.iter().map(Uuid::to_string).collect(),
-    };
-    Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
 }
