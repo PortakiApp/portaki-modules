@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3]
+
+### Fixed
+
+- `updateConfig`: question flags are `Option<bool>` merged into KV — explicit `false`
+  sticks, and an empty `{}` payload no longer resets toggles ON via `default_true`.
+
 ## [0.3.2]
 
 ### Fixed

@@ -253,12 +253,12 @@ fn update_config_persists_show_when_and_questions() {
             ctx,
             UpdateConfigArgs {
                 show_when: "checkin".into(),
-                ask_arrival_time: true,
-                ask_occasion: false,
-                ask_allergies: true,
-                ask_guest_count: false,
-                ask_special_needs: true,
-                ask_id_document: true,
+                ask_arrival_time: Some(true),
+                ask_occasion: Some(false),
+                ask_allergies: Some(true),
+                ask_guest_count: Some(false),
+                ask_special_needs: Some(true),
+                ask_id_document: Some(true),
             },
         )
         .expect("updateConfig");
@@ -271,6 +271,58 @@ fn update_config_persists_show_when_and_questions() {
         assert!(!cfg.questions.ask_guest_count);
         assert!(cfg.questions.ask_special_needs);
         assert!(cfg.questions.ask_id_document);
+    });
+}
+
+#[test]
+#[serial]
+fn update_config_false_toggles_stick_and_empty_keeps_kv() {
+    reset_test_store();
+    MockContext::host().run(|ctx| {
+        update_config(
+            ctx.clone(),
+            UpdateConfigArgs {
+                show_when: "confirm".into(),
+                ask_arrival_time: Some(false),
+                ask_occasion: Some(false),
+                ask_allergies: Some(true),
+                ask_guest_count: Some(false),
+                ask_special_needs: Some(false),
+                ask_id_document: Some(false),
+            },
+        )
+        .expect("seed");
+
+        // Host Save with empty `{}` (formApiRef miss) must not reset toggles ON.
+        let empty: UpdateConfigArgs = serde_json::from_value(json!({})).expect("empty args");
+        update_config(ctx.clone(), empty).expect("empty updateConfig");
+
+        let cfg = load_config().expect("config");
+        assert_eq!(cfg.show_when, ShowWhen::Confirm);
+        assert!(!cfg.questions.ask_arrival_time);
+        assert!(!cfg.questions.ask_occasion);
+        assert!(cfg.questions.ask_allergies);
+        assert!(!cfg.questions.ask_guest_count);
+
+        // Wire JSON with explicit false (dashboard nestFlatFormValues).
+        let from_json: UpdateConfigArgs = serde_json::from_value(json!({
+            "show_when": "before",
+            "ask_arrival_time": false,
+            "ask_occasion": true,
+            "ask_allergies": false,
+            "ask_guest_count": true,
+            "ask_special_needs": false,
+            "ask_id_document": false
+        }))
+        .expect("json args");
+        update_config(ctx, from_json).expect("json updateConfig");
+
+        let cfg = load_config().expect("config");
+        assert_eq!(cfg.show_when, ShowWhen::Before);
+        assert!(!cfg.questions.ask_arrival_time);
+        assert!(cfg.questions.ask_occasion);
+        assert!(!cfg.questions.ask_allergies);
+        assert!(cfg.questions.ask_guest_count);
     });
 }
 
