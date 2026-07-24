@@ -22,12 +22,10 @@ pub(crate) fn build_create_found_form(ctx: &HostContext) -> Component {
         .and_then(|raw| Uuid::parse_str(raw).ok());
 
     let Some(stay_id) = stay_id else {
-        return Component::Stack(
-            Stack::new().gap(12.0).children(vec![Text::new()
+        return Component::Stack(Stack::new().gap(12.0).children(vec![Text::new()
                 .text("i18n:host.stay.missingStay")
                 .variant(TextVariant::Caption)
-                .into()]),
-        );
+                .into()]));
     };
 
     let submit_action = crate::ids::module_id().command(
