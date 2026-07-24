@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.3](https://github.com/PortakiApp/portaki-modules/compare/sections-v0.2.2...sections-v0.2.3) (2026-07-24)
+
+
+### Features
+
+* align host SDUI to design `sections-editor-v1` (master-detail list, TipTap editor, add/cancel/save)
+
+
 ## [0.2.0](https://github.com/PortakiApp/portaki-modules/compare/sections-v0.1.0...sections-v0.2.0) (2026-07-21)
 
 

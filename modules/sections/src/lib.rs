@@ -1,6 +1,7 @@
 //! Portaki sections module — editorial title + markdown blocks.
 
 mod commands;
+mod content;
 mod entities;
 mod guest;
 mod host;

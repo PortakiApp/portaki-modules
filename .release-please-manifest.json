@@ -14,7 +14,7 @@
   "modules/nuki": "0.2.0",
   "modules/pre-arrival-form": "0.2.2",
   "modules/rules": "0.2.3",
-  "modules/sections": "0.2.2",
+  "modules/sections": "0.2.3",
   "modules/train": "0.1.1",
   "modules/waste-recycling": "0.2.1",
   "modules/weather": "0.3.19",
