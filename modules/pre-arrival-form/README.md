@@ -20,8 +20,8 @@ OCI image: `ghcr.io/portakiapp/portaki-modules-pre-arrival-form:<semver>`
 
 | Shell | Surface id | Description |
 |-------|------------|-------------|
-| guest | `home.card` | Inline form (ETA, occasion, allergies, message) or thank-you |
-| host | `main` | Informational page (no config keys) — property workspace tab |
+| guest | `home.card` | Inline form when available; thank-you when done; hidden when gated |
+| host | `main` | Config editor (`show_when` + question toggles) |
 | host | `stay` | Stay-detail embed — read-only responses (`input.stayId`) |
 
 Host manifest (`portaki.module.json`): `property-workspace-tab` + `stay-detail` (`pathSegment`: `stay`).
@@ -30,6 +30,8 @@ Host manifest (`portaki.module.json`): `property-workspace-tab` + `stay-detail` 
 
 - `getStatus` — `{ completed, arrivalTimeEstimated?, … }` for the current stay
 - `submit` — upsert response; emits `pre-arrival.completed`
+- `updateConfig` — persist `show_when` + question flags
+- `sendFormAvailable` — tick / stay-created; `host::email::send` when form is available
 
 ## Development
 

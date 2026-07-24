@@ -12,6 +12,7 @@ define_operation_names! {
     GET_STATUS = "getStatus",
     SUBMIT = "submit",
     UPDATE_CONFIG = "updateConfig",
+    SEND_FORM_AVAILABLE = "sendFormAvailable",
 }
 
 define_event_types! {

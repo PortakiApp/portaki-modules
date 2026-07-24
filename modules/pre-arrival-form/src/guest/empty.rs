@@ -45,6 +45,17 @@ fn empty_inactive_state(surface_id: SurfaceId) -> Surface {
     .with_id(surface_id)
 }
 
+/// Form gated by `show_when` — guest shell hides non-error EmptyStates (no teaser card).
+pub fn empty_not_yet_state(surface_id: SurfaceId) -> Surface {
+    Surface::new(
+        EmptyState::new()
+            .title("i18n:home.card.notYet")
+            .description("i18n:home.card.notYet")
+            .icon("clipboard-list"),
+    )
+    .with_id(surface_id)
+}
+
 pub fn log_render_failure(surface_id: SurfaceId, error: &PortakiError) {
     let mut fields = log::Fields::new();
     fields.insert("surfaceId", &surface_id);

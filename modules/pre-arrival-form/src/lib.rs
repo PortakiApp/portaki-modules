@@ -2,6 +2,7 @@
 
 mod commands;
 mod config;
+mod email_send;
 mod entities;
 mod guest;
 mod host;
@@ -10,7 +11,7 @@ mod queries;
 mod show_when;
 mod storage;
 
-pub use commands::{submit, update_config, SubmitArgs, UpdateConfigArgs};
+pub use commands::{send_form_available, submit, update_config, SubmitArgs, UpdateConfigArgs};
 pub use config::{load_config, FormQuestions, ModuleConfig, ShowWhen};
 pub use entities::PreArrivalResponse;
 pub use guest::render_home_card;

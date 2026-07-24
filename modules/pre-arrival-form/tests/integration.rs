@@ -7,9 +7,12 @@ use portaki_sdk::sdui::surface::Surface;
 use uuid::Uuid;
 
 use portaki_test_utils::{MockContext, Property};
+use chrono::{Duration, Utc};
+use portaki_sdk::prelude::StayContext;
 use pre_arrival_form::{
     get_status, load_config, render_home_card, render_host_main, render_host_stay,
-    reset_test_store, submit, update_config, ShowWhen, SubmitArgs, UpdateConfigArgs,
+    reset_test_store, send_form_available, submit, update_config, ShowWhen, SubmitArgs,
+    UpdateConfigArgs,
 };
 use serde_json::json;
 
@@ -112,6 +115,106 @@ fn submit_then_status_and_thanks_card() {
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("home.card.thanks"));
             assert!(!json.contains("TimePicker"));
+        });
+}
+
+#[test]
+#[serial]
+fn home_card_hides_when_form_not_yet_available() {
+    reset_test_store();
+    let config_bytes = serde_json::to_vec(&json!({
+        "show_when": "before",
+        "questions": {
+            "ask_arrival_time": true,
+            "ask_occasion": true,
+            "ask_allergies": true,
+            "ask_guest_count": true,
+            "ask_special_needs": false,
+            "ask_id_document": false
+        }
+    }))
+    .expect("config json");
+
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_kv("config", config_bytes)
+        .run(|mut ctx| {
+            let stay_id = ctx
+                .guest
+                .as_ref()
+                .map(|guest| guest.session_id)
+                .expect("guest stay");
+            ctx.stay = Some(StayContext {
+                stay_id,
+                checkin_at: Some(Utc::now() + Duration::days(10)),
+                checkout_at: Some(Utc::now() + Duration::days(14)),
+            });
+
+            let surface = render_home_card(ctx);
+            assert!(contains_component_type(&surface, "EmptyState"));
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("home.card.notYet"));
+            assert!(!json.contains("home.card.intro"));
+            assert!(!json.contains("TimePicker"));
+            assert!(!json.contains("\"type\":\"Form\"") && !json.contains("\"type\": \"Form\""));
+        });
+}
+
+#[test]
+#[serial]
+fn send_form_available_noops_when_gated() {
+    reset_test_store();
+    let config_bytes = serde_json::to_vec(&json!({
+        "show_when": "checkin",
+        "questions": {}
+    }))
+    .expect("config json");
+
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_kv("config", config_bytes)
+        .run(|mut ctx| {
+            let stay_id = ctx
+                .guest
+                .as_ref()
+                .map(|guest| guest.session_id)
+                .expect("guest stay");
+            ctx.stay = Some(StayContext {
+                stay_id,
+                checkin_at: Some(Utc::now() + Duration::days(5)),
+                checkout_at: None,
+            });
+            send_form_available(ctx, portaki_sdk::prelude::EmptyArgs {})
+                .expect("sendFormAvailable gated no-op");
+        });
+}
+
+#[test]
+#[serial]
+fn send_form_available_ok_when_confirm() {
+    reset_test_store();
+    let config_bytes = serde_json::to_vec(&json!({
+        "show_when": "confirm",
+        "questions": {}
+    }))
+    .expect("config json");
+
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_kv("config", config_bytes)
+        .run(|mut ctx| {
+            let stay_id = ctx
+                .guest
+                .as_ref()
+                .map(|guest| guest.session_id)
+                .expect("guest stay");
+            ctx.stay = Some(StayContext {
+                stay_id,
+                checkin_at: Some(Utc::now() + Duration::days(20)),
+                checkout_at: None,
+            });
+            send_form_available(ctx, portaki_sdk::prelude::EmptyArgs {})
+                .expect("sendFormAvailable when available");
         });
 }
 

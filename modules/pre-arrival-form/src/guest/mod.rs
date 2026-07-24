@@ -7,8 +7,8 @@ mod load;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 
-use empty::{empty_runtime_error_state, log_render_failure};
-use home::{build_completed_card, build_form_card, build_not_yet_card};
+use empty::{empty_not_yet_state, empty_runtime_error_state, log_render_failure};
+use home::{build_completed_card, build_form_card};
 use load::{load_guest_pre_arrival, GuestLoad};
 
 use crate::config::load_config;
@@ -28,7 +28,7 @@ pub fn render_home_card(ctx: GuestContext) -> Surface {
 fn render_with_data(ctx: &GuestContext) -> Result<Surface> {
     match load_guest_pre_arrival(ctx)? {
         GuestLoad::Empty(surface) => Ok(*surface),
-        GuestLoad::NotYet => Ok(build_not_yet_card()),
+        GuestLoad::NotYet => Ok(empty_not_yet_state(crate::ids::HOME_CARD)),
         GuestLoad::Form => {
             let config = load_config().unwrap_or_default();
             Ok(build_form_card(&config.questions))

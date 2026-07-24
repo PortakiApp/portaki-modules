@@ -135,17 +135,3 @@ pub fn build_completed_card() -> Surface {
     )
     .with_id(crate::ids::HOME_CARD)
 }
-
-pub fn build_not_yet_card() -> Surface {
-    Surface::new(
-        Card::new()
-            .icon("clipboard-list")
-            .title("i18n:home.card.title")
-            .child(
-                Text::new()
-                    .text("i18n:home.card.notYet")
-                    .variant(TextVariant::Body),
-            ),
-    )
-    .with_id(crate::ids::HOME_CARD)
-}

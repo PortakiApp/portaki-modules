@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::config::{load_config, save_config, FormQuestions, ModuleConfig, ShowWhen};
+use crate::email_send;
 use crate::storage;
 
 #[portaki_sdk::wire(serialize)]
@@ -67,6 +68,12 @@ pub struct SubmitArgs {
     pub special_needs: Option<String>,
     pub id_document: Option<String>,
     pub message_to_host: Option<String>,
+}
+
+/// Scheduling tick / stay-created — module owns availability gate + email content.
+#[portaki_sdk::command(name = "sendFormAvailable")]
+pub fn send_form_available(ctx: Context, _args: EmptyArgs) -> Result<()> {
+    email_send::send_form_available(&ctx)
 }
 
 #[portaki_sdk::command(name = "submit")]

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.2]
+
+### Fixed
+
+- Guest `home.card`: when `show_when` gates the form (not yet available), emit EmptyState so the guest shell hides the card entirely.
+
+### Added
+
+- `sendFormAvailable` command — module-owned guest email via `host::email::send` when the form becomes available (tick / stay-created).
+
 ## [0.3.1]
 
 ### Fixed
