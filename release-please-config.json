@@ -158,6 +158,154 @@
         }
       ]
     },
+    "modules/checklist": {
+      "package-name": "checklist",
+      "component": "checklist",
+      "release-type": "simple",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": true,
+      "include-v-in-tag": true,
+      "include-v-in-release-name": true,
+      "extra-files": [
+        {
+          "type": "toml",
+          "path": "Cargo.toml",
+          "jsonpath": "$.package.version"
+        },
+        {
+          "type": "json",
+          "path": "portaki.module.json",
+          "jsonpath": "$.version"
+        }
+      ],
+      "changelog-sections": [
+        {
+          "type": "feat",
+          "section": "Features"
+        },
+        {
+          "type": "fix",
+          "section": "Bug Fixes"
+        },
+        {
+          "type": "perf",
+          "section": "Performance"
+        },
+        {
+          "type": "revert",
+          "section": "Reverts"
+        },
+        {
+          "type": "docs",
+          "section": "Documentation",
+          "hidden": true
+        },
+        {
+          "type": "style",
+          "section": "Styling",
+          "hidden": true
+        },
+        {
+          "type": "chore",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "refactor",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "test",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "build",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "ci",
+          "section": "Miscellaneous",
+          "hidden": true
+        }
+      ]
+    },
+    "modules/emergency-contacts": {
+      "package-name": "emergency-contacts",
+      "component": "emergency-contacts",
+      "release-type": "simple",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": true,
+      "include-v-in-tag": true,
+      "include-v-in-release-name": true,
+      "extra-files": [
+        {
+          "type": "toml",
+          "path": "Cargo.toml",
+          "jsonpath": "$.package.version"
+        },
+        {
+          "type": "json",
+          "path": "portaki.module.json",
+          "jsonpath": "$.version"
+        }
+      ],
+      "changelog-sections": [
+        {
+          "type": "feat",
+          "section": "Features"
+        },
+        {
+          "type": "fix",
+          "section": "Bug Fixes"
+        },
+        {
+          "type": "perf",
+          "section": "Performance"
+        },
+        {
+          "type": "revert",
+          "section": "Reverts"
+        },
+        {
+          "type": "docs",
+          "section": "Documentation",
+          "hidden": true
+        },
+        {
+          "type": "style",
+          "section": "Styling",
+          "hidden": true
+        },
+        {
+          "type": "chore",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "refactor",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "test",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "build",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "ci",
+          "section": "Miscellaneous",
+          "hidden": true
+        }
+      ]
+    },
     "modules/ev-parking": {
       "package-name": "ev-parking",
       "component": "ev-parking",
@@ -306,6 +454,154 @@
         }
       ]
     },
+    "modules/facility-hours": {
+      "package-name": "facility-hours",
+      "component": "facility-hours",
+      "release-type": "simple",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": true,
+      "include-v-in-tag": true,
+      "include-v-in-release-name": true,
+      "extra-files": [
+        {
+          "type": "toml",
+          "path": "Cargo.toml",
+          "jsonpath": "$.package.version"
+        },
+        {
+          "type": "json",
+          "path": "portaki.module.json",
+          "jsonpath": "$.version"
+        }
+      ],
+      "changelog-sections": [
+        {
+          "type": "feat",
+          "section": "Features"
+        },
+        {
+          "type": "fix",
+          "section": "Bug Fixes"
+        },
+        {
+          "type": "perf",
+          "section": "Performance"
+        },
+        {
+          "type": "revert",
+          "section": "Reverts"
+        },
+        {
+          "type": "docs",
+          "section": "Documentation",
+          "hidden": true
+        },
+        {
+          "type": "style",
+          "section": "Styling",
+          "hidden": true
+        },
+        {
+          "type": "chore",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "refactor",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "test",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "build",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "ci",
+          "section": "Miscellaneous",
+          "hidden": true
+        }
+      ]
+    },
+    "modules/guest-reviews": {
+      "package-name": "guest-reviews",
+      "component": "guest-reviews",
+      "release-type": "simple",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": true,
+      "include-v-in-tag": true,
+      "include-v-in-release-name": true,
+      "extra-files": [
+        {
+          "type": "toml",
+          "path": "Cargo.toml",
+          "jsonpath": "$.package.version"
+        },
+        {
+          "type": "json",
+          "path": "portaki.module.json",
+          "jsonpath": "$.version"
+        }
+      ],
+      "changelog-sections": [
+        {
+          "type": "feat",
+          "section": "Features"
+        },
+        {
+          "type": "fix",
+          "section": "Bug Fixes"
+        },
+        {
+          "type": "perf",
+          "section": "Performance"
+        },
+        {
+          "type": "revert",
+          "section": "Reverts"
+        },
+        {
+          "type": "docs",
+          "section": "Documentation",
+          "hidden": true
+        },
+        {
+          "type": "style",
+          "section": "Styling",
+          "hidden": true
+        },
+        {
+          "type": "chore",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "refactor",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "test",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "build",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "ci",
+          "section": "Miscellaneous",
+          "hidden": true
+        }
+      ]
+    },
     "modules/ical-sync": {
       "package-name": "ical-sync",
       "component": "ical-sync",
@@ -383,6 +679,80 @@
     "modules/issue-report": {
       "package-name": "issue-report",
       "component": "issue-report",
+      "release-type": "simple",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": true,
+      "include-v-in-tag": true,
+      "include-v-in-release-name": true,
+      "extra-files": [
+        {
+          "type": "toml",
+          "path": "Cargo.toml",
+          "jsonpath": "$.package.version"
+        },
+        {
+          "type": "json",
+          "path": "portaki.module.json",
+          "jsonpath": "$.version"
+        }
+      ],
+      "changelog-sections": [
+        {
+          "type": "feat",
+          "section": "Features"
+        },
+        {
+          "type": "fix",
+          "section": "Bug Fixes"
+        },
+        {
+          "type": "perf",
+          "section": "Performance"
+        },
+        {
+          "type": "revert",
+          "section": "Reverts"
+        },
+        {
+          "type": "docs",
+          "section": "Documentation",
+          "hidden": true
+        },
+        {
+          "type": "style",
+          "section": "Styling",
+          "hidden": true
+        },
+        {
+          "type": "chore",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "refactor",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "test",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "build",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "ci",
+          "section": "Miscellaneous",
+          "hidden": true
+        }
+      ]
+    },
+    "modules/local-guide": {
+      "package-name": "local-guide",
+      "component": "local-guide",
       "release-type": "simple",
       "changelog-path": "CHANGELOG.md",
       "include-component-in-tag": true,
@@ -827,6 +1197,80 @@
     "modules/train": {
       "package-name": "train",
       "component": "train",
+      "release-type": "simple",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": true,
+      "include-v-in-tag": true,
+      "include-v-in-release-name": true,
+      "extra-files": [
+        {
+          "type": "toml",
+          "path": "Cargo.toml",
+          "jsonpath": "$.package.version"
+        },
+        {
+          "type": "json",
+          "path": "portaki.module.json",
+          "jsonpath": "$.version"
+        }
+      ],
+      "changelog-sections": [
+        {
+          "type": "feat",
+          "section": "Features"
+        },
+        {
+          "type": "fix",
+          "section": "Bug Fixes"
+        },
+        {
+          "type": "perf",
+          "section": "Performance"
+        },
+        {
+          "type": "revert",
+          "section": "Reverts"
+        },
+        {
+          "type": "docs",
+          "section": "Documentation",
+          "hidden": true
+        },
+        {
+          "type": "style",
+          "section": "Styling",
+          "hidden": true
+        },
+        {
+          "type": "chore",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "refactor",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "test",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "build",
+          "section": "Miscellaneous",
+          "hidden": true
+        },
+        {
+          "type": "ci",
+          "section": "Miscellaneous",
+          "hidden": true
+        }
+      ]
+    },
+    "modules/waste-recycling": {
+      "package-name": "waste-recycling",
+      "component": "waste-recycling",
       "release-type": "simple",
       "changelog-path": "CHANGELOG.md",
       "include-component-in-tag": true,
