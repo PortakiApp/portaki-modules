@@ -51,11 +51,17 @@ pub fn update_config(_ctx: Context, args: UpdateConfigArgs) -> Result<()> {
         config.show_when = ShowWhen::parse(&args.show_when);
     }
 
-    apply_flag(&mut config.questions.ask_arrival_time, args.ask_arrival_time);
+    apply_flag(
+        &mut config.questions.ask_arrival_time,
+        args.ask_arrival_time,
+    );
     apply_flag(&mut config.questions.ask_occasion, args.ask_occasion);
     apply_flag(&mut config.questions.ask_allergies, args.ask_allergies);
     apply_flag(&mut config.questions.ask_guest_count, args.ask_guest_count);
-    apply_flag(&mut config.questions.ask_special_needs, args.ask_special_needs);
+    apply_flag(
+        &mut config.questions.ask_special_needs,
+        args.ask_special_needs,
+    );
     apply_flag(&mut config.questions.ask_id_document, args.ask_id_document);
 
     save_config(&config)
