@@ -12,7 +12,7 @@
   "modules/local-guide": "0.2.1",
   "modules/lost-found": "0.3.2",
   "modules/nuki": "0.2.0",
-  "modules/pre-arrival-form": "0.3.0",
+  "modules/pre-arrival-form": "0.3.1",
   "modules/rules": "0.2.3",
   "modules/sections": "0.2.3",
   "modules/train": "0.1.1",

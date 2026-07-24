@@ -102,8 +102,11 @@ fn question_toggle_rows(questions: &FormQuestions) -> Vec<Component> {
 }
 
 fn toggle_row(name: &str, label: &str, icon: &str, checked: bool) -> Component {
-    // Leading icons need SDK ToggleRow.icon (portaki-sdk#27). Wire `.icon(icon)` after merge.
-    let row = ToggleRow::new().name(name).label(label).checked(checked);
-    let _ = icon;
-    row.into()
+    // Bordered tile + leading icon chip (design `editorPrearrival` question grid).
+    ToggleRow::new()
+        .name(name)
+        .label(label)
+        .icon(icon)
+        .checked(checked)
+        .into()
 }

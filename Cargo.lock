@@ -584,7 +584,7 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 [[package]]
 name = "portaki-connectors"
 version = "2.1.0"
-source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#5e6f23f123b8acc78b9f56e42b92896bd97fc226"
+source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#2eed2584c40f01aefbe738ce57eb908224b53c35"
 dependencies = [
  "portaki-sdk",
  "serde",
@@ -595,7 +595,7 @@ dependencies = [
 [[package]]
 name = "portaki-sdk"
 version = "2.1.0"
-source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#5e6f23f123b8acc78b9f56e42b92896bd97fc226"
+source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#2eed2584c40f01aefbe738ce57eb908224b53c35"
 dependencies = [
  "base64",
  "chrono",
@@ -612,7 +612,7 @@ dependencies = [
 [[package]]
 name = "portaki-sdk-macros"
 version = "2.1.0"
-source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#5e6f23f123b8acc78b9f56e42b92896bd97fc226"
+source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#2eed2584c40f01aefbe738ce57eb908224b53c35"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -623,7 +623,7 @@ dependencies = [
 [[package]]
 name = "portaki-test-utils"
 version = "2.1.0"
-source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#5e6f23f123b8acc78b9f56e42b92896bd97fc226"
+source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#2eed2584c40f01aefbe738ce57eb908224b53c35"
 dependencies = [
  "chrono",
  "portaki-sdk",
@@ -634,7 +634,7 @@ dependencies = [
 
 [[package]]
 name = "pre-arrival-form"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "chrono",
  "extism-pdk",

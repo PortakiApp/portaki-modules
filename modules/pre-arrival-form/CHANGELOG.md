@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.1]
+
+### Fixed
+
+- Question ToggleRows emit leading `icon` so host shells render bordered tiles + icon chips (design).
+
 ## [0.3.0]
 
 ### Added

@@ -134,6 +134,10 @@ fn host_main_renders_config_editor() {
             assert!(json.contains("ask_id_document"));
             assert!(json.contains("host.section.when"));
             assert!(json.contains("host.section.questions"));
+            // Design question tiles: bordered ToggleRow + leading icon chip.
+            assert!(json.contains("\"icon\":\"clock-circle\""));
+            assert!(json.contains("\"icon\":\"gift\""));
+            assert!(json.contains("\"icon\":\"users\""));
         });
 }
 
