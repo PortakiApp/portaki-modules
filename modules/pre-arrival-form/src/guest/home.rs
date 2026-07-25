@@ -58,7 +58,9 @@ pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
                     .title("i18n:home.task.preArrival.label")
                     .subtitle("i18n:home.task.completed")
                     .leading("clipboard")
-                    .chevron(false)
+                    .chevron(true)
+                    // Reopen overlay to review the submitted form / thanks.
+                    .action(open_form)
                     .into(),
             );
         }
