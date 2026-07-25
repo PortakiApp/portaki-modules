@@ -1,15 +1,19 @@
 //! Load checklist data for guest surfaces.
 
+use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 use uuid::Uuid;
 
 use super::empty::{empty_no_items_card, empty_state_if_module_not_ready};
+use crate::config::load_config;
 use crate::entities::ChecklistItem;
+use crate::show_when::is_checklist_available;
 use crate::storage;
 
 pub enum GuestLoad {
     Empty(Box<Surface>),
+    NotYet,
     Ready(GuestChecklistData),
 }
 
@@ -33,6 +37,14 @@ pub fn load_guest_checklist(ctx: &GuestContext) -> Result<GuestLoad> {
         return Ok(GuestLoad::Empty(Box::new(empty_no_items_card(
             crate::ids::HOME_CARD,
         ))));
+    }
+
+    let config = load_config().unwrap_or_default();
+    let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at);
+    let checkout_at = ctx.stay.as_ref().and_then(|stay| stay.checkout_at);
+    let now = time::now().unwrap_or_else(|_| chrono::Utc::now());
+    if !is_checklist_available(config.show_when, now, checkin_at, checkout_at) {
+        return Ok(GuestLoad::NotYet);
     }
 
     let stay_id = ctx.guest.as_ref().map(|guest| guest.session_id);

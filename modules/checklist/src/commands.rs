@@ -5,6 +5,7 @@ use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::config::{load_config, save_config, ShowWhen};
 use crate::labels::{self, lang_code};
 use crate::storage;
 
@@ -78,16 +79,24 @@ impl ReplaceItemsArgs {
     }
 }
 
-/// Workspace header Save → nested form `{ items: [{ label }] }`.
+/// Workspace header Save → `{ show_when, items: [{ label }] }`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateConfigArgs {
+    #[serde(default)]
+    pub show_when: String,
     #[serde(default)]
     pub items: Vec<ChecklistItemInput>,
 }
 
-/// Persists checklist items from the host workspace Save chrome.
+/// Persists timing + checklist items from the host workspace Save chrome.
 #[portaki_sdk::command(name = "updateConfig")]
 pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
+    let mut config = load_config().unwrap_or_default();
+    if !args.show_when.trim().is_empty() {
+        config.show_when = ShowWhen::parse(&args.show_when);
+    }
+    save_config(&config)?;
+
     replace_items(
         ctx,
         ReplaceItemsArgs {

@@ -7,7 +7,7 @@ mod load;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 
-use empty::{empty_runtime_error_state, log_render_failure};
+use empty::{empty_not_yet_card, empty_runtime_error_state, log_render_failure};
 use home::build_home_card;
 use load::{load_guest_checklist, GuestLoad};
 
@@ -26,6 +26,7 @@ pub fn render_home_card(ctx: GuestContext) -> Surface {
 fn render_with_data(ctx: &GuestContext) -> Result<Surface> {
     match load_guest_checklist(ctx)? {
         GuestLoad::Empty(surface) => Ok(*surface),
+        GuestLoad::NotYet => Ok(empty_not_yet_card(crate::ids::HOME_CARD)),
         GuestLoad::Ready(data) => Ok(build_home_card(&data)),
     }
 }

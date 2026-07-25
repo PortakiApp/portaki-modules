@@ -203,6 +203,7 @@ fn update_config_replaces_items_from_form() {
         update_config(
             ctx.clone(),
             UpdateConfigArgs {
+                show_when: "from_checkin".into(),
                 items: vec![
                     ChecklistItemInput {
                         label: "Clés".into(),
@@ -224,4 +225,69 @@ fn update_config_replaces_items_from_form() {
         let items = list_items(ctx).expect("list");
         assert_eq!(items.len(), 1);
     });
+}
+
+#[test]
+#[serial]
+fn host_main_renders_when_choice_list() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_host_main(ctx)).expect("surface json");
+            assert!(json.contains("show_when"));
+            assert!(json.contains("from_checkin"));
+            assert!(json.contains("before_checkout"));
+            assert!(json.contains("checkout_day"));
+            assert!(json.contains("host.section.when"));
+        });
+}
+
+#[test]
+#[serial]
+fn home_card_gated_shows_not_yet() {
+    use chrono::{Duration, Utc};
+    use portaki_sdk::context::StayContext;
+    use serde_json::json;
+
+    reset_test_store();
+    let config_bytes = serde_json::to_vec(&json!({
+        "show_when": "checkout_day"
+    }))
+    .expect("config json");
+
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_kv("config", config_bytes)
+        .run(|mut ctx| {
+            replace_items(
+                ctx.clone(),
+                ReplaceItemsArgs {
+                    items: vec![ChecklistItemInput {
+                        label: String::new(),
+                        label_fr: "Clés".into(),
+                        label_en: "Keys".into(),
+                        sort_order: 0,
+                    }],
+                    items_json: None,
+                },
+            )
+            .expect("replace");
+
+            let stay_id = ctx
+                .guest
+                .as_ref()
+                .map(|guest| guest.session_id)
+                .expect("guest stay");
+            ctx.stay = Some(StayContext {
+                stay_id,
+                checkin_at: Some(Utc::now() - Duration::days(2)),
+                checkout_at: Some(Utc::now() + Duration::days(3)),
+            });
+
+            let surface = render_home_card(ctx);
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("home.card.notYet"));
+            assert!(!json.contains("completeItem"));
+        });
 }

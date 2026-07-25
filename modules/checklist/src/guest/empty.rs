@@ -19,6 +19,20 @@ pub fn empty_no_items_card(surface_id: SurfaceId) -> Surface {
     .with_id(surface_id)
 }
 
+pub fn empty_not_yet_card(surface_id: SurfaceId) -> Surface {
+    Surface::new(
+        Card::new()
+            .icon("clock-circle")
+            .title("i18n:home.card.title")
+            .child(
+                Text::new()
+                    .text("i18n:home.card.notYet")
+                    .variant(TextVariant::Body),
+            ),
+    )
+    .with_id(surface_id)
+}
+
 pub fn empty_runtime_error_state(surface_id: SurfaceId) -> Surface {
     Surface::new(
         EmptyState::new()

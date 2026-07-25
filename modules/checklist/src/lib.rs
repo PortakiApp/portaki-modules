@@ -1,6 +1,7 @@
 //! Portaki checklist module — checkout tasks with stay-scoped completions.
 
 mod commands;
+mod config;
 mod email_context;
 mod entities;
 mod guest;
@@ -8,6 +9,7 @@ mod host;
 mod ids;
 mod labels;
 mod queries;
+mod show_when;
 mod storage;
 
 pub use commands::{
