@@ -1,10 +1,9 @@
 //! Host dashboard surface — design `rules-editor-v1` (Wasm SDUI for mobile + fallback).
+//!
+//! Save chrome is owned by the workspace tab (`updateConfig`).
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::common::Tone;
-use portaki_sdk::sdui::primitives::{
-    Button, Card, Field, Form, Page, Select, Stack, Text, TextInput,
-};
+use portaki_sdk::sdui::primitives::{Card, Field, Form, Page, Select, Stack, Text, TextInput};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::content::{RuleItem, RulesBundle, RulesPayload};
@@ -13,6 +12,8 @@ use crate::store;
 const ITEM_SLOTS: usize = 6;
 
 /// Host editor — rule cards for the active `ctx.locale`.
+///
+/// No in-form Save — workspace header owns Enregistrer → `updateConfig`.
 #[portaki_sdk::surface(host, id = "main")]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = RulesBundle::lang_code(&ctx.locale);
@@ -30,33 +31,19 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         }
     };
 
-    let submit_args = crate::commands::SaveContentArgs {
-        items: items_to_submit(&payload),
-        content_fr: String::new(),
-        content_en: String::new(),
-    };
-    let save_action = crate::ids::module_id().command(crate::ids::SAVE_CONTENT, submit_args);
-
     let mut cards: Vec<Component> = Vec::new();
     for index in 0..ITEM_SLOTS {
         cards.push(rule_card(index, payload.items.get(index)));
     }
-    cards.push(
-        Button::new()
-            .label("i18n:host.save")
-            .tone(Tone::Primary)
-            .action(save_action)
-            .into(),
-    );
 
     Surface::new(
         Page::new().child(Form::new().child(Stack::new().gap(16.0).children(vec![
-                        Text::new()
-                            .text("i18n:surface.host.main.subtitle")
-                            .variant(TextVariant::Body)
-                            .into(),
-                        Component::Stack(Stack::new().gap(16.0).children(cards)),
-                    ]))),
+            Text::new()
+                .text("i18n:surface.host.main.subtitle")
+                .variant(TextVariant::Body)
+                .into(),
+            Component::Stack(Stack::new().gap(16.0).children(cards)),
+        ]))),
     )
     .with_id(crate::ids::HOST_MAIN)
 }
@@ -93,19 +80,6 @@ fn default_for_lang(lang: &str) -> RulesPayload {
             ],
         }
     }
-}
-
-fn items_to_submit(payload: &RulesPayload) -> Vec<crate::commands::RuleItemInput> {
-    payload
-        .items
-        .iter()
-        .map(|item| crate::commands::RuleItemInput {
-            icon: item.icon.clone(),
-            title: item.title.clone(),
-            subtitle: item.subtitle.clone(),
-            ..Default::default()
-        })
-        .collect()
 }
 
 fn rule_card(index: usize, item: Option<&RuleItem>) -> Component {

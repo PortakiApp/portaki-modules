@@ -43,7 +43,8 @@ Host edits fields (icon, titles, subtitles). Storage still keeps `content_fr` / 
 ## Queries and commands
 
 - `getContent` — locale-aware items + raw FR/EN JSON
-- `saveContent` — upsert `RulesContent`
+- `updateConfig` — workspace Save chrome → upsert `RulesContent` (`items[]`)
+- `saveContent` — same payload (legacy / direct command)
 
 ## Development
 
