@@ -33,6 +33,8 @@
   "status.returned": "Récupéré",
   "home.card.title": "Objets perdus ou trouvés",
   "home.card.intro": "Vous avez perdu quelque chose ou trouvé un objet ? Prévenez votre hôte — il vous recontactera.",
+  "home.card.openForm": "Nouvelle déclaration",
+  "nav.lost-found": "Objets perdus ou trouvés",
   "home.card.thanks": "Merci — votre hôte a été prévenu.",
   "home.card.yourReports": "Vos signalements ce séjour",
   "home.card.unavailable": "Signalement indisponible",

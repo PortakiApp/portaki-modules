@@ -17,7 +17,7 @@ pub use commands::{
     ReplaceItemsArgs, SubmitArgs, UpdateConfigArgs, UpdateStatusArgs,
 };
 pub use entities::{ConsumableItem, ConsumableReport};
-pub use guest::render_home_card;
+pub use guest::{render_guest_form, render_home_card};
 pub use host::{render_host_main, render_host_stats, render_host_stay};
 pub use level::DEFAULT as LEVEL_DEFAULT;
 pub use queries::{

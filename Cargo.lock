@@ -128,7 +128,7 @@ dependencies = [
 
 [[package]]
 name = "consumables"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -422,7 +422,7 @@ dependencies = [
 
 [[package]]
 name = "issue-report"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -497,7 +497,7 @@ checksum = "0ceec5bc11778974d1bcb055b18002eba7f4b3518b6a0081b3af5f21666da9ad"
 
 [[package]]
 name = "lost-found"
-version = "0.3.2"
+version = "0.4.0"
 dependencies = [
  "chrono",
  "extism-pdk",

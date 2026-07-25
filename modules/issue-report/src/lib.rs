@@ -11,7 +11,7 @@ mod storage;
 
 pub use commands::{submit, SubmitArgs};
 pub use entities::IssueReport;
-pub use guest::render_home_card;
+pub use guest::{render_guest_form, render_home_card};
 pub use host::render_host_main;
 pub use queries::{list_for_stay, list_recent, IssueReportRow};
 pub use storage::reset_test_store;

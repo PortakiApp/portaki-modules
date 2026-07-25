@@ -1,6 +1,7 @@
 //! Guest booklet surfaces.
 
 mod empty;
+mod form;
 mod home;
 mod load;
 
@@ -11,7 +12,9 @@ use empty::{empty_runtime_error_state, log_render_failure};
 use home::build_home_card;
 use load::{load_guest_reports, GuestLoad};
 
-/// Guest home card — issue report form and stay report list.
+pub use form::render_guest_form;
+
+/// Guest home card — teaser + open form overlay.
 #[portaki_sdk::surface(guest, id = "home.card")]
 pub fn render_home_card(ctx: GuestContext) -> Surface {
     match render_with_data(&ctx) {

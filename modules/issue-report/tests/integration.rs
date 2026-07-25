@@ -3,8 +3,8 @@
 use serial_test::serial;
 
 use issue_report::{
-    list_for_stay, list_recent, render_home_card, render_host_main, reset_test_store, submit,
-    SubmitArgs,
+    list_for_stay, list_recent, render_guest_form, render_home_card, render_host_main,
+    reset_test_store, submit, SubmitArgs,
 };
 use portaki_sdk::sdui::component::Component;
 use portaki_sdk::sdui::surface::Surface;
@@ -55,18 +55,26 @@ fn child_components(node: &Component) -> Vec<&Component> {
 
 #[test]
 #[serial]
-fn home_card_renders_form_when_no_reports() {
+fn home_card_opens_form_overlay_when_no_reports() {
     reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx.clone());
             assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "Form"));
-            assert!(contains_component_type(&surface, "Button"));
+            assert!(!contains_component_type(&surface, "Form"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("home.card.intro"));
-            assert!(json.contains("form.category.label"));
+            assert!(json.contains("danger-triangle"));
+            assert!(json.contains("guest.form"));
+            assert!(json.contains("home.card.openForm"));
+
+            let form = render_guest_form(ctx);
+            assert!(contains_component_type(&form, "Form"));
+            assert!(contains_component_type(&form, "Button"));
+            assert!(!contains_component_type(&form, "Card"));
+            let form_json = serde_json::to_string(&form).expect("form json");
+            assert!(form_json.contains("form.category.label"));
         });
 }
 

@@ -4,10 +4,11 @@ use serial_test::serial;
 use uuid::Uuid;
 
 use consumables::{
-    list_for_stay, list_items, list_open_count, render_home_card, render_host_main,
-    render_host_stats, render_host_stay, replace_items, reset_test_store, seed_defaults, submit,
-    update_config, update_status, ConsumableItemInput, ListForStayArgs, ReplaceItemsArgs,
-    SubmitArgs, UpdateConfigArgs, UpdateStatusArgs, LEVEL_DEFAULT, STATUS_DEFAULT,
+    list_for_stay, list_items, list_open_count, render_guest_form, render_home_card,
+    render_host_main, render_host_stats, render_host_stay, replace_items, reset_test_store,
+    seed_defaults, submit, update_config, update_status, ConsumableItemInput, ListForStayArgs,
+    ReplaceItemsArgs, SubmitArgs, UpdateConfigArgs, UpdateStatusArgs, LEVEL_DEFAULT,
+    STATUS_DEFAULT,
 };
 use portaki_sdk::prelude::EmptyArgs;
 use portaki_sdk::sdui::component::Component;
@@ -77,7 +78,7 @@ fn home_card_empty_when_no_items() {
 
 #[test]
 #[serial]
-fn home_card_renders_form_with_catalog() {
+fn home_card_opens_form_overlay_with_catalog() {
     reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
@@ -97,14 +98,22 @@ fn home_card_renders_form_with_catalog() {
             )
             .expect("replace");
 
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx.clone());
             assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "Form"));
-            assert!(contains_component_type(&surface, "ChoiceList"));
-            assert!(contains_component_type(&surface, "Button"));
+            assert!(!contains_component_type(&surface, "Form"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("home.card.intro"));
-            assert!(json.contains("Café") || json.contains("Coffee"));
+            assert!(json.contains("guest.form"));
+            assert!(json.contains("package"));
+            assert!(json.contains("home.card.openForm"));
+
+            let form = render_guest_form(ctx);
+            assert!(contains_component_type(&form, "Form"));
+            assert!(contains_component_type(&form, "ChoiceList"));
+            assert!(contains_component_type(&form, "Button"));
+            assert!(!contains_component_type(&form, "Card"));
+            let form_json = serde_json::to_string(&form).expect("form json");
+            assert!(form_json.contains("Café") || form_json.contains("Coffee"));
         });
 }
 

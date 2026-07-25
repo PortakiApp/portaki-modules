@@ -15,6 +15,8 @@
   "home.card.intro": "Dites-nous ce qui ne va pas — nous transmettrons à votre hôte.",
   "home.card.thanks": "Merci — votre hôte a été prévenu.",
   "home.card.yourReports": "Vos signalements ce séjour",
+  "home.card.openForm": "Nouveau signalement",
+  "nav.issue-report": "Signaler un problème",
   "home.card.unavailable": "Signalement indisponible",
   "home.card.error.title": "Signalement temporairement indisponible",
   "home.card.error.description": "Le formulaire n’a pas pu être chargé. Réessayez dans un instant.",

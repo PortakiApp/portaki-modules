@@ -15,6 +15,8 @@
   "home.card.intro": "Tell us what is wrong — we will pass it to your host.",
   "home.card.thanks": "Thanks — your host has been notified.",
   "home.card.yourReports": "Your reports this stay",
+  "home.card.openForm": "New report",
+  "nav.issue-report": "Report an issue",
   "home.card.unavailable": "Reporting unavailable",
   "home.card.error.title": "Reporting temporarily unavailable",
   "home.card.error.description": "The form could not be loaded. Try again in a moment.",
