@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2]
+
+### Added
+
+- Manifest `emails[]` for `checkout-j2` → `sendCheckoutFollowUp` (tick-driven;
+  no `catchUpOnPropertyPublish` — offset is fixed, module has no timing config).
+
 ## [0.3.1]
 
 ### Changed

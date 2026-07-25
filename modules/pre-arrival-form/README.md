@@ -31,7 +31,7 @@ Host manifest (`portaki.module.json`): `property-workspace-tab` + `stay-detail` 
 - `getStatus` — `{ completed, arrivalTimeEstimated?, … }` for the current stay
 - `submit` — upsert response; emits `pre-arrival.completed`
 - `updateConfig` — persist `show_when` + question flags
-- `sendFormAvailable` — tick / stay-created; `host::email::send` when form is available
+- `sendFormAvailable` — daily tick + manifest catch-up (`emails[].catchUpOnPropertyPublish` / `dispatchOnStayCreated`); `host::email::send` when form is available (dedup `form-available`)
 
 ## Development
 
