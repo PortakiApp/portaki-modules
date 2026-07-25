@@ -26,7 +26,7 @@ pub struct RuleItemInput {
     pub subtitle_en: String,
 }
 
-/// Arguments for `saveContent`.
+/// Arguments for `saveContent` / `updateConfig` (workspace Save chrome).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SaveContentArgs {
     /// Structured items for the active request locale (preferred).
@@ -38,6 +38,15 @@ pub struct SaveContentArgs {
     /// Legacy JSON string for English payload.
     #[serde(default)]
     pub content_en: String,
+}
+
+/// Workspace header Save → nested form `{ items: [{ icon, title, subtitle }] }`.
+///
+/// Same payload as [`save_content`] — host `HostSurfacePanel` always dispatches
+/// `updateConfig` for property-workspace-tab modules.
+#[portaki_sdk::command(name = "updateConfig")]
+pub fn update_config(ctx: Context, args: SaveContentArgs) -> Result<()> {
+    save_content(ctx, args)
 }
 
 #[portaki_sdk::command(name = "saveContent")]
