@@ -1,6 +1,8 @@
 name: ci
 
 # Quality on pull_request; push main = publish path only (avoids feature push + PR double bill).
+# workflow_dispatch: recover from Actions outages / 0-job runs without an empty tip commit
+# (empty pushes are skipped by paths-ignore).
 on:
   push:
     branches: [main]
@@ -13,6 +15,7 @@ on:
       - "**.md"
       - "docs/**"
       - ".github/CI.md"
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
