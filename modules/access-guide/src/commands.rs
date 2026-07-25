@@ -1,7 +1,7 @@
 //! Module commands — configuration persistence (shared config + locale texts).
 
 use portaki_sdk::host::email::{
-    self, EmailAudience, LocalizedEmailText, ModuleEmailCta, ModuleEmailSdui, SendEmailArgs,
+    self, EmailAudience, ModuleEmailCta, ModuleEmailSdui, SendEmailArgs,
 };
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -558,21 +558,12 @@ pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
             email_id: "code-changed".into(),
             audience: EmailAudience::PropertyEligibleGuests,
             content: ModuleEmailSdui {
-                subject: LocalizedEmailText::new(
-                    "Votre code d'accès a été mis à jour",
-                    "Your access code was updated",
-                ),
-                eyebrow: Some(LocalizedEmailText::both("Accès")),
-                title: Some(LocalizedEmailText::new(
-                    "Nouveau code d'accès",
-                    "New access code",
-                )),
-                body: LocalizedEmailText::new(
-                    "L'hôte a mis à jour les codes d'accès du logement. Ouvrez votre livret pour consulter les nouvelles instructions.",
-                    "The host updated the property access codes. Open your booklet for the latest instructions.",
-                ),
+                subject: crate::email_i18n::text("email.codeChanged.subject"),
+                eyebrow: Some(crate::email_i18n::text("email.codeChanged.eyebrow")),
+                title: Some(crate::email_i18n::text("email.codeChanged.title")),
+                body: crate::email_i18n::text("email.codeChanged.body"),
                 cta: Some(ModuleEmailCta {
-                    label: LocalizedEmailText::new("Voir mon accès", "View access"),
+                    label: crate::email_i18n::text("email.codeChanged.cta"),
                     url: None,
                     portaki_action: Some("open-module:access-guide:default".into()),
                 }),

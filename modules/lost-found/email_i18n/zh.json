@@ -1,0 +1,12 @@
+{
+  "email.hostFound.subject": "您可能遗留了物品",
+  "email.hostFound.eyebrow": "拾获物品",
+  "email.hostFound.title": "您可能遗留了物品",
+  "email.hostFound.body": "房东在整理房源时发现一件可能属于您的物品。\n\n« {description} »\n\n请回复本邮件或打开手册安排取回。",
+  "email.hostFound.cta": "联系房东",
+  "email.checkoutFollowUp.subject": "您可能遗留了物品",
+  "email.checkoutFollowUp.eyebrow": "拾获物品",
+  "email.checkoutFollowUp.title": "您可能遗留了物品",
+  "email.checkoutFollowUp.body": "为下一位旅客整理时，申报了一件与您住宿相关的物品。\n\n« {description} »\n\n请回复本邮件安排寄回或取回。",
+  "email.checkoutFollowUp.cta": "联系房东"
+}

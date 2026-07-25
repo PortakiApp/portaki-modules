@@ -1,0 +1,12 @@
+{
+  "email.hostFound.subject": "置き忘れの可能性があります",
+  "email.hostFound.eyebrow": "拾得物",
+  "email.hostFound.title": "置き忘れの可能性があります",
+  "email.hostFound.body": "ホストが物件を準備中に、お客様のものとみられる物品を見つけました。\n\n« {description} »\n\nこのメールに返信するか、ブックレットを開いて受け取りを手配してください。",
+  "email.hostFound.cta": "ホストに連絡",
+  "email.checkoutFollowUp.subject": "置き忘れの可能性があります",
+  "email.checkoutFollowUp.eyebrow": "拾得物",
+  "email.checkoutFollowUp.title": "置き忘れの可能性があります",
+  "email.checkoutFollowUp.body": "次のゲスト向けに準備中、ご滞在に関連する物品が申告されました。\n\n« {description} »\n\n返送または受け取りの手配のため、このメールにご返信ください。",
+  "email.checkoutFollowUp.cta": "ホストに連絡"
+}

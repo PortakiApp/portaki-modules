@@ -1,0 +1,12 @@
+{
+  "email.hostFound.subject": "Misschien bent u iets vergeten",
+  "email.hostFound.eyebrow": "Gevonden voorwerp",
+  "email.hostFound.title": "Misschien bent u iets vergeten",
+  "email.hostFound.body": "Bij het voorbereiden van de woning vond de host een voorwerp dat van u kan zijn.\n\n« {description} »\n\nBeantwoord deze e-mail of open uw boekje om ophalen te regelen.",
+  "email.hostFound.cta": "Host contacteren",
+  "email.checkoutFollowUp.subject": "Misschien bent u iets vergeten",
+  "email.checkoutFollowUp.eyebrow": "Gevonden voorwerp",
+  "email.checkoutFollowUp.title": "Misschien bent u iets vergeten",
+  "email.checkoutFollowUp.body": "Bij het voorbereiden voor volgende gasten is een voorwerp van uw verblijf gemeld.\n\n« {description} »\n\nBeantwoord deze e-mail om retour of ophalen te regelen.",
+  "email.checkoutFollowUp.cta": "Host contacteren"
+}

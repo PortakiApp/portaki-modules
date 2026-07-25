@@ -2,6 +2,7 @@
 
 mod commands;
 mod config;
+mod email_i18n;
 mod email_send;
 mod entities;
 mod guest;

@@ -4,6 +4,7 @@ mod commands;
 mod config;
 mod description;
 mod email_context;
+mod email_i18n;
 mod email_send;
 mod entities;
 mod guest;

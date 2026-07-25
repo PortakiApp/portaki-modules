@@ -1,0 +1,12 @@
+{
+  "email.hostFound.subject": "Pode ter esquecido alguma coisa",
+  "email.hostFound.eyebrow": "Objeto encontrado",
+  "email.hostFound.title": "Pode ter esquecido alguma coisa",
+  "email.hostFound.body": "Ao preparar o alojamento, o anfitrião encontrou um objeto que pode ser seu.\n\n« {description} »\n\nResponda a este e-mail ou abra o livreto para organizar a recolha.",
+  "email.hostFound.cta": "Contactar o anfitrião",
+  "email.checkoutFollowUp.subject": "Pode ter esquecido alguma coisa",
+  "email.checkoutFollowUp.eyebrow": "Objeto encontrado",
+  "email.checkoutFollowUp.title": "Pode ter esquecido alguma coisa",
+  "email.checkoutFollowUp.body": "Ao preparar o alojamento para os próximos hóspedes, foi declarado um objeto ligado à sua estadia.\n\n« {description} »\n\nResponda a este e-mail para organizar a devolução ou recolha.",
+  "email.checkoutFollowUp.cta": "Contactar o anfitrião"
+}

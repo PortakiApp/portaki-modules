@@ -1,0 +1,12 @@
+{
+  "email.hostFound.subject": "You may have left something behind",
+  "email.hostFound.eyebrow": "Found item",
+  "email.hostFound.title": "You may have left something behind",
+  "email.hostFound.body": "While preparing the property, the host found an item that may belong to you.\n\n« {description} »\n\nReply to this email or open your booklet to arrange collection.",
+  "email.hostFound.cta": "Contact the host",
+  "email.checkoutFollowUp.subject": "You may have left something behind",
+  "email.checkoutFollowUp.eyebrow": "Found item",
+  "email.checkoutFollowUp.title": "You may have left something behind",
+  "email.checkoutFollowUp.body": "While preparing the property for the next guests, an item linked to your stay was declared.\n\n« {description} »\n\nReply to this email to arrange return or collection.",
+  "email.checkoutFollowUp.cta": "Contact the host"
+}

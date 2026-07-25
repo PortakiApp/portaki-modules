@@ -1,0 +1,12 @@
+{
+  "email.hostFound.subject": "ربما نسيت شيئاً",
+  "email.hostFound.eyebrow": "غرض موجود",
+  "email.hostFound.title": "ربما نسيت شيئاً",
+  "email.hostFound.body": "أثناء تجهيز المسكن، عثر المضيف على غرض قد يخصك.\n\n« {description} »\n\nيرجى الرد على هذا البريد أو فتح الكتيب لتنظيم الاستلام.",
+  "email.hostFound.cta": "اتصل بالمضيف",
+  "email.checkoutFollowUp.subject": "ربما نسيت شيئاً",
+  "email.checkoutFollowUp.eyebrow": "غرض موجود",
+  "email.checkoutFollowUp.title": "ربما نسيت شيئاً",
+  "email.checkoutFollowUp.body": "أثناء التجهيز للضيوف التاليين، أُعلن عن غرض مرتبط بإقامتك.\n\n« {description} »\n\nيرجى الرد على هذا البريد لتنظيم الإرجاع أو الاستلام.",
+  "email.checkoutFollowUp.cta": "اتصل بالمضيف"
+}

@@ -1,0 +1,7 @@
+{
+  "email.formAvailable.subject": "Un formulaire vous attend avant votre arrivée",
+  "email.formAvailable.eyebrow": "Avant votre arrivée",
+  "email.formAvailable.title": "Aidez-nous à préparer votre venue",
+  "email.formAvailable.body": "Votre hôte a préparé un court formulaire (horaire d’arrivée, allergies…).\n\nRépondez en 1 minute depuis votre livret séjour.",
+  "email.formAvailable.cta": "Ouvrir le formulaire"
+}

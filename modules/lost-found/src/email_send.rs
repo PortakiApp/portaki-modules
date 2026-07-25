@@ -7,10 +7,11 @@ use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
 use crate::description;
+use crate::email_i18n;
 use crate::entities::LostFoundReport;
 use crate::storage;
 
-/// Guest self-report → notify workspace owner.
+/// Guest self-report → notify workspace owner (host audience — FR/EN).
 pub fn notify_host_submitted(
     property_id: Uuid,
     stay_id: Uuid,
@@ -52,31 +53,23 @@ pub fn notify_host_submitted(
     })
 }
 
-/// Host-declared found item → notify guest.
+/// Host-declared found item → notify guest (multi-locale).
 pub fn notify_guest_host_found(
     stay_id: Uuid,
     report_id: Uuid,
     plain_description: &str,
 ) -> Result<()> {
-    let body = format!(
-        "En préparant le logement, l'hôte a retrouvé un objet qui pourrait vous appartenir.\n\n« {plain_description} »\n\nRépondez à cet email ou ouvrez votre livret pour organiser la récupération."
-    );
+    let vars = [("description", plain_description)];
     email::send(&SendEmailArgs {
         email_id: format!("host-found-{report_id}"),
         audience: EmailAudience::Guest,
         content: ModuleEmailSdui {
-            subject: LocalizedEmailText::new(
-                "Vous avez peut-être oublié quelque chose",
-                "You may have left something behind",
-            ),
-            eyebrow: Some(LocalizedEmailText::both("Objet trouvé")),
-            title: Some(LocalizedEmailText::new(
-                "Vous avez peut-être oublié quelque chose",
-                "You may have left something behind",
-            )),
-            body: LocalizedEmailText::both(body),
+            subject: email_i18n::text("email.hostFound.subject"),
+            eyebrow: Some(email_i18n::text("email.hostFound.eyebrow")),
+            title: Some(email_i18n::text("email.hostFound.title")),
+            body: email_i18n::text_with("email.hostFound.body", &vars),
             cta: Some(ModuleEmailCta {
-                label: LocalizedEmailText::new("Contacter l'hôte", "Contact the host"),
+                label: email_i18n::text("email.hostFound.cta"),
                 url: None,
                 portaki_action: Some("open-module:lost-found:default".into()),
             }),
@@ -104,26 +97,17 @@ pub fn send_checkout_follow_up(ctx: &Context) -> Result<()> {
         return Ok(());
     };
 
-    let body = format!(
-        "En préparant le logement pour les prochains voyageurs, un objet lié à votre séjour a été déclaré.\n\n« {joined} »\n\nRépondez à cet email pour organiser le renvoi ou la récupération."
-    );
-
+    let vars = [("description", joined.as_str())];
     email::send(&SendEmailArgs {
         email_id: "checkout-j2".into(),
         audience: EmailAudience::Guest,
         content: ModuleEmailSdui {
-            subject: LocalizedEmailText::new(
-                "Vous avez peut-être oublié quelque chose",
-                "You may have left something behind",
-            ),
-            eyebrow: Some(LocalizedEmailText::both("Objet trouvé")),
-            title: Some(LocalizedEmailText::new(
-                "Vous avez peut-être oublié quelque chose",
-                "You may have left something behind",
-            )),
-            body: LocalizedEmailText::both(body),
+            subject: email_i18n::text("email.checkoutFollowUp.subject"),
+            eyebrow: Some(email_i18n::text("email.checkoutFollowUp.eyebrow")),
+            title: Some(email_i18n::text("email.checkoutFollowUp.title")),
+            body: email_i18n::text_with("email.checkoutFollowUp.body", &vars),
             cta: Some(ModuleEmailCta {
-                label: LocalizedEmailText::new("Contacter l'hôte", "Contact the host"),
+                label: email_i18n::text("email.checkoutFollowUp.cta"),
                 url: None,
                 portaki_action: Some("open-module:lost-found:default".into()),
             }),
@@ -145,5 +129,24 @@ fn join_descriptions(reports: &[LostFoundReport]) -> Option<String> {
         None
     } else {
         Some(parts.join(" · "))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn host_found_payload_includes_de_and_falls_back() {
+        let subject = email_i18n::text("email.hostFound.subject");
+        assert!(subject.translations.contains_key("de"));
+        assert_eq!(
+            subject.resolve("de"),
+            subject.translations.get("de").map(String::as_str).unwrap()
+        );
+        assert!(!subject.resolve("xx").is_empty());
+        let body = email_i18n::text_with("email.hostFound.body", &[("description", "scarf")]);
+        assert!(body.resolve("en").contains("scarf"));
+        assert!(body.resolve("fr").contains("scarf"));
     }
 }

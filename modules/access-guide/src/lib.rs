@@ -3,6 +3,7 @@
 mod commands;
 mod config;
 mod email_context;
+mod email_i18n;
 mod guest;
 mod host;
 mod ids;

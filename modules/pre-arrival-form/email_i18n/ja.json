@@ -1,0 +1,7 @@
+{
+  "email.formAvailable.subject": "到着前にフォームがあります",
+  "email.formAvailable.eyebrow": "到着前",
+  "email.formAvailable.title": "滞在の準備にご協力ください",
+  "email.formAvailable.body": "ホストが短いフォーム（到着時刻、アレルギーなど）を用意しました。\n\n滞在ブックレットから1分で回答できます。",
+  "email.formAvailable.cta": "フォームを開く"
+}

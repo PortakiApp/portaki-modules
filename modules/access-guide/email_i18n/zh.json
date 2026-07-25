@@ -1,0 +1,7 @@
+{
+  "email.codeChanged.subject": "您的门禁密码已更新",
+  "email.codeChanged.eyebrow": "门禁",
+  "email.codeChanged.title": "新的门禁密码",
+  "email.codeChanged.body": "房东已更新房源门禁密码。请打开手册查看最新说明。",
+  "email.codeChanged.cta": "查看门禁"
+}

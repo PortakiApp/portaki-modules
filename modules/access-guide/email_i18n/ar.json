@@ -1,0 +1,7 @@
+{
+  "email.codeChanged.subject": "تم تحديث رمز الدخول",
+  "email.codeChanged.eyebrow": "الدخول",
+  "email.codeChanged.title": "رمز دخول جديد",
+  "email.codeChanged.body": "حدّث المضيف رموز الدخول. افتح الكتيب للاطلاع على التعليمات الجديدة.",
+  "email.codeChanged.cta": "عرض الدخول"
+}

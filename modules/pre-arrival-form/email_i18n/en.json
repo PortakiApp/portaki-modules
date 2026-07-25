@@ -1,0 +1,7 @@
+{
+  "email.formAvailable.subject": "A form is ready before your arrival",
+  "email.formAvailable.eyebrow": "Before your arrival",
+  "email.formAvailable.title": "Help us prepare for your stay",
+  "email.formAvailable.body": "Your host prepared a short form (arrival time, allergies…).\n\nAnswer in one minute from your stay booklet.",
+  "email.formAvailable.cta": "Open the form"
+}

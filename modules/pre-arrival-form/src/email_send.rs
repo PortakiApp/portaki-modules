@@ -1,12 +1,13 @@
 //! Module-owned transactional emails via `host::email::send`.
 
 use portaki_sdk::host::email::{
-    self, EmailAudience, LocalizedEmailText, ModuleEmailCta, ModuleEmailSdui, SendEmailArgs,
+    self, EmailAudience, ModuleEmailCta, ModuleEmailSdui, SendEmailArgs,
 };
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 
 use crate::config::load_config;
+use crate::email_i18n;
 use crate::show_when::is_form_available;
 use crate::storage;
 
@@ -38,24 +39,12 @@ pub fn send_form_available(ctx: &Context) -> Result<()> {
         email_id: FORM_AVAILABLE_EMAIL_ID.into(),
         audience: EmailAudience::Guest,
         content: ModuleEmailSdui {
-            subject: LocalizedEmailText::new(
-                "Un formulaire vous attend avant votre arrivée",
-                "A form is ready before your arrival",
-            ),
-            eyebrow: Some(LocalizedEmailText::new(
-                "Avant votre arrivée",
-                "Before your arrival",
-            )),
-            title: Some(LocalizedEmailText::new(
-                "Aidez-nous à préparer votre venue",
-                "Help us prepare for your stay",
-            )),
-            body: LocalizedEmailText::new(
-                "Votre hôte a préparé un court formulaire (horaire d’arrivée, allergies…).\n\nRépondez en 1 minute depuis votre livret séjour.",
-                "Your host prepared a short form (arrival time, allergies…).\n\nAnswer in one minute from your stay booklet.",
-            ),
+            subject: email_i18n::text("email.formAvailable.subject"),
+            eyebrow: Some(email_i18n::text("email.formAvailable.eyebrow")),
+            title: Some(email_i18n::text("email.formAvailable.title")),
+            body: email_i18n::text("email.formAvailable.body"),
             cta: Some(ModuleEmailCta {
-                label: LocalizedEmailText::new("Ouvrir le formulaire", "Open the form"),
+                label: email_i18n::text("email.formAvailable.cta"),
                 url: None,
                 portaki_action: Some("open-module:pre-arrival-form:default".into()),
             }),
