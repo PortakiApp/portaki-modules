@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.1]
+
+### Added
+
+- Manifest `emails[].catchUpOnConfigUpdate` for `form-available` — platform
+  promotes draft KV and redispatches `sendFormAvailable` after host
+  `updateConfig` (workspace-tab Save without property Publish).
+
 ## [0.6.0]
 
 ### Added

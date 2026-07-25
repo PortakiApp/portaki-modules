@@ -14,10 +14,11 @@ use crate::storage;
 /// Stable delivery id — orchestrator dedups per stay + module + email_id.
 pub const FORM_AVAILABLE_EMAIL_ID: &str = "form-available";
 
-/// Scheduled / stay-created / property-publish catch-up — send guest mail only when
-/// the form is available and not yet completed. Orchestrator re-dispatches this after
-/// draft publish so a newly opened `show_when` does not leave far-future stays without
-/// `form-available` (dedup claim prevents re-send).
+/// Scheduled / stay-created / property-publish / config-update catch-up — send guest
+/// mail only when the form is available and not yet completed. Orchestrator
+/// re-dispatches after draft publish and after host `updateConfig` (KV promote) so a
+/// newly opened `show_when` does not leave stays without `form-available` (dedup
+/// claim prevents re-send).
 pub fn send_form_available(ctx: &Context) -> Result<()> {
     let stay_id = ctx
         .guest
