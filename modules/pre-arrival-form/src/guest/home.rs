@@ -103,9 +103,7 @@ pub fn build_form_surface(
     existing: Option<&PreArrivalResponse>,
     completed: bool,
 ) -> Surface {
-    use portaki_sdk::sdui::primitives::{
-        Button, Field, Form, Text, TextArea, TimePicker,
-    };
+    use portaki_sdk::sdui::primitives::{Button, Field, Form, Text, TextArea, TimePicker};
 
     let submit_action = crate::ids::module_id().command_empty(crate::ids::SUBMIT);
     let submit_label = if completed {
@@ -217,17 +215,19 @@ pub fn build_form_surface(
             })
             .into(),
     );
-    form_children.push(Button::new().label(submit_label).action(submit_action).into());
+    form_children.push(
+        Button::new()
+            .label(submit_label)
+            .action(submit_action)
+            .into(),
+    );
 
     // Page chrome owns the title; body is the form only (no nested Card).
     Surface::new(Form::new().children(form_children)).with_id(crate::ids::GUEST_FORM)
 }
 
 /// Read-only summary after check-in (answers no longer editable).
-pub fn build_readonly_surface(
-    questions: &FormQuestions,
-    response: &PreArrivalResponse,
-) -> Surface {
+pub fn build_readonly_surface(questions: &FormQuestions, response: &PreArrivalResponse) -> Surface {
     use portaki_sdk::sdui::primitives::Text;
 
     let mut children: Vec<Component> = Vec::new();
