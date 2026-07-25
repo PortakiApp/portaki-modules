@@ -10,7 +10,7 @@ mod ids;
 mod queries;
 mod store;
 
-pub use commands::{save_content, SaveContentArgs};
+pub use commands::{save_content, update_config, RuleItemInput, SaveContentArgs};
 pub use content::{RuleItem, RulesPayload};
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use entities::RulesContent;

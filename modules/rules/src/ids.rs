@@ -12,9 +12,11 @@ define_operation_names! {
     EMAIL_CONTEXT = "emailContext",
     GET_CONTENT = "getContent",
     SAVE_CONTENT = "saveContent",
+    UPDATE_CONFIG = "updateConfig",
 }
 
 /// Catalog module id (`rules`).
+#[allow(dead_code)] // reserved for typed command actions (workspace Save uses updateConfig by name)
 pub fn module_id() -> ModuleId {
     ModuleId::from_static("rules")
 }

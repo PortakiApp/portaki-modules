@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.0](https://github.com/PortakiApp/portaki-modules/compare/rules-v0.2.3...rules-v0.3.0) (2026-07-25)
+
+### Features
+
+* expose `updateConfig` for workspace Save chrome (delegates to `saveContent`)
+
 ## [0.2.0](https://github.com/PortakiApp/portaki-modules/compare/rules-v0.1.1...rules-v0.2.0) (2026-07-21)
 
 

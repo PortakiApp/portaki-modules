@@ -12,7 +12,7 @@ use serde_json::json;
 
 use rules::{
     get_content, render_explore_detail, render_home_card, reset_test_store, save_content,
-    GetContentArgs, RulesContent, SaveContentArgs,
+    update_config, GetContentArgs, RuleItemInput, RulesContent, SaveContentArgs,
 };
 
 fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
@@ -151,6 +151,39 @@ fn get_content_returns_saved_items() {
             )
             .expect("get");
             assert_eq!(view.items.len(), 4);
+            assert_eq!(view.items[0].title, "Calme après 22 h");
+        });
+}
+
+#[test]
+#[serial]
+fn update_config_persists_items_for_locale() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            update_config(
+                ctx.clone(),
+                SaveContentArgs {
+                    items: vec![RuleItemInput {
+                        icon: "clock-circle".into(),
+                        title: "Calme après 22 h".into(),
+                        subtitle: "Merci pour le voisinage".into(),
+                        ..Default::default()
+                    }],
+                    content_fr: String::new(),
+                    content_en: String::new(),
+                },
+            )
+            .expect("updateConfig");
+            let view = get_content(
+                ctx,
+                GetContentArgs {
+                    locale: Some("fr-FR".into()),
+                },
+            )
+            .expect("get");
+            assert_eq!(view.items.len(), 1);
             assert_eq!(view.items[0].title, "Calme après 22 h");
         });
 }
