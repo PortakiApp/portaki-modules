@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0]
+
+### Added
+
+- Manifest `emails[]` for `form-available`: `command: sendFormAvailable`,
+  `catchUpOnPropertyPublish`, `dispatchOnStayCreated`. Platform redispatches on
+  property publish / stay created; module gate + delivery dedup unchanged.
+
 ## [0.5.1]
 
 ### Changed
