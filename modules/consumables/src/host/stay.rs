@@ -1,7 +1,7 @@
 //! Stay-scoped host surface — shortage reports for one stay.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Card, List, Page, Text};
+use portaki_sdk::sdui::primitives::{Card, EmptyState, List, Page, Text};
 use portaki_sdk::sdui::surface::Surface;
 use uuid::Uuid;
 
@@ -9,7 +9,9 @@ use crate::storage;
 
 use super::report_ui::build_report_block;
 
-/// Stay detail embed — reports when any exist; empty tree otherwise.
+/// Stay detail embed — guest shortage reports for `input.stayId`.
+///
+/// Empty stay → Card + EmptyState (tab must not look blank). Non-empty → Card + list.
 #[portaki_sdk::surface(host, id = "stay")]
 pub fn render_host_stay(ctx: HostContext) -> Surface {
     let stay_id = ctx
@@ -25,7 +27,7 @@ pub fn render_host_stay(ctx: HostContext) -> Surface {
         Some(stay_id) => {
             let reports = storage::list_by_stay(stay_id).unwrap_or_default();
             if reports.is_empty() {
-                Vec::new()
+                vec![empty_stay_card()]
             } else {
                 let items: Vec<Component> = reports
                     .iter()
@@ -41,4 +43,16 @@ pub fn render_host_stay(ctx: HostContext) -> Surface {
     };
 
     Surface::new(Page::new().children(children)).with_id(crate::ids::HOST_STAY)
+}
+
+fn empty_stay_card() -> Component {
+    Card::new()
+        .title("i18n:host.stay.listTitle")
+        .icon("package")
+        .children(vec![EmptyState::new()
+            .title("i18n:host.stay.empty")
+            .description("i18n:host.stay.empty.help")
+            .icon("package")
+            .into()])
+        .into()
 }

@@ -16,6 +16,8 @@
   "host.main.emptyRecent.help": "When a guest reports a shortage, it shows up here.",
   "host.main.markRestocked": "Mark restocked",
   "host.stay.listTitle": "Reported consumables",
+  "host.stay.empty": "No reports for this stay",
+  "host.stay.empty.help": "When a guest reports a shortage or low stock, it shows up here.",
   "host.stay.missingStay": "Missing stay — reload the page.",
   "stats.title": "Stock",
   "stats.subtitle": "Property consumables",

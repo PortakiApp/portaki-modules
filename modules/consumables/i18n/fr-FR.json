@@ -16,6 +16,8 @@
   "host.main.emptyRecent.help": "Quand un voyageur signale un manque, il apparaît ici.",
   "host.main.markRestocked": "Réapprovisionné",
   "host.stay.listTitle": "Consommables signalés",
+  "host.stay.empty": "Aucun signalement pour ce séjour",
+  "host.stay.empty.help": "Quand un voyageur signale un manque ou un stock bas, il apparaît ici.",
   "host.stay.missingStay": "Séjour manquant — rechargez la page.",
   "stats.title": "Stocks",
   "stats.subtitle": "Consommables du logement",

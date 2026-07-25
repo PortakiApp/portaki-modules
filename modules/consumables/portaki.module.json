@@ -9,7 +9,7 @@
     "fr": "Liste des consommables du logement, signalements voyageurs (manque / bientôt vide), et suivi des restocks.",
     "en": "Property consumables list, guest shortage reports (missing / running low), and restock tracking."
   },
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
