@@ -3,10 +3,8 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 
-use portaki_sdk::sdui::primitives::Text;
-
 use super::empty::{empty_not_yet_state, empty_runtime_error_state, log_render_failure};
-use super::home::build_form_surface;
+use super::home::{build_form_surface, build_readonly_surface};
 use super::load::{load_guest_pre_arrival, GuestLoad};
 use crate::config::load_config;
 
@@ -26,15 +24,20 @@ fn render_form(ctx: &GuestContext) -> Result<Surface> {
     match load_guest_pre_arrival(ctx)? {
         GuestLoad::Empty(surface) => Ok(*surface),
         GuestLoad::NotYet => Ok(empty_not_yet_state(crate::ids::GUEST_FORM)),
-        GuestLoad::Completed => Ok(Surface::new(
-            Text::new()
-                .text("i18n:home.card.thanks")
-                .variant(TextVariant::Body),
-        )
-        .with_id(crate::ids::GUEST_FORM)),
-        GuestLoad::Form => {
+        GuestLoad::Locked { response } => {
             let config = load_config().unwrap_or_default();
-            Ok(build_form_surface(&config.questions))
+            Ok(build_readonly_surface(&config.questions, &response))
+        }
+        GuestLoad::Form {
+            completed,
+            existing,
+        } => {
+            let config = load_config().unwrap_or_default();
+            Ok(build_form_surface(
+                &config.questions,
+                existing.as_ref(),
+                completed,
+            ))
         }
     }
 }

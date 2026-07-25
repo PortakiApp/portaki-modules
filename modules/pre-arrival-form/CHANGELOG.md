@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1]
+
+### Changed
+
+- Guest form stays editable after submit until stay check-in (prefilled fields + resubmit).
+- After check-in, overlay is read-only; `submit` rejects with `form_locked_after_checkin`.
+
 ## [0.4.2]
 
 ### Fixed

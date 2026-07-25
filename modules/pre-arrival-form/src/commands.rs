@@ -1,12 +1,14 @@
 //! Module commands — config + submit pre-arrival form.
 
 use portaki_sdk::host::events;
+use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::config::{load_config, save_config, ShowWhen};
 use crate::email_send;
+use crate::show_when::is_editable_until_checkin;
 use crate::storage;
 
 #[portaki_sdk::wire(serialize)]
@@ -94,6 +96,12 @@ pub fn send_form_available(ctx: Context, _args: EmptyArgs) -> Result<()> {
 #[portaki_sdk::command(name = "submit")]
 pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     let stay_id = require_stay_id(&ctx)?;
+    let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at);
+    let now = time::now().unwrap_or_else(|_| chrono::Utc::now());
+    if !is_editable_until_checkin(now, checkin_at) {
+        return Err(PortakiError::Host("form_locked_after_checkin".to_string()));
+    }
+
     let config = load_config().unwrap_or_default();
     let q = &config.questions;
 

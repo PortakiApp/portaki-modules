@@ -9,6 +9,7 @@ use portaki_sdk::sdui::primitives::{Card, HostFragment, ListItem, Stack};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::FormQuestions;
+use crate::entities::PreArrivalResponse;
 
 pub enum FormTaskState {
     NotYet,
@@ -59,7 +60,7 @@ pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
                     .subtitle("i18n:home.task.completed")
                     .leading("clipboard")
                     .chevron(true)
-                    // Reopen overlay to review the submitted form / thanks.
+                    // Reopen overlay to edit until check-in, or review after.
                     .action(open_form)
                     .into(),
             );
@@ -94,12 +95,24 @@ pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
 }
 
 /// Fullscreen overlay form body (design `prearrivalBody` — no nested Card chrome).
-pub fn build_form_surface(questions: &FormQuestions) -> Surface {
+///
+/// When `existing` is set, fields are prefilled so the guest can edit / resubmit
+/// until check-in.
+pub fn build_form_surface(
+    questions: &FormQuestions,
+    existing: Option<&PreArrivalResponse>,
+    completed: bool,
+) -> Surface {
     use portaki_sdk::sdui::primitives::{
-        Button, Field, Form, Text, TextArea, TextInput, TimePicker,
+        Button, Field, Form, Text, TextArea, TimePicker,
     };
 
     let submit_action = crate::ids::module_id().command_empty(crate::ids::SUBMIT);
+    let submit_label = if completed {
+        "i18n:form.submitUpdate"
+    } else {
+        "i18n:form.submit"
+    };
     let mut form_children: Vec<Component> = Vec::new();
 
     form_children.push(
@@ -110,12 +123,16 @@ pub fn build_form_surface(questions: &FormQuestions) -> Surface {
     );
 
     if questions.ask_arrival_time {
+        let mut picker = TimePicker::new().name("arrivalTimeEstimated");
+        if let Some(value) = existing.and_then(|row| row.arrival_time.as_deref()) {
+            picker = picker.value(value);
+        }
         form_children.push(
             Field::new()
                 .name("arrivalTimeEstimated")
                 .label("i18n:form.arrival.label")
                 .required(true)
-                .child(TimePicker::new().name("arrivalTimeEstimated"))
+                .child(picker)
                 .into(),
         );
     }
@@ -124,11 +141,11 @@ pub fn build_form_surface(questions: &FormQuestions) -> Surface {
             Field::new()
                 .name("guestOccasion")
                 .label("i18n:form.occasion.label")
-                .child(
-                    TextInput::new()
-                        .name("guestOccasion")
-                        .placeholder("i18n:form.occasion.placeholder"),
-                )
+                .child(text_input(
+                    "guestOccasion",
+                    "i18n:form.occasion.placeholder",
+                    existing.and_then(|row| row.occasion.as_deref()),
+                ))
                 .into(),
         );
     }
@@ -137,11 +154,11 @@ pub fn build_form_surface(questions: &FormQuestions) -> Surface {
             Field::new()
                 .name("guestAllergies")
                 .label("i18n:form.allergies.label")
-                .child(
-                    TextInput::new()
-                        .name("guestAllergies")
-                        .placeholder("i18n:form.allergies.placeholder"),
-                )
+                .child(text_input(
+                    "guestAllergies",
+                    "i18n:form.allergies.placeholder",
+                    existing.and_then(|row| row.allergies.as_deref()),
+                ))
                 .into(),
         );
     }
@@ -150,11 +167,11 @@ pub fn build_form_surface(questions: &FormQuestions) -> Surface {
             Field::new()
                 .name("guestCount")
                 .label("i18n:form.guestCount.label")
-                .child(
-                    TextInput::new()
-                        .name("guestCount")
-                        .placeholder("i18n:form.guestCount.placeholder"),
-                )
+                .child(text_input(
+                    "guestCount",
+                    "i18n:form.guestCount.placeholder",
+                    existing.and_then(|row| row.guest_count.as_deref()),
+                ))
                 .into(),
         );
     }
@@ -163,11 +180,11 @@ pub fn build_form_surface(questions: &FormQuestions) -> Surface {
             Field::new()
                 .name("specialNeeds")
                 .label("i18n:form.specialNeeds.label")
-                .child(
-                    TextInput::new()
-                        .name("specialNeeds")
-                        .placeholder("i18n:form.specialNeeds.placeholder"),
-                )
+                .child(text_input(
+                    "specialNeeds",
+                    "i18n:form.specialNeeds.placeholder",
+                    existing.and_then(|row| row.special_needs.as_deref()),
+                ))
                 .into(),
         );
     }
@@ -176,11 +193,11 @@ pub fn build_form_surface(questions: &FormQuestions) -> Surface {
             Field::new()
                 .name("idDocument")
                 .label("i18n:form.idDocument.label")
-                .child(
-                    TextInput::new()
-                        .name("idDocument")
-                        .placeholder("i18n:form.idDocument.placeholder"),
-                )
+                .child(text_input(
+                    "idDocument",
+                    "i18n:form.idDocument.placeholder",
+                    existing.and_then(|row| row.id_document.as_deref()),
+                ))
                 .into(),
         );
     }
@@ -189,20 +206,129 @@ pub fn build_form_surface(questions: &FormQuestions) -> Surface {
         Field::new()
             .name("messageToHost")
             .label("i18n:form.message.label")
-            .child(
-                TextArea::new()
+            .child({
+                let mut area = TextArea::new()
                     .name("messageToHost")
-                    .placeholder("i18n:form.message.placeholder"),
-            )
+                    .placeholder("i18n:form.message.placeholder");
+                if let Some(value) = existing.and_then(|row| row.guest_message.as_deref()) {
+                    area = area.value(value);
+                }
+                area
+            })
             .into(),
     );
-    form_children.push(
-        Button::new()
-            .label("i18n:form.submit")
-            .action(submit_action)
-            .into(),
-    );
+    form_children.push(Button::new().label(submit_label).action(submit_action).into());
 
     // Page chrome owns the title; body is the form only (no nested Card).
     Surface::new(Form::new().children(form_children)).with_id(crate::ids::GUEST_FORM)
+}
+
+/// Read-only summary after check-in (answers no longer editable).
+pub fn build_readonly_surface(
+    questions: &FormQuestions,
+    response: &PreArrivalResponse,
+) -> Surface {
+    use portaki_sdk::sdui::primitives::Text;
+
+    let mut children: Vec<Component> = Vec::new();
+    children.push(
+        Text::new()
+            .text("i18n:home.card.thanks")
+            .variant(TextVariant::Body)
+            .into(),
+    );
+    children.push(
+        Text::new()
+            .text("i18n:home.card.lockedHint")
+            .variant(TextVariant::Caption)
+            .into(),
+    );
+
+    if questions.ask_arrival_time {
+        children.push(readonly_row(
+            "clock-circle",
+            "i18n:form.arrival.label",
+            display_or_dash(response.arrival_time.as_deref()),
+        ));
+    }
+    if questions.ask_occasion {
+        children.push(readonly_row(
+            "star",
+            "i18n:form.occasion.label",
+            display_or_dash(response.occasion.as_deref()),
+        ));
+    }
+    if questions.ask_allergies {
+        children.push(readonly_row(
+            "danger-triangle",
+            "i18n:form.allergies.label",
+            display_or_dash(response.allergies.as_deref()),
+        ));
+    }
+    if questions.ask_guest_count {
+        children.push(readonly_row(
+            "users",
+            "i18n:form.guestCount.label",
+            display_or_dash(response.guest_count.as_deref()),
+        ));
+    }
+    if questions.ask_special_needs {
+        children.push(readonly_row(
+            "home",
+            "i18n:form.specialNeeds.label",
+            display_or_dash(response.special_needs.as_deref()),
+        ));
+    }
+    if questions.ask_id_document {
+        children.push(readonly_row(
+            "clipboard",
+            "i18n:form.idDocument.label",
+            display_or_dash(response.id_document.as_deref()),
+        ));
+    }
+    if let Some(message) = response
+        .guest_message
+        .as_ref()
+        .map(|value| value.trim())
+        .filter(|value| !value.is_empty())
+    {
+        children.push(readonly_row(
+            "message",
+            "i18n:form.message.label",
+            message.to_string(),
+        ));
+    }
+
+    Surface::new(Stack::new().gap(8.0).children(children)).with_id(crate::ids::GUEST_FORM)
+}
+
+fn text_input(
+    name: &str,
+    placeholder: &str,
+    value: Option<&str>,
+) -> portaki_sdk::sdui::primitives::TextInput {
+    use portaki_sdk::sdui::primitives::TextInput;
+
+    let mut input = TextInput::new().name(name).placeholder(placeholder);
+    if let Some(value) = value {
+        input = input.value(value);
+    }
+    input
+}
+
+fn readonly_row(leading: &str, label_i18n: &str, value: String) -> Component {
+    ListItem::new()
+        .title(label_i18n)
+        .subtitle(value)
+        .leading(leading)
+        .chevron(false)
+        .into()
+}
+
+fn display_or_dash(value: Option<&str>) -> String {
+    value
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or("—")
+        .to_string()
 }

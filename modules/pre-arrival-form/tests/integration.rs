@@ -113,7 +113,19 @@ fn submit_then_status_and_thanks_card() {
     reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
-        .run(|ctx| {
+        .run(|mut ctx| {
+            let stay_id = ctx
+                .guest
+                .as_ref()
+                .map(|guest| guest.session_id)
+                .expect("guest stay");
+            // Still before check-in — completed form stays editable.
+            ctx.stay = Some(StayContext {
+                stay_id,
+                checkin_at: Some(Utc::now() + Duration::days(2)),
+                checkout_at: Some(Utc::now() + Duration::days(5)),
+            });
+
             let before = get_status(ctx.clone()).expect("status");
             assert!(!before.completed);
 
@@ -124,7 +136,7 @@ fn submit_then_status_and_thanks_card() {
             assert_eq!(after.arrival_time_estimated.as_deref(), Some("17:30"));
             assert_eq!(after.guest_occasion.as_deref(), Some("Anniversaire"));
 
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx.clone());
             assert!(contains_component_type(&surface, "ListItem"));
             assert!(contains_component_type(&surface, "HostFragment"));
             let json = serde_json::to_string(&surface).expect("surface json");
@@ -133,6 +145,64 @@ fn submit_then_status_and_thanks_card() {
             assert!(json.contains("home.task.preArrival.label"));
             assert!(json.contains("check-circle"));
             assert!(!json.contains("TimePicker"));
+
+            let form = render_guest_form(ctx);
+            assert!(contains_component_type(&form, "Form"));
+            assert!(contains_component_type(&form, "Button"));
+            let form_json = serde_json::to_string(&form).expect("form json");
+            assert!(form_json.contains("form.submitUpdate"));
+            assert!(form_json.contains("17:30"));
+            assert!(form_json.contains("Anniversaire"));
+        });
+}
+
+#[test]
+#[serial]
+fn completed_form_locks_after_checkin() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|mut ctx| {
+            let stay_id = ctx
+                .guest
+                .as_ref()
+                .map(|guest| guest.session_id)
+                .expect("guest stay");
+            ctx.stay = Some(StayContext {
+                stay_id,
+                checkin_at: Some(Utc::now() + Duration::hours(2)),
+                checkout_at: None,
+            });
+            submit(ctx.clone(), sample_submit()).expect("submit before check-in");
+
+            ctx.stay = Some(StayContext {
+                stay_id,
+                checkin_at: Some(Utc::now() - Duration::hours(1)),
+                checkout_at: None,
+            });
+
+            let form = render_guest_form(ctx.clone());
+            assert!(!contains_component_type(&form, "Form"));
+            assert!(!contains_component_type(&form, "Button"));
+            let form_json = serde_json::to_string(&form).expect("form json");
+            assert!(form_json.contains("home.card.thanks"));
+            assert!(form_json.contains("home.card.lockedHint"));
+            assert!(form_json.contains("17:30"));
+
+            let err = submit(
+                ctx,
+                SubmitArgs {
+                    arrival_time_estimated: Some("18:00".into()),
+                    guest_occasion: None,
+                    guest_allergies: None,
+                    guest_count: None,
+                    special_needs: None,
+                    id_document: None,
+                    message_to_host: None,
+                },
+            )
+            .expect_err("submit locked after check-in");
+            assert!(format!("{err:?}").contains("form_locked_after_checkin"));
         });
 }
 

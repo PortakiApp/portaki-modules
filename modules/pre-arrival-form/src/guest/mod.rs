@@ -30,7 +30,12 @@ fn render_with_data(ctx: &GuestContext) -> Result<Surface> {
     match load_guest_pre_arrival(ctx)? {
         GuestLoad::Empty(surface) => Ok(*surface),
         GuestLoad::NotYet => Ok(build_formalities_card(FormTaskState::NotYet)),
-        GuestLoad::Form => Ok(build_formalities_card(FormTaskState::Pending)),
-        GuestLoad::Completed => Ok(build_formalities_card(FormTaskState::Done)),
+        GuestLoad::Form {
+            completed: false, ..
+        } => Ok(build_formalities_card(FormTaskState::Pending)),
+        GuestLoad::Form {
+            completed: true, ..
+        }
+        | GuestLoad::Locked { .. } => Ok(build_formalities_card(FormTaskState::Done)),
     }
 }

@@ -24,6 +24,16 @@ pub fn is_form_available(
     }
 }
 
+/// Whether the guest may still edit / resubmit after completing the form.
+///
+/// Editable until the stay check-in instant. Missing check-in fails open.
+pub fn is_editable_until_checkin(now: DateTime<Utc>, checkin_at: Option<DateTime<Utc>>) -> bool {
+    match checkin_at {
+        None => true,
+        Some(checkin) => now < checkin,
+    }
+}
+
 fn start_of_utc_day(instant: DateTime<Utc>) -> DateTime<Utc> {
     let date = instant.date_naive();
     Utc.from_utc_datetime(&date.and_hms_opt(0, 0, 0).unwrap_or_default())
@@ -76,5 +86,19 @@ mod tests {
             utc("2026-07-20T00:00:00Z"),
             Some(checkin)
         ));
+    }
+
+    #[test]
+    fn editable_until_checkin_instant() {
+        let checkin = utc("2026-07-20T14:00:00Z");
+        assert!(is_editable_until_checkin(
+            utc("2026-07-20T13:59:59Z"),
+            Some(checkin)
+        ));
+        assert!(!is_editable_until_checkin(
+            utc("2026-07-20T14:00:00Z"),
+            Some(checkin)
+        ));
+        assert!(is_editable_until_checkin(utc("2026-07-20T14:00:00Z"), None));
     }
 }
