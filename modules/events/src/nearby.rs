@@ -67,12 +67,7 @@ pub fn invalidate_nearby_cache() -> Result<()> {
     host::kv::delete(CACHE_KEY)
 }
 
-fn load_nearby(
-    ctx: &Context,
-    config: &ModuleConfig,
-    lat: f64,
-    lng: f64,
-) -> Result<Vec<EventRow>> {
+fn load_nearby(ctx: &Context, config: &ModuleConfig, lat: f64, lng: f64) -> Result<Vec<EventRow>> {
     let now = time::now().unwrap_or_else(|_| Utc::now());
     let locale = Localized::lang_code(&ctx.locale);
     if let Some(cached) = read_cache()? {
@@ -180,9 +175,8 @@ fn read_cache() -> Result<Option<NearbyCache>> {
 }
 
 fn write_cache(cache: NearbyCache) -> Result<()> {
-    let bytes = serde_json::to_vec(&cache).map_err(|error| {
-        PortakiError::Storage(format!("nearby cache serialize: {error}"))
-    })?;
+    let bytes = serde_json::to_vec(&cache)
+        .map_err(|error| PortakiError::Storage(format!("nearby cache serialize: {error}")))?;
     host::kv::set(CACHE_KEY, &bytes, Some(CACHE_TTL_SECS as u32))
 }
 
