@@ -12,10 +12,12 @@ use super::home::rules_stack;
 use crate::content::RulesPayload;
 
 pub fn build_detail_page(payload: &RulesPayload) -> Surface {
-    Surface::new(Stack::new().gap(0.0).child(Component::Card(
-        Card::new()
-            .surface(SurfaceLevel::Elevated)
-            .child(rules_stack(&payload.items)),
-    )))
+    Surface::new(
+        Stack::new().gap(0.0).child(Component::Card(
+            Card::new()
+                .surface(SurfaceLevel::Elevated)
+                .child(rules_stack(&payload.items)),
+        )),
+    )
     .with_id(crate::ids::EXPLORE_DETAIL)
 }
