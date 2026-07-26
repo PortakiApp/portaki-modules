@@ -9,7 +9,7 @@ mod localized;
 mod queries;
 
 pub use commands::{submit_review, update_config, SubmitReviewArgs, UpdateConfigArgs};
-pub use config::{load_config, ModuleConfig, ReviewChannel};
+pub use config::{load_config, ModuleConfig};
 pub use guest::render_home_card;
 pub use host::render_host_main;
 pub use queries::get_config;
