@@ -25,32 +25,30 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         .unwrap_or_else(|| config.airbnb_review_url.clone());
     let airbnb_needs_url = platform_airbnb && normalize_url(&draft_url).is_none();
 
-    let mut form_children: Vec<Component> = vec![
-        Card::new()
-            .title("i18n:host.section.channel")
-            .subtitle("i18n:host.section.channel.help")
-            .icon("star")
-            .children(vec![Grid::new()
-                .columns(2)
-                .gap(8.0)
-                .minColumnWidth(280.0)
-                .children(vec![
-                    platform_toggle(
-                        "platform_airbnb",
-                        "i18n:host.channel.airbnb",
-                        "star",
-                        platform_airbnb,
-                    ),
-                    platform_toggle(
-                        "platform_portaki",
-                        "i18n:host.channel.portaki",
-                        "sparkles",
-                        platform_portaki,
-                    ),
-                ])
-                .into()])
-            .into(),
-    ];
+    let mut form_children: Vec<Component> = vec![Card::new()
+        .title("i18n:host.section.channel")
+        .subtitle("i18n:host.section.channel.help")
+        .icon("star")
+        .children(vec![Grid::new()
+            .columns(2)
+            .gap(8.0)
+            .minColumnWidth(280.0)
+            .children(vec![
+                platform_toggle(
+                    "platform_airbnb",
+                    "i18n:host.channel.airbnb",
+                    "star",
+                    platform_airbnb,
+                ),
+                platform_toggle(
+                    "platform_portaki",
+                    "i18n:host.channel.portaki",
+                    "sparkles",
+                    platform_portaki,
+                ),
+            ])
+            .into()])
+        .into()];
 
     if !platform_airbnb && !platform_portaki {
         form_children.push(InfoBanner::new().message("i18n:host.platforms.none").into());
