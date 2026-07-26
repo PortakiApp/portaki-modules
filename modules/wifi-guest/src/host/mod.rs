@@ -64,7 +64,9 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
             .name("connection_steps")
             .label("i18n:host.connectionSteps.label")
             .children(vec![
-                FieldHint::new().text("i18n:host.connectionSteps.desc").into(),
+                FieldHint::new()
+                    .text("i18n:host.connectionSteps.desc")
+                    .into(),
                 TextArea::new()
                     .name("connection_steps")
                     .value(config.connection_steps.clone().unwrap_or_default())
@@ -76,7 +78,9 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
             .name("reveal_policy")
             .label("i18n:host.section.reveal")
             .children(vec![
-                FieldHint::new().text("i18n:host.section.reveal.help").into(),
+                FieldHint::new()
+                    .text("i18n:host.section.reveal.help")
+                    .into(),
                 reveal_choice_list(config.reveal_policy).into(),
             ])
             .into(),
@@ -84,9 +88,7 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
 
     // No Page title / Save — the modules drawer owns chrome + footer Save.
     Surface::new(
-        Page::new().child(
-            Form::new().child(Stack::new().gap(20.0).children(form_children)),
-        ),
+        Page::new().child(Form::new().child(Stack::new().gap(20.0).children(form_children))),
     )
     .with_id(crate::ids::HOST_MAIN)
 }
