@@ -47,6 +47,8 @@ pub struct ModuleConfig {
     pub password: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hint: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub connection_steps: Option<String>,
     #[serde(default)]
     pub reveal_policy: RevealPolicy,
 }
@@ -57,6 +59,7 @@ impl Default for ModuleConfig {
             ssid: String::new(),
             password: String::new(),
             hint: None,
+            connection_steps: None,
             reveal_policy: RevealPolicy::DayBefore16h,
         }
     }
@@ -69,6 +72,13 @@ impl ModuleConfig {
 
     pub fn hint_text(&self) -> Option<&str> {
         self.hint
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+    }
+
+    pub fn connection_steps_text(&self) -> Option<&str> {
+        self.connection_steps
             .as_deref()
             .map(str::trim)
             .filter(|s| !s.is_empty())
