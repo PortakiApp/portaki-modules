@@ -182,6 +182,8 @@ fn host_main_is_flat_drawer_form_without_cards() {
             assert!(!contains_component_type(&surface, "Card"));
             assert!(json.contains("i18n:host.ssid.label"));
             assert!(json.contains("i18n:host.connectionSteps.label"));
-            assert!(json.contains("\"tone\":\"warning\"") || json.contains("\"tone\": \"warning\""));
+            assert!(
+                json.contains("\"tone\":\"warning\"") || json.contains("\"tone\": \"warning\"")
+            );
         });
 }
