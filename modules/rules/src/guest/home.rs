@@ -1,4 +1,7 @@
-//! Guest home booklet card.
+//! Guest home booklet card — design Portaki Guest `rules` section (Séjour).
+//!
+//! Card: scale + « Règlement intérieur » + Ouvrir → fullscreen page.
+//! Body: icon rows (title + optional subtitle), glance of first rules.
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{Card, ListItem, Stack, Text};
@@ -6,6 +9,7 @@ use portaki_sdk::sdui::surface::Surface;
 
 use crate::content::{RuleItem, RulesPayload};
 
+/// Design glance shows four rules on the Séjour card.
 const CARD_GLANCE_LIMIT: usize = 4;
 
 pub fn build_home_card(payload: &RulesPayload) -> Surface {
@@ -16,21 +20,25 @@ pub fn build_home_card(payload: &RulesPayload) -> Surface {
         .take(CARD_GLANCE_LIMIT)
         .collect();
 
-    let mut children = Vec::new();
-    for item in items {
-        children.push(rule_list_item(item));
-    }
+    let children: Vec<Component> = if items.is_empty() {
+        vec![Component::Text(
+            Text::new()
+                .text("i18n:home.card.empty.description")
+                .variant(TextVariant::Body),
+        )]
+    } else {
+        items.into_iter().map(rule_list_item).collect()
+    };
 
+    // Prefer nav.* — shell ships `nav.rules`; avoids colliding home.card titles.
     Surface::new(
         Card::new()
             .icon("scale")
-            .title("i18n:home.card.title")
+            .title("i18n:nav.rules")
             .action(Action::open_overlay(
                 OverlayPresentation::Fullscreen,
                 crate::ids::EXPLORE_DETAIL,
-                OverlayArgs::new()
-                    .icon("scale")
-                    .title("i18n:home.card.title"),
+                OverlayArgs::new().icon("scale").title("i18n:nav.rules"),
             ))
             .children(children),
     )
@@ -41,7 +49,7 @@ pub fn rule_list_item(item: &RuleItem) -> Component {
     let icon_name = if item.icon.trim().is_empty() {
         "check-circle".to_string()
     } else {
-        item.icon.clone()
+        normalize_guest_icon(&item.icon)
     };
     let mut list = ListItem::new().title(item.title.clone()).leading(icon_name);
     if !item.subtitle.trim().is_empty() {
@@ -64,4 +72,12 @@ pub fn rules_stack(items: &[RuleItem]) -> Component {
         );
     }
     Component::Stack(Stack::new().gap(0.0).children(children))
+}
+
+fn normalize_guest_icon(icon: &str) -> String {
+    match icon.trim() {
+        "paw-print" | "pets" => "gift".into(),
+        "volume-x" | "volume-2" | "noise" => "minus".into(),
+        other => other.to_string(),
+    }
 }

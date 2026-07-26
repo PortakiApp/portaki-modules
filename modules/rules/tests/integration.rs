@@ -11,8 +11,8 @@ use portaki_test_utils::{MockContext, Property};
 use serde_json::json;
 
 use rules::{
-    get_content, render_explore_detail, render_home_card, reset_test_store, save_content,
-    update_config, GetContentArgs, RuleItemInput, RulesContent, SaveContentArgs,
+    get_content, render_explore_detail, render_home_card, render_host_main, reset_test_store,
+    save_content, update_config, GetContentArgs, RuleItemInput, RulesContent, SaveContentArgs,
 };
 
 fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
@@ -24,6 +24,7 @@ fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
             Component::Stack(_) if type_name == "Stack" => true,
             Component::Form(_) if type_name == "Form" => true,
             Component::Page(_) if type_name == "Page" => true,
+            Component::StepList(_) if type_name == "StepList" => true,
             Component::TextArea(_) if type_name == "TextArea" => true,
             _ => false,
         };
@@ -48,6 +49,7 @@ fn child_components(node: &Component) -> Vec<&Component> {
         Component::Form(inner) => inner.children.iter().collect(),
         Component::Page(inner) => inner.children.iter().collect(),
         Component::ListItem(inner) => inner.children.iter().collect(),
+        Component::StepList(inner) => inner.children.iter().collect(),
         Component::Group(inner) => inner.children.iter().collect(),
         _ => Vec::new(),
     }
@@ -119,6 +121,7 @@ fn explore_detail_renders_full_list() {
             )
             .expect("save");
             let surface = render_explore_detail(ctx);
+            assert!(contains_component_type(&surface, "Card"));
             assert!(contains_component_type(&surface, "Stack"));
             assert!(contains_component_type(&surface, "ListItem"));
             let json = serde_json::to_string(&surface).expect("json");
@@ -152,6 +155,23 @@ fn get_content_returns_saved_items() {
             .expect("get");
             assert_eq!(view.items.len(), 4);
             assert_eq!(view.items[0].title, "Calme après 22 h");
+        });
+}
+
+#[test]
+#[serial]
+fn host_main_renders_rules_section_steplist() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let surface = render_host_main(ctx);
+            assert!(contains_component_type(&surface, "Card"));
+            assert!(contains_component_type(&surface, "StepList"));
+            assert!(contains_component_type(&surface, "Form"));
+            let json = serde_json::to_string(&surface).expect("json");
+            assert!(json.contains("host.section.title") || json.contains("Règles du logement"));
+            assert!(json.contains("host.rules.add") || json.contains("Ajouter une règle"));
         });
 }
 

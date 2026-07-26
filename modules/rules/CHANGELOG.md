@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.1](https://github.com/PortakiApp/portaki-modules/compare/rules-v0.3.0...rules-v0.3.1) (2026-07-26)
+
+### Features
+
+* align host/guest SDUI with « Règlement intérieur » design (StepList editor, fullscreen guest page card)
+
 ## [0.3.0](https://github.com/PortakiApp/portaki-modules/compare/rules-v0.2.3...rules-v0.3.0) (2026-07-25)
 
 ### Features

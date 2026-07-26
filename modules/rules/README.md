@@ -32,9 +32,9 @@ OCI image: `ghcr.io/portakiapp/portaki-modules-rules:<semver>`
 
 | Shell | Surface id | Description |
 |-------|------------|-------------|
-| guest | `home.card` | Glance of up to 4 rules |
-| guest | `explore.detail` | Full rules list (page body) |
-| host | `main` | Structured bilingual rule slots |
+| guest | `home.card` | Séjour glance (up to 4 icon rows) → fullscreen |
+| guest | `explore.detail` | Full rules list in elevated card (page body) |
+| host | `main` | « Règles du logement » StepList (`rules-editor-v1`) |
 
 Host workspace tab: `pathSegment = "rules"` (see `portaki.module.json`).
 
