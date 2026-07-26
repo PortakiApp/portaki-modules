@@ -189,10 +189,11 @@ dependencies = [
 
 [[package]]
 name = "events"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "extism-pdk",
+ "portaki-connectors",
  "portaki-sdk",
  "portaki-sdk-macros",
  "portaki-test-utils",
@@ -599,7 +600,7 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 [[package]]
 name = "portaki-connectors"
 version = "2.1.1"
-source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#1c5ef6292fc4e8d822bfba4ddfb3e8fd3bee32b6"
+source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=feat%2Fevents-openagenda#80e7ca90ac434b32f36fa93ae6012207a54c2dc8"
 dependencies = [
  "portaki-sdk",
  "serde",
@@ -610,7 +611,7 @@ dependencies = [
 [[package]]
 name = "portaki-sdk"
 version = "2.1.1"
-source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#1c5ef6292fc4e8d822bfba4ddfb3e8fd3bee32b6"
+source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=feat%2Fevents-openagenda#80e7ca90ac434b32f36fa93ae6012207a54c2dc8"
 dependencies = [
  "base64",
  "chrono",
@@ -627,7 +628,7 @@ dependencies = [
 [[package]]
 name = "portaki-sdk-macros"
 version = "2.1.1"
-source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#1c5ef6292fc4e8d822bfba4ddfb3e8fd3bee32b6"
+source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=feat%2Fevents-openagenda#80e7ca90ac434b32f36fa93ae6012207a54c2dc8"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -638,7 +639,7 @@ dependencies = [
 [[package]]
 name = "portaki-test-utils"
 version = "2.1.1"
-source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=main#1c5ef6292fc4e8d822bfba4ddfb3e8fd3bee32b6"
+source = "git+https://github.com/PortakiApp/portaki-sdk.git?branch=feat%2Fevents-openagenda#80e7ca90ac434b32f36fa93ae6012207a54c2dc8"
 dependencies = [
  "chrono",
  "portaki-sdk",

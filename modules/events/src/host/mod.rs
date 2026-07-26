@@ -1,10 +1,11 @@
 //! Host dashboard surfaces — config cards embedded in the module sheet.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Card, Field, Form, Page, Text, TextArea, TextInput};
+use portaki_sdk::sdui::primitives::{Card, Field, Form, Page, Select, Text, TextArea, TextInput};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{load_config, EventRow, Localized};
+use crate::nearby::has_open_agenda;
 
 const EVENT_SLOTS: usize = 6;
 
@@ -14,8 +15,10 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     let config = load_config().unwrap_or_default();
     let events = config.parse_events();
     let disclaimer = config.disclaimer.get(&lang).to_string();
+    let open_agenda = has_open_agenda(&ctx);
 
     let mut form_children: Vec<Component> = Vec::new();
+    form_children.push(nearby_card(&config, open_agenda));
     for index in 0..EVENT_SLOTS {
         form_children.push(event_slot_card(index, events.get(index), &lang));
     }
@@ -46,6 +49,63 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     // No Page title / Save — the modules sheet owns chrome + footer Save.
     Surface::new(Page::new().child(Form::new().children(form_children)))
         .with_id(crate::ids::HOST_MAIN)
+}
+
+fn nearby_card(config: &crate::config::ModuleConfig, open_agenda: bool) -> Component {
+    let status_key = if !config.nearby_enabled {
+        "i18n:host.nearby.status.off"
+    } else if open_agenda {
+        "i18n:host.nearby.status.ready"
+    } else {
+        "i18n:host.nearby.status.missingKey"
+    };
+    let nearby_value = if config.nearby_enabled {
+        "true"
+    } else {
+        "false"
+    };
+    let radius_value = config.normalized_radius_km().to_string();
+
+    Card::new()
+        .title("i18n:host.section.nearby")
+        .subtitle("i18n:host.section.nearby.help")
+        .icon("map-pin")
+        .children(vec![
+            Field::new()
+                .name("nearby_enabled")
+                .label("i18n:host.nearby.enabled")
+                .child(
+                    Select::new()
+                        .name("nearby_enabled")
+                        .options(vec![
+                            ChoiceOption::new("true", "i18n:host.nearby.enabled.on"),
+                            ChoiceOption::new("false", "i18n:host.nearby.enabled.off"),
+                        ])
+                        .value(nearby_value),
+                )
+                .into(),
+            Field::new()
+                .name("radius_km")
+                .label("i18n:host.nearby.radius")
+                .child(
+                    Select::new()
+                        .name("radius_km")
+                        .options(vec![
+                            ChoiceOption::new("10", "i18n:host.nearby.radius.10"),
+                            ChoiceOption::new("20", "i18n:host.nearby.radius.20"),
+                            ChoiceOption::new("40", "i18n:host.nearby.radius.40"),
+                            ChoiceOption::new("60", "i18n:host.nearby.radius.60"),
+                            ChoiceOption::new("100", "i18n:host.nearby.radius.100"),
+                        ])
+                        .value(radius_value),
+                )
+                .into(),
+            Text::new()
+                .text(status_key)
+                .variant(TextVariant::Caption)
+                .into(),
+        ])
+        .into()
 }
 
 fn event_slot_card(index: usize, event: Option<&EventRow>, lang: &str) -> Component {
