@@ -2,14 +2,14 @@
   "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
   "id": "events",
   "name": {
-    "fr": "Événements",
+    "fr": "Événements locaux",
     "en": "Local events"
   },
   "description": {
-    "fr": "Concerts, marchés et fêtes près du logement, renseignés par l'hôte.",
-    "en": "Concerts, markets, and festivals near the stay — curated by the host."
+    "fr": "Sorties, concerts et animations à proximité — OpenAgenda et curation hôte.",
+    "en": "Local happenings near the stay — OpenAgenda plus host-curated slots."
   },
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",

@@ -3,7 +3,7 @@
 use portaki_sdk::prelude::*;
 
 use crate::config::load_config;
-use crate::time_format::{events_for_home_card, sort_events_by_start};
+use crate::nearby::resolve_events;
 
 /// Gateway `emailContext` args — shared SDK wire type.
 pub use portaki_sdk::EmailContextArgs;
@@ -30,14 +30,8 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
     let property_locale = ctx.property.locale.as_str();
 
     let config = load_config().unwrap_or_default();
-    let events = sort_events_by_start(config.parse_events());
-    let upcoming = events_for_home_card(&events);
-    let pick_from = if upcoming.is_empty() {
-        &events[..]
-    } else {
-        &upcoming[..]
-    };
-    let Some(event) = pick_from.first() else {
+    let events = resolve_events(&ctx, &config, true)?;
+    let Some(event) = events.first() else {
         return Ok(EmailContextResponse { local_tip: None });
     };
 

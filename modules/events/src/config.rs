@@ -8,18 +8,38 @@ use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 
 const CONFIG_KEY: &str = "config";
+const DEFAULT_RADIUS_KM: u32 = 40;
+const MIN_RADIUS_KM: u32 = 5;
+const MAX_RADIUS_KM: u32 = 100;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ModuleConfig {
     #[serde(default)]
     pub events: Vec<EventRow>,
     #[serde(default, deserialize_with = "deserialize_localized_field")]
     pub disclaimer: Localized,
+    /// When true, guest surfaces also load OpenAgenda events around the property.
+    #[serde(default = "default_nearby_enabled")]
+    pub nearby_enabled: bool,
+    /// Search radius in kilometers (bbox approximation for OpenAgenda `geo`).
+    #[serde(default = "default_radius_km")]
+    pub radius_km: u32,
+}
+
+impl Default for ModuleConfig {
+    fn default() -> Self {
+        Self {
+            events: Vec::new(),
+            disclaimer: Localized::default(),
+            nearby_enabled: true,
+            radius_km: DEFAULT_RADIUS_KM,
+        }
+    }
 }
 
 impl ModuleConfig {
     pub fn is_empty(&self) -> bool {
-        self.parse_events().is_empty() && self.disclaimer.is_empty()
+        self.parse_events().is_empty() && !self.nearby_enabled && self.disclaimer.is_empty()
     }
 
     pub fn parse_events(&self) -> Vec<EventRow> {
@@ -29,6 +49,18 @@ impl ModuleConfig {
             .cloned()
             .collect()
     }
+
+    pub fn normalized_radius_km(&self) -> u32 {
+        self.radius_km.clamp(MIN_RADIUS_KM, MAX_RADIUS_KM)
+    }
+}
+
+fn default_nearby_enabled() -> bool {
+    true
+}
+
+fn default_radius_km() -> u32 {
+    DEFAULT_RADIUS_KM
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -184,14 +216,17 @@ pub fn load_config() -> Result<ModuleConfig> {
     let Some(bytes) = host::kv::get(CONFIG_KEY)? else {
         return Ok(ModuleConfig::default());
     };
-    let config: ModuleConfig = serde_json::from_slice(&bytes).map_err(|error| {
+    let mut config: ModuleConfig = serde_json::from_slice(&bytes).map_err(|error| {
         portaki_sdk::PortakiError::Storage(format!("invalid config JSON: {error}"))
     })?;
+    config.radius_km = config.normalized_radius_km();
     Ok(config)
 }
 
 pub fn save_config(config: &ModuleConfig) -> Result<()> {
-    let bytes = serde_json::to_vec(config).map_err(|error| {
+    let mut normalized = config.clone();
+    normalized.radius_km = normalized.normalized_radius_km();
+    let bytes = serde_json::to_vec(&normalized).map_err(|error| {
         portaki_sdk::PortakiError::Storage(format!("config serialize: {error}"))
     })?;
     host::kv::set(CONFIG_KEY, &bytes, None)
@@ -209,5 +244,7 @@ mod tests {
         }))
         .unwrap();
         assert_eq!(config.disclaimer.get("fr"), "Dates indicatives");
+        assert!(config.nearby_enabled);
+        assert_eq!(config.radius_km, DEFAULT_RADIUS_KM);
     }
 }

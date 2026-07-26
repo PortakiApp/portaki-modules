@@ -1,10 +1,10 @@
-//! Load config for guest surfaces.
+//! Load config + nearby events for guest surfaces.
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{load_config, EventRow, ModuleConfig};
-use crate::time_format::{events_for_home_card, sort_events_by_start};
+use crate::nearby::{has_open_agenda, resolve_events};
 
 use super::empty::{empty_content_state, empty_state_if_module_not_ready};
 
@@ -27,18 +27,15 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Gues
     }
 
     let config = load_config().unwrap_or_else(|_| ModuleConfig::default());
-    if config.is_empty() {
+    let for_home = surface_id == crate::ids::HOME_CARD;
+    let events = resolve_events(ctx, &config, for_home)?;
+
+    let has_manual = !config.parse_events().is_empty();
+    let nearby_ready = config.nearby_enabled && has_open_agenda(ctx);
+    if events.is_empty() && !has_manual && !nearby_ready {
         return Ok(GuestLoad::Empty(Box::new(empty_content_state(surface_id))));
     }
-
-    let all = sort_events_by_start(config.parse_events());
-    let events = if surface_id == crate::ids::HOME_CARD {
-        events_for_home_card(&all)
-    } else {
-        all
-    };
-
-    if events.is_empty() && surface_id == crate::ids::HOME_CARD {
+    if events.is_empty() && for_home {
         return Ok(GuestLoad::Empty(Box::new(empty_content_state(surface_id))));
     }
 

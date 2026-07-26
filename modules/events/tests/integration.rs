@@ -4,7 +4,8 @@ use portaki_sdk::capability;
 use serial_test::serial;
 
 use events::{
-    get_config, render_explore_detail, render_home_card, update_config, UpdateConfigArgs,
+    get_config, render_explore_detail, render_home_card, update_config, EventInput,
+    UpdateConfigArgs,
 };
 use portaki_sdk::sdui::component::Component;
 use portaki_sdk::sdui::surface::Surface;
@@ -23,9 +24,29 @@ fn sample_config_bytes() -> Vec<u8> {
             "lng": 7.12,
             "note": {"fr": "Arrivez tôt.", "en": "Arrive early."}
         }],
-        "disclaimer": "Dates indicatives"
+        "disclaimer": "Dates indicatives",
+        "nearby_enabled": false
     }))
     .expect("config json")
+}
+
+fn openagenda_payload() -> String {
+    json!({
+        "total": 1,
+        "events": [{
+            "uid": 56158955,
+            "title": "Festival du port",
+            "location": {
+                "name": "Quai",
+                "city": "Cannes",
+                "latitude": 43.55,
+                "longitude": 7.01
+            },
+            "nextTiming": { "begin": "2099-07-28T19:00:00.000Z" },
+            "canonicalUrl": "https://openagenda.com/events/festival-du-port"
+        }]
+    })
+    .to_string()
 }
 
 fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
@@ -111,6 +132,32 @@ fn detail_includes_map_and_link() {
 
 #[test]
 #[serial]
+fn home_card_renders_openagenda_nearby() {
+    MockContext::guest()
+        .with_capabilities(&[
+            capability::core::STORAGE,
+            capability::external::OPEN_AGENDA_POOL,
+        ])
+        .with_connector_response("open-agenda", "nearby_events", openagenda_payload())
+        .with_kv(
+            "config",
+            serde_json::to_vec(&json!({
+                "nearby_enabled": true,
+                "radius_km": 40
+            }))
+            .unwrap(),
+        )
+        .run(|ctx| {
+            let surface = render_home_card(ctx);
+            assert!(contains_component_type(&surface, "Card"));
+            assert!(contains_component_type(&surface, "ListItem"));
+            let json = serde_json::to_string(&surface).expect("json");
+            assert!(json.contains("Festival du port") || json.contains("Pressable"));
+        });
+}
+
+#[test]
+#[serial]
 fn update_config_roundtrip() {
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
@@ -118,7 +165,7 @@ fn update_config_roundtrip() {
             update_config(
                 ctx.clone(),
                 UpdateConfigArgs {
-                    events: vec![events::EventInput {
+                    events: vec![EventInput {
                         title: "Fête du village".into(),
                         place: "Place centrale".into(),
                         starts_at: "2099-08-01T20:00:00Z".into(),
@@ -127,6 +174,8 @@ fn update_config_roundtrip() {
                         lng: String::new(),
                     }],
                     disclaimer: "d".into(),
+                    nearby_enabled: "true".into(),
+                    radius_km: "20".into(),
                 },
             )
             .expect("ok");
@@ -134,5 +183,7 @@ fn update_config_roundtrip() {
             assert_eq!(cfg.disclaimer.get("fr"), "d");
             assert_eq!(cfg.parse_events().len(), 1);
             assert_eq!(cfg.parse_events()[0].title.get("fr"), "Fête du village");
+            assert!(cfg.nearby_enabled);
+            assert_eq!(cfg.radius_km, 20);
         });
 }
