@@ -8,7 +8,8 @@ use portaki_sdk::sdui::surface::Surface;
 use portaki_test_utils::MockContext;
 use serde_json::json;
 use wifi_guest::{
-    get_config, render_explore_detail, render_home_card, update_config, UpdateConfigArgs,
+    get_config, render_explore_detail, render_home_card, render_host_main, update_config,
+    UpdateConfigArgs,
 };
 
 fn sample_config_bytes() -> Vec<u8> {
@@ -39,6 +40,9 @@ fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
             Component::EmptyState(_) if type_name == "EmptyState" => true,
             Component::Button(_) if type_name == "Button" => true,
             Component::Stack(_) if type_name == "Stack" => true,
+            Component::Field(_) if type_name == "Field" => true,
+            Component::Form(_) if type_name == "Form" => true,
+            Component::Page(_) if type_name == "Page" => true,
             _ => false,
         };
         if matches {
@@ -59,6 +63,9 @@ fn child_components(node: &Component) -> Vec<&Component> {
         Component::Stack(inner) => inner.children.iter().collect(),
         Component::Card(inner) => inner.children.iter().collect(),
         Component::EmptyState(inner) => inner.children.iter().collect(),
+        Component::Field(inner) => inner.children.iter().collect(),
+        Component::Form(inner) => inner.children.iter().collect(),
+        Component::Page(inner) => inner.children.iter().collect(),
         _ => Vec::new(),
     }
 }
@@ -120,6 +127,7 @@ fn update_config_roundtrip() {
                     ssid: "TestNet".into(),
                     password: "hunter2".into(),
                     hint: "Guest only".into(),
+                    connection_steps: "Join then open the captive page.".into(),
                     reveal_policy: wifi_guest::RevealPolicy::Always,
                 },
             )
@@ -128,6 +136,10 @@ fn update_config_roundtrip() {
             assert_eq!(config.ssid, "TestNet");
             assert_eq!(config.password, "hunter2");
             assert_eq!(config.hint.as_deref(), Some("Guest only"));
+            assert_eq!(
+                config.connection_steps.as_deref(),
+                Some("Join then open the captive page.")
+            );
             assert_eq!(config.reveal_policy, wifi_guest::RevealPolicy::Always);
         });
 }
@@ -145,6 +157,7 @@ fn update_config_keeps_password_when_blank() {
                     ssid: "Renamed".into(),
                     password: String::new(),
                     hint: String::new(),
+                    connection_steps: String::new(),
                     reveal_policy: wifi_guest::RevealPolicy::DayBefore16h,
                 },
             )
@@ -152,5 +165,23 @@ fn update_config_keeps_password_when_blank() {
             let config = get_config(ctx).expect("getConfig");
             assert_eq!(config.ssid, "Renamed");
             assert_eq!(config.password, "soleil2026");
+        });
+}
+
+#[test]
+#[serial]
+fn host_main_is_flat_drawer_form_without_cards() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv("config", always_reveal_config_bytes())
+        .run(|ctx| {
+            let surface = render_host_main(ctx);
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(contains_component_type(&surface, "InfoBanner"));
+            assert!(contains_component_type(&surface, "Field"));
+            assert!(!contains_component_type(&surface, "Card"));
+            assert!(json.contains("i18n:host.ssid.label"));
+            assert!(json.contains("i18n:host.connectionSteps.label"));
+            assert!(json.contains("\"tone\":\"warning\"") || json.contains("\"tone\": \"warning\""));
         });
 }

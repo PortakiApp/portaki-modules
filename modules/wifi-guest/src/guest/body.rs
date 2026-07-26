@@ -66,5 +66,9 @@ pub fn build_wifi_body(data: &GuestData, show_security_banner: bool) -> Vec<Comp
         children.push(Text::new().text(hint).variant(TextVariant::Caption).into());
     }
 
+    if let Some(steps) = data.config.connection_steps_text() {
+        children.push(Text::new().text(steps).variant(TextVariant::Body).into());
+    }
+
     children
 }

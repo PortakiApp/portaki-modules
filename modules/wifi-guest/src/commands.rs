@@ -14,7 +14,18 @@ pub struct UpdateConfigArgs {
     #[serde(default)]
     pub hint: String,
     #[serde(default)]
+    pub connection_steps: String,
+    #[serde(default)]
     pub reveal_policy: RevealPolicy,
+}
+
+fn optional_trimmed(value: &str) -> Option<String> {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed.to_string())
+    }
 }
 
 #[portaki_sdk::command(name = "updateConfig")]
@@ -25,18 +36,11 @@ pub fn update_config(_ctx: Context, args: UpdateConfigArgs) -> Result<()> {
     } else {
         args.password
     };
-    let hint = {
-        let trimmed = args.hint.trim();
-        if trimmed.is_empty() {
-            None
-        } else {
-            Some(trimmed.to_string())
-        }
-    };
     save_config(&ModuleConfig {
         ssid: args.ssid.trim().to_string(),
         password,
-        hint,
+        hint: optional_trimmed(&args.hint),
+        connection_steps: optional_trimmed(&args.connection_steps),
         reveal_policy: args.reveal_policy,
     })
 }

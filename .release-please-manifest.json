@@ -19,5 +19,5 @@
   "modules/train": "0.1.1",
   "modules/waste-recycling": "0.2.1",
   "modules/weather": "0.3.19",
-  "modules/wifi-guest": "0.1.1"
+  "modules/wifi-guest": "0.1.3"
 }
