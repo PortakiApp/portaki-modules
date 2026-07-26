@@ -5,9 +5,7 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::primitives::{
-    Card, Field, Form, Page, Select, Stack, StepList, TextInput,
-};
+use portaki_sdk::sdui::primitives::{Card, Field, Form, Page, Select, Stack, StepList, TextInput};
 use portaki_sdk::sdui::surface::Surface;
 use serde::Serialize;
 
@@ -44,24 +42,26 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     }
 
     Surface::new(
-        Page::new().child(Form::new().child(
-            Card::new()
-                .title("i18n:host.section.title")
-                .subtitle("i18n:host.section.subtitle")
-                .icon("scale")
-                .child(
-                    StepList::new()
-                        .addLabel("i18n:host.rules.add")
-                        .removeLabel("i18n:host.rules.remove")
-                        .emptyTitle("i18n:host.rules.emptyTitle")
-                        .emptyDescription("i18n:host.rules.emptyDescription")
-                        .itemKeyPrefix("items")
-                        .addAction(emit_input(ItemsCountInput {
-                            items_count: (items_count + 1).min(ITEM_SLOTS),
-                        }))
-                        .children(rows),
-                ),
-        )),
+        Page::new().child(
+            Form::new().child(
+                Card::new()
+                    .title("i18n:host.section.title")
+                    .subtitle("i18n:host.section.subtitle")
+                    .icon("scale")
+                    .child(
+                        StepList::new()
+                            .addLabel("i18n:host.rules.add")
+                            .removeLabel("i18n:host.rules.remove")
+                            .emptyTitle("i18n:host.rules.emptyTitle")
+                            .emptyDescription("i18n:host.rules.emptyDescription")
+                            .itemKeyPrefix("items")
+                            .addAction(emit_input(ItemsCountInput {
+                                items_count: (items_count + 1).min(ITEM_SLOTS),
+                            }))
+                            .children(rows),
+                    ),
+            ),
+        ),
     )
     .with_id(crate::ids::HOST_MAIN)
 }
