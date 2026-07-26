@@ -15,10 +15,10 @@ keywords = ["portaki", "wasm", "extism", "oci", "module"]
 rust-version = "1.75"
 
 [workspace.dependencies]
-portaki-sdk = { git = "https://github.com/PortakiApp/portaki-sdk.git", branch = "feat/events-openagenda" }
-portaki-sdk-macros = { git = "https://github.com/PortakiApp/portaki-sdk.git", branch = "feat/events-openagenda" }
-portaki-connectors = { git = "https://github.com/PortakiApp/portaki-sdk.git", branch = "feat/events-openagenda" }
-portaki-test-utils = { git = "https://github.com/PortakiApp/portaki-sdk.git", branch = "feat/events-openagenda" }
+portaki-sdk = { git = "https://github.com/PortakiApp/portaki-sdk.git", branch = "main" }
+portaki-sdk-macros = { git = "https://github.com/PortakiApp/portaki-sdk.git", branch = "main" }
+portaki-connectors = { git = "https://github.com/PortakiApp/portaki-sdk.git", branch = "main" }
+portaki-test-utils = { git = "https://github.com/PortakiApp/portaki-sdk.git", branch = "main" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 uuid = { version = "1", features = ["serde", "v4", "rng-getrandom"] }
