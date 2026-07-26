@@ -120,8 +120,11 @@ struct RawModuleConfig {
 
 impl From<RawModuleConfig> for ModuleConfig {
     fn from(raw: RawModuleConfig) -> Self {
-        let (platform_airbnb, platform_portaki) =
-            resolve_platforms(raw.platform_airbnb, raw.platform_portaki, raw.review_channel);
+        let (platform_airbnb, platform_portaki) = resolve_platforms(
+            raw.platform_airbnb,
+            raw.platform_portaki,
+            raw.review_channel,
+        );
 
         Self {
             platform_airbnb,
