@@ -1,4 +1,6 @@
 //! Guest home card — inline post-stay review (no overlay).
+//!
+//! Only selected *and* feasible platforms are offered (Airbnb needs a URL).
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
@@ -32,10 +34,7 @@ pub fn build_home_card(data: &GuestData) -> Surface {
         ));
     }
 
-    let show_airbnb = data.channel.show_airbnb() && data.airbnb_url.is_some();
-    let show_portaki = data.channel.show_portaki();
-
-    if show_airbnb {
+    if data.show_airbnb {
         let url = data.airbnb_url.clone().unwrap_or_default();
         let action = Action::external(url.clone());
         children.push(Component::Button(
@@ -51,8 +50,8 @@ pub fn build_home_card(data: &GuestData) -> Surface {
         }
     }
 
-    if show_portaki {
-        if show_airbnb {
+    if data.show_portaki {
+        if data.show_airbnb {
             children.push(Component::Text(
                 Text::new()
                     .text("i18n:guest.orPortaki")

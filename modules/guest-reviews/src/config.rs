@@ -1,4 +1,7 @@
 //! Host configuration stored in KV (`config` key).
+//!
+//! Platforms are multi-select (`platform_airbnb` / `platform_portaki`). Guest CTAs
+//! only appear for platforms that are both selected and feasible (Airbnb needs a URL).
 
 use portaki_sdk::host;
 use portaki_sdk::Result;
@@ -10,17 +13,16 @@ pub use crate::localized::Localized;
 
 const CONFIG_KEY: &str = "config";
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
-pub enum ReviewChannel {
-    #[default]
+/// Legacy exclusive channel — still accepted on load, never written back.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LegacyReviewChannel {
     Airbnb,
     Portaki,
     Both,
 }
 
-impl ReviewChannel {
-    pub fn parse(raw: &str) -> Self {
+impl LegacyReviewChannel {
+    fn parse(raw: &str) -> Self {
         match raw.trim().to_ascii_lowercase().as_str() {
             "portaki" => Self::Portaki,
             "both" => Self::Both,
@@ -28,27 +30,23 @@ impl ReviewChannel {
         }
     }
 
-    pub fn as_str(&self) -> &'static str {
+    fn platforms(self) -> (bool, bool) {
         match self {
-            Self::Airbnb => "airbnb",
-            Self::Portaki => "portaki",
-            Self::Both => "both",
+            Self::Airbnb => (true, false),
+            Self::Portaki => (false, true),
+            Self::Both => (true, true),
         }
-    }
-
-    pub fn show_airbnb(&self) -> bool {
-        matches!(self, Self::Airbnb | Self::Both)
-    }
-
-    pub fn show_portaki(&self) -> bool {
-        matches!(self, Self::Portaki | Self::Both)
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ModuleConfig {
+    /// Collect reviews via Airbnb link + optional QR.
+    #[serde(default = "default_true")]
+    pub platform_airbnb: bool,
+    /// Collect reviews via in-booklet Portaki star form.
     #[serde(default)]
-    pub review_channel: ReviewChannel,
+    pub platform_portaki: bool,
     #[serde(default = "default_true")]
     pub show_qr_code: bool,
     #[serde(default)]
@@ -64,7 +62,8 @@ fn default_true() -> bool {
 impl Default for ModuleConfig {
     fn default() -> Self {
         Self {
-            review_channel: ReviewChannel::Airbnb,
+            platform_airbnb: true,
+            platform_portaki: false,
             show_qr_code: true,
             airbnb_review_url: String::new(),
             thank_you_message: Localized::default(),
@@ -73,15 +72,85 @@ impl Default for ModuleConfig {
 }
 
 impl ModuleConfig {
+    /// True when no selected platform can actually run for the guest.
     pub fn is_empty(&self) -> bool {
-        let airbnb_ok = self.review_channel.show_airbnb() && self.airbnb_url().is_some();
-        let portaki_ok = self.review_channel.show_portaki();
-        !airbnb_ok && !portaki_ok
+        !self.has_feasible_platform()
     }
 
     pub fn airbnb_url(&self) -> Option<String> {
         normalize_url(&self.airbnb_review_url)
     }
+
+    /// Airbnb selected and a usable review URL is present.
+    pub fn airbnb_feasible(&self) -> bool {
+        self.platform_airbnb && self.airbnb_url().is_some()
+    }
+
+    /// Portaki in-booklet form selected (always feasible once enabled).
+    pub fn portaki_feasible(&self) -> bool {
+        self.platform_portaki
+    }
+
+    pub fn has_feasible_platform(&self) -> bool {
+        self.airbnb_feasible() || self.portaki_feasible()
+    }
+
+    /// Airbnb is selected but the review URL is missing — host must finish setup.
+    pub fn airbnb_needs_url(&self) -> bool {
+        self.platform_airbnb && self.airbnb_url().is_none()
+    }
+}
+
+/// Wire shape that accepts new platform toggles and legacy `review_channel`.
+#[derive(Debug, Deserialize)]
+struct RawModuleConfig {
+    #[serde(default)]
+    platform_airbnb: Option<bool>,
+    #[serde(default)]
+    platform_portaki: Option<bool>,
+    #[serde(default)]
+    review_channel: Option<String>,
+    #[serde(default = "default_true")]
+    show_qr_code: bool,
+    #[serde(default)]
+    airbnb_review_url: String,
+    #[serde(default, deserialize_with = "deserialize_localized_field")]
+    thank_you_message: Localized,
+}
+
+impl From<RawModuleConfig> for ModuleConfig {
+    fn from(raw: RawModuleConfig) -> Self {
+        let (platform_airbnb, platform_portaki) =
+            resolve_platforms(raw.platform_airbnb, raw.platform_portaki, raw.review_channel);
+
+        Self {
+            platform_airbnb,
+            platform_portaki,
+            show_qr_code: raw.show_qr_code,
+            airbnb_review_url: raw.airbnb_review_url,
+            thank_you_message: raw.thank_you_message,
+        }
+    }
+}
+
+fn resolve_platforms(
+    platform_airbnb: Option<bool>,
+    platform_portaki: Option<bool>,
+    review_channel: Option<String>,
+) -> (bool, bool) {
+    if platform_airbnb.is_some() || platform_portaki.is_some() {
+        return (
+            platform_airbnb.unwrap_or(false),
+            platform_portaki.unwrap_or(false),
+        );
+    }
+
+    if let Some(channel) = review_channel.as_deref() {
+        return LegacyReviewChannel::parse(channel).platforms();
+    }
+
+    // Match historical default: Airbnb-only.
+    (true, false)
 }
 
 pub fn normalize_url(raw: &str) -> Option<String> {
@@ -105,9 +174,10 @@ pub fn load_config() -> Result<ModuleConfig> {
     let Some(bytes) = host::kv::get(CONFIG_KEY)? else {
         return Ok(ModuleConfig::default());
     };
-    serde_json::from_slice(&bytes).map_err(|error| {
+    let raw: RawModuleConfig = serde_json::from_slice(&bytes).map_err(|error| {
         portaki_sdk::PortakiError::Storage(format!("invalid config JSON: {error}"))
-    })
+    })?;
+    Ok(ModuleConfig::from(raw))
 }
 
 pub fn save_config(config: &ModuleConfig) -> Result<()> {
@@ -115,4 +185,47 @@ pub fn save_config(config: &ModuleConfig) -> Result<()> {
         portaki_sdk::PortakiError::Storage(format!("config serialize: {error}"))
     })?;
     host::kv::set(CONFIG_KEY, &bytes, None)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn migrates_legacy_both_channel() {
+        let raw: RawModuleConfig = serde_json::from_value(serde_json::json!({
+            "review_channel": "both",
+            "airbnb_review_url": "https://airbnb.com/users/review/1"
+        }))
+        .unwrap();
+        let cfg = ModuleConfig::from(raw);
+        assert!(cfg.platform_airbnb);
+        assert!(cfg.platform_portaki);
+        assert!(cfg.airbnb_feasible());
+    }
+
+    #[test]
+    fn platform_flags_win_over_legacy_channel() {
+        let raw: RawModuleConfig = serde_json::from_value(serde_json::json!({
+            "review_channel": "both",
+            "platform_airbnb": false,
+            "platform_portaki": true
+        }))
+        .unwrap();
+        let cfg = ModuleConfig::from(raw);
+        assert!(!cfg.platform_airbnb);
+        assert!(cfg.platform_portaki);
+    }
+
+    #[test]
+    fn airbnb_without_url_is_not_feasible() {
+        let cfg = ModuleConfig {
+            platform_airbnb: true,
+            platform_portaki: false,
+            airbnb_review_url: String::new(),
+            ..ModuleConfig::default()
+        };
+        assert!(cfg.airbnb_needs_url());
+        assert!(cfg.is_empty());
+    }
 }

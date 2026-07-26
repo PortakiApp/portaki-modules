@@ -7,7 +7,7 @@
   "modules/ev-parking": "0.2.0",
   "modules/events": "0.1.0",
   "modules/facility-hours": "0.2.1",
-  "modules/guest-reviews": "0.1.2",
+  "modules/guest-reviews": "0.2.0",
   "modules/ical-sync": "0.1.0",
   "modules/issue-report": "0.1.1",
   "modules/local-guide": "0.2.1",
