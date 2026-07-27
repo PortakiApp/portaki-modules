@@ -2,10 +2,13 @@
 
 mod commands;
 mod config;
+mod email_i18n;
+mod email_send;
 mod host;
 mod ics;
 mod ids;
 mod queries;
+mod sync_state;
 
 pub use commands::{update_config, CalendarInput, UpdateConfigArgs};
 pub use config::{load_config, CalendarFeed, CalendarFormat, ModuleConfig, CALENDAR_SLOTS};

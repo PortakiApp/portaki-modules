@@ -390,7 +390,7 @@ dependencies = [
 
 [[package]]
 name = "ical-sync"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -400,6 +400,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serial_test",
+ "uuid",
 ]
 
 [[package]]

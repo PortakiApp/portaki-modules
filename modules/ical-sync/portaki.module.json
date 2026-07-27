@@ -9,7 +9,7 @@
     "fr": "Importe les séjours depuis un export calendrier Airbnb, Booking ou autre lien .ics.",
     "en": "Import stays from an Airbnb, Booking, or other .ics calendar export URL."
   },
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -44,5 +44,43 @@
     "platformFetch": true,
     "sourcesQuery": "listSources",
     "applyQuery": "applyFeeds"
-  }
+  },
+  "emails": [
+    {
+      "id": "sync-failed",
+      "audience": "host",
+      "description": {
+        "fr": "Échec de lecture d’un flux iCal — nouveaux séjours non importés",
+        "en": "iCal feed read failure — new stays not imported"
+      },
+      "trigger": {
+        "type": "onApplyFeeds"
+      },
+      "requiresGuestEmail": false
+    },
+    {
+      "id": "stay-imported",
+      "audience": "host",
+      "description": {
+        "fr": "Nouveau séjour importé sans email voyageur — invitation à compléter",
+        "en": "New stay imported without guest email — invite to complete"
+      },
+      "trigger": {
+        "type": "onApplyFeeds"
+      },
+      "requiresGuestEmail": false
+    },
+    {
+      "id": "sync-summary",
+      "audience": "host",
+      "description": {
+        "fr": "Bilan de synchronisation (nouveaux / mis à jour / à compléter)",
+        "en": "Sync digest (new / updated / incomplete stays)"
+      },
+      "trigger": {
+        "type": "onApplyFeeds"
+      },
+      "requiresGuestEmail": false
+    }
+  ]
 }

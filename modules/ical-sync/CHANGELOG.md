@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0] — 2026-07-27
+
+### Added
+
+- Host transactional emails via `host::email::send` (module SDUI, FR/EN):
+  - `sync-failed` — feed body empty / unreachable (dedup per feed + day)
+  - `stay-imported` — single new stay without guest email
+  - `sync-summary` — batch digest when several stays are new/updated
+- KV `sync_state` snapshot (`icalUid` → dates) to detect new vs updated stays
+- Manifest `emails[]` declarations for the three host mails (`onApplyFeeds`)
+
 ## [0.2.0] — 2026-07-27
 
 ### Added

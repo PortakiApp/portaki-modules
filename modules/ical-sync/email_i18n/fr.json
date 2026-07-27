@@ -1,0 +1,27 @@
+{
+  "email.syncFailed.subject": "Synchronisation calendrier échouée",
+  "email.syncFailed.eyebrow": "Synchronisation",
+  "email.syncFailed.title": "Synchronisation calendrier échouée",
+  "email.syncFailed.body": "Nous n'arrivons plus à lire votre calendrier iCal. Les nouveaux séjours ne sont plus importés en attendant.\n\nLogement : {property}\nSource : {source} · iCal\nDernière sync réussie : {lastSuccess}\nErreur : {error}\n\nVérifiez le lien iCal dans les paramètres du logement, ou régénérez-le depuis votre plateforme de réservation.",
+  "email.syncFailed.cta": "Vérifier la connexion",
+  "email.syncFailed.error.empty": "Flux vide ou inaccessible",
+  "email.syncFailed.lastSuccess.never": "Jamais",
+
+  "email.stayImported.subject": "Un séjour a été importé depuis {source}",
+  "email.stayImported.eyebrow": "Séjour importé",
+  "email.stayImported.title": "Nouveau séjour importé",
+  "email.stayImported.body": "Un séjour vient d'être ajouté automatiquement depuis votre calendrier synchronisé.\n\nLogement : {property}\nDates : {dates}\nSource : {source} · iCal\nEmail voyageur : À compléter\n\nAjoutez l'email du voyageur pour lui envoyer automatiquement son lien de séjour et son code d'accès.",
+  "email.stayImported.cta": "Compléter le séjour",
+
+  "email.syncSummary.subject": "{imported} séjours importés — {incomplete} à compléter",
+  "email.syncSummary.subject.noneIncomplete": "{imported} séjours importés",
+  "email.syncSummary.eyebrow": "Synchronisation",
+  "email.syncSummary.title": "{imported} séjours importés",
+  "email.syncSummary.body": "La synchronisation de vos calendriers vient de se terminer. Voici le bilan.\n\nNouveaux séjours : {newCount}\nSéjours mis à jour : {updatedCount}\nCoordonnées manquantes : {incompleteCount}\nDernière synchro : {syncedAt}\n\n{incompleteCallout}\n\n{incompleteList}\n\nComplétez-les en un clic depuis le tableau de bord : le lien de séjour et le code d'accès partiront aussitôt.",
+  "email.syncSummary.body.noneIncomplete": "La synchronisation de vos calendriers vient de se terminer. Voici le bilan.\n\nNouveaux séjours : {newCount}\nSéjours mis à jour : {updatedCount}\nCoordonnées manquantes : 0\nDernière synchro : {syncedAt}\n\nTous les séjours importés sont prêts — aucune action nécessaire.",
+  "email.syncSummary.incompleteCallout": "{incompleteCount} séjours ne partiront pas automatiquement — il manque l'email du voyageur. Airbnb ne transmet pas toujours ces informations dans le flux iCal.",
+  "email.syncSummary.incomplete.email": "Email manquant",
+  "email.syncSummary.cta": "Compléter les {incompleteCount} séjours",
+  "email.syncSummary.cta.singular": "Compléter le séjour",
+  "email.syncSummary.cta.ready": "Voir les séjours"
+}

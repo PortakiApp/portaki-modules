@@ -1,0 +1,27 @@
+{
+  "email.syncFailed.subject": "Calendar sync failed",
+  "email.syncFailed.eyebrow": "Sync",
+  "email.syncFailed.title": "Calendar sync failed",
+  "email.syncFailed.body": "We can no longer read your iCal calendar. New stays are not imported until this is fixed.\n\nProperty: {property}\nSource: {source} · iCal\nLast successful sync: {lastSuccess}\nError: {error}\n\nCheck the iCal link in the property settings, or regenerate it from your booking platform.",
+  "email.syncFailed.cta": "Check connection",
+  "email.syncFailed.error.empty": "Empty or unreachable feed",
+  "email.syncFailed.lastSuccess.never": "Never",
+
+  "email.stayImported.subject": "A stay was imported from {source}",
+  "email.stayImported.eyebrow": "Stay imported",
+  "email.stayImported.title": "New stay imported",
+  "email.stayImported.body": "A stay was added automatically from your synced calendar.\n\nProperty: {property}\nDates: {dates}\nSource: {source} · iCal\nGuest email: To complete\n\nAdd the guest email so we can send their stay link and access code automatically.",
+  "email.stayImported.cta": "Complete stay",
+
+  "email.syncSummary.subject": "{imported} stays imported — {incomplete} to complete",
+  "email.syncSummary.subject.noneIncomplete": "{imported} stays imported",
+  "email.syncSummary.eyebrow": "Sync",
+  "email.syncSummary.title": "{imported} stays imported",
+  "email.syncSummary.body": "Your calendar sync just finished. Here is the summary.\n\nNew stays: {newCount}\nUpdated stays: {updatedCount}\nMissing contact details: {incompleteCount}\nLast sync: {syncedAt}\n\n{incompleteCallout}\n\n{incompleteList}\n\nComplete them from the dashboard in one click — the stay link and access code will go out right away.",
+  "email.syncSummary.body.noneIncomplete": "Your calendar sync just finished. Here is the summary.\n\nNew stays: {newCount}\nUpdated stays: {updatedCount}\nMissing contact details: 0\nLast sync: {syncedAt}\n\nAll imported stays are ready — no action needed.",
+  "email.syncSummary.incompleteCallout": "{incompleteCount} stays will not go out automatically — the guest email is missing. Airbnb does not always include that in the iCal feed.",
+  "email.syncSummary.incomplete.email": "Email missing",
+  "email.syncSummary.cta": "Complete {incompleteCount} stays",
+  "email.syncSummary.cta.singular": "Complete stay",
+  "email.syncSummary.cta.ready": "View stays"
+}

@@ -30,11 +30,23 @@ Manifest `hostScheduledSync` uses the platform-fetch path:
 
 Manual trigger: `POST /api/v1/properties/{id}/modules/ical-sync/sync`.
 
+## Host emails
+
+Triggered from `applyFeeds` via `host::email::send` (generic `module-host-transactional` shell):
+
+| `email_id` | When |
+|------------|------|
+| `sync-failed-{feedId}-{YYYY-MM-DD}` | Feed body empty / unreachable |
+| `stay-imported-{icalUid}` | Exactly one **new** stay without guest email |
+| `sync-summary-{syncAt}` | Several new/updated stays (batch digest) |
+
+Copy lives in `email_i18n/{fr,en}.json`. Dedup is orchestrator-side (module + stay claim + `email_id`).
+
 ## Capabilities
 
 | Capability | Role |
 |------------|------|
-| `core.storage` | **Required** — KV config |
+| `core.storage` | **Required** — KV config + sync UID snapshot |
 | `core.ical.import` | **Required** — plan allowance for calendar import |
 
 ## KV config
