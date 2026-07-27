@@ -9,7 +9,7 @@
     "fr": "Conditions actuelles et prévisions sur 5 jours pour vos voyageurs.",
     "en": "Current conditions and a 5-day forecast for your guests."
   },
-  "version": "0.3.20",
+  "version": "0.3.21",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -17,6 +17,8 @@
   },
   "icon": "cloud-sun",
   "type": "official",
+  "maturity": "stable",
+  "sortOrder": 130,
   "hostSurfaces": [
     {
       "type": "property-module-sheet",

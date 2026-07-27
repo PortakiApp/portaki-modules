@@ -9,7 +9,7 @@
     "fr": "Piscine, spa, salle de sport : horaires par lieu.",
     "en": "Pool, spa, gym: hours per facility."
   },
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -17,6 +17,8 @@
   },
   "icon": "clock-circle",
   "type": "official",
+  "maturity": "stable",
+  "sortOrder": 150,
   "hostSurfaces": [
     {
       "type": "property-workspace-tab",

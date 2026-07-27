@@ -9,7 +9,7 @@
     "fr": "Adresses et liens utiles rangés par thème.",
     "en": "Useful places and links, grouped by theme."
   },
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -17,6 +17,8 @@
   },
   "icon": "map-pin",
   "type": "official",
+  "maturity": "stable",
+  "sortOrder": 140,
   "hostSurfaces": [
     {
       "type": "property-workspace-tab",

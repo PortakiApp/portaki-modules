@@ -9,7 +9,7 @@
     "fr": "Les voyageurs signalent un souci pendant le séjour — sans WhatsApp.",
     "en": "Guests report a problem during the stay — no WhatsApp needed."
   },
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -17,6 +17,8 @@
   },
   "icon": "danger-triangle",
   "type": "official",
+  "maturity": "stable",
+  "sortOrder": 90,
   "hostSurfaces": [
     {
       "type": "property-workspace-tab",

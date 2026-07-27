@@ -9,7 +9,7 @@
     "fr": "Lien d'avis Airbnb / QR ou notation sur Portaki.",
     "en": "Airbnb review link / QR or in-booklet Portaki rating."
   },
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -17,6 +17,8 @@
   },
   "icon": "star",
   "type": "official",
+  "maturity": "stable",
+  "sortOrder": 100,
   "hostSurfaces": [
     {
       "type": "property-workspace-tab",
