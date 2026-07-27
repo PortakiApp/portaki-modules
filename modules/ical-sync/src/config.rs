@@ -195,9 +195,9 @@ fn migrate_raw_feed(index: usize, mut feed: RawCalendarFeed) -> Option<CalendarF
             Some(trimmed)
         }
     });
-    let format = feed
-        .format
-        .unwrap_or_else(|| CalendarFormat::detect_from_url(&url).unwrap_or(CalendarFormat::Generic));
+    let format = feed.format.unwrap_or_else(|| {
+        CalendarFormat::detect_from_url(&url).unwrap_or(CalendarFormat::Generic)
+    });
     Some(CalendarFeed {
         id: feed.id.trim().to_string(),
         url,
