@@ -54,10 +54,7 @@ fn update_config_and_list_sources_many_calendars() {
             assert_eq!(sources.sources[0].id, "airbnb");
             assert_eq!(sources.sources[0].provider.as_deref(), Some("airbnb"));
             assert_eq!(sources.sources[1].provider.as_deref(), Some("booking"));
-            assert_eq!(
-                sources.sources[2].provider.as_deref(),
-                Some("abritel_vrbo")
-            );
+            assert_eq!(sources.sources[2].provider.as_deref(), Some("abritel_vrbo"));
 
             let config = get_config(ctx).expect("config");
             assert_eq!(config.calendars.len(), 3);

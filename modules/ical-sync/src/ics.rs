@@ -244,8 +244,7 @@ fn normalize_summary(summary: &str) -> String {
     summary
         .trim()
         .to_ascii_lowercase()
-        .replace('–', "-")
-        .replace('—', "-")
+        .replace(['–', '—'], "-")
         .split_whitespace()
         .collect::<Vec<_>>()
         .join(" ")
@@ -276,8 +275,7 @@ fn guest_name_from_description(description: &str) -> Option<String> {
                 }
             }
             // Case-insensitive prefix match
-            if trimmed.len() >= prefix.len()
-                && trimmed[..prefix.len()].eq_ignore_ascii_case(prefix)
+            if trimmed.len() >= prefix.len() && trimmed[..prefix.len()].eq_ignore_ascii_case(prefix)
             {
                 let name = trimmed[prefix.len()..].trim();
                 if !name.is_empty() {
