@@ -35,7 +35,7 @@ Product choice (2026-07): incomplete, experimental, or niche integrations.
 |---:|---|---|
 | 200 | `train` | Static mock TER board — no Navitia / host station config yet |
 | 210 | `events` | OpenAgenda nearby fetch is experimental; needs keys / radius setup |
-| 220 | `ical-sync` | Host calendar import still early (v0.1.x) |
+| 220 | `ical-sync` | Host calendar import still early (v0.2.x, beta) |
 | 230 | `nuki` | Smart-lock provider; hardware + BYOK; guest UX lives in access-guide |
 
 Promote a module out of beta by setting `maturity: "stable"` and a sortOrder

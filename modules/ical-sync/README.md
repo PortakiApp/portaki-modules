@@ -42,15 +42,24 @@ Manual trigger: `POST /api/v1/properties/{id}/modules/ical-sync/sync`.
 ```json
 {
   "calendars": [
-    { "id": "cal-1", "url": "https://…/calendar.ics", "label": "Airbnb" },
-    { "id": "cal-2", "url": "https://…/other.ics" }
+    {
+      "id": "cal-1",
+      "url": "https://…/calendar.ics",
+      "label": "Airbnb",
+      "format": "airbnb"
+    },
+    {
+      "id": "cal-2",
+      "url": "https://…/other.ics",
+      "format": "booking"
+    }
   ],
   "last_sync_at": "2026-07-23T08:12:00Z",
   "sync_summary": "3 stay(s) · 1 feed(s) ok · 0 feed(s) failed"
 }
 ```
 
-`calendars` is the only source of truth. Sync fetches every connected URL. Legacy `ical_url_primary` / `ical_url_secondary` / `feeds_json` are accepted on load (and on `updateConfig`) and converted into `calendars` — they are never persisted or exposed going forward.
+`calendars` is the only source of truth. Each feed **must** declare a `format` (`airbnb` | `booking` | `abritel_vrbo` | `google` | `generic`) — parsing differs (e.g. Airbnb « Reserved » vs « Not available »). Sync fetches every connected URL. Feeds loaded without `format` get a best-effort URL detection, else `generic`. Legacy `ical_url_primary` / `ical_url_secondary` / `feeds_json` are accepted on load (and on `updateConfig`) and converted into `calendars` — they are never persisted or exposed going forward.
 
 Soft UI cap: 20 calendar rows (`CALENDAR_SLOTS`).
 

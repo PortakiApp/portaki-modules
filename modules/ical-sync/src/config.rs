@@ -10,6 +10,71 @@ const CONFIG_KEY: &str = "config";
 /// Soft cap for host SDUI rows (abuse / UI guard). Not a product “max 2”.
 pub const CALENDAR_SLOTS: usize = 20;
 
+/// Declared ICS dialect for a feed — drives VEVENT filtering / guest naming.
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CalendarFormat {
+    Airbnb,
+    Booking,
+    AbritelVrbo,
+    Google,
+    #[default]
+    Generic,
+}
+
+impl CalendarFormat {
+    pub const ALL: [CalendarFormat; 5] = [
+        CalendarFormat::Airbnb,
+        CalendarFormat::Booking,
+        CalendarFormat::AbritelVrbo,
+        CalendarFormat::Google,
+        CalendarFormat::Generic,
+    ];
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            CalendarFormat::Airbnb => "airbnb",
+            CalendarFormat::Booking => "booking",
+            CalendarFormat::AbritelVrbo => "abritel_vrbo",
+            CalendarFormat::Google => "google",
+            CalendarFormat::Generic => "generic",
+        }
+    }
+
+    pub fn parse(raw: &str) -> Option<Self> {
+        match raw.trim().to_ascii_lowercase().as_str() {
+            "airbnb" => Some(CalendarFormat::Airbnb),
+            "booking" => Some(CalendarFormat::Booking),
+            "abritel_vrbo" | "abritel" | "vrbo" | "homeaway" => Some(CalendarFormat::AbritelVrbo),
+            "google" => Some(CalendarFormat::Google),
+            "generic" | "other" | "" => Some(CalendarFormat::Generic),
+            _ => None,
+        }
+    }
+
+    /// Best-effort guess from export URL host (migration / legacy writes).
+    pub fn detect_from_url(url: &str) -> Option<Self> {
+        let lower = url.to_ascii_lowercase();
+        if lower.contains("airbnb.") {
+            Some(CalendarFormat::Airbnb)
+        } else if lower.contains("booking.com") {
+            Some(CalendarFormat::Booking)
+        } else if lower.contains("abritel.")
+            || lower.contains("vrbo.")
+            || lower.contains("homeaway.")
+        {
+            Some(CalendarFormat::AbritelVrbo)
+        } else if lower.contains("calendar.google.com")
+            || lower.contains("google.com/calendar")
+            || lower.contains("googleapis.com/calendar")
+        {
+            Some(CalendarFormat::Google)
+        } else {
+            None
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CalendarFeed {
     pub id: String,
@@ -17,6 +82,9 @@ pub struct CalendarFeed {
     pub url: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
+    /// Platform ICS dialect. Always persisted after migrate / save.
+    #[serde(default)]
+    pub format: CalendarFormat,
 }
 
 impl CalendarFeed {
@@ -47,6 +115,14 @@ impl ModuleConfig {
     pub fn has_any_feed(&self) -> bool {
         !self.connected_calendars().is_empty()
     }
+
+    pub fn format_for_id(&self, id: &str) -> CalendarFormat {
+        self.calendars
+            .iter()
+            .find(|c| c.id == id)
+            .map(|c| c.format)
+            .unwrap_or(CalendarFormat::Generic)
+    }
 }
 
 fn trim_url(raw: &str) -> Option<&str> {
@@ -63,7 +139,7 @@ fn trim_url(raw: &str) -> Option<&str> {
 #[derive(Debug, Clone, Deserialize, Default)]
 #[serde(default)]
 struct RawConfig {
-    calendars: Vec<CalendarFeed>,
+    calendars: Vec<RawCalendarFeed>,
     ical_url_primary: String,
     ical_url_secondary: String,
     feeds_json: String,
@@ -71,30 +147,22 @@ struct RawConfig {
     sync_summary: Option<String>,
 }
 
+/// Load-only feed row — `format` absent means migrate from URL when safe.
+#[derive(Debug, Clone, Deserialize, Default)]
+#[serde(default)]
+struct RawCalendarFeed {
+    id: String,
+    url: String,
+    label: Option<String>,
+    format: Option<CalendarFormat>,
+}
+
 fn migrate_raw(raw: RawConfig) -> ModuleConfig {
     let mut calendars = raw
         .calendars
         .into_iter()
         .enumerate()
-        .filter_map(|(index, mut feed)| {
-            let url = feed.url.trim().to_string();
-            if url.is_empty() {
-                return None;
-            }
-            feed.url = url;
-            if feed.id.trim().is_empty() {
-                feed.id = format!("cal-{}", index + 1);
-            }
-            if let Some(label) = feed.label.take() {
-                let trimmed = label.trim().to_string();
-                feed.label = if trimmed.is_empty() {
-                    None
-                } else {
-                    Some(trimmed)
-                };
-            }
-            Some(feed)
-        })
+        .filter_map(|(index, feed)| migrate_raw_feed(index, feed))
         .collect::<Vec<_>>();
 
     if calendars.is_empty() {
@@ -111,6 +179,33 @@ fn migrate_raw(raw: RawConfig) -> ModuleConfig {
     }
 }
 
+fn migrate_raw_feed(index: usize, mut feed: RawCalendarFeed) -> Option<CalendarFeed> {
+    let url = feed.url.trim().to_string();
+    if url.is_empty() {
+        return None;
+    }
+    if feed.id.trim().is_empty() {
+        feed.id = format!("cal-{}", index + 1);
+    }
+    let label = feed.label.take().and_then(|label| {
+        let trimmed = label.trim().to_string();
+        if trimmed.is_empty() {
+            None
+        } else {
+            Some(trimmed)
+        }
+    });
+    let format = feed
+        .format
+        .unwrap_or_else(|| CalendarFormat::detect_from_url(&url).unwrap_or(CalendarFormat::Generic));
+    Some(CalendarFeed {
+        id: feed.id.trim().to_string(),
+        url,
+        label,
+        format,
+    })
+}
+
 fn calendars_from_legacy_urls(primary: &str, secondary: &str) -> Vec<CalendarFeed> {
     let mut out = Vec::new();
     if let Some(url) = trim_url(primary) {
@@ -118,6 +213,7 @@ fn calendars_from_legacy_urls(primary: &str, secondary: &str) -> Vec<CalendarFee
             id: "cal-1".into(),
             url: url.to_string(),
             label: None,
+            format: CalendarFormat::detect_from_url(url).unwrap_or(CalendarFormat::Generic),
         });
     }
     if let Some(url) = trim_url(secondary) {
@@ -125,6 +221,7 @@ fn calendars_from_legacy_urls(primary: &str, secondary: &str) -> Vec<CalendarFee
             id: "cal-2".into(),
             url: url.to_string(),
             label: None,
+            format: CalendarFormat::detect_from_url(url).unwrap_or(CalendarFormat::Generic),
         });
     }
     out
@@ -161,7 +258,18 @@ fn calendars_from_feeds_json(raw: &str) -> Vec<CalendarFeed> {
                 .map(str::trim)
                 .filter(|s| !s.is_empty())
                 .map(str::to_string);
-            Some(CalendarFeed { id, url, label })
+            let format = value
+                .get("format")
+                .and_then(|v| v.as_str())
+                .and_then(CalendarFormat::parse)
+                .or_else(|| CalendarFormat::detect_from_url(&url))
+                .unwrap_or(CalendarFormat::Generic);
+            Some(CalendarFeed {
+                id,
+                url,
+                label,
+                format,
+            })
         })
         .collect()
 }
@@ -211,6 +319,7 @@ mod tests {
         assert_eq!(cfg.calendars.len(), 2);
         assert_eq!(cfg.calendars[0].url, "https://a.ics");
         assert_eq!(cfg.calendars[1].url, "https://b.ics");
+        assert_eq!(cfg.calendars[0].format, CalendarFormat::Generic);
         let json = serde_json::to_value(&cfg).expect("serialize");
         assert!(json.get("ical_url_primary").is_none());
         assert!(json.get("ical_url_secondary").is_none());
@@ -233,10 +342,11 @@ mod tests {
     #[test]
     fn calendars_list_wins_over_legacy() {
         let cfg = migrate_raw(RawConfig {
-            calendars: vec![CalendarFeed {
+            calendars: vec![RawCalendarFeed {
                 id: "c1".into(),
                 url: "https://only.ics".into(),
                 label: Some("Airbnb".into()),
+                format: Some(CalendarFormat::Airbnb),
             }],
             ical_url_primary: "https://legacy.ics".into(),
             ical_url_secondary: "https://legacy2.ics".into(),
@@ -244,6 +354,35 @@ mod tests {
         });
         assert_eq!(cfg.calendars.len(), 1);
         assert_eq!(cfg.calendars[0].url, "https://only.ics");
+        assert_eq!(cfg.calendars[0].format, CalendarFormat::Airbnb);
+    }
+
+    #[test]
+    fn missing_format_detects_from_airbnb_url() {
+        let cfg = migrate_raw(RawConfig {
+            calendars: vec![RawCalendarFeed {
+                id: "c1".into(),
+                url: "https://www.airbnb.com/calendar/ical/1.ics".into(),
+                label: None,
+                format: None,
+            }],
+            ..RawConfig::default()
+        });
+        assert_eq!(cfg.calendars[0].format, CalendarFormat::Airbnb);
+    }
+
+    #[test]
+    fn explicit_generic_is_kept_even_on_airbnb_url() {
+        let cfg = migrate_raw(RawConfig {
+            calendars: vec![RawCalendarFeed {
+                id: "c1".into(),
+                url: "https://www.airbnb.com/calendar/ical/1.ics".into(),
+                label: None,
+                format: Some(CalendarFormat::Generic),
+            }],
+            ..RawConfig::default()
+        });
+        assert_eq!(cfg.calendars[0].format, CalendarFormat::Generic);
     }
 
     #[test]
@@ -254,16 +393,30 @@ mod tests {
                     id: "a".into(),
                     url: "  ".into(),
                     label: None,
+                    format: CalendarFormat::Generic,
                 },
                 CalendarFeed {
                     id: "b".into(),
                     url: "https://example.com/a.ics".into(),
                     label: None,
+                    format: CalendarFormat::Booking,
                 },
             ],
             ..Default::default()
         };
         assert_eq!(config.connected_calendars().len(), 1);
         assert!(config.has_any_feed());
+        assert_eq!(config.format_for_id("b"), CalendarFormat::Booking);
+    }
+
+    #[test]
+    fn format_wire_roundtrip() {
+        for format in CalendarFormat::ALL {
+            assert_eq!(CalendarFormat::parse(format.as_str()), Some(format));
+        }
+        assert_eq!(
+            CalendarFormat::parse("vrbo"),
+            Some(CalendarFormat::AbritelVrbo)
+        );
     }
 }
