@@ -3,7 +3,9 @@
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::config::{load_config, save_config, CalendarFeed, ModuleConfig, CALENDAR_SLOTS};
+use crate::config::{
+    load_config, save_config, CalendarFeed, CalendarFormat, ModuleConfig, CALENDAR_SLOTS,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CalendarInput {
@@ -13,11 +15,14 @@ pub struct CalendarInput {
     pub url: String,
     #[serde(default)]
     pub label: String,
+    /// Platform ICS dialect (`airbnb`, `booking`, `abritel_vrbo`, `google`, `generic`).
+    #[serde(default)]
+    pub format: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UpdateConfigArgs {
-    /// Dynamic list from host StepList (`calendars.{i}.url` / `.label` / `.id`).
+    /// Dynamic list from host StepList (`calendars.{i}.url` / `.label` / `.id` / `.format`).
     #[serde(default)]
     pub calendars: Vec<CalendarInput>,
     /// Legacy flat fields (pre multi-calendar) — accepted on write, converted to `calendars`.
@@ -66,10 +71,12 @@ fn calendars_from_args(args: &UpdateConfigArgs) -> Vec<CalendarFeed> {
                         Some(trimmed.to_string())
                     }
                 };
+                let format = resolve_format(&input.format, url);
                 Some(CalendarFeed {
                     id,
                     url: url.to_string(),
                     label,
+                    format,
                 })
             })
             .collect();
@@ -83,6 +90,7 @@ fn calendars_from_args(args: &UpdateConfigArgs) -> Vec<CalendarFeed> {
             id: "cal-1".into(),
             url: primary.to_string(),
             label: None,
+            format: CalendarFormat::detect_from_url(primary).unwrap_or(CalendarFormat::Generic),
         });
     }
     let secondary = args.ical_url_secondary.trim();
@@ -91,7 +99,18 @@ fn calendars_from_args(args: &UpdateConfigArgs) -> Vec<CalendarFeed> {
             id: "cal-2".into(),
             url: secondary.to_string(),
             label: None,
+            format: CalendarFormat::detect_from_url(secondary).unwrap_or(CalendarFormat::Generic),
         });
     }
     out
+}
+
+fn resolve_format(raw: &str, url: &str) -> CalendarFormat {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return CalendarFormat::detect_from_url(url).unwrap_or(CalendarFormat::Generic);
+    }
+    CalendarFormat::parse(trimmed)
+        .or_else(|| CalendarFormat::detect_from_url(url))
+        .unwrap_or(CalendarFormat::Generic)
 }

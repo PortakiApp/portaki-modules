@@ -8,7 +8,7 @@ mod ids;
 mod queries;
 
 pub use commands::{update_config, CalendarInput, UpdateConfigArgs};
-pub use config::{load_config, CalendarFeed, ModuleConfig, CALENDAR_SLOTS};
+pub use config::{load_config, CalendarFeed, CalendarFormat, ModuleConfig, CALENDAR_SLOTS};
 pub use host::{render_host_main, render_host_stats};
 pub use ics::{parse_stay_rows, StayImportRow};
 pub use queries::{
