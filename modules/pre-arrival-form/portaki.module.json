@@ -9,7 +9,7 @@
     "fr": "Recueille horaire, occasion, allergies avant l'arrivée.",
     "en": "Collects ETA, occasion, and allergies before arrival."
   },
-  "version": "0.6.1",
+  "version": "0.6.2",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -17,25 +17,8 @@
   },
   "icon": "clipboard",
   "type": "official",
-  "emails": [
-    {
-      "id": "form-available",
-      "audience": "guest",
-      "description": {
-        "fr": "Formulaire de pré-arrivée disponible",
-        "en": "Pre-arrival form available"
-      },
-      "command": "sendFormAvailable",
-      "catchUpOnPropertyPublish": true,
-      "catchUpOnConfigUpdate": true,
-      "dispatchOnStayCreated": true,
-      "trigger": {
-        "type": "moduleCommand"
-      },
-      "requiresGuestEmail": true,
-      "skipWhen": ["guest.email.missing", "stay.cancelled"]
-    }
-  ],
+  "maturity": "stable",
+  "sortOrder": 50,
   "hostSurfaces": [
     {
       "type": "property-workspace-tab",
@@ -73,6 +56,28 @@
       "surfaceId": "guest.form",
       "path": "pre-arrival-form/form",
       "labelKey": "nav.pre-arrival-form"
+    }
+  ],
+  "emails": [
+    {
+      "id": "form-available",
+      "audience": "guest",
+      "description": {
+        "fr": "Formulaire de pré-arrivée disponible",
+        "en": "Pre-arrival form available"
+      },
+      "command": "sendFormAvailable",
+      "catchUpOnPropertyPublish": true,
+      "catchUpOnConfigUpdate": true,
+      "dispatchOnStayCreated": true,
+      "trigger": {
+        "type": "moduleCommand"
+      },
+      "requiresGuestEmail": true,
+      "skipWhen": [
+        "guest.email.missing",
+        "stay.cancelled"
+      ]
     }
   ]
 }

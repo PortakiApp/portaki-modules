@@ -9,7 +9,7 @@
     "fr": "Sorties, concerts et animations à proximité — OpenAgenda et curation hôte.",
     "en": "Local happenings near the stay — OpenAgenda plus host-curated slots."
   },
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -17,6 +17,8 @@
   },
   "icon": "calendar",
   "type": "official",
+  "maturity": "beta",
+  "sortOrder": 210,
   "hostSurfaces": [
     {
       "type": "property-module-sheet",

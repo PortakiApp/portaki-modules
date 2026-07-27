@@ -26,6 +26,7 @@
   <a href="#requirements">Requirements</a> ·
   <a href="#development">Development</a> ·
   <a href="#publishing">Publishing</a> ·
+  <a href="docs/MARKETPLACE_ORDER.md">Marketplace order</a> ·
   <a href="CONTRIBUTING.md">Contributing</a> ·
   <a href="SECURITY.md">Security</a>
 </p>

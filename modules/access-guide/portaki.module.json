@@ -9,7 +9,7 @@
     "fr": "Moyen d'entrée, couches optionnelles et révélation des codes.",
     "en": "Entry method, optional layers, and when codes are revealed."
   },
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -17,6 +17,8 @@
   },
   "icon": "key",
   "type": "official",
+  "maturity": "stable",
+  "sortOrder": 20,
   "hostSurfaces": [
     {
       "type": "property-workspace-tab",

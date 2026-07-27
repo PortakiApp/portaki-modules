@@ -9,7 +9,7 @@
     "fr": "Blocs de contenu markdown pour le carnet d'accueil invité.",
     "en": "Markdown content blocks for the guest welcome book."
   },
-  "version": "0.2.3",
+  "version": "0.2.4",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -17,6 +17,8 @@
   },
   "icon": "home",
   "type": "official",
+  "maturity": "stable",
+  "sortOrder": 40,
   "hostSurfaces": [
     {
       "type": "property-workspace-tab",

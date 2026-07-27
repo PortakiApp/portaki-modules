@@ -9,7 +9,7 @@
     "fr": "Numéros d'urgence, pharmacie, médecin, ligne directe.",
     "en": "Emergency numbers, pharmacy, doctor, and your direct line."
   },
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -17,6 +17,8 @@
   },
   "icon": "phone",
   "type": "official",
+  "maturity": "stable",
+  "sortOrder": 70,
   "hostSurfaces": [
     {
       "type": "property-workspace-tab",

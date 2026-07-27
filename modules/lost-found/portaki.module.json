@@ -9,7 +9,7 @@
     "fr": "Ajoute un bouton « Déclarer un objet trouvé » au détail du séjour et prévient le voyageur.",
     "en": "Adds a “Declare a found item” action on stay detail and notifies the guest."
   },
-  "version": "0.5.2",
+  "version": "0.5.3",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -17,25 +17,8 @@
   },
   "icon": "search",
   "type": "official",
-  "emails": [
-    {
-      "id": "checkout-j2",
-      "audience": "guest",
-      "description": {
-        "fr": "Relance objets perdus J+2 après départ",
-        "en": "Lost & found follow-up J+2 after checkout"
-      },
-      "command": "sendCheckoutFollowUp",
-      "catchUpOnPropertyPublish": false,
-      "dispatchOnStayCreated": false,
-      "trigger": {
-        "type": "relativeToCheckOut",
-        "offset": "P2D"
-      },
-      "requiresGuestEmail": true,
-      "skipWhen": ["guest.email.missing", "stay.cancelled"]
-    }
-  ],
+  "maturity": "stable",
+  "sortOrder": 80,
   "hostSurfaces": [
     {
       "type": "property-workspace-tab",
@@ -78,6 +61,28 @@
       "surfaceId": "guest.form",
       "path": "lost-found/form",
       "labelKey": "nav.lost-found"
+    }
+  ],
+  "emails": [
+    {
+      "id": "checkout-j2",
+      "audience": "guest",
+      "description": {
+        "fr": "Relance objets perdus J+2 après départ",
+        "en": "Lost & found follow-up J+2 after checkout"
+      },
+      "command": "sendCheckoutFollowUp",
+      "catchUpOnPropertyPublish": false,
+      "dispatchOnStayCreated": false,
+      "trigger": {
+        "type": "relativeToCheckOut",
+        "offset": "P2D"
+      },
+      "requiresGuestEmail": true,
+      "skipWhen": [
+        "guest.email.missing",
+        "stay.cancelled"
+      ]
     }
   ]
 }

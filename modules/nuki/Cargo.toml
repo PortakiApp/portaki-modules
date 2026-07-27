@@ -1,6 +1,6 @@
 [package]
 name = "nuki"
-version = "0.2.0"
+version = "0.2.1"
 edition.workspace = true
 license.workspace = true
 description = "Portaki Nuki smart-lock provider — keypad credentials for access-guide"
