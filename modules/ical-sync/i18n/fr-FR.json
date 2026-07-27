@@ -15,7 +15,7 @@
   "host.calendar.id.placeholder": "cal-1",
   "host.calendar.format": "Format du calendrier",
   "host.calendar.channel": "Plateforme de réservation",
-  "host.calendar.channel.help": "Qui vend ces séjours. Différent du format : un calendrier Google est un miroir, pas un vendeur. Laissez « Je ne sais pas » — Portaki lit la plateforme dans le flux quand elle y est.",
+  "host.calendar.channel.help": "Qui vend ces séjours. Le format du calendrier en est déduit automatiquement (et affiné depuis l'URL du flux). Laissez « Je ne sais pas » si vous hésitez — Portaki lit la plateforme dans le flux quand elle y est.",
   "host.channel.airbnb": "Airbnb",
   "host.channel.airbnb.help": "Séjours vendus sur Airbnb.",
   "host.channel.booking": "Booking.com",

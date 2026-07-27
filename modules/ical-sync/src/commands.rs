@@ -1,5 +1,6 @@
 //! Module commands — configuration persistence.
 
+use portaki_sdk::contracts::booking_channel::BookingChannel;
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -77,8 +78,8 @@ fn calendars_from_args(args: &UpdateConfigArgs) -> Vec<CalendarFeed> {
                         Some(trimmed.to_string())
                     }
                 };
-                let format = resolve_format(&input.format, url);
                 let (channel, channel_signal) = resolve_channel(&input.channel, url);
+                let format = resolve_format(&input.format, url, channel);
                 Some(CalendarFeed {
                     id,
                     url: url.to_string(),
@@ -116,12 +117,71 @@ fn legacy_feed(id: &str, url: &str) -> CalendarFeed {
     }
 }
 
-fn resolve_format(raw: &str, url: &str) -> CalendarFormat {
+/// Deduces the feed shape now that the host no longer picks it by hand — a single
+/// "platform" selector drives everything. A legacy explicit `format` is still honoured
+/// on write; otherwise the feed URL wins (a `google.com` calendar is a Google mirror
+/// whoever sold the stay), then the chosen platform implies its own export shape.
+fn resolve_format(raw: &str, url: &str, channel: BookingChannel) -> CalendarFormat {
     let trimmed = raw.trim();
-    if trimmed.is_empty() {
-        return CalendarFormat::detect_from_url(url).unwrap_or(CalendarFormat::Generic);
+    if !trimmed.is_empty() {
+        if let Some(parsed) = CalendarFormat::parse(trimmed) {
+            return parsed;
+        }
     }
-    CalendarFormat::parse(trimmed)
-        .or_else(|| CalendarFormat::detect_from_url(url))
+    CalendarFormat::detect_from_url(url)
+        .or_else(|| crate::channel::format_from_channel(channel))
         .unwrap_or(CalendarFormat::Generic)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn format_deduced_from_platform_when_url_is_neutral() {
+        // A neutral .ics URL — the chosen platform implies the feed shape.
+        assert_eq!(
+            resolve_format("", "https://example.com/a.ics", BookingChannel::Airbnb),
+            CalendarFormat::Airbnb
+        );
+        assert_eq!(
+            resolve_format("", "https://example.com/a.ics", BookingChannel::Booking),
+            CalendarFormat::Booking
+        );
+        // Direct / other sellers imply no dialect → generic.
+        assert_eq!(
+            resolve_format("", "https://example.com/a.ics", BookingChannel::Direct),
+            CalendarFormat::Generic
+        );
+    }
+
+    #[test]
+    fn feed_url_wins_over_the_platform() {
+        // A Google mirror sold direct still parses as a Google feed.
+        assert_eq!(
+            resolve_format(
+                "",
+                "https://calendar.google.com/calendar/ical/x/basic.ics",
+                BookingChannel::Direct
+            ),
+            CalendarFormat::Google
+        );
+        // An airbnb.com URL detects Airbnb whatever the seller says.
+        assert_eq!(
+            resolve_format(
+                "",
+                "https://www.airbnb.com/calendar/ical/1.ics",
+                BookingChannel::Unknown
+            ),
+            CalendarFormat::Airbnb
+        );
+    }
+
+    #[test]
+    fn legacy_explicit_format_is_still_honoured() {
+        assert_eq!(
+            resolve_format("google", "https://example.com/a.ics", BookingChannel::Airbnb),
+            CalendarFormat::Google
+        );
+    }
 }

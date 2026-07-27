@@ -112,6 +112,19 @@ pub fn channel_from_format(format: CalendarFormat) -> Option<BookingChannel> {
     }
 }
 
+/// Maps a selling platform onto the feed shape it exports. The reverse of
+/// [`channel_from_format`] — used when the host picks a single "platform" and the
+/// feed shape is deduced from it. Non-marketplace sellers (`Direct`, `OtherPlatform`,
+/// `Unknown`) imply no specific dialect, so they resolve to nothing (→ `Generic`).
+pub fn format_from_channel(channel: BookingChannel) -> Option<CalendarFormat> {
+    match channel {
+        BookingChannel::Airbnb => Some(CalendarFormat::Airbnb),
+        BookingChannel::Booking => Some(CalendarFormat::Booking),
+        BookingChannel::AbritelVrbo => Some(CalendarFormat::AbritelVrbo),
+        _ => None,
+    }
+}
+
 /// Configuration-time prefill for the host platform selector.
 ///
 /// Never called at import. Only marketplace hosts are recognised — a

@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.1] — 2026-07-28
+
+### Changed
+
+- Host SDUI: merged the calendar-format and booking-platform selectors into a
+  single **booking platform** picker. The feed shape (format) is deduced instead
+  of hand-picked — the feed URL wins (a `google.com` calendar stays a Google
+  mirror whoever sold the stay), otherwise the chosen platform implies its export
+  shape, else generic. A legacy explicit `format` on write is still honoured, and
+  the persisted `channel` / `channel_signal` are unchanged.
+
 ## [0.4.0] — 2026-07-27
 
 ### Added

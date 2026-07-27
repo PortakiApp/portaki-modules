@@ -15,7 +15,7 @@
   "host.calendar.id.placeholder": "cal-1",
   "host.calendar.format": "Calendar format",
   "host.calendar.channel": "Booking platform",
-  "host.calendar.channel.help": "Who sells these stays. Not the same as the format: a Google calendar is a mirror, not a seller. Leave « I don't know » — Portaki reads the platform from the feed when it is there.",
+  "host.calendar.channel.help": "Who sells these stays. The calendar format is deduced from it automatically (and refined from the feed URL). Leave « I don't know » if unsure — Portaki reads the platform from the feed when it is there.",
   "host.channel.airbnb": "Airbnb",
   "host.channel.airbnb.help": "Stays sold on Airbnb.",
   "host.channel.booking": "Booking.com",

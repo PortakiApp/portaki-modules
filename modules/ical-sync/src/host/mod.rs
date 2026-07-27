@@ -8,7 +8,7 @@ use portaki_sdk::sdui::primitives::{
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{load_config, CalendarFeed, CalendarFormat, ModuleConfig, CALENDAR_SLOTS};
+use crate::config::{load_config, CalendarFeed, ModuleConfig, CALENDAR_SLOTS};
 
 mod stats;
 
@@ -117,8 +117,6 @@ fn calendar_row(index: usize, feed: Option<&CalendarFeed>) -> Component {
         .unwrap_or_else(|| format!("cal-{}", index + 1));
     let url = feed.map(|f| f.url.as_str()).unwrap_or("");
     let label = feed.and_then(|f| f.label.as_deref()).unwrap_or("");
-    let format = feed.map(|f| f.format).unwrap_or(CalendarFormat::Generic);
-    let format_help = format_help_key(format);
     let channel = feed.map(|f| f.channel).unwrap_or_default();
 
     // Hidden id keeps stable feed ids across edits (StepList remove clears visible fields only).
@@ -129,20 +127,6 @@ fn calendar_row(index: usize, feed: Option<&CalendarFeed>) -> Component {
             TextInput::new()
                 .name(format!("calendars.{index}.id"))
                 .value(id)
-                .into(),
-            Field::new()
-                .name(format!("calendars.{index}.format"))
-                .label("i18n:host.calendar.format")
-                .child(
-                    Select::new()
-                        .name(format!("calendars.{index}.format"))
-                        .options(format_options())
-                        .value(format.as_str()),
-                )
-                .into(),
-            Text::new()
-                .text(format_help)
-                .variant(TextVariant::Caption)
                 .into(),
             Field::new()
                 .name(format!("calendars.{index}.channel"))
@@ -182,23 +166,10 @@ fn calendar_row(index: usize, feed: Option<&CalendarFeed>) -> Component {
         .into()
 }
 
-fn format_options() -> Vec<ChoiceOption> {
-    vec![
-        ChoiceOption::new("airbnb", "i18n:host.format.airbnb")
-            .description("i18n:host.format.airbnb.help"),
-        ChoiceOption::new("booking", "i18n:host.format.booking")
-            .description("i18n:host.format.booking.help"),
-        ChoiceOption::new("abritel_vrbo", "i18n:host.format.abritel_vrbo")
-            .description("i18n:host.format.abritel_vrbo.help"),
-        ChoiceOption::new("google", "i18n:host.format.google")
-            .description("i18n:host.format.google.help"),
-        ChoiceOption::new("generic", "i18n:host.format.generic")
-            .description("i18n:host.format.generic.help"),
-    ]
-}
-
 /// Platform list comes straight from [`BookingChannel::ALL`] — the SDK owns the
-/// vocabulary so this selector cannot drift from what the gateway parses.
+/// vocabulary so this selector cannot drift from what the gateway parses. The feed
+/// shape (format) is no longer picked by hand: it is deduced from the URL or the
+/// chosen platform at save time (see `commands::resolve_format`).
 fn channel_options() -> Vec<ChoiceOption> {
     BookingChannel::ALL
         .iter()
@@ -208,14 +179,4 @@ fn channel_options() -> Vec<ChoiceOption> {
                 .description(format!("i18n:host.channel.{code}.help"))
         })
         .collect()
-}
-
-fn format_help_key(format: CalendarFormat) -> &'static str {
-    match format {
-        CalendarFormat::Airbnb => "i18n:host.format.airbnb.help",
-        CalendarFormat::Booking => "i18n:host.format.booking.help",
-        CalendarFormat::AbritelVrbo => "i18n:host.format.abritel_vrbo.help",
-        CalendarFormat::Google => "i18n:host.format.google.help",
-        CalendarFormat::Generic => "i18n:host.format.generic.help",
-    }
 }
