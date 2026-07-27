@@ -57,11 +57,7 @@ pub fn notify_sync_failed(
             subject: email_i18n::text("email.syncFailed.subject"),
             eyebrow: Some(email_i18n::text("email.syncFailed.eyebrow")),
             title: Some(email_i18n::text("email.syncFailed.title")),
-            body: localized_with_pairs(
-                "email.syncFailed.body",
-                &vars_fr,
-                &vars_en,
-            ),
+            body: localized_with_pairs("email.syncFailed.body", &vars_fr, &vars_en),
             cta: Some(ModuleEmailCta {
                 label: email_i18n::text("email.syncFailed.cta"),
                 url: None,
@@ -98,18 +94,10 @@ pub fn notify_stay_imported(
         email_id: format!("stay-imported-{}", row.ical_uid),
         audience: EmailAudience::Host,
         content: ModuleEmailSdui {
-            subject: localized_with_pairs(
-                "email.stayImported.subject",
-                &vars_fr,
-                &vars_en,
-            ),
+            subject: localized_with_pairs("email.stayImported.subject", &vars_fr, &vars_en),
             eyebrow: Some(email_i18n::text("email.stayImported.eyebrow")),
             title: Some(email_i18n::text("email.stayImported.title")),
-            body: localized_with_pairs(
-                "email.stayImported.body",
-                &vars_fr,
-                &vars_en,
-            ),
+            body: localized_with_pairs("email.stayImported.body", &vars_fr, &vars_en),
             cta: Some(ModuleEmailCta {
                 label: email_i18n::text("email.stayImported.cta"),
                 url: None,
@@ -289,22 +277,14 @@ fn interpolate(template: &str, vars: &[(&str, &str)]) -> String {
 
 fn format_stay_dates_fr(check_in: &str, check_out: &str) -> String {
     match (parse_day(check_in), parse_day(check_out)) {
-        (Some(start), Some(end)) => format!(
-            "{} → {}",
-            format_day_fr(start),
-            format_day_fr(end)
-        ),
+        (Some(start), Some(end)) => format!("{} → {}", format_day_fr(start), format_day_fr(end)),
         _ => format!("{check_in} → {check_out}"),
     }
 }
 
 fn format_stay_dates_en(check_in: &str, check_out: &str) -> String {
     match (parse_day(check_in), parse_day(check_out)) {
-        (Some(start), Some(end)) => format!(
-            "{} → {}",
-            format_day_en(start),
-            format_day_en(end)
-        ),
+        (Some(start), Some(end)) => format!("{} → {}", format_day_en(start), format_day_en(end)),
         _ => format!("{check_in} → {check_out}"),
     }
 }
