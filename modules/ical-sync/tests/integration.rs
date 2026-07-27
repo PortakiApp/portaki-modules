@@ -226,3 +226,98 @@ fn parse_stay_rows_unit() {
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0].guest_name, "A");
 }
+
+#[test]
+#[serial]
+fn apply_feeds_empty_body_counts_as_failed() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE, capability::core::ICAL_IMPORT])
+        .run(|ctx| {
+            update_config(
+                ctx.clone(),
+                UpdateConfigArgs {
+                    calendars: vec![CalendarInput {
+                        id: "primary".into(),
+                        url: "https://example.com/a.ics".into(),
+                        label: "Booking".into(),
+                        format: "booking".into(),
+                    }],
+                    ..Default::default()
+                },
+            )
+            .expect("update");
+
+            let result = apply_feeds(
+                ctx,
+                ApplyFeedsArgs {
+                    guest_lang: "fr".into(),
+                    feeds: vec![FeedBody {
+                        id: "primary".into(),
+                        provider: Some("booking".into()),
+                        ics_body: String::new(),
+                    }],
+                },
+            )
+            .expect("apply");
+
+            assert!(!result.ok);
+            assert_eq!(result.failed, 1);
+            assert_eq!(result.succeeded, 0);
+        });
+}
+
+#[test]
+#[serial]
+fn apply_feeds_second_pass_is_idempotent_for_same_uids() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE, capability::core::ICAL_IMPORT])
+        .run(|ctx| {
+            update_config(
+                ctx.clone(),
+                UpdateConfigArgs {
+                    calendars: vec![CalendarInput {
+                        id: "primary".into(),
+                        url: "https://example.com/a.ics".into(),
+                        label: "".into(),
+                        format: "generic".into(),
+                    }],
+                    ..Default::default()
+                },
+            )
+            .expect("update");
+
+            let ics = "BEGIN:VEVENT\nUID:stable-1\nDTSTART;VALUE=DATE:20260801\n\
+DTEND;VALUE=DATE:20260805\nSUMMARY:Ada Lovelace\nEND:VEVENT\n\
+BEGIN:VEVENT\nUID:stable-2\nDTSTART;VALUE=DATE:20260810\n\
+DTEND;VALUE=DATE:20260812\nSUMMARY:Tom Weber\nEND:VEVENT\n";
+
+            let first = apply_feeds(
+                ctx.clone(),
+                ApplyFeedsArgs {
+                    guest_lang: "fr".into(),
+                    feeds: vec![FeedBody {
+                        id: "primary".into(),
+                        provider: Some("generic".into()),
+                        ics_body: ics.into(),
+                    }],
+                },
+            )
+            .expect("apply first");
+            assert_eq!(first.rows.len(), 2);
+
+            let second = apply_feeds(
+                ctx,
+                ApplyFeedsArgs {
+                    guest_lang: "fr".into(),
+                    feeds: vec![FeedBody {
+                        id: "primary".into(),
+                        provider: Some("generic".into()),
+                        ics_body: ics.into(),
+                    }],
+                },
+            )
+            .expect("apply second");
+            assert_eq!(second.rows.len(), 2);
+            assert!(second.ok);
+        });
+}
