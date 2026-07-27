@@ -1,5 +1,6 @@
 //! Portaki ical-sync module — host calendar feed import (iCal / Airbnb).
 
+mod channel;
 mod commands;
 mod config;
 mod email_i18n;
@@ -10,10 +11,11 @@ mod ids;
 mod queries;
 mod sync_state;
 
+pub use channel::{detect as detect_channel, DetectedChannel, FeedChannelSignals};
 pub use commands::{update_config, CalendarInput, UpdateConfigArgs};
 pub use config::{load_config, CalendarFeed, CalendarFormat, ModuleConfig, CALENDAR_SLOTS};
 pub use host::{render_host_main, render_host_stats};
-pub use ics::{parse_stay_rows, StayImportRow};
+pub use ics::{parse_stay_rows, FeedParseContext, StayImportRow};
 pub use queries::{
     apply_feeds, get_config, list_sources, ApplyFeedsArgs, ApplyFeedsResponse, FeedBody,
     FeedSource, ListSourcesResponse,

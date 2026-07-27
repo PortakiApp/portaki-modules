@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::{load_config, save_config, CalendarFormat, ModuleConfig};
 use crate::email_send;
-use crate::ics::{parse_stay_rows, StayImportRow};
+use crate::ics::{parse_stay_rows, FeedParseContext, StayImportRow};
 use crate::sync_state::{self, SyncDiff};
 
 const MAX_EVENTS: usize = 200;
@@ -108,12 +108,9 @@ pub fn apply_feeds(ctx: Context, args: ApplyFeedsArgs) -> Result<ApplyFeedsRespo
     let mut primary_source: Option<(CalendarFormat, Option<String>)> = None;
 
     for feed in &args.feeds {
-        let format = resolve_feed_format(feed, &config);
-        let feed_label = config
-            .calendars
-            .iter()
-            .find(|c| c.id == feed.id)
-            .and_then(|c| c.label.clone());
+        let parse_context = resolve_parse_context(feed, &config);
+        let format = parse_context.format;
+        let feed_label = config.feed_for_id(&feed.id).and_then(|c| c.label.clone());
 
         if feed.ics_body.trim().is_empty() {
             failed += 1;
@@ -124,7 +121,7 @@ pub fn apply_feeds(ctx: Context, args: ApplyFeedsArgs) -> Result<ApplyFeedsRespo
         if remaining == 0 {
             break;
         }
-        let parsed = parse_stay_rows(&feed.ics_body, guest_lang, remaining, format);
+        let parsed = parse_stay_rows(&feed.ics_body, guest_lang, remaining, &parse_context);
         // Non-empty body = fetch ok. Zero stays can mean “only blocks” — not a failure.
         items_total += parsed.len() as i32;
         succeeded += 1;
@@ -237,6 +234,18 @@ fn day_key_from_now(now: &str) -> String {
         now[..10].to_string()
     } else {
         "unknown".into()
+    }
+}
+
+/// Feed shape comes from the platform payload when present, else from config.
+/// The platform declaration is always read from config — the fetch payload has
+/// no reason to carry it and the feed URL is never consulted here.
+fn resolve_parse_context(feed: &FeedBody, config: &ModuleConfig) -> FeedParseContext {
+    let (declared_channel, declared_channel_signal) = config.channel_for_id(&feed.id);
+    FeedParseContext {
+        format: resolve_feed_format(feed, config),
+        declared_channel,
+        declared_channel_signal,
     }
 }
 

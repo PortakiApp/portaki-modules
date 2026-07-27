@@ -1,22 +1,31 @@
 //! Minimal iCalendar VEVENT parser for stay import.
 
 use chrono::{DateTime, NaiveDate, NaiveTime, TimeZone, Utc};
-use serde::{Deserialize, Serialize};
+use portaki_sdk::contracts::booking_channel::{BookingChannel, ChannelSignal};
+pub use portaki_sdk::contracts::stay_import::StayImportRow;
 
+use crate::channel::{self, FeedChannelSignals};
 use crate::config::CalendarFormat;
 
-/// Stay row shape expected by `ModuleGatewayStayImportAdapter`.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct StayImportRow {
-    pub guest_name: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub guest_email: Option<String>,
-    #[serde(default)]
-    pub guest_lang: String,
-    pub check_in_at: String,
-    pub check_out_at: String,
-    pub ical_uid: String,
+/// What the module knows about a feed before reading its body.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct FeedParseContext {
+    /// ICS dialect — drives VEVENT filtering / guest naming.
+    pub format: CalendarFormat,
+    /// Selling platform declared on the feed config (`Unknown` = undeclared).
+    pub declared_channel: BookingChannel,
+    /// Provenance of `declared_channel`.
+    pub declared_channel_signal: ChannelSignal,
+}
+
+impl FeedParseContext {
+    /// Feed known only by its shape — no platform declaration.
+    pub fn from_format(format: CalendarFormat) -> Self {
+        Self {
+            format,
+            ..Default::default()
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -28,18 +37,19 @@ struct VEvent {
     dtend: Option<DateTime<Utc>>,
 }
 
-/// Parse ICS text into stay import rows (max `limit`), using the declared feed format.
+/// Parse ICS text into stay import rows (max `limit`) for one configured feed.
 pub fn parse_stay_rows(
     ics_body: &str,
     guest_lang: &str,
     limit: usize,
-    format: CalendarFormat,
+    feed: &FeedParseContext,
 ) -> Vec<StayImportRow> {
     if ics_body.trim().is_empty() || limit == 0 {
         return Vec::new();
     }
 
     let unfolded = unfold_ics(ics_body);
+    let prodid = calendar_prodid(&unfolded);
     let mut rows = Vec::new();
     let mut current: Option<VEvent> = None;
 
@@ -57,7 +67,7 @@ pub fn parse_stay_rows(
         }
         if line.eq_ignore_ascii_case("END:VEVENT") {
             if let Some(event) = current.take() {
-                if let Some(row) = event_to_row(event, guest_lang, format) {
+                if let Some(row) = event_to_row(event, guest_lang, feed, &prodid) {
                     rows.push(row);
                     if rows.len() >= limit {
                         break;
@@ -75,7 +85,30 @@ pub fn parse_stay_rows(
     rows
 }
 
-fn event_to_row(event: VEvent, guest_lang: &str, format: CalendarFormat) -> Option<StayImportRow> {
+/// Reads `PRODID` from the calendar header — it sits between `BEGIN:VCALENDAR`
+/// and the first `BEGIN:VEVENT`, so the event loop never sees it.
+fn calendar_prodid(unfolded: &str) -> String {
+    for line in unfolded.lines() {
+        let line = line.trim_end_matches('\r');
+        if line.eq_ignore_ascii_case("BEGIN:VEVENT") {
+            break;
+        }
+        let Some((raw_key, value)) = split_property(line) else {
+            continue;
+        };
+        if property_key(raw_key) == "PRODID" {
+            return unescape_text(value).trim().to_string();
+        }
+    }
+    String::new()
+}
+
+fn event_to_row(
+    event: VEvent,
+    guest_lang: &str,
+    feed: &FeedParseContext,
+    prodid: &str,
+) -> Option<StayImportRow> {
     let check_in = event.dtstart?;
     let check_out = event
         .dtend
@@ -84,7 +117,16 @@ fn event_to_row(event: VEvent, guest_lang: &str, format: CalendarFormat) -> Opti
         return None;
     }
 
-    let guest_name = guest_name_for_format(&event, format)?;
+    let guest_name = guest_name_for_format(&event, feed.format)?;
+    // Detect before the UID is replaced by a generated one — a generated uid
+    // carries no channel information.
+    let detected = channel::detect(&FeedChannelSignals {
+        declared_format: feed.format,
+        declared_channel: feed.declared_channel,
+        declared_channel_signal: feed.declared_channel_signal,
+        prodid,
+        uid: &event.uid,
+    });
     let ical_uid = if event.uid.trim().is_empty() {
         format!(
             "generated:{}:{}",
@@ -102,6 +144,8 @@ fn event_to_row(event: VEvent, guest_lang: &str, format: CalendarFormat) -> Opti
         check_in_at: check_in.to_rfc3339(),
         check_out_at: check_out.to_rfc3339(),
         ical_uid,
+        booking_channel: detected.code,
+        booking_channel_signal: detected.signal,
     })
 }
 
@@ -291,13 +335,7 @@ fn apply_property(event: &mut VEvent, line: &str) {
     let Some((raw_key, value)) = split_property(line) else {
         return;
     };
-    let key = raw_key
-        .split(';')
-        .next()
-        .unwrap_or(raw_key)
-        .trim()
-        .to_ascii_uppercase();
-    match key.as_str() {
+    match property_key(raw_key).as_str() {
         "UID" => event.uid = unescape_text(value),
         "SUMMARY" => event.summary = unescape_text(value),
         "DESCRIPTION" => event.description = unescape_text(value),
@@ -310,6 +348,16 @@ fn apply_property(event: &mut VEvent, line: &str) {
 fn split_property(line: &str) -> Option<(&str, &str)> {
     let idx = line.find(':')?;
     Some((&line[..idx], &line[idx + 1..]))
+}
+
+/// Property name without its parameters (`DTSTART;VALUE=DATE` → `DTSTART`).
+fn property_key(raw_key: &str) -> String {
+    raw_key
+        .split(';')
+        .next()
+        .unwrap_or(raw_key)
+        .trim()
+        .to_ascii_uppercase()
 }
 
 fn unescape_text(value: &str) -> String {
@@ -380,8 +428,13 @@ fn parse_ics_datetime(raw_key: &str, value: &str) -> Option<DateTime<Utc>> {
 mod tests {
     use super::*;
 
+    fn shape(format: CalendarFormat) -> FeedParseContext {
+        FeedParseContext::from_format(format)
+    }
+
     const AIRBNB_SAMPLE: &str = "BEGIN:VCALENDAR\r\n\
 VERSION:2.0\r\n\
+PRODID:-//Airbnb Inc//Hosting Calendar 0.8.8//EN\r\n\
 BEGIN:VEVENT\r\n\
 UID:abc-123@airbnb.com\r\n\
 DTSTART;VALUE=DATE:20260720\r\n\
@@ -411,7 +464,7 @@ END:VCALENDAR\r\n";
 
     #[test]
     fn airbnb_imports_reservations_skips_not_available() {
-        let rows = parse_stay_rows(AIRBNB_SAMPLE, "fr", 50, CalendarFormat::Airbnb);
+        let rows = parse_stay_rows(AIRBNB_SAMPLE, "fr", 50, &shape(CalendarFormat::Airbnb));
         assert_eq!(rows.len(), 2);
         assert_eq!(rows[0].guest_name, "Marie Dupont");
         assert_eq!(rows[0].ical_uid, "abc-123@airbnb.com");
@@ -422,10 +475,111 @@ END:VCALENDAR\r\n";
     }
 
     #[test]
+    fn airbnb_sample_labels_rows_by_uid_then_prodid() {
+        let rows = parse_stay_rows(AIRBNB_SAMPLE, "fr", 50, &shape(CalendarFormat::Airbnb));
+        // `abc-123@airbnb.com` — the UID names the seller.
+        assert_eq!(rows[0].booking_channel, BookingChannel::Airbnb);
+        assert_eq!(rows[0].booking_channel_signal, ChannelSignal::IcalUidSuffix);
+        // `def-456` is opaque — the calendar PRODID carries it.
+        assert_eq!(rows[1].booking_channel, BookingChannel::Airbnb);
+        assert_eq!(rows[1].booking_channel_signal, ChannelSignal::IcalProdid);
+    }
+
+    #[test]
+    fn airbnb_uid_survives_a_feed_declared_generic() {
+        let ics = "BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:mixed-1@airbnb.com\n\
+DTSTART;VALUE=DATE:20260901\nDTEND;VALUE=DATE:20260903\nSUMMARY:Léa Martin\n\
+END:VEVENT\nEND:VCALENDAR\n";
+        let rows = parse_stay_rows(ics, "fr", 10, &shape(CalendarFormat::Generic));
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].booking_channel, BookingChannel::Airbnb);
+        assert_eq!(rows[0].booking_channel_signal, ChannelSignal::IcalUidSuffix);
+    }
+
+    #[test]
+    fn google_mirror_is_unknown_not_google() {
+        let ics = "BEGIN:VCALENDAR\nVERSION:2.0\n\
+PRODID:-//Google Inc//Google Calendar 70.9054//EN\nBEGIN:VEVENT\n\
+UID:7d3k9@google.com\nDTSTART;VALUE=DATE:20260901\nDTEND;VALUE=DATE:20260903\n\
+SUMMARY:Famille Bernard\nEND:VEVENT\nEND:VCALENDAR\n";
+        let rows = parse_stay_rows(ics, "fr", 10, &shape(CalendarFormat::Google));
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].booking_channel, BookingChannel::Unknown);
+        assert_eq!(rows[0].booking_channel_signal, ChannelSignal::None);
+    }
+
+    #[test]
+    fn mixed_feed_labels_each_row_from_its_own_uid() {
+        let ics = "BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:a@airbnb.com\n\
+DTSTART;VALUE=DATE:20260901\nDTEND;VALUE=DATE:20260903\nSUMMARY:Ada\nEND:VEVENT\n\
+BEGIN:VEVENT\nUID:b@booking.com\nDTSTART;VALUE=DATE:20260910\n\
+DTEND;VALUE=DATE:20260912\nSUMMARY:Tom\nEND:VEVENT\n\
+BEGIN:VEVENT\nUID:opaque-c\nDTSTART;VALUE=DATE:20260920\n\
+DTEND;VALUE=DATE:20260922\nSUMMARY:Lou\nEND:VEVENT\nEND:VCALENDAR\n";
+        let rows = parse_stay_rows(ics, "fr", 10, &shape(CalendarFormat::Generic));
+        assert_eq!(rows.len(), 3);
+        assert_eq!(rows[0].booking_channel, BookingChannel::Airbnb);
+        assert_eq!(rows[1].booking_channel, BookingChannel::Booking);
+        assert_eq!(rows[2].booking_channel, BookingChannel::Unknown);
+        assert_eq!(rows[2].booking_channel_signal, ChannelSignal::None);
+    }
+
+    #[test]
+    fn generated_uid_row_still_carries_the_prodid_channel() {
+        let ics = "BEGIN:VCALENDAR\nPRODID:-//Booking.com//Calendar//EN\nBEGIN:VEVENT\n\
+DTSTART;VALUE=DATE:20260901\nDTEND;VALUE=DATE:20260903\nSUMMARY:Sofia Rossi\n\
+END:VEVENT\nEND:VCALENDAR\n";
+        let rows = parse_stay_rows(ics, "fr", 10, &shape(CalendarFormat::Booking));
+        assert_eq!(rows.len(), 1);
+        assert!(rows[0].ical_uid.starts_with("generated:"));
+        assert_eq!(rows[0].booking_channel, BookingChannel::Booking);
+        assert_eq!(rows[0].booking_channel_signal, ChannelSignal::IcalProdid);
+    }
+
+    #[test]
+    fn declared_platform_carries_a_channel_manager_feed() {
+        let ics = "BEGIN:VCALENDAR\nPRODID:-//Beds24//Calendar//EN\nBEGIN:VEVENT\n\
+UID:bd24-9931\nDTSTART;VALUE=DATE:20260901\nDTEND;VALUE=DATE:20260903\n\
+SUMMARY:Nina Faure\nEND:VEVENT\nEND:VCALENDAR\n";
+        let rows = parse_stay_rows(
+            ics,
+            "fr",
+            10,
+            &FeedParseContext {
+                format: CalendarFormat::Generic,
+                declared_channel: BookingChannel::OtherPlatform,
+                declared_channel_signal: ChannelSignal::HostOverride,
+            },
+        );
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].booking_channel, BookingChannel::OtherPlatform);
+        assert_eq!(rows[0].booking_channel_signal, ChannelSignal::HostOverride);
+    }
+
+    #[test]
+    fn prodid_after_the_first_event_is_not_read() {
+        let ics = "BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:opaque-1\n\
+DTSTART;VALUE=DATE:20260901\nDTEND;VALUE=DATE:20260903\nSUMMARY:Ada\nEND:VEVENT\n\
+PRODID:-//Airbnb Inc//Hosting Calendar//EN\nEND:VCALENDAR\n";
+        let rows = parse_stay_rows(ics, "fr", 10, &shape(CalendarFormat::Generic));
+        assert_eq!(rows[0].booking_channel, BookingChannel::Unknown);
+    }
+
+    #[test]
+    fn folded_prodid_is_unfolded_before_matching() {
+        let ics = "BEGIN:VCALENDAR\nPRODID:-//Airbnb\n  Inc//Hosting Calendar//EN\n\
+BEGIN:VEVENT\nUID:opaque-2\nDTSTART;VALUE=DATE:20260901\n\
+DTEND;VALUE=DATE:20260903\nSUMMARY:Ada\nEND:VEVENT\nEND:VCALENDAR\n";
+        let rows = parse_stay_rows(ics, "fr", 10, &shape(CalendarFormat::Generic));
+        assert_eq!(rows[0].booking_channel, BookingChannel::Airbnb);
+        assert_eq!(rows[0].booking_channel_signal, ChannelSignal::IcalProdid);
+    }
+
+    #[test]
     fn airbnb_reserved_without_name_still_imports() {
         let ics = "BEGIN:VEVENT\nUID:r1\nDTSTART;VALUE=DATE:20260901\n\
 DTEND;VALUE=DATE:20260903\nSUMMARY:Reserved\nEND:VEVENT\n";
-        let rows = parse_stay_rows(ics, "fr", 10, CalendarFormat::Airbnb);
+        let rows = parse_stay_rows(ics, "fr", 10, &shape(CalendarFormat::Airbnb));
         assert_eq!(rows.len(), 1);
         assert_eq!(rows[0].guest_name, "Guest");
     }
@@ -436,7 +590,7 @@ DTEND;VALUE=DATE:20260903\nSUMMARY:Reserved\nEND:VEVENT\n";
 DTEND;VALUE=DATE:20260905\nSUMMARY:CLOSED - Not available\nEND:VEVENT\n\
 BEGIN:VEVENT\nUID:b2\nDTSTART;VALUE=DATE:20260910\n\
 DTEND;VALUE=DATE:20260912\nSUMMARY:Dupont\nEND:VEVENT\n";
-        let rows = parse_stay_rows(ics, "fr", 10, CalendarFormat::Booking);
+        let rows = parse_stay_rows(ics, "fr", 10, &shape(CalendarFormat::Booking));
         assert_eq!(rows.len(), 1);
         assert_eq!(rows[0].guest_name, "Dupont");
     }
@@ -447,7 +601,7 @@ DTEND;VALUE=DATE:20260912\nSUMMARY:Dupont\nEND:VEVENT\n";
 DTEND;VALUE=DATE:20260902\nSUMMARY:Blocked\nEND:VEVENT\n\
 BEGIN:VEVENT\nUID:g2\nDTSTART;VALUE=DATE:20260903\n\
 DTEND;VALUE=DATE:20260904\nSUMMARY:Family week\nEND:VEVENT\n";
-        let rows = parse_stay_rows(ics, "en", 10, CalendarFormat::Generic);
+        let rows = parse_stay_rows(ics, "en", 10, &shape(CalendarFormat::Generic));
         assert_eq!(rows.len(), 1);
         assert_eq!(rows[0].guest_name, "Family week");
     }
@@ -455,13 +609,13 @@ DTEND;VALUE=DATE:20260904\nSUMMARY:Family week\nEND:VEVENT\n";
     #[test]
     fn unfolds_continued_lines() {
         let folded = "BEGIN:VEVENT\nUID:x\nSUMMARY:Hel\n lo\nDTSTART;VALUE=DATE:20260101\nDTEND;VALUE=DATE:20260102\nEND:VEVENT\n";
-        let rows = parse_stay_rows(folded, "en", 10, CalendarFormat::Generic);
+        let rows = parse_stay_rows(folded, "en", 10, &shape(CalendarFormat::Generic));
         assert_eq!(rows.len(), 1);
         assert_eq!(rows[0].guest_name, "Hello");
     }
 
     #[test]
     fn empty_body_returns_no_rows() {
-        assert!(parse_stay_rows("", "fr", 10, CalendarFormat::Airbnb).is_empty());
+        assert!(parse_stay_rows("", "fr", 10, &shape(CalendarFormat::Airbnb)).is_empty());
     }
 }

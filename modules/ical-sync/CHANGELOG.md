@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.4.0] — 2026-07-27
+
+### Added
+
+- Every imported stay row now reports the booking platform: `bookingChannel`
+  (`airbnb` | `booking` | `abritel-vrbo` | `direct` | `other-platform` |
+  `unknown`) and `bookingChannelSignal` (`ical-uid-suffix` | `ical-prodid` |
+  `feed-format-declared` | `feed-url-host` | `host-override` | `none`). Both
+  keys are always present — an unidentifiable feed emits `unknown` / `none`.
+- Detection reads the VEVENT `UID` suffix first, then the calendar `PRODID`
+  (previously discarded — it lives in the header, outside any `VEVENT`), then
+  what the host declared. `SUMMARY` / `DESCRIPTION` are never consulted.
+- Host SDUI: a **booking platform** selector per feed, separate from the
+  calendar format, with options driven from the SDK `BookingChannel` catalog.
+  Feeds store `channel` + `channel_signal`; a blank choice prefills from the
+  feed URL host.
+
+### Changed
+
+- `StayImportRow` now comes from `portaki_sdk::contracts::stay_import` — the
+  shape is SDK-owned so every import module emits the same row.
+- `parse_stay_rows` takes `&FeedParseContext` instead of a bare `CalendarFormat`
+  (crate-internal source change, no wire change).
+- `CalendarFormat` is documented as the feed **shape**, not the seller. `Google`
+  and `Generic` map to no platform: a Google Calendar mirror resolves to
+  `unknown`, never to `google`.
+
 ## [0.3.0] — 2026-07-27
 
 ### Added

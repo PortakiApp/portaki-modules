@@ -58,12 +58,16 @@ Copy lives in `email_i18n/{fr,en}.json`. Dedup is orchestrator-side (module + st
       "id": "cal-1",
       "url": "https://…/calendar.ics",
       "label": "Airbnb",
-      "format": "airbnb"
+      "format": "airbnb",
+      "channel": "airbnb",
+      "channel_signal": "feed-url-host"
     },
     {
       "id": "cal-2",
       "url": "https://…/other.ics",
-      "format": "booking"
+      "format": "generic",
+      "channel": "direct",
+      "channel_signal": "host-override"
     }
   ],
   "last_sync_at": "2026-07-23T08:12:00Z",
@@ -73,7 +77,33 @@ Copy lives in `email_i18n/{fr,en}.json`. Dedup is orchestrator-side (module + st
 
 `calendars` is the only source of truth. Each feed **must** declare a `format` (`airbnb` | `booking` | `abritel_vrbo` | `google` | `generic`) — parsing differs (e.g. Airbnb « Reserved » vs « Not available »). Sync fetches every connected URL. Feeds loaded without `format` get a best-effort URL detection, else `generic`. Legacy `ical_url_primary` / `ical_url_secondary` / `feeds_json` are accepted on load (and on `updateConfig`) and converted into `calendars` — they are never persisted or exposed going forward.
 
+`format` is the feed **shape**; `channel` is **who sold the stay**, from the SDK
+`BookingChannel` catalog (`airbnb` | `booking` | `abritel-vrbo` | `direct` |
+`other-platform` | `unknown`). They answer different questions: Google Calendar
+is a mirror, so `format: "google"` carries no channel. `channel_signal` records
+where `channel` came from — `host-override` when the host picked it,
+`feed-url-host` when it was prefilled from the URL, `none` when undeclared.
+
 Soft UI cap: 20 calendar rows (`CALENDAR_SLOTS`).
+
+## Booking channel on imported rows
+
+Every row from `applyFeeds` carries `bookingChannel` + `bookingChannelSignal`
+(never omitted — an unidentifiable feed emits `unknown` / `none`). First known
+match wins:
+
+| Order | Signal | Source |
+|-------|--------|--------|
+| 1 | `ical-uid-suffix` | VEVENT `UID` domain (`…@airbnb.com`) — survives re-export and mirroring |
+| 2 | `ical-prodid` | Calendar `PRODID` — strong when present, cannot split a mixed feed |
+| 3 | `host-override` | Host named the platform on the feed config |
+| 4 | `feed-format-declared` | Declared `format` names a marketplace |
+| 5 | `feed-url-host` | Platform prefilled from the feed URL at config time |
+| 6 | `none` | Nothing identified a seller → `unknown` |
+
+`SUMMARY` / `DESCRIPTION` are never consulted — localised strings change without
+notice. The feed URL is never read at import: it is wrong on channel-manager
+feeds (`beds24.com`, `smoobu.com` mask the origin) and on a Google mirror.
 
 ## Queries / commands
 

@@ -9,7 +9,7 @@
     "fr": "Importe les séjours depuis un export calendrier Airbnb, Booking ou autre lien .ics.",
     "en": "Import stays from an Airbnb, Booking, or other .ics calendar export URL."
   },
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",

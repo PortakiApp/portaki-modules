@@ -4,7 +4,8 @@ use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::config::{
-    load_config, save_config, CalendarFeed, CalendarFormat, ModuleConfig, CALENDAR_SLOTS,
+    load_config, resolve_channel, save_config, CalendarFeed, CalendarFormat, ModuleConfig,
+    CALENDAR_SLOTS,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -15,9 +16,14 @@ pub struct CalendarInput {
     pub url: String,
     #[serde(default)]
     pub label: String,
-    /// Platform ICS dialect (`airbnb`, `booking`, `abritel_vrbo`, `google`, `generic`).
+    /// Feed shape (`airbnb`, `booking`, `abritel_vrbo`, `google`, `generic`).
     #[serde(default)]
     pub format: String,
+    /// Selling platform from the SDK vocabulary (`airbnb`, `booking`,
+    /// `abritel-vrbo`, `direct`, `other-platform`, `unknown`). Empty or
+    /// `unknown` falls back to the feed URL prefill.
+    #[serde(default)]
+    pub channel: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -72,11 +78,14 @@ fn calendars_from_args(args: &UpdateConfigArgs) -> Vec<CalendarFeed> {
                     }
                 };
                 let format = resolve_format(&input.format, url);
+                let (channel, channel_signal) = resolve_channel(&input.channel, url);
                 Some(CalendarFeed {
                     id,
                     url: url.to_string(),
                     label,
                     format,
+                    channel,
+                    channel_signal,
                 })
             })
             .collect();
@@ -86,23 +95,25 @@ fn calendars_from_args(args: &UpdateConfigArgs) -> Vec<CalendarFeed> {
     let mut out = Vec::new();
     let primary = args.ical_url_primary.trim();
     if !primary.is_empty() {
-        out.push(CalendarFeed {
-            id: "cal-1".into(),
-            url: primary.to_string(),
-            label: None,
-            format: CalendarFormat::detect_from_url(primary).unwrap_or(CalendarFormat::Generic),
-        });
+        out.push(legacy_feed("cal-1", primary));
     }
     let secondary = args.ical_url_secondary.trim();
     if !secondary.is_empty() {
-        out.push(CalendarFeed {
-            id: "cal-2".into(),
-            url: secondary.to_string(),
-            label: None,
-            format: CalendarFormat::detect_from_url(secondary).unwrap_or(CalendarFormat::Generic),
-        });
+        out.push(legacy_feed("cal-2", secondary));
     }
     out
+}
+
+fn legacy_feed(id: &str, url: &str) -> CalendarFeed {
+    let (channel, channel_signal) = resolve_channel("", url);
+    CalendarFeed {
+        id: id.into(),
+        url: url.to_string(),
+        label: None,
+        format: CalendarFormat::detect_from_url(url).unwrap_or(CalendarFormat::Generic),
+        channel,
+        channel_signal,
+    }
 }
 
 fn resolve_format(raw: &str, url: &str) -> CalendarFormat {

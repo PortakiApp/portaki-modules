@@ -103,6 +103,8 @@ pub fn next_state(rows: &[StayImportRow], last_success_at: Option<String>) -> Sy
 
 #[cfg(test)]
 mod tests {
+    use portaki_sdk::contracts::booking_channel::{BookingChannel, ChannelSignal};
+
     use super::*;
 
     fn row(uid: &str, check_in: &str, check_out: &str) -> StayImportRow {
@@ -113,6 +115,8 @@ mod tests {
             check_in_at: check_in.into(),
             check_out_at: check_out.into(),
             ical_uid: uid.into(),
+            booking_channel: BookingChannel::Airbnb,
+            booking_channel_signal: ChannelSignal::IcalUidSuffix,
         }
     }
 

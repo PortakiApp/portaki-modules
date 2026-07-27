@@ -1,5 +1,6 @@
 //! Host dashboard surfaces — config sheet + property stats card.
 
+use portaki_sdk::contracts::booking_channel::BookingChannel;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::primitives::{
@@ -118,6 +119,7 @@ fn calendar_row(index: usize, feed: Option<&CalendarFeed>) -> Component {
     let label = feed.and_then(|f| f.label.as_deref()).unwrap_or("");
     let format = feed.map(|f| f.format).unwrap_or(CalendarFormat::Generic);
     let format_help = format_help_key(format);
+    let channel = feed.map(|f| f.channel).unwrap_or_default();
 
     // Hidden id keeps stable feed ids across edits (StepList remove clears visible fields only).
     Stack::new()
@@ -140,6 +142,20 @@ fn calendar_row(index: usize, feed: Option<&CalendarFeed>) -> Component {
                 .into(),
             Text::new()
                 .text(format_help)
+                .variant(TextVariant::Caption)
+                .into(),
+            Field::new()
+                .name(format!("calendars.{index}.channel"))
+                .label("i18n:host.calendar.channel")
+                .child(
+                    Select::new()
+                        .name(format!("calendars.{index}.channel"))
+                        .options(channel_options())
+                        .value(channel.as_str()),
+                )
+                .into(),
+            Text::new()
+                .text("i18n:host.calendar.channel.help")
                 .variant(TextVariant::Caption)
                 .into(),
             Field::new()
@@ -179,6 +195,19 @@ fn format_options() -> Vec<ChoiceOption> {
         ChoiceOption::new("generic", "i18n:host.format.generic")
             .description("i18n:host.format.generic.help"),
     ]
+}
+
+/// Platform list comes straight from [`BookingChannel::ALL`] — the SDK owns the
+/// vocabulary so this selector cannot drift from what the gateway parses.
+fn channel_options() -> Vec<ChoiceOption> {
+    BookingChannel::ALL
+        .iter()
+        .map(|channel| {
+            let code = channel.as_str();
+            ChoiceOption::new(code, format!("i18n:host.channel.{code}"))
+                .description(format!("i18n:host.channel.{code}.help"))
+        })
+        .collect()
 }
 
 fn format_help_key(format: CalendarFormat) -> &'static str {
