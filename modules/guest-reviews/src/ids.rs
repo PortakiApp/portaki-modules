@@ -4,6 +4,7 @@ use portaki_sdk::prelude::*;
 
 define_surface_ids! {
     HOME_CARD = "home.card",
+    POST_STAY_CARD = "post-stay.card",
     HOST_MAIN = "main",
 }
 

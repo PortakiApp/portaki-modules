@@ -4,7 +4,8 @@ use portaki_sdk::capability;
 use serial_test::serial;
 
 use guest_reviews::{
-    get_config, render_home_card, submit_review, update_config, SubmitReviewArgs, UpdateConfigArgs,
+    get_config, render_home_card, render_post_stay_card, submit_review, update_config,
+    SubmitReviewArgs, UpdateConfigArgs,
 };
 use portaki_sdk::sdui::component::Component;
 use portaki_sdk::sdui::surface::Surface;
@@ -168,6 +169,20 @@ fn home_card_inline_both_platforms() {
             assert!(contains_component_type(&surface, "Form"));
             let json = serde_json::to_string(&surface).expect("json");
             assert!(!json.contains("openOverlay"));
+        });
+}
+
+#[test]
+#[serial]
+fn post_stay_card_reuses_home_card_content() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv("config", sample_config_bytes())
+        .run(|ctx| {
+            let home = serde_json::to_string(&render_home_card(ctx.clone())).expect("home json");
+            let post =
+                serde_json::to_string(&render_post_stay_card(ctx)).expect("post-stay json");
+            assert_eq!(home, post);
         });
 }
 

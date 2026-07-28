@@ -5,9 +5,9 @@ use uuid::Uuid;
 
 use lost_found::{
     build_email_context, list_for_stay, list_recent, render_guest_form, render_home_card,
-    render_host_create, render_host_main, render_host_stay, reset_test_store, submit, submit_found,
-    update_config, update_status, EmailContextArgs, ListForStayArgs, SubmitArgs, SubmitFoundArgs,
-    UpdateConfigArgs, UpdateStatusArgs, STATUS_DEFAULT,
+    render_host_create, render_host_main, render_host_stay, render_post_stay_card, reset_test_store,
+    submit, submit_found, update_config, update_status, EmailContextArgs, ListForStayArgs,
+    SubmitArgs, SubmitFoundArgs, UpdateConfigArgs, UpdateStatusArgs, STATUS_DEFAULT,
 };
 use portaki_sdk::prelude::EmailTemplateKey;
 use portaki_sdk::sdui::component::Component;
@@ -60,6 +60,20 @@ fn child_components(node: &Component) -> Vec<&Component> {
         Component::ListItem(inner) => inner.children.iter().collect(),
         _ => Vec::new(),
     }
+}
+
+#[test]
+#[serial]
+fn post_stay_card_reuses_home_card_content() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let home = serde_json::to_string(&render_home_card(ctx.clone())).expect("home json");
+            let post =
+                serde_json::to_string(&render_post_stay_card(ctx)).expect("post-stay json");
+            assert_eq!(home, post);
+        });
 }
 
 #[test]
