@@ -28,11 +28,14 @@ pub fn build_home_card(sections: &[SectionView]) -> Surface {
 
 pub fn section_blocks(sections: &[SectionView], limit: usize) -> Vec<Component> {
     let mut children = Vec::new();
+    // The card header already shows a title, so only repeat a per-section title
+    // when several sections share the block; a lone section renders body-only.
+    let show_titles = sections.len() > 1;
     for (index, section) in sections.iter().take(limit).enumerate() {
         if index > 0 {
             children.push(Component::Divider(Divider::new()));
         }
-        if !section.title.trim().is_empty() {
+        if show_titles && !section.title.trim().is_empty() {
             children.push(Component::Text(
                 Text::new()
                     .text(section.title.clone())

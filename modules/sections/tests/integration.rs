@@ -82,10 +82,6 @@ fn seed_two_sections(ctx: portaki_sdk::Context) -> (Uuid, Uuid) {
             title: String::new(),
             body_markdown: String::new(),
             lang: String::new(),
-            title_fr: String::new(),
-            title_en: String::new(),
-            body_markdown_fr: String::new(),
-            body_markdown_en: String::new(),
         },
     )
     .expect("save first");
@@ -102,10 +98,6 @@ fn seed_two_sections(ctx: portaki_sdk::Context) -> (Uuid, Uuid) {
             title: String::new(),
             body_markdown: String::new(),
             lang: String::new(),
-            title_fr: String::new(),
-            title_en: String::new(),
-            body_markdown_fr: String::new(),
-            body_markdown_en: String::new(),
         },
     )
     .expect("save second");

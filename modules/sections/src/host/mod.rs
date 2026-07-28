@@ -162,8 +162,10 @@ fn build_detail_panel(sections: &[SectionView], selected_id: &str, lang: &str) -
     };
 
     let form_children: Vec<Component> = vec![
+        // Hidden form-state carrier: the dashboard renderer renders a TextInput
+        // named `id` as `<input type="hidden">`, so it is never a visible field.
+        // The editing locale comes only from `ctx.locale`, never a visible field.
         TextInput::new().name("id").value(id).into(),
-        TextInput::new().name("lang").value(lang).into(),
         Field::new()
             .name("title")
             .label("i18n:host.title.label")

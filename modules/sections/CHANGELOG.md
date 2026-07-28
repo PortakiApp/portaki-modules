@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.5](https://github.com/PortakiApp/portaki-modules/compare/sections-v0.2.4...sections-v0.2.5) (2026-07-28)
+
+
+### Bug Fixes
+
+* **host:** drop the visible internal `lang` field from the section detail form — the editing locale comes only from the top language selector (`ctx.locale`)
+* **guest:** stop duplicating the section title inside the card when a single section is shown (header already renders it)
+
+
+### Code Refactoring
+
+* **commands:** remove legacy `title_fr` / `title_en` / `body_markdown_fr` / `body_markdown_en` fields — the module edits a single active locale
+
+
 ## [0.2.3](https://github.com/PortakiApp/portaki-modules/compare/sections-v0.2.2...sections-v0.2.3) (2026-07-24)
 
 
