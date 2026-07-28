@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 /// One guest issue report for a stay (many per stay allowed).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 1)]
+#[portaki_sdk::entity(schema_version = 2)]
 pub struct IssueReport {
     pub id: Uuid,
     pub stay_id: Uuid,
