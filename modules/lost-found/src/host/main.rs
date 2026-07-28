@@ -6,10 +6,19 @@ use portaki_sdk::sdui::primitives::{
 };
 use portaki_sdk::sdui::surface::Surface;
 
+use portaki_sdk::host::time;
+
 use crate::config::load_config;
 use crate::storage;
 
 use super::status_ui::build_report_block;
+
+/// Host-provided wall clock (the Wasm sandbox has none — never call `Utc::now()`).
+fn host_now() -> chrono::DateTime<chrono::Utc> {
+    time::now().unwrap_or_else(|_| {
+        chrono::DateTime::<chrono::Utc>::from_timestamp(0, 0).expect("epoch is valid")
+    })
+}
 
 /// Host main — info banner, optional TipTap guest note, recent reports + status.
 ///
@@ -41,9 +50,10 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
             .icon("search")
             .into()]
     } else {
+        let now = host_now();
         let items: Vec<Component> = reports
             .iter()
-            .map(|report| build_report_block(report, locale))
+            .map(|report| build_report_block(report, now, locale))
             .collect();
         vec![
             Text::new()

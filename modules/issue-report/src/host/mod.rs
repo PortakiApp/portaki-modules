@@ -11,9 +11,16 @@ use portaki_sdk::sdui::primitives::{
 };
 use portaki_sdk::sdui::surface::Surface;
 
+use portaki_sdk::host::time;
+
 use crate::category;
 use crate::entities::IssueReport;
 use crate::storage;
+
+/// Host-provided wall clock (the Wasm sandbox has none — never call `Utc::now()`).
+fn host_now() -> DateTime<Utc> {
+    time::now().unwrap_or_else(|_| DateTime::<Utc>::from_timestamp(0, 0).expect("epoch is valid"))
+}
 
 /// Host main — banner + recent property reports (max 20).
 #[portaki_sdk::surface(host, id = "main")]
@@ -28,9 +35,10 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
             .icon("danger-triangle")
             .into()]
     } else {
+        let now = host_now();
         let items: Vec<Component> = reports
             .iter()
-            .map(|report| build_report_row(report, locale))
+            .map(|report| build_report_row(report, now, locale))
             .collect();
         vec![Component::List(List::new().children(items))]
     };
@@ -59,9 +67,9 @@ fn category_icon(wire: &str) -> &'static str {
     }
 }
 
-fn build_report_row(report: &IssueReport, locale: &str) -> Component {
+fn build_report_row(report: &IssueReport, now: DateTime<Utc>, locale: &str) -> Component {
     let label_key = category::category_label_key(report.category.as_str());
-    let when = format_relative_when(report.created_at, locale);
+    let when = format_relative_when(report.created_at, now, locale);
     let pill = Pill::new()
         .label("i18n:host.main.status.open")
         .tone(Tone::Warning);
@@ -78,9 +86,8 @@ fn build_report_row(report: &IssueReport, locale: &str) -> Component {
 }
 
 /// Compact relative age — design: « il y a 2 h », « hier », « 2 jours ».
-fn format_relative_when(created_at: DateTime<Utc>, locale: &str) -> String {
+fn format_relative_when(created_at: DateTime<Utc>, now: DateTime<Utc>, locale: &str) -> String {
     let fr = locale.to_ascii_lowercase().starts_with("fr");
-    let now = Utc::now();
     let hours = (now - created_at).num_hours().max(0);
     let days = (now - created_at).num_days().max(0);
 

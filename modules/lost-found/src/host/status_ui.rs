@@ -105,9 +105,15 @@ fn format_short_date(created_at: DateTime<Utc>, locale: &str) -> String {
 }
 
 /// Compact relative age — design: « 2 jours », « 3 sem. », « 1 mois ».
-pub(crate) fn format_relative_when(created_at: DateTime<Utc>, locale: &str) -> String {
+///
+/// `now` is passed in from the host context (via `time::now()`); calling `Utc::now()` here would
+/// panic in the Wasm sandbox, which has no wall clock.
+pub(crate) fn format_relative_when(
+    created_at: DateTime<Utc>,
+    now: DateTime<Utc>,
+    locale: &str,
+) -> String {
     let fr = locale.to_ascii_lowercase().starts_with("fr");
-    let now = Utc::now();
     let days = (now - created_at).num_days().max(0);
 
     if days < 1 {
@@ -149,10 +155,14 @@ fn report_subtitle(report: &LostFoundReport, locale: &str) -> String {
 }
 
 /// Visual row — title, source · date, status pill, relative age (design list).
-pub(crate) fn build_report_list_item(report: &LostFoundReport, locale: &str) -> Component {
+pub(crate) fn build_report_list_item(
+    report: &LostFoundReport,
+    now: DateTime<Utc>,
+    locale: &str,
+) -> Component {
     let title = report_title(report);
     let subtitle = report_subtitle(report, locale);
-    let when = format_relative_when(report.created_at, locale);
+    let when = format_relative_when(report.created_at, now, locale);
     let pill = Pill::new()
         .label(status_label_i18n(report.status.as_str()))
         .tone(status_tone(report.status.as_str()));
@@ -200,12 +210,16 @@ pub(crate) fn build_status_update_form(report: &LostFoundReport) -> Component {
 }
 
 /// Stack: design list row + status Select (functional update).
-pub(crate) fn build_report_block(report: &LostFoundReport, locale: &str) -> Component {
+pub(crate) fn build_report_block(
+    report: &LostFoundReport,
+    now: DateTime<Utc>,
+    locale: &str,
+) -> Component {
     Component::Stack(
         portaki_sdk::sdui::primitives::Stack::new()
             .gap(6.0)
             .children(vec![
-                build_report_list_item(report, locale),
+                build_report_list_item(report, now, locale),
                 build_status_update_form(report),
             ]),
     )

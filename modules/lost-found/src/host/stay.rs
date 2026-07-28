@@ -7,9 +7,18 @@ use portaki_sdk::sdui::primitives::{Card, EmptyState, List, Page, Text};
 use portaki_sdk::sdui::surface::Surface;
 use uuid::Uuid;
 
+use portaki_sdk::host::time;
+
 use crate::storage;
 
 use super::status_ui::build_report_block;
+
+/// Host-provided wall clock (the Wasm sandbox has none — never call `Utc::now()`).
+fn host_now() -> chrono::DateTime<chrono::Utc> {
+    time::now().unwrap_or_else(|_| {
+        chrono::DateTime::<chrono::Utc>::from_timestamp(0, 0).expect("epoch is valid")
+    })
+}
 
 /// Stay detail embed — reports / status for the stay (no create form).
 ///
@@ -33,9 +42,10 @@ pub fn render_host_stay(ctx: HostContext) -> Surface {
             if reports.is_empty() {
                 vec![empty_stay_card()]
             } else {
+                let now = host_now();
                 let items: Vec<Component> = reports
                     .iter()
-                    .map(|report| build_report_block(report, locale))
+                    .map(|report| build_report_block(report, now, locale))
                     .collect();
                 vec![Card::new()
                     .title("i18n:host.stay.listTitle")
