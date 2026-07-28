@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "access-guide"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -189,7 +189,7 @@ dependencies = [
 
 [[package]]
 name = "events"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -347,7 +347,7 @@ dependencies = [
 
 [[package]]
 name = "guest-reviews"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "extism-pdk",
  "portaki-sdk",
@@ -471,7 +471,7 @@ checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
 
 [[package]]
 name = "local-guide"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "extism-pdk",
  "portaki-sdk",
@@ -499,7 +499,7 @@ checksum = "0ceec5bc11778974d1bcb055b18002eba7f4b3518b6a0081b3af5f21666da9ad"
 
 [[package]]
 name = "lost-found"
-version = "0.5.3"
+version = "0.5.4"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -967,7 +967,7 @@ dependencies = [
 
 [[package]]
 name = "train"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "extism-pdk",
  "portaki-sdk",
@@ -1074,7 +1074,7 @@ dependencies = [
 
 [[package]]
 name = "weather"
-version = "0.3.21"
+version = "0.3.22"
 dependencies = [
  "chrono",
  "extism-pdk",

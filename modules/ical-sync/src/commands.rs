@@ -180,7 +180,11 @@ mod tests {
     #[test]
     fn legacy_explicit_format_is_still_honoured() {
         assert_eq!(
-            resolve_format("google", "https://example.com/a.ics", BookingChannel::Airbnb),
+            resolve_format(
+                "google",
+                "https://example.com/a.ics",
+                BookingChannel::Airbnb
+            ),
             CalendarFormat::Google
         );
     }

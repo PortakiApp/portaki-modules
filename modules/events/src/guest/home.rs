@@ -45,9 +45,7 @@ pub fn build_upcoming_card(data: &GuestData) -> Surface {
 
     if let Some(headline) = upcoming_headline(data) {
         card = card.children(vec![Component::Text(
-            Text::new()
-                .text(headline)
-                .variant(TextVariant::Caption),
+            Text::new().text(headline).variant(TextVariant::Caption),
         )]);
     }
 

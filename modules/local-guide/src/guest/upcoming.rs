@@ -25,8 +25,5 @@ fn headline_value(data: &GuestData) -> Option<String> {
         return None;
     }
     let count_str = count.to_string();
-    Some(
-        t!("guest.upcoming.spotCount", count = &count_str)
-            .unwrap_or_else(|_| count_str.clone()),
-    )
+    Some(t!("guest.upcoming.spotCount", count = &count_str).unwrap_or_else(|_| count_str.clone()))
 }

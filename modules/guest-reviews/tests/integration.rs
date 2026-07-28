@@ -180,8 +180,7 @@ fn post_stay_card_reuses_home_card_content() {
         .with_kv("config", sample_config_bytes())
         .run(|ctx| {
             let home = serde_json::to_string(&render_home_card(ctx.clone())).expect("home json");
-            let post =
-                serde_json::to_string(&render_post_stay_card(ctx)).expect("post-stay json");
+            let post = serde_json::to_string(&render_post_stay_card(ctx)).expect("post-stay json");
             assert_eq!(home, post);
         });
 }
