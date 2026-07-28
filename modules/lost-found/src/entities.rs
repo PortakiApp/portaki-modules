@@ -9,7 +9,7 @@ use uuid::Uuid;
 /// `item_description` may be plain text (guest) or TipTap JSON (host-found).
 /// `status` tracks host workflow — see [`crate::status`].
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 2)]
+#[portaki_sdk::entity(schema_version = 3)]
 pub struct LostFoundReport {
     pub id: Uuid,
     pub stay_id: Uuid,
