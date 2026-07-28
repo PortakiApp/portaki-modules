@@ -4,7 +4,8 @@ use portaki_sdk::capability;
 use serial_test::serial;
 
 use local_guide::{
-    get_config, render_explore_detail, render_home_card, update_config, UpdateConfigArgs,
+    get_config, render_explore_detail, render_home_card, render_upcoming_card, update_config,
+    UpdateConfigArgs,
 };
 use portaki_sdk::sdui::component::Component;
 use portaki_sdk::sdui::surface::Surface;
@@ -81,6 +82,36 @@ fn home_card_renders_spots_with_pill() {
             assert!(contains_component_type(&surface, "Pill"));
             let json = serde_json::to_string(&surface).expect("json");
             assert!(json.contains("bottomSheet"));
+        });
+}
+
+#[test]
+#[serial]
+fn upcoming_card_renders_spot_count() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv("config", sample_config_bytes())
+        .run(|ctx| {
+            let surface = render_upcoming_card(ctx);
+            assert!(contains_component_type(&surface, "Card"));
+            // Compact card must not embed the full spot list.
+            assert!(!contains_component_type(&surface, "ListItem"));
+            let json = serde_json::to_string(&surface).expect("json");
+            assert!(json.contains("upcoming.card"));
+            assert!(json.contains("i18n:nav.local-guide"));
+        });
+}
+
+#[test]
+#[serial]
+fn upcoming_card_empty_without_config() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            assert!(contains_component_type(
+                &render_upcoming_card(ctx),
+                "EmptyState"
+            ));
         });
 }
 

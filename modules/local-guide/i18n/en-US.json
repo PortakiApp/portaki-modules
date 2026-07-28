@@ -20,6 +20,7 @@
   "host.main.help": "Leave a spot empty to hide it. Texts are saved for the active edit language only.",
   "host.save": "Save",
   "home.card.title": "Local picks",
+  "guest.upcoming.spotCount": "{count} spots",
   "guest.disclaimer.title": "Info",
   "guest.openLink": "Open link",
   "guest.empty.title": "Local picks not configured",

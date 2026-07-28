@@ -8,7 +8,7 @@ mod guest;
 mod ids;
 
 pub use content::{DEFAULT_DESTINATION, DESTINATIONS};
-pub use guest::{render_explore_detail, render_home_card};
+pub use guest::{render_explore_detail, render_home_card, render_upcoming_card};
 
 portaki_sdk::portaki_module!(
     id = "train",

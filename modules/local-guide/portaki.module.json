@@ -9,7 +9,7 @@
     "fr": "Adresses et liens utiles rangés par thème.",
     "en": "Useful places and links, grouped by theme."
   },
-  "version": "0.2.2",
+  "version": "0.2.3",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -37,6 +37,12 @@
     {
       "surfaceId": "explore.detail",
       "path": "local-guide/detail",
+      "labelKey": "nav.local-guide"
+    },
+    {
+      "surfaceId": "upcoming.card",
+      "path": "upcoming",
+      "role": "upcoming",
       "labelKey": "nav.local-guide"
     }
   ]

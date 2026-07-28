@@ -5,7 +5,7 @@ use portaki_sdk::sdui::surface::Surface;
 use portaki_test_utils::{MockContext, Property};
 use serde_json::json;
 
-use train::{render_explore_detail, render_home_card};
+use train::{render_explore_detail, render_home_card, render_upcoming_card};
 
 fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
     fn walk(node: &Component, type_name: &str) -> bool {
@@ -55,6 +55,23 @@ fn home_card_shows_board_glance() {
             let card_json = serde_json::to_string(&card).expect("json");
             assert!(card_json.contains("\"type\":\"openOverlay\""));
             assert!(card_json.contains("explore.detail"));
+            assert!(card_json.contains("Nice-Ville"));
+        });
+}
+
+#[test]
+fn upcoming_card_is_compact_with_single_headline() {
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let card = render_upcoming_card(ctx);
+            assert!(contains_component_type(&card, "Card"));
+            assert!(contains_component_type(&card, "Text"));
+            // Compact: no full departure board on the prep card.
+            assert!(!contains_component_type(&card, "TimedEntry"));
+
+            let card_json = serde_json::to_string(&card).expect("json");
+            assert!(card_json.contains("upcoming.card"));
             assert!(card_json.contains("Nice-Ville"));
         });
 }

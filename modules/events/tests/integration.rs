@@ -4,8 +4,8 @@ use portaki_sdk::capability;
 use serial_test::serial;
 
 use events::{
-    get_config, render_explore_detail, render_home_card, update_config, EventInput,
-    UpdateConfigArgs,
+    get_config, render_explore_detail, render_home_card, render_upcoming_card, update_config,
+    EventInput, UpdateConfigArgs,
 };
 use portaki_sdk::sdui::component::Component;
 use portaki_sdk::sdui::surface::Surface;
@@ -61,6 +61,7 @@ fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
             Component::Link(_) if type_name == "Link" => true,
             Component::Stack(_) if type_name == "Stack" => true,
             Component::Map(_) if type_name == "Map" => true,
+            Component::Text(_) if type_name == "Text" => true,
             _ => false,
         };
         if matches {
@@ -113,6 +114,39 @@ fn home_card_renders_events_with_pressable_link() {
             assert!(contains_component_type(&surface, "Pressable"));
             let json = serde_json::to_string(&surface).expect("json");
             assert!(json.contains("bottomSheet"));
+        });
+}
+
+#[test]
+#[serial]
+fn upcoming_card_is_compact_with_next_event_headline() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv("config", sample_config_bytes())
+        .run(|ctx| {
+            let surface = render_upcoming_card(ctx);
+            assert!(contains_component_type(&surface, "Card"));
+            assert!(contains_component_type(&surface, "Text"));
+            // Compact: no full event list / map on the prep card.
+            assert!(!contains_component_type(&surface, "ListItem"));
+            assert!(!contains_component_type(&surface, "Map"));
+
+            let json = serde_json::to_string(&surface).expect("json");
+            assert!(json.contains("upcoming.card"));
+            assert!(json.contains("Concert jazz") || json.contains("Jazz concert"));
+        });
+}
+
+#[test]
+#[serial]
+fn upcoming_card_empty_without_config() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            assert!(contains_component_type(
+                &render_upcoming_card(ctx),
+                "EmptyState"
+            ));
         });
 }
 

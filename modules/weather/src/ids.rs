@@ -4,6 +4,7 @@ use portaki_sdk::prelude::*;
 
 define_surface_ids! {
     HOME_CARD = "home.card",
+    UPCOMING_CARD = "upcoming.card",
     EXPLORE_FORECAST = "explore.forecast",
     HOST_MAIN = "main",
 }

@@ -20,6 +20,7 @@
   "host.main.help": "Laissez un lieu vide pour ne pas l’afficher. Les textes sont enregistrés pour la langue d'édition active uniquement.",
   "host.save": "Enregistrer",
   "home.card.title": "Bons plans",
+  "guest.upcoming.spotCount": "{count} adresses",
   "guest.disclaimer.title": "Info",
   "guest.openLink": "Ouvrir le lien",
   "guest.empty.title": "Bons plans non configurés",

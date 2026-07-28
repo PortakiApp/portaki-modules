@@ -1,5 +1,6 @@
 {
   "module.displayName": "Accès & parking",
+  "nav.access-guide": "Accès",
   "module.description": "Étapes jusqu’au logement",
   "host.section.primary": "Comment le voyageur entre",
   "host.section.primary.help": "Choisissez le moyen d’accès principal du logement. Il est obligatoire ; les couches ci-dessous sont optionnelles.",

@@ -9,7 +9,7 @@ use portaki_sdk::sdui::surface::Surface;
 
 use detail::build_detail_page;
 use empty::{empty_runtime_error_state, empty_state_if_module_not_ready, log_render_failure};
-use home::build_home_card;
+use home::{build_home_card, build_upcoming_card};
 
 use crate::content::normalize_destination;
 
@@ -21,6 +21,18 @@ pub fn render_home_card(ctx: GuestContext) -> Surface {
         Err(error) => {
             log_render_failure(crate::ids::HOME_CARD, &error);
             empty_runtime_error_state(crate::ids::HOME_CARD)
+        }
+    }
+}
+
+/// Compact pre-arrival prep card rendered on the guest timeline (`role: upcoming`).
+#[portaki_sdk::surface(guest, id = "upcoming.card")]
+pub fn render_upcoming_card(ctx: GuestContext) -> Surface {
+    match render_upcoming(&ctx) {
+        Ok(surface) => surface,
+        Err(error) => {
+            log_render_failure(crate::ids::UPCOMING_CARD, &error);
+            empty_runtime_error_state(crate::ids::UPCOMING_CARD)
         }
     }
 }
@@ -45,6 +57,13 @@ fn render_home(ctx: &GuestContext) -> Result<Surface> {
         return Ok(surface);
     }
     Ok(build_home_card(ctx))
+}
+
+fn render_upcoming(ctx: &GuestContext) -> Result<Surface> {
+    if let Some(surface) = empty_state_if_module_not_ready(crate::ids::UPCOMING_CARD)? {
+        return Ok(surface);
+    }
+    Ok(build_upcoming_card(ctx))
 }
 
 fn render_detail(ctx: &GuestContext, selected: &str) -> Result<Surface> {

@@ -5,8 +5,8 @@ use portaki_sdk::capability;
 use serial_test::serial;
 
 use access_guide::{
-    get_config, render_explore_detail, render_home_card, render_host_main, update_config,
-    MethodFields, PrimaryMethod, RevealPolicy, UpdateConfigArgs,
+    get_config, render_explore_detail, render_home_card, render_host_main, render_upcoming_card,
+    update_config, MethodFields, PrimaryMethod, RevealPolicy, UpdateConfigArgs,
 };
 use portaki_sdk::context::StayContext;
 use portaki_sdk::host::with_host;
@@ -129,6 +129,42 @@ fn home_card_empty_without_config() {
         .run(|ctx| {
             assert!(contains_component_type(
                 &render_home_card(ctx),
+                "EmptyState"
+            ));
+        });
+}
+
+#[test]
+#[serial]
+fn upcoming_card_renders_compact_method_summary() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv("config", sample_config_bytes())
+        .run(|ctx| {
+            let surface = render_upcoming_card(ctx);
+            assert!(contains_component_type(&surface, "Card"));
+            // Compact card must not embed the full access glance (map / codes).
+            assert!(!contains_component_type(&surface, "Map"));
+            assert!(!contains_component_type(&surface, "KeyValue"));
+            let json = serde_json::to_string(&surface).expect("json");
+            assert!(json.contains("upcoming.card"));
+            assert!(json.contains("i18n:nav.access-guide"));
+            // Legacy keybox config → keybox method label.
+            assert!(json.contains("i18n:guest.method.keybox"));
+            // Never leak secrets on the compact card.
+            assert!(!json.contains("4821"));
+            assert!(!json.contains("A17B"));
+        });
+}
+
+#[test]
+#[serial]
+fn upcoming_card_empty_without_config() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            assert!(contains_component_type(
+                &render_upcoming_card(ctx),
                 "EmptyState"
             ));
         });

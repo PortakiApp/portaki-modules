@@ -9,7 +9,7 @@
     "fr": "Conditions actuelles et prévisions sur 5 jours pour vos voyageurs.",
     "en": "Current conditions and a 5-day forecast for your guests."
   },
-  "version": "0.3.21",
+  "version": "0.3.22",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -35,6 +35,12 @@
       "surfaceId": "explore.forecast",
       "path": "weather/forecast",
       "labelKey": "nav.forecast"
+    },
+    {
+      "surfaceId": "upcoming.card",
+      "path": "upcoming",
+      "role": "upcoming",
+      "labelKey": "nav.weather"
     }
   ]
 }
