@@ -17,7 +17,11 @@ fn status_tone(wire: &str) -> Tone {
 }
 
 /// Visual row — label, level (+ note), status pill, relative age.
-pub(crate) fn build_report_list_item(report: &ConsumableReport, locale: &str) -> Component {
+pub(crate) fn build_report_list_item(
+    report: &ConsumableReport,
+    now: DateTime<Utc>,
+    locale: &str,
+) -> Component {
     let level_label = level_label_plain(report.level.as_str(), locale);
     let subtitle = match report
         .note
@@ -28,7 +32,7 @@ pub(crate) fn build_report_list_item(report: &ConsumableReport, locale: &str) ->
         Some(note) => format!("{level_label} · {note}"),
         None => level_label,
     };
-    let when = format_relative_when(report.created_at, locale);
+    let when = format_relative_when(report.created_at, now, locale);
     let pill = Pill::new()
         .label(format!(
             "i18n:{}",
@@ -81,17 +85,22 @@ pub(crate) fn build_restock_form(report: &ConsumableReport) -> Option<Component>
 }
 
 /// Stack: list row + optional restock button.
-pub(crate) fn build_report_block(report: &ConsumableReport, locale: &str) -> Component {
-    let mut children = vec![build_report_list_item(report, locale)];
+pub(crate) fn build_report_block(
+    report: &ConsumableReport,
+    now: DateTime<Utc>,
+    locale: &str,
+) -> Component {
+    let mut children = vec![build_report_list_item(report, now, locale)];
     if let Some(form) = build_restock_form(report) {
         children.push(form);
     }
     Component::Stack(Stack::new().gap(6.0).children(children))
 }
 
-fn format_relative_when(created_at: DateTime<Utc>, locale: &str) -> String {
+/// `now` is passed in from the host context (via `time::now()`); calling `Utc::now()` here would
+/// panic in the Wasm sandbox, which has no wall clock.
+fn format_relative_when(created_at: DateTime<Utc>, now: DateTime<Utc>, locale: &str) -> String {
     let fr = locale.to_ascii_lowercase().starts_with("fr");
-    let now = Utc::now();
     let hours = (now - created_at).num_hours().max(0);
     let days = (now - created_at).num_days().max(0);
 

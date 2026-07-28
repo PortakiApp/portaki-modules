@@ -13,6 +13,11 @@ const CACHE_TTL_SECS: i64 = 60 * 60;
 const MAX_NEARBY: usize = 12;
 const HOME_NEARBY_CAP: usize = 3;
 
+/// Host-provided wall clock (the Wasm sandbox has none — never call `Utc::now()`).
+fn host_now() -> DateTime<Utc> {
+    time::now().unwrap_or_else(|_| DateTime::<Utc>::from_timestamp(0, 0).expect("epoch is valid"))
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 struct NearbyCache {
     lat: f64,
@@ -35,9 +40,10 @@ pub fn resolve_events(
     config: &ModuleConfig,
     for_home_card: bool,
 ) -> Result<Vec<EventRow>> {
+    let now = host_now();
     let mut manual = crate::time_format::sort_events_by_start(config.parse_events());
     if for_home_card {
-        manual = crate::time_format::events_for_home_card(&manual);
+        manual = crate::time_format::events_for_home_card(&manual, now);
     }
 
     if !config.nearby_enabled || !has_open_agenda(ctx) {
@@ -53,7 +59,7 @@ pub fn resolve_events(
     let nearby = load_nearby(ctx, config, lat, lng).unwrap_or_else(|_| Vec::new());
     let mut nearby = crate::time_format::sort_events_by_start(nearby);
     if for_home_card {
-        nearby = crate::time_format::events_for_home_card(&nearby);
+        nearby = crate::time_format::events_for_home_card(&nearby, now);
         nearby.truncate(HOME_NEARBY_CAP);
     } else {
         nearby.truncate(MAX_NEARBY);

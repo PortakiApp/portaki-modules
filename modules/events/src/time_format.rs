@@ -25,7 +25,11 @@ pub fn parse_starts_at(raw: &str) -> Option<DateTime<Utc>> {
     None
 }
 
-pub fn events_for_home_card(events: &[EventRow]) -> Vec<EventRow> {
+/// Filters out past events for the home card.
+///
+/// `now` is passed in from the host context (via `time::now()`); calling `Utc::now()` here would
+/// panic in the Wasm sandbox, which has no wall clock.
+pub fn events_for_home_card(events: &[EventRow], now: DateTime<Utc>) -> Vec<EventRow> {
     let parsed: Vec<(EventRow, Option<DateTime<Utc>>)> = events
         .iter()
         .cloned()
@@ -38,7 +42,6 @@ pub fn events_for_home_card(events: &[EventRow]) -> Vec<EventRow> {
     if !any_parseable {
         return events.to_vec();
     }
-    let now = Utc::now();
     parsed
         .into_iter()
         .filter_map(|(event, at)| {
@@ -128,7 +131,8 @@ mod tests {
                 note: None,
             },
         ];
-        let filtered = events_for_home_card(&events);
+        let now = Utc.with_ymd_and_hms(2050, 1, 1, 0, 0, 0).unwrap();
+        let filtered = events_for_home_card(&events, now);
         assert_eq!(filtered.len(), 1);
         assert_eq!(filtered[0].id, "b");
     }
