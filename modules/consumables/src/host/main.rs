@@ -6,12 +6,21 @@ use portaki_sdk::sdui::primitives::{
 };
 use portaki_sdk::sdui::surface::Surface;
 
+use portaki_sdk::host::time;
+
 use crate::labels::{self, lang_code};
 use crate::storage;
 
 use super::report_ui::build_report_block;
 
 const ITEM_SLOTS: usize = 8;
+
+/// Host-provided wall clock (the Wasm sandbox has none — never call `Utc::now()`).
+fn host_now() -> chrono::DateTime<chrono::Utc> {
+    time::now().unwrap_or_else(|_| {
+        chrono::DateTime::<chrono::Utc>::from_timestamp(0, 0).expect("epoch is valid")
+    })
+}
 
 /// Host main — catalog IndexedInputs + seed defaults + open shortage reports.
 ///
@@ -74,9 +83,10 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
             .icon("package")
             .into()]
     } else {
+        let now = host_now();
         let report_items: Vec<Component> = open_reports
             .iter()
-            .map(|report| build_report_block(report, locale))
+            .map(|report| build_report_block(report, now, locale))
             .collect();
         vec![
             Text::new()
