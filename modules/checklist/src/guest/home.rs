@@ -10,6 +10,9 @@ use crate::labels;
 
 pub fn build_home_card(data: &GuestChecklistData) -> Surface {
     let progress = format!("{} / {} — {}%", data.done, data.total, data.percent);
+    // Nav-row summary on the description line, e.g. "3/6 complété".
+    let row_summary = t!("guest.rowSummary", done = data.done, total = data.total)
+        .unwrap_or_else(|_| format!("{} / {}", data.done, data.total));
 
     let mut children = vec![Text::new()
         .text(progress)
@@ -45,6 +48,7 @@ pub fn build_home_card(data: &GuestChecklistData) -> Surface {
         Card::new()
             .icon("list-checks")
             .title("i18n:home.card.title")
+            .subtitle(row_summary)
             .children(children),
     )
     .with_id(crate::ids::HOME_CARD)

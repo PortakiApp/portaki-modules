@@ -2,6 +2,7 @@
   "module.displayName": "Checkout checklist",
   "module.description": "Checkable items with saved progress.",
   "guest.teaser": "Your check-out checklist",
+  "guest.rowSummary": "{done}/{total} done",
   "surface.host.main.title": "Checkout checklist",
   "surface.host.main.subtitle": "6 bilingual slots — guests tick their progress, saved automatically.",
   "host.section.when": "When to show",
