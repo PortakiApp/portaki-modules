@@ -2,6 +2,7 @@
   "module.displayName": "Urgences & utiles",
   "module.description": "Numéros utiles et ligne hôte",
   "nav.emergency-contacts": "Urgences & utiles",
+  "guest.teaser": "Hôte, urgences et numéros utiles",
   "surface.host.main.title": "Urgences & utiles",
   "surface.host.main.subtitle": "Configurez les contacts et le téléphone hôte visibles dans le livret",
   "host.phone.label": "Téléphone hôte (visible)",

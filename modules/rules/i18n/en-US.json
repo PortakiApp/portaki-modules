@@ -2,6 +2,7 @@
   "module.displayName": "House rules",
   "module.description": "Structured house rules for the guest booklet",
   "nav.rules": "House rules",
+  "guest.teaser": "House rules for a smooth stay",
   "surface.host.main.title": "House rules",
   "surface.host.main.subtitle": "Short rules shown to guests — add as many as you need.",
   "host.section.title": "House rules",

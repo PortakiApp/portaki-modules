@@ -1,6 +1,7 @@
 {
   "module.displayName": "Editorial sections",
   "module.description": "Markdown content blocks for the guest welcome book.",
+  "guest.teaser": "Welcome note and a quick tour of the place",
   "surface.host.main.title": "Sections",
   "surface.host.main.subtitle": "Markdown content blocks for the guest welcome book.",
   "host.list.title": "Sections",

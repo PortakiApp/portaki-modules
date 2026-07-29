@@ -1,7 +1,8 @@
 {
   "module.displayName": "Local events",
   "module.description": "Concerts, markets, and festivals near the stay",
-  "nav.events": "Events",
+  "nav.events": "Local events",
+  "guest.teaser": "What's on around you",
   "connector.openAgenda.name": "OpenAgenda",
   "capability.openAgenda.purpose": "Loads local events via the Portaki OpenAgenda pool",
   "capability.openAgenda.fallback": "Upgrade your plan or add an OpenAgenda API key",

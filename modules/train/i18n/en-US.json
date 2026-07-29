@@ -1,7 +1,8 @@
 {
   "module.displayName": "Train times",
   "module.description": "Upcoming departures from the nearest station.",
-  "nav.train": "Trains",
+  "nav.train": "Train times",
+  "guest.teaser": "Next departures from the station",
   "home.card.title": "Train times",
   "explore.detail.from": "Departure",
   "explore.detail.to": "Destination",

@@ -1,6 +1,7 @@
 {
   "module.displayName": "Formulaire pré-arrivée",
   "module.description": "Recueille horaire, occasion, allergies avant l'arrivée.",
+  "guest.teaser": "Aidez-nous à préparer votre venue",
   "surface.host.main.title": "Formulaire pré-arrivée",
   "surface.host.main.subtitle": "Les voyageurs remplissent ce formulaire avant l’entrée dans les lieux",
   "surface.host.stay.title": "Formulaire de pré-arrivée",

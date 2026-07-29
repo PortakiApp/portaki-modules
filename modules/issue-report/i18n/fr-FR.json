@@ -17,6 +17,7 @@
   "home.card.yourReports": "Vos signalements ce séjour",
   "home.card.openForm": "Nouveau signalement",
   "nav.issue-report": "Signaler un problème",
+  "guest.teaser": "Signaler un problème à votre hôte",
   "home.card.unavailable": "Signalement indisponible",
   "home.card.error.title": "Signalement temporairement indisponible",
   "home.card.error.description": "Le formulaire n’a pas pu être chargé. Réessayez dans un instant.",

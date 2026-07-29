@@ -1,7 +1,8 @@
 {
   "module.displayName": "Horaires trains",
   "module.description": "Prochains départs depuis la gare la plus proche.",
-  "nav.train": "Trains",
+  "nav.train": "Horaires trains",
+  "guest.teaser": "Prochains départs depuis la gare",
   "home.card.title": "Horaires trains",
   "explore.detail.from": "Départ",
   "explore.detail.to": "Destination",

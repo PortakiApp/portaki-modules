@@ -2,6 +2,7 @@
   "module.displayName": "Règlement intérieur",
   "module.description": "Règles de la maison structurées pour le livret invité",
   "nav.rules": "Règlement intérieur",
+  "guest.teaser": "Les règles à connaître pour un séjour serein",
   "surface.host.main.title": "Règlement intérieur",
   "surface.host.main.subtitle": "Consignes courtes affichées aux voyageurs — ajoutez-en autant que nécessaire.",
   "host.section.title": "Règles du logement",

@@ -1,6 +1,7 @@
 {
   "module.displayName": "Emergency & useful",
-  "nav.emergency-contacts": "Emergency & useful",
+  "nav.emergency-contacts": "Emergencies & help",
+  "guest.teaser": "Host, emergencies and useful numbers",
   "module.description": "Useful numbers and host line",
   "surface.host.main.title": "Emergency & useful",
   "surface.host.main.subtitle": "Configure contacts and the host phone shown in the guest booklet",

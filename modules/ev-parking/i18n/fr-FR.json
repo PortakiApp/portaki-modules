@@ -2,6 +2,7 @@
   "module.displayName": "Parking VE",
   "module.description": "Place VE réservée, code barrière et PIN borne pour le livret",
   "nav.ev-parking": "Parking VE",
+  "guest.teaser": "Place, borne de recharge et codes",
   "host.section.spot": "Place & borne",
   "host.section.spot.help": "Ce que voit le voyageur en véhicule électrique. Les codes sont soumis à la révélation programmée ci-dessous.",
   "host.section.directions": "Itinéraire",

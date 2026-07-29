@@ -1,6 +1,7 @@
 {
   "module.displayName": "Tri & déchets",
   "nav.waste-recycling": "Tri & déchets",
+  "guest.teaser": "Tri, bacs et jours de collecte",
   "module.description": "Bacs et jours de collecte",
   "surface.host.main.title": "Tri & déchets",
   "surface.host.main.subtitle": "Configurez les bacs et les jours de collecte pour le livret invité",

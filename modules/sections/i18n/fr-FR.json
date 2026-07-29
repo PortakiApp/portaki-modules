@@ -1,6 +1,7 @@
 {
   "module.displayName": "Sections éditoriales",
   "module.description": "Blocs de contenu markdown du carnet d'accueil.",
+  "guest.teaser": "Mot de bienvenue et présentation du logement",
   "surface.host.main.title": "Sections",
   "surface.host.main.subtitle": "Blocs de contenu markdown du carnet d'accueil.",
   "host.list.title": "Sections",
