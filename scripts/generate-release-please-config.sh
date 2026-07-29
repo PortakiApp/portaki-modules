@@ -179,7 +179,9 @@ config["always-update"] = True
 config["draft-pull-request"] = True
 # Independent package versions; one PR listing only packages that need a bump.
 config["separate-pull-requests"] = False
-config["group-pull-request-title-pattern"] = "chore: release modules"
+# release-please requires ${scope} in the title pattern to round-trip its own PR;
+# for a grouped release it renders empty, so the visible title stays "chore: release modules".
+config["group-pull-request-title-pattern"] = "chore${scope}: release modules"
 config["pull-request-header"] = "Release candidate for Portaki modules"
 config["pull-request-footer"] = (
     "## Before merge\n\n"
