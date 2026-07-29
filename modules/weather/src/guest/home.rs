@@ -21,12 +21,14 @@ pub fn build_home_card(data: &GuestWeatherData) -> Surface {
     let condition = t!(data.current.description_key.as_str()).unwrap_or_default();
     let summary = t!("guest.summary", temp = &temp, condition = &condition)
         .unwrap_or_else(|_| format!("{temp} · {condition}"));
+    // Live summary now leads as the card title; the teaser sits on the description line.
+    let teaser = t!("guest.teaser").unwrap_or_default();
 
     Surface::new(
         Card::new()
             .icon(icon)
-            .title("i18n:nav.weather")
-            .subtitle(summary)
+            .title(summary)
+            .subtitle(teaser)
             .action(Action::open_overlay(
                 OverlayPresentation::BottomSheet,
                 crate::ids::EXPLORE_FORECAST,

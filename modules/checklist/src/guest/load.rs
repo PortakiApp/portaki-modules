@@ -25,6 +25,9 @@ pub struct GuestChecklistData {
     pub done: usize,
     pub total: usize,
     pub percent: u8,
+    /// Departure instant (UTC) — rendered as the card title in the property timezone.
+    pub checkout_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub property_timezone: String,
 }
 
 pub fn load_guest_checklist(ctx: &GuestContext) -> Result<GuestLoad> {
@@ -67,5 +70,7 @@ pub fn load_guest_checklist(ctx: &GuestContext) -> Result<GuestLoad> {
         done,
         total,
         percent,
+        checkout_at,
+        property_timezone: ctx.property.timezone.clone(),
     }))
 }

@@ -1,5 +1,6 @@
 //! Guest booklet surfaces.
 
+mod depart;
 mod empty;
 mod home;
 mod load;

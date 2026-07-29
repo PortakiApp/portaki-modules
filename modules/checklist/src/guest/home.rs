@@ -10,9 +10,12 @@ use crate::labels;
 
 pub fn build_home_card(data: &GuestChecklistData) -> Surface {
     let progress = format!("{} / {} — {}%", data.done, data.total, data.percent);
-    // Nav-row summary on the description line, e.g. "3/6 complété".
-    let row_summary = t!("guest.rowSummary", done = data.done, total = data.total)
-        .unwrap_or_else(|_| format!("{} / {}", data.done, data.total));
+    // Title leads with the departure moment ("Départ mardi à 11:00"); the description line invites
+    // opening the list. Falls back to the module name until the stay carries a checkout time.
+    let title = super::depart::format_departure(data.checkout_at, &data.property_timezone)
+        .unwrap_or_else(|| t!("home.card.title").unwrap_or_else(|_| "Checklist de départ".into()));
+    let subtitle =
+        t!("guest.rowTeaser").unwrap_or_else(|_| "Voir la checklist de départ".into());
 
     let mut children = vec![Text::new()
         .text(progress)
@@ -47,8 +50,8 @@ pub fn build_home_card(data: &GuestChecklistData) -> Surface {
     Surface::new(
         Card::new()
             .icon("list-checks")
-            .title("i18n:home.card.title")
-            .subtitle(row_summary)
+            .title(title)
+            .subtitle(subtitle)
             .children(children),
     )
     .with_id(crate::ids::HOME_CARD)
