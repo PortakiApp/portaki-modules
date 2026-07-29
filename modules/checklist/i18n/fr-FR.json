@@ -2,6 +2,7 @@
   "module.displayName": "Checklist de départ",
   "module.description": "Items cochables, progression sauvegardée.",
   "guest.teaser": "La checklist avant de partir",
+  "guest.rowSummary": "{done}/{total} complété",
   "surface.host.main.title": "Checklist de départ",
   "surface.host.main.subtitle": "6 emplacements bilingues — les voyageurs cochent leur progression, sauvegardée automatiquement.",
   "host.section.when": "Quand l’afficher",

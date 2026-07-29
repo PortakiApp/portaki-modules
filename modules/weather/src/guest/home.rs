@@ -10,21 +10,23 @@ use super::load::GuestWeatherData;
 use crate::weather::{convert_temp, format_temp_label, icon_name_for_condition};
 
 pub fn build_home_card(data: &GuestWeatherData) -> Surface {
-    // Live glance for the nav row — condition icon, current temperature, condition label.
-    // The shell renders these generic Card fields; nothing here is shell-specific.
+    // Nav row: keep the module name as the title; put a live summary on the description line
+    // ("24° · Ensoleillé"). Condition icon reflects the real weather. All generic Card fields.
     let icon = icon_name_for_condition(&data.current.condition);
     let temp = format_temp_label(
         convert_temp(data.current.temp_c, data.units),
         data.units.sdui_unit(),
         false,
     );
-    let condition = format!("i18n:{}", data.current.description_key);
+    let condition = t!(data.current.description_key.as_str()).unwrap_or_default();
+    let summary = t!("guest.summary", temp = &temp, condition = &condition)
+        .unwrap_or_else(|_| format!("{temp} · {condition}"));
 
     Surface::new(
         Card::new()
             .icon(icon)
-            .title(temp)
-            .subtitle(condition)
+            .title("i18n:nav.weather")
+            .subtitle(summary)
             .action(Action::open_overlay(
                 OverlayPresentation::BottomSheet,
                 crate::ids::EXPLORE_FORECAST,

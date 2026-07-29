@@ -34,6 +34,7 @@
   "weather.col.wind": "Wind",
   "nav.weather": "Weather",
   "guest.teaser": "The forecast for the days ahead",
+  "guest.summary": "{temp} · {condition}",
   "nav.forecast": "Forecast",
   "day.monday": "Mon",
   "day.tuesday": "Tue",
