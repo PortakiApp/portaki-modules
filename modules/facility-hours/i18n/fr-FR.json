@@ -1,6 +1,7 @@
 {
   "module.displayName": "Horaires & accès",
   "nav.facility-hours": "Horaires & accès",
+  "guest.teaser": "Arrivée, départ, piscine, réception",
   "module.description": "Piscine, spa, équipements partagés",
   "surface.host.main.title": "Horaires & accès",
   "surface.host.main.subtitle": "Configurez les horaires des équipements du logement",

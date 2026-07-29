@@ -1,6 +1,7 @@
 {
   "module.displayName": "Local picks",
-  "nav.local-guide": "Local picks",
+  "nav.local-guide": "Good spots",
+  "guest.teaser": "Your host's favourite spots",
   "module.description": "Nearby addresses and useful links",
   "surface.host.main.title": "Local picks",
   "surface.host.main.subtitle": "Add addresses and tips for guests",

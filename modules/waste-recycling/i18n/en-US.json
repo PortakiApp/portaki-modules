@@ -1,6 +1,7 @@
 {
   "module.displayName": "Recycling & waste",
-  "nav.waste-recycling": "Recycling & waste",
+  "nav.waste-recycling": "Waste & recycling",
+  "guest.teaser": "Sorting, bins and collection days",
   "module.description": "Bins and collection days",
   "surface.host.main.title": "Recycling & waste",
   "surface.host.main.subtitle": "Configure bins and collection days for the guest booklet",

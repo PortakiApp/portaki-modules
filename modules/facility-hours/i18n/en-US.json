@@ -1,6 +1,7 @@
 {
   "module.displayName": "Hours & access",
   "nav.facility-hours": "Hours & access",
+  "guest.teaser": "Check-in, check-out, pool, reception",
   "module.description": "Pool, spa, shared amenities",
   "surface.host.main.title": "Hours & access",
   "surface.host.main.subtitle": "Configure amenity hours for the property",

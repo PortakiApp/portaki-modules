@@ -1,7 +1,8 @@
 {
   "module.displayName": "Événements locaux",
   "module.description": "Sorties, concerts et animations à proximité",
-  "nav.events": "Événements",
+  "nav.events": "Événements locaux",
+  "guest.teaser": "Ce qui se passe autour de vous",
   "connector.openAgenda.name": "OpenAgenda",
   "capability.openAgenda.purpose": "Charge les événements locaux via le pool OpenAgenda Portaki",
   "capability.openAgenda.fallback": "Mettez à niveau votre offre ou ajoutez une clé OpenAgenda",

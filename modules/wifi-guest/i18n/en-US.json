@@ -1,7 +1,8 @@
 {
   "module.displayName": "Guest Wi-Fi",
   "module.description": "Wi-Fi network name and password for the guest booklet",
-  "nav.wifi-guest": "Guest Wi-Fi",
+  "nav.wifi-guest": "Wi-Fi & codes",
+  "guest.teaser": "Network, password and QR code",
   "host.main.warning": "The password is visible in the guest app. Use a network or password reserved for guests.",
   "host.ssid.label": "Wi-Fi network name",
   "host.ssid.desc": "The name guests pick in their device network list.",

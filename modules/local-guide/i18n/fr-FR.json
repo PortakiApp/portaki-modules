@@ -1,6 +1,7 @@
 {
   "module.displayName": "Bons plans",
   "nav.local-guide": "Bons plans",
+  "guest.teaser": "Les bonnes adresses de votre hôte",
   "module.description": "Adresses et liens utiles autour du logement",
   "surface.host.main.title": "Bons plans",
   "surface.host.main.subtitle": "Ajoutez vos adresses et bons plans pour les voyageurs",

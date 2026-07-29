@@ -1,6 +1,7 @@
 {
   "module.displayName": "Pre-arrival form",
   "module.description": "Collects ETA, occasion, and allergies before arrival.",
+  "guest.teaser": "Help us get ready for your arrival",
   "surface.host.main.title": "Pre-arrival form",
   "surface.host.main.subtitle": "Guests fill this form before check-in",
   "surface.host.stay.title": "Pre-arrival form",

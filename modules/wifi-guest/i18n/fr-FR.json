@@ -1,7 +1,8 @@
 {
   "module.displayName": "Wi-Fi invité",
   "module.description": "Nom du réseau et mot de passe Wi-Fi pour le livret",
-  "nav.wifi-guest": "Wi-Fi invité",
+  "nav.wifi-guest": "Wi-Fi & codes",
+  "guest.teaser": "Réseau, mot de passe et QR code",
   "host.main.warning": "Le mot de passe est visible dans l’app voyageur. Utilisez un réseau ou un mot de passe réservés aux locataires.",
   "host.ssid.label": "Nom du réseau Wi-Fi",
   "host.ssid.desc": "Le nom que les voyageurs choisissent dans la liste des réseaux.",

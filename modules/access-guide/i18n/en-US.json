@@ -1,6 +1,7 @@
 {
   "module.displayName": "Access & parking",
-  "nav.access-guide": "Access",
+  "nav.access-guide": "Access & parking",
+  "guest.teaser": "Address, access codes, parking, directions",
   "module.description": "Steps to reach the property",
   "host.section.primary": "How the guest gets in",
   "host.section.primary.help": "Pick the primary access method for the property. It is required; layers below are optional.",

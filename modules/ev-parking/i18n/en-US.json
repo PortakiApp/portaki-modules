@@ -2,6 +2,7 @@
   "module.displayName": "EV parking",
   "module.description": "Reserved EV spot, gate code, and charger PIN for the guest booklet",
   "nav.ev-parking": "EV parking",
+  "guest.teaser": "Spot, EV charger and codes",
   "host.section.spot": "Spot & charger",
   "host.section.spot.help": "What EV guests see. Codes follow the reveal schedule below.",
   "host.section.directions": "Directions",
