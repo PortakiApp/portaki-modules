@@ -27,8 +27,12 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Gues
     }
 
     let config = load_config().unwrap_or_else(|_| ModuleConfig::default());
-    let show_airbnb = config.airbnb_feasible();
-    let show_portaki = config.portaki_feasible();
+    // Platform the stay was booked on (lowercased, e.g. "airbnb"); `None` on older backends.
+    let booking_channel = ctx
+        .stay
+        .as_ref()
+        .and_then(|stay| stay.booking_channel.as_deref());
+    let (show_airbnb, show_portaki) = config.resolve_guest_platforms(booking_channel);
     if !show_airbnb && !show_portaki {
         return Ok(GuestLoad::Empty(Box::new(empty_content_state(surface_id))));
     }

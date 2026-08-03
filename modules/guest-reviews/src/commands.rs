@@ -57,6 +57,9 @@ pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
     thank_you_message.set(&lang, args.thank_you_message.trim().to_string());
 
     save_config(&ModuleConfig {
+        // Preserved as-is: the host form does not expose channel mode yet, so keep whatever is
+        // stored (defaults to Manual) rather than resetting it on every config save.
+        channel_mode: existing.channel_mode,
         platform_airbnb,
         platform_portaki,
         show_qr_code: args.show_qr_code.unwrap_or(existing.show_qr_code),
