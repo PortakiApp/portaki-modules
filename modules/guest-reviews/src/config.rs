@@ -44,8 +44,9 @@ pub struct ModuleConfig {
     /// Collect reviews via Airbnb link + optional QR.
     #[serde(default = "default_true")]
     pub platform_airbnb: bool,
-    /// Collect reviews via in-booklet Portaki star form.
-    #[serde(default)]
+    /// Collect reviews via in-booklet Portaki star form. On by default so the post-stay surface
+    /// always has an actionable channel (Airbnb needs a URL and is off until one is set).
+    #[serde(default = "default_true")]
     pub platform_portaki: bool,
     #[serde(default = "default_true")]
     pub show_qr_code: bool,
@@ -63,7 +64,7 @@ impl Default for ModuleConfig {
     fn default() -> Self {
         Self {
             platform_airbnb: true,
-            platform_portaki: false,
+            platform_portaki: true,
             show_qr_code: true,
             airbnb_review_url: String::new(),
             thank_you_message: Localized::default(),
