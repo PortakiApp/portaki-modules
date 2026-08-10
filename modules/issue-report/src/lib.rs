@@ -25,3 +25,11 @@ portaki_sdk::portaki_module!(
 
 #[portaki_sdk::capability(required, id = "core.storage")]
 pub const STORAGE: &str = "core.storage";
+
+#[portaki_sdk::capability(
+    optional,
+    id = "core.host.notifications",
+    purpose_key = "capability.hostNotifications.purpose",
+    fallback_key = "capability.hostNotifications.fallback"
+)]
+pub const HOST_NOTIFICATIONS: &str = "core.host.notifications";

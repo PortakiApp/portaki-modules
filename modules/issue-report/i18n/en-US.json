@@ -1,6 +1,8 @@
 {
   "module.displayName": "Report an issue",
   "module.description": "Guests report a problem during the stay — appliance, cleanliness, noise, and more",
+  "capability.hostNotifications.purpose": "Alerts the host in-app and by push when a guest reports an issue",
+  "capability.hostNotifications.fallback": "Reports are still delivered by email",
   "surface.host.main.title": "Issue reports",
   "surface.host.main.subtitle": "Guests send stay-scoped reports from the booklet — no WhatsApp.",
   "host.main.banner": "This module has no settings: guests report a problem from their booklet (category + description), and you get it here and by email. Nothing to fill in.",

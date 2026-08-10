@@ -1,6 +1,8 @@
 {
   "module.displayName": "Signaler un problème",
   "module.description": "Les voyageurs signalent un souci pendant le séjour — appareil, ménage, bruit, etc.",
+  "capability.hostNotifications.purpose": "Alerte l'hôte dans l'app et par notification push quand un voyageur signale un problème",
+  "capability.hostNotifications.fallback": "Les signalements restent envoyés par e-mail",
   "surface.host.main.title": "Signalements",
   "surface.host.main.subtitle": "Les voyageurs envoient un signalement depuis le livret — sans WhatsApp.",
   "host.main.banner": "Ce module ne se configure pas : les voyageurs signalent un problème depuis leur livret (catégorie + description), et vous recevez le signalement ici et par email. Aucune donnée à saisir.",
