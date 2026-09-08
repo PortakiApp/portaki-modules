@@ -18,6 +18,7 @@
   "icon": "train",
   "type": "official",
   "maturity": "beta",
+  "permissions": ["platform"],
   "sortOrder": 200,
   "guestSurfaces": [
     {

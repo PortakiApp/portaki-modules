@@ -18,6 +18,7 @@
   "icon": "home",
   "type": "official",
   "maturity": "stable",
+  "permissions": ["platform", "repo"],
   "sortOrder": 40,
   "hostSurfaces": [
     {

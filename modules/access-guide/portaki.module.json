@@ -18,6 +18,7 @@
   "icon": "key",
   "type": "official",
   "maturity": "stable",
+  "permissions": ["email", "kv", "platform"],
   "sortOrder": 20,
   "hostSurfaces": [
     {

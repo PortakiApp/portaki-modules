@@ -18,6 +18,7 @@
   "icon": "plug",
   "type": "official",
   "maturity": "stable",
+  "permissions": ["platform", "repo"],
   "sortOrder": 120,
   "hostSurfaces": [
     {

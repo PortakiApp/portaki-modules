@@ -18,6 +18,7 @@
   "icon": "clipboard",
   "type": "official",
   "maturity": "stable",
+  "permissions": ["email", "events", "kv", "platform", "repo"],
   "sortOrder": 50,
   "hostSurfaces": [
     {
