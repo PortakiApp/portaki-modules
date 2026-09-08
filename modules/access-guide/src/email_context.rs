@@ -353,6 +353,7 @@ mod tests {
                     .expect("dt"),
             ),
             checkout_at: None,
+            booking_channel: None,
         });
 
         with_host(host, ctx.clone(), || {

@@ -14,8 +14,7 @@ pub fn build_home_card(data: &GuestChecklistData) -> Surface {
     // opening the list. Falls back to the module name until the stay carries a checkout time.
     let title = super::depart::format_departure(data.checkout_at, &data.property_timezone)
         .unwrap_or_else(|| t!("home.card.title").unwrap_or_else(|_| "Checklist de départ".into()));
-    let subtitle =
-        t!("guest.rowTeaser").unwrap_or_else(|_| "Voir la checklist de départ".into());
+    let subtitle = t!("guest.rowTeaser").unwrap_or_else(|_| "Voir la checklist de départ".into());
 
     let mut children = vec![Text::new()
         .text(progress)
