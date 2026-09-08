@@ -18,6 +18,7 @@
   "icon": "cloud-sun",
   "type": "official",
   "maturity": "stable",
+  "permissions": ["kv", "platform", "repo", "connectors:open-weather"],
   "sortOrder": 130,
   "hostSurfaces": [
     {

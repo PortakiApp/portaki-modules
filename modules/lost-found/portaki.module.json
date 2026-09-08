@@ -18,6 +18,7 @@
   "icon": "search",
   "type": "official",
   "maturity": "stable",
+  "permissions": ["email", "kv", "platform", "repo"],
   "sortOrder": 80,
   "hostSurfaces": [
     {

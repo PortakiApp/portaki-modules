@@ -18,6 +18,7 @@
   "icon": "zap",
   "type": "official",
   "maturity": "stable",
+  "permissions": ["kv", "platform"],
   "sortOrder": 170,
   "hostSurfaces": [
     {
