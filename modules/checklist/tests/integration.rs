@@ -283,6 +283,7 @@ fn home_card_gated_shows_not_yet() {
                 stay_id,
                 checkin_at: Some(Utc::now() - Duration::days(2)),
                 checkout_at: Some(Utc::now() + Duration::days(3)),
+                booking_channel: None,
             });
 
             let surface = render_home_card(ctx);
