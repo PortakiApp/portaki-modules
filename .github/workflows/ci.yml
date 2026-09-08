@@ -15,7 +15,13 @@ on:
       - "**.md"
       - "docs/**"
       - ".github/CI.md"
+  # `module` sert au premier tir d'une liaison : publier UN module précis, sans attendre
+  # qu'un commit le modifie. La liaison enregistrée au registre autorise `workflow_dispatch`.
   workflow_dispatch:
+    inputs:
+      module:
+        description: "Publier ce module seul (laisser vide pour le comportement normal)"
+        required: false
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -28,6 +34,10 @@ env:
   CARGO_TERM_COLOR: always
   REGISTRY: ghcr.io/portakiapp
   CI_ARTIFACT_RETENTION_DAYS: "1"
+  # La plateforme à qui annoncer la publication. GHCR reçoit l'artefact quoi qu'il arrive ;
+  # c'est l'annonce qui le fait entrer dans un catalogue. Variable de dépôt pour viser un
+  # staging sans toucher au workflow.
+  PORTAKI_API_URL: ${{ vars.PORTAKI_API_URL || 'https://api.portaki.app' }}
 
 jobs:
   changes:
@@ -54,7 +64,23 @@ jobs:
 
       - name: Detect changed modules
         id: detect
-        run: bash .github/scripts/changed-modules.sh "${{ steps.base.outputs.ref }}"
+        env:
+          REQUESTED: ${{ inputs.module }}
+        run: |
+          set -euo pipefail
+          if [ -n "$REQUESTED" ]; then
+            if [ ! -d "modules/$REQUESTED" ]; then
+              echo "::error::module inconnu : $REQUESTED"
+              exit 1
+            fi
+            {
+              printf 'modules=["%s"]\n' "$REQUESTED"
+              echo "any=true"
+              echo "reason=demandé à la main"
+            } >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          bash .github/scripts/changed-modules.sh "${{ steps.base.outputs.ref }}"
 
   # fmt + clippy + test on one runner (setup cost ×3 was burning minutes).
   rust:
@@ -158,12 +184,19 @@ jobs:
     needs: [changes, wasm]
     if: >-
       needs.changes.outputs.any == 'true' &&
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main'
+      ((github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+       (github.event_name == 'workflow_dispatch' && inputs.module != ''))
     runs-on: ubuntu-latest
+    # La liaison enregistrée au registre exige un environment sur le canal stable : c'est lui
+    # qui porte les relecteurs obligatoires, et le meilleur rapport sécurité/effort du
+    # dispositif. Sans lui, l'échange du jeton est refusé — `environment_required`.
+    environment: release
     permissions:
       contents: read
       packages: write
+      # Sans ce droit, GitHub n'émet aucun jeton OIDC et il n'y a rien à échanger contre un
+      # credential de publication. C'est ce jeton qui remplace un secret longue durée.
+      id-token: write
     strategy:
       fail-fast: false
       max-parallel: 2
