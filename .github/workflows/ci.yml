@@ -170,7 +170,7 @@ jobs:
           (cd "modules/${module}" && portaki lint)
 
       - name: Upload wasm artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: wasm-${{ matrix.module }}
           path: |
