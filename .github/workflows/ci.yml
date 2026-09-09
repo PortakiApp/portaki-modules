@@ -150,7 +150,7 @@ jobs:
 
       - name: Cache portaki CLI
         id: cache-cli
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.cargo/bin/portaki
           key: portaki-cli-${{ runner.os }}-${{ steps.sdk.outputs.rev }}
@@ -218,7 +218,7 @@ jobs:
 
       - name: Cache portaki CLI
         id: cache-cli
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.cargo/bin/portaki
           key: portaki-cli-${{ runner.os }}-${{ steps.sdk.outputs.rev }}
