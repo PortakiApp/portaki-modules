@@ -160,12 +160,6 @@ jobs:
         # `--force` : on n'arrive ici que si le cache dédié a manqué, donc on VEUT écraser.
         run: cargo install --force --git https://github.com/PortakiApp/portaki-sdk --branch main --locked portaki-cli
 
-      - name: Refresh Portaki SDK lockfile from main
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          cargo update
-          grep -q 'portaki-sdk-macros' Cargo.lock
-
       - name: Build and lint (wasm)
         run: |
           set -euo pipefail

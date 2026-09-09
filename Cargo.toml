@@ -15,10 +15,17 @@ keywords = ["portaki", "wasm", "extism", "oci", "module"]
 rust-version = "1.75"
 
 [workspace.dependencies]
-portaki-sdk = { git = "https://github.com/PortakiApp/portaki-sdk.git", branch = "main" }
-portaki-sdk-macros = { git = "https://github.com/PortakiApp/portaki-sdk.git", branch = "main" }
-portaki-connectors = { git = "https://github.com/PortakiApp/portaki-sdk.git", branch = "main" }
-portaki-test-utils = { git = "https://github.com/PortakiApp/portaki-sdk.git", branch = "main" }
+# Le SDK vient de crates.io, pas de `branch = "main"`.
+#
+# La branche faisait qu'un rebuild pouvait changer de SDK sans qu'aucun commit ne bouge ici :
+# `requiresModuleSdk` est tamponné depuis le graphe résolu par cargo, donc un module publié
+# hier et republié aujourd'hui n'annonçait pas la même version — sans que rien ne le dise.
+#
+# Une version fixe rend le contraire vrai : monter de SDK devient un commit qu'on relit.
+portaki-sdk = "2.2.0"
+portaki-sdk-macros = "2.2.0"
+portaki-connectors = "2.2.0"
+portaki-test-utils = "2.2.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 uuid = { version = "1", features = ["serde", "v4", "rng-getrandom"] }
