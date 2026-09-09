@@ -131,6 +131,11 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
+          # `~/.cargo/bin` appartient au cache dédié ci-dessous, pas à celui-ci. Les deux le
+          # revendiquaient : rust-cache restaurait un vieux `portaki`, puis le cache dédié
+          # manquait sa clé (le tip du SDK avait bougé) et l'installation trouvait le binaire
+          # déjà là. Un chemin, un propriétaire.
+          cache-bin: "false"
           workspaces: modules/${{ matrix.module }} -> target
           shared-key: module-${{ matrix.module }}
 
@@ -152,7 +157,8 @@ jobs:
 
       - name: Install portaki CLI
         if: steps.cache-cli.outputs.cache-hit != 'true'
-        run: cargo install --git https://github.com/PortakiApp/portaki-sdk --branch main --locked portaki-cli
+        # `--force` : on n'arrive ici que si le cache dédié a manqué, donc on VEUT écraser.
+        run: cargo install --force --git https://github.com/PortakiApp/portaki-sdk --branch main --locked portaki-cli
 
       - name: Refresh Portaki SDK lockfile from main
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -225,7 +231,8 @@ jobs:
 
       - name: Install portaki CLI
         if: steps.cache-cli.outputs.cache-hit != 'true'
-        run: cargo install --git https://github.com/PortakiApp/portaki-sdk --branch main --locked portaki-cli
+        # `--force` : on n'arrive ici que si le cache dédié a manqué, donc on VEUT écraser.
+        run: cargo install --force --git https://github.com/PortakiApp/portaki-sdk --branch main --locked portaki-cli
 
       # upload-artifact roots at modules/<mod>/target (LCA of wasm + portaki/).
       - name: Download wasm artifact
