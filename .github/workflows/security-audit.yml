@@ -1,6 +1,6 @@
 # Une CVE paraît sans qu'on pousse de commit.
 #
-# La CI ne se déclenche que sur `push` et `pull_request`, et `changed-modules.sh` la restreint
+# La CI ne se déclenche que sur `push` et `pull_request`, et `portaki ci modules` la restreint
 # encore aux modules touchés : un avis RustSec publié sur une dépendance qu'on n'a pas modifiée
 # depuis six mois ne déclencherait rien du tout. D'où le `schedule`, qui est le cœur de ce
 # fichier.

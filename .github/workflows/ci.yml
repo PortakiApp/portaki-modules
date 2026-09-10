@@ -62,6 +62,11 @@ jobs:
             echo "ref=${{ github.event.before }}" >>"$GITHUB_OUTPUT"
           fi
 
+      - uses: PortakiApp/portaki-release-action/install@v1
+
+      # `portaki ci modules` lit la disposition dans les manifestes et rend `modules`,
+      # `any` et `reason` dans GITHUB_OUTPUT. Il remplace `changed-modules.sh` —
+      # quatre-vingt-douze lignes de bash et de jq qui ne servaient que ce dépôt.
       - name: Detect changed modules
         id: detect
         env:
@@ -69,18 +74,10 @@ jobs:
         run: |
           set -euo pipefail
           if [ -n "$REQUESTED" ]; then
-            if [ ! -d "modules/$REQUESTED" ]; then
-              echo "::error::module inconnu : $REQUESTED"
-              exit 1
-            fi
-            {
-              printf 'modules=["%s"]\n' "$REQUESTED"
-              echo "any=true"
-              echo "reason=demandé à la main"
-            } >>"$GITHUB_OUTPUT"
-            exit 0
+            portaki ci modules --only "$REQUESTED"
+          else
+            portaki ci modules --changed-since "${{ steps.base.outputs.ref }}"
           fi
-          bash .github/scripts/changed-modules.sh "${{ steps.base.outputs.ref }}"
 
   # fmt + clippy + test on one runner (setup cost ×3 was burning minutes).
   rust:
@@ -139,26 +136,12 @@ jobs:
           workspaces: modules/${{ matrix.module }} -> target
           shared-key: module-${{ matrix.module }}
 
-      # Pin cache to SDK main tip — flat `sdk-main` kept a pre-2.x CLI that
-      # rejected newer catalog ids (e.g. access.smart_lock).
-      - name: Resolve SDK main tip
-        id: sdk
-        run: |
-          set -euo pipefail
-          rev=$(git ls-remote https://github.com/PortakiApp/portaki-sdk.git refs/heads/main | cut -f1)
-          echo "rev=${rev}" >>"$GITHUB_OUTPUT"
-
-      - name: Cache portaki CLI
-        id: cache-cli
-        uses: actions/cache@v6
+      # L'action résout le CLI depuis `Cargo.lock` et met en cache sur cette version. Le
+      # bloc précédent interrogeait le tip de `main` du SDK à chaque run, ce qui invalidait
+      # le cache à chaque commit poussé là-bas.
+      - uses: PortakiApp/portaki-release-action/install@v1
         with:
-          path: ~/.cargo/bin/portaki
-          key: portaki-cli-${{ runner.os }}-${{ steps.sdk.outputs.rev }}
-
-      - name: Install portaki CLI
-        if: steps.cache-cli.outputs.cache-hit != 'true'
-        # `--force` : on n'arrive ici que si le cache dédié a manqué, donc on VEUT écraser.
-        run: cargo install --force --git https://github.com/PortakiApp/portaki-sdk --branch main --locked portaki-cli
+          working-directory: modules/${{ matrix.module }}
 
       - name: Build and lint (wasm)
         run: |
@@ -209,25 +192,6 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
-      - name: Resolve SDK main tip
-        id: sdk
-        run: |
-          set -euo pipefail
-          rev=$(git ls-remote https://github.com/PortakiApp/portaki-sdk.git refs/heads/main | cut -f1)
-          echo "rev=${rev}" >>"$GITHUB_OUTPUT"
-
-      - name: Cache portaki CLI
-        id: cache-cli
-        uses: actions/cache@v6
-        with:
-          path: ~/.cargo/bin/portaki
-          key: portaki-cli-${{ runner.os }}-${{ steps.sdk.outputs.rev }}
-
-      - name: Install portaki CLI
-        if: steps.cache-cli.outputs.cache-hit != 'true'
-        # `--force` : on n'arrive ici que si le cache dédié a manqué, donc on VEUT écraser.
-        run: cargo install --force --git https://github.com/PortakiApp/portaki-sdk --branch main --locked portaki-cli
-
       # upload-artifact roots at modules/<mod>/target (LCA of wasm + portaki/).
       - name: Download wasm artifact
         uses: actions/download-artifact@v8
@@ -242,11 +206,30 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish to GHCR (from artifact)
+      # `build: false` : le job `wasm` a déjà compilé et linté, et l'artefact vient d'être
+      # récupéré. Recompiler ici pousserait un binaire que personne n'a vérifié.
+      - uses: PortakiApp/portaki-release-action@v1
+        with:
+          working-directory: modules/${{ matrix.module }}
+          build: false
+          registry: ${{ env.REGISTRY }}
+          api-url: ${{ env.PORTAKI_API_URL }}
+
+      # Propre à cette organisation, donc hors de l'action : un paquet fraîchement créé
+      # naît privé, et un catalogue public ne peut pas le lire.
+      - name: Make the GHCR package public
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PUBLISH_FROM_ARTIFACT: "1"
-        run: bash .github/scripts/publish-module.sh "${{ matrix.module }}"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGE: portaki-modules-${{ matrix.module }}
+        run: |
+          set -euo pipefail
+          seen="$(gh api "orgs/PortakiApp/packages/container/${PACKAGE}" --jq .visibility 2>/dev/null || echo unknown)"
+          if [ "$seen" = "public" ]; then
+            echo "${PACKAGE} is already public."
+            exit 0
+          fi
+          gh api --method PATCH "orgs/PortakiApp/packages/container/${PACKAGE}" --field visibility=public \
+            || echo "::warning::could not set ${PACKAGE} public — do it once by hand in the package settings"
 
   quality:
     name: quality
