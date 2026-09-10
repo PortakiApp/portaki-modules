@@ -70,6 +70,15 @@ Ce qui reste de Dependabot, et qui n'a rien à voir avec le fichier retiré : le
 vulnérabilité** et le **graphe de dépendances**, plus le **secret scanning** avec sa protection
 au push — ce dépôt est public.
 
+### Automerge
+
+Patch, `pin` et `digest` fusionnent seuls quand `quality` est vert ; les majeures et les mineures
+en `0.x` jamais. Toute montée attend **trois jours** après publication — sauf un correctif de
+sécurité, où la version récente est justement ce qu'on veut.
+
+La configuration vit dans `PortakiApp/renovate-config` ; ce dépôt n'en garde que ce qui lui est
+propre, ci-dessous.
+
 ### Le SDK ne monte pas tout seul
 
 `portaki-sdk` et ses trois crates voisines sont `"enabled": false` dans `renovate.json`. Ce
