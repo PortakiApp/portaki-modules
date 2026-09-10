@@ -59,3 +59,26 @@ Plain `GITHUB_TOKEN` limitations if you ever fall back:
 ### After merge
 
 Release PR merge bumps module versions on `main` → existing `ci` `publish` matrix builds/publishes GHCR from Cargo.toml. Tags / GitHub Releases are optional extras from release-please.
+
+## Dépendances — un seul gestionnaire
+
+**Renovate écrit les PR. Dependabot ne les écrit plus.** Les deux tournaient : deux
+gestionnaires ne font pas deux filets, ils font deux politiques, et celle qu'un second robot
+ignore n'en est pas une.
+
+Ce qui reste de Dependabot, et qui n'a rien à voir avec le fichier retiré : les **alertes de
+vulnérabilité** et le **graphe de dépendances**, plus le **secret scanning** avec sa protection
+au push — ce dépôt est public.
+
+### Le SDK ne monte pas tout seul
+
+`portaki-sdk` et ses trois crates voisines sont `"enabled": false` dans `renovate.json`. Ce
+n'est pas de la prudence générale : `requiresModuleSdk` est **tamponné depuis le graphe résolu
+par cargo**, donc une montée automatique changerait ce que ces vingt et un modules annoncent au
+registre sans que personne ne l'ait décidé.
+
+C'est exactement ce que 9a2a374 a corrigé en quittant `branch = "main"` pour une version fixe :
+monter de SDK doit être un commit qu'on relit. La règle vivait dans le `dependabot.yml` sous
+forme d'`ignore` ; le `renovate.json`, lui, ciblait `depTypes: ["git"]` — qui ne matche plus
+rien depuis ce même commit. Retirer Dependabot sans porter la règle aurait donc rouvert la
+dérive que 9a2a374 avait fermée.

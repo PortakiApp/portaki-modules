@@ -31,17 +31,15 @@
       "schedule": ["before 10am on monday"]
     },
     {
-      "description": "Portaki SDK (git main) — bump Cargo.lock digest",
+      "description": "Portaki SDK — monte par un commit qu'on relit, jamais par un robot. `requiresModuleSdk` est tamponne depuis le graphe resolu par cargo : une montee automatique changerait ce que ces modules annoncent au registre sans que personne ne l'ait decide. Voir 9a2a374, qui a quitte `branch = main` pour une version fixe afin de rendre ce changement relisible.",
       "matchManagers": ["cargo"],
-      "matchDepTypes": ["git"],
       "matchPackageNames": [
         "portaki-sdk",
         "portaki-sdk-macros",
         "portaki-connectors",
         "portaki-test-utils"
       ],
-      "groupName": "portaki-sdk git",
-      "schedule": ["at any time"]
+      "enabled": false
     },
     {
       "groupName": "Serde",
