@@ -2,10 +2,10 @@
 
 ## Flow
 
-1. **`changes`** — `changed-modules.sh` → JSON module list (or empty).
+1. **`changes`** — `portaki ci modules` → JSON module list (or empty).
 2. **`rust`** — fmt + clippy + tests on one runner (setup cost shared).
 3. **`wasm` matrix** (only if modules changed) → upload `wasm-{module}` artifact.
-4. **`publish` matrix** on `main` push — download artifact, `portaki publish --skip-build`.
+4. **`publish` matrix** on `main` push — download artifact, `portaki-release-action` with `build: false`.
 5. **`quality`** gate aggregates results.
 
 ## Changed-modules rules
