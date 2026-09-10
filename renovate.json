@@ -1,37 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended",
-    ":dependencyDashboard",
-    ":semanticCommits",
-    "group:recommended",
-    "group:monorepos"
+    "github>PortakiApp/renovate-config",
+    "github>PortakiApp/renovate-config:rust"
   ],
-  "labels": ["dependencies"],
-  "timezone": "Europe/Paris",
-  "schedule": ["before 10am on monday"],
-  "prHourlyLimit": 2,
-  "prConcurrentLimit": 5,
-  "rangeStrategy": "bump",
-  "rebaseWhen": "behind-base-branch",
-  "lockFileMaintenance": {
-    "enabled": true,
-    "schedule": ["before 5am on sunday"]
-  },
-  "osvVulnerabilityAlerts": true,
-  "vulnerabilityAlerts": {
-    "labels": ["dependencies", "security"],
-    "schedule": ["at any time"]
-  },
   "packageRules": [
     {
-      "description": "GitHub Actions — groupe hebdo",
-      "matchManagers": ["github-actions"],
-      "groupName": "GitHub Actions",
-      "schedule": ["before 10am on monday"]
-    },
-    {
-      "description": "Portaki SDK — monte par un commit qu'on relit, jamais par un robot. `requiresModuleSdk` est tamponne depuis le graphe resolu par cargo : une montee automatique changerait ce que ces modules annoncent au registre sans que personne ne l'ait decide. Voir 9a2a374, qui a quitte `branch = main` pour une version fixe afin de rendre ce changement relisible.",
+      "description": "Le SDK monte par un commit qu'on relit, jamais par un robot. `requiresModuleSdk` est tamponne depuis le graphe resolu par cargo : une montee automatique changerait ce que ces vingt et un modules annoncent au registre sans que personne ne l'ait decide. Voir 9a2a374, qui a quitte `branch = main` pour une version fixe afin de rendre ce changement relisible.",
       "matchManagers": ["cargo"],
       "matchPackageNames": [
         "portaki-sdk",
@@ -42,25 +17,10 @@
       "enabled": false
     },
     {
-      "groupName": "Serde",
+      "description": "extism-pdk suit le SDK, qui suit le runtime hote. Le monter separement desaligne les trois.",
       "matchManagers": ["cargo"],
-      "matchPackageNames": ["serde", "serde_json"]
-    },
-    {
-      "groupName": "Extism PDK",
-      "matchManagers": ["cargo"],
-      "matchPackageNames": ["extism-pdk"]
-    },
-    {
-      "groupName": "serial_test",
-      "matchManagers": ["cargo"],
-      "matchPackageNames": ["serial_test"]
-    },
-    {
-      "description": "Majors Rust — review manuelle",
-      "matchManagers": ["cargo"],
-      "matchUpdateTypes": ["major"],
-      "labels": ["dependencies", "breaking"]
+      "matchPackageNames": ["extism-pdk"],
+      "enabled": false
     }
   ]
 }
