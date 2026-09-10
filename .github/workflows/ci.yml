@@ -180,6 +180,13 @@ jobs:
       # Sans ce droit, GitHub n'émet aucun jeton OIDC et il n'y a rien à échanger contre un
       # credential de publication. C'est ce jeton qui remplace un secret longue durée.
       id-token: write
+    # Un seul job de publication par module à la fois. Deux qui poussent le même module en
+    # parallèle écrasent tour à tour le même tag OCI, et le catalogue finit par référencer un
+    # digest que le tag ne porte plus. On met en file : `cancel-in-progress` interromprait une
+    # publication en cours, ce qui est pire que de la faire attendre.
+    concurrency:
+      group: publish-${{ matrix.module }}
+      cancel-in-progress: false
     strategy:
       fail-fast: false
       max-parallel: 2
