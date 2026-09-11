@@ -162,13 +162,63 @@ jobs:
           if-no-files-found: error
           retention-days: ${{ env.CI_ARTIFACT_RETENTION_DAYS }}
 
-  publish:
-    name: publish (${{ matrix.module }})
-    needs: [changes, wasm]
+  # Ce qui se publie : les modules dont la VERSION a changé, pas tous ceux qu'un commit touche.
+  # Une publication est immuable au registre — republier 0.4.1 avec d'autres octets est refusé.
+  # Sans ce filtre, tout merge qui modifiait un module sans bumper sa version (une montée de
+  # SDK, un attribut ajouté partout) rougissait `main` : les 21 publications refusées, le
+  # quality gate derrière. La version bouge dans la PR de release ; c'est elle qui publie.
+  bumped:
+    name: detect bumped versions
+    needs: changes
     if: >-
       needs.changes.outputs.any == 'true' &&
       ((github.event_name == 'push' && github.ref == 'refs/heads/main') ||
        (github.event_name == 'workflow_dispatch' && inputs.module != ''))
+    runs-on: ubuntu-latest
+    outputs:
+      modules: ${{ steps.pick.outputs.modules }}
+      any: ${{ steps.pick.outputs.any }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Keep the modules whose version changed
+        id: pick
+        env:
+          MODULES: ${{ needs.changes.outputs.modules }}
+          BEFORE: ${{ github.event.before }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          version_of() { sed -n 's/^version *= *"\(.*\)"/\1/p' | head -n 1; }
+
+          # Un dispatch nomme le module à publier : c'est une demande explicite, on la sert.
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            echo "modules=$MODULES" >>"$GITHUB_OUTPUT"
+            echo "any=true" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          picked='[]'
+          for module in $(jq -r '.[]' <<<"$MODULES"); do
+            now="$(version_of <"modules/${module}/Cargo.toml")"
+            before="$(git show "${BEFORE}:modules/${module}/Cargo.toml" 2>/dev/null | version_of || true)"
+            if [ -n "$now" ] && [ "$now" = "$before" ]; then
+              echo "::notice title=${module}::${now} unchanged — nothing to publish; the release PR bumps it"
+              continue
+            fi
+            echo "${module}: ${before:-new} → ${now}"
+            picked="$(jq -c --arg m "$module" '. + [$m]' <<<"$picked")"
+          done
+
+          echo "modules=${picked}" >>"$GITHUB_OUTPUT"
+          echo "any=$(jq 'length > 0' <<<"$picked")" >>"$GITHUB_OUTPUT"
+
+  publish:
+    name: publish (${{ matrix.module }})
+    needs: [changes, wasm, bumped]
+    if: needs.bumped.outputs.any == 'true'
     runs-on: ubuntu-latest
     # La liaison enregistrée au registre exige un environment sur le canal stable : c'est lui
     # qui porte les relecteurs obligatoires, et le meilleur rapport sécurité/effort du
@@ -191,7 +241,7 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        module: ${{ fromJson(needs.changes.outputs.modules) }}
+        module: ${{ fromJson(needs.bumped.outputs.modules) }}
     steps:
       - uses: actions/checkout@v7
 
@@ -240,7 +290,7 @@ jobs:
 
   quality:
     name: quality
-    needs: [changes, rust, wasm, publish]
+    needs: [changes, rust, wasm, bumped, publish]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 1
@@ -250,6 +300,7 @@ jobs:
           ANY: ${{ needs.changes.outputs.any }}
           RUST: ${{ needs.rust.result }}
           WASM: ${{ needs.wasm.result }}
+          BUMPED: ${{ needs.bumped.outputs.any }}
           PUBLISH: ${{ needs.publish.result }}
           EVENT: ${{ github.event_name }}
           REF: ${{ github.ref }}
@@ -266,7 +317,8 @@ jobs:
               echo "Quality gate failed: WASM=$WASM"
               exit 1
             fi
-            if [ "$EVENT" = "push" ] && [ "$REF" = "refs/heads/main" ]; then
+            # Rien de bumpé : la publication est sautée, et c'est le résultat attendu.
+            if [ "$EVENT" = "push" ] && [ "$REF" = "refs/heads/main" ] && [ "$BUMPED" = "true" ]; then
               if [ "$PUBLISH" != "success" ]; then
                 echo "Quality gate failed: PUBLISH=$PUBLISH"
                 exit 1
