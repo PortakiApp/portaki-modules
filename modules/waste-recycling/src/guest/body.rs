@@ -3,6 +3,8 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{ColorDotItem, InfoBanner, ListItem, Text};
 
+use crate::config::bin_swatch;
+
 use super::load::GuestData;
 
 /// Glance / detail shared body: bin rows + optional collection banner.
@@ -21,11 +23,11 @@ pub fn build_bins_body(data: &GuestData, enriched: bool) -> Vec<Component> {
             .collect::<Vec<_>>()
             .join(", ");
 
-        if let Some(color) = bin.color.as_deref().filter(|c| !c.trim().is_empty()) {
+        if let Some(swatch) = bin_swatch(bin.color.as_deref()) {
             children.push(Component::ColorDotItem(
                 ColorDotItem::new()
                     .label(format!("{title} — {subtitle}"))
-                    .color(color),
+                    .swatch(swatch),
             ));
         } else {
             let mut item = ListItem::new().title(title);

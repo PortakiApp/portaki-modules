@@ -7,7 +7,7 @@ use portaki_sdk::sdui::primitives::{
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{color_hex_to_name, load_config, BinRow, Localized};
+use crate::config::{bin_color_name, load_config, BinRow, Localized};
 
 const BIN_SLOTS: usize = 6;
 
@@ -79,7 +79,9 @@ fn bins_to_submit(bins: &[BinRow], lang: &str) -> Vec<crate::commands::BinInput>
                 .collect::<Vec<_>>()
                 .join("\n"),
             items_fr: String::new(),
-            color: b.color.clone().unwrap_or_default(),
+            color: bin_color_name(b.color.as_deref())
+                .unwrap_or_default()
+                .to_string(),
         })
         .collect()
 }
@@ -91,7 +93,7 @@ fn bin_card(index: usize, bin: Option<&BinRow>, lang: &str) -> Component {
         .and_then(|b| b.items.first())
         .map(|item| item.get(lang))
         .unwrap_or("");
-    let color = color_hex_to_name(bin.and_then(|b| b.color.as_deref()));
+    let color = bin_color_name(bin.and_then(|b| b.color.as_deref())).unwrap_or("");
 
     Card::new()
         .title(format!("i18n:host.bin.slot{slot}"))

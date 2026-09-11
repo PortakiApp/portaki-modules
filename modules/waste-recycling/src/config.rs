@@ -1,6 +1,7 @@
 //! Host configuration stored in KV (`config` key).
 
 use portaki_sdk::host;
+use portaki_sdk::prelude::Swatch;
 use portaki_sdk::Result;
 use serde::{Deserialize, Serialize};
 
@@ -63,27 +64,55 @@ pub struct BinRow {
     pub color: Option<String>,
 }
 
-/// Maps host color select values to guest hex colors.
-pub fn color_name_to_hex(name: &str) -> Option<String> {
-    match name.trim().to_ascii_lowercase().as_str() {
-        "yellow" => Some("#f4c020".into()),
-        "green" => Some("#3a8a4d".into()),
-        "brown" => Some("#8b5a2b".into()),
-        "grey" | "gray" => Some("#8b949e".into()),
-        other if other.starts_with('#') => Some(other.to_string()),
-        _ => None,
-    }
+/// The bin tints the host can pick — each one a [`Swatch`] the booklet resolves in its theme.
+///
+/// A name, never a hex: the yellow bin is yellow because the municipality says so, but which
+/// yellow is the shell's call — its palette, a dark theme, contrast.
+const BIN_SWATCHES: [(&str, Swatch); 4] = [
+    ("yellow", Swatch::Yellow),
+    ("green", Swatch::Green),
+    ("brown", Swatch::Brown),
+    ("grey", Swatch::Grey),
+];
+
+/// The hex values stored before swatches, read back as the tint they stood for.
+const LEGACY_HEX: [(&str, &str); 4] = [
+    ("#f4c020", "yellow"),
+    ("#3a8a4d", "green"),
+    ("#8b5a2b", "brown"),
+    ("#8b949e", "grey"),
+];
+
+/// The canonical tint name for a stored or submitted value — `None` for anything else.
+///
+/// Accepts the names the host select sends, `gray`, and the hex strings earlier versions
+/// stored, so configurations saved before swatches keep their dots.
+pub fn bin_color_name(value: Option<&str>) -> Option<&'static str> {
+    let value = value?.trim().to_ascii_lowercase();
+    let value = if value == "gray" {
+        "grey".to_string()
+    } else {
+        value
+    };
+    LEGACY_HEX
+        .iter()
+        .find(|(hex, _)| *hex == value)
+        .map(|(_, name)| *name)
+        .or_else(|| {
+            BIN_SWATCHES
+                .iter()
+                .find(|(name, _)| *name == value)
+                .map(|(name, _)| *name)
+        })
 }
 
-/// Maps stored hex (or name) back to a select value.
-pub fn color_hex_to_name(color: Option<&str>) -> &'static str {
-    match color.map(str::trim).unwrap_or("") {
-        "#f4c020" | "yellow" => "yellow",
-        "#3a8a4d" | "green" => "green",
-        "#8b5a2b" | "brown" => "brown",
-        "#8b949e" | "grey" | "gray" => "grey",
-        _ => "",
-    }
+/// The swatch a bin's dot takes, if its color is one the booklet knows.
+pub fn bin_swatch(value: Option<&str>) -> Option<Swatch> {
+    let name = bin_color_name(value)?;
+    BIN_SWATCHES
+        .iter()
+        .find(|(candidate, _)| *candidate == name)
+        .map(|(_, swatch)| *swatch)
 }
 
 pub fn load_config() -> Result<ModuleConfig> {
@@ -102,4 +131,31 @@ pub fn save_config(config: &ModuleConfig) -> Result<()> {
         portaki_sdk::PortakiError::Storage(format!("config serialize: {error}"))
     })?;
     host::kv::set(CONFIG_KEY, &bytes, None)
+}
+
+#[cfg(test)]
+mod bin_color_tests {
+    use super::*;
+
+    #[test]
+    fn a_host_name_is_its_own_swatch() {
+        assert_eq!(bin_color_name(Some("yellow")), Some("yellow"));
+        assert_eq!(bin_color_name(Some(" Gray ")), Some("grey"));
+        assert_eq!(bin_swatch(Some("brown")), Some(Swatch::Brown));
+    }
+
+    /// Configurations saved before swatches stored hex: their bins keep their dots.
+    #[test]
+    fn a_legacy_hex_reads_as_the_tint_it_stood_for() {
+        assert_eq!(bin_color_name(Some("#F4C020")), Some("yellow"));
+        assert_eq!(bin_swatch(Some("#3a8a4d")), Some(Swatch::Green));
+    }
+
+    /// An arbitrary color is not a tint the booklet knows — no dot rather than a guessed one.
+    #[test]
+    fn anything_else_has_no_swatch() {
+        assert_eq!(bin_swatch(Some("#123456")), None);
+        assert_eq!(bin_swatch(Some("")), None);
+        assert_eq!(bin_swatch(None), None);
+    }
 }
