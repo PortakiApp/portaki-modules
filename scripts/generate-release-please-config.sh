@@ -87,23 +87,19 @@ if [[ ! -s "$MODULES_FILE" ]]; then
 fi
 
 EXISTING_BOOTSTRAP=""
-EXISTING_MANIFEST="{}"
 if [[ -f "$CONFIG_PATH" ]]; then
   EXISTING_BOOTSTRAP="$(jq -r '."bootstrap-sha" // empty' "$CONFIG_PATH")"
-fi
-if [[ -f "$MANIFEST_PATH" ]]; then
-  EXISTING_MANIFEST="$(cat "$MANIFEST_PATH")"
 fi
 
 BOOTSTRAP="${BOOTSTRAP_SHA:-$EXISTING_BOOTSTRAP}"
 
 # Build packages object + merged manifest via Python for stable key order.
-python3 - "$MODULES_FILE" "$EXISTING_MANIFEST" "$BOOTSTRAP" "$TMP_CONFIG" "$TMP_MANIFEST" <<'PY'
+python3 - "$MODULES_FILE" "$BOOTSTRAP" "$TMP_CONFIG" "$TMP_MANIFEST" <<'PY'
 import json
 import sys
 from collections import OrderedDict
 
-modules_path, existing_manifest_raw, bootstrap, out_config, out_manifest = sys.argv[1:6]
+modules_path, bootstrap, out_config, out_manifest = sys.argv[1:5]
 
 modules = []
 with open(modules_path, encoding="utf-8") as f:
@@ -115,8 +111,6 @@ with open(modules_path, encoding="utf-8") as f:
         modules.append((mod_id, ver))
 
 modules.sort(key=lambda x: x[0])
-
-existing_manifest = json.loads(existing_manifest_raw) if existing_manifest_raw.strip() else {}
 
 changelog_sections = [
     {"type": "feat", "section": "Features"},
@@ -161,11 +155,13 @@ for mod_id, ver in modules:
         ],
         "changelog-sections": changelog_sections,
     }
-    # Preserve prior released versions; seed new packages from Cargo.toml.
-    if pkg_path in existing_manifest and existing_manifest[pkg_path]:
-        manifest[pkg_path] = existing_manifest[pkg_path]
-    else:
-        manifest[pkg_path] = ver
+    # The manifest follows the files, always. Every push to main that touches a module
+    # publishes the version its Cargo.toml / portaki.module.json carry (the `ci` publish
+    # job), so the files ARE the last released version -- whether release-please bumped
+    # them or someone did by hand. Preserving the previous entry instead froze the manifest
+    # while hand bumps went out, and the next release PR would have recomputed versions from
+    # that stale base, downgrading the files (checklist 0.3.3 -> 0.2.x).
+    manifest[pkg_path] = ver
 
 config = OrderedDict()
 config["$schema"] = (
