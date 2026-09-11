@@ -3,7 +3,7 @@
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::config::{color_name_to_hex, load_config, save_config, BinRow, Localized, ModuleConfig};
+use crate::config::{bin_color_name, load_config, save_config, BinRow, Localized, ModuleConfig};
 
 /// One bin row from the host form (`bins.N.*`).
 #[portaki_sdk::params]
@@ -111,6 +111,11 @@ fn merge_bin(
             .unwrap_or_else(|| format!("bin-{}", index + 1)),
         title,
         items,
-        color: color_name_to_hex(&input.color).or_else(|| previous.and_then(|p| p.color.clone())),
+        // Le nom de la teinte, plus un hex : c'est le livret qui choisit quel jaune.
+        color: bin_color_name(Some(&input.color))
+            .map(str::to_string)
+            .or_else(|| {
+                previous.and_then(|p| bin_color_name(p.color.as_deref()).map(str::to_string))
+            }),
     })
 }
