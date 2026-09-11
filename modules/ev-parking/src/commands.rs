@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::{load_config, save_config, ModuleConfig, RevealPolicy};
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateConfigArgs {
     #[serde(default)]

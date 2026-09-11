@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::{load_config, save_config, ContactRow, Localized, ModuleConfig};
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ContactInput {
     #[serde(default)]
@@ -17,6 +18,7 @@ pub struct ContactInput {
     pub phone: String,
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateConfigArgs {
     #[serde(default)]

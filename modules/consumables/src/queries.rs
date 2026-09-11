@@ -70,6 +70,7 @@ pub fn list_items(_ctx: Context) -> Result<Vec<ConsumableItemDto>> {
 
 /// Optional host override — guest sessions ignore and use the guest stay id.
 #[portaki_sdk::wire]
+#[portaki_sdk::params]
 #[derive(Default)]
 pub struct ListForStayArgs {
     #[serde(default)]

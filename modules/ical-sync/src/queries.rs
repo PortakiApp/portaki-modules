@@ -25,6 +25,7 @@ pub struct ListSourcesResponse {
     pub sources: Vec<FeedSource>,
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FeedBody {
@@ -35,6 +36,7 @@ pub struct FeedBody {
     pub ics_body: String,
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct ApplyFeedsArgs {

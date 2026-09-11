@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 /// One locale block for create/update.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct SectionLocaleInput {
     pub lang: String,

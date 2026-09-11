@@ -10,6 +10,7 @@ use crate::labels::{self, lang_code};
 use crate::storage;
 
 /// Single item payload for `replaceItems`.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChecklistItemInput {
     #[serde(default)]
@@ -23,6 +24,7 @@ pub struct ChecklistItemInput {
 }
 
 /// Arguments for `replaceItems`.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReplaceItemsArgs {
     /// Structured items array (preferred).
@@ -35,6 +37,7 @@ pub struct ReplaceItemsArgs {
 
 /// Arguments for complete / uncomplete.
 #[portaki_sdk::wire]
+#[portaki_sdk::params]
 pub struct ItemIdArgs {
     pub item_id: Uuid,
 }
@@ -80,6 +83,7 @@ impl ReplaceItemsArgs {
 }
 
 /// Workspace header Save → `{ show_when, items: [{ label }] }`.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateConfigArgs {
     #[serde(default)]

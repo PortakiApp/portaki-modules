@@ -13,6 +13,7 @@ const CONFIG_KEY: &str = "config";
 
 // ── Public schema ────────────────────────────────────────────────────────────
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum PrimaryMethod {
@@ -71,6 +72,7 @@ impl PrimaryMethod {
     }
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum DoorCodeTarget {
@@ -80,6 +82,7 @@ pub enum DoorCodeTarget {
     Apartment,
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum StaffKind {
@@ -88,6 +91,7 @@ pub enum StaffKind {
     Caretaker,
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum RevealPolicy {
@@ -127,6 +131,7 @@ impl RevealPolicy {
 
 /// Fields for the selected primary access method (tagged by `kind`).
 /// Text instructions live in [`ModuleTexts::method_instructions`].
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum MethodFields {
@@ -198,6 +203,7 @@ impl MethodFields {
     }
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct BuildingAccess {
     /// Digicode for gate / building entrance.
@@ -213,6 +219,7 @@ impl BuildingAccess {
     }
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct ParkingLayer {
     #[serde(default)]
@@ -227,6 +234,7 @@ impl ParkingLayer {
     }
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct ArrivalGuide {
     #[serde(default)]
@@ -255,6 +263,7 @@ impl ArrivalGuide {
 }
 
 /// Shared step skeleton (language-invariant).
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AccessStep {
     pub id: String,

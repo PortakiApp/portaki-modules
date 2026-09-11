@@ -7,11 +7,13 @@ use serde::{Deserialize, Serialize};
 use crate::config::{load_config, save_config, ModuleConfig};
 
 #[portaki_sdk::wire]
+#[portaki_sdk::params]
 #[derive(Default)]
 pub struct StayArgs {
     pub stay_id: Option<String>,
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateConfigArgs {
     #[serde(default)]

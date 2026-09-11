@@ -7,6 +7,7 @@ use crate::content::{RulesBundle, RulesPayload};
 use crate::store;
 
 /// Arguments for `getContent` (locale optional — defaults to context locale).
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct GetContentArgs {
     pub locale: Option<String>,

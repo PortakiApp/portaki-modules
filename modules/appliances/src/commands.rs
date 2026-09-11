@@ -7,6 +7,7 @@ use uuid::Uuid;
 use crate::content::{Appliance, ApplianceStatus, MAX_APPLIANCES, MAX_FEATURED};
 use crate::store;
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SaveApplianceArgs {
     pub id: Option<String>,
@@ -29,17 +30,20 @@ pub struct SaveApplianceArgs {
     pub status: ApplianceStatus,
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeleteApplianceArgs {
     pub id: String,
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReorderAppliancesArgs {
     #[serde(rename = "orderedIds")]
     pub ordered_ids: Vec<String>,
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SaveSafetyNoticeArgs {
     #[serde(default, rename = "safetyNotice", alias = "safety_notice")]
@@ -47,6 +51,7 @@ pub struct SaveSafetyNoticeArgs {
 }
 
 /// Host SDUI form payload — nested `devices.N.*` + `safetyNotice`.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReplaceDevicesArgs {
     #[serde(default, rename = "safetyNotice", alias = "safety_notice")]
@@ -55,6 +60,7 @@ pub struct ReplaceDevicesArgs {
     pub devices: Vec<ReplaceDeviceSlot>,
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ReplaceDeviceSlot {
     #[serde(default)]

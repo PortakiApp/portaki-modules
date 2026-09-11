@@ -8,6 +8,7 @@ use crate::config::{save_config, ModuleConfig};
 use crate::entities::WeatherUnits;
 
 /// Arguments for `updateConfig`.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateConfigArgs {
     /// `celsius` or `fahrenheit`.

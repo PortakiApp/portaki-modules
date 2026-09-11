@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 const CONFIG_KEY: &str = "config";
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum RevealPolicy {

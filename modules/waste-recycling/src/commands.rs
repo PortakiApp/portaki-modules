@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::config::{color_name_to_hex, load_config, save_config, BinRow, Localized, ModuleConfig};
 
 /// One bin row from the host form (`bins.N.*`).
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct BinInput {
     #[serde(default)]
@@ -23,6 +24,7 @@ pub struct BinInput {
 }
 
 /// Arguments for `updateConfig`.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateConfigArgs {
     #[serde(default)]

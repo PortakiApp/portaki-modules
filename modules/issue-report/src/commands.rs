@@ -11,6 +11,7 @@ use crate::storage;
 
 /// Arguments for `submit`.
 #[portaki_sdk::wire]
+#[portaki_sdk::params]
 pub struct SubmitArgs {
     pub category: String,
     pub summary: String,

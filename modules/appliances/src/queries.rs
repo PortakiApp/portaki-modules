@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::content::{Appliance, AppliancesBundle, AppliancesPayload};
 use crate::store;
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct GetContentArgs {
     pub locale: Option<String>,
