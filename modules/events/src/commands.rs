@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::config::{load_config, save_config, EventRow, Localized, ModuleConfig};
 use crate::nearby::invalidate_nearby_cache;
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct EventInput {
     #[serde(default)]
@@ -22,6 +23,7 @@ pub struct EventInput {
     pub lng: String,
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateConfigArgs {
     #[serde(default)]

@@ -9,6 +9,7 @@ use crate::config::{
     CALENDAR_SLOTS,
 };
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CalendarInput {
     #[serde(default)]
@@ -27,6 +28,7 @@ pub struct CalendarInput {
     pub channel: String,
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UpdateConfigArgs {
     /// Dynamic list from host StepList (`calendars.{i}.url` / `.label` / `.id` / `.format`).

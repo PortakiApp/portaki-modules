@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::{load_config, save_config, Localized, ModuleConfig, SpotRow};
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SpotInput {
     #[serde(default)]
@@ -19,6 +20,7 @@ pub struct SpotInput {
     pub description: String,
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateConfigArgs {
     #[serde(default)]

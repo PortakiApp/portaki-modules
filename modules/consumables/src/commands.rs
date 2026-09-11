@@ -11,6 +11,7 @@ use crate::status;
 use crate::storage;
 
 /// Single item payload for `replaceItems` / `updateConfig`.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsumableItemInput {
     #[serde(default)]
@@ -26,6 +27,7 @@ pub struct ConsumableItemInput {
 }
 
 /// Arguments for `replaceItems`.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReplaceItemsArgs {
     #[serde(default)]
@@ -76,6 +78,7 @@ impl ReplaceItemsArgs {
 }
 
 /// Workspace header Save → nested form `{ items: [{ label }] }`.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateConfigArgs {
     #[serde(default)]
@@ -176,6 +179,7 @@ fn default_catalog() -> Vec<ConsumableItemInput> {
 
 /// Arguments for guest `submit`.
 #[portaki_sdk::wire]
+#[portaki_sdk::params]
 pub struct SubmitArgs {
     pub item_id: Uuid,
     pub level: String,
@@ -221,6 +225,7 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
 
 /// Arguments for host `updateStatus`.
 #[portaki_sdk::wire]
+#[portaki_sdk::params]
 pub struct UpdateStatusArgs {
     pub report_id: Uuid,
     pub status: String,

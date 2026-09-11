@@ -14,6 +14,7 @@ use crate::weather::{
 };
 
 /// Arguments for `getCurrent`.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetCurrentArgs {
     /// Optional latitude override (defaults to property coordinates).
@@ -23,6 +24,7 @@ pub struct GetCurrentArgs {
 }
 
 /// Arguments for `getForecast`.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetForecastArgs {
     /// Optional latitude override.

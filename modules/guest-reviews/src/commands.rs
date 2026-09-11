@@ -12,6 +12,7 @@ use crate::config::{load_config, normalize_url, save_config, Localized, ModuleCo
 /// Arguments for `updateConfig` (flat form fields from host SDUI Save).
 ///
 /// Platform / QR flags are `Option<bool>` so a missing key keeps the KV value.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateConfigArgs {
     #[serde(default)]
@@ -88,6 +89,7 @@ fn resolve_platform_args(args: &UpdateConfigArgs, existing: &ModuleConfig) -> (b
     (existing.platform_airbnb, existing.platform_portaki)
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SubmitReviewArgs {
     pub rating: u8,

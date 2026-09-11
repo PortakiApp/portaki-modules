@@ -7,6 +7,7 @@ use uuid::Uuid;
 use crate::model::{lang_code, SectionLocaleInput, SectionView};
 use crate::store;
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SaveSectionArgs {
     /// Section id from host form (`""` / missing → create).
@@ -25,11 +26,13 @@ pub struct SaveSectionArgs {
     pub lang: String,
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeleteSectionArgs {
     pub id: Uuid,
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReorderArgs {
     pub ordered_ids: Vec<Uuid>,

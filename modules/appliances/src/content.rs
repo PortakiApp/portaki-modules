@@ -8,6 +8,7 @@ pub const MAX_APPLIANCES: usize = 10;
 pub const MAX_FEATURED: usize = 5;
 
 /// Guest-visible vs host-only hidden.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum ApplianceStatus {

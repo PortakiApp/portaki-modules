@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::model::SectionView;
 use crate::store;
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ListSectionsArgs {
     pub locale: Option<String>,

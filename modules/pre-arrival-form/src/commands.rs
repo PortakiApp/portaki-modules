@@ -27,6 +27,7 @@ struct CompletedPayload {
 /// Question flags are `Option<bool>` so a missing key keeps the KV value.
 /// A present `false` must stick — never use `default = true` (empty `{}`
 /// payloads used to reset every toggle ON and look like a fake Save).
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateConfigArgs {
     #[serde(default)]
@@ -77,6 +78,7 @@ fn apply_flag(target: &mut bool, value: Option<bool>) {
 
 /// Arguments for `submit`.
 #[portaki_sdk::wire]
+#[portaki_sdk::params]
 pub struct SubmitArgs {
     pub arrival_time_estimated: Option<String>,
     pub guest_occasion: Option<String>,

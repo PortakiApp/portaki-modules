@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::{load_config, save_config, FacilityRow, Localized, ModuleConfig};
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct FacilityInput {
     #[serde(default)]
@@ -18,6 +19,7 @@ pub struct FacilityInput {
     pub hours: String,
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateConfigArgs {
     #[serde(default)]

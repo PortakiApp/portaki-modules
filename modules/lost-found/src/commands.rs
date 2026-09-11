@@ -13,6 +13,7 @@ use crate::storage;
 
 /// Arguments for guest `submit`.
 #[portaki_sdk::wire]
+#[portaki_sdk::params]
 pub struct SubmitArgs {
     pub kind: String,
     pub item_description: String,
@@ -52,6 +53,7 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
 
 /// Arguments for host `submitFound` — one report per stay (shared description/status).
 #[portaki_sdk::wire]
+#[portaki_sdk::params]
 pub struct SubmitFoundArgs {
     /// Target stays (property-scoped). Empty when only [`Self::stay_id`] is set.
     #[serde(default)]
@@ -106,6 +108,7 @@ pub fn send_checkout_follow_up(ctx: Context, _args: EmptyArgs) -> Result<()> {
 
 /// Arguments for host `updateStatus` — change workflow status after create.
 #[portaki_sdk::wire]
+#[portaki_sdk::params]
 pub struct UpdateStatusArgs {
     pub report_id: Uuid,
     pub status: String,
@@ -123,6 +126,7 @@ pub fn update_status(ctx: Context, args: UpdateStatusArgs) -> Result<()> {
 }
 
 /// Arguments for `updateConfig`.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateConfigArgs {
     #[serde(default)]

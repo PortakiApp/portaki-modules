@@ -11,6 +11,7 @@ use serde_json::Value;
 const TEXTS_PREFIX: &str = "texts/";
 
 /// Language-specific titles and free-text fields.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct ModuleTexts {
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -40,6 +41,7 @@ impl ModuleTexts {
 }
 
 /// Title/detail for one arrival step (matched to shared config by `id`).
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct StepText {
     pub id: String,

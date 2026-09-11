@@ -13,6 +13,7 @@ use crate::config::{
 };
 use crate::texts::{lang_code, save_texts, ModuleTexts, StepText};
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct StepInput {
     #[serde(default)]
@@ -32,6 +33,7 @@ pub struct StepInput {
     pub detail_en: String,
 }
 
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UpdateConfigArgs {
     // ── New schema (structured) ──────────────────────────────────────────────

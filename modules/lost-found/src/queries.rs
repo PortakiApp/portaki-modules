@@ -39,6 +39,7 @@ impl From<crate::entities::LostFoundReport> for LostFoundReportRow {
 
 /// Optional host override — guest sessions ignore and use the guest stay id.
 #[portaki_sdk::wire]
+#[portaki_sdk::params]
 #[derive(Default)]
 pub struct ListForStayArgs {
     #[serde(default)]

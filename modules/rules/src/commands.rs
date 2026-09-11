@@ -7,6 +7,7 @@ use crate::content::{RuleItem, RulesBundle, RulesPayload};
 use crate::store;
 
 /// One rule row from the host form (`items.N.*`) for the active locale.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RuleItemInput {
     #[serde(default)]
@@ -27,6 +28,7 @@ pub struct RuleItemInput {
 }
 
 /// Arguments for `saveContent` / `updateConfig` (workspace Save chrome).
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SaveContentArgs {
     /// Structured items for the active request locale (preferred).
