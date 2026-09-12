@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v0.4.1...ical-sync-v0.5.0) (2026-09-12)
+
+
+### Features
+
+* **catalog:** mark maturity and marketplace order ([9b9a3d0](https://github.com/PortakiApp/portaki-modules/commit/9b9a3d069d65151d266187094cf888ce0008dfc9))
+* describe operation arguments with #[params] ([86f0fca](https://github.com/PortakiApp/portaki-modules/commit/86f0fcacc7ad3d17f370e819d0d6c045f51b95f4))
+* **ical-sync:** add host calendar import module ([b2324cd](https://github.com/PortakiApp/portaki-modules/commit/b2324cd5328a90052c3a54a6496bbd8875184467))
+* **ical-sync:** add host sync emails via Wasm ([6fdcb49](https://github.com/PortakiApp/portaki-modules/commit/6fdcb499e0a344d9631daca1f908fe4957194d3e))
+* **ical-sync:** declare per-feed ICS format ([a14f67f](https://github.com/PortakiApp/portaki-modules/commit/a14f67fd65ff6bba8c2f4103811a8f44b38981b4))
+* **ical-sync:** detect booking channel per stay row ([7609290](https://github.com/PortakiApp/portaki-modules/commit/76092900b9179dfa35b209827aab7add905d0832))
+* **ical-sync:** merge format + platform into one selector ([a678eef](https://github.com/PortakiApp/portaki-modules/commit/a678eef70b06a84f2d811258dd5770096d45c05c))
+* **ical-sync:** multi-calendar sync and stats card ([ec339e1](https://github.com/PortakiApp/portaki-modules/commit/ec339e1ea24018622e32790e7f0f10fec62e211b))
+* **ical-sync:** persist calendars[] only ([67d54b1](https://github.com/PortakiApp/portaki-modules/commit/67d54b11d2462157aae6b48839950c554fa3b479))
+* **modules:** déclarer les permissions des vingt et un modules ([b4f9e89](https://github.com/PortakiApp/portaki-modules/commit/b4f9e8902e6ed016f79a71c123f87da4c0b6d697))
+* **modules:** Portaki author and sheet drawer hosts ([7366277](https://github.com/PortakiApp/portaki-modules/commit/7366277942fa71574f9059d40d43cd75536e79aa))
+
+
+### Bug Fixes
+
+* **ical-sync:** derive Default for ModuleConfig ([d7b073f](https://github.com/PortakiApp/portaki-modules/commit/d7b073f4bd59f31478f216431e9ddfe7e72f84af))
+
 ## [0.4.1] — 2026-07-28
 
 ### Changed

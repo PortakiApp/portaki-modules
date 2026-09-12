@@ -9,7 +9,7 @@
     "fr": "Prochains départs depuis la gare la plus proche du logement.",
     "en": "Upcoming departures from the property's nearest station."
   },
-  "version": "0.1.3",
+  "version": "0.2.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -18,7 +18,9 @@
   "icon": "train",
   "type": "official",
   "maturity": "beta",
-  "permissions": ["platform"],
+  "permissions": [
+    "platform"
+  ],
   "sortOrder": 200,
   "guestSurfaces": [
     {
