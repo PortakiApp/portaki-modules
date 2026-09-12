@@ -62,8 +62,16 @@ jobs:
           echo "changed=true" >>"$GITHUB_OUTPUT"
           echo "Pushed regenerated release-please config; action will read tip via API."
 
+      # Sans `continue-on-error` : depuis le 21 juillet, ce pas échouait à chaque passage sans que
+      # rien ne le dise. release-please retrouvait #14 étiquetée « pending release », tentait ses
+      # quatre releases, prenait un 403 et s'arrêtait là — sans jamais ouvrir la PR de release
+      # suivante. Deux mois de versions figées, sur des runs verts.
+      #
+      # Le 403 venait de la règle GitHub sur les workflows : poser un tag sur un vieux commit dont
+      # les `.github/workflows/**` diffèrent de `main` demande `Workflows: write` à une App, que
+      # `Portaki CI` n'a pas. Sur le commit de tête, la même release passe — d'où l'échec qui ne
+      # se déclenche que sur un arriéré. Si l'arriéré se reforme, accorder `Workflows: write`.
       - uses: googleapis/release-please-action@v5
-        continue-on-error: true
         with:
           token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
