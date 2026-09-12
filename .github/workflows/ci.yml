@@ -93,6 +93,12 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      # Vingt-deux endroits portent la version du SDK depuis que les manifestes la declarent :
+      # le pin du workspace, et les vingt et un `portaki.module.json`. Sans ce controle, la
+      # divergence n'apparaitrait qu'a la publication, module par module.
+      - name: SDK pin
+        run: ./scripts/check-sdk-pin.sh
+
       - name: Format
         run: cargo fmt --all -- --check
 

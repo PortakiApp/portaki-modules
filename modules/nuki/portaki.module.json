@@ -10,6 +10,7 @@
     "en": "Nuki smart lock — keypad codes for the Access module."
   },
   "version": "0.3.0",
+  "requiresModuleSdk": "4.0.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",

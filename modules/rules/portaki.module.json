@@ -10,6 +10,7 @@
     "en": "House rules in French and English, easy for guests to read."
   },
   "version": "0.4.0",
+  "requiresModuleSdk": "4.0.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
