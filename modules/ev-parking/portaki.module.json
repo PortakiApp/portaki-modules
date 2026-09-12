@@ -9,7 +9,7 @@
     "fr": "Place réservée, code barrière et PIN borne pour les voyageurs en véhicule électrique.",
     "en": "Reserved spot, gate code, and charger PIN for guests with an electric vehicle."
   },
-  "version": "0.2.1",
+  "version": "0.3.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -18,7 +18,10 @@
   "icon": "zap",
   "type": "official",
   "maturity": "stable",
-  "permissions": ["kv", "platform"],
+  "permissions": [
+    "kv",
+    "platform"
+  ],
   "sortOrder": 170,
   "hostSurfaces": [
     {

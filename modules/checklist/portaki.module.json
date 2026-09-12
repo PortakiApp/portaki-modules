@@ -9,7 +9,7 @@
     "fr": "Items cochables, progression sauvegardée.",
     "en": "Checkable items with saved progress."
   },
-  "version": "0.3.3",
+  "version": "0.4.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -18,7 +18,12 @@
   "icon": "check-circle",
   "type": "official",
   "maturity": "stable",
-  "permissions": ["events", "kv", "platform", "repo"],
+  "permissions": [
+    "events",
+    "kv",
+    "platform",
+    "repo"
+  ],
   "sortOrder": 60,
   "hostSurfaces": [
     {

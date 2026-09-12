@@ -9,7 +9,7 @@
     "fr": "Bac par bac : quoi jeter où, et jours de collecte.",
     "en": "Bin by bin: what goes where, and collection days."
   },
-  "version": "0.2.2",
+  "version": "0.3.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -18,7 +18,10 @@
   "icon": "recycle",
   "type": "official",
   "maturity": "stable",
-  "permissions": ["kv", "platform"],
+  "permissions": [
+    "kv",
+    "platform"
+  ],
   "sortOrder": 160,
   "hostSurfaces": [
     {

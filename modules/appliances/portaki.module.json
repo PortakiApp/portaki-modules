@@ -9,7 +9,7 @@
     "fr": "Four, lave-linge, clim : consignes courtes pour vos voyageurs.",
     "en": "Oven, washer, AC: short tips for your guests."
   },
-  "version": "0.3.3",
+  "version": "0.4.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -18,7 +18,10 @@
   "icon": "plug",
   "type": "official",
   "maturity": "stable",
-  "permissions": ["platform", "repo"],
+  "permissions": [
+    "platform",
+    "repo"
+  ],
   "sortOrder": 120,
   "hostSurfaces": [
     {
