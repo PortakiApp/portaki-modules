@@ -10,6 +10,7 @@
     "en": "Emergency numbers, pharmacy, doctor, and your direct line."
   },
   "version": "0.3.0",
+  "requiresModuleSdk": "4.0.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",

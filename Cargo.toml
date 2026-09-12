@@ -23,18 +23,20 @@ rust-version = "1.75"
 #
 # Une version fixe rend le contraire vrai : monter de SDK devient un commit qu'on relit.
 #
-# Mais monter ce fichier ne PUBLIE rien, et c'est le piège.
+# Et qui se PUBLIE, depuis que les manifestes déclarent le SDK.
 #
-# Ce qui part au registre tamponne `requiresModuleSdk` depuis le graphe résolu ici : tant que les
-# vingt et un artefacts ne sont pas reconstruits, ils annoncent l'ancien SDK, quoi que dise cette
-# ligne. Or release-please attribue les commits PAR CHEMIN — son journal le dit lui-même,
-# « No commits for path: modules/access-guide, skipping ». Un commit qui ne touche que la racine
-# n'est attribué à aucun paquet, donc ni `chore(deps):` ni `fix(deps):` n'y déclenchent de
-# release. Constaté sur fe307f0 puis ce5107f : deux montées, zéro publication.
+# Ce qui part au registre annonce `requiresModuleSdk`, et release-please attribue les commits PAR
+# CHEMIN — son journal le dit, « No commits for path: modules/access-guide, skipping ». Un bump
+# qui ne touchait que ce fichier n'était attribué à aucun paquet : fe307f0 puis ce5107f, deux
+# montées, zéro publication, les vingt et un artefacts annonçant encore l'ancien SDK.
 #
-# Deux décisions se contredisent ici : « un seul endroit à bumper » et « un module se publie
-# quand son chemin change ». Tant que les deux tiennent, une montée de SDK demande un geste
-# explicite pour republier les vingt et un.
+# Chaque `portaki.module.json` déclare donc son `requiresModuleSdk`. Une montée touche les
+# vingt et un chemins, elle est attribuable, elle publie. Un manifeste DIT ce dont il a besoin au
+# lieu qu'on le déduise du graphe à la publication — ce qui était le défaut de l'ancien
+# `branch = "main"`, sous une autre forme.
+#
+# Le prix est vingt-deux endroits à tenir ensemble. `scripts/check-sdk-pin.sh` les compare à
+# chaque CI, et le CLI refuse de publier un manifeste qui annonce autre chose que le SDK lié.
 portaki-sdk = "4.0.0"
 portaki-sdk-macros = "4.0.0"
 portaki-connectors = "4.0.0"

@@ -10,6 +10,7 @@
     "en": "Bin by bin: what goes where, and collection days."
   },
   "version": "0.3.0",
+  "requiresModuleSdk": "4.0.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",

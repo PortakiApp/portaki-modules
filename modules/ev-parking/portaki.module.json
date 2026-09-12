@@ -10,6 +10,7 @@
     "en": "Reserved spot, gate code, and charger PIN for guests with an electric vehicle."
   },
   "version": "0.3.0",
+  "requiresModuleSdk": "4.0.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
