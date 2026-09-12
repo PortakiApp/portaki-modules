@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v0.6.0...lost-found-v0.6.1) (2026-09-12)
+
+
+### Bug Fixes
+
+* **deps:** declare the SDK in every module manifest ([6e1eb6a](https://github.com/PortakiApp/portaki-modules/commit/6e1eb6a9ab35640062106838a3218ba8bb7d551c))
+
 ## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v0.5.6...lost-found-v0.6.0) (2026-09-12)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v0.5.0...ical-sync-v0.5.1) (2026-09-12)
+
+
+### Bug Fixes
+
+* **deps:** declare the SDK in every module manifest ([6e1eb6a](https://github.com/PortakiApp/portaki-modules/commit/6e1eb6a9ab35640062106838a3218ba8bb7d551c))
+
 ## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v0.4.1...ical-sync-v0.5.0) (2026-09-12)
 
 

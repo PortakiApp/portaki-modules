@@ -9,7 +9,7 @@
     "fr": "Serrure Nuki — codes clavier pour le module Accès.",
     "en": "Nuki smart lock — keypad codes for the Access module."
   },
-  "version": "0.3.0",
+  "version": "0.3.1",
   "requiresModuleSdk": "4.0.0",
   "author": {
     "name": "Portaki",
