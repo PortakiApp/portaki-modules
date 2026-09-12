@@ -9,7 +9,7 @@
     "fr": "Adresses et liens utiles rangés par thème.",
     "en": "Useful places and links, grouped by theme."
   },
-  "version": "0.3.0",
+  "version": "0.3.1",
   "requiresModuleSdk": "4.0.0",
   "author": {
     "name": "Portaki",

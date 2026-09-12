@@ -9,7 +9,7 @@
     "fr": "Les voyageurs signalent un souci pendant le séjour — sans WhatsApp.",
     "en": "Guests report a problem during the stay — no WhatsApp needed."
   },
-  "version": "0.3.0",
+  "version": "0.3.1",
   "requiresModuleSdk": "4.0.0",
   "author": {
     "name": "Portaki",

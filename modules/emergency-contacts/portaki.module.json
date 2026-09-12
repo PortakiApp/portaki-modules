@@ -9,7 +9,7 @@
     "fr": "Numéros d'urgence, pharmacie, médecin, ligne directe.",
     "en": "Emergency numbers, pharmacy, doctor, and your direct line."
   },
-  "version": "0.3.0",
+  "version": "0.3.1",
   "requiresModuleSdk": "4.0.0",
   "author": {
     "name": "Portaki",
