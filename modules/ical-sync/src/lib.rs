@@ -31,5 +31,10 @@ portaki_sdk::portaki_module!(
 #[portaki_sdk::capability(required, id = "core.storage")]
 pub const STORAGE: &str = "core.storage";
 
-#[portaki_sdk::capability(required, id = "core.ical.import")]
-pub const ICAL_IMPORT: &str = "core.ical.import";
+/// La plateforme invoque la synchro ; le plan dit à quelle cadence.
+///
+/// Remplace `core.ical.import`, retiré du catalogue : il nommait un format là où le cœur ne
+/// devrait connaître qu'un service, et promettait une fréquence que l'ordonnanceur ne
+/// pouvait pas tenir.
+#[portaki_sdk::capability(required, id = "core.modules.scheduled_sync")]
+pub const SCHEDULED_SYNC: &str = "core.modules.scheduled_sync";
