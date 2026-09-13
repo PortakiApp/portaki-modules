@@ -47,7 +47,7 @@ Copy lives in `email_i18n/{fr,en}.json`. Dedup is orchestrator-side (module + st
 | Capability | Role |
 |------------|------|
 | `core.storage` | **Required** — KV config + sync UID snapshot |
-| `core.ical.import` | **Required** — plan allowance for calendar import |
+| `core.modules.scheduled_sync` | **Required** — the host calls the module on a schedule; the plan sets the cadence |
 
 ## KV config
 
