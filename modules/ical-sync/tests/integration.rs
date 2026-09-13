@@ -13,7 +13,7 @@ use serial_test::serial;
 #[serial]
 fn update_config_and_list_sources_many_calendars() {
     MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE, capability::core::ICAL_IMPORT])
+        .with_capabilities(&[capability::core::STORAGE, capability::core::MODULES_SCHEDULED_SYNC])
         .run(|ctx| {
             update_config(
                 ctx.clone(),
@@ -74,7 +74,7 @@ fn update_config_and_list_sources_many_calendars() {
 #[serial]
 fn update_config_detects_format_from_url_when_omitted() {
     MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE, capability::core::ICAL_IMPORT])
+        .with_capabilities(&[capability::core::STORAGE, capability::core::MODULES_SCHEDULED_SYNC])
         .run(|ctx| {
             update_config(
                 ctx.clone(),
@@ -100,7 +100,7 @@ fn update_config_detects_format_from_url_when_omitted() {
 #[serial]
 fn legacy_primary_secondary_still_accepted() {
     MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE, capability::core::ICAL_IMPORT])
+        .with_capabilities(&[capability::core::STORAGE, capability::core::MODULES_SCHEDULED_SYNC])
         .run(|ctx| {
             update_config(
                 ctx.clone(),
@@ -128,7 +128,7 @@ fn legacy_primary_secondary_still_accepted() {
 #[serial]
 fn apply_feeds_parses_ics_and_updates_summary() {
     MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE, capability::core::ICAL_IMPORT])
+        .with_capabilities(&[capability::core::STORAGE, capability::core::MODULES_SCHEDULED_SYNC])
         .run(|ctx| {
             update_config(
                 ctx.clone(),
@@ -190,7 +190,7 @@ SUMMARY:Reserved - Not available\nEND:VEVENT\nEND:VCALENDAR\n";
 #[serial]
 fn apply_feeds_blocks_only_still_succeeds() {
     MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE, capability::core::ICAL_IMPORT])
+        .with_capabilities(&[capability::core::STORAGE, capability::core::MODULES_SCHEDULED_SYNC])
         .run(|ctx| {
             update_config(
                 ctx.clone(),
@@ -248,7 +248,7 @@ fn parse_stay_rows_unit() {
 #[serial]
 fn apply_feeds_empty_body_counts_as_failed() {
     MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE, capability::core::ICAL_IMPORT])
+        .with_capabilities(&[capability::core::STORAGE, capability::core::MODULES_SCHEDULED_SYNC])
         .run(|ctx| {
             update_config(
                 ctx.clone(),
@@ -288,7 +288,7 @@ fn apply_feeds_empty_body_counts_as_failed() {
 #[serial]
 fn apply_feeds_second_pass_is_idempotent_for_same_uids() {
     MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE, capability::core::ICAL_IMPORT])
+        .with_capabilities(&[capability::core::STORAGE, capability::core::MODULES_SCHEDULED_SYNC])
         .run(|ctx| {
             update_config(
                 ctx.clone(),
@@ -345,7 +345,7 @@ DTEND;VALUE=DATE:20260812\nSUMMARY:Tom Weber\nEND:VEVENT\n";
 #[serial]
 fn apply_feeds_reports_the_channel_on_every_row() {
     MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE, capability::core::ICAL_IMPORT])
+        .with_capabilities(&[capability::core::STORAGE, capability::core::MODULES_SCHEDULED_SYNC])
         .run(|ctx| {
             update_config(
                 ctx.clone(),
@@ -402,7 +402,7 @@ DTEND;VALUE=DATE:20260812\nSUMMARY:Tom\nEND:VEVENT\nEND:VCALENDAR\n";
 #[serial]
 fn google_mirrored_feed_reports_unknown_not_google() {
     MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE, capability::core::ICAL_IMPORT])
+        .with_capabilities(&[capability::core::STORAGE, capability::core::MODULES_SCHEDULED_SYNC])
         .run(|ctx| {
             update_config(
                 ctx.clone(),
@@ -451,7 +451,7 @@ SUMMARY:Famille Bernard\nEND:VEVENT\nEND:VCALENDAR\n";
 #[serial]
 fn host_declared_platform_carries_an_opaque_channel_manager_feed() {
     MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE, capability::core::ICAL_IMPORT])
+        .with_capabilities(&[capability::core::STORAGE, capability::core::MODULES_SCHEDULED_SYNC])
         .run(|ctx| {
             update_config(
                 ctx.clone(),
@@ -505,7 +505,7 @@ SUMMARY:Nina Faure\nEND:VEVENT\nEND:VCALENDAR\n";
 #[serial]
 fn airbnb_url_prefills_the_platform_when_the_host_leaves_it_blank() {
     MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE, capability::core::ICAL_IMPORT])
+        .with_capabilities(&[capability::core::STORAGE, capability::core::MODULES_SCHEDULED_SYNC])
         .run(|ctx| {
             update_config(
                 ctx.clone(),
