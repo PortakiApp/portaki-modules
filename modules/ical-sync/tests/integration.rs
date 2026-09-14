@@ -6,6 +6,7 @@ use ical_sync::{
 };
 use portaki_sdk::capability;
 use portaki_sdk::contracts::booking_channel::{BookingChannel, ChannelSignal};
+use portaki_sdk::host::email::SendEmailArgs;
 use portaki_test_utils::MockContext;
 use serial_test::serial;
 
@@ -585,4 +586,105 @@ DTEND;VALUE=DATE:20260903\nSUMMARY:Lou Girard\nEND:VEVENT\n";
                 ChannelSignal::FeedUrlHost
             );
         });
+}
+
+fn failing_feed(id: &str) -> FeedBody {
+    FeedBody {
+        id: id.into(),
+        provider: Some("booking".into()),
+        ics_body: String::new(),
+    }
+}
+
+/// Runs `applyFeeds` over `feeds` as one invocation on a frozen day: (failed, succeeded, emails).
+fn apply_in_one_invocation(feeds: Vec<FeedBody>) -> (i32, i32, Vec<SendEmailArgs>) {
+    let now = chrono::DateTime::parse_from_rfc3339("2026-09-14T06:00:00Z")
+        .expect("instant")
+        .with_timezone(&chrono::Utc);
+    MockContext::host()
+        .with_capabilities(&[
+            capability::core::STORAGE,
+            capability::core::MODULES_SCHEDULED_SYNC,
+        ])
+        .with_now(now)
+        .run_with(|ctx, host| {
+            let result = apply_feeds(
+                ctx,
+                ApplyFeedsArgs {
+                    guest_lang: "fr".into(),
+                    feeds,
+                },
+            )
+            .expect("apply");
+            (result.failed, result.succeeded, host.sent_emails())
+        })
+}
+
+fn listed_feeds(body: &str) -> usize {
+    body.lines().filter(|line| line.starts_with("• ")).count()
+}
+
+/// Eight feeds fail beside a working one: one `sync-failed` email names all eight, and the run
+/// sends two emails in all (failure + stay-imported), under the per-invocation cap.
+#[test]
+#[serial]
+fn eight_failed_feeds_share_one_failure_email() {
+    let ics = "BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:u1\n\
+DTSTART;VALUE=DATE:20260801\nDTEND;VALUE=DATE:20260805\n\
+SUMMARY:Reserved\nDESCRIPTION:Name: Sofia Rossi\nEND:VEVENT\nEND:VCALENDAR\n";
+    let mut feeds: Vec<FeedBody> = (1..=8)
+        .map(|index| failing_feed(&format!("broken-{index}")))
+        .collect();
+    feeds.push(FeedBody {
+        id: "primary".into(),
+        provider: Some("airbnb".into()),
+        ics_body: ics.into(),
+    });
+
+    let (failed, succeeded, sent) = apply_in_one_invocation(feeds);
+    assert_eq!((failed, succeeded), (8, 1));
+    let ids: Vec<&str> = sent.iter().map(|email| email.email_id.as_str()).collect();
+    assert_eq!(sent.len(), 2, "{ids:?}");
+    assert!(ids.iter().any(|id| id.starts_with("stay-imported-")));
+
+    let failures: Vec<&SendEmailArgs> = sent
+        .iter()
+        .filter(|email| email.email_id.starts_with("sync-failed-"))
+        .collect();
+    assert_eq!(failures.len(), 1, "{ids:?}");
+    let failure = failures[0];
+    assert!(failure.content.subject.en.starts_with("8 calendars"));
+    assert!(failure.content.subject.fr.starts_with("8 calendriers"));
+    assert_eq!(listed_feeds(&failure.content.body.fr), 8);
+    assert_eq!(listed_feeds(&failure.content.body.en), 8);
+    assert!(!failure.content.body.en.contains("… and"));
+}
+
+/// The multi-feed email id is keyed on the day and the set of failed feeds, not their order; a
+/// lone failure keeps its per-feed id; past ten feeds the list names ten and counts the rest.
+#[test]
+#[serial]
+fn failure_email_is_keyed_on_the_failed_set_and_bounded() {
+    let email_id = |names: &[&str]| -> String {
+        let (_, _, sent) =
+            apply_in_one_invocation(names.iter().copied().map(failing_feed).collect());
+        assert_eq!(sent.len(), 1);
+        sent[0].email_id.clone()
+    };
+    let abc = email_id(&["a", "b", "c"]);
+    assert!(abc.starts_with("sync-failed-2026-09-14-"), "{abc}");
+    assert_eq!(abc, email_id(&["c", "a", "b"]));
+    assert_ne!(abc, email_id(&["a", "b"]));
+    assert_eq!(email_id(&["a"]), "sync-failed-a-2026-09-14");
+
+    let twelve = (1..=12)
+        .map(|index| failing_feed(&format!("broken-{index}")))
+        .collect();
+    let (failed, _, sent) = apply_in_one_invocation(twelve);
+    assert_eq!(failed, 12);
+    assert_eq!(sent.len(), 1);
+    let body = &sent[0].content.body.en;
+    assert_eq!(listed_feeds(body), 10);
+    assert!(body.contains("… and 2 more"), "{body}");
+    assert!(sent[0].content.body.fr.contains("… et 2 autre(s)"));
 }
