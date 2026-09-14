@@ -1,4 +1,7 @@
 //! Module-owned transactional emails via `host::email::send`.
+//!
+//! Guest-typed text is quoted within a fixed length — the report keeps it whole; see
+//! [`crate::email_text`].
 
 use portaki_sdk::host::email::{
     self, EmailAudience, LocalizedEmailText, ModuleEmailCta, ModuleEmailSdui, SendEmailArgs,
@@ -8,8 +11,15 @@ use uuid::Uuid;
 
 use crate::description;
 use crate::email_i18n;
+use crate::email_text::{self, Quoted};
 use crate::entities::LostFoundReport;
 use crate::storage;
+
+/// Longest run of joined declarations quoted in the J+2 follow-up, in chars.
+///
+/// Each declaration is already quoted within [`email_text::GUEST_TEXT_EMAIL_MAX_CHARS`]; a
+/// stay with many of them would still overflow `limits::EMAIL_BODY_MAX_CHARS` without this.
+const JOINED_DESCRIPTIONS_MAX_CHARS: usize = 3000;
 
 /// Guest self-report → notify workspace owner (host audience — FR/EN).
 pub fn notify_host_submitted(
@@ -20,14 +30,26 @@ pub fn notify_host_submitted(
     contact_hint: Option<&str>,
     details: Option<&str>,
 ) -> Result<()> {
-    let mut body = format!("Un voyageur a signalé un objet ({kind}) :\n\n{item_description}");
-    if let Some(hint) = contact_hint {
+    let description = email_text::quote_guest_text(item_description);
+    let hint = contact_hint.map(email_text::quote_guest_text);
+    let extra = details.map(email_text::quote_guest_text);
+    let truncated = description.truncated
+        || [&hint, &extra]
+            .into_iter()
+            .flatten()
+            .any(|quoted| quoted.truncated);
+
+    let mut body = format!(
+        "Un voyageur a signalé un objet ({kind}) :\n\n{}",
+        description.text
+    );
+    if let Some(hint) = &hint {
         body.push_str("\n\nContact / lieu : ");
-        body.push_str(hint);
+        body.push_str(&hint.text);
     }
-    if let Some(extra) = details {
+    if let Some(extra) = &extra {
         body.push_str("\n\nDétails : ");
-        body.push_str(extra);
+        body.push_str(&extra.text);
     }
 
     email::send(&SendEmailArgs {
@@ -42,7 +64,11 @@ pub fn notify_host_submitted(
             title: Some(LocalizedEmailText::new("Nouveau signalement", "New report")),
             body: LocalizedEmailText::both(body),
             cta: Some(ModuleEmailCta {
-                label: LocalizedEmailText::new("Voir le logement", "View property"),
+                // No URL: with `property_id` set, the platform links the property page.
+                label: email_text::cta_label(
+                    truncated,
+                    LocalizedEmailText::new("Voir le logement", "View property"),
+                ),
                 url: None,
                 portaki_action: None,
             }),
@@ -59,7 +85,8 @@ pub fn notify_guest_host_found(
     report_id: Uuid,
     plain_description: &str,
 ) -> Result<()> {
-    let vars = [("description", plain_description)];
+    let description = email_text::quote_guest_text(plain_description);
+    let vars = [("description", description.text.as_str())];
     email::send(&SendEmailArgs {
         email_id: format!("host-found-{report_id}"),
         audience: EmailAudience::Guest,
@@ -69,7 +96,10 @@ pub fn notify_guest_host_found(
             title: Some(email_i18n::text("email.hostFound.title")),
             body: email_i18n::text_with("email.hostFound.body", &vars),
             cta: Some(ModuleEmailCta {
-                label: email_i18n::text("email.hostFound.cta"),
+                label: email_text::cta_label(
+                    description.truncated,
+                    email_i18n::text("email.hostFound.cta"),
+                ),
                 url: None,
                 portaki_action: Some("open-module:lost-found:default".into()),
             }),
@@ -97,7 +127,7 @@ pub fn send_checkout_follow_up(ctx: &Context) -> Result<()> {
         return Ok(());
     };
 
-    let vars = [("description", joined.as_str())];
+    let vars = [("description", joined.text.as_str())];
     email::send(&SendEmailArgs {
         email_id: "checkout-j2".into(),
         audience: EmailAudience::Guest,
@@ -107,7 +137,10 @@ pub fn send_checkout_follow_up(ctx: &Context) -> Result<()> {
             title: Some(email_i18n::text("email.checkoutFollowUp.title")),
             body: email_i18n::text_with("email.checkoutFollowUp.body", &vars),
             cta: Some(ModuleEmailCta {
-                label: email_i18n::text("email.checkoutFollowUp.cta"),
+                label: email_text::cta_label(
+                    joined.truncated,
+                    email_i18n::text("email.checkoutFollowUp.cta"),
+                ),
                 url: None,
                 portaki_action: Some("open-module:lost-found:default".into()),
             }),
@@ -118,18 +151,28 @@ pub fn send_checkout_follow_up(ctx: &Context) -> Result<()> {
     })
 }
 
-fn join_descriptions(reports: &[LostFoundReport]) -> Option<String> {
-    let parts: Vec<String> = reports
+/// The stay's declarations, each quoted, joined, and bounded as a whole.
+fn join_descriptions(reports: &[LostFoundReport]) -> Option<Quoted> {
+    let parts: Vec<Quoted> = reports
         .iter()
         .map(|row| description::to_plain_text(&row.item_description))
         .map(|text| text.trim().to_string())
         .filter(|text| !text.is_empty())
+        .map(|text| email_text::quote_guest_text(&text))
         .collect();
     if parts.is_empty() {
-        None
-    } else {
-        Some(parts.join(" · "))
+        return None;
     }
+    let joined = parts
+        .iter()
+        .map(|part| part.text.as_str())
+        .collect::<Vec<_>>()
+        .join(" · ");
+    let bounded = email_text::clip_chars(&joined, JOINED_DESCRIPTIONS_MAX_CHARS);
+    Some(Quoted {
+        truncated: bounded.truncated || parts.iter().any(|part| part.truncated),
+        text: bounded.text,
+    })
 }
 
 #[cfg(test)]

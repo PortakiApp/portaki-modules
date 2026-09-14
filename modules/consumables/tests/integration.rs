@@ -7,9 +7,10 @@ use consumables::{
     list_for_stay, list_items, list_open_count, render_guest_form, render_home_card,
     render_host_main, render_host_stats, render_host_stay, replace_items, reset_test_store,
     seed_defaults, submit, update_config, update_status, ConsumableItemInput, ListForStayArgs,
-    ReplaceItemsArgs, SubmitArgs, UpdateConfigArgs, UpdateStatusArgs, LEVEL_DEFAULT,
-    STATUS_DEFAULT,
+    ReplaceItemsArgs, SubmitArgs, UpdateConfigArgs, UpdateStatusArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
+    LEVEL_DEFAULT, STATUS_DEFAULT,
 };
+use portaki_sdk::limits;
 use portaki_sdk::prelude::EmptyArgs;
 use portaki_sdk::sdui::component::Component;
 use portaki_sdk::sdui::surface::Surface;
@@ -326,5 +327,72 @@ fn submit_rejects_unknown_item() {
                 },
             );
             assert!(err.is_err());
+        });
+}
+
+/// A 20 000-char guest note: the report keeps it whole, the host email quotes at most
+/// `GUEST_TEXT_EMAIL_MAX_CHARS` chars then `…`, and the CTA reads « Voir plus ».
+#[test]
+#[serial]
+fn long_note_is_stored_whole_and_quoted_in_the_host_email() {
+    reset_test_store();
+    let note = format!("{}!", "serviette ".repeat(2_000).trim_end());
+    assert_eq!(note.chars().count(), 20_000);
+
+    MockContext::guest()
+        .with_property(Property::default())
+        .run_with(|ctx, host| {
+            replace_items(
+                ctx.clone(),
+                ReplaceItemsArgs {
+                    items: vec![ConsumableItemInput {
+                        label: String::new(),
+                        label_fr: "Serviettes".into(),
+                        label_en: "Towels".into(),
+                        sort_order: 0,
+                        low_threshold: 0,
+                    }],
+                    items_json: None,
+                },
+            )
+            .expect("replace");
+            let item_id = list_items(ctx.clone()).expect("items")[0].id;
+
+            submit(
+                ctx.clone(),
+                SubmitArgs {
+                    item_id,
+                    level: LEVEL_DEFAULT.into(),
+                    note: Some(note.clone()),
+                },
+            )
+            .expect("submit");
+
+            let rows = list_for_stay(ctx.clone(), ListForStayArgs::default()).expect("list");
+            assert_eq!(rows[0].note.as_deref(), Some(note.as_str()));
+
+            let email = host.sent_emails().into_iter().last().expect("host email");
+            for (body, prefix) in [
+                (&email.content.body.fr, "Précision : "),
+                (&email.content.body.en, "Note: "),
+            ] {
+                assert!(body.chars().count() <= limits::EMAIL_BODY_MAX_CHARS);
+                let quoted = body
+                    .split("\n\n")
+                    .find(|part| part.ends_with('…'))
+                    .expect("quoted note");
+                let kept = quoted
+                    .trim_end_matches('…')
+                    .strip_prefix(prefix)
+                    .expect("note prefix");
+                assert!(kept.chars().count() <= GUEST_TEXT_EMAIL_MAX_CHARS);
+                assert!(note.starts_with(kept));
+            }
+
+            let cta = email.content.cta.as_ref().expect("cta");
+            assert_eq!(cta.label.fr, "Voir plus");
+            assert_eq!(cta.label.en, "See more");
+            assert_eq!(email.property_id, Some(ctx.property_id));
+            assert!(email.action_url.is_none());
         });
 }

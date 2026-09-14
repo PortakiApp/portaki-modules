@@ -8,6 +8,7 @@ use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::config::{load_config, normalize_url, save_config, Localized, ModuleConfig};
+use crate::email_text;
 
 /// Arguments for `updateConfig` (flat form fields from host SDUI Save).
 ///
@@ -137,16 +138,22 @@ pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
         .filter(|name| !name.is_empty())
         .unwrap_or_else(|| "Voyageur".to_string());
 
+    // Guest text is quoted within a fixed length; the stored review keeps it whole.
+    let quoted_name = email_text::quote_guest_text(&guest_name);
+    let quoted_comment = email_text::quote_guest_text(&comment);
+    let truncated = quoted_name.truncated || quoted_comment.truncated;
+
     let stars = "★".repeat(args.rating as usize) + &"☆".repeat(5 - args.rating as usize);
-    let mut body = format!("{guest_name} — {stars} ({}/5)", args.rating);
+    let mut body = format!("{} — {stars} ({}/5)", quoted_name.text, args.rating);
     if !comment.is_empty() {
         body.push_str("\n\n");
-        body.push_str(&comment);
+        body.push_str(&quoted_comment.text);
     }
 
     let stay_id = ctx.guest.as_ref().map(|g| g.session_id);
 
-    email::send(&SendEmailArgs {
+    // The review is saved: a refused email is logged, it does not fail the guest's submit.
+    let sent = email::send(&SendEmailArgs {
         email_id: "review-submitted".into(),
         audience: EmailAudience::Host,
         content: ModuleEmailSdui {
@@ -161,7 +168,11 @@ pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
             )),
             body: LocalizedEmailText::both(body),
             cta: Some(ModuleEmailCta {
-                label: LocalizedEmailText::new("Voir le logement", "View property"),
+                // No URL: with `property_id` set, the platform links the property page.
+                label: email_text::cta_label(
+                    truncated,
+                    LocalizedEmailText::new("Voir le logement", "View property"),
+                ),
                 url: None,
                 portaki_action: None,
             }),
@@ -169,7 +180,10 @@ pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
         stay_id,
         property_id: Some(ctx.property_id),
         action_url: None,
-    })?;
+    });
+    if let Err(error) = sent {
+        email_text::log_send_failure("guest_reviews_host_email_failed", &error);
+    }
 
     Ok(())
 }

@@ -7,6 +7,7 @@ use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
 use crate::category;
+use crate::email_text;
 use crate::storage;
 
 /// Arguments for `submit`.
@@ -28,13 +29,22 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
 
     let _ = storage::create(stay_id, category.clone(), summary.clone(), details.clone())?;
 
-    let mut body = format!("Catégorie : {category}\n\n{summary}");
-    if let Some(extra) = &details {
+    // Guest text is quoted within a fixed length; the stored report keeps it whole.
+    let quoted_summary = email_text::quote_guest_text(&summary);
+    let quoted_details = details.as_deref().map(email_text::quote_guest_text);
+    let truncated = quoted_summary.truncated
+        || quoted_details
+            .as_ref()
+            .is_some_and(|quoted| quoted.truncated);
+
+    let mut body = format!("Catégorie : {category}\n\n{}", quoted_summary.text);
+    if let Some(extra) = &quoted_details {
         body.push_str("\n\n");
-        body.push_str(extra);
+        body.push_str(&extra.text);
     }
 
-    email::send(&SendEmailArgs {
+    // The report is saved: a refused email is logged, it does not fail the guest's submit.
+    let sent = email::send(&SendEmailArgs {
         email_id: format!("submitted-{stay_id}"),
         audience: EmailAudience::Host,
         content: ModuleEmailSdui {
@@ -49,7 +59,11 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
             )),
             body: LocalizedEmailText::both(body),
             cta: Some(ModuleEmailCta {
-                label: LocalizedEmailText::new("Voir le logement", "View property"),
+                // No URL: with `property_id` set, the platform links the property page.
+                label: email_text::cta_label(
+                    truncated,
+                    LocalizedEmailText::new("Voir le logement", "View property"),
+                ),
                 url: None,
                 portaki_action: None,
             }),
@@ -57,7 +71,10 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
         stay_id: Some(stay_id),
         property_id: Some(ctx.property_id),
         action_url: None,
-    })?;
+    });
+    if let Err(error) = sent {
+        email_text::log_send_failure("issue_report_host_email_failed", &error);
+    }
     Ok(())
 }
 

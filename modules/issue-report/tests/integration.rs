@@ -4,8 +4,9 @@ use serial_test::serial;
 
 use issue_report::{
     list_for_stay, list_recent, render_guest_form, render_home_card, render_host_main,
-    reset_test_store, submit, SubmitArgs,
+    reset_test_store, submit, SubmitArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
 };
+use portaki_sdk::limits;
 use portaki_sdk::sdui::component::Component;
 use portaki_sdk::sdui::surface::Surface;
 use portaki_test_utils::{MockContext, Property};
@@ -154,5 +155,50 @@ fn host_main_lists_recent_after_guest_submit() {
             assert!(json.contains("host.main.banner"));
             assert!(json.contains("host.main.status.open"));
             assert!(json.contains("danger-triangle") || json.contains("sparkles"));
+        });
+}
+
+/// A 20 000-char description: the report keeps it whole, the host email quotes at most
+/// `GUEST_TEXT_EMAIL_MAX_CHARS` chars then `…`, and the CTA reads « Voir plus ».
+#[test]
+#[serial]
+fn long_details_are_stored_whole_and_quoted_in_the_host_email() {
+    reset_test_store();
+    let details = format!("{}!", "robinet ".repeat(2_500).trim_end());
+    assert_eq!(details.chars().count(), 20_000);
+
+    MockContext::guest()
+        .with_property(Property::default())
+        .run_with(|ctx, host| {
+            submit(
+                ctx.clone(),
+                SubmitArgs {
+                    category: "appliance".into(),
+                    summary: "Fuite sous l'évier".into(),
+                    details: Some(details.clone()),
+                },
+            )
+            .expect("submit");
+
+            let rows = list_for_stay(ctx.clone()).expect("list");
+            assert_eq!(rows[0].details.as_deref(), Some(details.as_str()));
+
+            let email = host.sent_emails().into_iter().last().expect("host email");
+            let body = &email.content.body.fr;
+            assert!(body.chars().count() <= limits::EMAIL_BODY_MAX_CHARS);
+            assert!(body.contains("Fuite sous l'évier"));
+            let quoted = body
+                .split("\n\n")
+                .find(|part| part.ends_with('…'))
+                .expect("quoted details");
+            let kept = quoted.trim_end_matches('…');
+            assert!(kept.chars().count() <= GUEST_TEXT_EMAIL_MAX_CHARS);
+            assert!(details.starts_with(kept));
+
+            let cta = email.content.cta.as_ref().expect("cta");
+            assert_eq!(cta.label.fr, "Voir plus");
+            assert_eq!(cta.label.en, "See more");
+            assert_eq!(email.property_id, Some(ctx.property_id));
+            assert!(email.action_url.is_none());
         });
 }

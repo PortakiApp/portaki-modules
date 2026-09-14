@@ -1,11 +1,12 @@
 //! Integration-style unit tests with `portaki-test-utils`.
 
 use portaki_sdk::capability;
+use portaki_sdk::limits;
 use serial_test::serial;
 
 use guest_reviews::{
     get_config, render_home_card, render_post_stay_card, submit_review, update_config,
-    SubmitReviewArgs, UpdateConfigArgs,
+    SubmitReviewArgs, UpdateConfigArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
 };
 use portaki_sdk::sdui::component::Component;
 use portaki_sdk::sdui::surface::Surface;
@@ -324,5 +325,60 @@ fn host_main_renders_platform_toggles() {
             let surface = render_host_main(ctx);
             assert!(contains_component_type(&surface, "ToggleRow"));
             assert!(contains_component_type(&surface, "Card"));
+        });
+}
+
+/// A 20 000-char comment: the stored review keeps it whole, the host email quotes at most
+/// `GUEST_TEXT_EMAIL_MAX_CHARS` chars then `…`, and the CTA reads « Voir plus ».
+#[test]
+#[serial]
+fn long_comment_is_stored_whole_and_quoted_in_the_host_email() {
+    let comment = format!("{}!", "parfait ".repeat(2_500).trim_end());
+    assert_eq!(comment.chars().count(), 20_000);
+
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv(
+            "config",
+            serde_json::to_vec(&json!({
+                "platform_airbnb": false,
+                "platform_portaki": true
+            }))
+            .unwrap(),
+        )
+        .run_with(|ctx, host| {
+            submit_review(
+                ctx.clone(),
+                SubmitReviewArgs {
+                    rating: 5,
+                    comment: comment.clone(),
+                },
+            )
+            .expect("submit");
+
+            let stored: Vec<SubmitReviewArgs> = serde_json::from_slice(
+                &portaki_sdk::host::kv::get("reviews")
+                    .expect("kv")
+                    .expect("reviews"),
+            )
+            .expect("reviews json");
+            assert_eq!(stored.last().expect("review").comment, comment);
+
+            let email = host.sent_emails().into_iter().last().expect("host email");
+            let body = &email.content.body.fr;
+            assert!(body.chars().count() <= limits::EMAIL_BODY_MAX_CHARS);
+            let quoted = body
+                .split("\n\n")
+                .find(|part| part.ends_with('…'))
+                .expect("quoted comment");
+            let kept = quoted.trim_end_matches('…');
+            assert!(kept.chars().count() <= GUEST_TEXT_EMAIL_MAX_CHARS);
+            assert!(comment.starts_with(kept));
+
+            let cta = email.content.cta.as_ref().expect("cta");
+            assert_eq!(cta.label.fr, "Voir plus");
+            assert_eq!(cta.label.en, "See more");
+            assert_eq!(email.property_id, Some(ctx.property_id));
+            assert!(email.action_url.is_none());
         });
 }

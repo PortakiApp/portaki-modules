@@ -6,6 +6,7 @@ mod description;
 mod email_context;
 mod email_i18n;
 mod email_send;
+mod email_text;
 mod entities;
 mod guest;
 mod host;
@@ -23,6 +24,7 @@ pub use config::{load_config, ModuleConfig};
 pub use email_context::{
     build_email_context, email_context, EmailContextArgs, EmailContextResponse,
 };
+pub use email_text::GUEST_TEXT_EMAIL_MAX_CHARS;
 pub use entities::LostFoundReport;
 pub use guest::{render_guest_form, render_home_card, render_post_stay_card};
 pub use host::{render_host_create, render_host_main, render_host_stay};

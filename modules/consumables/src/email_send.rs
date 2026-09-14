@@ -1,10 +1,15 @@
 //! Module-owned transactional emails via `host::email::send`.
+//!
+//! Guest-typed text is quoted within a fixed length — the report keeps it whole; see
+//! [`crate::email_text`].
 
 use portaki_sdk::host::email::{
     self, EmailAudience, LocalizedEmailText, ModuleEmailCta, ModuleEmailSdui, SendEmailArgs,
 };
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
+
+use crate::email_text;
 
 /// Guest shortage report → notify workspace owner.
 pub fn notify_host_submitted(
@@ -24,13 +29,23 @@ pub fn notify_host_submitted(
         _ => "missing",
     };
 
-    let mut body_fr = format!("Un voyageur signale un consommable ({level_fr}) :\n\n{item_label}");
-    let mut body_en = format!("A guest reported a consumable ({level_en}):\n\n{item_label}");
-    if let Some(extra) = note {
+    let label = email_text::quote_guest_text(item_label);
+    let note = note.map(email_text::quote_guest_text);
+    let truncated = label.truncated || note.as_ref().is_some_and(|quoted| quoted.truncated);
+
+    let mut body_fr = format!(
+        "Un voyageur signale un consommable ({level_fr}) :\n\n{}",
+        label.text
+    );
+    let mut body_en = format!(
+        "A guest reported a consumable ({level_en}):\n\n{}",
+        label.text
+    );
+    if let Some(extra) = &note {
         body_fr.push_str("\n\nPrécision : ");
-        body_fr.push_str(extra);
+        body_fr.push_str(&extra.text);
         body_en.push_str("\n\nNote: ");
-        body_en.push_str(extra);
+        body_en.push_str(&extra.text);
     }
 
     email::send(&SendEmailArgs {
@@ -48,7 +63,11 @@ pub fn notify_host_submitted(
             )),
             body: LocalizedEmailText::new(body_fr, body_en),
             cta: Some(ModuleEmailCta {
-                label: LocalizedEmailText::new("Voir le logement", "View property"),
+                // No URL: with `property_id` set, the platform links the property page.
+                label: email_text::cta_label(
+                    truncated,
+                    LocalizedEmailText::new("Voir le logement", "View property"),
+                ),
                 url: None,
                 portaki_action: None,
             }),
