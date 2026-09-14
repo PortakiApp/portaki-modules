@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::email_send;
+use crate::email_text;
 use crate::labels::{self, lang_code};
 use crate::level;
 use crate::status;
@@ -212,14 +213,17 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
         note.clone(),
     )?;
 
-    email_send::notify_host_submitted(
+    // The report is saved: a refused email is logged, it does not fail the guest's submit.
+    if let Err(error) = email_send::notify_host_submitted(
         ctx.property_id,
         stay_id,
         report.id,
         &item_label,
         &level,
         note.as_deref(),
-    )?;
+    ) {
+        email_text::log_send_failure("consumables_host_email_failed", &error);
+    }
     Ok(())
 }
 

@@ -1,19 +1,23 @@
 //! Integration-style unit tests with `portaki-test-utils`.
 
+use chrono::Duration;
 use serial_test::serial;
 use uuid::Uuid;
 
 use lost_found::{
     build_email_context, list_for_stay, list_recent, render_guest_form, render_home_card,
     render_host_create, render_host_main, render_host_stay, render_post_stay_card,
-    reset_test_store, submit, submit_found, update_config, update_status, EmailContextArgs,
-    ListForStayArgs, SubmitArgs, SubmitFoundArgs, UpdateConfigArgs, UpdateStatusArgs,
-    STATUS_DEFAULT,
+    reset_test_store, send_checkout_follow_up, submit, submit_found, update_config, update_status,
+    EmailContextArgs, ListForStayArgs, SubmitArgs, SubmitFoundArgs, UpdateConfigArgs,
+    UpdateStatusArgs, GUEST_TEXT_EMAIL_MAX_CHARS, STATUS_DEFAULT,
 };
-use portaki_sdk::prelude::EmailTemplateKey;
+use portaki_sdk::host::email::{EmailAudience, EmailError};
+use portaki_sdk::limits;
+use portaki_sdk::prelude::{EmailTemplateKey, PortakiError};
+use portaki_sdk::sdui::action::EmptyArgs;
 use portaki_sdk::sdui::component::Component;
 use portaki_sdk::sdui::surface::Surface;
-use portaki_test_utils::{MockContext, Property};
+use portaki_test_utils::{Booking, MockContext, Property};
 
 fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
     fn walk(node: &Component, type_name: &str) -> bool {
@@ -511,5 +515,196 @@ fn update_config_persists_host_note() {
             let surface = render_host_main(ctx);
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("Lobby closet."));
+        });
+}
+
+/// The J+2 tick lands inside the platform's guest window (checkout + 7 days), so the
+/// after-stay rule lets it through; the same send past the window is refused.
+#[test]
+#[serial]
+fn checkout_follow_up_sends_at_j2_and_stops_after_the_guest_window() {
+    for (days_after_checkout, accepted) in [(2, true), (8, false)] {
+        reset_test_store();
+        let builder = MockContext::guest().with_property(Property::default());
+        let stay_id = builder.context().guest.expect("guest").session_id;
+        // The invocation stay is the guest's own, so the SDK judges its checkout.
+        let booking = Booking {
+            id: stay_id,
+            ..Booking::default()
+        };
+        let now = booking.check_out + Duration::days(days_after_checkout);
+
+        builder
+            .with_stay(booking)
+            .with_now(now)
+            .run_with(|ctx, host| {
+                submit(
+                    ctx.clone(),
+                    SubmitArgs {
+                        kind: "lost".into(),
+                        item_description: "Écharpe bleue".into(),
+                        contact_hint: None,
+                        details: None,
+                    },
+                )
+                .expect("submit");
+
+                let result = send_checkout_follow_up(ctx, EmptyArgs {});
+                let follow_ups: Vec<_> = host
+                    .sent_emails()
+                    .into_iter()
+                    .filter(|email| email.email_id == "checkout-j2")
+                    .collect();
+
+                if accepted {
+                    result.expect("J+2 follow-up");
+                    assert_eq!(follow_ups.len(), 1);
+                    assert_eq!(follow_ups[0].audience, EmailAudience::Guest);
+                    assert_eq!(follow_ups[0].stay_id, Some(stay_id));
+                } else {
+                    assert!(matches!(
+                        result,
+                        Err(PortakiError::Email(EmailError::StayEnded))
+                    ));
+                    assert!(follow_ups.is_empty());
+                }
+            });
+    }
+}
+
+/// A 20 000-char guest description: the report keeps it whole, the host email quotes at most
+/// `GUEST_TEXT_EMAIL_MAX_CHARS` chars then `…`, and the CTA reads « Voir plus ».
+#[test]
+#[serial]
+fn long_description_is_stored_whole_and_quoted_in_the_host_email() {
+    reset_test_store();
+    let description = format!("{}!", "écharpe ".repeat(2_500).trim_end());
+    assert_eq!(description.chars().count(), 20_000);
+
+    MockContext::guest()
+        .with_property(Property::default())
+        .run_with(|ctx, host| {
+            submit(
+                ctx.clone(),
+                SubmitArgs {
+                    kind: "lost".into(),
+                    item_description: description.clone(),
+                    contact_hint: None,
+                    details: None,
+                },
+            )
+            .expect("submit");
+
+            let rows = list_for_stay(ctx.clone(), ListForStayArgs::default()).expect("list");
+            assert_eq!(rows[0].item_description, description);
+
+            let email = host.sent_emails().into_iter().last().expect("host email");
+            let body = &email.content.body.fr;
+            assert!(body.chars().count() <= limits::EMAIL_BODY_MAX_CHARS);
+            let quoted = body
+                .split("\n\n")
+                .find(|part| part.ends_with('…'))
+                .expect("quoted description");
+            let kept = quoted.trim_end_matches('…');
+            assert!(kept.chars().count() <= GUEST_TEXT_EMAIL_MAX_CHARS);
+            assert!(description.starts_with(kept));
+            // Cut on a word boundary: the original goes on with a space.
+            assert!(description[kept.len()..].starts_with(' '));
+
+            let cta = email.content.cta.as_ref().expect("cta");
+            assert_eq!(cta.label.fr, "Voir plus");
+            assert_eq!(cta.label.en, "See more");
+            assert_eq!(email.property_id, Some(ctx.property_id));
+            assert!(email.action_url.is_none());
+
+            // Nothing cut: the email keeps its own CTA label.
+            submit(
+                ctx.clone(),
+                SubmitArgs {
+                    kind: "found".into(),
+                    item_description: "Parapluie".into(),
+                    contact_hint: None,
+                    details: None,
+                },
+            )
+            .expect("short submit");
+            let email = host.sent_emails().into_iter().last().expect("second email");
+            assert_eq!(email.content.cta.expect("cta").label.fr, "Voir le logement");
+        });
+}
+
+/// The report is what the guest submits; the email is a side effect. Past the per-invocation
+/// cap the email is refused, and the submit still succeeds with the report saved.
+#[test]
+#[serial]
+fn a_refused_host_email_does_not_fail_the_submit() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run_with(|ctx, host| {
+            for index in 0..=limits::EMAIL_SENDS_PER_INVOCATION {
+                submit(
+                    ctx.clone(),
+                    SubmitArgs {
+                        kind: "lost".into(),
+                        item_description: format!("Objet {index}"),
+                        contact_hint: None,
+                        details: None,
+                    },
+                )
+                .expect("submit despite a refused email");
+            }
+            let rows = list_for_stay(ctx, ListForStayArgs::default()).expect("list");
+            assert_eq!(rows.len(), limits::EMAIL_SENDS_PER_INVOCATION + 1);
+            assert_eq!(host.sent_emails().len(), limits::EMAIL_SENDS_PER_INVOCATION);
+        });
+}
+
+/// Many long declarations: each is quoted, the joined run is bounded, and the J+2 body stays
+/// within the platform cap in every locale.
+#[test]
+#[serial]
+fn checkout_follow_up_quotes_long_declarations_within_the_body_cap() {
+    reset_test_store();
+    let builder = MockContext::guest().with_property(Property::default());
+    let stay_id = builder.context().guest.expect("guest").session_id;
+    let long = format!("{}!", "valise ".repeat(1_000).trim_end());
+
+    builder.clone().run(|ctx| {
+        for _ in 0..12 {
+            submit(
+                ctx.clone(),
+                SubmitArgs {
+                    kind: "lost".into(),
+                    item_description: long.clone(),
+                    contact_hint: None,
+                    details: None,
+                },
+            )
+            .expect("submit");
+        }
+    });
+
+    let booking = Booking {
+        id: stay_id,
+        ..Booking::default()
+    };
+    let now = booking.check_out + Duration::days(2);
+    builder
+        .with_stay(booking)
+        .with_now(now)
+        .run_with(|ctx, host| {
+            send_checkout_follow_up(ctx, EmptyArgs {}).expect("J+2 follow-up");
+            let email = host.sent_emails().into_iter().last().expect("follow-up");
+            assert_eq!(email.email_id, "checkout-j2");
+            let body = &email.content.body;
+            for text in [&body.fr, &body.en]
+                .into_iter()
+                .chain(body.translations.values())
+            {
+                assert!(text.chars().count() <= limits::EMAIL_BODY_MAX_CHARS);
+            }
+            assert!(body.fr.contains('…'));
+            assert_eq!(email.content.cta.expect("cta").label.fr, "Voir plus");
         });
 }

@@ -7,6 +7,7 @@ use uuid::Uuid;
 use crate::config::{save_config, ModuleConfig};
 use crate::description;
 use crate::email_send;
+use crate::email_text;
 use crate::kind;
 use crate::status;
 use crate::storage;
@@ -40,14 +41,17 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
         status::DEFAULT.to_string(),
     )?;
 
-    email_send::notify_host_submitted(
+    // The report is saved: a refused email is logged, it does not fail the guest's submit.
+    if let Err(error) = email_send::notify_host_submitted(
         ctx.property_id,
         stay_id,
         &kind,
         &item_description,
         contact_hint.as_deref(),
         details.as_deref(),
-    )?;
+    ) {
+        email_text::log_send_failure("lost_found_host_email_failed", &error);
+    }
     Ok(())
 }
 
@@ -94,7 +98,10 @@ pub fn submit_found(ctx: Context, args: SubmitFoundArgs) -> Result<()> {
             status.clone(),
         )?;
 
-        email_send::notify_guest_host_found(stay_id, report.id, &plain)?;
+        // The report is saved: a refused email is logged, the other stays still get theirs.
+        if let Err(error) = email_send::notify_guest_host_found(stay_id, report.id, &plain) {
+            email_text::log_send_failure("lost_found_guest_email_failed", &error);
+        }
     }
 
     Ok(())

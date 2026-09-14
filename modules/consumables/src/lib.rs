@@ -1,7 +1,9 @@
 //! Portaki consumables module — host catalog + guest shortage reports.
 
 mod commands;
+mod email_i18n;
 mod email_send;
+mod email_text;
 mod entities;
 mod guest;
 mod host;
@@ -16,6 +18,7 @@ pub use commands::{
     replace_items, seed_defaults, submit, update_config, update_status, ConsumableItemInput,
     ReplaceItemsArgs, SubmitArgs, UpdateConfigArgs, UpdateStatusArgs,
 };
+pub use email_text::GUEST_TEXT_EMAIL_MAX_CHARS;
 pub use entities::{ConsumableItem, ConsumableReport};
 pub use guest::{render_guest_form, render_home_card};
 pub use host::{render_host_main, render_host_stats, render_host_stay};
