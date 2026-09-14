@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.2](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.3.1...local-guide-v0.3.2) (2026-09-14)
+
+
+### Bug Fixes
+
+* **deps:** move every module to SDK 5.0.0 ([b359890](https://github.com/PortakiApp/portaki-modules/commit/b359890b7dcadac933be0067d174fbd27a8ba318))
+* **deps:** move every module to SDK 5.1.0 ([78889c8](https://github.com/PortakiApp/portaki-modules/commit/78889c82a61c209dc87d10771a8e0e58c659d837))
+
 ## [0.3.1](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.3.0...local-guide-v0.3.1) (2026-09-12)
 
 
