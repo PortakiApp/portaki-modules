@@ -1,4 +1,8 @@
 {
+  "email.syncFailedMany.subject": "{count} calendriers ne se synchronisent plus",
+  "email.syncFailedMany.title": "{count} calendriers ne se synchronisent plus",
+  "email.syncFailedMany.body": "Nous n'arrivons plus à lire {count} de vos calendriers iCal. Les nouveaux séjours de ces sources ne sont plus importés en attendant.\n\nLogement : {property}\nDernière sync réussie : {lastSuccess}\nErreur : {error}\n\nCalendriers concernés :\n{feeds}\n\nVérifiez les liens iCal dans les paramètres du logement, ou régénérez-les depuis votre plateforme de réservation.",
+  "email.syncFailedMany.more": "… et {count} autre(s)",
   "email.syncFailed.subject": "Synchronisation calendrier échouée",
   "email.syncFailed.eyebrow": "Synchronisation",
   "email.syncFailed.title": "Synchronisation calendrier échouée",

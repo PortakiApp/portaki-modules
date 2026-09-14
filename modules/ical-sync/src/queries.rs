@@ -193,16 +193,39 @@ fn dispatch_sync_emails(
     let property_name = ctx.property.name.as_str();
     let day_key = day_key_from_now(now);
 
-    for (feed_id, format, label) in failed_feeds {
-        let source = email_send::source_label(*format, label.as_deref());
-        let _ = email_send::notify_sync_failed(
-            property_id,
-            property_name,
-            feed_id,
-            &source,
-            previous_last_success,
-            &day_key,
-        );
+    // One failed feed keeps its own email; several share one, so a run sends at most two
+    // emails (failure + stay-imported or digest) — see `email_send::notify_sync_failed_many`.
+    match failed_feeds {
+        [] => {}
+        [(feed_id, format, label)] => {
+            let source = email_send::source_label(*format, label.as_deref());
+            let _ = email_send::notify_sync_failed(
+                property_id,
+                property_name,
+                feed_id,
+                &source,
+                previous_last_success,
+                &day_key,
+            );
+        }
+        many => {
+            let failed: Vec<(String, String)> = many
+                .iter()
+                .map(|(feed_id, format, label)| {
+                    (
+                        feed_id.clone(),
+                        email_send::source_label(*format, label.as_deref()),
+                    )
+                })
+                .collect();
+            let _ = email_send::notify_sync_failed_many(
+                property_id,
+                property_name,
+                &failed,
+                previous_last_success,
+                &day_key,
+            );
+        }
     }
 
     if diff.is_empty() {

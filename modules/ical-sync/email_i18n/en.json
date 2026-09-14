@@ -1,4 +1,8 @@
 {
+  "email.syncFailedMany.subject": "{count} calendars failed to sync",
+  "email.syncFailedMany.title": "{count} calendars failed to sync",
+  "email.syncFailedMany.body": "We can no longer read {count} of your iCal calendars. New stays from these sources are not imported until this is fixed.\n\nProperty: {property}\nLast successful sync: {lastSuccess}\nError: {error}\n\nAffected calendars:\n{feeds}\n\nCheck the iCal links in the property settings, or regenerate them from your booking platform.",
+  "email.syncFailedMany.more": "… and {count} more",
   "email.syncFailed.subject": "Calendar sync failed",
   "email.syncFailed.eyebrow": "Sync",
   "email.syncFailed.title": "Calendar sync failed",

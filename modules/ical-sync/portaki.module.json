@@ -10,7 +10,7 @@
     "en": "Import stays from an Airbnb, Booking, or other .ics calendar export URL."
   },
   "version": "0.5.1",
-  "requiresModuleSdk": "5.0.0",
+  "requiresModuleSdk": "5.1.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
@@ -55,8 +55,8 @@
       "id": "sync-failed",
       "audience": "host",
       "description": {
-        "fr": "Échec de lecture d’un flux iCal — nouveaux séjours non importés",
-        "en": "iCal feed read failure — new stays not imported"
+        "fr": "Échec de lecture d’un ou plusieurs flux iCal (un seul email par synchronisation) — nouveaux séjours non importés",
+        "en": "iCal feed read failure, one or more feeds (one email per sync) — new stays not imported"
       },
       "trigger": {
         "type": "onApplyFeeds"
