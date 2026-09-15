@@ -354,6 +354,7 @@ mod tests {
             ),
             checkout_at: None,
             booking_channel: None,
+            ..StayContext::default()
         });
 
         with_host(host, ctx.clone(), || {

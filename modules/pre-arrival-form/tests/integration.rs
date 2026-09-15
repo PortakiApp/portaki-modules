@@ -125,6 +125,7 @@ fn submit_then_status_and_thanks_card() {
                 checkin_at: Some(Utc::now() + Duration::days(2)),
                 checkout_at: Some(Utc::now() + Duration::days(5)),
                 booking_channel: None,
+                ..StayContext::default()
             });
 
             let before = get_status(ctx.clone()).expect("status");
@@ -174,6 +175,7 @@ fn completed_form_locks_after_checkin() {
                 checkin_at: Some(Utc::now() + Duration::hours(2)),
                 checkout_at: None,
                 booking_channel: None,
+                ..StayContext::default()
             });
             submit(ctx.clone(), sample_submit()).expect("submit before check-in");
 
@@ -182,6 +184,7 @@ fn completed_form_locks_after_checkin() {
                 checkin_at: Some(Utc::now() - Duration::hours(1)),
                 checkout_at: None,
                 booking_channel: None,
+                ..StayContext::default()
             });
 
             let form = render_guest_form(ctx.clone());
@@ -240,6 +243,7 @@ fn home_card_gated_omits_form_teaser_keeps_police_fragment() {
                 checkin_at: Some(Utc::now() + Duration::days(10)),
                 checkout_at: Some(Utc::now() + Duration::days(14)),
                 booking_channel: None,
+                ..StayContext::default()
             });
 
             let surface = render_home_card(ctx);
@@ -282,6 +286,7 @@ fn send_form_available_noops_when_gated() {
                 checkin_at: Some(Utc::now() + Duration::days(5)),
                 checkout_at: None,
                 booking_channel: None,
+                ..StayContext::default()
             });
             send_form_available(ctx, portaki_sdk::prelude::EmptyArgs {})
                 .expect("sendFormAvailable gated no-op");
@@ -312,6 +317,7 @@ fn send_form_available_ok_when_confirm() {
                 checkin_at: Some(Utc::now() + Duration::days(20)),
                 checkout_at: None,
                 booking_channel: None,
+                ..StayContext::default()
             });
             send_form_available(ctx, portaki_sdk::prelude::EmptyArgs {})
                 .expect("sendFormAvailable when available");
