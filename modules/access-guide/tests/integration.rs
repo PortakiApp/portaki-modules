@@ -321,6 +321,7 @@ fn smart_lock_provider_hides_cta_when_not_revealed() {
         ),
         checkout_at: None,
         booking_channel: None,
+        ..StayContext::default()
     });
 
     with_host(host, ctx.clone(), || {
