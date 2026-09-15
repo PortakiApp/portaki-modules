@@ -10,7 +10,7 @@
     "en": "Guest Wi-Fi SSID and password for the booklet, with timed reveal."
   },
   "version": "0.2.1",
-  "requiresModuleSdk": "5.1.0",
+  "requiresModuleSdk": "6.0.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
