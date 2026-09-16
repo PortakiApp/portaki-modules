@@ -8,10 +8,10 @@ use crate::config::ActivitiesConfig;
 
 /// La section une fois résolue — ou rien, et alors elle ne s'affiche pas.
 pub struct ActivitiesView {
-    /// Ville visée par la recherche, telle qu'affichée au voyageur.
+    /// Nom du lieu tel qu'affiché au voyageur. Vide = le libellé neutre prend le relais.
     pub destination: String,
-    /// Lien de recherche automatique.
-    pub search_url: String,
+    /// Lien principal : recherche par destination, ou page GetYourGuide collée par l'hôte.
+    pub destination_url: String,
     /// Phrase d'introduction de l'hôte. Vide = pas de phrase.
     pub intro: String,
     /// Liens choisis par l'hôte, dans son ordre.
@@ -41,7 +41,6 @@ pub fn resolve(
         return None;
     }
     let destination = destination(config, address)?;
-    let search_url = affiliate::search_url(&destination)?;
 
     let links = config
         .links
@@ -65,8 +64,8 @@ pub fn resolve(
         .collect();
 
     Some(ActivitiesView {
-        destination,
-        search_url,
+        destination: destination.label,
+        destination_url: destination.url,
         intro: config
             .intro
             .pick_with_fallback(guest_locale, property_locale)
@@ -76,6 +75,14 @@ pub fn resolve(
     })
 }
 
+/// La destination résolue : ce que lit le voyageur, et où l'emmène le bouton.
+pub struct ResolvedDestination {
+    /// Nom du lieu. Vide quand aucun n'est lisible — le rendu passe alors au libellé neutre.
+    pub label: String,
+    /// URL du bouton.
+    pub url: String,
+}
+
 /// La destination : la saisie de l'hôte d'abord, la ville de l'adresse ensuite.
 ///
 /// L'ordre se lit comme une règle de préséance et non comme une préférence de qualité :
@@ -83,12 +90,38 @@ pub fn resolve(
 /// hôte est là pour la corriger — « Antibes » quand le logement est à Juan-les-Pins, ou
 /// quand l'adresse géocodée ne donne rien d'exploitable. Une correction qui ne gagnerait
 /// pas ne corrigerait rien.
-pub fn destination(config: &ActivitiesConfig, address: Option<&str>) -> Option<String> {
-    let host_override = config.destination.trim();
-    if !host_override.is_empty() {
-        return Some(host_override.to_string());
+///
+/// Cette saisie vaut nom de lieu **ou** URL de page GetYourGuide. Les deux mènent au même
+/// bouton, mais pas au même lien : la recherche `?q=…` choisit ses résultats depuis l'IP du
+/// visiteur et ignore la requête pour un voyageur qui arrive de l'étranger ou d'un VPN,
+/// tandis que la page de destination collée par l'hôte est juste pour tout le monde. D'où
+/// le champ qui accepte les deux, et la feuille hôte qui dit laquelle est fiable.
+pub fn destination(
+    config: &ActivitiesConfig,
+    address: Option<&str>,
+) -> Option<ResolvedDestination> {
+    let host_value = config.destination.trim();
+    if !host_value.is_empty() {
+        if affiliate::looks_like_url(host_value) {
+            // Refusée à l'enregistrement ; une valeur écrite hors du formulaire peut
+            // encore arriver ici, et alors la section ne s'affiche pas.
+            let url = affiliate::normalize_curated_url(host_value).ok()?;
+            // Le slug porte le nom du lieu ; un lien court n'en a pas, et la ville de
+            // l'adresse le remplace avant le libellé neutre.
+            let label = affiliate::place_from_url(&url)
+                .or_else(|| address.and_then(destination_from_address))
+                .unwrap_or_default();
+            return Some(ResolvedDestination { label, url });
+        }
+        return Some(ResolvedDestination {
+            label: host_value.to_string(),
+            url: affiliate::search_url(host_value)?,
+        });
     }
-    address.and_then(destination_from_address)
+
+    let city = address.and_then(destination_from_address)?;
+    let url = affiliate::search_url(&city)?;
+    Some(ResolvedDestination { label: city, url })
 }
 
 /// Extrait une ville d'une adresse formatée sur une ligne.
@@ -185,18 +218,82 @@ mod tests {
         }
     }
 
+    fn activities(destination: &str) -> ActivitiesConfig {
+        ActivitiesConfig {
+            enabled: true,
+            destination: destination.into(),
+            ..ActivitiesConfig::default()
+        }
+    }
+
     #[test]
     fn the_host_override_beats_the_address() {
-        let config = ActivitiesConfig {
-            destination: " Antibes ".into(),
-            ..ActivitiesConfig::default()
-        };
-        assert_eq!(
-            destination(&config, Some("Cannes, France")).as_deref(),
-            Some("Antibes")
-        );
+        let config = activities(" Antibes ");
+        let resolved = destination(&config, Some("Cannes, France")).expect("destination");
+        assert_eq!(resolved.label, "Antibes");
+        assert_eq!(resolved.url, "https://www.getyourguide.com/s/?q=Antibes");
         // Et il tient tout seul quand l'adresse n'est pas géocodée.
-        assert_eq!(destination(&config, None).as_deref(), Some("Antibes"));
+        assert_eq!(
+            destination(&config, None).expect("destination").label,
+            "Antibes"
+        );
+    }
+
+    #[test]
+    fn a_pasted_url_becomes_the_link_and_names_its_place() {
+        for (raw, expected_url, expected_label) in [
+            (
+                "https://www.getyourguide.com/cannes-l15/",
+                "https://www.getyourguide.com/cannes-l15/",
+                "Cannes",
+            ),
+            // Relevée en https et débarrassée d'un identifiant collé avec elle.
+            (
+                "www.getyourguide.com/aix-en-provence-l1234/?partner_id=someone",
+                "https://www.getyourguide.com/aix-en-provence-l1234/",
+                "Aix en Provence",
+            ),
+        ] {
+            let config = activities(raw);
+            let resolved = destination(&config, Some("Cannes, France")).expect("destination");
+            assert_eq!(resolved.url, expected_url, "{raw}");
+            assert_eq!(resolved.label, expected_label, "{raw}");
+        }
+    }
+
+    #[test]
+    fn a_short_link_keeps_its_url_and_borrows_a_label() {
+        let config = activities("https://gyg.me/aBcD12");
+        // Le lien court repart intact : son identifiant est déjà dans le chemin.
+        let resolved = destination(&config, Some("Cannes, France")).expect("destination");
+        assert_eq!(resolved.url, "https://gyg.me/aBcD12");
+        // Aucun nom de lieu dans l'URL : la ville de l'adresse le remplace.
+        assert_eq!(resolved.label, "Cannes");
+
+        // Et sans adresse, le libellé neutre prendra le relais au rendu.
+        let resolved = destination(&config, None).expect("destination");
+        assert_eq!(resolved.url, "https://gyg.me/aBcD12");
+        assert!(resolved.label.is_empty());
+    }
+
+    #[test]
+    fn a_destination_url_written_outside_the_form_is_dropped_at_render() {
+        // Un domaine étranger est refusé à l'enregistrement ; s'il arrive quand même,
+        // la section ne s'affiche pas plutôt que de sortir le lien.
+        let config = activities("https://viator.com/paris");
+        assert!(destination(&config, Some("Cannes, France")).is_none());
+        assert!(resolve(&config, Some("Cannes, France"), "fr-FR", "fr-FR").is_none());
+    }
+
+    #[test]
+    fn free_text_still_produces_the_search_url() {
+        let config = activities("Nîmes");
+        let view = resolve(&config, Some("Cannes, France"), "fr-FR", "fr-FR").expect("view");
+        assert_eq!(view.destination, "Nîmes");
+        assert_eq!(
+            view.destination_url,
+            "https://www.getyourguide.com/s/?q=N%C3%AEmes"
+        );
     }
 
     #[test]

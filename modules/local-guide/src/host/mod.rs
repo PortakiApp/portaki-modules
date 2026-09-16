@@ -7,7 +7,7 @@ use portaki_sdk::sdui::primitives::{
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::affiliate::{normalize_curated_url, CuratedUrlError, MAX_CURATED_LINKS};
+use crate::affiliate::{looks_like_url, normalize_curated_url, CuratedUrlError, MAX_CURATED_LINKS};
 use crate::config::{load_config, ActivityRow, Localized, SpotRow};
 
 const SPOT_SLOTS: usize = 6;
@@ -166,6 +166,17 @@ fn activities_card(
                 )
                 .into(),
         );
+    }
+
+    // La destination accepte une URL : quand c'en est une, elle est relevée ici comme les
+    // liens de la liste, avec le même message.
+    if looks_like_url(destination)
+        && matches!(
+            normalize_curated_url(destination),
+            Err(CuratedUrlError::NotGetYourGuide)
+        )
+    {
+        has_rejected_url = true;
     }
 
     // Même formulation que le refus de la commande, mais lisible avant d'avoir cliqué

@@ -80,6 +80,78 @@ pub fn search_url(destination: &str) -> Option<String> {
     Some(url)
 }
 
+/// La valeur saisie par l'hôte est une tentative d'URL, et non un nom de lieu.
+///
+/// Le champ Destination accepte les deux ; il faut donc trancher sans jamais prendre
+/// « Cannes » ou « Aix-en-Provence » pour une adresse. Quatre formes valent URL :
+///
+/// 1. un schéma explicite — `https://…`, mais aussi `ftp://…` ou `javascript:…` : ce sont
+///    des tentatives d'URL, à refuser comme telles plutôt qu'à chercher comme du texte ;
+/// 2. le préfixe `www.` ;
+/// 3. un hôte GetYourGuide ou `gyg.me`, même nu — `getyourguide.com` sans chemin ;
+/// 4. un hôte plausible **suivi d'un chemin** : pas d'espace, un TLD alphabétique, et un
+///    `/`, `?` ou `#` derrière.
+///
+/// Le reste est du texte libre. La quatrième règle est la seule qui devine, et elle exige
+/// les deux moitiés d'une URL : « St. Tropez / Ramatuelle » a bien un point et une barre,
+/// mais son hôte supposé contient une espace, donc il n'en est pas un. Un domaine nu qui
+/// n'est pas GetYourGuide (« viator.com », sans chemin) part en recherche plutôt qu'en
+/// refus : la saisie est trop ambiguë pour qu'on invente une faute.
+pub fn looks_like_url(value: &str) -> bool {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        return false;
+    }
+    if scheme_like(trimmed) {
+        return true;
+    }
+
+    let head = trimmed.split(['/', '?', '#']).next().unwrap_or(trimmed);
+    if head.to_ascii_lowercase().starts_with("www.") && host_like(head) {
+        return true;
+    }
+
+    let host = host_of(trimmed).to_ascii_lowercase();
+    if is_domain_or_subdomain(&host, GYG_DOMAIN) || is_domain_or_subdomain(&host, GYG_SHORT_DOMAIN)
+    {
+        return true;
+    }
+
+    host_like(head) && trimmed.contains(['/', '?', '#'])
+}
+
+/// Un schéma ouvre la valeur : `scheme:` avant le premier `/`, `?` ou `#`.
+///
+/// Le `:` seul ne suffit pas — « Cannes: la Croisette » est du texte. Un `:` suivi d'une
+/// espace n'ouvre pas un schéma ; `ftp://…` en ouvre un, et son reste est vide parce que
+/// la tête s'arrête au premier `/`.
+fn scheme_like(value: &str) -> bool {
+    let head = value.split(['/', '?', '#']).next().unwrap_or(value);
+    let Some((scheme, rest)) = head.split_once(':') else {
+        return false;
+    };
+    if scheme.is_empty()
+        || !scheme
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '+' | '-' | '.'))
+    {
+        return false;
+    }
+    rest.is_empty() || !rest.starts_with(char::is_whitespace)
+}
+
+/// Une autorité plausible : pas d'espace, et un TLD alphabétique d'au moins deux lettres.
+fn host_like(head: &str) -> bool {
+    !head.is_empty()
+        && !head.contains(char::is_whitespace)
+        && match head.rsplit_once('.') {
+            Some((label, tld)) => {
+                !label.is_empty() && tld.len() >= 2 && tld.chars().all(|c| c.is_ascii_alphabetic())
+            }
+            None => false,
+        }
+}
+
 /// Valide et normalise une URL choisie par l'hôte.
 ///
 /// Seuls `getyourguide.com` (tout sous-domaine, tout chemin) et le raccourcisseur `gyg.me`
@@ -191,6 +263,94 @@ fn is_partner_pair(pair: &str) -> bool {
         Some((name, _)) => name == PARTNER_QUERY_PARAM,
         None => pair == PARTNER_QUERY_PARAM,
     }
+}
+
+/// Nom de lieu lisible tiré d'une URL de destination GetYourGuide.
+///
+/// Leurs pages de destination s'écrivent `/cannes-l15/`, `/aix-en-provence-l1234/` : un slug,
+/// puis `-l` et l'identifiant interne du lieu. Ce suffixe est ce qui distingue une page de
+/// destination d'autre chose, et il est exigé — sans lui, on rendrait « S » pour `/s/?q=…`
+/// ou l'identifiant d'un lien court `gyg.me`. `None` alors, et l'appelant retombe sur la
+/// ville de l'adresse puis sur un libellé neutre.
+///
+/// Le slug est rendu en mots séparés par des espaces : ses tirets confondent les espaces
+/// (`new-york`) et les traits d'union (`aix-en-provence`), et rien dans l'URL ne dit
+/// lesquels. L'espace lit juste sur la majorité — « New York », « Rio de Janeiro » — là où
+/// le trait d'union donnerait « New-York ». Les particules restent en minuscules sauf en
+/// tête, ce qui rend « Aix en Provence » et « Le Mans ».
+pub fn place_from_url(url: &str) -> Option<String> {
+    let rest = url
+        .strip_prefix("https://")
+        .or_else(|| url.strip_prefix("http://"))
+        .unwrap_or(url);
+    let path = &rest[rest.find('/')?..];
+    let path = path.split(['?', '#']).next().unwrap_or(path);
+    let segment = path.split('/').find(|part| !part.is_empty())?;
+    let decoded = percent_decode(segment)?;
+    let slug = strip_destination_id(&decoded)?;
+    let name = title_case_slug(slug);
+    if name.is_empty() {
+        None
+    } else {
+        Some(name)
+    }
+}
+
+/// Retire le `-l<chiffres>` final d'un slug de destination.
+fn strip_destination_id(segment: &str) -> Option<&str> {
+    let (slug, id) = segment.rsplit_once('-')?;
+    let digits = id.strip_prefix('l').or_else(|| id.strip_prefix('L'))?;
+    if slug.is_empty() || digits.is_empty() || !digits.chars().all(|c| c.is_ascii_digit()) {
+        return None;
+    }
+    Some(slug)
+}
+
+/// Particules qui restent en minuscules quand elles ne sont pas en tête.
+const SLUG_PARTICLES: [&str; 18] = [
+    "a", "and", "at", "au", "aux", "d", "de", "des", "du", "en", "et", "in", "l", "la", "le",
+    "les", "of", "the",
+];
+
+fn title_case_slug(slug: &str) -> String {
+    let mut words: Vec<String> = Vec::new();
+    for token in slug.split('-').filter(|token| !token.is_empty()) {
+        let lower = token.to_lowercase();
+        if !words.is_empty() && SLUG_PARTICLES.contains(&lower.as_str()) {
+            words.push(lower);
+        } else {
+            words.push(capitalize(&lower));
+        }
+    }
+    words.join(" ")
+}
+
+fn capitalize(word: &str) -> String {
+    let mut chars = word.chars();
+    match chars.next() {
+        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+        None => String::new(),
+    }
+}
+
+/// Décodage pour-cent d'un segment de chemin. `None` si les octets ne sont pas de l'UTF-8.
+fn percent_decode(value: &str) -> Option<String> {
+    let bytes = value.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut index = 0;
+    while index < bytes.len() {
+        if bytes[index] == b'%' && index + 2 < bytes.len() {
+            let hex = std::str::from_utf8(&bytes[index + 1..index + 3]).ok()?;
+            if let Ok(byte) = u8::from_str_radix(hex, 16) {
+                out.push(byte);
+                index += 3;
+                continue;
+            }
+        }
+        out.push(bytes[index]);
+        index += 1;
+    }
+    String::from_utf8(out).ok()
 }
 
 /// Encodage pour-cent d'une valeur de query (RFC 3986).
@@ -346,6 +506,87 @@ mod tests {
             set_partner_param_with("https://www.getyourguide.com/x?partner_id=ancien", None),
             "https://www.getyourguide.com/x"
         );
+    }
+
+    #[test]
+    fn a_place_name_is_never_read_as_a_url() {
+        for raw in [
+            "Cannes",
+            "Aix-en-Provence",
+            "Saint-Jean-Cap-Ferrat",
+            "Nîmes & Uzès",
+            "St. Tropez",
+            // Un point et une barre, mais une espace dans l'hôte supposé : du texte.
+            "St. Tropez / Ramatuelle",
+            // Un `:` n'ouvre un schéma que s'il n'est pas suivi d'une espace.
+            "Cannes: la Croisette",
+            "",
+            "   ",
+        ] {
+            assert!(!looks_like_url(raw), "{raw}");
+        }
+    }
+
+    #[test]
+    fn a_pasted_link_is_read_as_a_url_in_all_its_forms() {
+        for raw in [
+            "https://www.getyourguide.com/cannes-l15/",
+            "http://www.getyourguide.com/cannes-l15/",
+            "www.getyourguide.com/cannes-l15/",
+            "getyourguide.com/cannes-l15/",
+            // Un domaine GetYourGuide nu reste une URL.
+            "getyourguide.com",
+            "https://gyg.me/aBcD12",
+            "gyg.me/aBcD12",
+            // Domaine étranger avec un chemin : une URL, donc refusée plus loin.
+            "viator.com/paris",
+            // Autres schémas : des tentatives d'URL, pas des destinations à chercher.
+            "javascript:alert(1)",
+            "ftp://www.getyourguide.com/x",
+            "data:text/html,<script>",
+        ] {
+            assert!(looks_like_url(raw), "{raw}");
+        }
+    }
+
+    #[test]
+    fn the_place_name_comes_out_of_the_destination_slug() {
+        for (url, expected) in [
+            ("https://www.getyourguide.com/cannes-l15/", "Cannes"),
+            ("https://www.getyourguide.com/cannes-l15", "Cannes"),
+            (
+                "https://www.getyourguide.com/aix-en-provence-l1234/",
+                "Aix en Provence",
+            ),
+            ("https://www.getyourguide.com/le-mans-l770/", "Le Mans"),
+            ("https://www.getyourguide.com/new-york-l59/", "New York"),
+            // Le slug reste celui de la destination sur une page de produit.
+            (
+                "https://www.getyourguide.com/paris-l16/eiffel-t1?lc=fr",
+                "Paris",
+            ),
+            // Percent-décodé.
+            ("https://www.getyourguide.com/n%C3%AEmes-l900/", "Nîmes"),
+            ("https://FR.getyourguide.com/CANNES-L15/", "Cannes"),
+        ] {
+            assert_eq!(place_from_url(url).as_deref(), Some(expected), "{url}");
+        }
+    }
+
+    #[test]
+    fn a_url_without_a_destination_slug_yields_no_place_name() {
+        for url in [
+            // Lien court : l'identifiant n'est pas un nom de lieu.
+            "https://gyg.me/aBcD12",
+            // Page de recherche : « s » n'en est pas un non plus.
+            "https://www.getyourguide.com/s/?q=Cannes",
+            "https://www.getyourguide.com/",
+            "https://www.getyourguide.com",
+            // `-l` sans chiffres derrière.
+            "https://www.getyourguide.com/cannes-lx/",
+        ] {
+            assert_eq!(place_from_url(url), None, "{url}");
+        }
     }
 
     /// Variante paramétrable de [`set_partner_param`] — la vraie lit la constante, qui est

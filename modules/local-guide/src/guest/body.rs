@@ -106,18 +106,23 @@ fn build_activities(view: &ActivitiesView) -> Vec<Component> {
     }
 
     // La destination est interpolée ici : une clé `i18n:` part telle quelle vers le shell,
-    // qui ne sait pas y injecter de variable.
-    let search_label = t!(
-        "guest.activities.searchLabel",
-        destination = &view.destination
-    )
-    .unwrap_or_else(|_| view.destination.clone());
+    // qui ne sait pas y injecter de variable. Sans nom de lieu lisible — un lien court
+    // collé par l'hôte sur un logement sans adresse — le libellé neutre prend le relais.
+    let destination_label = if view.destination.is_empty() {
+        "i18n:guest.activities.browseLabel".to_string()
+    } else {
+        t!(
+            "guest.activities.searchLabel",
+            destination = &view.destination
+        )
+        .unwrap_or_else(|_| view.destination.clone())
+    };
     children.push(
         Link::new()
-            .label(search_label)
-            .href(view.search_url.clone())
+            .label(destination_label)
+            .href(view.destination_url.clone())
             .action(Action::External {
-                url: view.search_url.clone(),
+                url: view.destination_url.clone(),
             })
             .into(),
     );

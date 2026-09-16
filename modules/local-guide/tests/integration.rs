@@ -499,6 +499,186 @@ fn the_search_label_names_the_destination() {
 
 #[test]
 #[serial]
+fn a_pasted_destination_url_becomes_the_link_and_names_its_place() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_translation(
+            "guest.activities.searchLabel",
+            "Voir les activités à {destination}",
+        )
+        .with_kv(
+            "config",
+            config_bytes(json!({
+                "activities": {
+                    "enabled": true,
+                    // L'hôte a collé la page de destination : elle est juste quel que soit
+                    // le pays depuis lequel le voyageur se connecte, là où `?q=` ne l'est pas.
+                    "destination": "https://www.getyourguide.com/cannes-l15/"
+                }
+            })),
+        )
+        .run(|ctx| {
+            let json = surface_json(&render_explore_detail(ctx));
+            assert!(
+                json.contains("https://www.getyourguide.com/cannes-l15/"),
+                "{json}"
+            );
+            assert!(!json.contains("/s/?q="), "{json}");
+            assert!(json.contains("Voir les activités à Cannes"), "{json}");
+        });
+}
+
+#[test]
+#[serial]
+fn a_destination_url_drops_a_partner_id_the_host_pasted_with_it() {
+    assert_eq!(
+        PARTNER_ID, "",
+        "ce test décrit le comportement identifiant vide"
+    );
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv(
+            "config",
+            config_bytes(json!({
+                "activities": {
+                    "enabled": true,
+                    "destination": "https://www.getyourguide.com/cannes-l15/?partner_id=someone"
+                }
+            })),
+        )
+        .run(|ctx| {
+            let json = surface_json(&render_explore_detail(ctx));
+            assert!(
+                json.contains("https://www.getyourguide.com/cannes-l15/"),
+                "{json}"
+            );
+            assert!(!json.contains(PARTNER_QUERY_PARAM), "{json}");
+        });
+}
+
+#[test]
+#[serial]
+fn a_short_destination_link_is_kept_and_labelled_from_the_address() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_translation(
+            "guest.activities.searchLabel",
+            "Voir les activités à {destination}",
+        )
+        .with_kv(
+            "config",
+            config_bytes(json!({
+                "activities": { "enabled": true, "destination": "https://gyg.me/aBcD12" }
+            })),
+        )
+        .run(|ctx| {
+            let json = surface_json(&render_explore_detail(ctx));
+            // Le lien court repart intact : son identifiant est déjà dans le chemin.
+            assert!(json.contains("https://gyg.me/aBcD12"), "{json}");
+            assert!(!json.contains(PARTNER_QUERY_PARAM), "{json}");
+            // Aucun slug à lire : la ville de l'adresse nomme le bouton.
+            assert!(json.contains("Voir les activités à Cannes"), "{json}");
+        });
+}
+
+#[test]
+#[serial]
+fn a_short_destination_link_without_an_address_gets_the_neutral_label() {
+    let (mut ctx, host) = MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv(
+            "config",
+            config_bytes(json!({
+                "activities": { "enabled": true, "destination": "https://gyg.me/aBcD12" }
+            })),
+        )
+        .build();
+    ctx.property.address = None;
+    with_host(host, ctx.clone(), || {
+        let json = surface_json(&render_explore_detail(ctx.clone()));
+        assert!(json.contains("https://gyg.me/aBcD12"), "{json}");
+        assert!(json.contains("i18n:guest.activities.browseLabel"), "{json}");
+    });
+}
+
+#[test]
+#[serial]
+fn a_foreign_destination_url_is_refused_at_save() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            let error = update_config(
+                ctx,
+                UpdateConfigArgs {
+                    activities_destination: "https://viator.com/paris".into(),
+                    ..Default::default()
+                },
+            )
+            .expect_err("refusé");
+            // Même faute que dans la liste, donc même erreur et même message.
+            assert!(
+                error.to_string().contains(ERR_ACTIVITY_URL_NOT_GYG),
+                "{error}"
+            );
+        });
+}
+
+#[test]
+#[serial]
+fn saving_a_destination_url_normalizes_it_and_leaves_a_place_name_alone() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            update_config(
+                ctx.clone(),
+                UpdateConfigArgs {
+                    activities_enabled: Some(true),
+                    activities_destination:
+                        "  www.getyourguide.com/cannes-l15/?partner_id=ancien  ".into(),
+                    ..Default::default()
+                },
+            )
+            .expect("enregistré");
+            assert_eq!(
+                get_config(ctx.clone()).expect("cfg").activities.destination,
+                "https://www.getyourguide.com/cannes-l15/"
+            );
+
+            update_config(
+                ctx.clone(),
+                UpdateConfigArgs {
+                    activities_enabled: Some(true),
+                    activities_destination: "  Antibes  ".into(),
+                    ..Default::default()
+                },
+            )
+            .expect("enregistré");
+            assert_eq!(
+                get_config(ctx).expect("cfg").activities.destination,
+                "Antibes"
+            );
+        });
+}
+
+#[test]
+#[serial]
+fn the_host_sheet_flags_a_destination_url_it_would_refuse() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv(
+            "config",
+            config_bytes(json!({
+                "activities": { "destination": "https://viator.com/paris" }
+            })),
+        )
+        .run(|ctx| {
+            let json = surface_json(&render_host_main(ctx));
+            assert!(json.contains("i18n:host.activities.error.badUrl"), "{json}");
+        });
+}
+
+#[test]
+#[serial]
 fn the_affiliate_disclosure_ships_in_every_locale() {
     for (locale, raw) in BUNDLES {
         let text = bundle(raw)
