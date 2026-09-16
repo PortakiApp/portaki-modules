@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.4.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.3.1...local-guide-v0.4.0) (2026-09-16)
+
+
+### Features
+
+* **local-guide:** offer GetYourGuide activities as partner links ([51b0676](https://github.com/PortakiApp/portaki-modules/commit/51b06769c2c22e32b4f73601ccf72a1590464eb7))
+
+
+### Bug Fixes
+
+* **deps:** move every module to SDK 5.0.0 ([b359890](https://github.com/PortakiApp/portaki-modules/commit/b359890b7dcadac933be0067d174fbd27a8ba318))
+* **deps:** move every module to SDK 5.1.0 ([78889c8](https://github.com/PortakiApp/portaki-modules/commit/78889c82a61c209dc87d10771a8e0e58c659d837))
+* **deps:** move every module to SDK 6.0.0 ([fe9d1b2](https://github.com/PortakiApp/portaki-modules/commit/fe9d1b2392a7a1167c9876e77a939efa2ab7a2d1))
+
 ## [0.3.1](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.3.0...local-guide-v0.3.1) (2026-09-12)
 
 

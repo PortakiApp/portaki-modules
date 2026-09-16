@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.2](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v0.5.1...ical-sync-v0.5.2) (2026-09-16)
+
+
+### Bug Fixes
+
+* **deps:** move every module to SDK 5.0.0 ([b359890](https://github.com/PortakiApp/portaki-modules/commit/b359890b7dcadac933be0067d174fbd27a8ba318))
+* **deps:** move every module to SDK 6.0.0 ([fe9d1b2](https://github.com/PortakiApp/portaki-modules/commit/fe9d1b2392a7a1167c9876e77a939efa2ab7a2d1))
+* **ical-sync:** require the scheduled sync capability ([9690031](https://github.com/PortakiApp/portaki-modules/commit/9690031c237f80cd5d8e34d54a64216abd082df7))
+* **ical-sync:** send one email for all failed feeds ([e733358](https://github.com/PortakiApp/portaki-modules/commit/e73335859b68d2d0017adf53160addf11b881946))
+
 ## [0.5.1](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v0.5.0...ical-sync-v0.5.1) (2026-09-12)
 
 
