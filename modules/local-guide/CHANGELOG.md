@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.6.0...local-guide-v0.7.0) (2026-09-16)
+
+
+### Features
+
+* **events:** expose located events as map markers ([2cbd231](https://github.com/PortakiApp/portaki-modules/commit/2cbd231469a02fa7596ab8e95e7c833b830ffd6c))
+* **local-guide:** expose spots as map markers ([841c311](https://github.com/PortakiApp/portaki-modules/commit/841c31173b89c682b3d433ec2484e1ea617f307b))
+
 ## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.5.0...local-guide-v0.6.0) (2026-09-16)
 
 

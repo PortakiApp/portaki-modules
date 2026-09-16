@@ -195,7 +195,7 @@ dependencies = [
 
 [[package]]
 name = "events"
-version = "0.3.2"
+version = "0.4.0"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -465,7 +465,7 @@ checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
 
 [[package]]
 name = "local-guide"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "extism-pdk",
  "portaki-sdk",
