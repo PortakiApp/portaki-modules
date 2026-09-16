@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.5.0...local-guide-v0.6.0) (2026-09-16)
+
+
+### Features
+
+* **local-guide:** map the host's located spots ([05a4874](https://github.com/PortakiApp/portaki-modules/commit/05a48742d04ebdef193a9ba4e04b951f29da1065))
+* **local-guide:** set the GetYourGuide partner id ([132d60b](https://github.com/PortakiApp/portaki-modules/commit/132d60b13b5492eb8e63bd2940c7f63691cf8df3))
+
 ## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.4.0...local-guide-v0.5.0) (2026-09-16)
 
 
