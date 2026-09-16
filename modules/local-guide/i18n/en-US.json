@@ -16,6 +16,8 @@
   "host.spot.distance": "Distance",
   "host.spot.tag": "Tag",
   "host.spot.description": "Description",
+  "host.spot.address": "Location",
+  "host.spot.address.hint": "Optional. Drop the spot on the map to place it on the booklet map.",
   "host.disclaimer.label": "Disclaimer",
   "host.disclaimer.placeholder": "Non-partner suggestions — hours may vary",
   "host.main.help": "Leave a spot empty to hide it. Texts are saved for the active edit language only.",

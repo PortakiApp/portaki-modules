@@ -17,7 +17,29 @@ Official Portaki local guide module — nearby spots and host picks.
 | Section | Description |
 |---------|-------------|
 | Spots | Up to 6 host-curated addresses with category, distance, tag and note |
+| Map | The located spots plus the property, on the enriched surface only |
 | Activities & tickets | GetYourGuide affiliate links (**off by default**) — an automatic destination search plus up to 10 host-curated links |
+
+### Map
+
+Each spot carries an optional `address` / `lat` / `lng`, filled from the
+`AddressMapPicker` in the host sheet. The map renders **only on
+`explore.detail`**, and **only when at least one spot is located** — configs
+written before the map carry no coordinates, and an empty map is worth less than
+no map.
+
+It is static and non-interactive, like the one in `events`: the surface is a
+scrolling bottom sheet, where a pannable map would steal the guest's scroll
+gesture.
+
+Coordinates are filtered before they reach the map: outside WGS-84 bounds, and
+the `0, 0` point — where no host has a good address, but where any form that
+submitted empty fields lands. The property is added as a `property` marker and
+counts in the centring, so the guest sees where they are starting from.
+
+The three picker fields are submitted together. A caller older than the map sends
+none of them, and the stored position is **kept** rather than wiped on the next
+save.
 
 ### Activities & tickets
 

@@ -2,7 +2,9 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::primitives::{InfoBanner, Link, ListItem, Pill, Pressable, Stack, Text};
+use portaki_sdk::sdui::primitives::{
+    InfoBanner, Link, ListItem, Map, Pill, Pressable, Stack, Text,
+};
 
 use crate::activities::ActivitiesView;
 
@@ -10,6 +12,12 @@ use super::load::GuestData;
 
 pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
     let mut children = Vec::new();
+
+    if enriched {
+        if let Some(map) = spots_map(data) {
+            children.push(map);
+        }
+    }
 
     if !data.disclaimer.is_empty() {
         children.push(Component::InfoBanner(
@@ -83,6 +91,65 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
     }
 
     children
+}
+
+/// Carte des bons plans dont l'hôte a posé la position, le logement en repère.
+///
+/// `None` tant qu'aucun spot n'est situé : les configurations écrites avant la carte n'ont
+/// pas de coordonnées, et une carte vide vaut moins que pas de carte du tout.
+///
+/// Statique et sans interaction, comme celle du module `events` : cette surface est une
+/// feuille qui défile, où une carte pannable volerait le geste de défilement au voyageur.
+fn spots_map(data: &GuestData) -> Option<Component> {
+    let mut markers = Vec::new();
+    let mut lat_sum = 0.0;
+    let mut lng_sum = 0.0;
+
+    for spot in &data.spots {
+        let Some((lat, lng)) = spot.coords() else {
+            continue;
+        };
+        lat_sum += lat;
+        lng_sum += lng;
+        markers.push(
+            MapMarker::new(spot.id.clone(), lat, lng)
+                .label(
+                    spot.title
+                        .pick_with_fallback(&data.locale, &data.property_locale),
+                )
+                .kind(MapMarkerKind::Poi),
+        );
+    }
+
+    if markers.is_empty() {
+        return None;
+    }
+    let mut count = markers.len() as f64;
+
+    // Le logement ferme la carte : sans lui, le voyageur lit des points sans savoir d'où
+    // il part, et le centre se décale vers la grappe des bonnes adresses.
+    if let Some((lat, lng)) = data.property_coords {
+        lat_sum += lat;
+        lng_sum += lng;
+        count += 1.0;
+        markers.push(
+            MapMarker::new("property".to_string(), lat, lng)
+                .label(data.property_name.clone())
+                .kind(MapMarkerKind::Property),
+        );
+    }
+
+    Some(Component::Map(
+        Map::new()
+            .viewport(MapViewport::new(
+                lat_sum / count,
+                lng_sum / count,
+                Some(13.0),
+            ))
+            .markers(markers)
+            .isStatic(true)
+            .interactionMode(MapInteractionMode::None),
+    ))
 }
 
 /// Section « Activités & billets » : recherche d'abord, sélection de l'hôte ensuite,

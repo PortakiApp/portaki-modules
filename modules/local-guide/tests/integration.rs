@@ -8,7 +8,7 @@ use serial_test::serial;
 
 use local_guide::{
     get_config, render_explore_detail, render_home_card, render_host_main, render_upcoming_card,
-    update_config, ActivityInput, UpdateConfigArgs, ERR_ACTIVITIES_TOO_MANY,
+    update_config, ActivityInput, SpotInput, UpdateConfigArgs, ERR_ACTIVITIES_TOO_MANY,
     ERR_ACTIVITY_URL_NOT_GYG, MAX_CURATED_LINKS, PARTNER_ID, PARTNER_QUERY_PARAM,
 };
 use portaki_sdk::sdui::component::Component;
@@ -72,6 +72,7 @@ fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
             Component::EmptyState(_) if type_name == "EmptyState" => true,
             Component::Link(_) if type_name == "Link" => true,
             Component::Stack(_) if type_name == "Stack" => true,
+            Component::Map(_) if type_name == "Map" => true,
             _ => false,
         };
         if matches {
@@ -172,6 +173,145 @@ fn detail_includes_link() {
             let surface = render_explore_detail(ctx);
             assert!(contains_component_type(&surface, "Link"));
             assert!(contains_component_type(&surface, "InfoBanner"));
+        });
+}
+
+// --- Carte -------------------------------------------------------------------------------
+
+/// Config avec un spot situé et un spot sans position.
+fn located_config_bytes() -> Vec<u8> {
+    config_bytes(json!({
+        "spots": [
+            {
+                "id": "plage", "title": { "fr": "Plage du Midi" },
+                "address": "Plage du Midi, Cannes", "lat": 43.548, "lng": 7.005
+            },
+            { "id": "boulangerie", "title": { "fr": "Boulangerie" } }
+        ]
+    }))
+}
+
+#[test]
+#[serial]
+fn the_detail_surface_maps_the_located_spots_and_the_property() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv("config", located_config_bytes())
+        .run(|ctx| {
+            let surface = render_explore_detail(ctx);
+            assert!(contains_component_type(&surface, "Map"));
+            let json = surface_json(&surface);
+            assert!(json.contains("Plage du Midi"), "{json}");
+            // Le logement ferme la carte, avec le marqueur qui lui est propre.
+            assert!(json.contains("\"property\""), "{json}");
+            // Le spot sans position n'a pas de marqueur, mais reste dans la liste.
+            assert!(json.contains("Boulangerie"), "{json}");
+        });
+}
+
+#[test]
+#[serial]
+fn the_home_card_stays_a_list_without_a_map() {
+    // La carte d'accueil est une vignette : la carte appartient à la feuille détaillée.
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv("config", located_config_bytes())
+        .run(|ctx| {
+            let surface = render_home_card(ctx);
+            assert!(!contains_component_type(&surface, "Map"));
+            assert!(contains_component_type(&surface, "ListItem"));
+        });
+}
+
+#[test]
+#[serial]
+fn a_config_written_before_the_map_renders_no_map() {
+    // Les installations existantes n'ont aucune coordonnée : elles gardent leur liste,
+    // sans carte vide ni carte centrée sur l'Atlantique.
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv("config", sample_config_bytes())
+        .run(|ctx| {
+            let surface = render_explore_detail(ctx);
+            assert!(!contains_component_type(&surface, "Map"));
+            assert!(contains_component_type(&surface, "ListItem"));
+        });
+}
+
+#[test]
+#[serial]
+fn null_island_never_reaches_the_map() {
+    // Ce que rend un formulaire dont les deux champs de position sont restés vides.
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv(
+            "config",
+            config_bytes(json!({
+                "spots": [{ "id": "s1", "title": { "fr": "Plage" }, "lat": 0.0, "lng": 0.0 }]
+            })),
+        )
+        .run(|ctx| {
+            assert!(!contains_component_type(&render_explore_detail(ctx), "Map"));
+        });
+}
+
+#[test]
+#[serial]
+fn the_picker_fields_save_the_position() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            update_config(
+                ctx.clone(),
+                UpdateConfigArgs {
+                    spots: vec![SpotInput {
+                        name: "Plage du Midi".into(),
+                        address: "  Plage du Midi, Cannes  ".into(),
+                        lat: Some(43.548),
+                        lng: Some(7.005),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+            )
+            .expect("enregistré");
+
+            let config = get_config(ctx).expect("cfg");
+            assert_eq!(config.spots[0].coords(), Some((43.548, 7.005)));
+            assert_eq!(
+                config.spots[0].address.as_deref(),
+                Some("Plage du Midi, Cannes")
+            );
+        });
+}
+
+#[test]
+#[serial]
+fn saving_without_the_map_fields_keeps_the_stored_position() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv("config", located_config_bytes())
+        .run(|ctx| {
+            // Un appelant plus ancien que la carte soumet le nom et rien d'autre : la
+            // position enregistrée doit lui survivre.
+            update_config(
+                ctx.clone(),
+                UpdateConfigArgs {
+                    spots: vec![SpotInput {
+                        name: "Plage du Midi".into(),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+            )
+            .expect("enregistré");
+
+            let config = get_config(ctx).expect("cfg");
+            assert_eq!(config.spots[0].coords(), Some((43.548, 7.005)));
+            assert_eq!(
+                config.spots[0].address.as_deref(),
+                Some("Plage du Midi, Cannes")
+            );
         });
 }
 

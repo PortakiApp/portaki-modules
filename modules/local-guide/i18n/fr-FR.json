@@ -16,6 +16,8 @@
   "host.spot.distance": "Distance",
   "host.spot.tag": "Tag",
   "host.spot.description": "Description",
+  "host.spot.address": "Emplacement",
+  "host.spot.address.hint": "Facultatif. Posez le lieu sur la carte pour qu’il apparaisse sur le plan du livret.",
   "host.disclaimer.label": "Disclaimer",
   "host.disclaimer.placeholder": "Suggestions non partenaires — horaires variables",
   "host.main.help": "Laissez un lieu vide pour ne pas l’afficher. Les textes sont enregistrés pour la langue d'édition active uniquement.",
