@@ -17,17 +17,17 @@
 /// En contrepartie, le changer est une **release du module** : la constante est compilée
 /// dans le Wasm, republier est le seul moyen de la faire bouger sur les logements.
 ///
-/// Il est **vide tant que le compte d'affiliation n'existe pas**. Vide, les liens partent
-/// sans aucun paramètre partenaire : de simples liens GetYourGuide, aucune commission, et
-/// rien d'autre ne change — ni la section, ni les liens choisis par l'hôte, ni la mention
-/// d'affiliation, qui reste affichée parce qu'elle décrit l'intention du lien et non son
-/// rendement du jour.
-pub const PARTNER_ID: &str = "";
+/// Le **vider reste licite** : les liens partent alors sans aucun paramètre partenaire,
+/// de simples liens GetYourGuide qui ne rapportent rien, et rien d'autre ne change — ni la
+/// section, ni les liens choisis par l'hôte, ni la mention d'affiliation, qui décrit
+/// l'intention du lien et non son rendement du jour.
+pub const PARTNER_ID: &str = "CLOQ42U";
 
 /// Nom du paramètre de requête qui porte [`PARTNER_ID`].
 ///
-/// À confirmer dans le portail partenaire GetYourGuide le jour où le compte existe :
-/// c'est la seule valeur de ce fichier qui dépend d'eux et non de nous.
+/// C'est la seule valeur de ce fichier qui vienne d'eux : elle est relevée sur le lien de
+/// partage du portail partenaire, `…/?partner_id=…&cmp=share_to_earn`. Le `cmp` qui
+/// l'accompagne est un nom de campagne, facultatif, et on ne le reprend pas.
 pub const PARTNER_QUERY_PARAM: &str = "partner_id";
 
 /// Recherche GetYourGuide par destination.
@@ -374,27 +374,35 @@ fn percent_encode(value: &str) -> String {
 mod tests {
     use super::*;
 
-    /// Garde-fou : tout ce fichier décrit le comportement « identifiant vide », et les
-    /// assertions ci-dessous seraient muettes si quelqu'un le remplissait sans les relire.
+    /// Garde-fou : les assertions de ce fichier nomment l'identifiant en clair et
+    /// deviendraient muettes si quelqu'un le changeait sans les relire.
     #[test]
-    fn partner_id_is_still_empty() {
-        assert_eq!(PARTNER_ID, "");
-        assert_eq!(partner_id(), None);
+    fn partner_id_is_the_one_from_the_portal() {
+        assert_eq!(PARTNER_ID, "CLOQ42U");
+        assert_eq!(partner_id(), Some("CLOQ42U"));
     }
 
     #[test]
     fn search_url_percent_encodes_the_destination() {
         assert_eq!(
             search_url("Aix-en-Provence"),
-            Some("https://www.getyourguide.com/s/?q=Aix-en-Provence".to_string())
+            Some(
+                "https://www.getyourguide.com/s/?q=Aix-en-Provence&partner_id=CLOQ42U".to_string()
+            )
         );
         assert_eq!(
             search_url(" Saint-Jean-Cap-Ferrat "),
-            Some("https://www.getyourguide.com/s/?q=Saint-Jean-Cap-Ferrat".to_string())
+            Some(
+                "https://www.getyourguide.com/s/?q=Saint-Jean-Cap-Ferrat&partner_id=CLOQ42U"
+                    .to_string()
+            )
         );
         assert_eq!(
             search_url("Nîmes & Uzès"),
-            Some("https://www.getyourguide.com/s/?q=N%C3%AEmes%20%26%20Uz%C3%A8s".to_string())
+            Some(
+                "https://www.getyourguide.com/s/?q=N%C3%AEmes%20%26%20Uz%C3%A8s&partner_id=CLOQ42U"
+                    .to_string()
+            )
         );
     }
 
@@ -405,26 +413,32 @@ mod tests {
     }
 
     #[test]
-    fn empty_partner_id_yields_plain_links() {
-        // Le compte d'affiliation n'existe pas encore : aucun paramètre partenaire nulle part.
+    fn both_kinds_of_link_carry_the_partner_id() {
         let search = search_url("Antibes").expect("search url");
-        assert_eq!(search, "https://www.getyourguide.com/s/?q=Antibes");
-        assert!(!search.contains(PARTNER_QUERY_PARAM));
+        assert_eq!(
+            search,
+            "https://www.getyourguide.com/s/?q=Antibes&partner_id=CLOQ42U"
+        );
 
         let curated =
             normalize_curated_url("https://www.getyourguide.com/antibes-l1234/").expect("curated");
-        assert_eq!(curated, "https://www.getyourguide.com/antibes-l1234/");
-        assert!(!curated.contains(PARTNER_QUERY_PARAM));
+        assert_eq!(
+            curated,
+            "https://www.getyourguide.com/antibes-l1234/?partner_id=CLOQ42U"
+        );
     }
 
     #[test]
-    fn empty_partner_id_strips_an_id_pasted_by_the_host() {
+    fn an_id_pasted_by_the_host_is_replaced_by_ours() {
         // La commission revient à la plateforme, pas à l'hôte : un identifiant collé dans
         // l'URL ne survit pas à l'enregistrement.
         let out =
             normalize_curated_url("https://www.getyourguide.com/paris-l16/?partner_id=someone")
                 .expect("curated");
-        assert_eq!(out, "https://www.getyourguide.com/paris-l16/");
+        assert_eq!(
+            out,
+            "https://www.getyourguide.com/paris-l16/?partner_id=CLOQ42U"
+        );
     }
 
     #[test]
@@ -435,7 +449,7 @@ mod tests {
         .expect("curated");
         assert_eq!(
             out,
-            "https://www.getyourguide.com/paris-l16/eiffel-t1?cmp=ete&lc=fr#avis"
+            "https://www.getyourguide.com/paris-l16/eiffel-t1?cmp=ete&lc=fr&partner_id=CLOQ42U#avis"
         );
     }
 
@@ -489,8 +503,8 @@ mod tests {
 
     #[test]
     fn partner_param_is_set_then_replaced_when_an_id_exists() {
-        // `PARTNER_ID` est vide aujourd'hui ; on vérifie ici la mécanique de pose et de
-        // remplacement, qui est ce qui change le jour où le compte existe.
+        // La constante est remplie : seul ce helper paramétrable peut encore montrer le
+        // retrait, c'est-à-dire ce que rendrait le module si on la vidait.
         assert_eq!(
             set_partner_param_with("https://www.getyourguide.com/x", Some("portaki")),
             "https://www.getyourguide.com/x?partner_id=portaki"
@@ -589,8 +603,8 @@ mod tests {
         }
     }
 
-    /// Variante paramétrable de [`set_partner_param`] — la vraie lit la constante, qui est
-    /// vide, et ne pourrait donc pas montrer le remplacement.
+    /// Variante paramétrable de [`set_partner_param`] — la vraie lit la constante, et ne
+    /// peut donc pas montrer ce que donnerait un identifiant vide.
     fn set_partner_param_with(url: &str, id: Option<&str>) -> String {
         let (head, fragment) = match url.split_once('#') {
             Some((head, fragment)) => (head, Some(fragment)),

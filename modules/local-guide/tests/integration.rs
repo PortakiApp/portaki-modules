@@ -331,11 +331,7 @@ fn curated_links_render_normalized_capped_and_in_order() {
 
 #[test]
 #[serial]
-fn without_a_partner_id_every_link_stays_plain() {
-    assert_eq!(
-        PARTNER_ID, "",
-        "ce test décrit le comportement identifiant vide"
-    );
+fn every_link_reaching_the_guest_carries_our_partner_id() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .with_kv(
@@ -354,9 +350,13 @@ fn without_a_partner_id_every_link_stays_plain() {
         )
         .run(|ctx| {
             let json = surface_json(&render_explore_detail(ctx));
-            assert!(!json.contains(PARTNER_QUERY_PARAM), "{json}");
-            assert!(json.contains("https://www.getyourguide.com/s/?q=Antibes"));
-            assert!(json.contains("https://www.getyourguide.com/paris-l16/"));
+            assert!(!json.contains("someone"), "{json}");
+            assert!(json.contains(&format!(
+                "https://www.getyourguide.com/s/?q=Antibes&{PARTNER_QUERY_PARAM}={PARTNER_ID}"
+            )));
+            assert!(json.contains(&format!(
+                "https://www.getyourguide.com/paris-l16/?{PARTNER_QUERY_PARAM}={PARTNER_ID}"
+            )));
             // Le lien court repart intact : son identifiant est déjà dans le chemin.
             assert!(json.contains("https://gyg.me/aBcD12"));
         });
@@ -451,7 +451,7 @@ fn saving_normalizes_the_links_and_keeps_the_order() {
             // Relevé en https, identifiant périmé retiré, reste de la query intact.
             assert_eq!(
                 activities.links[0].url,
-                "https://www.getyourguide.com/paris-l16/?lc=fr"
+                "https://www.getyourguide.com/paris-l16/?lc=fr&partner_id=CLOQ42U"
             );
             assert_eq!(activities.links[0].label.get("fr"), "Paris");
             assert_eq!(activities.links[1].url, "https://gyg.me/aBcD12");
@@ -530,11 +530,7 @@ fn a_pasted_destination_url_becomes_the_link_and_names_its_place() {
 
 #[test]
 #[serial]
-fn a_destination_url_drops_a_partner_id_the_host_pasted_with_it() {
-    assert_eq!(
-        PARTNER_ID, "",
-        "ce test décrit le comportement identifiant vide"
-    );
+fn a_destination_url_trades_the_hosts_partner_id_for_ours() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .with_kv(
@@ -549,10 +545,12 @@ fn a_destination_url_drops_a_partner_id_the_host_pasted_with_it() {
         .run(|ctx| {
             let json = surface_json(&render_explore_detail(ctx));
             assert!(
-                json.contains("https://www.getyourguide.com/cannes-l15/"),
+                json.contains(&format!(
+                    "https://www.getyourguide.com/cannes-l15/?{PARTNER_QUERY_PARAM}={PARTNER_ID}"
+                )),
                 "{json}"
             );
-            assert!(!json.contains(PARTNER_QUERY_PARAM), "{json}");
+            assert!(!json.contains("someone"), "{json}");
         });
 }
 
@@ -641,7 +639,7 @@ fn saving_a_destination_url_normalizes_it_and_leaves_a_place_name_alone() {
             .expect("enregistré");
             assert_eq!(
                 get_config(ctx.clone()).expect("cfg").activities.destination,
-                "https://www.getyourguide.com/cannes-l15/"
+                "https://www.getyourguide.com/cannes-l15/?partner_id=CLOQ42U"
             );
 
             update_config(

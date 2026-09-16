@@ -72,8 +72,8 @@ reads that before clicking, not after.
 The affiliate id lives in a single constant, `PARTNER_ID` in
 [`src/affiliate.rs`](src/affiliate.rs). It is public by nature (it travels in
 every link), so it is not a secret — but it is compiled into the Wasm, so
-changing it means a module release. It is **empty by default**: while it is
-empty, links render with no partner parameter at all.
+changing it means a module release. **Emptying it stays legal**: links then
+render with no partner parameter at all, and nothing else changes.
 
 ## Surfaces
 
