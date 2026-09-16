@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.2](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v0.3.1...ev-parking-v0.3.2) (2026-09-16)
+
+
+### Bug Fixes
+
+* **deps:** move every module to SDK 5.0.0 ([b359890](https://github.com/PortakiApp/portaki-modules/commit/b359890b7dcadac933be0067d174fbd27a8ba318))
+* **deps:** move every module to SDK 5.1.0 ([78889c8](https://github.com/PortakiApp/portaki-modules/commit/78889c82a61c209dc87d10771a8e0e58c659d837))
+* **deps:** move every module to SDK 6.0.0 ([fe9d1b2](https://github.com/PortakiApp/portaki-modules/commit/fe9d1b2392a7a1167c9876e77a939efa2ab7a2d1))
+
 ## [0.3.1](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v0.3.0...ev-parking-v0.3.1) (2026-09-12)
 
 
