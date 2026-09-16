@@ -3,7 +3,8 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
-    Button, Card, Field, Form, InfoBanner, Page, Stack, Text, TextArea, TextInput, ToggleRow,
+    AddressMapPicker, Button, Card, Field, Form, InfoBanner, Page, Stack, Text, TextArea,
+    TextInput, ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -253,6 +254,9 @@ fn spots_to_submit(spots: &[SpotRow], lang: &str) -> Vec<crate::commands::SpotIn
                 .as_ref()
                 .map(|d| d.get(lang).to_string())
                 .unwrap_or_default(),
+            address: s.address.clone().unwrap_or_default(),
+            lat: s.lat,
+            lng: s.lng,
         })
         .collect()
 }
@@ -267,6 +271,10 @@ fn spot_card(index: usize, spot: Option<&SpotRow>, lang: &str) -> Component {
         .and_then(|s| s.detail.as_ref())
         .map(|d| d.get(lang))
         .unwrap_or("");
+    let address = spot.and_then(|s| s.address.as_deref()).unwrap_or("");
+    // Le sélecteur veut deux nombres, pas deux options : `0, 0` est sa façon de dire
+    // « aucune position », et c'est aussi ce que le module refuse de mettre sur la carte.
+    let (lat, lng) = spot.and_then(SpotRow::coords).unwrap_or((0.0, 0.0));
 
     Card::new()
         .title(format!("i18n:host.spot.slot{slot}"))
@@ -316,6 +324,16 @@ fn spot_card(index: usize, spot: Option<&SpotRow>, lang: &str) -> Component {
                         .name(format!("spots.{index}.description"))
                         .value(description),
                 )
+                .into(),
+            AddressMapPicker::new()
+                .addressName(format!("spots.{index}.address"))
+                .latName(format!("spots.{index}.lat"))
+                .lngName(format!("spots.{index}.lng"))
+                .address(address)
+                .lat(lat)
+                .lng(lng)
+                .label("i18n:host.spot.address")
+                .hint("i18n:host.spot.address.hint")
                 .into(),
         ])
         .into()

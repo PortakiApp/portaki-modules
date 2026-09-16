@@ -9,7 +9,7 @@ use serde_json::Value;
 
 const CONFIG_KEY: &str = "config";
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct ModuleConfig {
     #[serde(default)]
     pub spots: Vec<SpotRow>,
@@ -89,7 +89,9 @@ impl ModuleConfig {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// `Eq` en moins des autres structures du module : `lat` et `lng` sont des `f64`, qui
+/// n'ont pas d'égalité totale. `PartialEq` suffit partout où on compare des spots.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SpotRow {
     pub id: String,
     pub title: Localized,
@@ -105,6 +107,39 @@ pub struct SpotRow {
     pub note: Option<Localized>,
     #[serde(default)]
     pub detail: Option<Localized>,
+    /// Adresse postale telle que le sélecteur de carte l'a géocodée.
+    #[serde(default)]
+    pub address: Option<String>,
+    /// Latitude WGS-84, absente tant que l'hôte n'a pas posé le lieu sur la carte.
+    #[serde(default)]
+    pub lat: Option<f64>,
+    /// Longitude WGS-84.
+    #[serde(default)]
+    pub lng: Option<f64>,
+}
+
+impl SpotRow {
+    /// Position affichable du spot, ou `None`.
+    pub fn coords(&self) -> Option<(f64, f64)> {
+        valid_coords(self.lat?, self.lng?)
+    }
+}
+
+/// Filtre les coordonnées qu'on ne peut pas afficher.
+///
+/// Deux rejets. Hors des bornes WGS-84, d'abord : une valeur pareille ne vient pas d'une
+/// carte, et la projeter déplacerait toute la vue. Le point `0, 0` ensuite — au large du
+/// golfe de Guinée, où aucun hôte n'a de bonne adresse, mais où atterrit n'importe quel
+/// formulaire ayant soumis des champs vides. Le refuser vaut mieux que de centrer la carte
+/// du livret sur l'Atlantique.
+pub fn valid_coords(lat: f64, lng: f64) -> Option<(f64, f64)> {
+    if !(-90.0..=90.0).contains(&lat) || !(-180.0..=180.0).contains(&lng) {
+        return None;
+    }
+    if lat.abs() < f64::EPSILON && lng.abs() < f64::EPSILON {
+        return None;
+    }
+    Some((lat, lng))
 }
 
 /// N-language string map. Legacy `{fr,en}` deserializes as-is; extra langs via flatten.
@@ -286,6 +321,44 @@ mod tests {
     fn activities_are_off_by_default() {
         assert!(!ModuleConfig::default().activities.enabled);
         assert!(!ActivitiesConfig::default().enabled);
+    }
+
+    fn spot(value: Value) -> SpotRow {
+        serde_json::from_value(value).expect("spot")
+    }
+
+    #[test]
+    fn coordinates_off_the_planet_are_refused() {
+        assert_eq!(valid_coords(43.5513, 7.0128), Some((43.5513, 7.0128)));
+        assert_eq!(valid_coords(91.0, 7.0), None);
+        assert_eq!(valid_coords(-90.5, 7.0), None);
+        assert_eq!(valid_coords(43.0, 181.0), None);
+        // Null Island : ce que rend un formulaire dont les deux champs sont restés vides.
+        assert_eq!(valid_coords(0.0, 0.0), None);
+        // Mais une seule des deux à zéro reste un point comme un autre — le méridien de
+        // Greenwich passe par Villers-sur-Mer, et l'équateur par Quito.
+        assert_eq!(valid_coords(0.0, 7.0128), Some((0.0, 7.0128)));
+        assert_eq!(valid_coords(43.5513, 0.0), Some((43.5513, 0.0)));
+    }
+
+    #[test]
+    fn a_spot_reaches_the_map_only_with_both_coordinates() {
+        let located = spot(json!({
+            "id": "s1", "title": { "fr": "Plage" }, "lat": 43.55, "lng": 7.01
+        }));
+        assert_eq!(located.coords(), Some((43.55, 7.01)));
+
+        // Une seule des deux ne situe rien.
+        let half = spot(json!({ "id": "s1", "title": { "fr": "Plage" }, "lat": 43.55 }));
+        assert_eq!(half.coords(), None);
+
+        // Et une configuration écrite avant la carte n'en a aucune : elle se relit sans
+        // erreur, elle ne s'affiche simplement pas sur le plan.
+        let legacy = spot(json!({
+            "id": "s1", "title": { "fr": "Plage" }, "category": "Plage", "tag": "Coup de cœur"
+        }));
+        assert_eq!(legacy.coords(), None);
+        assert_eq!(legacy.category.as_deref(), Some("Plage"));
     }
 
     #[test]

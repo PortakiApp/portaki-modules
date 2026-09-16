@@ -27,6 +27,13 @@ pub struct SpotInput {
     pub tag: String,
     #[serde(default)]
     pub description: String,
+    /// Les trois champs du sélecteur de carte, soumis ensemble ou pas du tout.
+    #[serde(default)]
+    pub address: String,
+    #[serde(default)]
+    pub lat: Option<f64>,
+    #[serde(default)]
+    pub lng: Option<f64>,
 }
 
 /// Une ligne du tableau « Activités & billets » du formulaire hôte.
@@ -192,6 +199,18 @@ fn merge_spot(
         Some(detail)
     };
 
+    // Le sélecteur de carte soumet adresse et coordonnées ensemble. Un appelant plus
+    // ancien que la carte n'envoie aucun des trois : on garde alors la position
+    // enregistrée, au lieu de l'effacer au premier enregistrement.
+    let (address, lat, lng) = match (input.lat, input.lng) {
+        (Some(lat), Some(lng)) => (nonempty_opt(&input.address), Some(lat), Some(lng)),
+        _ => (
+            previous.and_then(|p| p.address.clone()),
+            previous.and_then(|p| p.lat),
+            previous.and_then(|p| p.lng),
+        ),
+    };
+
     Some(SpotRow {
         id: previous
             .map(|p| p.id.clone())
@@ -203,6 +222,9 @@ fn merge_spot(
         tag: nonempty_opt(&input.tag),
         note: previous.and_then(|p| p.note.clone()),
         detail,
+        address,
+        lat,
+        lng,
     })
 }
 
