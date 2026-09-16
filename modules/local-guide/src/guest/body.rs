@@ -2,7 +2,9 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::primitives::{InfoBanner, Link, ListItem, Pill, Pressable, Text};
+use portaki_sdk::sdui::primitives::{InfoBanner, Link, ListItem, Pill, Pressable, Stack, Text};
+
+use crate::activities::ActivitiesView;
 
 use super::load::GuestData;
 
@@ -73,6 +75,78 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
             children.push(Component::ListItem(item));
         }
     }
+
+    if let Some(view) = data.activities.as_ref() {
+        children.push(Component::Stack(
+            Stack::new().gap(8.0).children(build_activities(view)),
+        ));
+    }
+
+    children
+}
+
+/// Section « Activités & billets » : recherche d'abord, sélection de l'hôte ensuite,
+/// mention d'affiliation dessous.
+///
+/// Rien que des liens — pas de script, pas d'iframe, pas une image chargée chez
+/// GetYourGuide. Le livret n'appelle personne pour afficher cette section.
+fn build_activities(view: &ActivitiesView) -> Vec<Component> {
+    let mut children: Vec<Component> = vec![Text::new()
+        .text("i18n:guest.activities.title")
+        .variant(TextVariant::Title)
+        .into()];
+
+    if !view.intro.is_empty() {
+        children.push(
+            Text::new()
+                .text(view.intro.clone())
+                .variant(TextVariant::Body)
+                .into(),
+        );
+    }
+
+    // La destination est interpolée ici : une clé `i18n:` part telle quelle vers le shell,
+    // qui ne sait pas y injecter de variable.
+    let search_label = t!(
+        "guest.activities.searchLabel",
+        destination = &view.destination
+    )
+    .unwrap_or_else(|_| view.destination.clone());
+    children.push(
+        Link::new()
+            .label(search_label)
+            .href(view.search_url.clone())
+            .action(Action::External {
+                url: view.search_url.clone(),
+            })
+            .into(),
+    );
+
+    for link in &view.links {
+        let label = if link.label.is_empty() {
+            "i18n:guest.activities.openLink".to_string()
+        } else {
+            link.label.clone()
+        };
+        children.push(
+            Link::new()
+                .label(label)
+                .href(link.url.clone())
+                .action(Action::External {
+                    url: link.url.clone(),
+                })
+                .into(),
+        );
+    }
+
+    // Obligatoire, dans toutes les langues, sous la liste : ces liens rapportent à
+    // Portaki, le voyageur doit le lire avant de cliquer et non le découvrir après.
+    children.push(
+        Text::new()
+            .text("i18n:guest.activities.disclosure")
+            .variant(TextVariant::Caption)
+            .into(),
+    );
 
     children
 }

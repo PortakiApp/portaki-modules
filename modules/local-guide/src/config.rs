@@ -18,6 +18,44 @@ pub struct ModuleConfig {
     /// Per-language disclaimer (plain string legacy → `fr` on load).
     #[serde(default, deserialize_with = "deserialize_localized_field")]
     pub disclaimer: Localized,
+    /// Section « Activités & billets » (liens d'affiliation GetYourGuide).
+    #[serde(default)]
+    pub activities: ActivitiesConfig,
+}
+
+/// Configuration de la section « Activités & billets ».
+///
+/// La section est **éteinte par défaut**. Ces liens rapportent une commission à Portaki :
+/// personne ne doit se mettre à en afficher sans l'avoir décidé, et une configuration
+/// écrite avant que la section existe n'a pas la clé — elle reste donc éteinte.
+///
+/// Une fois allumée, tout le reste est optionnel : elle se débrouille avec la ville de
+/// l'adresse du logement, sans que l'hôte ait rien d'autre à saisir.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ActivitiesConfig {
+    /// Affiche la section dans le livret. Éteinte tant que l'hôte ne l'allume pas.
+    #[serde(default)]
+    pub enabled: bool,
+    /// Ville visée, quand celle de l'adresse ne convient pas (« Antibes »).
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub destination: String,
+    /// Phrase d'introduction affichée au-dessus des liens.
+    #[serde(default, deserialize_with = "deserialize_localized_field")]
+    pub intro: Localized,
+    /// Liens choisis par l'hôte, dans son ordre.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub links: Vec<ActivityRow>,
+}
+
+/// Un lien choisi par l'hôte : `{ url, label? }`.
+///
+/// `label` accepte une chaîne simple autant qu'une carte par langue — c'est le même
+/// `Localized` que partout ailleurs dans le module.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct ActivityRow {
+    pub url: String,
+    #[serde(default, deserialize_with = "deserialize_localized_field")]
+    pub label: Localized,
 }
 
 impl ModuleConfig {
@@ -232,5 +270,35 @@ mod tests {
         }))
         .unwrap();
         assert_eq!(config.disclaimer.get("fr"), "Suggestions non partenaires");
+    }
+
+    #[test]
+    fn activities_stay_off_on_a_config_that_predates_them() {
+        // Les configurations déjà en base n'ont pas la clé. Elles ne doivent pas se
+        // mettre à afficher des liens d'affiliation parce qu'on a publié une version.
+        let config: ModuleConfig = serde_json::from_value(json!({ "spots": [] })).unwrap();
+        assert!(!config.activities.enabled);
+        assert!(config.activities.destination.is_empty());
+        assert!(config.activities.links.is_empty());
+    }
+
+    #[test]
+    fn activities_are_off_by_default() {
+        assert!(!ModuleConfig::default().activities.enabled);
+        assert!(!ActivitiesConfig::default().enabled);
+    }
+
+    #[test]
+    fn activity_label_accepts_a_plain_string() {
+        let config: ModuleConfig = serde_json::from_value(json!({
+            "activities": {
+                "links": [{ "url": "https://gyg.me/aBcD12", "label": "Visite du Suquet" }]
+            }
+        }))
+        .unwrap();
+        assert_eq!(
+            config.activities.links[0].label.get("fr"),
+            "Visite du Suquet"
+        );
     }
 }
