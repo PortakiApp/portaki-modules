@@ -102,18 +102,21 @@ jobs:
       - name: Format
         run: cargo fmt --all -- --check
 
+      # `--locked` : un `Cargo.lock` qui ne suit plus les `Cargo.toml` fait échouer la PR au lieu
+      # d'être réécrit en silence chez chaque développeur. La PR de release y passe aussi — c'est
+      # là qu'on verrait release-please cesser de bumper le lock (extra-file `/Cargo.lock`).
       # Host targets only — wasm32 is for the wasm matrix job.
       - name: Clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --locked --workspace --all-targets -- -D warnings
 
       - name: Unit tests
-        run: cargo test --workspace --lib
+        run: cargo test --locked --workspace --lib
 
       - name: Integration tests
-        run: cargo test --workspace --test integration
+        run: cargo test --locked --workspace --test integration
 
       - name: Doc tests
-        run: cargo test --workspace --doc
+        run: cargo test --locked --workspace --doc
 
   wasm:
     name: wasm (${{ matrix.module }})
