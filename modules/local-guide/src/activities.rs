@@ -231,7 +231,10 @@ mod tests {
         let config = activities(" Antibes ");
         let resolved = destination(&config, Some("Cannes, France")).expect("destination");
         assert_eq!(resolved.label, "Antibes");
-        assert_eq!(resolved.url, "https://www.getyourguide.com/s/?q=Antibes");
+        assert_eq!(
+            resolved.url,
+            "https://www.getyourguide.com/s/?q=Antibes&partner_id=CLOQ42U"
+        );
         // Et il tient tout seul quand l'adresse n'est pas géocodée.
         assert_eq!(
             destination(&config, None).expect("destination").label,
@@ -244,13 +247,13 @@ mod tests {
         for (raw, expected_url, expected_label) in [
             (
                 "https://www.getyourguide.com/cannes-l15/",
-                "https://www.getyourguide.com/cannes-l15/",
+                "https://www.getyourguide.com/cannes-l15/?partner_id=CLOQ42U",
                 "Cannes",
             ),
-            // Relevée en https et débarrassée d'un identifiant collé avec elle.
+            // Relevée en https, et l'identifiant collé avec elle remplacé par le nôtre.
             (
                 "www.getyourguide.com/aix-en-provence-l1234/?partner_id=someone",
-                "https://www.getyourguide.com/aix-en-provence-l1234/",
+                "https://www.getyourguide.com/aix-en-provence-l1234/?partner_id=CLOQ42U",
                 "Aix en Provence",
             ),
         ] {
@@ -292,7 +295,7 @@ mod tests {
         assert_eq!(view.destination, "Nîmes");
         assert_eq!(
             view.destination_url,
-            "https://www.getyourguide.com/s/?q=N%C3%AEmes"
+            "https://www.getyourguide.com/s/?q=N%C3%AEmes&partner_id=CLOQ42U"
         );
     }
 
@@ -340,10 +343,19 @@ mod tests {
         };
         let view = resolve(&config, Some("Cannes, France"), "fr-FR", "fr-FR").expect("view");
         assert_eq!(view.links.len(), MAX_CURATED_LINKS);
-        assert!(view.links[0].url.ends_with("/tour-0"));
-        assert!(view.links[MAX_CURATED_LINKS - 1]
-            .url
-            .ends_with(&format!("/tour-{}", MAX_CURATED_LINKS - 1)));
+        // L'URL complète, plutôt qu'un suffixe : l'identifiant partenaire est en queue,
+        // et « finit par tour-1 » se confondrait de toute façon avec `tour-10`.
+        assert_eq!(
+            view.links[0].url,
+            "https://www.getyourguide.com/tour-0?partner_id=CLOQ42U"
+        );
+        assert_eq!(
+            view.links[MAX_CURATED_LINKS - 1].url,
+            format!(
+                "https://www.getyourguide.com/tour-{}?partner_id=CLOQ42U",
+                MAX_CURATED_LINKS - 1
+            )
+        );
         assert_eq!(view.links[3].label, "Sortie 3");
     }
 
