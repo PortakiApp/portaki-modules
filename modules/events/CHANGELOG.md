@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/PortakiApp/portaki-modules/compare/events-v0.3.2...events-v0.4.0) (2026-09-16)
+
+
+### Features
+
+* **events:** expose located events as map markers ([2cbd231](https://github.com/PortakiApp/portaki-modules/commit/2cbd231469a02fa7596ab8e95e7c833b830ffd6c))
+
 ## [0.3.2](https://github.com/PortakiApp/portaki-modules/compare/events-v0.3.1...events-v0.3.2) (2026-09-16)
 
 
