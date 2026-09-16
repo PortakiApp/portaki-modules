@@ -35,6 +35,28 @@ The destination is the host's `destination` override when set, otherwise the cit
 parsed from the property address (`PropertyContext::address` — there is no `city`
 field). With neither, the section does not render.
 
+The `destination` field accepts **either a place name or a GetYourGuide URL**:
+
+- **Free text** (`Antibes`) builds the search link `…/s/?q=Antibes`. That search
+  picks its results from the visitor's IP and ignores the query for a guest
+  arriving from abroad or through a VPN — fine for most guests, unreliable for
+  the rest.
+- **A pasted URL** (`https://www.getyourguide.com/antibes-l1234/`) is used as the
+  destination link itself, and is correct wherever the guest connects from. This
+  is the reliable option, and the host sheet says so.
+
+A value counts as a URL when it declares a scheme, starts with `www.`, names a
+GetYourGuide host, or pairs a plausible host with a path — a place name never
+does. A pasted URL goes through the **same allowlist and normalization as the
+curated links**: `getyourguide.com` (any subdomain) or `gyg.me` only, partner id
+set or replaced, anything else refused at save with
+`activities_url_not_getyourguide` and flagged in the host sheet before saving.
+
+The button label names the place: it comes from the destination slug
+(`/cannes-l15/` → `Cannes`, `/aix-en-provence-l1234/` → `Aix en Provence`), then
+from the city in the address when the URL carries no slug (a `gyg.me` short
+link), then from a neutral label (`guest.activities.browseLabel`).
+
 Host-curated links are accepted only on `getyourguide.com` (any subdomain, any
 path) or the `gyg.me` short domain; anything else is refused at save time with
 `activities_url_not_getyourguide`. Long links get the partner id query parameter

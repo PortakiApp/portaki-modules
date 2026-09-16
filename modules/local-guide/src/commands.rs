@@ -3,7 +3,7 @@
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::affiliate::{normalize_curated_url, CuratedUrlError, MAX_CURATED_LINKS};
+use crate::affiliate::{looks_like_url, normalize_curated_url, CuratedUrlError, MAX_CURATED_LINKS};
 use crate::config::{
     load_config, save_config, ActivitiesConfig, ActivityRow, Localized, ModuleConfig, SpotRow,
 };
@@ -96,10 +96,26 @@ fn resolve_activities(
 
     Ok(ActivitiesConfig {
         enabled: args.activities_enabled.unwrap_or(existing.enabled),
-        destination: args.activities_destination.trim().to_string(),
+        destination: resolve_destination(&args.activities_destination)?,
         intro,
         links,
     })
+}
+
+/// Le champ Destination : un nom de ville, ou l'URL de la page GetYourGuide du lieu.
+///
+/// Une URL y passe par la liste blanche et la normalisation des liens choisis — même
+/// domaine autorisé, même identifiant partenaire reposé, même refus et même message si
+/// elle mène ailleurs. Il n'y a pas deux règles selon l'endroit où l'hôte colle un lien.
+///
+/// Un nom de ville ressort tel quel, débarrassé de ses espaces.
+fn resolve_destination(raw: &str) -> Result<String> {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() || !looks_like_url(trimmed) {
+        return Ok(trimmed.to_string());
+    }
+    normalize_curated_url(trimmed)
+        .map_err(|_| PortakiError::Host(ERR_ACTIVITY_URL_NOT_GYG.to_string()))
 }
 
 fn resolve_activity_links(
