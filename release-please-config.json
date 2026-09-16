@@ -28,6 +28,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='access-guide')].version"
         }
       ],
       "changelog-sections": [
@@ -102,6 +107,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='appliances')].version"
         }
       ],
       "changelog-sections": [
@@ -176,6 +186,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='checklist')].version"
         }
       ],
       "changelog-sections": [
@@ -250,6 +265,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='consumables')].version"
         }
       ],
       "changelog-sections": [
@@ -324,6 +344,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='emergency-contacts')].version"
         }
       ],
       "changelog-sections": [
@@ -398,6 +423,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='ev-parking')].version"
         }
       ],
       "changelog-sections": [
@@ -472,6 +502,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='events')].version"
         }
       ],
       "changelog-sections": [
@@ -546,6 +581,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='facility-hours')].version"
         }
       ],
       "changelog-sections": [
@@ -620,6 +660,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='guest-reviews')].version"
         }
       ],
       "changelog-sections": [
@@ -694,6 +739,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='ical-sync')].version"
         }
       ],
       "changelog-sections": [
@@ -768,6 +818,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='issue-report')].version"
         }
       ],
       "changelog-sections": [
@@ -842,6 +897,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='local-guide')].version"
         }
       ],
       "changelog-sections": [
@@ -916,6 +976,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='lost-found')].version"
         }
       ],
       "changelog-sections": [
@@ -990,6 +1055,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='nuki')].version"
         }
       ],
       "changelog-sections": [
@@ -1064,6 +1134,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='pre-arrival-form')].version"
         }
       ],
       "changelog-sections": [
@@ -1138,6 +1213,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='rules')].version"
         }
       ],
       "changelog-sections": [
@@ -1212,6 +1292,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='sections')].version"
         }
       ],
       "changelog-sections": [
@@ -1286,6 +1371,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='train')].version"
         }
       ],
       "changelog-sections": [
@@ -1360,6 +1450,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='waste-recycling')].version"
         }
       ],
       "changelog-sections": [
@@ -1434,6 +1529,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='weather')].version"
         }
       ],
       "changelog-sections": [
@@ -1508,6 +1608,11 @@
           "type": "json",
           "path": "portaki.module.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "/Cargo.lock",
+          "jsonpath": "$.package[?(@.name.value=='wifi-guest')].version"
         }
       ],
       "changelog-sections": [

@@ -152,6 +152,16 @@ for mod_id, ver in modules:
                 "path": "portaki.module.json",
                 "jsonpath": "$.version",
             },
+            # The workspace lock records every member's version. Bumping Cargo.toml alone
+            # left it behind after each release, and the next cargo command rewrote it in
+            # every checkout. A leading `/` makes the path repo-relative; the grouped PR
+            # chains the 21 updates on the same file. `.value`: release-please parses TOML
+            # into tagged nodes, so a bare `@.name` never equals a string.
+            {
+                "type": "toml",
+                "path": "/Cargo.lock",
+                "jsonpath": f"$.package[?(@.name.value=='{mod_id}')].version",
+            },
         ],
         "changelog-sections": changelog_sections,
     }

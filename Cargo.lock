@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "access-guide"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -34,7 +34,7 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
 name = "appliances"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -107,7 +107,7 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
 name = "checklist"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -134,7 +134,7 @@ dependencies = [
 
 [[package]]
 name = "consumables"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -161,7 +161,7 @@ checksum = "9e5e8f6c15a24b9a3ee5efec809ccd006d3b30e8b3bb63c39af737c7f87daa1d"
 
 [[package]]
 name = "emergency-contacts"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "extism-pdk",
  "portaki-sdk",
@@ -180,7 +180,7 @@ checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
 name = "ev-parking"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -195,7 +195,7 @@ dependencies = [
 
 [[package]]
 name = "events"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -276,7 +276,7 @@ dependencies = [
 
 [[package]]
 name = "facility-hours"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "extism-pdk",
  "portaki-sdk",
@@ -341,7 +341,7 @@ dependencies = [
 
 [[package]]
 name = "guest-reviews"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "extism-pdk",
  "portaki-sdk",
@@ -384,7 +384,7 @@ dependencies = [
 
 [[package]]
 name = "ical-sync"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -418,7 +418,7 @@ dependencies = [
 
 [[package]]
 name = "issue-report"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -465,7 +465,7 @@ checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
 
 [[package]]
 name = "local-guide"
-version = "0.3.1"
+version = "0.5.0"
 dependencies = [
  "extism-pdk",
  "portaki-sdk",
@@ -493,7 +493,7 @@ checksum = "0ceec5bc11778974d1bcb055b18002eba7f4b3518b6a0081b3af5f21666da9ad"
 
 [[package]]
 name = "lost-found"
-version = "0.6.1"
+version = "0.6.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -537,7 +537,7 @@ checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
 name = "nuki"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "extism-pdk",
  "portaki-sdk",
@@ -649,7 +649,7 @@ dependencies = [
 
 [[package]]
 name = "pre-arrival-form"
-version = "0.7.1"
+version = "0.7.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -759,7 +759,7 @@ dependencies = [
 
 [[package]]
 name = "rules"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -786,7 +786,7 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "sections"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -959,7 +959,7 @@ dependencies = [
 
 [[package]]
 name = "train"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "extism-pdk",
  "portaki-sdk",
@@ -1044,7 +1044,7 @@ dependencies = [
 
 [[package]]
 name = "waste-recycling"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "extism-pdk",
  "portaki-sdk",
@@ -1057,7 +1057,7 @@ dependencies = [
 
 [[package]]
 name = "weather"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -1073,7 +1073,7 @@ dependencies = [
 
 [[package]]
 name = "wifi-guest"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "chrono",
  "extism-pdk",
