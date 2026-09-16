@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.4.0...local-guide-v0.5.0) (2026-09-16)
+
+
+### Features
+
+* **local-guide:** accept a pasted destination URL ([87c389b](https://github.com/PortakiApp/portaki-modules/commit/87c389bac29072910e050e3a780f592cf0016023))
+
 ## [0.4.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.3.1...local-guide-v0.4.0) (2026-09-16)
 
 
