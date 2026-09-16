@@ -3,7 +3,16 @@
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::config::{load_config, save_config, Localized, ModuleConfig, SpotRow};
+use crate::affiliate::{normalize_curated_url, CuratedUrlError, MAX_CURATED_LINKS};
+use crate::config::{
+    load_config, save_config, ActivitiesConfig, ActivityRow, Localized, ModuleConfig, SpotRow,
+};
+
+/// Une URL proposée par l'hôte n'est ni GetYourGuide ni un lien court `gyg.me`.
+pub const ERR_ACTIVITY_URL_NOT_GYG: &str = "activities_url_not_getyourguide";
+
+/// Plus de [`MAX_CURATED_LINKS`] liens soumis.
+pub const ERR_ACTIVITIES_TOO_MANY: &str = "activities_too_many";
 
 #[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -20,8 +29,18 @@ pub struct SpotInput {
     pub description: String,
 }
 
+/// Une ligne du tableau « Activités & billets » du formulaire hôte.
 #[portaki_sdk::params]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ActivityInput {
+    #[serde(default)]
+    pub url: String,
+    #[serde(default)]
+    pub label: String,
+}
+
+#[portaki_sdk::params]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UpdateConfigArgs {
     #[serde(default)]
     pub spots: Vec<SpotInput>,
@@ -29,6 +48,15 @@ pub struct UpdateConfigArgs {
     pub spots_json: String,
     #[serde(default)]
     pub disclaimer: String,
+    /// `None` = champ non soumis, on garde l'état enregistré.
+    #[serde(default)]
+    pub activities_enabled: Option<bool>,
+    #[serde(default)]
+    pub activities_destination: String,
+    #[serde(default)]
+    pub activities_intro: String,
+    #[serde(default)]
+    pub activities: Vec<ActivityInput>,
 }
 
 #[portaki_sdk::command(name = "updateConfig")]
@@ -36,13 +64,75 @@ pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
     let lang = Localized::lang_code(&ctx.locale);
     let existing = load_config().unwrap_or_default();
     let spots = resolve_spots(&args, &existing.spots, &lang);
+    let activities = resolve_activities(&args, &existing.activities, &lang)?;
     let mut disclaimer = existing.disclaimer;
     disclaimer.set(&lang, args.disclaimer.trim().to_string());
     save_config(&ModuleConfig {
         spots,
         spots_json: String::new(),
         disclaimer,
+        activities,
     })
+}
+
+/// Valide et normalise la section activités soumise par l'hôte.
+///
+/// Un domaine étranger est refusé ici, et non silencieusement ignoré : l'hôte a collé une
+/// URL en pensant l'afficher, la faire disparaître sans rien dire serait pire que l'erreur.
+fn resolve_activities(
+    args: &UpdateConfigArgs,
+    existing: &ActivitiesConfig,
+    lang: &str,
+) -> Result<ActivitiesConfig> {
+    let mut intro = existing.intro.clone();
+    intro.set(lang, args.activities_intro.trim().to_string());
+
+    let links = if args.activities.is_empty() {
+        // Champ non soumis (appelant plus ancien que la section) — on ne vide rien.
+        existing.links.clone()
+    } else {
+        resolve_activity_links(&args.activities, &existing.links, lang)?
+    };
+
+    Ok(ActivitiesConfig {
+        enabled: args.activities_enabled.unwrap_or(existing.enabled),
+        destination: args.activities_destination.trim().to_string(),
+        intro,
+        links,
+    })
+}
+
+fn resolve_activity_links(
+    inputs: &[ActivityInput],
+    existing: &[ActivityRow],
+    lang: &str,
+) -> Result<Vec<ActivityRow>> {
+    let mut rows = Vec::new();
+    for (index, input) in inputs.iter().enumerate() {
+        let url = match normalize_curated_url(&input.url) {
+            Ok(url) => url,
+            // Ligne laissée vide : c'est un créneau libre, pas une faute.
+            Err(CuratedUrlError::Empty) => continue,
+            Err(CuratedUrlError::NotGetYourGuide) => {
+                return Err(PortakiError::Host(ERR_ACTIVITY_URL_NOT_GYG.to_string()))
+            }
+        };
+
+        // L'index est celui du créneau affiché : il désigne la même ligne que celle
+        // rendue depuis la configuration, donc les autres langues du libellé suivent.
+        let mut label = existing
+            .get(index)
+            .map(|row| row.label.clone())
+            .unwrap_or_default();
+        label.set(lang, input.label.trim().to_string());
+
+        rows.push(ActivityRow { url, label });
+    }
+
+    if rows.len() > MAX_CURATED_LINKS {
+        return Err(PortakiError::Host(ERR_ACTIVITIES_TOO_MANY.to_string()));
+    }
+    Ok(rows)
 }
 
 fn resolve_spots(args: &UpdateConfigArgs, existing: &[SpotRow], lang: &str) -> Vec<SpotRow> {
