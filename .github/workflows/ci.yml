@@ -109,11 +109,12 @@ jobs:
       - name: Clippy
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
 
-      - name: Unit tests
-        run: cargo test --locked --workspace --lib
-
-      - name: Integration tests
-        run: cargo test --locked --workspace --test integration
+      # `--tests` : les tests unitaires et tous les `tests/*.rs`. Nommer les fichiers un à un
+      # laissait de côté ceux qu'on oubliait d'ajouter ici (`map_markers.rs`), et la batterie
+      # de conformité du SDK (`tests/conformance.rs`) doit tourner avant la publication, qui la
+      # relance module par module et refuse de publier sans elle.
+      - name: Unit, integration and conformance tests
+        run: cargo test --locked --workspace --tests
 
       - name: Doc tests
         run: cargo test --locked --workspace --doc
@@ -256,9 +257,21 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # La cible de l'hôte vient toujours avec la toolchain : `portaki publish` y compile et
+      # lance les tests du module (batterie de conformité comprise) avant de pousser quoi que
+      # ce soit, `--skip-build` ou non.
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
+
+      # Ces tests compilent dans `modules/<mod>/target/debug`, que l'artefact wasm ne contient
+      # pas. Clé propre au job : celle du job `wasm` porte un build release wasm32.
+      # Avant le téléchargement, pour que l'artefact vérifié recouvre ce que le cache restaure.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-bin: "false"
+          workspaces: modules/${{ matrix.module }} -> target
+          shared-key: publish-${{ matrix.module }}
 
       # upload-artifact roots at modules/<mod>/target (LCA of wasm + portaki/).
       - name: Download wasm artifact
