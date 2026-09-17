@@ -4,68 +4,17 @@
 
 use serial_test::serial;
 
-use portaki_sdk::sdui::component::Component;
-use portaki_sdk::sdui::surface::Surface;
 use uuid::Uuid;
 
 use chrono::{Duration, Utc};
 use portaki_sdk::prelude::StayContext;
-use portaki_test_utils::{MockContext, Property};
+use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use pre_arrival_form::{
     get_status, load_config, render_guest_form, render_home_card, render_host_main,
     render_host_stay, reset_test_store, send_form_available, submit, update_config, ShowWhen,
     SubmitArgs, UpdateConfigArgs,
 };
 use serde_json::json;
-
-fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
-    fn walk(node: &Component, type_name: &str) -> bool {
-        let matches = match node {
-            Component::Card(_) if type_name == "Card" => true,
-            Component::Text(_) if type_name == "Text" => true,
-            Component::EmptyState(_) if type_name == "EmptyState" => true,
-            Component::Form(_) if type_name == "Form" => true,
-            Component::Page(_) if type_name == "Page" => true,
-            Component::Button(_) if type_name == "Button" => true,
-            Component::TimePicker(_) if type_name == "TimePicker" => true,
-            Component::TextArea(_) if type_name == "TextArea" => true,
-            Component::ChoiceList(_) if type_name == "ChoiceList" => true,
-            Component::ToggleRow(_) if type_name == "ToggleRow" => true,
-            Component::Grid(_) if type_name == "Grid" => true,
-            Component::Pill(_) if type_name == "Pill" => true,
-            Component::ListItem(_) if type_name == "ListItem" => true,
-            Component::Stack(_) if type_name == "Stack" => true,
-            Component::HostFragment(_) if type_name == "HostFragment" => true,
-            Component::ChecklistItem(_) if type_name == "ChecklistItem" => true,
-            _ => false,
-        };
-        if matches {
-            return true;
-        }
-        for child in child_components(node) {
-            if walk(child, type_name) {
-                return true;
-            }
-        }
-        false
-    }
-    walk(&surface.root, type_name)
-}
-
-fn child_components(node: &Component) -> Vec<&Component> {
-    match node {
-        Component::Stack(inner) => inner.children.iter().collect(),
-        Component::Card(inner) => inner.children.iter().collect(),
-        Component::EmptyState(inner) => inner.children.iter().collect(),
-        Component::Group(inner) => inner.children.iter().collect(),
-        Component::Form(inner) => inner.children.iter().collect(),
-        Component::Page(inner) => inner.children.iter().collect(),
-        Component::Field(inner) => inner.children.iter().collect(),
-        Component::ListItem(inner) => inner.children.iter().collect(),
-        Component::Grid(inner) => inner.children.iter().collect(),
-        _ => Vec::new(),
-    }
-}
 
 fn sample_submit() -> SubmitArgs {
     SubmitArgs {
@@ -87,9 +36,9 @@ fn home_card_renders_form_when_incomplete() {
         .with_property(Property::default())
         .run(|ctx| {
             let surface = render_home_card(ctx.clone());
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "HostFragment"));
-            assert!(contains_component_type(&surface, "ListItem"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("HostFragment"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("home.formalities.pending"));
             assert!(json.contains("home.task.preArrival.label"));
@@ -97,12 +46,12 @@ fn home_card_renders_form_when_incomplete() {
             assert!(!json.contains("TimePicker"));
 
             let form = render_guest_form(ctx);
-            assert!(contains_component_type(&form, "Form"));
-            assert!(contains_component_type(&form, "TimePicker"));
-            assert!(contains_component_type(&form, "TextArea"));
-            assert!(contains_component_type(&form, "Button"));
+            assert!(SurfaceAssertions::new(&form).contains_type("Form"));
+            assert!(SurfaceAssertions::new(&form).contains_type("TimePicker"));
+            assert!(SurfaceAssertions::new(&form).contains_type("TextArea"));
+            assert!(SurfaceAssertions::new(&form).contains_type("Button"));
             // Overlay chrome owns framing — no nested Card around the form.
-            assert!(!contains_component_type(&form, "Card"));
+            assert!(!SurfaceAssertions::new(&form).contains_type("Card"));
             let form_json = serde_json::to_string(&form).expect("form json");
             assert!(form_json.contains("home.card.intro"));
             assert!(form_json.contains("submit"));
@@ -141,8 +90,8 @@ fn submit_then_status_and_thanks_card() {
             assert_eq!(after.guest_occasion.as_deref(), Some("Anniversaire"));
 
             let surface = render_home_card(ctx.clone());
-            assert!(contains_component_type(&surface, "ListItem"));
-            assert!(contains_component_type(&surface, "HostFragment"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("HostFragment"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("home.formalities.allReady"));
             assert!(json.contains("home.task.completed"));
@@ -151,8 +100,8 @@ fn submit_then_status_and_thanks_card() {
             assert!(!json.contains("TimePicker"));
 
             let form = render_guest_form(ctx);
-            assert!(contains_component_type(&form, "Form"));
-            assert!(contains_component_type(&form, "Button"));
+            assert!(SurfaceAssertions::new(&form).contains_type("Form"));
+            assert!(SurfaceAssertions::new(&form).contains_type("Button"));
             let form_json = serde_json::to_string(&form).expect("form json");
             assert!(form_json.contains("form.submitUpdate"));
             assert!(form_json.contains("17:30"));
@@ -190,8 +139,8 @@ fn completed_form_locks_after_checkin() {
             });
 
             let form = render_guest_form(ctx.clone());
-            assert!(!contains_component_type(&form, "Form"));
-            assert!(!contains_component_type(&form, "Button"));
+            assert!(!SurfaceAssertions::new(&form).contains_type("Form"));
+            assert!(!SurfaceAssertions::new(&form).contains_type("Button"));
             let form_json = serde_json::to_string(&form).expect("form json");
             assert!(form_json.contains("home.card.thanks"));
             assert!(form_json.contains("home.card.lockedHint"));
@@ -249,10 +198,10 @@ fn home_card_gated_omits_form_teaser_keeps_police_fragment() {
             });
 
             let surface = render_home_card(ctx);
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "HostFragment"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("HostFragment"));
             // Gated: no form ListItem / soon teaser — police fragment only.
-            assert!(!contains_component_type(&surface, "ListItem"));
+            assert!(!SurfaceAssertions::new(&surface).contains_type("ListItem"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(!json.contains("home.formalities.pendingGate"));
             assert!(!json.contains("home.card.notYet"));
@@ -334,11 +283,11 @@ fn host_main_renders_config_editor() {
         .with_property(Property::default())
         .run(|ctx| {
             let surface = render_host_main(ctx);
-            assert!(contains_component_type(&surface, "Page"));
-            assert!(contains_component_type(&surface, "Form"));
-            assert!(contains_component_type(&surface, "ChoiceList"));
-            assert!(contains_component_type(&surface, "ToggleRow"));
-            assert!(contains_component_type(&surface, "Grid"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Page"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ChoiceList"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ToggleRow"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Grid"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("show_when"));
             assert!(json.contains("ask_arrival_time"));
@@ -480,9 +429,9 @@ fn host_stay_surface_pending_without_response() {
                 "stayDates": "21 – 26 août",
             });
             let surface = render_host_stay(ctx);
-            assert!(contains_component_type(&surface, "Page"));
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "Pill"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Page"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Pill"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("surface.host.stay.title"));
             assert!(json.contains("host.stay.status.pending"));
@@ -523,9 +472,9 @@ fn host_stay_surface_shows_completed_response() {
         .run(|mut ctx| {
             ctx.input = serde_json::json!({ "stayId": stay_id.to_string() });
             let surface = render_host_stay(ctx);
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "Pill"));
-            assert!(contains_component_type(&surface, "ListItem"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Pill"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("host.stay.status.done"));
             assert!(

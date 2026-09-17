@@ -9,52 +9,7 @@ use checklist::{
     reset_test_store, uncomplete_item, update_config, ChecklistItemInput, ItemIdArgs,
     ReplaceItemsArgs, UpdateConfigArgs,
 };
-use portaki_sdk::sdui::component::Component;
-use portaki_sdk::sdui::surface::Surface;
-use portaki_test_utils::{MockContext, Property};
-
-fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
-    fn walk(node: &Component, type_name: &str) -> bool {
-        let matches = match node {
-            Component::Card(_) if type_name == "Card" => true,
-            Component::Text(_) if type_name == "Text" => true,
-            Component::EmptyState(_) if type_name == "EmptyState" => true,
-            Component::ChecklistItem(_) if type_name == "ChecklistItem" => true,
-            Component::IndexedInput(_) if type_name == "IndexedInput" => true,
-            Component::Grid(_) if type_name == "Grid" => true,
-            Component::Pressable(_) if type_name == "Pressable" => true,
-            Component::Form(_) if type_name == "Form" => true,
-            Component::Page(_) if type_name == "Page" => true,
-            Component::Button(_) if type_name == "Button" => true,
-            _ => false,
-        };
-        if matches {
-            return true;
-        }
-        for child in child_components(node) {
-            if walk(child, type_name) {
-                return true;
-            }
-        }
-        false
-    }
-    walk(&surface.root, type_name)
-}
-
-fn child_components(node: &Component) -> Vec<&Component> {
-    match node {
-        Component::Stack(inner) => inner.children.iter().collect(),
-        Component::Grid(inner) => inner.children.iter().collect(),
-        Component::Card(inner) => inner.children.iter().collect(),
-        Component::EmptyState(inner) => inner.children.iter().collect(),
-        Component::Group(inner) => inner.children.iter().collect(),
-        Component::Form(inner) => inner.children.iter().collect(),
-        Component::Page(inner) => inner.children.iter().collect(),
-        Component::Pressable(inner) => inner.children.iter().collect(),
-        Component::Field(inner) => inner.children.iter().collect(),
-        _ => Vec::new(),
-    }
-}
+use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 
 #[test]
 #[serial]
@@ -64,7 +19,7 @@ fn home_card_empty_when_no_items() {
         .with_property(Property::default())
         .run(|ctx| {
             let surface = render_home_card(ctx);
-            assert!(contains_component_type(&surface, "Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("home.card.empty"));
         });
@@ -100,9 +55,9 @@ fn home_card_renders_toggles_with_items() {
             .expect("replace");
 
             let surface = render_home_card(ctx);
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "ChecklistItem"));
-            assert!(contains_component_type(&surface, "Pressable"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ChecklistItem"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Pressable"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("Fermer les volets") || json.contains("Close shutters"));
             assert!(json.contains("completeItem"));
@@ -152,13 +107,13 @@ fn host_main_renders_form() {
         .with_property(Property::default())
         .run(|ctx| {
             let surface = render_host_main(ctx);
-            assert!(contains_component_type(&surface, "Page"));
-            assert!(contains_component_type(&surface, "Form"));
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "Grid"));
-            assert!(contains_component_type(&surface, "IndexedInput"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Page"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Grid"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("IndexedInput"));
             // Workspace header Save owns persistence — no in-form Enregistrer.
-            assert!(!contains_component_type(&surface, "Button"));
+            assert!(!SurfaceAssertions::new(&surface).contains_type("Button"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("host.item.empty"));
             // Wasm emits all slots; host binding keeps one trailing empty while typing.

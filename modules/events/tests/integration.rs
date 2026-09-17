@@ -7,9 +7,7 @@ use events::{
     get_config, render_explore_detail, render_home_card, render_upcoming_card, update_config,
     EventInput, UpdateConfigArgs,
 };
-use portaki_sdk::sdui::component::Component;
-use portaki_sdk::sdui::surface::Surface;
-use portaki_test_utils::MockContext;
+use portaki_test_utils::{MockContext, SurfaceAssertions};
 use serde_json::json;
 
 fn sample_config_bytes() -> Vec<u8> {
@@ -49,55 +47,13 @@ fn openagenda_payload() -> String {
     .to_string()
 }
 
-fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
-    fn walk(node: &Component, type_name: &str) -> bool {
-        let matches = match node {
-            Component::Card(_) if type_name == "Card" => true,
-            Component::ListItem(_) if type_name == "ListItem" => true,
-            Component::Pill(_) if type_name == "Pill" => true,
-            Component::Pressable(_) if type_name == "Pressable" => true,
-            Component::InfoBanner(_) if type_name == "InfoBanner" => true,
-            Component::EmptyState(_) if type_name == "EmptyState" => true,
-            Component::Link(_) if type_name == "Link" => true,
-            Component::Stack(_) if type_name == "Stack" => true,
-            Component::Map(_) if type_name == "Map" => true,
-            Component::Text(_) if type_name == "Text" => true,
-            _ => false,
-        };
-        if matches {
-            return true;
-        }
-        for child in child_components(node) {
-            if walk(child, type_name) {
-                return true;
-            }
-        }
-        false
-    }
-    walk(&surface.root, type_name)
-}
-
-fn child_components(node: &Component) -> Vec<&Component> {
-    match node {
-        Component::Stack(inner) => inner.children.iter().collect(),
-        Component::Card(inner) => inner.children.iter().collect(),
-        Component::ListItem(inner) => inner.children.iter().collect(),
-        Component::Pressable(inner) => inner.children.iter().collect(),
-        Component::EmptyState(inner) => inner.children.iter().collect(),
-        _ => Vec::new(),
-    }
-}
-
 #[test]
 #[serial]
 fn home_card_empty_without_config() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
-            assert!(contains_component_type(
-                &render_home_card(ctx),
-                "EmptyState"
-            ));
+            assert!(SurfaceAssertions::new(&render_home_card(ctx)).contains_type("EmptyState"));
         });
 }
 
@@ -109,9 +65,9 @@ fn home_card_renders_events_with_pressable_link() {
         .with_kv("config", sample_config_bytes())
         .run(|ctx| {
             let surface = render_home_card(ctx);
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "ListItem"));
-            assert!(contains_component_type(&surface, "Pressable"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Pressable"));
             let json = serde_json::to_string(&surface).expect("json");
             assert!(json.contains("bottomSheet"));
         });
@@ -125,11 +81,11 @@ fn upcoming_card_is_compact_with_next_event_headline() {
         .with_kv("config", sample_config_bytes())
         .run(|ctx| {
             let surface = render_upcoming_card(ctx);
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "Text"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Text"));
             // Compact: no full event list / map on the prep card.
-            assert!(!contains_component_type(&surface, "ListItem"));
-            assert!(!contains_component_type(&surface, "Map"));
+            assert!(!SurfaceAssertions::new(&surface).contains_type("ListItem"));
+            assert!(!SurfaceAssertions::new(&surface).contains_type("Map"));
 
             let json = serde_json::to_string(&surface).expect("json");
             assert!(json.contains("upcoming.card"));
@@ -143,10 +99,7 @@ fn upcoming_card_empty_without_config() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
-            assert!(contains_component_type(
-                &render_upcoming_card(ctx),
-                "EmptyState"
-            ));
+            assert!(SurfaceAssertions::new(&render_upcoming_card(ctx)).contains_type("EmptyState"));
         });
 }
 
@@ -158,9 +111,9 @@ fn detail_includes_map_and_link() {
         .with_kv("config", sample_config_bytes())
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
-            assert!(contains_component_type(&surface, "Map"));
-            assert!(contains_component_type(&surface, "Link"));
-            assert!(contains_component_type(&surface, "InfoBanner"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Map"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Link"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
         });
 }
 
@@ -183,8 +136,8 @@ fn home_card_renders_openagenda_nearby() {
         )
         .run(|ctx| {
             let surface = render_home_card(ctx);
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "ListItem"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
             let json = serde_json::to_string(&surface).expect("json");
             assert!(json.contains("Festival du port") || json.contains("Pressable"));
         });

@@ -3,58 +3,13 @@
 use portaki_sdk::capability;
 use serial_test::serial;
 
-use portaki_sdk::sdui::component::Component;
-use portaki_sdk::sdui::surface::Surface;
-use portaki_test_utils::{MockContext, Property};
+use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use serde_json::json;
 
 use appliances::{
     get_content, render_explore_detail, render_explore_item, render_home_card, reset_test_store,
     save_appliance, ApplianceStatus, GetContentArgs, SaveApplianceArgs,
 };
-
-fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
-    fn walk(node: &Component, type_name: &str) -> bool {
-        let matches = match node {
-            Component::Card(_) if type_name == "Card" => true,
-            Component::ListItem(_) if type_name == "ListItem" => true,
-            Component::Pressable(_) if type_name == "Pressable" => true,
-            Component::EmptyState(_) if type_name == "EmptyState" => true,
-            Component::Stack(_) if type_name == "Stack" => true,
-            Component::InfoBanner(_) if type_name == "InfoBanner" => true,
-            Component::Text(_) if type_name == "Text" => true,
-            Component::RichText(_) if type_name == "RichText" => true,
-            Component::Link(_) if type_name == "Link" => true,
-            Component::Eyebrow(_) if type_name == "Eyebrow" => true,
-            Component::Button(_) if type_name == "Button" => true,
-            _ => false,
-        };
-        if matches {
-            return true;
-        }
-        for child in child_components(node) {
-            if walk(child, type_name) {
-                return true;
-            }
-        }
-        false
-    }
-    walk(&surface.root, type_name)
-}
-
-fn child_components(node: &Component) -> Vec<&Component> {
-    match node {
-        Component::Stack(inner) => inner.children.iter().collect(),
-        Component::Card(inner) => inner.children.iter().collect(),
-        Component::EmptyState(inner) => inner.children.iter().collect(),
-        Component::Form(inner) => inner.children.iter().collect(),
-        Component::Page(inner) => inner.children.iter().collect(),
-        Component::ListItem(inner) => inner.children.iter().collect(),
-        Component::Pressable(inner) => inner.children.iter().collect(),
-        Component::Group(inner) => inner.children.iter().collect(),
-        _ => Vec::new(),
-    }
-}
 
 fn seed_two_devices(ctx: portaki_sdk::prelude::Context) {
     save_appliance(
@@ -120,7 +75,7 @@ fn home_card_empty_without_content() {
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
             let surface = render_home_card(ctx);
-            assert!(contains_component_type(&surface, "EmptyState"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
         });
 }
 
@@ -134,8 +89,8 @@ fn home_card_featured_only_and_detail_list() {
         .run(|ctx| {
             seed_two_devices(ctx.clone());
             let card = render_home_card(ctx.clone());
-            assert!(contains_component_type(&card, "Card"));
-            assert!(contains_component_type(&card, "ListItem"));
+            assert!(SurfaceAssertions::new(&card).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&card).contains_type("ListItem"));
             let card_json = serde_json::to_string(&card).expect("json");
             assert!(card_json.contains("Télévision"));
             assert!(!card_json.contains("Lave-linge"));
@@ -144,8 +99,8 @@ fn home_card_featured_only_and_detail_list() {
             assert!(card_json.contains("appliances/tv"));
 
             let detail = render_explore_detail(ctx.clone());
-            assert!(contains_component_type(&detail, "Card"));
-            assert!(contains_component_type(&detail, "ListItem"));
+            assert!(SurfaceAssertions::new(&detail).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&detail).contains_type("ListItem"));
             let detail_json = serde_json::to_string(&detail).expect("json");
             assert!(detail_json.contains("Télévision"));
             assert!(detail_json.contains("Lave-linge"));
@@ -166,10 +121,10 @@ fn explore_item_uses_device_id_and_howto_steps() {
             let mut tv_ctx = ctx.clone();
             tv_ctx.input = json!({ "deviceId": "tv" });
             let tv = render_explore_item(tv_ctx);
-            assert!(contains_component_type(&tv, "ListItem"));
-            assert!(contains_component_type(&tv, "Eyebrow"));
-            assert!(contains_component_type(&tv, "Button"));
-            assert!(contains_component_type(&tv, "Link"));
+            assert!(SurfaceAssertions::new(&tv).contains_type("ListItem"));
+            assert!(SurfaceAssertions::new(&tv).contains_type("Eyebrow"));
+            assert!(SurfaceAssertions::new(&tv).contains_type("Button"));
+            assert!(SurfaceAssertions::new(&tv).contains_type("Link"));
             let tv_json = serde_json::to_string(&tv).expect("json");
             assert!(tv_json.contains("Télévision"));
             assert!(tv_json.contains("Allumez avec la télécommande."));
@@ -180,7 +135,7 @@ fn explore_item_uses_device_id_and_howto_steps() {
             let mut washer_ctx = ctx.clone();
             washer_ctx.input = json!({ "deviceId": "washer" });
             let washer = render_explore_item(washer_ctx);
-            assert!(contains_component_type(&washer, "InfoBanner"));
+            assert!(SurfaceAssertions::new(&washer).contains_type("InfoBanner"));
             let washer_json = serde_json::to_string(&washer).expect("json");
             assert!(washer_json.contains("Lave-linge"));
             assert!(washer_json.contains("Pas de machine après 21 h."));
@@ -263,6 +218,6 @@ fn migrates_legacy_payload_on_read() {
             assert!(view.safety_notice.contains("Coupez l'eau"));
             let card = render_home_card(ctx);
             // featured=false after migration → empty featured card children, still Card
-            assert!(contains_component_type(&card, "Card"));
+            assert!(SurfaceAssertions::new(&card).contains_type("Card"));
         });
 }

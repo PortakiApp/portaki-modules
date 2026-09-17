@@ -11,9 +11,8 @@ use local_guide::{
     update_config, ActivityInput, SpotInput, UpdateConfigArgs, ERR_ACTIVITIES_TOO_MANY,
     ERR_ACTIVITY_URL_NOT_GYG, MAX_CURATED_LINKS, PARTNER_ID, PARTNER_QUERY_PARAM,
 };
-use portaki_sdk::sdui::component::Component;
 use portaki_sdk::sdui::surface::Surface;
-use portaki_test_utils::MockContext;
+use portaki_test_utils::{MockContext, SurfaceAssertions};
 use serde_json::json;
 
 const FR_BUNDLE: &str = include_str!("../i18n/fr-FR.json");
@@ -61,44 +60,6 @@ fn i18n_refs(json: &str) -> BTreeSet<String> {
     refs
 }
 
-fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
-    fn walk(node: &Component, type_name: &str) -> bool {
-        let matches = match node {
-            Component::Card(_) if type_name == "Card" => true,
-            Component::ListItem(_) if type_name == "ListItem" => true,
-            Component::Pill(_) if type_name == "Pill" => true,
-            Component::Pressable(_) if type_name == "Pressable" => true,
-            Component::InfoBanner(_) if type_name == "InfoBanner" => true,
-            Component::EmptyState(_) if type_name == "EmptyState" => true,
-            Component::Link(_) if type_name == "Link" => true,
-            Component::Stack(_) if type_name == "Stack" => true,
-            Component::Map(_) if type_name == "Map" => true,
-            _ => false,
-        };
-        if matches {
-            return true;
-        }
-        for child in child_components(node) {
-            if walk(child, type_name) {
-                return true;
-            }
-        }
-        false
-    }
-    walk(&surface.root, type_name)
-}
-
-fn child_components(node: &Component) -> Vec<&Component> {
-    match node {
-        Component::Stack(inner) => inner.children.iter().collect(),
-        Component::Card(inner) => inner.children.iter().collect(),
-        Component::ListItem(inner) => inner.children.iter().collect(),
-        Component::Pressable(inner) => inner.children.iter().collect(),
-        Component::EmptyState(inner) => inner.children.iter().collect(),
-        _ => Vec::new(),
-    }
-}
-
 #[test]
 #[serial]
 fn home_card_empty_without_config_or_address() {
@@ -109,10 +70,7 @@ fn home_card_empty_without_config_or_address() {
         .build();
     ctx.property.address = None;
     with_host(host, ctx.clone(), || {
-        assert!(contains_component_type(
-            &render_home_card(ctx.clone()),
-            "EmptyState"
-        ));
+        assert!(SurfaceAssertions::new(&render_home_card(ctx.clone())).contains_type("EmptyState"));
     });
 }
 
@@ -124,8 +82,8 @@ fn home_card_renders_spots_with_pill() {
         .with_kv("config", sample_config_bytes())
         .run(|ctx| {
             let surface = render_home_card(ctx);
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "Pill"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Pill"));
             let json = surface_json(&surface);
             assert!(json.contains("bottomSheet"));
         });
@@ -139,9 +97,9 @@ fn upcoming_card_renders_spot_count() {
         .with_kv("config", sample_config_bytes())
         .run(|ctx| {
             let surface = render_upcoming_card(ctx);
-            assert!(contains_component_type(&surface, "Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             // Compact card must not embed the full spot list.
-            assert!(!contains_component_type(&surface, "ListItem"));
+            assert!(!SurfaceAssertions::new(&surface).contains_type("ListItem"));
             let json = surface_json(&surface);
             assert!(json.contains("upcoming.card"));
             assert!(json.contains("i18n:nav.local-guide"));
@@ -156,10 +114,9 @@ fn upcoming_card_empty_without_config_or_address() {
         .build();
     ctx.property.address = None;
     with_host(host, ctx.clone(), || {
-        assert!(contains_component_type(
-            &render_upcoming_card(ctx.clone()),
-            "EmptyState"
-        ));
+        assert!(
+            SurfaceAssertions::new(&render_upcoming_card(ctx.clone())).contains_type("EmptyState")
+        );
     });
 }
 
@@ -171,8 +128,8 @@ fn detail_includes_link() {
         .with_kv("config", sample_config_bytes())
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
-            assert!(contains_component_type(&surface, "Link"));
-            assert!(contains_component_type(&surface, "InfoBanner"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Link"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
         });
 }
 
@@ -199,7 +156,7 @@ fn the_detail_surface_maps_the_located_spots_and_the_property() {
         .with_kv("config", located_config_bytes())
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
-            assert!(contains_component_type(&surface, "Map"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Map"));
             let json = surface_json(&surface);
             assert!(json.contains("Plage du Midi"), "{json}");
             // Le logement ferme la carte, avec le marqueur qui lui est propre.
@@ -218,8 +175,8 @@ fn the_home_card_stays_a_list_without_a_map() {
         .with_kv("config", located_config_bytes())
         .run(|ctx| {
             let surface = render_home_card(ctx);
-            assert!(!contains_component_type(&surface, "Map"));
-            assert!(contains_component_type(&surface, "ListItem"));
+            assert!(!SurfaceAssertions::new(&surface).contains_type("Map"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
         });
 }
 
@@ -233,8 +190,8 @@ fn a_config_written_before_the_map_renders_no_map() {
         .with_kv("config", sample_config_bytes())
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
-            assert!(!contains_component_type(&surface, "Map"));
-            assert!(contains_component_type(&surface, "ListItem"));
+            assert!(!SurfaceAssertions::new(&surface).contains_type("Map"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
         });
 }
 
@@ -251,7 +208,7 @@ fn null_island_never_reaches_the_map() {
             })),
         )
         .run(|ctx| {
-            assert!(!contains_component_type(&render_explore_detail(ctx), "Map"));
+            assert!(!SurfaceAssertions::new(&render_explore_detail(ctx)).contains_type("Map"));
         });
 }
 
@@ -384,7 +341,7 @@ fn a_bare_module_renders_no_activities_section() {
             let surface = render_explore_detail(ctx);
             let json = surface_json(&surface);
             assert!(!json.contains("getyourguide"), "{json}");
-            assert!(contains_component_type(&surface, "EmptyState"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
         });
 }
 
@@ -402,7 +359,7 @@ fn a_config_without_the_activities_key_renders_no_section() {
             assert!(!json.contains("getyourguide"), "{json}");
             assert!(!json.contains("i18n:guest.activities.title"), "{json}");
             // Les bons plans, eux, s'affichent toujours.
-            assert!(contains_component_type(&surface, "ListItem"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
         });
 }
 
@@ -421,7 +378,7 @@ fn without_a_destination_the_section_is_absent() {
         let surface = render_explore_detail(ctx.clone());
         let json = surface_json(&surface);
         assert!(!json.contains("getyourguide"), "{json}");
-        assert!(contains_component_type(&surface, "EmptyState"));
+        assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
     });
 }
 
@@ -442,7 +399,7 @@ fn a_disabled_section_disappears_and_leaves_the_spots() {
             let json = surface_json(&surface);
             assert!(!json.contains("getyourguide"), "{json}");
             assert!(!json.contains("i18n:guest.activities.title"));
-            assert!(contains_component_type(&surface, "ListItem"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
         });
 }
 

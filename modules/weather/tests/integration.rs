@@ -3,9 +3,7 @@
 use portaki_sdk::capability;
 use serial_test::serial;
 
-use portaki_sdk::sdui::component::Component;
-use portaki_sdk::sdui::surface::Surface;
-use portaki_test_utils::{MockContext, Property};
+use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use serde_json::json;
 use std::sync::atomic::Ordering;
 
@@ -52,47 +50,6 @@ fn sample_forecast_json() -> String {
     json!({ "list": list }).to_string()
 }
 
-fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
-    fn walk(node: &Component, type_name: &str) -> bool {
-        let matches = match node {
-            Component::Card(_) if type_name == "Card" => true,
-            Component::Icon(_) if type_name == "Icon" => true,
-            Component::Text(_) if type_name == "Text" => true,
-            Component::EmptyState(_) if type_name == "EmptyState" => true,
-            Component::Stack(_) if type_name == "Stack" => true,
-            Component::Divider(_) if type_name == "Divider" => true,
-            Component::InfoBanner(_) if type_name == "InfoBanner" => true,
-            Component::Button(_) if type_name == "Button" => true,
-            Component::Grid(_) if type_name == "Grid" => true,
-            _ => false,
-        };
-        if matches {
-            return true;
-        }
-        for child in child_components(node) {
-            if walk(child, type_name) {
-                return true;
-            }
-        }
-        false
-    }
-    walk(&surface.root, type_name)
-}
-
-fn child_components(node: &Component) -> Vec<&Component> {
-    match node {
-        Component::Stack(inner) => inner.children.iter().collect(),
-        Component::Divider(_) => Vec::new(),
-        Component::Card(inner) => inner.children.iter().collect(),
-        Component::Grid(inner) => inner.children.iter().collect(),
-        Component::EmptyState(inner) => inner.children.iter().collect(),
-        Component::Group(inner) => inner.children.iter().collect(),
-        Component::Form(inner) => inner.children.iter().collect(),
-        Component::Page(inner) => inner.children.iter().collect(),
-        _ => Vec::new(),
-    }
-}
-
 #[test]
 #[serial]
 fn home_card_renders_with_capability_pool() {
@@ -107,12 +64,12 @@ fn home_card_renders_with_capability_pool() {
         .with_connector_response("open-weather", "forecast", sample_forecast_json())
         .run(|ctx| {
             let surface = render_home_card(ctx);
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "Stack"));
-            assert!(contains_component_type(&surface, "Text"));
-            assert!(contains_component_type(&surface, "Icon"));
-            assert!(contains_component_type(&surface, "Grid"));
-            assert!(contains_component_type(&surface, "Divider"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Stack"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Text"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Icon"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Grid"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Divider"));
         });
 }
 
@@ -130,10 +87,10 @@ fn upcoming_card_renders_compact_headline() {
         .with_connector_response("open-weather", "forecast", sample_forecast_json())
         .run(|ctx| {
             let surface = render_upcoming_card(ctx);
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "Text"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Text"));
             // Compact card must not embed the full forecast strip.
-            assert!(!contains_component_type(&surface, "Grid"));
+            assert!(!SurfaceAssertions::new(&surface).contains_type("Grid"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("upcoming.card"));
         });
@@ -148,7 +105,7 @@ fn upcoming_card_renders_empty_state_without_capability() {
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
             let surface = render_upcoming_card(ctx);
-            assert!(contains_component_type(&surface, "EmptyState"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
         });
 }
 
@@ -197,7 +154,7 @@ fn home_card_renders_empty_state_without_capability() {
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
             let surface = render_home_card(ctx);
-            assert!(contains_component_type(&surface, "EmptyState"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
         });
 }
 
@@ -301,7 +258,7 @@ fn forecast_renders_5_days() {
         .with_connector_response("open-weather", "forecast", sample_forecast_json())
         .run(|ctx| {
             let surface = render_explore_forecast(ctx);
-            assert!(contains_component_type(&surface, "Grid"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Grid"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("explore.forecast.hint"));
             assert!(!json.contains("sheet.assistant.tip"));
