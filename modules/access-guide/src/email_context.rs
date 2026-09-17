@@ -63,7 +63,7 @@ pub fn build_email_context(ctx: &Context, args: &EmailContextArgs) -> Result<Ema
     let config = load_config().unwrap_or_else(|_| ModuleConfig::default());
     let property_timezone = property_timezone(ctx);
     let checkin_at = ctx.stay.as_ref().and_then(|s| s.checkin_at);
-    let now = time::now().unwrap_or_else(|_| Utc::now());
+    let now = time::now()?;
     let decision = evaluate_reveal(config.reveal_policy, now, checkin_at, &property_timezone);
 
     // arrival / new-code: method callout + code when revealed.

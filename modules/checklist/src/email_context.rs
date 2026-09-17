@@ -70,6 +70,7 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
 }
 
 #[cfg(test)]
+#[allow(clippy::disallowed_methods)] // tests natifs : l'horloge du système y est disponible
 mod tests {
     use super::*;
     use crate::storage::seed_test_items;

@@ -135,6 +135,7 @@ fn condition_emoji(condition: &str) -> &'static str {
 }
 
 #[cfg(test)]
+#[allow(clippy::disallowed_methods)] // tests natifs : l'horloge du système y est disponible
 mod tests {
     use super::*;
     use crate::entities::WeatherUnits;

@@ -223,6 +223,7 @@ pub fn locked_message(available_from_label: Option<&str>) -> String {
 }
 
 #[cfg(test)]
+#[allow(clippy::disallowed_methods)] // tests natifs : l'horloge du système y est disponible
 mod tests {
     use super::*;
 

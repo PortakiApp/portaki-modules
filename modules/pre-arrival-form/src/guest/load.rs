@@ -37,7 +37,7 @@ pub fn load_guest_pre_arrival(ctx: &GuestContext) -> Result<GuestLoad> {
     };
 
     let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at);
-    let now = time::now().unwrap_or_else(|_| chrono::Utc::now());
+    let now = time::now()?;
     let editable = is_editable_until_checkin(now, checkin_at);
 
     if let Some(response) = storage::find_by_stay(guest.session_id)? {

@@ -99,7 +99,7 @@ pub fn send_form_available(ctx: Context, _args: EmptyArgs) -> Result<()> {
 pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     let stay_id = require_stay_id(&ctx)?;
     let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at);
-    let now = time::now().unwrap_or_else(|_| chrono::Utc::now());
+    let now = time::now()?;
     if !is_editable_until_checkin(now, checkin_at) {
         return Err(PortakiError::Host("form_locked_after_checkin".to_string()));
     }

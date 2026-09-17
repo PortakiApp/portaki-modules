@@ -1,6 +1,5 @@
 //! Load config for guest surfaces.
 
-use chrono::Utc;
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
@@ -35,7 +34,7 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Gues
 
     let property_timezone = property_timezone(ctx);
     let checkin_at = ctx.stay.as_ref().and_then(|s| s.checkin_at);
-    let now = time::now().unwrap_or_else(|_| Utc::now());
+    let now = time::now()?;
     let decision = evaluate_reveal(config.reveal_policy, now, checkin_at, &property_timezone);
 
     Ok(GuestLoad::Ready(GuestData {

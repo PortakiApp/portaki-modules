@@ -1,0 +1,15 @@
+# Ce qui n'existe pas dans le bac à sable Wasm des modules.
+#
+# Il n'y a pas d'horloge : sur wasm32-unknown-unknown, SystemTime::now panique, et chrono s'appuie
+# dessus sans la feature `wasmbind` — que ce workspace n'active pas, Extism n'étant pas un runtime
+# JavaScript. L'heure vient de l'hôte, `portaki_sdk::host::time::now()`, dont l'erreur se propage :
+# une fausse heure serait pire qu'une erreur — access-guide décide selon elle s'il révèle un code.
+#
+# Les tests tournent sur la machine, où l'horloge existe : ils portent un
+# `#[allow(clippy::disallowed_methods)]` explicite plutôt qu'une exception globale.
+disallowed-methods = [
+  { path = "chrono::Utc::now", reason = "pas d'horloge dans le bac à sable : utiliser portaki_sdk::host::time::now() et propager son erreur" },
+  { path = "chrono::Local::now", reason = "pas d'horloge ni de fuseau local dans le bac à sable : host::time::now() et le fuseau du logement" },
+  { path = "std::time::SystemTime::now", reason = "panique sur wasm32-unknown-unknown : utiliser portaki_sdk::host::time::now()" },
+  { path = "std::time::Instant::now", reason = "panique sur wasm32-unknown-unknown : pas de mesure de durée dans un module" },
+]
