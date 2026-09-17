@@ -10,7 +10,7 @@
     "en": "Upcoming departures from the property's nearest station."
   },
   "version": "0.2.2",
-  "requiresModuleSdk": "6.2.0",
+  "requiresModuleSdk": "6.3.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
