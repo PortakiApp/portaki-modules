@@ -14,6 +14,8 @@ cargo install --git https://github.com/PortakiApp/portaki-sdk --branch main --lo
 ## Adding a module
 
 1. Create `modules/<module-id>/` with `Cargo.toml`, `portaki.module.json`, `src/`, `i18n/`, and `tests/`.
+   `tests/conformance.rs` holds `portaki_test_utils::conformance!();` — the SDK's conformance
+   battery, which `portaki publish` refuses to publish without.
 2. Keep `version` in sync between `Cargo.toml` and `portaki.module.json` (same SemVer string).
 3. Depend on workspace SDK crates (`portaki-sdk`, `portaki-connectors`, …).
 4. Follow the Wasm crate layout: `ids.rs` (`define_surface_ids!` / `define_operation_names!` /
