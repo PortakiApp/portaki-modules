@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/PortakiApp/portaki-modules/compare/events-v0.4.0...events-v0.4.1) (2026-09-17)
+
+
+### Bug Fixes
+
+* **modules:** use host clock, ban native clock ([6c660c0](https://github.com/PortakiApp/portaki-modules/commit/6c660c033429260fe8dfaff7be808b80fffe49fa))
+
 ## [0.4.0](https://github.com/PortakiApp/portaki-modules/compare/events-v0.3.2...events-v0.4.0) (2026-09-16)
 
 
