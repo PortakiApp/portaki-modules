@@ -10,7 +10,7 @@
     "en": "Adds a “Declare a found item” action on stay detail and notifies the guest."
   },
   "version": "0.6.2",
-  "requiresModuleSdk": "6.2.0",
+  "requiresModuleSdk": "6.3.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
