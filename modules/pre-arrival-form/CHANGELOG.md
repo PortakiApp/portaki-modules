@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.3](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v0.7.2...pre-arrival-form-v0.7.3) (2026-09-17)
+
+
+### Bug Fixes
+
+* **modules:** use host clock, ban native clock ([6c660c0](https://github.com/PortakiApp/portaki-modules/commit/6c660c033429260fe8dfaff7be808b80fffe49fa))
+* **pre-arrival-form:** add missing guest nav label ([9028e5e](https://github.com/PortakiApp/portaki-modules/commit/9028e5e60512c74f91cbd95a5b4f17fb3e81e6b5))
+
 ## [0.7.2](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v0.7.1...pre-arrival-form-v0.7.2) (2026-09-16)
 
 

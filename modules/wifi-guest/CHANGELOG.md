@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v0.2.2...wifi-guest-v0.2.3) (2026-09-17)
+
+
+### Bug Fixes
+
+* **modules:** use host clock, ban native clock ([6c660c0](https://github.com/PortakiApp/portaki-modules/commit/6c660c033429260fe8dfaff7be808b80fffe49fa))
+
 ## [0.2.2](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v0.2.1...wifi-guest-v0.2.2) (2026-09-16)
 
 
