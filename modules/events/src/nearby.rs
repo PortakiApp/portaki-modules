@@ -74,7 +74,7 @@ pub fn invalidate_nearby_cache() -> Result<()> {
 }
 
 fn load_nearby(ctx: &Context, config: &ModuleConfig, lat: f64, lng: f64) -> Result<Vec<EventRow>> {
-    let now = time::now().unwrap_or_else(|_| Utc::now());
+    let now = time::now()?;
     let locale = Localized::lang_code(&ctx.locale);
     if let Some(cached) = read_cache()? {
         if cache_valid(&cached, lat, lng, config.radius_km, &locale, now) {

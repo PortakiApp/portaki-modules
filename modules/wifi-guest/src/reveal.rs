@@ -246,6 +246,7 @@ fn apply_vars(template: &str, vars: &[(&str, &str)]) -> String {
 }
 
 #[cfg(test)]
+#[allow(clippy::disallowed_methods)] // tests natifs : l'horloge du système y est disponible
 mod tests {
     use super::*;
 

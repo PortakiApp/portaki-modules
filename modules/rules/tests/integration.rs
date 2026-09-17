@@ -1,5 +1,7 @@
 //! Integration-style unit tests with `portaki-test-utils`.
 
+#![allow(clippy::disallowed_methods)] // tests natifs : l'horloge du système y est disponible
+
 use chrono::Utc;
 use portaki_sdk::capability;
 use serial_test::serial;

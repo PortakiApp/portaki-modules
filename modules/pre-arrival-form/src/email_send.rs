@@ -33,7 +33,7 @@ pub fn send_form_available(ctx: &Context) -> Result<()> {
 
     let config = load_config().unwrap_or_default();
     let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at);
-    let now = time::now().unwrap_or_else(|_| chrono::Utc::now());
+    let now = time::now()?;
     if !is_form_available(config.show_when, now, checkin_at) {
         return Ok(());
     }

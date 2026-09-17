@@ -45,7 +45,7 @@ pub fn load_guest_checklist(ctx: &GuestContext) -> Result<GuestLoad> {
     let config = load_config().unwrap_or_default();
     let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at);
     let checkout_at = ctx.stay.as_ref().and_then(|stay| stay.checkout_at);
-    let now = time::now().unwrap_or_else(|_| chrono::Utc::now());
+    let now = time::now()?;
     if !is_checklist_available(config.show_when, now, checkin_at, checkout_at) {
         return Ok(GuestLoad::NotYet);
     }
