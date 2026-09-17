@@ -226,7 +226,9 @@ jobs:
 
   publish:
     name: publish (${{ matrix.module }})
-    needs: [changes, wasm, bumped]
+    # `rust` porte clippy et les tests : sans lui, un module aux tests rouges était publié quand
+    # même, puisque `wasm` ne fait que compiler. La porte `quality` arrivait après la publication.
+    needs: [changes, rust, wasm, bumped]
     if: needs.bumped.outputs.any == 'true'
     runs-on: ubuntu-latest
     # La liaison enregistrée au registre exige un environment sur le canal stable : c'est lui
