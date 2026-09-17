@@ -7,55 +7,13 @@ use portaki_sdk::capability;
 use serial_test::serial;
 use uuid::Uuid;
 
-use portaki_sdk::sdui::component::Component;
-use portaki_sdk::sdui::surface::Surface;
-use portaki_test_utils::{MockContext, Property};
+use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use serde_json::json;
 
 use rules::{
     get_content, render_explore_detail, render_home_card, render_host_main, reset_test_store,
     save_content, update_config, GetContentArgs, RuleItemInput, RulesContent, SaveContentArgs,
 };
-
-fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
-    fn walk(node: &Component, type_name: &str) -> bool {
-        let matches = match node {
-            Component::Card(_) if type_name == "Card" => true,
-            Component::ListItem(_) if type_name == "ListItem" => true,
-            Component::EmptyState(_) if type_name == "EmptyState" => true,
-            Component::Stack(_) if type_name == "Stack" => true,
-            Component::Form(_) if type_name == "Form" => true,
-            Component::Page(_) if type_name == "Page" => true,
-            Component::StepList(_) if type_name == "StepList" => true,
-            Component::TextArea(_) if type_name == "TextArea" => true,
-            _ => false,
-        };
-        if matches {
-            return true;
-        }
-        for child in child_components(node) {
-            if walk(child, type_name) {
-                return true;
-            }
-        }
-        false
-    }
-    walk(&surface.root, type_name)
-}
-
-fn child_components(node: &Component) -> Vec<&Component> {
-    match node {
-        Component::Stack(inner) => inner.children.iter().collect(),
-        Component::Card(inner) => inner.children.iter().collect(),
-        Component::EmptyState(inner) => inner.children.iter().collect(),
-        Component::Form(inner) => inner.children.iter().collect(),
-        Component::Page(inner) => inner.children.iter().collect(),
-        Component::ListItem(inner) => inner.children.iter().collect(),
-        Component::StepList(inner) => inner.children.iter().collect(),
-        Component::Group(inner) => inner.children.iter().collect(),
-        _ => Vec::new(),
-    }
-}
 
 fn sample_payload() -> String {
     json!({
@@ -78,7 +36,7 @@ fn home_card_renders_empty_without_content() {
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
             let surface = render_home_card(ctx);
-            assert!(contains_component_type(&surface, "EmptyState"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
         });
 }
 
@@ -100,8 +58,8 @@ fn home_card_renders_list_items_with_content() {
             )
             .expect("save");
             let surface = render_home_card(ctx);
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "ListItem"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
         });
 }
 
@@ -123,9 +81,9 @@ fn explore_detail_renders_full_list() {
             )
             .expect("save");
             let surface = render_explore_detail(ctx);
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "Stack"));
-            assert!(contains_component_type(&surface, "ListItem"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Stack"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
             let json = serde_json::to_string(&surface).expect("json");
             assert!(json.contains("Calme après 22 h"));
         });
@@ -168,9 +126,9 @@ fn host_main_renders_rules_section_steplist() {
         .with_property(Property::default())
         .run(|ctx| {
             let surface = render_host_main(ctx);
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "StepList"));
-            assert!(contains_component_type(&surface, "Form"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("StepList"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
             let json = serde_json::to_string(&surface).expect("json");
             assert!(json.contains("host.section.title") || json.contains("Règles du logement"));
             assert!(json.contains("host.rules.add") || json.contains("Ajouter une règle"));

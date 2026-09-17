@@ -8,9 +8,7 @@ use guest_reviews::{
     get_config, render_home_card, render_post_stay_card, submit_review, update_config,
     SubmitReviewArgs, UpdateConfigArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
 };
-use portaki_sdk::sdui::component::Component;
-use portaki_sdk::sdui::surface::Surface;
-use portaki_test_utils::MockContext;
+use portaki_test_utils::{MockContext, SurfaceAssertions};
 use serde_json::json;
 
 fn sample_config_bytes() -> Vec<u8> {
@@ -22,46 +20,6 @@ fn sample_config_bytes() -> Vec<u8> {
         "thank_you_message": "Merci !"
     }))
     .expect("config json")
-}
-
-fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
-    fn walk(node: &Component, type_name: &str) -> bool {
-        let matches = match node {
-            Component::Card(_) if type_name == "Card" => true,
-            Component::Form(_) if type_name == "Form" => true,
-            Component::Button(_) if type_name == "Button" => true,
-            Component::QRCode(_) if type_name == "QRCode" => true,
-            Component::EmptyState(_) if type_name == "EmptyState" => true,
-            Component::Stack(_) if type_name == "Stack" => true,
-            Component::Select(_) if type_name == "Select" => true,
-            Component::ToggleRow(_) if type_name == "ToggleRow" => true,
-            Component::InfoBanner(_) if type_name == "InfoBanner" => true,
-            _ => false,
-        };
-        if matches {
-            return true;
-        }
-        for child in child_components(node) {
-            if walk(child, type_name) {
-                return true;
-            }
-        }
-        false
-    }
-    walk(&surface.root, type_name)
-}
-
-fn child_components(node: &Component) -> Vec<&Component> {
-    match node {
-        Component::Stack(inner) => inner.children.iter().collect(),
-        Component::Card(inner) => inner.children.iter().collect(),
-        Component::Form(inner) => inner.children.iter().collect(),
-        Component::Field(inner) => inner.children.iter().collect(),
-        Component::EmptyState(inner) => inner.children.iter().collect(),
-        Component::Grid(inner) => inner.children.iter().collect(),
-        Component::Page(inner) => inner.children.iter().collect(),
-        _ => Vec::new(),
-    }
 }
 
 #[test]
@@ -79,10 +37,7 @@ fn home_card_empty_for_airbnb_without_url() {
             .unwrap(),
         )
         .run(|ctx| {
-            assert!(contains_component_type(
-                &render_home_card(ctx),
-                "EmptyState"
-            ));
+            assert!(SurfaceAssertions::new(&render_home_card(ctx)).contains_type("EmptyState"));
         });
 }
 
@@ -103,9 +58,9 @@ fn home_card_migrates_legacy_both_channel() {
         )
         .run(|ctx| {
             let surface = render_home_card(ctx);
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "QRCode"));
-            assert!(contains_component_type(&surface, "Form"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("QRCode"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
         });
 }
 
@@ -126,9 +81,9 @@ fn home_card_airbnb_only_skips_portaki_form() {
         )
         .run(|ctx| {
             let surface = render_home_card(ctx);
-            assert!(contains_component_type(&surface, "Button"));
-            assert!(!contains_component_type(&surface, "Form"));
-            assert!(!contains_component_type(&surface, "QRCode"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Button"));
+            assert!(!SurfaceAssertions::new(&surface).contains_type("Form"));
+            assert!(!SurfaceAssertions::new(&surface).contains_type("QRCode"));
         });
 }
 
@@ -149,8 +104,8 @@ fn home_card_portaki_only_when_airbnb_url_missing() {
         )
         .run(|ctx| {
             let surface = render_home_card(ctx);
-            assert!(contains_component_type(&surface, "Form"));
-            assert!(!contains_component_type(&surface, "QRCode"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
+            assert!(!SurfaceAssertions::new(&surface).contains_type("QRCode"));
             let json = serde_json::to_string(&surface).expect("json");
             assert!(!json.contains("airbnb.com"));
             assert!(!json.contains("guest.airbnbCta"));
@@ -165,9 +120,9 @@ fn home_card_inline_both_platforms() {
         .with_kv("config", sample_config_bytes())
         .run(|ctx| {
             let surface = render_home_card(ctx);
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "QRCode"));
-            assert!(contains_component_type(&surface, "Form"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("QRCode"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
             let json = serde_json::to_string(&surface).expect("json");
             assert!(!json.contains("openOverlay"));
         });
@@ -323,8 +278,8 @@ fn host_main_renders_platform_toggles() {
         .with_kv("config", sample_config_bytes())
         .run(|ctx| {
             let surface = render_host_main(ctx);
-            assert!(contains_component_type(&surface, "ToggleRow"));
-            assert!(contains_component_type(&surface, "Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ToggleRow"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
         });
 }
 

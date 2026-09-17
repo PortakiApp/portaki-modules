@@ -15,57 +15,7 @@ use portaki_sdk::host::email::{EmailAudience, EmailError};
 use portaki_sdk::limits;
 use portaki_sdk::prelude::{EmailTemplateKey, PortakiError};
 use portaki_sdk::sdui::action::EmptyArgs;
-use portaki_sdk::sdui::component::Component;
-use portaki_sdk::sdui::surface::Surface;
-use portaki_test_utils::{Booking, MockContext, Property};
-
-fn contains_component_type(surface: &Surface, type_name: &str) -> bool {
-    fn walk(node: &Component, type_name: &str) -> bool {
-        let matches = match node {
-            Component::Card(_) if type_name == "Card" => true,
-            Component::Text(_) if type_name == "Text" => true,
-            Component::EmptyState(_) if type_name == "EmptyState" => true,
-            Component::Form(_) if type_name == "Form" => true,
-            Component::Page(_) if type_name == "Page" => true,
-            Component::Button(_) if type_name == "Button" => true,
-            Component::ListItem(_) if type_name == "ListItem" => true,
-            Component::List(_) if type_name == "List" => true,
-            Component::InfoBanner(_) if type_name == "InfoBanner" => true,
-            Component::Select(_) if type_name == "Select" => true,
-            Component::Pill(_) if type_name == "Pill" => true,
-            Component::HeaderTitle(_) if type_name == "HeaderTitle" => true,
-            Component::TextArea(_) if type_name == "TextArea" => true,
-            Component::RichTextEditor(_) if type_name == "RichTextEditor" => true,
-            Component::FieldHint(_) if type_name == "FieldHint" => true,
-            _ => false,
-        };
-        if matches {
-            return true;
-        }
-        for child in child_components(node) {
-            if walk(child, type_name) {
-                return true;
-            }
-        }
-        false
-    }
-    walk(&surface.root, type_name)
-}
-
-fn child_components(node: &Component) -> Vec<&Component> {
-    match node {
-        Component::Stack(inner) => inner.children.iter().collect(),
-        Component::Card(inner) => inner.children.iter().collect(),
-        Component::EmptyState(inner) => inner.children.iter().collect(),
-        Component::Group(inner) => inner.children.iter().collect(),
-        Component::Form(inner) => inner.children.iter().collect(),
-        Component::Page(inner) => inner.children.iter().collect(),
-        Component::Field(inner) => inner.children.iter().collect(),
-        Component::List(inner) => inner.children.iter().collect(),
-        Component::ListItem(inner) => inner.children.iter().collect(),
-        _ => Vec::new(),
-    }
-}
+use portaki_test_utils::{Booking, MockContext, Property, SurfaceAssertions};
 
 #[test]
 #[serial]
@@ -88,17 +38,17 @@ fn home_card_opens_form_overlay_when_no_reports() {
         .with_property(Property::default())
         .run(|ctx| {
             let surface = render_home_card(ctx.clone());
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(!contains_component_type(&surface, "Form"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(!SurfaceAssertions::new(&surface).contains_type("Form"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("home.card.intro"));
             assert!(json.contains("guest.form"));
             assert!(json.contains("home.card.openForm"));
 
             let form = render_guest_form(ctx);
-            assert!(contains_component_type(&form, "Form"));
-            assert!(contains_component_type(&form, "Button"));
-            assert!(!contains_component_type(&form, "Card"));
+            assert!(SurfaceAssertions::new(&form).contains_type("Form"));
+            assert!(SurfaceAssertions::new(&form).contains_type("Button"));
+            assert!(!SurfaceAssertions::new(&form).contains_type("Card"));
             let form_json = serde_json::to_string(&form).expect("form json");
             assert!(form_json.contains("form.kind.label"));
         });
@@ -147,7 +97,7 @@ fn submit_allows_multiple_reports_and_shows_list() {
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("home.card.thanks"));
             assert!(json.contains("home.card.yourReports"));
-            assert!(contains_component_type(&surface, "ListItem"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
         });
 }
 
@@ -177,14 +127,14 @@ fn host_main_lists_recent_after_guest_submit() {
             assert_eq!(recent.len(), 1);
 
             let surface = render_host_main(ctx);
-            assert!(contains_component_type(&surface, "Page"));
-            assert!(contains_component_type(&surface, "Form"));
-            assert!(contains_component_type(&surface, "InfoBanner"));
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "List"));
-            assert!(contains_component_type(&surface, "ListItem"));
-            assert!(contains_component_type(&surface, "Pill"));
-            assert!(contains_component_type(&surface, "Select"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Page"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("List"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Pill"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Select"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("host.main.banner"));
             assert!(json.contains("host.main.recentTitle"));
@@ -369,10 +319,10 @@ fn host_create_surface_renders_declare_form() {
                 "stayDates": "12–15 juil.",
             });
             let surface = render_host_create(ctx);
-            assert!(contains_component_type(&surface, "Page"));
-            assert!(contains_component_type(&surface, "Form"));
-            assert!(contains_component_type(&surface, "RichTextEditor"));
-            assert!(contains_component_type(&surface, "FieldHint"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Page"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("RichTextEditor"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("FieldHint"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("submitFound") || json.contains("host.create.submit"));
             assert!(json.contains("host.create.description.label") || json.contains("description"));
@@ -394,13 +344,13 @@ fn host_stay_surface_empty_state_when_no_reports() {
         .run(|mut ctx| {
             ctx.input = serde_json::json!({ "stayId": stay_id.to_string() });
             let surface = render_host_stay(ctx);
-            assert!(contains_component_type(&surface, "Page"));
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "EmptyState"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Page"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("host.stay.empty"));
             assert!(json.contains("host.stay.listTitle"));
-            assert!(!contains_component_type(&surface, "List"));
+            assert!(!SurfaceAssertions::new(&surface).contains_type("List"));
             assert!(!json.contains("submitFound"));
             assert!(!json.contains("host.create.submit"));
             assert!(!json.contains("TextArea"));
@@ -430,13 +380,13 @@ fn host_stay_surface_card_when_reports_exist() {
 
             ctx.input = serde_json::json!({ "stayId": stay_id.to_string() });
             let surface = render_host_stay(ctx);
-            assert!(contains_component_type(&surface, "Page"));
-            assert!(contains_component_type(&surface, "Card"));
-            assert!(contains_component_type(&surface, "List"));
-            assert!(contains_component_type(&surface, "Select"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Page"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("List"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Select"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("host.stay.listTitle"));
-            assert!(!contains_component_type(&surface, "EmptyState"));
+            assert!(!SurfaceAssertions::new(&surface).contains_type("EmptyState"));
             assert!(!json.contains("submitFound"));
             assert!(!json.contains("host.create.submit"));
         });
@@ -450,9 +400,9 @@ fn host_main_editor_has_note_not_create_form() {
         .with_property(Property::default())
         .run(|ctx| {
             let surface = render_host_main(ctx);
-            assert!(contains_component_type(&surface, "InfoBanner"));
-            assert!(contains_component_type(&surface, "RichTextEditor"));
-            assert!(contains_component_type(&surface, "EmptyState"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("RichTextEditor"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("host.hostNote.label") || json.contains("host_note"));
             assert!(json.contains("host.main.banner"));
@@ -476,7 +426,7 @@ fn host_note_shows_on_guest_card_and_email_context() {
         .with_kv("config", config_bytes)
         .run(|ctx| {
             let surface = render_home_card(ctx.clone());
-            assert!(contains_component_type(&surface, "InfoBanner"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("Leave found items in the lobby closet."));
 
