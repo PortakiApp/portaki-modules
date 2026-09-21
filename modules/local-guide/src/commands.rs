@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::affiliate::{looks_like_url, normalize_curated_url, CuratedUrlError, MAX_CURATED_LINKS};
 use crate::config::{
     load_config, save_config, ActivitiesConfig, ActivityRow, Localized, ModuleConfig, SpotRow,
+    TiqetsConfig,
 };
 
 /// Une URL proposée par l'hôte n'est ni GetYourGuide ni un lien court `gyg.me`.
@@ -64,6 +65,15 @@ pub struct UpdateConfigArgs {
     pub activities_intro: String,
     #[serde(default)]
     pub activities: Vec<ActivityInput>,
+    /// `None` = champ non soumis, on garde l'état enregistré.
+    #[serde(default)]
+    pub tiqets_enabled: Option<bool>,
+    /// Valeur du sélecteur (« 10 ») ; vide ou illisible = on garde l'état enregistré.
+    #[serde(default)]
+    pub tiqets_radius_km: String,
+    /// Valeur du sélecteur (« 0 » = aucun filtre, « 4 ») ; vide = on garde l'état enregistré.
+    #[serde(default)]
+    pub tiqets_min_rating: String,
 }
 
 #[portaki_sdk::command(name = "updateConfig")]
@@ -72,6 +82,8 @@ pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
     let existing = load_config().unwrap_or_default();
     let spots = resolve_spots(&args, &existing.spots, &lang);
     let activities = resolve_activities(&args, &existing.activities, &lang)?;
+    let tiqets = resolve_tiqets(&args, &existing.tiqets);
+    let tiqets_changed = tiqets != existing.tiqets;
     let mut disclaimer = existing.disclaimer;
     disclaimer.set(&lang, args.disclaimer.trim().to_string());
     save_config(&ModuleConfig {
@@ -79,7 +91,36 @@ pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
         spots_json: String::new(),
         disclaimer,
         activities,
-    })
+        tiqets,
+    })?;
+    // Un rayon ou un filtre changé doit se voir au prochain affichage, pas dans 24 h.
+    if tiqets_changed {
+        crate::tiqets::invalidate_cache();
+    }
+    Ok(())
+}
+
+/// Réglages Tiqets soumis. Un champ absent ou illisible garde la valeur enregistrée : un
+/// appelant plus ancien que la section ne l'éteint pas, ne la rallume pas non plus.
+fn resolve_tiqets(args: &UpdateConfigArgs, existing: &TiqetsConfig) -> TiqetsConfig {
+    let config = TiqetsConfig {
+        enabled: args.tiqets_enabled.unwrap_or(existing.enabled),
+        radius_km: args
+            .tiqets_radius_km
+            .trim()
+            .parse()
+            .unwrap_or(existing.radius_km),
+        min_rating: args
+            .tiqets_min_rating
+            .trim()
+            .parse()
+            .unwrap_or(existing.min_rating),
+    };
+    TiqetsConfig {
+        radius_km: config.normalized_radius_km(),
+        min_rating: config.normalized_min_rating().unwrap_or(0),
+        ..config
+    }
 }
 
 /// Valide et normalise la section activités soumise par l'hôte.

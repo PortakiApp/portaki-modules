@@ -1,0 +1,45 @@
+{
+  "success": true,
+  "pagination": { "total": 2, "page": 1, "page_size": 12 },
+  "products": [
+    {
+      "id": "974079",
+      "language": "fr",
+      "title": "Musée Van Gogh : billet d'entrée",
+      "city_name": "Amsterdam",
+      "city_id": "75061",
+      "images": [
+        {
+          "small": "https://aws-tiqets-cdn.imgix.net/images/content/fixture-small.jpg",
+          "medium": "https://aws-tiqets-cdn.imgix.net/images/content/fixture-medium.jpg",
+          "large": "https://aws-tiqets-cdn.imgix.net/images/content/fixture-large.jpg",
+          "extra_large": "https://aws-tiqets-cdn.imgix.net/images/content/fixture-xl.jpg",
+          "alt_text": "Façade du musée",
+          "credit": "Photo : Fixture Studio"
+        }
+      ],
+      "geolocation": { "lat": 52.3584, "lng": 4.8811 },
+      "distance": 2,
+      "ratings": { "average": 4.6, "total": 18234 },
+      "price": 22.0,
+      "currency": "EUR",
+      "product_url": "https://www.tiqets.com/fr/attractions-amsterdam-c75061/billets-pour-musee-van-gogh-p974079/?partner=portaki-fixture",
+      "tagline": "Le plus grand ensemble d'œuvres de Van Gogh au monde",
+      "sale_status": "available",
+      "is_package": false
+    },
+    {
+      "id": "1006522",
+      "language": "fr",
+      "title": "Produit hors saison",
+      "images": [],
+      "ratings": null,
+      "price": null,
+      "currency": "EUR",
+      "product_url": "https://www.tiqets.com/fr/p1006522/?partner=portaki-fixture",
+      "sale_status": "unavailable",
+      "sale_status_reason": "The product is out of season",
+      "is_package": false
+    }
+  ]
+}

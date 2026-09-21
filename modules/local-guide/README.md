@@ -10,7 +10,11 @@ Official Portaki local guide module — nearby spots and host picks.
 
 | Capability | Required | Purpose |
 |------------|----------|---------|
-| `core.storage` | Yes | KV config (`spots`, `disclaimer`, `activities`) |
+| `core.storage` | Yes | KV config (`spots`, `disclaimer`, `activities`, `tiqets`) and the Tiqets cache |
+| `external.tiqets.pool` | No | Tiqets section with Portaki's partner key (monthly quota per workspace) |
+| `external.tiqets.byok` | No | Tiqets section with the host's own partner key |
+
+Permission `connectors:tiqets` — the only connector this module calls.
 
 ## Sections
 
@@ -19,6 +23,7 @@ Official Portaki local guide module — nearby spots and host picks.
 | Spots | Up to 6 host-curated addresses with category, distance, tag and note |
 | Map | The located spots plus the property, on the enriched surface only |
 | Activities & tickets | GetYourGuide affiliate links (**off by default**) — an automatic destination search plus up to 10 host-curated links |
+| Tickets & activities (Tiqets) | Bookable Tiqets products around the property — title, image, price, rating, affiliate link (**off by default**) |
 
 ### Map
 
@@ -97,14 +102,46 @@ every link), so it is not a secret — but it is compiled into the Wasm, so
 changing it means a module release. **Emptying it stays legal**: links then
 render with no partner parameter at all, and nothing else changes.
 
+### Tickets & activities (Tiqets)
+
+Unlike the GetYourGuide section, this one **calls a provider**: the `tiqets`
+connector, `GET /v2/products` of the Tiqets Content API, filtered by the
+property's coordinates (`lat`, `lng`, `max_distance`). Read-only — the partner
+key covers content and availability, never ordering. Booking happens on Tiqets,
+through each product's `product_url`, which Tiqets returns **with the calling
+key's affiliate code already in it** (`?partner=…`). The module never rewrites
+it: on the pool key the commission goes to Portaki, on a BYOK key to the host.
+
+The platform pins the host (`api.tiqets.com`) and the credential shape
+(`Authorization: Token <key>`) in `contracts/connectors/tiqets.json`; the module
+declares only the operation path.
+
+- **Off by default** (`tiqets.enabled`), like the GetYourGuide section. Host
+  settings: radius (5, 10, 20 or 40 km, default 10) and minimum rating (any, 3+, 4+).
+  The host sheet says why nothing would show: section off, no key (neither pool
+  nor BYOK), or no property position.
+- **Cache**: one KV entry per booklet language (`tiqets_cache.<lang>`), fresh for
+  24 h. When Tiqets fails (down, quota spent) an entry up to **14 days** old is
+  still served; past that the section disappears — Tiqets requires image caches
+  to be refreshed at least every 14 days. Without the host clock nothing renders.
+  Saving different settings drops the cache.
+- **Languages**: the booklet language when Tiqets serves it, English otherwise.
+- **Display**: `explore.detail` shows image, **image credit** (required by
+  Tiqets), tagline, price and rating; `home.card` shows 3 products, no image;
+  `upcoming.card` is unchanged. Products not on sale, untitled, or whose link is
+  not `https://…tiqets.com` are dropped by `portaki-connectors`.
+- **Attribution and disclosure** render under the list in every locale
+  (`guest.tiqets.attribution`, `guest.tiqets.disclosure`).
+- A Tiqets failure never breaks the booklet: the rest of the surface renders.
+
 ## Surfaces
 
 | Shell | Surface id | Description |
 |-------|------------|-------------|
-| guest | `home.card` | Spot rows + tags + activities section |
-| guest | `explore.detail` | Enriched spots + activities section (bottom sheet) |
+| guest | `home.card` | Spot rows + tags + activities section + 3 Tiqets products |
+| guest | `explore.detail` | Enriched spots + activities section + Tiqets products (bottom sheet) |
 | guest | `upcoming.card` | Compact spot count |
-| host | `main` | Spot slots + activities + disclaimer form |
+| host | `main` | Spot slots + activities + Tiqets + disclaimer form |
 
 ## Development
 

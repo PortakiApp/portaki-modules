@@ -3,10 +3,11 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::primitives::{
-    InfoBanner, Link, ListItem, Map, Pill, Pressable, Stack, Text,
+    Image, InfoBanner, Link, ListItem, Map, Pill, Pressable, Stack, Text,
 };
 
 use crate::activities::ActivitiesView;
+use crate::tiqets::{format_price, format_rating, TiqetsView, HOME_PRODUCTS};
 
 use super::load::GuestData;
 
@@ -90,7 +91,112 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         ));
     }
 
+    if let Some(view) = data.tiqets.as_ref() {
+        children.push(Component::Stack(
+            Stack::new()
+                .gap(8.0)
+                .children(build_tiqets(view, enriched, &data.locale)),
+        ));
+    }
+
     children
+}
+
+/// Section Tiqets : les billets à proximité, mention de la source et de l'affiliation dessous.
+///
+/// Le détail montre image, crédit, accroche, prix et note ; la carte d'accueil n'en garde que
+/// [`HOME_PRODUCTS`], sans image, pour rester un aperçu. Chaque lien est le `product_url` de
+/// Tiqets tel quel : c'est lui qui porte le code d'affiliation.
+fn build_tiqets(view: &TiqetsView, enriched: bool, locale: &str) -> Vec<Component> {
+    let mut children: Vec<Component> = vec![Text::new()
+        .text("i18n:guest.tiqets.title")
+        .variant(TextVariant::Title)
+        .into()];
+
+    let shown = if enriched {
+        view.products.len()
+    } else {
+        HOME_PRODUCTS
+    };
+    for product in view.products.iter().take(shown) {
+        let action = Action::External {
+            url: product.product_url.clone(),
+        };
+        let mut item = ListItem::new().title(product.title.clone());
+        let subtitle = product_subtitle(product, locale);
+        if !subtitle.is_empty() {
+            item = item.subtitle(subtitle);
+        }
+
+        if !enriched {
+            children.push(Component::Pressable(
+                Pressable::new().action(action).child(item),
+            ));
+            continue;
+        }
+
+        if let Some(image) = product.image.as_ref() {
+            children.push(
+                Image::new()
+                    .url(image.url.clone())
+                    .alt(image.alt.clone().unwrap_or_else(|| product.title.clone()))
+                    .aspectRatio("16 / 9")
+                    .into(),
+            );
+        }
+        if let Some(tagline) = product.tagline.as_deref() {
+            item = item.child(Text::new().text(tagline).variant(TextVariant::Body));
+        }
+        // Tiqets exige le crédit de l'image partout où l'image est montrée.
+        if let Some(credit) = product
+            .image
+            .as_ref()
+            .and_then(|image| image.credit.as_deref())
+        {
+            item = item.child(Text::new().text(credit).variant(TextVariant::Caption));
+        }
+        item = item.child(
+            Link::new()
+                .label("i18n:guest.tiqets.book")
+                .href(product.product_url.clone())
+                .action(action),
+        );
+        children.push(Component::ListItem(item));
+    }
+
+    // Toujours sous la liste, dans toutes les langues : d'où viennent billets et notes, et
+    // que ces liens rapportent une commission.
+    children.push(
+        Text::new()
+            .text("i18n:guest.tiqets.attribution")
+            .variant(TextVariant::Caption)
+            .into(),
+    );
+    children.push(
+        Text::new()
+            .text("i18n:guest.tiqets.disclosure")
+            .variant(TextVariant::Caption)
+            .into(),
+    );
+    children
+}
+
+/// « Dès 22 € · ★ 4,6 (18 234) » — ce qui est connu, dans cet ordre.
+fn product_subtitle(product: &portaki_connectors::tiqets::TiqetsProduct, locale: &str) -> String {
+    let mut parts = Vec::new();
+    if let (Some(price), Some(currency)) = (product.price, product.currency.as_deref()) {
+        let formatted = format_price(price, currency, locale);
+        parts.push(t!("guest.tiqets.priceFrom", price = &formatted).unwrap_or(formatted));
+    }
+    if let Some(rating) = product.rating {
+        let average = format_rating(rating, locale);
+        let count = product.rating_count.to_string();
+        parts.push(
+            t!("guest.tiqets.rating", rating = &average, count = &count)
+                .unwrap_or_else(|_| format!("★ {average} ({count})")),
+        );
+    }
+    parts.join(" · ")
 }
 
 /// Carte des bons plans dont l'hôte a posé la position, le logement en repère.
