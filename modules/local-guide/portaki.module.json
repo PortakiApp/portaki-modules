@@ -21,7 +21,8 @@
   "maturity": "stable",
   "permissions": [
     "kv",
-    "platform"
+    "platform",
+    "connectors:tiqets"
   ],
   "sortOrder": 140,
   "hostSurfaces": [

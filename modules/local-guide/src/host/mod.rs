@@ -3,13 +3,14 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Button, Card, Field, Form, InfoBanner, Page, Stack, Text, TextArea,
+    AddressMapPicker, Button, Card, Field, Form, InfoBanner, Page, Select, Stack, Text, TextArea,
     TextInput, ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::affiliate::{looks_like_url, normalize_curated_url, CuratedUrlError, MAX_CURATED_LINKS};
-use crate::config::{load_config, ActivityRow, Localized, SpotRow};
+use crate::config::{load_config, ActivityRow, Localized, SpotRow, TIQETS_RADIUS_CHOICES_KM};
+use crate::tiqets::TiqetsStatus;
 
 const SPOT_SLOTS: usize = 6;
 
@@ -40,6 +41,23 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         .map(str::to_string)
         .unwrap_or_else(|| activities.intro.get(&lang).to_string());
 
+    let tiqets_enabled = ctx.input_bool("tiqets_enabled", config.tiqets.enabled);
+    let tiqets_radius = ctx
+        .input_str("tiqets_radius_km")
+        .map(str::to_string)
+        .unwrap_or_else(|| config.tiqets.normalized_radius_km().to_string());
+    let tiqets_min_rating = ctx
+        .input_str("tiqets_min_rating")
+        .map(str::to_string)
+        .unwrap_or_else(|| config.tiqets.min_rating.to_string());
+    let tiqets_status = crate::tiqets::status(
+        &ctx,
+        &crate::config::TiqetsConfig {
+            enabled: tiqets_enabled,
+            ..config.tiqets.clone()
+        },
+    );
+
     let submit_args = crate::commands::UpdateConfigArgs {
         spots: spots_to_submit(&spots, &lang),
         spots_json: String::new(),
@@ -48,6 +66,9 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         activities_destination: activities_destination.clone(),
         activities_intro: activities_intro.clone(),
         activities: activities_to_submit(&activities.links, &lang),
+        tiqets_enabled: Some(tiqets_enabled),
+        tiqets_radius_km: tiqets_radius.clone(),
+        tiqets_min_rating: tiqets_min_rating.clone(),
     };
     let save_action = crate::ids::module_id().command(crate::ids::UPDATE_CONFIG, submit_args);
 
@@ -62,6 +83,12 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         &activities_intro,
         &activities.links,
         &lang,
+    ));
+    cards.push(tiqets_card(
+        tiqets_enabled,
+        &tiqets_radius,
+        &tiqets_min_rating,
+        tiqets_status,
     ));
     cards.push(
         Card::new()
@@ -226,6 +253,87 @@ fn activities_card(
     Card::new()
         .title("i18n:host.section.activities")
         .subtitle("i18n:host.section.activities.help")
+        .icon("ticket")
+        .children(children)
+        .into()
+}
+
+/// Carte « Billets & activités (Tiqets) ».
+///
+/// L'état dit à l'hôte pourquoi rien ne s'afficherait : section éteinte, pas de clé (ni
+/// incluse à l'offre, ni la sienne), ou logement sans position sur la carte.
+fn tiqets_card(enabled: bool, radius: &str, min_rating: &str, status: TiqetsStatus) -> Component {
+    let status_key = match status {
+        TiqetsStatus::Off => "i18n:host.tiqets.status.off",
+        TiqetsStatus::MissingKey => "i18n:host.tiqets.status.missingKey",
+        TiqetsStatus::MissingCoordinates => "i18n:host.tiqets.status.missingCoordinates",
+        TiqetsStatus::Ready => "i18n:host.tiqets.status.ready",
+    };
+    let radius_options = TIQETS_RADIUS_CHOICES_KM
+        .iter()
+        .map(|km| ChoiceOption::new(km.to_string(), format!("i18n:host.tiqets.radius.{km}")))
+        .collect();
+
+    let mut children: Vec<Component> = vec![
+        ToggleRow::new()
+            .name("tiqets_enabled")
+            .label("i18n:host.tiqets.enabled")
+            .icon("ticket")
+            .checked(enabled)
+            .into(),
+        Field::new()
+            .name("tiqets_radius_km")
+            .label("i18n:host.tiqets.radius")
+            .child(
+                Select::new()
+                    .name("tiqets_radius_km")
+                    .options(radius_options)
+                    .value(radius.to_string()),
+            )
+            .into(),
+        Field::new()
+            .name("tiqets_min_rating")
+            .label("i18n:host.tiqets.minRating")
+            .child(
+                Select::new()
+                    .name("tiqets_min_rating")
+                    .options(vec![
+                        ChoiceOption::new("0", "i18n:host.tiqets.minRating.any"),
+                        ChoiceOption::new("3", "i18n:host.tiqets.minRating.3"),
+                        ChoiceOption::new("4", "i18n:host.tiqets.minRating.4"),
+                    ])
+                    .value(min_rating.to_string()),
+            )
+            .into(),
+    ];
+    if matches!(
+        status,
+        TiqetsStatus::MissingKey | TiqetsStatus::MissingCoordinates
+    ) {
+        children.push(
+            InfoBanner::new()
+                .tone(Tone::Warning)
+                .message(status_key)
+                .into(),
+        );
+    } else {
+        children.push(
+            Text::new()
+                .text(status_key)
+                .variant(TextVariant::Caption)
+                .into(),
+        );
+    }
+    children.push(
+        Text::new()
+            .text("i18n:host.tiqets.help")
+            .variant(TextVariant::Caption)
+            .into(),
+    );
+
+    Card::new()
+        .title("i18n:host.section.tiqets")
+        .subtitle("i18n:host.section.tiqets.help")
         .icon("ticket")
         .children(children)
         .into()

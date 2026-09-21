@@ -21,6 +21,61 @@ pub struct ModuleConfig {
     /// Section « Activités & billets » (liens d'affiliation GetYourGuide).
     #[serde(default)]
     pub activities: ActivitiesConfig,
+    /// Section « Billets & activités (Tiqets) » (produits à proximité, API Tiqets).
+    #[serde(default)]
+    pub tiqets: TiqetsConfig,
+}
+
+/// Rayon proposé par défaut : la ville et sa proche périphérie.
+pub const TIQETS_DEFAULT_RADIUS_KM: u32 = 10;
+
+/// Rayons proposés à l'hôte. Tiqets accepte 1 à 100 km ; au-delà de 40, la liste se remplit
+/// d'attractions qu'aucun voyageur ne ferait dans la journée.
+pub const TIQETS_RADIUS_CHOICES_KM: [u32; 4] = [5, 10, 20, 40];
+
+/// Configuration de la section Tiqets.
+///
+/// **Éteinte par défaut**, pour la même raison que la section GetYourGuide : ces liens
+/// rapportent une commission, et une configuration écrite avant la section n'a pas la clé.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct TiqetsConfig {
+    #[serde(default)]
+    pub enabled: bool,
+    /// Rayon de recherche autour du logement, en km.
+    #[serde(default = "default_tiqets_radius_km")]
+    pub radius_km: u32,
+    /// Note minimale des avis, 1 à 5 ; 0 = aucun filtre.
+    #[serde(default)]
+    pub min_rating: u8,
+}
+
+impl Default for TiqetsConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            radius_km: TIQETS_DEFAULT_RADIUS_KM,
+            min_rating: 0,
+        }
+    }
+}
+
+fn default_tiqets_radius_km() -> u32 {
+    TIQETS_DEFAULT_RADIUS_KM
+}
+
+impl TiqetsConfig {
+    /// Un rayon que Tiqets accepte : écrit hors du formulaire, il ne doit pas devenir un `400`.
+    pub fn normalized_radius_km(&self) -> u32 {
+        self.radius_km.clamp(1, 100)
+    }
+
+    /// `None` = pas de filtre, sinon 1 à 5.
+    pub fn normalized_min_rating(&self) -> Option<u8> {
+        match self.min_rating {
+            0 => None,
+            rating => Some(rating.min(5)),
+        }
+    }
 }
 
 /// Configuration de la section « Activités & billets ».
@@ -315,6 +370,31 @@ mod tests {
         assert!(!config.activities.enabled);
         assert!(config.activities.destination.is_empty());
         assert!(config.activities.links.is_empty());
+    }
+
+    #[test]
+    fn tiqets_stays_off_on_a_config_that_predates_it() {
+        let config: ModuleConfig = serde_json::from_value(json!({ "spots": [] })).unwrap();
+        assert_eq!(config.tiqets, TiqetsConfig::default());
+        assert!(!config.tiqets.enabled);
+        assert_eq!(config.tiqets.radius_km, TIQETS_DEFAULT_RADIUS_KM);
+        assert_eq!(config.tiqets.normalized_min_rating(), None);
+    }
+
+    #[test]
+    fn tiqets_settings_written_outside_the_form_stay_in_range() {
+        let config = TiqetsConfig {
+            enabled: true,
+            radius_km: 5000,
+            min_rating: 9,
+        };
+        assert_eq!(config.normalized_radius_km(), 100);
+        assert_eq!(config.normalized_min_rating(), Some(5));
+        let config = TiqetsConfig {
+            radius_km: 0,
+            ..config
+        };
+        assert_eq!(config.normalized_radius_km(), 1);
     }
 
     #[test]
