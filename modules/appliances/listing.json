@@ -1,0 +1,42 @@
+{
+  "category": "stay",
+  "tagline": {
+    "fr": "Des modes d’emploi courts pour chaque appareil du logement.",
+    "en": "Short how-to guides for every appliance in your rental."
+  },
+  "description": {
+    "fr": "Chaque appareil du logement a sa fiche : la pièce où il se trouve, les consignes d’utilisation et, si besoin, le lien vers le manuel. L’hôte ajoute, met en avant ou masque les appareils et rédige une consigne de sécurité commune, affichée à tous les voyageurs.",
+    "en": "Each appliance in the rental has its own card: the room it is in, how to use it and, if needed, a link to the manual. The host adds, features or hides appliances and writes a shared safety notice shown to every guest."
+  },
+  "guestSurface": {
+    "fr": "La liste des appareils (four, lave-linge, climatisation…) avec, pour chacun, la pièce, les consignes d’utilisation et le lien vers le manuel, ainsi qu’une consigne de sécurité commune.",
+    "en": "The list of appliances (oven, washing machine, air conditioning…) with, for each one, the room, how to use it and a link to the manual, plus a shared safety notice."
+  },
+  "hostSurface": {
+    "fr": "Un onglet Appareils pour ajouter, modifier, mettre en avant ou masquer les appareils, et rédiger la consigne de sécurité.",
+    "en": "An Appliances tab to add, edit, feature or hide appliances, and write the safety notice."
+  },
+  "configItems": [
+    {
+      "fr": "Nom, pièce et emoji de chaque appareil",
+      "en": "Name, room and emoji for each appliance"
+    },
+    {
+      "fr": "Consignes d’utilisation",
+      "en": "How-to instructions"
+    },
+    {
+      "fr": "Lien vers le manuel (facultatif)",
+      "en": "Link to the manual (optional)"
+    },
+    {
+      "fr": "Consigne de sécurité du logement",
+      "en": "Property safety notice"
+    }
+  ],
+  "capabilities": [],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
