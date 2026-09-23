@@ -1,0 +1,30 @@
+{
+  "category": "stay",
+  "tagline": {
+    "fr": "Le règlement du logement en quelques consignes claires, en français et en anglais.",
+    "en": "Your house rules as a few clear points, in French and English."
+  },
+  "description": {
+    "fr": "Le règlement du logement s’affiche sous forme de courtes consignes illustrées d’une icône : calme, animaux, bruit, nombre de voyageurs… Le voyageur en voit un aperçu, puis la liste complète ; l’hôte ajoute, modifie et retire les règles en quelques clics.",
+    "en": "House rules are shown as short points with an icon: quiet hours, pets, noise, number of guests… Guests see a preview, then the full list; the host adds, edits and removes rules in a few clicks."
+  },
+  "guestSurface": {
+    "fr": "Les règles de la maison sous forme de courtes consignes illustrées d’une icône (calme, animaux, bruit…), en aperçu puis en liste complète.",
+    "en": "House rules as short points with an icon (quiet hours, pets, noise…), as a preview and then as a full list."
+  },
+  "hostSurface": {
+    "fr": "Un onglet Règlement pour ajouter, modifier et retirer les règles.",
+    "en": "A House rules tab to add, edit and remove rules."
+  },
+  "configItems": [
+    {
+      "fr": "Chaque règle : icône, titre et sous-titre",
+      "en": "Each rule: icon, title and subtitle"
+    }
+  ],
+  "capabilities": [],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
