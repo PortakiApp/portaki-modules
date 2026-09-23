@@ -309,6 +309,7 @@ fn a_guest_photo_reaches_the_host_screen_and_the_stats() {
         .run(|ctx| {
             let main = serde_json::to_string(&render_host_main(ctx.clone())).expect("main json");
             assert!(main.contains(&format!(r#""url":"{PHOTO}""#)));
+            assert!(main.contains(r#""size":"thumb""#));
             let stats = serde_json::to_value(render_host_stats(ctx))
                 .expect("stats json")
                 .to_string();
