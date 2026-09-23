@@ -6,8 +6,8 @@
     "en": "Local events"
   },
   "description": {
-    "fr": "Sorties, concerts et animations à proximité — OpenAgenda et curation hôte.",
-    "en": "Local happenings near the stay — OpenAgenda plus host-curated slots."
+    "fr": "Sorties, concerts et animations à proximité — agenda local et sélection de l’hôte.",
+    "en": "Local happenings near the stay — local listings plus your own picks."
   },
   "version": "0.5.0",
   "requiresModuleSdk": "6.8.0",

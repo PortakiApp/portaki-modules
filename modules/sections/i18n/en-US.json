@@ -1,9 +1,9 @@
 {
   "module.displayName": "Editorial sections",
-  "module.description": "Markdown content blocks for the guest welcome book.",
+  "module.description": "Formatted text blocks (headings, lists, quotes) for the guest welcome book.",
   "guest.teaser": "Welcome note and a quick tour of the place",
   "surface.host.main.title": "Sections",
-  "surface.host.main.subtitle": "Markdown content blocks for the guest welcome book.",
+  "surface.host.main.subtitle": "Formatted text blocks (headings, lists, quotes) for the guest welcome book.",
   "host.list.title": "Sections",
   "host.list.empty": "No sections yet.",
   "host.list.add": "Add a section",
