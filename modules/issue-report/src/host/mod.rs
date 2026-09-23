@@ -6,7 +6,7 @@
 use chrono::{DateTime, Datelike, Utc};
 use portaki_sdk::files::FileRef;
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::common::Tone;
+use portaki_sdk::sdui::common::{ImageSize, Tone};
 use portaki_sdk::sdui::primitives::{
     Button, Card, EmptyState, Image, InfoBanner, List, ListItem, Page, Pill, Stack, Text,
 };
@@ -104,7 +104,7 @@ fn build_report_row(report: &IssueReport, now: DateTime<Utc>, locale: &str) -> C
             Image::new()
                 .url(photo.image_url())
                 .alt("i18n:host.main.photoAlt")
-                .aspectRatio("4:3")
+                .size(ImageSize::Thumb)
                 .into()
         });
     if !open && photo.is_none() {
