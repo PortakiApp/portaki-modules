@@ -1,0 +1,30 @@
+{
+  "category": "stay",
+  "tagline": {
+    "fr": "Des sections de texte mis en forme pour compléter votre livret d’accueil.",
+    "en": "Formatted text sections to round out your welcome book."
+  },
+  "description": {
+    "fr": "L’hôte rédige des sections libres avec un éditeur de texte riche (titres, listes, citations) pour tout ce qu’il veut transmettre. Le voyageur voit un aperçu des premières sections sur l’accueil du livret, puis le texte complet de chacune.",
+    "en": "The host writes free-form sections with a rich text editor (headings, lists, quotes) for anything they want to share. Guests see a preview of the first sections on the booklet's home page, then the full text of each one."
+  },
+  "guestSurface": {
+    "fr": "Un aperçu des premières sections sur l’accueil du livret, puis le texte complet de chacune, avec titres, listes et citations.",
+    "en": "A preview of the first sections on the booklet's home page, then the full text of each one, with headings, lists and quotes."
+  },
+  "hostSurface": {
+    "fr": "Un onglet Sections pour créer, modifier et supprimer des sections avec un éditeur de texte riche.",
+    "en": "A Sections tab to create, edit and delete sections with a rich text editor."
+  },
+  "configItems": [
+    {
+      "fr": "Titre et contenu de chaque section",
+      "en": "Title and content of each section"
+    }
+  ],
+  "capabilities": [],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
