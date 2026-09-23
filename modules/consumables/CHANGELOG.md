@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v0.4.0...consumables-v0.5.0) (2026-09-23)
+
+
+### Features
+
+* **consumables:** add catalogue listing ([d3ae8ac](https://github.com/PortakiApp/portaki-modules/commit/d3ae8ac0ec0636f7b9cb53da46433fc144854872))
+
 ## [0.4.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v0.3.2...consumables-v0.4.0) (2026-09-23)
 
 

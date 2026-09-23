@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/weather-v0.5.1...weather-v0.6.0) (2026-09-23)
+
+
+### Features
+
+* **weather:** add catalogue listing ([46c662e](https://github.com/PortakiApp/portaki-modules/commit/46c662e76ab056e139a8a8d47adebc157491e4a4))
+
 ## [0.5.1](https://github.com/PortakiApp/portaki-modules/compare/weather-v0.5.0...weather-v0.5.1) (2026-09-23)
 
 

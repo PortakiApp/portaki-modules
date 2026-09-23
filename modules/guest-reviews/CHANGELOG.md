@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v0.4.0...guest-reviews-v0.5.0) (2026-09-23)
+
+
+### Features
+
+* **guest-reviews:** add catalogue listing ([7cd9b06](https://github.com/PortakiApp/portaki-modules/commit/7cd9b06cc211e4f9515b58e3aa88d7c7f228a4b3))
+
 ## [0.4.0](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v0.3.2...guest-reviews-v0.4.0) (2026-09-23)
 
 

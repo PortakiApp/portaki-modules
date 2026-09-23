@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v0.4.0...emergency-contacts-v0.5.0) (2026-09-23)
+
+
+### Features
+
+* **emergency-contacts:** add catalogue listing ([992d830](https://github.com/PortakiApp/portaki-modules/commit/992d83048a7e51472f2c0231b40e764ffad56ec4))
+
 ## [0.4.0](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v0.3.2...emergency-contacts-v0.4.0) (2026-09-23)
 
 

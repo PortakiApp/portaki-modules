@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/sections-v0.4.1...sections-v0.5.0) (2026-09-23)
+
+
+### Features
+
+* **sections:** add catalogue listing ([aab8633](https://github.com/PortakiApp/portaki-modules/commit/aab8633ee6fc498a4a271bab7e0ed77d3adb228b))
+
 ## [0.4.1](https://github.com/PortakiApp/portaki-modules/compare/sections-v0.4.0...sections-v0.4.1) (2026-09-23)
 
 
