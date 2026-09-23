@@ -1,0 +1,42 @@
+{
+  "category": "arrival",
+  "tagline": {
+    "fr": "Place réservée, code d’accès et code de la borne pour les voyageurs en électrique.",
+    "en": "Reserved spot, gate code and charger PIN for guests driving electric."
+  },
+  "description": {
+    "fr": "Le voyageur en véhicule électrique trouve sa place réservée, le code barrière et le code de la borne de recharge, avec un lien vers la carte et les consignes de l’hôte. Les codes s’affichent selon le calendrier choisi par l’hôte, et la place est rappelée dans les e-mails d’arrivée.",
+    "en": "Guests driving electric find their reserved spot, the gate code and the charger PIN, with a map link and the host's instructions. Codes appear on the schedule chosen by the host, and the spot is mentioned in arrival emails."
+  },
+  "guestSurface": {
+    "fr": "La place réservée, le code barrière et le code de la borne de recharge, révélés selon le calendrier de l’hôte, avec un lien vers la carte et des consignes. La place est aussi rappelée dans les e-mails d’arrivée.",
+    "en": "The reserved spot, the gate code and the charger PIN, revealed on the host's schedule, with a map link and instructions. The spot is also mentioned in arrival emails."
+  },
+  "hostSurface": {
+    "fr": "Un onglet Parking VE : place, codes, itinéraire, consignes et moment d’affichage des codes.",
+    "en": "An EV parking tab: spot, codes, directions, instructions and when codes are shown."
+  },
+  "configItems": [
+    {
+      "fr": "Place réservée",
+      "en": "Reserved spot"
+    },
+    {
+      "fr": "Code barrière et code de la borne",
+      "en": "Gate code and charger PIN"
+    },
+    {
+      "fr": "Lien carte et consignes (facultatif)",
+      "en": "Map link and instructions (optional)"
+    },
+    {
+      "fr": "Moment d’affichage des codes (dès la réservation, 24 h avant, la veille à 16 h ou à l’arrivée)",
+      "en": "When codes appear (from booking, 24 h before, the day before at 4 pm, or at check-in)"
+    }
+  ],
+  "capabilities": [],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
