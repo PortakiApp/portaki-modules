@@ -190,10 +190,14 @@ fn host_stats_reflect_resolution_and_period() {
     ));
     assert!(text.contains(r#""label":"i18n:stats.open","type":"Stat","value":"2""#));
     assert!(text.contains(
-        r#""key":"i18n:stats.category.appliance","type":"KeyValue","value":"2 signalements""#
+        r#""display":"2 signalements","label":"i18n:stats.category.appliance","value":2.0"#
     ));
     assert!(text.find("stats.category.appliance") < text.find("stats.category.access"));
-    assert!(text.contains(r#""key":"i18n:stats.delay.avg","type":"KeyValue","value":"6 h""#));
+    // 30 days → five weekly slices; the oven, reported and resolved in the last one, took 6 h.
+    assert!(
+        text.contains(r#""display":"6 h","label":"S5","value":6.0"#),
+        "{text}"
+    );
 
     let later = t0 + Duration::days(40);
     assert!(

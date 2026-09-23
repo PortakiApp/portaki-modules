@@ -3,10 +3,11 @@
 //! The dashboard passes the selected period as `input.periodDays` (30, 90 or 365).
 //! Guests cannot attach photos yet (no guest upload in the SDK), so « Avec photo » stays « — ».
 
-use chrono::Duration;
+use chrono::{DateTime, Datelike, Duration, Utc};
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Card, EmptyState, Grid, KeyValue, Page, Stack, Stat};
+use portaki_sdk::sdui::primitives::{Card, Chart, EmptyState, Grid, Page, Stack, Stat};
 use portaki_sdk::sdui::surface::Surface;
+use portaki_sdk::sdui::{ChartKind, ChartPoint};
 
 use crate::category;
 use crate::entities::IssueReport;
@@ -55,21 +56,25 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
     let category_body = if by_category.is_empty() {
         empty("i18n:stats.byCategory.empty", "danger-triangle")
     } else {
-        rows(
-            by_category
-                .into_iter()
-                .map(|(wire, n)| (format!("i18n:stats.category.{wire}"), reports_unit(n, fr)))
-                .collect(),
-        )
+        Chart::new()
+            .kind(ChartKind::HorizontalBars)
+            .swatch(Swatch::Red)
+            .points(
+                by_category
+                    .into_iter()
+                    .map(|(wire, n)| {
+                        ChartPoint::new(format!("i18n:stats.category.{wire}"), n as f64)
+                            .display(reports_unit(n, fr))
+                    })
+                    .collect(),
+            )
+            .into()
     };
 
-    let delay_body = match (average(&delays), delays.iter().min(), delays.iter().max()) {
-        (Some(avg), Some(min), Some(max)) => rows(vec![
-            ("i18n:stats.delay.avg".into(), format_delay(avg, fr)),
-            ("i18n:stats.delay.min".into(), format_delay(*min, fr)),
-            ("i18n:stats.delay.max".into(), format_delay(*max, fr)),
-        ]),
-        _ => empty("i18n:stats.delay.empty", "clock-circle"),
+    let delay_body = if delays.is_empty() {
+        empty("i18n:stats.delay.empty", "clock-circle")
+    } else {
+        delay_chart(&reports, now, days, fr)
     };
 
     let panels = Grid::new().minColumnWidth(320.0).gap(16.0).children(vec![
@@ -143,16 +148,51 @@ fn format_delay(delay: Duration, fr: bool) -> String {
     }
 }
 
-fn rows(pairs: Vec<(String, String)>) -> Component {
-    Stack::new()
-        .gap(12.0)
-        .children(
-            pairs
-                .into_iter()
-                .map(|(key, value)| KeyValue::new().key(key).value(value).into())
-                .collect(),
-        )
+/// Average resolution delay per slice of the period: weeks (S1…) for 30 and 90 days, months
+/// for 12 months. Slices without a resolved report show « — ».
+fn delay_chart(reports: &[IssueReport], now: DateTime<Utc>, days: i64, fr: bool) -> Component {
+    let slices: i64 = match days {
+        365 => 12,
+        d => (d + 6) / 7,
+    };
+    let since = now - Duration::days(days);
+    let mut buckets = vec![Vec::new(); slices as usize];
+    for report in reports {
+        let Some(resolved) = report.resolved_at else {
+            continue;
+        };
+        let i = ((report.created_at - since).num_seconds() * slices
+            / Duration::days(days).num_seconds())
+        .clamp(0, slices - 1);
+        buckets[i as usize].push(resolved - report.created_at);
+    }
+    let points = buckets
+        .iter()
+        .enumerate()
+        .map(|(i, delays)| {
+            let label = if days == 365 {
+                let mid = since + Duration::days(days) * (2 * i as i32 + 1) / (2 * slices as i32);
+                month_initial(mid.month()).to_string()
+            } else {
+                format!("{}{}", if fr { "S" } else { "W" }, i + 1)
+            };
+            match average(delays) {
+                Some(avg) => ChartPoint::new(label, avg.num_minutes() as f64 / 60.0)
+                    .display(format_delay(avg, fr)),
+                None => ChartPoint::new(label, 0.0).display("—"),
+            }
+        })
+        .collect();
+    Chart::new()
+        .kind(ChartKind::Bars)
+        .swatch(Swatch::Red)
+        .points(points)
         .into()
+}
+
+/// Same initials in French and English.
+fn month_initial(month: u32) -> &'static str {
+    ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"][(month as usize + 11) % 12]
 }
 
 fn empty(description: &str, icon: &str) -> Component {
@@ -184,7 +224,6 @@ fn count_by_category(reports: &[IssueReport]) -> Vec<(&'static str, usize)> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::{DateTime, Utc};
     use uuid::Uuid;
 
     fn report(category: &str) -> IssueReport {
