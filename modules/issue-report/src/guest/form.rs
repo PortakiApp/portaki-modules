@@ -1,7 +1,9 @@
 //! Guest bottom-sheet form surface opened from the home card.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Button, ChoiceList, Field, Form, TextArea, TextInput};
+use portaki_sdk::sdui::primitives::{
+    Button, ChoiceList, Field, Form, ImageUpload, TextArea, TextInput,
+};
 use portaki_sdk::sdui::surface::Surface;
 
 use super::empty::{empty_runtime_error_state, log_render_failure};
@@ -61,6 +63,12 @@ fn build_form() -> Form {
                         .name("details")
                         .placeholder("i18n:form.details.placeholder"),
                 ),
+        )
+        .child(
+            Field::new()
+                .name("photo")
+                .label("i18n:form.photo.label")
+                .child(ImageUpload::new().name("photo")),
         )
         .child(
             Button::new()

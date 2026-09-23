@@ -56,5 +56,7 @@
   "stats.category.cleanliness": "Cleanliness",
   "stats.category.noise": "Noise",
   "stats.category.access": "Access",
-  "stats.category.other": "Other"
+  "stats.category.other": "Other",
+  "form.photo.label": "Photo",
+  "host.main.photoAlt": "Photo attached by the guest"
 }

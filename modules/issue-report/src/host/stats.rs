@@ -1,7 +1,7 @@
 //! Property stats tab — `property-stats-card` host surface (design `tabStats` → « Signalements »).
 //!
 //! The dashboard passes the selected period as `input.periodDays` (30, 90 or 365).
-//! Guests cannot attach photos yet (no guest upload in the SDK), so « Avec photo » stays « — ».
+//! « Avec photo » counts the period's reports that carry a guest photo.
 
 use chrono::Duration;
 use portaki_sdk::prelude::*;
@@ -48,7 +48,16 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
             .into(),
         resolved.into(),
         open.into(),
-        Stat::new().label("i18n:stats.withPhoto").value("—").into(),
+        Stat::new()
+            .label("i18n:stats.withPhoto")
+            .value(
+                reports
+                    .iter()
+                    .filter(|r| r.photo.is_some())
+                    .count()
+                    .to_string(),
+            )
+            .into(),
     ]);
 
     let by_category = count_by_category(&reports);
@@ -196,6 +205,7 @@ mod tests {
             details: None,
             created_at: DateTime::<Utc>::UNIX_EPOCH,
             resolved_at: None,
+            photo: None,
         }
     }
 

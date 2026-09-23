@@ -4,10 +4,11 @@
 //! Open rows carry a « Marquer comme résolu » button (`resolve` command).
 
 use chrono::{DateTime, Datelike, Utc};
+use portaki_sdk::files::FileRef;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
-    Button, Card, EmptyState, InfoBanner, List, ListItem, Page, Pill, Stack, Text,
+    Button, Card, EmptyState, Image, InfoBanner, List, ListItem, Page, Pill, Stack, Text,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -94,8 +95,25 @@ fn build_report_row(report: &IssueReport, now: DateTime<Utc>, locale: &str) -> C
         .child(pill)
         .child(Text::new().text(when).variant(TextVariant::Caption))
         .into();
-    if !open {
+    // The platform swaps the `portaki-file:` reference for a signed URL at render time.
+    let photo: Option<Component> = report
+        .photo
+        .as_deref()
+        .and_then(FileRef::parse)
+        .map(|photo| {
+            Image::new()
+                .url(photo.image_url())
+                .alt("i18n:host.main.photoAlt")
+                .aspectRatio("4:3")
+                .into()
+        });
+    if !open && photo.is_none() {
         return row;
+    }
+    let mut children = vec![row];
+    children.extend(photo);
+    if !open {
+        return Stack::new().gap(6.0).children(children).into();
     }
 
     let resolve = crate::ids::module_id().command(
@@ -104,17 +122,14 @@ fn build_report_row(report: &IssueReport, now: DateTime<Utc>, locale: &str) -> C
             report_id: report.id,
         },
     );
-    Stack::new()
-        .gap(6.0)
-        .children(vec![
-            row,
-            Button::new()
-                .label("i18n:host.main.resolve")
-                .variant(ButtonVariant::Outline)
-                .action(resolve)
-                .into(),
-        ])
-        .into()
+    children.push(
+        Button::new()
+            .label("i18n:host.main.resolve")
+            .variant(ButtonVariant::Outline)
+            .action(resolve)
+            .into(),
+    );
+    Stack::new().gap(6.0).children(children).into()
 }
 
 /// Compact relative age — design: « il y a 2 h », « hier », « 2 jours ».

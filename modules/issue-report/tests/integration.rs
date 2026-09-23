@@ -49,6 +49,7 @@ fn submit_allows_multiple_reports_and_shows_list() {
                     category: "appliance".into(),
                     summary: "Oven broken".into(),
                     details: Some("Won't heat".into()),
+                    photo: None,
                 },
             )
             .expect("submit");
@@ -64,6 +65,7 @@ fn submit_allows_multiple_reports_and_shows_list() {
                     category: "noise".into(),
                     summary: "Loud neighbors".into(),
                     details: None,
+                    photo: None,
                 },
             )
             .expect("submit second");
@@ -92,6 +94,7 @@ fn host_main_lists_recent_after_guest_submit() {
                     category: "cleanliness".into(),
                     summary: "Bathroom not clean".into(),
                     details: None,
+                    photo: None,
                 },
             )
             .expect("submit");
@@ -137,6 +140,7 @@ fn host_stats_reflect_resolution_and_period() {
                         category: category.into(),
                         summary: summary.into(),
                         details: None,
+                        photo: None,
                     },
                 )
                 .expect("submit");
@@ -223,6 +227,7 @@ fn long_details_are_stored_whole_and_quoted_in_the_host_email() {
                     category: "appliance".into(),
                     summary: "Fuite sous l'évier".into(),
                     details: Some(details.clone()),
+                    photo: None,
                 },
             )
             .expect("submit");
@@ -247,5 +252,62 @@ fn long_details_are_stored_whole_and_quoted_in_the_host_email() {
             assert_eq!(cta.label.en, "See more");
             assert_eq!(email.property_id, Some(ctx.property_id));
             assert!(email.action_url.is_none());
+        });
+}
+
+const PHOTO: &str = "portaki-file:6f1c1d2e-3a4b-4c5d-8e9f-0a1b2c3d4e5f";
+
+#[test]
+#[serial]
+fn a_guest_photo_reaches_the_host_screen_and_the_stats() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let form = render_guest_form(ctx.clone());
+            assert!(SurfaceAssertions::new(&form).contains_type("ImageUpload"));
+
+            let refused = submit(
+                ctx.clone(),
+                SubmitArgs {
+                    category: "other".into(),
+                    summary: "Tracker".into(),
+                    details: None,
+                    photo: Some("https://evil.example/pixel.png".into()),
+                },
+            );
+            assert!(refused.is_err(), "only a platform reference is accepted");
+
+            for photo in [Some(PHOTO.to_string()), Some("  ".into()), None] {
+                submit(
+                    ctx.clone(),
+                    SubmitArgs {
+                        category: "appliance".into(),
+                        summary: "Oven".into(),
+                        details: None,
+                        photo,
+                    },
+                )
+                .expect("submit");
+            }
+            let rows = list_for_stay(ctx).expect("list");
+            assert_eq!(
+                rows.iter()
+                    .filter(|r| r.photo.as_deref() == Some(PHOTO))
+                    .count(),
+                1
+            );
+            assert_eq!(rows.iter().filter(|r| r.photo.is_none()).count(), 2);
+        });
+
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let main = serde_json::to_string(&render_host_main(ctx.clone())).expect("main json");
+            assert!(main.contains(&format!(r#""url":"{PHOTO}""#)));
+            let stats = serde_json::to_value(render_host_stats(ctx))
+                .expect("stats json")
+                .to_string();
+            assert!(stats.contains(r#""label":"i18n:stats.withPhoto","type":"Stat","value":"1""#));
         });
 }

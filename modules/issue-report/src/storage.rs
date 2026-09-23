@@ -1,6 +1,7 @@
 //! Issue report persistence via `host::repo`.
 
 use chrono::{DateTime, Utc};
+use portaki_sdk::files::FileRef;
 use portaki_sdk::host::repo::{self, eq, find, gte, Query};
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
@@ -90,6 +91,7 @@ pub fn create(
     category: String,
     summary: String,
     details: Option<String>,
+    photo: Option<FileRef>,
 ) -> Result<IssueReport> {
     let now = time::now()?;
     let row = IssueReport {
@@ -100,6 +102,7 @@ pub fn create(
         details,
         created_at: now,
         resolved_at: None,
+        photo: photo.map(|photo| photo.to_string()),
     };
     persist_row(row.clone())?;
     Ok(row)
