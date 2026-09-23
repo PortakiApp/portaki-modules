@@ -1,0 +1,34 @@
+{
+  "category": "stay",
+  "tagline": {
+    "fr": "Numéros d’urgence et contacts utiles, toujours à portée de main.",
+    "en": "Emergency numbers and useful contacts, always within reach."
+  },
+  "description": {
+    "fr": "Le livret rassemble les numéros utiles choisis par l’hôte (pharmacie, médecin, dépannage…) et rappelle le 112. L’hôte peut aussi y afficher son propre téléphone, pour que le voyageur sache toujours qui appeler.",
+    "en": "The booklet gathers the useful numbers chosen by the host (pharmacy, doctor, repairs…) and reminds guests of the 112 emergency number. The host can also show their own phone number, so guests always know who to call."
+  },
+  "guestSurface": {
+    "fr": "Les numéros utiles (pharmacie, médecin…), le rappel du 112 et, si l’hôte le souhaite, son téléphone direct.",
+    "en": "Useful numbers (pharmacy, doctor…), a reminder of the 112 emergency number and, if the host wishes, their direct phone line."
+  },
+  "hostSurface": {
+    "fr": "Un onglet Urgences pour saisir votre téléphone et jusqu’à six contacts.",
+    "en": "An Emergency tab to enter your phone number and up to six contacts."
+  },
+  "configItems": [
+    {
+      "fr": "Votre téléphone (facultatif)",
+      "en": "Your phone number (optional)"
+    },
+    {
+      "fr": "Jusqu’à six contacts : libellé et numéro",
+      "en": "Up to six contacts: label and number"
+    }
+  ],
+  "capabilities": [],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
