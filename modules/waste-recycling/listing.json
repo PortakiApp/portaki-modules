@@ -1,0 +1,34 @@
+{
+  "category": "stay",
+  "tagline": {
+    "fr": "Quoi jeter dans quel bac, et quels jours sortir les poubelles.",
+    "en": "What goes in which bin, and which days to put the bins out."
+  },
+  "description": {
+    "fr": "Le voyageur sait quoi jeter dans chaque bac, repéré par sa couleur, et quels jours sortir les poubelles. L’hôte décrit jusqu’à six bacs et les jours de collecte de sa commune.",
+    "en": "Guests know what goes in each bin, identified by its colour, and which days to put the bins out. The host describes up to six bins and the local collection days."
+  },
+  "guestSurface": {
+    "fr": "Chaque bac avec sa couleur et ce qu’on y jette, et les jours de collecte.",
+    "en": "Each bin with its colour and what goes in it, plus collection days."
+  },
+  "hostSurface": {
+    "fr": "Un onglet Tri pour décrire jusqu’à six bacs et les jours de collecte.",
+    "en": "A Recycling tab to describe up to six bins and the collection days."
+  },
+  "configItems": [
+    {
+      "fr": "Jusqu’à six bacs : titre, couleur, contenu",
+      "en": "Up to six bins: title, colour, contents"
+    },
+    {
+      "fr": "Jours de collecte",
+      "en": "Collection days"
+    }
+  ],
+  "capabilities": [],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
