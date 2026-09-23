@@ -1,0 +1,38 @@
+{
+  "category": "arrival",
+  "tagline": {
+    "fr": "Votre serrure connectée donne son code et l’ouverture à distance aux voyageurs.",
+    "en": "Your smart lock gives guests its keypad code and remote unlocking."
+  },
+  "description": {
+    "fr": "L’hôte renseigne sa serrure Nuki et le code clavier des voyageurs, puis la choisit comme serrure connectée dans le module Accès. Le code est alors présenté au voyageur au moment prévu, et l’ouverture à distance fonctionne si l’hôte a connecté son compte Nuki. Le module n’ajoute rien d’autre au livret.",
+    "en": "The host enters their Nuki lock and the guest keypad code, then picks it as the smart lock in the Access module. The code is then shown to guests at the scheduled time, and remote unlocking works if the host has connected their Nuki account. The module adds nothing else to the booklet."
+  },
+  "hostSurface": {
+    "fr": "Un onglet Nuki pour renseigner la serrure et le code clavier. Le module n’ajoute rien au livret : il transmet le code, et l’ouverture à distance si un compte Nuki est connecté, au module Accès, qui les présente au voyageur.",
+    "en": "A Nuki tab to set up the lock and keypad code. The module adds nothing to the booklet: it passes the code, and remote unlocking when a Nuki account is connected, to the Access module, which shows them to guests."
+  },
+  "configItems": [
+    {
+      "fr": "Identifiant et nom de la serrure",
+      "en": "Lock ID and name"
+    },
+    {
+      "fr": "Code clavier des voyageurs",
+      "en": "Guest keypad code"
+    }
+  ],
+  "capabilities": [
+    {
+      "label": {
+        "fr": "Votre compte Nuki, pour l’ouverture à distance (facultatif)",
+        "en": "Your Nuki account, for remote unlocking (optional)"
+      },
+      "kind": "byok"
+    }
+  ],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
