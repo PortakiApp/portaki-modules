@@ -1,0 +1,50 @@
+{
+  "category": "arrival",
+  "tagline": {
+    "fr": "Des consignes d’arrivée claires et des codes révélés au bon moment.",
+    "en": "Clear arrival directions, with access codes revealed at the right time."
+  },
+  "description": {
+    "fr": "Le voyageur trouve dans son livret le moyen d’entrer dans le logement, l’accès à l’immeuble, le parking et le trajet jusqu’à la porte, étape par étape, avec une carte et une vidéo si l’hôte en ajoute une. Les codes restent masqués jusqu’au moment choisi par l’hôte, par exemple la veille à 16 h. Avec une serrure connectée liée, le voyageur ouvre la porte depuis le livret.",
+    "en": "Guests find in their booklet how to get into the rental, building access, parking and the route to the door, step by step, with a map and a video if the host adds one. Codes stay hidden until the time chosen by the host, for example the day before at 4 pm. With a linked smart lock, guests open the door from the booklet."
+  },
+  "guestSurface": {
+    "fr": "Le moyen d’entrée (boîte à clés, digicode, serrure connectée, remise des clés en main propre…), l’accès à l’immeuble, le parking et le parcours jusqu’à la porte, étape par étape, avec une carte et une vidéo facultative. Les codes apparaissent selon le calendrier choisi par l’hôte ; avec une serrure connectée liée, un bouton ouvre la porte.",
+    "en": "The entry method (key box, door code, smart lock, in-person key handover…), building access, parking and the route to the door step by step, with a map and an optional video. Codes appear on the schedule set by the host; with a linked smart lock, a button opens the door."
+  },
+  "hostSurface": {
+    "fr": "Un onglet Accès dans la fiche du logement : moyen d’entrée principal, accès à l’immeuble et parking facultatifs, parcours d’arrivée et moment d’affichage des codes.",
+    "en": "An Access tab on the property: main entry method, optional building access and parking, arrival route, and when codes are shown."
+  },
+  "configItems": [
+    {
+      "fr": "Moyen d’entrée principal et ses codes",
+      "en": "Main entry method and its codes"
+    },
+    {
+      "fr": "Accès à l’immeuble et parking (facultatif)",
+      "en": "Building access and parking (optional)"
+    },
+    {
+      "fr": "Adresse et étapes du parcours d’arrivée",
+      "en": "Address and arrival route steps"
+    },
+    {
+      "fr": "Moment d’affichage des codes (dès la réservation, 24 h avant, la veille à 16 h ou à l’arrivée)",
+      "en": "When codes appear (from booking, 24 h before, the day before at 4 pm, or at check-in)"
+    }
+  ],
+  "capabilities": [
+    {
+      "label": {
+        "fr": "Serrure connectée, via le module Nuki (facultatif)",
+        "en": "Smart lock, through the Nuki module (optional)"
+      },
+      "kind": "module_contract"
+    }
+  ],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
