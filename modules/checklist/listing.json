@@ -1,0 +1,34 @@
+{
+  "category": "formalities",
+  "tagline": {
+    "fr": "Une liste de tâches de départ que les voyageurs cochent avant de partir.",
+    "en": "A checkout task list guests tick off before they leave."
+  },
+  "description": {
+    "fr": "Le voyageur coche les tâches de départ (vaisselle, poubelles, clés…) directement dans son livret, et sa progression est enregistrée pour le séjour. L’hôte rédige jusqu’à six tâches et choisit quand la liste apparaît : toujours, dès l’arrivée, 48 h avant le départ ou le jour du départ.",
+    "en": "Guests tick off checkout tasks (dishes, bins, keys…) right in their booklet, and their progress is saved for the stay. The host writes up to six tasks and chooses when the list appears: always, from check-in, 48 h before checkout, or on checkout day."
+  },
+  "guestSurface": {
+    "fr": "Une carte avec les tâches de départ à cocher ; la progression est enregistrée pour le séjour. Elle apparaît au moment choisi par l’hôte.",
+    "en": "A card with checkout tasks to tick off; progress is saved for the stay. It appears at the time chosen by the host."
+  },
+  "hostSurface": {
+    "fr": "Un onglet Checklist pour rédiger les tâches et choisir quand la liste apparaît.",
+    "en": "A Checklist tab to write the tasks and choose when the list appears."
+  },
+  "configItems": [
+    {
+      "fr": "Jusqu’à six tâches",
+      "en": "Up to six tasks"
+    },
+    {
+      "fr": "Moment d’affichage (toujours, dès l’arrivée, 48 h avant le départ ou le jour du départ)",
+      "en": "When it appears (always, from check-in, 48 h before checkout, or on checkout day)"
+    }
+  ],
+  "capabilities": [],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
