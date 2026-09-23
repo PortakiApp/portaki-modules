@@ -1,0 +1,38 @@
+{
+  "category": "stay",
+  "tagline": {
+    "fr": "Le nom du réseau et le mot de passe Wi-Fi, affichés au bon moment.",
+    "en": "Wi-Fi network name and password, shown at the right time."
+  },
+  "description": {
+    "fr": "Le voyageur trouve le nom du réseau, le mot de passe, une astuce et les étapes pour se connecter, sans chercher l’étiquette de la box. Le mot de passe s’affiche selon le calendrier choisi par l’hôte, par exemple la veille de l’arrivée à 16 h.",
+    "en": "Guests find the network name, the password, a tip and the steps to connect, without hunting for the router label. The password appears on the schedule chosen by the host, for example the day before arrival at 4 pm."
+  },
+  "guestSurface": {
+    "fr": "Le nom du réseau, le mot de passe révélé selon le calendrier de l’hôte, une astuce et les étapes pour se connecter.",
+    "en": "The network name, the password revealed on the host's schedule, a tip and the steps to connect."
+  },
+  "hostSurface": {
+    "fr": "Une fiche Wi-Fi : nom du réseau, mot de passe, astuce, étapes de connexion et moment d’affichage du mot de passe.",
+    "en": "A Wi-Fi sheet: network name, password, tip, connection steps and when the password is shown."
+  },
+  "configItems": [
+    {
+      "fr": "Nom du réseau et mot de passe",
+      "en": "Network name and password"
+    },
+    {
+      "fr": "Astuce et étapes de connexion (facultatif)",
+      "en": "Tip and connection steps (optional)"
+    },
+    {
+      "fr": "Moment d’affichage du mot de passe (dès la réservation, 24 h avant, la veille à 16 h ou à l’arrivée)",
+      "en": "When the password appears (from booking, 24 h before, the day before at 4 pm, or at check-in)"
+    }
+  ],
+  "capabilities": [],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
