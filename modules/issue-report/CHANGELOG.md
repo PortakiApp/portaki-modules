@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v0.3.2...issue-report-v0.4.0) (2026-09-23)
+
+
+### Features
+
+* **issue-report:** add property stats card ([e5a8f3c](https://github.com/PortakiApp/portaki-modules/commit/e5a8f3c24593c1f75ec403e28a03021d37d91625))
+* **issue-report:** chart stats panels ([7c8b9da](https://github.com/PortakiApp/portaki-modules/commit/7c8b9daea4bd7409ce903ac646fc459e3c85007f))
+* **issue-report:** let guests attach a photo ([f008016](https://github.com/PortakiApp/portaki-modules/commit/f00801649de385b468c974383d8da684990ee495))
+* **issue-report:** resolve reports, real stats ([e8f5e62](https://github.com/PortakiApp/portaki-modules/commit/e8f5e62264cfae94929b5befc0271ee1df777271))
+* **issue-report:** show guest photo as a thumbnail ([bd67919](https://github.com/PortakiApp/portaki-modules/commit/bd679193aa4285ac36b16661c07c657c1d4bdcdb))
+
 ## [0.3.2](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v0.3.1...issue-report-v0.3.2) (2026-09-16)
 
 

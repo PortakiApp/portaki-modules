@@ -9,7 +9,7 @@
     "fr": "Bac par bac : quoi jeter où, et jours de collecte.",
     "en": "Bin by bin: what goes where, and collection days."
   },
-  "version": "0.3.2",
+  "version": "0.4.0",
   "requiresModuleSdk": "6.8.0",
   "author": {
     "name": "Portaki",

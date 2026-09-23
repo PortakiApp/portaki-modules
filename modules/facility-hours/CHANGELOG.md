@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v0.3.2...facility-hours-v0.4.0) (2026-09-23)
+
+
+### Features
+
+* **issue-report:** show guest photo as a thumbnail ([bd67919](https://github.com/PortakiApp/portaki-modules/commit/bd679193aa4285ac36b16661c07c657c1d4bdcdb))
+
 ## [0.3.2](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v0.3.1...facility-hours-v0.3.2) (2026-09-16)
 
 

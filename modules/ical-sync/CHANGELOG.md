@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v0.5.2...ical-sync-v0.6.0) (2026-09-23)
+
+
+### Features
+
+* **ical-sync:** chart sync history and stays ([4984cbd](https://github.com/PortakiApp/portaki-modules/commit/4984cbd0648377a49d353f4d6b9b9bf92a2f94c7))
+* **ical-sync:** count arrivals over stats period ([766ca0e](https://github.com/PortakiApp/portaki-modules/commit/766ca0e872fc25c8cd85df8ce8c3d67095f91af6))
+* **issue-report:** show guest photo as a thumbnail ([bd67919](https://github.com/PortakiApp/portaki-modules/commit/bd679193aa4285ac36b16661c07c657c1d4bdcdb))
+
 ## [0.5.2](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v0.5.1...ical-sync-v0.5.2) (2026-09-16)
 
 

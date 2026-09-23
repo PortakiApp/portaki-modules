@@ -9,7 +9,7 @@
     "fr": "Moyen d'entrée, couches optionnelles et révélation des codes.",
     "en": "Entry method, optional layers, and when codes are revealed."
   },
-  "version": "0.4.3",
+  "version": "0.5.0",
   "requiresModuleSdk": "6.8.0",
   "author": {
     "name": "Portaki",

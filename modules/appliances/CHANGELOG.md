@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v0.4.2...appliances-v0.5.0) (2026-09-23)
+
+
+### Features
+
+* **issue-report:** show guest photo as a thumbnail ([bd67919](https://github.com/PortakiApp/portaki-modules/commit/bd679193aa4285ac36b16661c07c657c1d4bdcdb))
+
 ## [0.4.2](https://github.com/PortakiApp/portaki-modules/compare/appliances-v0.4.1...appliances-v0.4.2) (2026-09-16)
 
 
