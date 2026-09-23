@@ -1,5 +1,6 @@
 //! Module commands — guest submit, host resolve.
 
+use portaki_sdk::files::FileRef;
 use portaki_sdk::host::email::{
     self, EmailAudience, LocalizedEmailText, ModuleEmailCta, ModuleEmailSdui, SendEmailArgs,
 };
@@ -18,6 +19,9 @@ pub struct SubmitArgs {
     pub summary: String,
     #[serde(default)]
     pub details: Option<String>,
+    /// `ImageUpload` value: `portaki-file:<uuid>`, empty when no photo was attached.
+    #[serde(default)]
+    pub photo: Option<String>,
 }
 
 #[portaki_sdk::command(name = "submit")]
@@ -26,8 +30,15 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     let category = category::parse_category(&args.category)?;
     let summary = require_summary(&args.summary)?;
     let details = normalize_optional(args.details);
+    let photo = parse_photo(args.photo)?;
 
-    let _ = storage::create(stay_id, category.clone(), summary.clone(), details.clone())?;
+    let _ = storage::create(
+        stay_id,
+        category.clone(),
+        summary.clone(),
+        details.clone(),
+        photo,
+    )?;
 
     // Guest text is quoted within a fixed length; the stored report keeps it whole.
     let quoted_summary = email_text::quote_guest_text(&summary);
@@ -41,6 +52,9 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     if let Some(extra) = &quoted_details {
         body.push_str("\n\n");
         body.push_str(&extra.text);
+    }
+    if photo.is_some() {
+        body.push_str("\n\nUne photo est jointe — visible dans le tableau de bord.");
     }
 
     // The report is saved: a refused email is logged, it does not fail the guest's submit.
@@ -100,6 +114,17 @@ fn require_summary(raw: &str) -> Result<String> {
         return Err(PortakiError::Host("summary_required".to_string()));
     }
     Ok(trimmed.to_string())
+}
+
+/// Only a platform reference is kept: any other value (an external URL…) is refused, so a guest
+/// cannot make the host dashboard load an arbitrary image.
+fn parse_photo(raw: Option<String>) -> Result<Option<FileRef>> {
+    match normalize_optional(raw) {
+        None => Ok(None),
+        Some(value) => FileRef::parse(&value)
+            .map(Some)
+            .ok_or_else(|| PortakiError::Host("invalid_photo".to_string())),
+    }
 }
 
 fn normalize_optional(value: Option<String>) -> Option<String> {

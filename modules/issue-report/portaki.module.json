@@ -21,6 +21,7 @@
   "maturity": "stable",
   "permissions": [
     "email",
+    "guest:files",
     "platform",
     "repo"
   ],

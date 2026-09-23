@@ -53,5 +53,7 @@
   "stats.category.cleanliness": "Propreté",
   "stats.category.noise": "Bruit",
   "stats.category.access": "Accès",
-  "stats.category.other": "Autre"
+  "stats.category.other": "Autre",
+  "form.photo.label": "Photo",
+  "host.main.photoAlt": "Photo jointe par le voyageur"
 }
