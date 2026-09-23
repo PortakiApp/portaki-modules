@@ -1,0 +1,42 @@
+{
+  "category": "stay",
+  "tagline": {
+    "fr": "La météo du moment et les prévisions à 5 jours pour le lieu du séjour.",
+    "en": "Current weather and a 5-day forecast for where your guests are staying."
+  },
+  "description": {
+    "fr": "Le livret affiche la température et le temps du moment, l’indice UV quand il est disponible et les prévisions sur 5 jours, pour l’adresse du logement. Un résumé de la météo figure aussi dans l’e-mail du jour d’arrivée ; l’hôte choisit seulement les unités et la fréquence de mise à jour.",
+    "en": "The booklet shows current temperature and conditions, the UV index when available and a 5-day forecast for the rental's address. A weather summary also appears in the arrival-day email; the host only picks units and refresh frequency."
+  },
+  "guestSurface": {
+    "fr": "La température et le temps actuels, avec l’indice UV quand il est disponible, et les prévisions sur 5 jours. Un résumé figure aussi dans l’e-mail du jour d’arrivée.",
+    "en": "Current temperature and conditions, with the UV index when available, and a 5-day forecast. A summary also appears in the arrival-day email."
+  },
+  "hostSurface": {
+    "fr": "Une fiche Météo pour choisir les unités et la fréquence de mise à jour. Les prévisions suivent l’adresse du logement.",
+    "en": "A Weather sheet to choose units and refresh frequency. Forecasts follow the property's address."
+  },
+  "configItems": [
+    {
+      "fr": "Unités de température",
+      "en": "Temperature units"
+    },
+    {
+      "fr": "Fréquence de mise à jour",
+      "en": "Refresh frequency"
+    }
+  ],
+  "capabilities": [
+    {
+      "label": {
+        "fr": "Données météo",
+        "en": "Weather data"
+      },
+      "kind": "pool"
+    }
+  ],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
