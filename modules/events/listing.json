@@ -1,0 +1,46 @@
+{
+  "category": "around",
+  "tagline": {
+    "fr": "Concerts, sorties et animations autour du logement, trouvés automatiquement.",
+    "en": "Concerts, outings and local happenings near your rental, found automatically."
+  },
+  "description": {
+    "fr": "Le livret affiche les prochains concerts, sorties et animations autour du logement, trouvés automatiquement dans un rayon choisi par l’hôte, avec une carte quand les lieux sont connus. L’hôte peut ajouter jusqu’à six événements de son choix, qui s’ajoutent à la liste.",
+    "en": "The booklet shows upcoming concerts, outings and local happenings near the rental, found automatically within a radius chosen by the host, with a map when venues are known. The host can add up to six events of their own, which are added to the list."
+  },
+  "guestSurface": {
+    "fr": "Les prochains événements autour du logement, trouvés automatiquement et complétés par la sélection de l’hôte, avec une carte quand les lieux sont connus.",
+    "en": "Upcoming events near the rental, found automatically and topped up with the host's picks, with a map when venues are known."
+  },
+  "hostSurface": {
+    "fr": "Une fiche Événements : recherche automatique et rayon, jusqu’à six événements saisis à la main et une mention affichée sous la liste.",
+    "en": "An Events sheet: automatic search and radius, up to six hand-entered events, and a notice shown under the list."
+  },
+  "configItems": [
+    {
+      "fr": "Recherche automatique et rayon (10 à 100 km)",
+      "en": "Automatic search and radius (10 to 100 km)"
+    },
+    {
+      "fr": "Jusqu’à six événements manuels : titre, lieu, date, lien",
+      "en": "Up to six manual events: title, venue, date, link"
+    },
+    {
+      "fr": "Mention affichée sous la liste",
+      "en": "Notice shown under the list"
+    }
+  ],
+  "capabilities": [
+    {
+      "label": {
+        "fr": "Agenda des événements locaux",
+        "en": "Local events listings"
+      },
+      "kind": "pool"
+    }
+  ],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
