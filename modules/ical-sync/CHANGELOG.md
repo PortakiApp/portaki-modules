@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v0.6.0...ical-sync-v0.6.1) (2026-09-23)
+
+
+### Bug Fixes
+
+* **copy:** drop tech jargon from module texts ([f988f54](https://github.com/PortakiApp/portaki-modules/commit/f988f549b38f200687eb66f24443e0f21d057af6))
+
 ## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v0.5.2...ical-sync-v0.6.0) (2026-09-23)
 
 

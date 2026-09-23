@@ -9,7 +9,7 @@
     "fr": "Blocs de texte mis en forme (titres, listes, citations) pour le carnet d'accueil.",
     "en": "Formatted text blocks (headings, lists, quotes) for the guest welcome book."
   },
-  "version": "0.4.0",
+  "version": "0.4.1",
   "requiresModuleSdk": "6.9.0",
   "author": {
     "name": "Portaki",

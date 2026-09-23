@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/PortakiApp/portaki-modules/compare/sections-v0.4.0...sections-v0.4.1) (2026-09-23)
+
+
+### Bug Fixes
+
+* **copy:** drop tech jargon from module texts ([f988f54](https://github.com/PortakiApp/portaki-modules/commit/f988f549b38f200687eb66f24443e0f21d057af6))
+
 ## [0.4.0](https://github.com/PortakiApp/portaki-modules/compare/sections-v0.3.2...sections-v0.4.0) (2026-09-23)
 
 
