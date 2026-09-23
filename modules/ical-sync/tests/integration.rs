@@ -688,3 +688,62 @@ fn failure_email_is_keyed_on_the_failed_set_and_bounded() {
     assert!(body.contains("… and 2 more"), "{body}");
     assert!(sent[0].content.body.fr.contains("… et 2 autre(s)"));
 }
+
+#[test]
+#[serial]
+fn stats_card_reads_history_conflicts_and_channels() {
+    let now = chrono::DateTime::parse_from_rfc3339("2026-07-25T09:00:00Z")
+        .expect("now")
+        .with_timezone(&chrono::Utc);
+    MockContext::host()
+        .with_capabilities(&[
+            capability::core::STORAGE,
+            capability::core::MODULES_SCHEDULED_SYNC,
+        ])
+        .with_now(now)
+        .run(|mut ctx| {
+            update_config(
+                ctx.clone(),
+                UpdateConfigArgs {
+                    calendars: vec![CalendarInput {
+                        id: "primary".into(),
+                        url: "https://www.airbnb.com/calendar/ical/1.ics".into(),
+                        label: "".into(),
+                        format: "airbnb".into(),
+                        channel: String::new(),
+                    }],
+                    ..Default::default()
+                },
+            )
+            .expect("update");
+
+            // Two stays sharing the night of Aug 4 — one date conflict.
+            let ics = "BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:u1@airbnb.com\n\
+DTSTART;VALUE=DATE:20260801\nDTEND;VALUE=DATE:20260805\n\
+SUMMARY:Reserved\nDESCRIPTION:Name: Sofia Rossi\nEND:VEVENT\n\
+BEGIN:VEVENT\nUID:u3@airbnb.com\n\
+DTSTART;VALUE=DATE:20260804\nDTEND;VALUE=DATE:20260806\n\
+SUMMARY:Reserved\nDESCRIPTION:Name: Leo Martin\nEND:VEVENT\nEND:VCALENDAR\n";
+            let feed = |body: &str| ApplyFeedsArgs {
+                guest_lang: "fr".into(),
+                feeds: vec![FeedBody {
+                    id: "primary".into(),
+                    provider: Some("airbnb".into()),
+                    ics_body: body.into(),
+                }],
+            };
+            apply_feeds(ctx.clone(), feed(ics)).expect("apply");
+            apply_feeds(ctx.clone(), feed("")).expect("failed run");
+
+            ctx.input = serde_json::json!({ "periodDays": 30 });
+            let text = serde_json::to_value(ical_sync::render_host_stats(ctx))
+                .expect("surface json")
+                .to_string();
+            assert!(text.contains(r#""delta":"sur 30 jours","label":"i18n:stats.imported","type":"Stat","value":"2""#), "{text}");
+            assert!(text.contains(r#""delta":"i18n:stats.conflicts.note","label":"i18n:stats.conflicts","type":"Stat","value":"1""#));
+            assert!(text.contains(r#""delta":"i18n:stats.incomplete.note","label":"i18n:stats.incomplete","type":"Stat","value":"2""#));
+            assert!(text.contains(r#""highlight":13,"kind":"bars""#));
+            assert!(text.contains(r#""display":"1 réussie · 1 en échec","label":"25","value":2.0"#));
+            assert!(text.contains(r#""display":"2 séjours","label":"Airbnb","value":2.0"#));
+        });
+}

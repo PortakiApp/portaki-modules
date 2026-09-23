@@ -156,10 +156,20 @@ pub fn apply_feeds(ctx: Context, args: ApplyFeedsArgs) -> Result<ApplyFeedsRespo
         SyncDiff::default()
     };
 
-    if succeeded > 0 {
-        let next = sync_state::next_state(&rows, Some(now.clone()).filter(|s| !s.is_empty()));
-        let _ = sync_state::save_sync_state(&next);
+    // A failed run keeps the previous snapshot but still lands in the day's history.
+    let mut next = if succeeded > 0 {
+        sync_state::next_state(
+            &previous_state,
+            &rows,
+            Some(now.clone()).filter(|s| !s.is_empty()),
+        )
+    } else {
+        previous_state.clone()
+    };
+    if !args.feeds.is_empty() {
+        next.record_run(now.get(..10).unwrap_or(""), failed > 0, diff.new_rows.len());
     }
+    let _ = sync_state::save_sync_state(&next);
 
     dispatch_sync_emails(
         &ctx,
