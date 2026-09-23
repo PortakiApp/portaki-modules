@@ -14,6 +14,7 @@ define_operation_names! {
     LIST_FOR_STAY = "listForStay",
     LIST_RECENT = "listRecent",
     SUBMIT = "submit",
+    RESOLVE = "resolve",
 }
 
 /// Catalog module id (`issue-report`).

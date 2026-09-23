@@ -1,19 +1,20 @@
 //! Host dashboard surface — design `editorIssueReport` / `issuereport-editor-v1`.
 //!
 //! No host config: info banner + recent reports with category icons and status pills.
-//! Open/resolved is not persisted yet — all rows show « À traiter » (design open state).
+//! Open rows carry a « Marquer comme résolu » button (`resolve` command).
 
 use chrono::{DateTime, Datelike, Utc};
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
-    Card, EmptyState, InfoBanner, List, ListItem, Page, Pill, Stack, Text,
+    Button, Card, EmptyState, InfoBanner, List, ListItem, Page, Pill, Stack, Text,
 };
 use portaki_sdk::sdui::surface::Surface;
 
 use portaki_sdk::host::time;
 
 use crate::category;
+use crate::commands::ResolveArgs;
 use crate::entities::IssueReport;
 use crate::storage;
 
@@ -74,19 +75,46 @@ fn category_icon(wire: &str) -> &'static str {
 fn build_report_row(report: &IssueReport, now: DateTime<Utc>, locale: &str) -> Component {
     let label_key = category::category_label_key(report.category.as_str());
     let when = format_relative_when(report.created_at, now, locale);
-    let pill = Pill::new()
-        .label("i18n:host.main.status.open")
-        .tone(Tone::Warning);
+    let open = report.resolved_at.is_none();
+    let pill = if open {
+        Pill::new()
+            .label("i18n:host.main.status.open")
+            .tone(Tone::Warning)
+    } else {
+        Pill::new()
+            .label("i18n:host.main.status.resolved")
+            .tone(Tone::Neutral)
+    };
 
-    Component::ListItem(
-        ListItem::new()
-            .title(report.summary.clone())
-            .subtitle(format!("i18n:{label_key}"))
-            .leading(category_icon(report.category.as_str()))
-            .chevron(false)
-            .child(pill)
-            .child(Text::new().text(when).variant(TextVariant::Caption)),
-    )
+    let row: Component = ListItem::new()
+        .title(report.summary.clone())
+        .subtitle(format!("i18n:{label_key}"))
+        .leading(category_icon(report.category.as_str()))
+        .chevron(false)
+        .child(pill)
+        .child(Text::new().text(when).variant(TextVariant::Caption))
+        .into();
+    if !open {
+        return row;
+    }
+
+    let resolve = crate::ids::module_id().command(
+        crate::ids::RESOLVE,
+        ResolveArgs {
+            report_id: report.id,
+        },
+    );
+    Stack::new()
+        .gap(6.0)
+        .children(vec![
+            row,
+            Button::new()
+                .label("i18n:host.main.resolve")
+                .variant(ButtonVariant::Outline)
+                .action(resolve)
+                .into(),
+        ])
+        .into()
 }
 
 /// Compact relative age — design: « il y a 2 h », « hier », « 2 jours ».
