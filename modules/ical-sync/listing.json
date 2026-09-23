@@ -1,0 +1,42 @@
+{
+  "category": "arrival",
+  "tagline": {
+    "fr": "Vos réservations importées automatiquement depuis les calendriers de vos plateformes.",
+    "en": "Bookings imported automatically from your platforms' calendars."
+  },
+  "description": {
+    "fr": "L’hôte colle les liens d’export de ses calendriers Airbnb, Booking.com, Abritel/Vrbo, Google Agenda ou autre, et les séjours sont créés puis mis à jour automatiquement dans Portaki. Une carte montre l’historique des synchronisations, et un e-mail prévient si un calendrier ne répond plus ou si de nouveaux séjours arrivent. Rien ne s’affiche dans le livret du voyageur.",
+    "en": "The host pastes export links from their Airbnb, Booking.com, Abritel/Vrbo, Google Calendar or other calendars, and stays are created and then updated automatically in Portaki. A card shows sync history, and an email warns when a calendar stops responding or new stays come in. Nothing appears in the guest booklet."
+  },
+  "hostSurface": {
+    "fr": "Une fiche Calendriers pour ajouter les liens d’export (.ics) d’Airbnb, Booking.com, Abritel/Vrbo, Google Agenda ou autre : les séjours sont créés et mis à jour automatiquement. Une carte montre l’historique des synchronisations, et un e-mail signale un calendrier injoignable ou de nouveaux séjours.",
+    "en": "A Calendars sheet to add export links (.ics) from Airbnb, Booking.com, Abritel/Vrbo, Google Calendar or others: stays are created and updated automatically. A card shows sync history, and an email flags an unreachable calendar or new stays."
+  },
+  "configItems": [
+    {
+      "fr": "Lien d’export de chaque calendrier",
+      "en": "Export link for each calendar"
+    },
+    {
+      "fr": "Plateforme de réservation de chaque calendrier",
+      "en": "Booking platform for each calendar"
+    },
+    {
+      "fr": "Libellé (facultatif)",
+      "en": "Label (optional)"
+    }
+  ],
+  "capabilities": [
+    {
+      "label": {
+        "fr": "Synchronisation automatique, fréquence selon votre plan",
+        "en": "Automatic sync, frequency depends on your plan"
+      },
+      "kind": "plan"
+    }
+  ],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
