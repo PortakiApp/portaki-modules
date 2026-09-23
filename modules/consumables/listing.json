@@ -1,0 +1,30 @@
+{
+  "category": "stay",
+  "tagline": {
+    "fr": "Les voyageurs signalent un produit manquant, vous réapprovisionnez à temps.",
+    "en": "Guests flag missing supplies so you can restock in time."
+  },
+  "description": {
+    "fr": "Le voyageur choisit un produit dans la liste du logement et indique qu’il n’y en a plus ou qu’il sera bientôt vide, avec une précision s’il le souhaite. L’hôte reçoit un e-mail, retrouve les signalements dans le détail du séjour et les marque comme réapprovisionnés après son passage. La liste se prépare en quelques clics, avec un préremplissage des produits courants.",
+    "en": "Guests pick an item from the rental's list and say it is out or running low, with a note if they wish. The host gets an email, sees the reports on the stay's detail page and marks them as restocked after a visit. The list takes a few clicks to set up, with common items prefilled."
+  },
+  "guestSurface": {
+    "fr": "Un formulaire pour signaler qu’un consommable manque ou sera bientôt vide (papier toilette, café, savon…), avec une précision facultative, puis la liste des signalements envoyés pendant le séjour.",
+    "en": "A form to report that a supply is out or running low (toilet paper, coffee, soap…), with an optional note, then the list of reports sent during the stay."
+  },
+  "hostSurface": {
+    "fr": "Un onglet Consommables pour gérer la liste et marquer les signalements comme réapprovisionnés, les signalements dans le détail de chaque séjour, une carte de suivi des stocks et un e-mail à chaque signalement.",
+    "en": "A Consumables tab to manage the list and mark reports as restocked, reports on each stay's detail page, a stock card, and an email for every report."
+  },
+  "configItems": [
+    {
+      "fr": "Liste des consommables du logement (préremplissage possible)",
+      "en": "Property supplies list (can be prefilled)"
+    }
+  ],
+  "capabilities": [],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
