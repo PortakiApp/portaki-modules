@@ -17,6 +17,7 @@ cargo install --git https://github.com/PortakiApp/portaki-sdk --branch main --lo
    `tests/conformance.rs` holds `portaki_test_utils::conformance!();` — the SDK's conformance
    battery, which `portaki publish` refuses to publish without.
 2. Keep `version` in sync between `Cargo.toml` and `portaki.module.json` (same SemVer string).
+   Add `listing.json` next to them: the public catalogue listing, published by CI with each release.
 3. Depend on workspace SDK crates (`portaki-sdk`, `portaki-connectors`, …).
 4. Follow the Wasm crate layout: `ids.rs` (`define_surface_ids!` / `define_operation_names!` /
    `define_event_types!`), `guest/`, `host/` (omit if guest-only), `connectors` when needed.
