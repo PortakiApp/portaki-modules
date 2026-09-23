@@ -1,0 +1,50 @@
+{
+  "category": "around",
+  "tagline": {
+    "fr": "Vos meilleures adresses du coin sur une carte, et des activités à réserver.",
+    "en": "Your favourite local spots on a map, plus activities to book."
+  },
+  "description": {
+    "fr": "L’hôte partage jusqu’à six adresses du coin, avec catégorie, distance et description, et le voyageur les retrouve sur une carte autour du logement. Si l’hôte les active, des activités et billets réservables à proximité complètent la liste, avec photo, prix et note.",
+    "en": "The host shares up to six local places, with category, distance and description, and guests see them on a map around the rental. If the host turns them on, bookable activities and tickets nearby round out the list, with photo, price and rating."
+  },
+  "guestSurface": {
+    "fr": "Jusqu’à six adresses choisies par l’hôte (catégorie, distance, description), une carte des lieux et du logement et, si l’hôte les active, des activités et billets réservables autour du logement, avec photo, prix et note.",
+    "en": "Up to six places picked by the host (category, distance, description), a map of the places and the rental and, if the host turns them on, bookable activities and tickets nearby, with photo, price and rating."
+  },
+  "hostSurface": {
+    "fr": "Un onglet Bons plans pour saisir les adresses et les placer sur la carte, et activer les sections d’activités et de billets, désactivées par défaut.",
+    "en": "A Local picks tab to enter places and pin them on the map, and to turn on the activities and tickets sections, off by default."
+  },
+  "configItems": [
+    {
+      "fr": "Jusqu’à six adresses : nom, catégorie, distance, description, emplacement",
+      "en": "Up to six places: name, category, distance, description, location"
+    },
+    {
+      "fr": "Avertissement affiché sous la liste",
+      "en": "Disclaimer shown under the list"
+    },
+    {
+      "fr": "Activités partenaires : destination et liens (facultatif)",
+      "en": "Partner activities: destination and links (optional)"
+    },
+    {
+      "fr": "Billets à proximité : rayon et note minimale (facultatif)",
+      "en": "Nearby tickets: radius and minimum rating (optional)"
+    }
+  ],
+  "capabilities": [
+    {
+      "label": {
+        "fr": "Catalogue de billets et d’activités",
+        "en": "Tickets and activities catalogue"
+      },
+      "kind": "pool"
+    }
+  ],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
