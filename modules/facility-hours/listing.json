@@ -1,0 +1,34 @@
+{
+  "category": "stay",
+  "tagline": {
+    "fr": "Piscine, spa, salle de sport : les horaires de chaque équipement.",
+    "en": "Pool, spa, gym: opening hours for every facility."
+  },
+  "description": {
+    "fr": "Le voyageur consulte les horaires de la piscine, du spa, de la salle de sport ou de tout autre équipement partagé, sans avoir à demander. L’hôte saisit jusqu’à six équipements et une note générale pour les consignes communes.",
+    "en": "Guests check the opening hours of the pool, spa, gym or any other shared facility without having to ask. The host enters up to six facilities and a general note for shared instructions."
+  },
+  "guestSurface": {
+    "fr": "Les horaires de chaque équipement partagé et une note générale.",
+    "en": "Opening hours for each shared facility and a general note."
+  },
+  "hostSurface": {
+    "fr": "Un onglet Horaires pour saisir jusqu’à six équipements et une note.",
+    "en": "An Hours tab to enter up to six facilities and a note."
+  },
+  "configItems": [
+    {
+      "fr": "Jusqu’à six équipements : nom et horaires",
+      "en": "Up to six facilities: name and hours"
+    },
+    {
+      "fr": "Note générale (facultatif)",
+      "en": "General note (optional)"
+    }
+  ],
+  "capabilities": [],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
