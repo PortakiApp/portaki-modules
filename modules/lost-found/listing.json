@@ -1,0 +1,30 @@
+{
+  "category": "formalities",
+  "tagline": {
+    "fr": "Objet oublié ou retrouvé : le voyageur et vous êtes prévenus par e-mail.",
+    "en": "Item lost or found: you and your guest are notified by email."
+  },
+  "description": {
+    "fr": "L’hôte déclare un objet retrouvé depuis le détail du séjour, et le voyageur reçoit un e-mail pour organiser le renvoi. Le voyageur peut lui aussi signaler un objet perdu ou trouvé depuis son livret, pendant ou après le séjour, et l’hôte en est prévenu par e-mail. Chaque objet se suit jusqu’à son retour : à récupérer, envoyé, récupéré.",
+    "en": "The host declares a found item from the stay's detail page, and the guest gets an email to arrange its return. Guests can also report an item lost or found from their booklet, during or after the stay, and the host is notified by email. Each item is tracked until it is returned: to collect, sent, returned."
+  },
+  "guestSurface": {
+    "fr": "Un formulaire pour déclarer un objet perdu ou trouvé, pendant ou après le séjour, avec le message éventuel de l’hôte, puis la liste des déclarations envoyées.",
+    "en": "A form to report an item lost or found, during or after the stay, with the host's message if any, then the list of reports sent."
+  },
+  "hostSurface": {
+    "fr": "Un bouton « Déclarer un objet trouvé » dans le détail de chaque séjour, qui prévient le voyageur par e-mail ; un onglet pour suivre les objets (à récupérer, envoyé, récupéré) et un e-mail à chaque déclaration d’un voyageur.",
+    "en": "A “Declare a found item” button on each stay's detail page that emails the guest; a tab to track items (to collect, sent, returned), and an email for every guest report."
+  },
+  "configItems": [
+    {
+      "fr": "Message pour le voyageur, repris dans l’e-mail (facultatif)",
+      "en": "Message for the guest, included in the email (optional)"
+    }
+  ],
+  "capabilities": [],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
