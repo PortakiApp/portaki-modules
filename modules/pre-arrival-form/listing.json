@@ -1,0 +1,34 @@
+{
+  "category": "arrival",
+  "tagline": {
+    "fr": "Heure d’arrivée, occasion, allergies : les infos utiles avant l’arrivée.",
+    "en": "Arrival time, occasion, allergies: what you need to know before check-in."
+  },
+  "description": {
+    "fr": "Avant l’arrivée, le voyageur remplit un court formulaire dans son livret : heure d’arrivée estimée, occasion, allergies, nombre de voyageurs, besoins particuliers ou pièce d’identité, selon les questions choisies par l’hôte. Il est prévenu par e-mail quand le formulaire est disponible, et l’hôte retrouve les réponses dans le détail du séjour.",
+    "en": "Before arrival, guests fill in a short form in their booklet: estimated arrival time, occasion, allergies, number of guests, special needs or ID document, depending on the questions chosen by the host. They are notified by email when the form is available, and the host finds the answers on the stay's detail page."
+  },
+  "guestSurface": {
+    "fr": "Un court formulaire dans le livret, selon les questions choisies par l’hôte : heure d’arrivée estimée, occasion, allergies, nombre de voyageurs, besoins particuliers, pièce d’identité et message pour l’hôte. Un e-mail prévient le voyageur quand le formulaire est disponible.",
+    "en": "A short form in the booklet, with the questions chosen by the host: estimated arrival time, occasion, allergies, number of guests, special needs, ID document and a message for the host. An email lets the guest know when the form is available."
+  },
+  "hostSurface": {
+    "fr": "Un onglet pour choisir les questions et le moment d’affichage, et les réponses dans le détail de chaque séjour.",
+    "en": "A tab to choose the questions and when the form appears, and the answers on each stay's detail page."
+  },
+  "configItems": [
+    {
+      "fr": "Questions à poser",
+      "en": "Questions to ask"
+    },
+    {
+      "fr": "Moment d’affichage (dès la réservation, 48 h avant l’arrivée ou le jour de l’arrivée)",
+      "en": "When it appears (from booking, 48 h before arrival, or on arrival day)"
+    }
+  ],
+  "capabilities": [],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
