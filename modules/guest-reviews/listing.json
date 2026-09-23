@@ -1,0 +1,38 @@
+{
+  "category": "formalities",
+  "tagline": {
+    "fr": "Remerciez vos voyageurs en fin de séjour et récoltez leurs avis.",
+    "en": "Thank guests at the end of their stay and collect their reviews."
+  },
+  "description": {
+    "fr": "À la fin du séjour, le voyageur voit un message de remerciement et peut laisser un avis sur Airbnb, par un bouton ou un QR code, ou noter le logement directement dans le livret. L’hôte choisit où collecter les avis et reçoit un e-mail à chaque note laissée dans le livret.",
+    "en": "At the end of the stay, guests see a thank-you message and can leave a review on Airbnb, through a button or a QR code, or rate the rental right in the booklet. The host chooses where reviews are collected and gets an email for every rating left in the booklet."
+  },
+  "guestSurface": {
+    "fr": "Après le séjour, un message de remerciement, un bouton et un QR code vers la page d’avis Airbnb, et/ou une notation par étoiles avec commentaire directement dans le livret.",
+    "en": "After the stay, a thank-you message, a button and QR code to the Airbnb review page, and/or a star rating with a comment right in the booklet."
+  },
+  "hostSurface": {
+    "fr": "Un onglet Merci & avis pour choisir où collecter les avis et rédiger le remerciement ; un e-mail vous prévient à chaque note laissée dans le livret.",
+    "en": "A Thanks & reviews tab to choose where reviews are collected and write the thank-you message; an email lets you know about every rating left in the booklet."
+  },
+  "configItems": [
+    {
+      "fr": "Où collecter les avis : Airbnb, le livret ou les deux",
+      "en": "Where to collect reviews: Airbnb, the booklet, or both"
+    },
+    {
+      "fr": "Lien d’avis Airbnb et QR code",
+      "en": "Airbnb review link and QR code"
+    },
+    {
+      "fr": "Message de remerciement (facultatif)",
+      "en": "Thank-you message (optional)"
+    }
+  ],
+  "capabilities": [],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
