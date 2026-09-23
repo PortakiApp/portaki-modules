@@ -1,6 +1,7 @@
 //! Issue report persistence via `host::repo`.
 
-use portaki_sdk::host::repo::{self, eq, find, Query};
+use chrono::{DateTime, Utc};
+use portaki_sdk::host::repo::{self, eq, find, gte, Query};
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
@@ -60,6 +61,27 @@ pub fn list_recent() -> Result<Vec<IssueReport>> {
     sort_newest_first(&mut rows);
     rows.truncate(20);
     Ok(rows)
+}
+
+/// Lists the property's reports created at or after `since` (host stats window).
+pub fn list_since(since: DateTime<Utc>) -> Result<Vec<IssueReport>> {
+    if in_memory_enabled() {
+        return Ok(TEST_ROWS.with(|store| {
+            store
+                .borrow()
+                .iter()
+                .filter(|row| row.created_at >= since)
+                .cloned()
+                .collect()
+        }));
+    }
+    // ponytail: one 1000-row page caps the window; move to repo::count per category if a property outgrows it.
+    let page = find::<IssueReport, IssueReport>(
+        Query::<IssueReport>::new()
+            .r#where(gte("created_at", since))
+            .limit(1000),
+    )?;
+    Ok(page.items)
 }
 
 /// Inserts a new report for the stay.

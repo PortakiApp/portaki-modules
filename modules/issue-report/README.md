@@ -22,6 +22,7 @@ OCI image: `ghcr.io/portakiapp/portaki-modules-issue-report:<semver>`
 |-------|------------|-------------|
 | guest | `home.card` | Category + summary form; list of this stay’s reports after submit |
 | host | `main` | Module info + recent reports (up to 20) |
+| host | `issue-stats` | `property-stats-card` — 30-day report count and per-category breakdown |
 
 ## Queries and commands
 

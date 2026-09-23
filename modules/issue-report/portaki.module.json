@@ -37,6 +37,15 @@
       "hostUi": {
         "designId": "issuereport-editor-v1"
       }
+    },
+    {
+      "type": "property-stats-card",
+      "pathSegment": "issue-stats",
+      "label": {
+        "fr": "Signalements",
+        "en": "Issue reports"
+      },
+      "icon": "danger-triangle"
     }
   ],
   "guestSurfaces": [

@@ -4,7 +4,7 @@ use serial_test::serial;
 
 use issue_report::{
     list_for_stay, list_recent, render_guest_form, render_home_card, render_host_main,
-    reset_test_store, submit, SubmitArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
+    render_host_stats, reset_test_store, submit, SubmitArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
 };
 use portaki_sdk::limits;
 use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
@@ -110,6 +110,42 @@ fn host_main_lists_recent_after_guest_submit() {
             assert!(json.contains("host.main.banner"));
             assert!(json.contains("host.main.status.open"));
             assert!(json.contains("danger-triangle") || json.contains("sparkles"));
+        });
+}
+
+#[test]
+#[serial]
+fn host_stats_counts_window_reports_by_category() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            for category in ["appliance", "appliance", "access"] {
+                submit(
+                    ctx.clone(),
+                    SubmitArgs {
+                        category: category.into(),
+                        summary: "x".into(),
+                        details: None,
+                    },
+                )
+                .expect("submit");
+            }
+        });
+
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let surface = render_host_stats(ctx);
+            let json = serde_json::to_value(&surface).expect("surface json");
+            let text = json.to_string();
+            assert!(SurfaceAssertions::new(&surface).contains_type("Stat"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("KeyValue"));
+            assert!(text.contains(r#""label":"i18n:stats.reports","type":"Stat","value":"3""#));
+            let appliance = text.find("form.category.appliance").expect("appliance row");
+            let access = text.find("form.category.access").expect("access row");
+            assert!(appliance < access, "most reported category first");
+            assert!(text.contains("stats.delay.empty"));
         });
 }
 

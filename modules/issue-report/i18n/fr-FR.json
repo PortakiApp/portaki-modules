@@ -36,5 +36,17 @@
   "module.status.incomplete.description": "Finalisez le module dans le tableau de bord hôte",
   "module.status.incomplete.hint": "Ouvrez Modules → Signaler un problème",
   "module.status.inactive.title": "Signalement désactivé",
-  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement"
+  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
+  "stats.reports": "Signalements",
+  "stats.window30": "sur 30 jours",
+  "stats.resolved": "Résolus",
+  "stats.open": "En cours",
+  "stats.withPhoto": "Avec photo",
+  "stats.byCategory.title": "Par catégorie",
+  "stats.byCategory.subtitle": "Ce que signalent vos voyageurs — 30 derniers jours",
+  "stats.byCategory.empty": "Aucun signalement sur les 30 derniers jours.",
+  "stats.delay.title": "Délai de résolution",
+  "stats.delay.subtitle": "Heures entre signalement et résolution",
+  "stats.delay.empty": "Pas encore de suivi de résolution",
+  "stats.delay.empty.help": "Le délai s’affichera quand les signalements pourront être marqués comme résolus."
 }
