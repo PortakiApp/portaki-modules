@@ -9,7 +9,7 @@
     "fr": "Piscine, spa, salle de sport : horaires par lieu.",
     "en": "Pool, spa, gym: hours per facility."
   },
-  "version": "0.3.2",
+  "version": "0.4.0",
   "requiresModuleSdk": "6.8.0",
   "author": {
     "name": "Portaki",

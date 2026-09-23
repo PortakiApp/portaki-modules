@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.7.0...local-guide-v0.8.0) (2026-09-23)
+
+
+### Features
+
+* **issue-report:** show guest photo as a thumbnail ([bd67919](https://github.com/PortakiApp/portaki-modules/commit/bd679193aa4285ac36b16661c07c657c1d4bdcdb))
+* **local-guide:** list nearby Tiqets tickets ([0e69f1f](https://github.com/PortakiApp/portaki-modules/commit/0e69f1f6da07033f47a8241fb0ac7eab6f4a24f2))
+
 ## [0.7.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.6.0...local-guide-v0.7.0) (2026-09-16)
 
 

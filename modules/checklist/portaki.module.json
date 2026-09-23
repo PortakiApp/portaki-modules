@@ -9,7 +9,7 @@
     "fr": "Items cochables, progression sauvegardée.",
     "en": "Checkable items with saved progress."
   },
-  "version": "0.4.3",
+  "version": "0.5.0",
   "requiresModuleSdk": "6.8.0",
   "author": {
     "name": "Portaki",
