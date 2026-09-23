@@ -60,7 +60,7 @@
   "connector.tiqets.name": "Tiqets",
   "capability.tiqets.purpose": "Charge les billets Tiqets à proximité avec la clé partenaire Portaki",
   "capability.tiqets.fallback": "Passez à une offre qui inclut Tiqets, ou ajoutez votre propre clé partenaire Tiqets",
-  "capability.tiqets.byok.purpose": "Utilise votre clé partenaire Tiqets (BYOK) : les commissions vous reviennent",
+  "capability.tiqets.byok.purpose": "Utilise votre propre clé partenaire Tiqets : les commissions vous reviennent",
   "capability.tiqets.byok.fallback": "Ajoutez une clé partenaire Tiqets dans les intégrations",
   "host.section.tiqets": "Billets & activités (Tiqets)",
   "host.section.tiqets.help": "Musées, attractions et visites réservables sur Tiqets autour du logement, avec photo, prix et note. Liens partenaires : avec la clé incluse à l’offre, la commission revient à Portaki ; avec votre propre clé Tiqets, elle vous revient. La section reste éteinte tant que vous ne l’activez pas.",

@@ -6,8 +6,8 @@
     "en": "Editorial sections"
   },
   "description": {
-    "fr": "Blocs de contenu markdown pour le carnet d'accueil invité.",
-    "en": "Markdown content blocks for the guest welcome book."
+    "fr": "Blocs de texte mis en forme (titres, listes, citations) pour le carnet d'accueil.",
+    "en": "Formatted text blocks (headings, lists, quotes) for the guest welcome book."
   },
   "version": "0.4.0",
   "requiresModuleSdk": "6.8.0",

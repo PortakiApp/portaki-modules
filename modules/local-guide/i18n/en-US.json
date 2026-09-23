@@ -60,7 +60,7 @@
   "connector.tiqets.name": "Tiqets",
   "capability.tiqets.purpose": "Loads nearby Tiqets tickets with Portaki's partner key",
   "capability.tiqets.fallback": "Move to a plan that includes Tiqets, or add your own Tiqets partner key",
-  "capability.tiqets.byok.purpose": "Uses your Tiqets partner key (BYOK): commissions go to you",
+  "capability.tiqets.byok.purpose": "Uses your own Tiqets partner key: commissions go to you",
   "capability.tiqets.byok.fallback": "Add a Tiqets partner key in integrations",
   "host.section.tiqets": "Tickets & activities (Tiqets)",
   "host.section.tiqets.help": "Museums, attractions and tours bookable on Tiqets around the property, with photo, price and rating. Partner links: with the key included in your plan, the commission goes to Portaki; with your own Tiqets key, it goes to you. The section stays off until you turn it on.",
