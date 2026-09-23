@@ -6,6 +6,8 @@ define_surface_ids! {
     HOME_CARD = "home.card",
     GUEST_FORM = "guest.form",
     HOST_MAIN = "main",
+    // property-stats-card pathSegment / Wasm surface id
+    HOST_STATS = "issue-stats",
 }
 
 define_operation_names! {

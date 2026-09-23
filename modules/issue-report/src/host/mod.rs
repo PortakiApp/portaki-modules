@@ -17,8 +17,12 @@ use crate::category;
 use crate::entities::IssueReport;
 use crate::storage;
 
+mod stats;
+
+pub use stats::render_host_stats;
+
 /// Host-provided wall clock (the Wasm sandbox has none — never call `Utc::now()`).
-fn host_now() -> DateTime<Utc> {
+pub(crate) fn host_now() -> DateTime<Utc> {
     time::now().unwrap_or_else(|_| DateTime::<Utc>::from_timestamp(0, 0).expect("epoch is valid"))
 }
 
