@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v0.4.0...facility-hours-v0.5.0) (2026-09-23)
+
+
+### Features
+
+* **facility-hours:** add catalogue listing ([a87a406](https://github.com/PortakiApp/portaki-modules/commit/a87a4062338b4ce0ceeab8ad834d8f4ead95e022))
+
 ## [0.4.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v0.3.2...facility-hours-v0.4.0) (2026-09-23)
 
 

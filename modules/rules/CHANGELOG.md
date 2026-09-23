@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/rules-v0.5.0...rules-v0.6.0) (2026-09-23)
+
+
+### Features
+
+* **rules:** add catalogue listing ([d05ce05](https://github.com/PortakiApp/portaki-modules/commit/d05ce05fbb769187c37966cbda2cd5c128fe814f))
+
 ## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/rules-v0.4.3...rules-v0.5.0) (2026-09-23)
 
 

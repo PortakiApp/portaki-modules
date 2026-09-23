@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v0.3.0...wifi-guest-v0.4.0) (2026-09-23)
+
+
+### Features
+
+* **wifi-guest:** add catalogue listing ([251f1a9](https://github.com/PortakiApp/portaki-modules/commit/251f1a9f3f54471d8df8cc7ac89504eb8e06f018))
+
 ## [0.3.0](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v0.2.3...wifi-guest-v0.3.0) (2026-09-23)
 
 
