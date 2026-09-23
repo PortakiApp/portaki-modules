@@ -1,10 +1,12 @@
 //! Integration-style unit tests with `portaki-test-utils`.
 
+use chrono::{DateTime, Duration, Utc};
 use serial_test::serial;
 
 use issue_report::{
     list_for_stay, list_recent, render_guest_form, render_home_card, render_host_main,
-    render_host_stats, reset_test_store, submit, SubmitArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
+    render_host_stats, reset_test_store, resolve, submit, ResolveArgs, SubmitArgs,
+    GUEST_TEXT_EMAIL_MAX_CHARS,
 };
 use portaki_sdk::limits;
 use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
@@ -115,17 +117,25 @@ fn host_main_lists_recent_after_guest_submit() {
 
 #[test]
 #[serial]
-fn host_stats_counts_window_reports_by_category() {
+fn host_stats_reflect_resolution_and_period() {
     reset_test_store();
+    let t0 = DateTime::parse_from_rfc3339("2026-09-01T08:00:00Z")
+        .expect("t0")
+        .with_timezone(&Utc);
     MockContext::guest()
         .with_property(Property::default())
+        .with_now(t0)
         .run(|ctx| {
-            for category in ["appliance", "appliance", "access"] {
+            for (category, summary) in [
+                ("appliance", "Oven"),
+                ("appliance", "Boiler"),
+                ("access", "Code"),
+            ] {
                 submit(
                     ctx.clone(),
                     SubmitArgs {
                         category: category.into(),
-                        summary: "x".into(),
+                        summary: summary.into(),
                         details: None,
                     },
                 )
@@ -133,20 +143,66 @@ fn host_stats_counts_window_reports_by_category() {
             }
         });
 
+    let render = |now: DateTime<Utc>, period: Option<u64>| {
+        let mut out = String::new();
+        MockContext::host()
+            .with_property(Property::default())
+            .with_now(now)
+            .run(|mut ctx| {
+                if let Some(days) = period {
+                    ctx.input = serde_json::json!({ "periodDays": days });
+                }
+                out = serde_json::to_value(render_host_stats(ctx))
+                    .expect("surface json")
+                    .to_string();
+            });
+        out
+    };
+
     MockContext::host()
         .with_property(Property::default())
+        .with_now(t0 + Duration::hours(6))
         .run(|ctx| {
-            let surface = render_host_stats(ctx);
-            let json = serde_json::to_value(&surface).expect("surface json");
-            let text = json.to_string();
-            assert!(SurfaceAssertions::new(&surface).contains_type("Stat"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("KeyValue"));
-            assert!(text.contains(r#""label":"i18n:stats.reports","type":"Stat","value":"3""#));
-            let appliance = text.find("form.category.appliance").expect("appliance row");
-            let access = text.find("form.category.access").expect("access row");
-            assert!(appliance < access, "most reported category first");
-            assert!(text.contains("stats.delay.empty"));
+            let oven = list_recent(ctx.clone())
+                .expect("listRecent")
+                .into_iter()
+                .find(|r| r.summary == "Oven")
+                .expect("oven");
+            resolve(ctx.clone(), ResolveArgs { report_id: oven.id }).expect("resolve");
+            // Second call keeps the first resolution time.
+            resolve(ctx.clone(), ResolveArgs { report_id: oven.id }).expect("resolve again");
+
+            let main = serde_json::to_string(&render_host_main(ctx)).expect("main json");
+            assert!(main.contains("host.main.status.resolved"));
+            assert_eq!(
+                main.matches("host.main.resolve").count(),
+                2,
+                "button on open rows only"
+            );
         });
+
+    let text = render(t0 + Duration::hours(9), None);
+    assert!(text.contains(
+        r#""delta":"sur 30 jours","label":"i18n:stats.reports","type":"Stat","value":"3""#
+    ));
+    assert!(text.contains(
+        r#""delta":"délai moyen 6 h","label":"i18n:stats.resolved","type":"Stat","value":"1""#
+    ));
+    assert!(text.contains(r#""label":"i18n:stats.open","type":"Stat","value":"2""#));
+    assert!(text.contains(
+        r#""key":"i18n:stats.category.appliance","type":"KeyValue","value":"2 signalements""#
+    ));
+    assert!(text.find("stats.category.appliance") < text.find("stats.category.access"));
+    assert!(text.contains(r#""key":"i18n:stats.delay.avg","type":"KeyValue","value":"6 h""#));
+
+    let later = t0 + Duration::days(40);
+    assert!(
+        render(later, None).contains(r#""label":"i18n:stats.reports","type":"Stat","value":"0""#)
+    );
+    let quarter = render(later, Some(90));
+    assert!(quarter.contains(
+        r#""delta":"sur 90 jours","label":"i18n:stats.reports","type":"Stat","value":"3""#
+    ));
 }
 
 /// A 20 000-char description: the report keeps it whole, the host email quotes at most

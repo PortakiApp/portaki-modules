@@ -99,16 +99,41 @@ pub fn create(
         summary,
         details,
         created_at: now,
+        resolved_at: None,
     };
     persist_row(row.clone())?;
     Ok(row)
 }
 
+/// Marks a report resolved; a second call keeps the first resolution time.
+pub fn resolve(id: Uuid) -> Result<IssueReport> {
+    let mut row = find_by_id(id)?.ok_or_else(|| PortakiError::Host("report_not_found".into()))?;
+    if row.resolved_at.is_none() {
+        row.resolved_at = Some(time::now()?);
+        persist_row(row.clone())?;
+    }
+    Ok(row)
+}
+
+fn find_by_id(id: Uuid) -> Result<Option<IssueReport>> {
+    if in_memory_enabled() {
+        return Ok(TEST_ROWS.with(|store| store.borrow().iter().find(|row| row.id == id).cloned()));
+    }
+    repo::find_by_id::<IssueReport, IssueReport>(id)
+}
+
 fn persist_row(row: IssueReport) -> Result<()> {
     if in_memory_enabled() {
-        TEST_ROWS.with(|store| store.borrow_mut().push(row));
+        TEST_ROWS.with(|store| {
+            let mut rows = store.borrow_mut();
+            match rows.iter().position(|existing| existing.id == row.id) {
+                Some(index) => rows[index] = row,
+                None => rows.push(row),
+            }
+        });
         return Ok(());
     }
+    // Gateway `repo_create` upserts on primary key (`id`).
     let _ = repo::create::<IssueReport, IssueReport, IssueReport>(row)?;
     Ok(())
 }

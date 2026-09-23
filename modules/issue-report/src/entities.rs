@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 /// One guest issue report for a stay (many per stay allowed).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 2)]
+#[portaki_sdk::entity(schema_version = 3)]
 pub struct IssueReport {
     pub id: Uuid,
     pub stay_id: Uuid,
@@ -14,6 +14,9 @@ pub struct IssueReport {
     pub summary: String,
     pub details: Option<String>,
     pub created_at: DateTime<Utc>,
+    /// Set once by the host (`resolve`); `None` = still open.
+    #[serde(default)]
+    pub resolved_at: Option<DateTime<Utc>>,
 }
 
 #[portaki_sdk::entity_indexes(IssueReport)]

@@ -1,4 +1,4 @@
-//! Module commands — submit issue report.
+//! Module commands — guest submit, host resolve.
 
 use portaki_sdk::host::email::{
     self, EmailAudience, LocalizedEmailText, ModuleEmailCta, ModuleEmailSdui, SendEmailArgs,
@@ -75,6 +75,22 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     if let Err(error) = sent {
         email_text::log_send_failure("issue_report_host_email_failed", &error);
     }
+    Ok(())
+}
+
+/// Arguments for host `resolve`.
+#[portaki_sdk::wire]
+#[portaki_sdk::params]
+pub struct ResolveArgs {
+    pub report_id: Uuid,
+}
+
+#[portaki_sdk::command(name = "resolve")]
+pub fn resolve(ctx: Context, args: ResolveArgs) -> Result<()> {
+    if ctx.guest.is_some() {
+        return Err(PortakiError::Host("host_only".to_string()));
+    }
+    let _ = storage::resolve(args.report_id)?;
     Ok(())
 }
 

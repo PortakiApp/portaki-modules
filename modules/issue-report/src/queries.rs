@@ -17,6 +17,8 @@ pub struct IssueReportRow {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub details: Option<String>,
     pub created_at: DateTime<Utc>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resolved_at: Option<DateTime<Utc>>,
 }
 
 impl From<crate::entities::IssueReport> for IssueReportRow {
@@ -28,6 +30,7 @@ impl From<crate::entities::IssueReport> for IssueReportRow {
             summary: row.summary,
             details: row.details,
             created_at: row.created_at,
+            resolved_at: row.resolved_at,
         }
     }
 }
