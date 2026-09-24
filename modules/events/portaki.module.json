@@ -10,7 +10,7 @@
     "en": "Local happenings near the stay — local listings plus your own picks."
   },
   "version": "0.5.1",
-  "requiresModuleSdk": "6.9.0",
+  "requiresModuleSdk": "6.11.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
