@@ -11,6 +11,7 @@ define_surface_ids! {
 define_operation_names! {
     EMAIL_CONTEXT = "emailContext",
     GET_CONTENT = "getContent",
+    PUBLISH_READINESS = "publishReadiness",
     SAVE_CONTENT = "saveContent",
     UPDATE_CONFIG = "updateConfig",
 }

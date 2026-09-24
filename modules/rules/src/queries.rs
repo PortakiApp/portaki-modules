@@ -1,9 +1,11 @@
 //! Module queries — house rules content.
 
+use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::content::{RulesBundle, RulesPayload};
+use crate::i18n::text;
 use crate::store;
 
 /// Arguments for `getContent` (locale optional — defaults to context locale).
@@ -35,6 +37,26 @@ pub fn get_content(ctx: Context, args: GetContentArgs) -> Result<RulesContentVie
         items: payload.items,
         content_fr,
         content_en,
+    })
+}
+
+/// Blocks publication until at least one rule exists, in any language.
+#[portaki_sdk::query(name = "publishReadiness")]
+pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
+    let ok = store::load_content()?.is_some_and(|row| {
+        RulesBundle::from_row(&row.content_fr, &row.content_en)
+            .by_lang
+            .values()
+            .any(|payload| !payload.is_empty())
+    });
+    Ok(PublishReadiness {
+        items: vec![PublishCheck {
+            id: "rules".into(),
+            level: PublishLevel::Required,
+            ok,
+            label: text("publish.rules.label"),
+            hint: text("publish.rules.hint"),
+        }],
     })
 }
 

@@ -11,8 +11,9 @@ use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use serde_json::json;
 
 use rules::{
-    get_content, render_explore_detail, render_home_card, render_host_main, reset_test_store,
-    save_content, update_config, GetContentArgs, RuleItemInput, RulesContent, SaveContentArgs,
+    get_content, publish_readiness, render_explore_detail, render_home_card, render_host_main,
+    reset_test_store, save_content, update_config, GetContentArgs, RuleItemInput, RulesContent,
+    SaveContentArgs,
 };
 
 fn sample_payload() -> String {
@@ -180,4 +181,31 @@ fn seed_row_shape_matches_entity() {
         updated_at: now,
     };
     assert!(!row.content_fr.is_empty());
+}
+
+#[test]
+#[serial]
+fn publish_readiness_requires_one_rule() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            assert!(
+                !publish_readiness(ctx.clone())
+                    .expect("publishReadiness")
+                    .items[0]
+                    .ok
+            );
+            save_content(
+                ctx.clone(),
+                SaveContentArgs {
+                    items: Vec::new(),
+                    content_fr: sample_payload(),
+                    content_en: String::new(),
+                },
+            )
+            .expect("save");
+            assert!(publish_readiness(ctx).expect("publishReadiness").items[0].ok);
+        });
 }
