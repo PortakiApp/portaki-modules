@@ -24,6 +24,15 @@
     "connectors:nuki"
   ],
   "sortOrder": 230,
+  "feeds": [
+    {
+      "module": "access-guide",
+      "what": {
+        "fr": "le code clavier",
+        "en": "the keypad code"
+      }
+    }
+  ],
   "hostSurfaces": [
     {
       "type": "property-workspace-tab",
