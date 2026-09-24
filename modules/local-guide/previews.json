@@ -1,0 +1,125 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "guest.disclaimer.title": "Info",
+        "nav.local-guide": "Bons plans"
+      },
+      "surfaceId": "explore.detail",
+      "title": "Bons plans",
+      "tree": {
+        "children": [
+          {
+            "interactionMode": "none",
+            "isStatic": true,
+            "markers": [
+              {
+                "id": "boulangerie",
+                "kind": "poi",
+                "label": "La boulangerie du village",
+                "lat": 43.5531,
+                "lng": 7.0152
+              },
+              {
+                "id": "marche",
+                "kind": "poi",
+                "label": "Marché provençal",
+                "lat": 43.5552,
+                "lng": 7.0214
+              },
+              {
+                "id": "lac",
+                "kind": "poi",
+                "label": "Lac de Saint-Cassien",
+                "lat": 43.5663,
+                "lng": 6.8511
+              },
+              {
+                "id": "property",
+                "kind": "property",
+                "label": "Villa Azur",
+                "lat": 43.5513,
+                "lng": 7.0128
+              }
+            ],
+            "type": "Map",
+            "viewport": {
+              "center": {
+                "lat": 43.556475,
+                "lng": 6.975125
+              },
+              "zoom": 13.0
+            }
+          },
+          {
+            "message": "Suggestions de votre hôte, sans partenariat.",
+            "title": "i18n:guest.disclaimer.title",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "text": "Croissants dès 7 h, fermée le lundi.",
+                "type": "Text",
+                "variant": "body"
+              }
+            ],
+            "subtitle": "Boulangerie · 350 m",
+            "title": "La boulangerie du village",
+            "type": "ListItem"
+          },
+          {
+            "children": [
+              {
+                "label": "Samedi matin",
+                "type": "Pill"
+              },
+              {
+                "text": "Fruits, fromages et fleurs, le samedi matin.",
+                "type": "Text",
+                "variant": "body"
+              }
+            ],
+            "subtitle": "Marché · 1,2 km",
+            "title": "Marché provençal",
+            "type": "ListItem"
+          },
+          {
+            "children": [
+              {
+                "text": "Eau calme et plage de galets, idéal avec des enfants.",
+                "type": "Text",
+                "variant": "body"
+              }
+            ],
+            "subtitle": "Baignade · 9 km",
+            "title": "Lac de Saint-Cassien",
+            "type": "ListItem"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "nav.local-guide": "Bons plans"
+      },
+      "surfaceId": "upcoming.card",
+      "title": "Bons plans",
+      "tree": {
+        "children": [
+          {
+            "text": "3 adresses",
+            "type": "Text",
+            "variant": "body"
+          }
+        ],
+        "icon": "map-pin",
+        "title": "i18n:nav.local-guide",
+        "type": "Card"
+      }
+    }
+  ]
+}

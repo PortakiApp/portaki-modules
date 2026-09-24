@@ -1,0 +1,111 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "guest.call": "Appeler",
+        "guest.dial112": "Composer le 112",
+        "guest.emergency.message": "En cas d’urgence vitale, composez le 112 ou le 15 (SAMU) selon les consignes locales.",
+        "guest.emergency.title": "Urgence vitale",
+        "guest.host.label": "Votre hôte",
+        "nav.emergency-contacts": "Urgences & utiles"
+      },
+      "surfaceId": "explore.detail",
+      "title": "Urgences & utiles",
+      "tree": {
+        "children": [
+          {
+            "message": "i18n:guest.emergency.message",
+            "title": "i18n:guest.emergency.title",
+            "type": "InfoBanner"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:0600000000"
+            },
+            "children": [
+              {
+                "subtitle": "06 00 00 00 00",
+                "title": "i18n:guest.host.label",
+                "trailing": "i18n:guest.call",
+                "type": "ListItem"
+              }
+            ],
+            "type": "Pressable"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:3237"
+            },
+            "children": [
+              {
+                "children": [
+                  {
+                    "text": "Service national",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "subtitle": "3237",
+                "title": "Pharmacie de garde",
+                "trailing": "i18n:guest.call",
+                "type": "ListItem"
+              }
+            ],
+            "type": "Pressable"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:0493000000"
+            },
+            "children": [
+              {
+                "children": [
+                  {
+                    "text": "Dr Martin, sur rendez-vous",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "subtitle": "04 93 00 00 00",
+                "title": "Médecin généraliste",
+                "trailing": "i18n:guest.call",
+                "type": "ListItem"
+              }
+            ],
+            "type": "Pressable"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:15"
+            },
+            "children": [
+              {
+                "subtitle": "15",
+                "title": "SAMU",
+                "trailing": "i18n:guest.call",
+                "type": "ListItem"
+              }
+            ],
+            "type": "Pressable"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:112"
+            },
+            "href": "tel:112",
+            "label": "i18n:guest.dial112",
+            "type": "Link"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    }
+  ]
+}
