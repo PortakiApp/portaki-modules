@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
   "category": "around",
   "tagline": {
     "fr": "Vos meilleures adresses du coin sur une carte, et des activités à réserver.",
