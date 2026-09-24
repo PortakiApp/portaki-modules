@@ -186,5 +186,7 @@
   "email.callout.other.withCode": "Voici votre code d'accès, valable dès {time}.",
   "email.callout.other.withoutCode": "Retrouvez les infos d'accès sur votre page de séjour.",
   "publish.entry-code.label": "Code d'entrée",
-  "publish.entry-code.hint": "Il manque le code d'entrée"
+  "publish.entry-code.hint": "Il manque le code d'entrée",
+  "module.catalogDescription": "Moyen d'entrée, couches optionnelles et révélation des codes.",
+  "catalog.host.main": "Accès"
 }

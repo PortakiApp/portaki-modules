@@ -36,5 +36,9 @@ fn previews_match_the_rendered_surfaces() {
         .expect("save");
         render_explore_detail(ctx)
     });
-    previews::check(root, vec![("explore.detail", detail)]);
+    previews::check(
+        root,
+        concat!(env!("OUT_DIR"), "/portaki-emissions"),
+        vec![("explore.detail", detail)],
+    );
 }

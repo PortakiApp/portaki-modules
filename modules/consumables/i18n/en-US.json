@@ -76,5 +76,8 @@
   "stats.restock.title": "When to buy again",
   "stats.restock.subtitle": "Days between a restock and the next shortage, on average",
   "stats.restock.empty": "Not enough restocks yet to estimate a rhythm.",
-  "stats.restock.unit": "{count} d"
+  "stats.restock.unit": "{count} d",
+  "catalog.host.main": "Consumables",
+  "catalog.host.stay": "Consumables",
+  "catalog.host.stock": "Consumables"
 }

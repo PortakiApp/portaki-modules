@@ -9,7 +9,13 @@ use crate::nearby::has_open_agenda;
 
 const EVENT_SLOTS: usize = 6;
 
-#[portaki_sdk::surface(host, id = "main")]
+#[portaki_sdk::surface(
+    host,
+    id = "main",
+    placement = "property-module-sheet",
+    label_key = "catalog.host.main",
+    icon = "calendar"
+)]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = Localized::lang_code(&ctx.locale);
     let config = load_config().unwrap_or_default();

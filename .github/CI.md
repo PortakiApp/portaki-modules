@@ -32,7 +32,7 @@ Workflow: [`.github/workflows/release-please.yml`](./workflows/release-please.ym
 
 ### Dynamic packages
 
-`scripts/generate-release-please-config.sh` scans `modules/*/Cargo.toml` + `portaki.module.json` and writes:
+`scripts/generate-release-please-config.sh` scans `modules/*/Cargo.toml` and writes:
 
 - `release-please-config.json` — one package path per module (`modules/<id>`)
 - `.release-please-manifest.json` — last released versions (new modules seeded from Cargo.toml)

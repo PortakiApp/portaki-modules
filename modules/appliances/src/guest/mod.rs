@@ -27,7 +27,12 @@ pub fn render_home_card(ctx: GuestContext) -> Surface {
     }
 }
 
-#[portaki_sdk::surface(guest, id = "explore.detail")]
+#[portaki_sdk::surface(
+    guest,
+    id = "explore.detail",
+    path = "appliances",
+    label_key = "nav.appliances"
+)]
 pub fn render_explore_detail(ctx: GuestContext) -> Surface {
     match render_with_payload(&ctx, crate::ids::EXPLORE_DETAIL, build_detail_page) {
         Ok(surface) => surface,
@@ -39,7 +44,12 @@ pub fn render_explore_detail(ctx: GuestContext) -> Surface {
 }
 
 /// Device detail. `deviceId` arrives via guest route params → render `input` → `ctx.input`.
-#[portaki_sdk::surface(guest, id = "explore.item")]
+#[portaki_sdk::surface(
+    guest,
+    id = "explore.item",
+    path = "appliances/:deviceId",
+    label_key = "nav.appliance"
+)]
 pub fn render_explore_item(ctx: GuestContext) -> Surface {
     let device_id = ctx
         .input

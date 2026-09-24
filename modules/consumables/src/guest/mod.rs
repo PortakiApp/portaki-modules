@@ -15,7 +15,12 @@ use load::{load_guest_consumables, GuestLoad};
 pub use form::render_guest_form;
 
 /// Guest home card — teaser + open form overlay.
-#[portaki_sdk::surface(guest, id = "home.card")]
+#[portaki_sdk::surface(
+    guest,
+    id = "home.card",
+    path = "consumables",
+    label_key = "nav.consumables"
+)]
 pub fn render_home_card(ctx: GuestContext) -> Surface {
     match render_with_data(&ctx) {
         Ok(surface) => surface,

@@ -56,5 +56,7 @@
   "module.status.incomplete.description": "Terminez la configuration des appareils dans le tableau de bord hôte",
   "module.status.incomplete.hint": "Ouvrez Modules → Appareils",
   "module.status.inactive.title": "Appareils désactivés",
-  "module.status.inactive.description": "Ce module n'est pas actif sur ce logement"
+  "module.status.inactive.description": "Ce module n'est pas actif sur ce logement",
+  "module.catalogDescription": "Four, lave-linge, clim : consignes courtes pour vos voyageurs.",
+  "catalog.host.main": "Appareils"
 }

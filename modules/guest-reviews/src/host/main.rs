@@ -11,7 +11,14 @@ use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{load_config, normalize_url, Localized};
 
-#[portaki_sdk::surface(host, id = "main")]
+#[portaki_sdk::surface(
+    host,
+    id = "main",
+    placement = "property-workspace-tab",
+    design_id = "reviews-editor-v1",
+    label_key = "catalog.host.main",
+    icon = "star"
+)]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = Localized::lang_code(&ctx.locale);
     let config = load_config().unwrap_or_default();

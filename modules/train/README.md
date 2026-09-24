@@ -31,7 +31,7 @@ Static, hardcoded in `src/content.rs`:
 | guest | `home.card` | Mixed-destination departure board glance (4 rows) |
 | guest | `explore.detail` | From/to header, destination filter chips, next departures |
 
-Guest route: `pathSegment = "train"` (see `portaki.module.json`).
+Guest route: `pathSegment = "train"` (see the guest `#[surface]`s).
 
 Destination filter chips re-navigate to `train` with `{ "dest": "<destination>" }`
 params, read back via `ctx.input.dest` in `render_explore_detail`.

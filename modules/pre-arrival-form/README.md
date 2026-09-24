@@ -24,7 +24,7 @@ OCI image: `ghcr.io/portakiapp/portaki-modules-pre-arrival-form:<semver>`
 | host | `main` | Config editor (`show_when` + question toggles) |
 | host | `stay` | Stay-detail embed — read-only responses (`input.stayId`) |
 
-Host manifest (`portaki.module.json`): `property-workspace-tab` + `stay-detail` (`pathSegment`: `stay`).
+Host entries (`#[surface]` placements): `property-workspace-tab` + `stay-detail` (`pathSegment`: `stay`).
 
 ## Queries and commands
 

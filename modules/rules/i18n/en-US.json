@@ -35,5 +35,7 @@
   "module.status.inactive.title": "House rules disabled",
   "module.status.inactive.description": "This module is not active on this property",
   "publish.rules.label": "House rules",
-  "publish.rules.hint": "Add at least one rule"
+  "publish.rules.hint": "Add at least one rule",
+  "module.catalogDescription": "House rules in French and English, easy for guests to read.",
+  "catalog.host.main": "House rules"
 }

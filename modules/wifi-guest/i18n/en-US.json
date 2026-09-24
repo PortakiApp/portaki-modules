@@ -50,5 +50,7 @@
   "publish.ssid.label": "Wi-Fi network name",
   "publish.ssid.hint": "The Wi-Fi network name is missing",
   "publish.password.label": "Wi-Fi password",
-  "publish.password.hint": "The password is missing, unless the network is open"
+  "publish.password.hint": "The password is missing, unless the network is open",
+  "module.catalogDescription": "Guest Wi-Fi SSID and password for the booklet, with timed reveal.",
+  "catalog.host.main": "Wi-Fi"
 }

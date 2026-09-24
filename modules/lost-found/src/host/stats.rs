@@ -76,7 +76,14 @@ pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSumma
     ))
 }
 
-#[portaki_sdk::surface(host, id = "lost-stats")]
+#[portaki_sdk::surface(
+    host,
+    id = "lost-stats",
+    placement = "property-stats-card",
+    placement = "property-stats-detail",
+    label_key = "catalog.host.lost-stats",
+    icon = "search"
+)]
 pub fn render_host_stats(ctx: HostContext) -> Surface {
     let locale = ctx.locale.as_str();
     let days = period_key(ctx.input_u64("periodDays").unwrap_or(30) as i64);

@@ -23,7 +23,14 @@ fn activity_slots(filled: usize) -> usize {
     (filled + 1).clamp(2, MAX_CURATED_LINKS)
 }
 
-#[portaki_sdk::surface(host, id = "main")]
+#[portaki_sdk::surface(
+    host,
+    id = "main",
+    placement = "property-workspace-tab",
+    design_id = "guide-editor-v1",
+    label_key = "catalog.host.main",
+    icon = "map-pin"
+)]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = Localized::lang_code(&ctx.locale);
     let config = load_config().unwrap_or_default();

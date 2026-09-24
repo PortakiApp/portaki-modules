@@ -31,5 +31,7 @@
   "module.status.incomplete.hint": "Required fields missing — open Modules → Hours & access",
   "module.status.inactive.title": "Hours module disabled",
   "module.status.inactive.description": "This module is not active on this property",
-  "host.section.note": "General note"
+  "host.section.note": "General note",
+  "module.catalogDescription": "Pool, spa, gym: hours per facility.",
+  "catalog.host.main": "Hours"
 }

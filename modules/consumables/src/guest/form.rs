@@ -10,7 +10,12 @@ use crate::labels;
 use crate::level;
 
 /// Bottom-sheet consumables shortage form (inputs live here — not on the home card).
-#[portaki_sdk::surface(guest, id = "guest.form")]
+#[portaki_sdk::surface(
+    guest,
+    id = "guest.form",
+    path = "consumables/form",
+    label_key = "nav.consumables"
+)]
 pub fn render_guest_form(ctx: GuestContext) -> Surface {
     match render_form(&ctx) {
         Ok(surface) => surface,

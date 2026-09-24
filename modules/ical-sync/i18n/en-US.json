@@ -67,5 +67,11 @@
   "module.status.inactive.title": "Calendar module disabled",
   "module.status.inactive.description": "This module is not active on this property",
   "stats.tile": "{count} stays imported",
-  "stats.tile.conflicts": "{count} conflict(s)"
+  "stats.tile.conflicts": "{count} conflict(s)",
+  "module.catalogDescription": "Import stays from an Airbnb, Booking, or other .ics calendar export URL.",
+  "catalog.host.calendar-sync": "Calendar sync",
+  "catalog.host.main": "Calendars",
+  "email.sync-failed.description": "iCal feed read failure, one or more feeds (one email per sync) — new stays not imported",
+  "email.stay-imported.description": "New stay imported without guest email — invite to complete",
+  "email.sync-summary.description": "Sync digest (new / updated / incomplete stays)"
 }

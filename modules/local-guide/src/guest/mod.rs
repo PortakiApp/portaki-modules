@@ -27,7 +27,13 @@ pub fn render_home_card(ctx: GuestContext) -> Surface {
     }
 }
 
-#[portaki_sdk::surface(guest, id = "upcoming.card")]
+#[portaki_sdk::surface(
+    guest,
+    id = "upcoming.card",
+    path = "upcoming",
+    label_key = "nav.local-guide",
+    role = "upcoming"
+)]
 pub fn render_upcoming_card(ctx: GuestContext) -> Surface {
     match render_with_data(&ctx, crate::ids::UPCOMING_CARD, build_upcoming_card) {
         Ok(surface) => surface,
@@ -38,7 +44,12 @@ pub fn render_upcoming_card(ctx: GuestContext) -> Surface {
     }
 }
 
-#[portaki_sdk::surface(guest, id = "explore.detail")]
+#[portaki_sdk::surface(
+    guest,
+    id = "explore.detail",
+    path = "local-guide/detail",
+    label_key = "nav.local-guide"
+)]
 pub fn render_explore_detail(ctx: GuestContext) -> Surface {
     match render_with_data(&ctx, crate::ids::EXPLORE_DETAIL, build_detail_surface) {
         Ok(surface) => surface,

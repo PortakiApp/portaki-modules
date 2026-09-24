@@ -56,5 +56,7 @@
   "module.status.incomplete.description": "Finish appliance configuration in the host dashboard",
   "module.status.incomplete.hint": "Open Modules → Appliances",
   "module.status.inactive.title": "Appliances disabled",
-  "module.status.inactive.description": "This module is not active on this property"
+  "module.status.inactive.description": "This module is not active on this property",
+  "module.catalogDescription": "Oven, washer, AC: short tips for your guests.",
+  "catalog.host.main": "Appliances"
 }

@@ -64,5 +64,7 @@
   "module.status.incomplete.description": "Finalisez les événements dans le tableau de bord hôte",
   "module.status.incomplete.hint": "Champs requis manquants — ouvrez Modules → Événements",
   "module.status.inactive.title": "Module événements désactivé",
-  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement"
+  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
+  "module.catalogDescription": "Sorties, concerts et animations à proximité — agenda local et sélection de l’hôte.",
+  "catalog.host.main": "Événements"
 }

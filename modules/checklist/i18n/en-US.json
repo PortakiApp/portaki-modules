@@ -146,5 +146,9 @@
   "stats.cleaning.status.late": "Late",
   "stats.cleaning.row.after": "After the {date} check-out",
   "stats.cleaning.row.dueAt": "to finish before {date} · {time}",
-  "stats.cleaning.row.lateBy": "finished on {date} · {time} · {delay} late"
+  "stats.cleaning.row.lateBy": "finished on {date} · {time} · {delay} late",
+  "catalog.host.checklist": "Checklist",
+  "catalog.host.cleaning": "Cleaning",
+  "catalog.host.main": "Checklists",
+  "catalog.host.tasks": "Tasks"
 }

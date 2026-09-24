@@ -32,7 +32,13 @@ pub fn render_home_card(ctx: GuestContext) -> Surface {
 }
 
 /// Compact pre-arrival prep card rendered on the guest timeline.
-#[portaki_sdk::surface(guest, id = "upcoming.card")]
+#[portaki_sdk::surface(
+    guest,
+    id = "upcoming.card",
+    path = "upcoming",
+    label_key = "nav.weather",
+    role = "upcoming"
+)]
 pub fn render_upcoming_card(ctx: GuestContext) -> Surface {
     match render_with_data(&ctx, crate::ids::UPCOMING_CARD, build_upcoming_card) {
         Ok(surface) => surface,
@@ -44,7 +50,12 @@ pub fn render_upcoming_card(ctx: GuestContext) -> Surface {
 }
 
 /// Sheet / explore detail — same weather body as the card (design `block("weather")` in sheet).
-#[portaki_sdk::surface(guest, id = "explore.forecast")]
+#[portaki_sdk::surface(
+    guest,
+    id = "explore.forecast",
+    path = "weather/forecast",
+    label_key = "nav.forecast"
+)]
 pub fn render_explore_forecast(ctx: GuestContext) -> Surface {
     match render_with_data(&ctx, crate::ids::EXPLORE_FORECAST, build_sheet_surface) {
         Ok(surface) => surface,

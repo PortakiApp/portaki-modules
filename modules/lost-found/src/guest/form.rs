@@ -8,7 +8,12 @@ use super::empty::{empty_runtime_error_state, log_render_failure};
 use super::load::{load_guest_reports, GuestLoad};
 
 /// Bottom-sheet lost/found form (inputs live here — not on the home card).
-#[portaki_sdk::surface(guest, id = "guest.form")]
+#[portaki_sdk::surface(
+    guest,
+    id = "guest.form",
+    path = "lost-found/form",
+    label_key = "nav.lost-found"
+)]
 pub fn render_guest_form(ctx: GuestContext) -> Surface {
     match render_form(&ctx) {
         Ok(surface) => surface,

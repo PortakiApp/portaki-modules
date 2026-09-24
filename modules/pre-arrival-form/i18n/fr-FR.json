@@ -71,5 +71,9 @@
   "module.status.inactive.title": "Module pré-arrivée désactivé",
   "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
   "publish.questions.label": "Questions aux voyageurs",
-  "publish.questions.hint": "Activez au moins une question du formulaire"
+  "publish.questions.hint": "Activez au moins une question du formulaire",
+  "module.catalogName": "Formulaire de pré-arrivée",
+  "catalog.host.main": "Formulaire de pré-arrivée",
+  "catalog.host.stay": "Formulaire de pré-arrivée",
+  "email.form-available.description": "Formulaire de pré-arrivée disponible"
 }

@@ -21,7 +21,13 @@ fn host_now() -> chrono::DateTime<chrono::Utc> {
 /// Stay detail embed — guest shortage reports for `input.stayId`.
 ///
 /// Empty stay → Card + EmptyState (tab must not look blank). Non-empty → Card + list.
-#[portaki_sdk::surface(host, id = "stay")]
+#[portaki_sdk::surface(
+    host,
+    id = "stay",
+    placement = "stay-detail",
+    label_key = "catalog.host.stay",
+    icon = "package"
+)]
 pub fn render_host_stay(ctx: HostContext) -> Surface {
     let stay_id = ctx
         .input_str("stayId")

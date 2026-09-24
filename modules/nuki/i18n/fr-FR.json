@@ -22,5 +22,8 @@
   "module.status.incomplete.description": "Ajoutez un code clavier dans le tableau de bord",
   "module.status.incomplete.hint": "Modules → Nuki",
   "module.status.inactive.title": "Module Nuki désactivé",
-  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement"
+  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
+  "module.catalogDescription": "Serrure Nuki — codes clavier pour le module Accès.",
+  "feeds.access-guide": "le code clavier",
+  "catalog.host.main": "Nuki"
 }

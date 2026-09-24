@@ -14,7 +14,13 @@ mod stats;
 
 pub use stats::{render_host_stats, stats_summary};
 
-#[portaki_sdk::surface(host, id = "main")]
+#[portaki_sdk::surface(
+    host,
+    id = "main",
+    placement = "property-module-sheet",
+    label_key = "catalog.host.main",
+    icon = "calendar"
+)]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let config = load_config().unwrap_or_default();
     let calendars_count = draft_calendars_count(&ctx, &config);

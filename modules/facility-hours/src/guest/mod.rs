@@ -25,7 +25,12 @@ pub fn render_home_card(ctx: GuestContext) -> Surface {
     }
 }
 
-#[portaki_sdk::surface(guest, id = "explore.detail")]
+#[portaki_sdk::surface(
+    guest,
+    id = "explore.detail",
+    path = "facility-hours/detail",
+    label_key = "nav.facility-hours"
+)]
 pub fn render_explore_detail(ctx: GuestContext) -> Surface {
     match render_with_data(&ctx, crate::ids::EXPLORE_DETAIL, build_detail_surface) {
         Ok(surface) => surface,

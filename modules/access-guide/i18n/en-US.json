@@ -186,5 +186,7 @@
   "email.callout.other.withCode": "Here is your access code, valid from {time}.",
   "email.callout.other.withoutCode": "Access details are on your stay page.",
   "publish.entry-code.label": "Entry code",
-  "publish.entry-code.hint": "The entry code is missing"
+  "publish.entry-code.hint": "The entry code is missing",
+  "module.catalogDescription": "Entry method, optional layers, and when codes are revealed.",
+  "catalog.host.main": "Access"
 }

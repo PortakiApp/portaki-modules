@@ -30,17 +30,17 @@ rust-version = "1.75"
 # qui ne touchait que ce fichier n'était attribué à aucun paquet : fe307f0 puis ce5107f, deux
 # montées, zéro publication, les vingt et un artefacts annonçant encore l'ancien SDK.
 #
-# Chaque `portaki.module.json` déclare donc son `requiresModuleSdk`. Une montée touche les
-# vingt et un chemins, elle est attribuable, elle publie. Un manifeste DIT ce dont il a besoin au
-# lieu qu'on le déduise du graphe à la publication — ce qui était le défaut de l'ancien
-# `branch = "main"`, sous une autre forme.
+# Chaque module écrit donc la version de `portaki-sdk` dans son propre `Cargo.toml` — avec les
+# features, donc les permissions, qu'il réclame — au lieu de l'hériter d'ici. Une montée touche
+# les vingt et un chemins, elle est attribuable, elle publie. `portaki build` en tire
+# `requiresModuleSdk` : il n'y a plus de manifeste écrit à la main pour le déclarer.
 #
 # Le prix est vingt-deux endroits à tenir ensemble. `scripts/check-sdk-pin.sh` les compare à
-# chaque CI, et le CLI refuse de publier un manifeste qui annonce autre chose que le SDK lié.
-portaki-sdk = "6.16.0"
-portaki-sdk-macros = "6.16.0"
-portaki-connectors = "6.16.0"
-portaki-test-utils = "6.16.0"
+# chaque CI.
+portaki-sdk = "7.0.0"
+portaki-sdk-macros = "7.0.0"
+portaki-connectors = "7.0.0"
+portaki-test-utils = "7.0.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 uuid = { version = "1", features = ["serde", "v4", "rng-getrandom"] }

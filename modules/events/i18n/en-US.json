@@ -64,5 +64,7 @@
   "module.status.incomplete.description": "Finish events setup in the host dashboard",
   "module.status.incomplete.hint": "Required fields missing — open Modules → Events",
   "module.status.inactive.title": "Events module disabled",
-  "module.status.inactive.description": "This module is not active on this property"
+  "module.status.inactive.description": "This module is not active on this property",
+  "module.catalogDescription": "Local happenings near the stay — local listings plus your own picks.",
+  "catalog.host.main": "Events"
 }

@@ -67,5 +67,11 @@
   "module.status.inactive.title": "Module calendrier désactivé",
   "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
   "stats.tile": "{count} séjours importés",
-  "stats.tile.conflicts": "{count} conflit(s)"
+  "stats.tile.conflicts": "{count} conflit(s)",
+  "module.catalogDescription": "Importe les séjours depuis un export calendrier Airbnb, Booking ou autre lien .ics.",
+  "catalog.host.calendar-sync": "Sync calendriers",
+  "catalog.host.main": "Calendriers",
+  "email.sync-failed.description": "Échec de lecture d’un ou plusieurs flux iCal (un seul email par synchronisation) — nouveaux séjours non importés",
+  "email.stay-imported.description": "Nouveau séjour importé sans email voyageur — invitation à compléter",
+  "email.sync-summary.description": "Bilan de synchronisation (nouveaux / mis à jour / à compléter)"
 }

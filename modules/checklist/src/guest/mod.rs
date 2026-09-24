@@ -13,13 +13,24 @@ use home::build_home_card;
 use load::{load_guest_checklist, GuestLoad};
 
 /// Guest home card — the open guest lists, progress + inline toggles (no overlay).
-#[portaki_sdk::surface(guest, id = "home.card")]
+#[portaki_sdk::surface(
+    guest,
+    id = "home.card",
+    path = "checklist",
+    label_key = "home.card.title"
+)]
 pub fn render_home_card(ctx: GuestContext) -> Surface {
     render_card(&ctx, crate::ids::HOME_CARD, false)
 }
 
 /// End-of-stay card — the departure lists, still tickable once the stay is over.
-#[portaki_sdk::surface(guest, id = "post-stay.card")]
+#[portaki_sdk::surface(
+    guest,
+    id = "post-stay.card",
+    path = "post-stay",
+    label_key = "home.card.title",
+    role = "post-stay"
+)]
 pub fn render_post_stay_card(ctx: GuestContext) -> Surface {
     render_card(&ctx, crate::ids::POST_STAY_CARD, true)
 }

@@ -33,5 +33,6 @@
   "module.status.incomplete.description": "Finish sections configuration in the host dashboard",
   "module.status.incomplete.hint": "Open Modules → Sections",
   "module.status.inactive.title": "Sections disabled",
-  "module.status.inactive.description": "This module is not active on this property"
+  "module.status.inactive.description": "This module is not active on this property",
+  "catalog.host.main": "Sections"
 }

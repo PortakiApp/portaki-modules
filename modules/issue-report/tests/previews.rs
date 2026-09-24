@@ -25,5 +25,9 @@ fn previews_match_the_rendered_surfaces() {
         .expect("submit");
         (render_home_card(ctx.clone()), render_guest_form(ctx))
     });
-    previews::check(root, vec![("home.card", card), ("guest.form", form)]);
+    previews::check(
+        root,
+        concat!(env!("OUT_DIR"), "/portaki-emissions"),
+        vec![("home.card", card), ("guest.form", form)],
+    );
 }

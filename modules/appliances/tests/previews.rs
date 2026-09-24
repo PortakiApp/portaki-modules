@@ -82,6 +82,7 @@ fn previews_match_the_rendered_surfaces() {
     });
     previews::check(
         root,
+        concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![("explore.detail", detail), ("explore.item", item)],
     );
 }

@@ -37,5 +37,7 @@
   "module.status.incomplete.hint": "Champs requis manquants — ouvrez Modules → Tri & déchets",
   "module.status.inactive.title": "Module tri désactivé",
   "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
-  "host.section.schedule": "Collecte"
+  "host.section.schedule": "Collecte",
+  "module.catalogDescription": "Bac par bac : quoi jeter où, et jours de collecte.",
+  "catalog.host.main": "Tri"
 }

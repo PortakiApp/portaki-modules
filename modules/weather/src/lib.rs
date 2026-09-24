@@ -28,8 +28,13 @@ pub use weather::{CONNECTOR_CURRENT_CALLS, CONNECTOR_FORECAST_CALLS};
 portaki_sdk::portaki_module!(
     id = "weather",
     display_name_key = "module.displayName",
-    description_key = "module.description",
+    description_key = "module.catalogDescription",
     author = "Portaki",
+    author_url = "https://portaki.app",
+    module_type = "official",
+    icon = "cloud-sun",
+    maturity = "stable",
+    sort_order = 130,
 );
 
 #[portaki_sdk::capability(required, id = "core.storage")]

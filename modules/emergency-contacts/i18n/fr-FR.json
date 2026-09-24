@@ -37,5 +37,7 @@
   "host.section.hostPhone": "Téléphone hôte",
   "host.section.hostPhone.help": "Affiché dans le livret si renseigné.",
   "publish.host-phone.label": "Numéro de l'hôte",
-  "publish.host-phone.hint": "Il manque votre numéro joignable pendant le séjour"
+  "publish.host-phone.hint": "Il manque votre numéro joignable pendant le séjour",
+  "module.catalogDescription": "Numéros d'urgence, pharmacie, médecin, ligne directe.",
+  "catalog.host.main": "Urgences"
 }

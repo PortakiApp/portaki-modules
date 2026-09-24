@@ -35,5 +35,7 @@
   "module.status.inactive.title": "Règlement désactivé",
   "module.status.inactive.description": "Ce module n'est pas actif sur ce logement",
   "publish.rules.label": "Règles de la maison",
-  "publish.rules.hint": "Ajoutez au moins une règle"
+  "publish.rules.hint": "Ajoutez au moins une règle",
+  "module.catalogDescription": "Les consignes du logement, en français et en anglais, lisibles par les voyageurs.",
+  "catalog.host.main": "Règlement"
 }

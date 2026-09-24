@@ -9,7 +9,12 @@ use super::load::{load_guest_pre_arrival, GuestLoad};
 use crate::config::load_config;
 
 /// Fullscreen pre-arrival form (design page overlay).
-#[portaki_sdk::surface(guest, id = "guest.form")]
+#[portaki_sdk::surface(
+    guest,
+    id = "guest.form",
+    path = "pre-arrival-form/form",
+    label_key = "nav.pre-arrival-form"
+)]
 pub fn render_guest_form(ctx: GuestContext) -> Surface {
     match render_form(&ctx) {
         Ok(surface) => surface,

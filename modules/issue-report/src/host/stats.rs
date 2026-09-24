@@ -47,7 +47,14 @@ fn period_key(days: i64) -> i64 {
     }
 }
 
-#[portaki_sdk::surface(host, id = "issue-stats")]
+#[portaki_sdk::surface(
+    host,
+    id = "issue-stats",
+    placement = "property-stats-card",
+    placement = "property-stats-detail",
+    label_key = "catalog.host.issue-stats",
+    icon = "danger-triangle"
+)]
 pub fn render_host_stats(ctx: HostContext) -> Surface {
     let fr = ctx.locale.to_ascii_lowercase().starts_with("fr");
     let days = period_days(&ctx);

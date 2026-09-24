@@ -27,7 +27,7 @@ pub fn render_home_card(ctx: GuestContext) -> Surface {
 }
 
 /// Full rules page (body-only — shell supplies header).
-#[portaki_sdk::surface(guest, id = "explore.detail")]
+#[portaki_sdk::surface(guest, id = "explore.detail", path = "rules", label_key = "nav.rules")]
 pub fn render_explore_detail(ctx: GuestContext) -> Surface {
     match render_with_payload(&ctx, crate::ids::EXPLORE_DETAIL, build_detail_page) {
         Ok(surface) => surface,

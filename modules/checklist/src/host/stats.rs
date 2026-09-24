@@ -176,7 +176,14 @@ fn departures(
     out
 }
 
-#[portaki_sdk::surface(host, id = "checklist")]
+#[portaki_sdk::surface(
+    host,
+    id = "checklist",
+    placement = "property-stats-card",
+    placement = "property-stats-detail",
+    label_key = "catalog.host.checklist",
+    icon = "check-circle"
+)]
 pub fn render_stats_checklist(ctx: HostContext) -> Surface {
     let now = time::now().unwrap_or(DateTime::<Utc>::UNIX_EPOCH);
     let since = now - Duration::days(period_days(&ctx));
@@ -464,7 +471,14 @@ fn planned_cleanings<'a>(
     tasks
 }
 
-#[portaki_sdk::surface(host, id = "cleaning")]
+#[portaki_sdk::surface(
+    host,
+    id = "cleaning",
+    placement = "property-stats-card",
+    placement = "property-stats-detail",
+    label_key = "catalog.host.cleaning",
+    icon = "sparkles"
+)]
 pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
     let now = time::now().unwrap_or(DateTime::<Utc>::UNIX_EPOCH);
     let days = period_days(&ctx);

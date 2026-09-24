@@ -13,7 +13,13 @@ use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{load_config, RevealPolicy};
 
-#[portaki_sdk::surface(host, id = "main")]
+#[portaki_sdk::surface(
+    host,
+    id = "main",
+    placement = "property-module-sheet",
+    label_key = "catalog.host.main",
+    icon = "wifi"
+)]
 pub fn render_host_main(_ctx: HostContext) -> Surface {
     let config = load_config().unwrap_or_default();
 

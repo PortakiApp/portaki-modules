@@ -84,5 +84,8 @@
   "guest.tiqets.priceFrom": "Dès {price}",
   "guest.tiqets.rating": "★ {rating} ({count} avis)",
   "guest.tiqets.attribution": "Billets, prix et notes fournis par Tiqets.",
-  "guest.tiqets.disclosure": "Liens partenaires : une commission peut être perçue sur les réservations, sans surcoût pour vous."
+  "guest.tiqets.disclosure": "Liens partenaires : une commission peut être perçue sur les réservations, sans surcoût pour vous.",
+  "module.catalogName": "Bons plans du coin",
+  "module.catalogDescription": "Adresses et liens utiles rangés par thème.",
+  "catalog.host.main": "Bons plans"
 }

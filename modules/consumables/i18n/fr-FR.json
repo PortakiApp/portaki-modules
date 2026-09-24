@@ -76,5 +76,8 @@
   "stats.restock.title": "Quand il faut racheter",
   "stats.restock.subtitle": "Jours entre un réassort et le manque suivant, en moyenne",
   "stats.restock.empty": "Pas encore assez de réassorts pour estimer un rythme.",
-  "stats.restock.unit": "{count} j"
+  "stats.restock.unit": "{count} j",
+  "catalog.host.main": "Consommables",
+  "catalog.host.stay": "Consommables",
+  "catalog.host.stock": "Consommables"
 }

@@ -36,7 +36,7 @@ OCI image: `ghcr.io/portakiapp/portaki-modules-rules:<semver>`
 | guest | `explore.detail` | Full rules list in elevated card (page body) |
 | host | `main` | « Règles du logement » StepList (`rules-editor-v1`) |
 
-Host workspace tab: `pathSegment = "rules"` (see `portaki.module.json`).
+Host workspace tab: `pathSegment = "rules"` (the `main` surface's `#[surface]`).
 
 Host edits fields (icon, titles, subtitles). Storage still keeps `content_fr` / `content_en` as structured JSON internally.
 

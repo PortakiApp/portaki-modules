@@ -31,8 +31,13 @@ pub fn store_save_legacy_for_tests(content_fr: String) -> portaki_sdk::prelude::
 portaki_sdk::portaki_module!(
     id = "appliances",
     display_name_key = "module.displayName",
-    description_key = "module.description",
+    description_key = "module.catalogDescription",
     author = "Portaki",
+    author_url = "https://portaki.app",
+    module_type = "official",
+    icon = "plug",
+    maturity = "stable",
+    sort_order = 120,
 );
 
 #[portaki_sdk::capability(required, id = "core.storage")]

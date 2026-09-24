@@ -15,7 +15,14 @@ use load::{load_guest_pre_arrival, GuestLoad};
 pub use form::render_guest_form;
 
 /// Guest home card — Accueil formalities composer (police HostFragment + form task).
-#[portaki_sdk::surface(guest, id = "home.card")]
+#[portaki_sdk::surface(
+    guest,
+    id = "home.card",
+    path = "pre-arrival-form",
+    label_key = "nav.pre-arrival-form",
+    role = "arrival-formality",
+    embeds = "regulatory.police-form"
+)]
 pub fn render_home_card(ctx: GuestContext) -> Surface {
     match render_with_data(&ctx) {
         Ok(surface) => surface,

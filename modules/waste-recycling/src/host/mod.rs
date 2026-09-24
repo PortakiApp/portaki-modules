@@ -12,7 +12,14 @@ use crate::config::{bin_color_name, load_config, BinRow, Localized};
 const BIN_SLOTS: usize = 6;
 
 /// Host configuration page — bin cards + collection schedule.
-#[portaki_sdk::surface(host, id = "main")]
+#[portaki_sdk::surface(
+    host,
+    id = "main",
+    placement = "property-workspace-tab",
+    design_id = "waste-editor-v1",
+    label_key = "catalog.host.main",
+    icon = "recycle"
+)]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = Localized::lang_code(&ctx.locale);
     let config = load_config().unwrap_or_default();

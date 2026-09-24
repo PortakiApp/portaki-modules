@@ -75,5 +75,9 @@
   "stats.detail.note": "The guest chooses in their e-mail: shipping at their cost, pick-up on site, or they don't want it back. You have nothing to send.",
   "stats.detail.openStay": "Open the stay",
   "stats.detail.message": "Message the guest",
-  "stats.detail.markReturned": "Mark as returned"
+  "stats.detail.markReturned": "Mark as returned",
+  "catalog.host.create": "Declare a found item",
+  "catalog.host.lost-stats": "Lost & found",
+  "catalog.host.stay": "Declared items",
+  "email.checkout-j2.description": "Lost & found follow-up J+2 after checkout"
 }

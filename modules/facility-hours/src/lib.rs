@@ -17,8 +17,13 @@ pub use queries::get_config;
 portaki_sdk::portaki_module!(
     id = "facility-hours",
     display_name_key = "module.displayName",
-    description_key = "module.description",
+    description_key = "module.catalogDescription",
     author = "Portaki",
+    author_url = "https://portaki.app",
+    module_type = "official",
+    icon = "clock-circle",
+    maturity = "stable",
+    sort_order = 150,
 );
 
 #[portaki_sdk::capability(required, id = "core.storage")]

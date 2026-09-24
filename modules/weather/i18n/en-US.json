@@ -73,5 +73,7 @@
   "email.condition.stormy": "storms possible",
   "email.condition.foggy": "fog",
   "email.condition.variable": "variable conditions",
-  "day.strip": "{weekday} {day}"
+  "day.strip": "{weekday} {day}",
+  "module.catalogDescription": "Current conditions and a 5-day forecast for your guests.",
+  "catalog.host.main": "Weather"
 }

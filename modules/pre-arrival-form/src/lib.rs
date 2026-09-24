@@ -23,9 +23,14 @@ pub use storage::reset_test_store;
 
 portaki_sdk::portaki_module!(
     id = "pre-arrival-form",
-    display_name_key = "module.displayName",
+    display_name_key = "module.catalogName",
     description_key = "module.description",
     author = "Portaki",
+    author_url = "https://portaki.app",
+    module_type = "official",
+    icon = "clipboard",
+    maturity = "stable",
+    sort_order = 50,
 );
 
 #[portaki_sdk::capability(required, id = "core.storage")]
