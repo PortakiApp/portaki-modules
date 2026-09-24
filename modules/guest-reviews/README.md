@@ -39,11 +39,13 @@ Guest CTAs only appear for **selected and feasible** platforms — Airbnb withou
 |-------|------------|-------------|
 | guest | `home.card` | Inline thank-you + review CTAs (no overlay) |
 | host | `main` | Platform toggles, Airbnb URL, QR toggle, thank-you message |
+| host | `reviews` | `property-stats-detail`: average rating, private feedback, rating breakdown, recurring themes, recent reviews (`FeedItem`). The `property-stats-card` tile of the same key is served by `statsSummary` |
 
 ## Commands
 
 - `updateConfig` — persist host settings (validates ≥1 platform; Airbnb requires URL)
-- `submitReview` — store Portaki rating + comment in KV (requires Portaki enabled)
+- `submitReview` — store Portaki rating + comment (+ date, guest name) in KV (requires Portaki enabled)
+- `statsSummary` — tile `reviews`: average rating over the period
 
 ## Development
 
