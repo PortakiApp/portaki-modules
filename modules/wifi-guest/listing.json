@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
   "category": "stay",
   "tagline": {
     "fr": "Le nom du réseau et le mot de passe Wi-Fi, affichés au bon moment.",

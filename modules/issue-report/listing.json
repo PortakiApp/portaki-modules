@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
   "category": "stay",
   "tagline": {
     "fr": "Les voyageurs signalent un souci pendant le séjour, vous êtes prévenu aussitôt.",

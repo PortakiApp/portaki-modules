@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
   "category": "formalities",
   "tagline": {
     "fr": "Remerciez vos voyageurs en fin de séjour et récoltez leurs avis.",

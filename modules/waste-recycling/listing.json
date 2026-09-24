@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
   "category": "stay",
   "tagline": {
     "fr": "Quoi jeter dans quel bac, et quels jours sortir les poubelles.",

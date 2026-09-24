@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
   "category": "formalities",
   "tagline": {
     "fr": "Une liste de tâches de départ que les voyageurs cochent avant de partir.",
