@@ -76,5 +76,6 @@
   "stats.feed.subtitle": "Reviews left in the booklet are for you only",
   "stats.row.stars": "{count} stars",
   "stats.row.noComment": "No comment",
-  "stats.status.private": "Private"
+  "stats.status.private": "Private",
+  "host.qr.desc": "Under the button, to open the review page on a phone."
 }

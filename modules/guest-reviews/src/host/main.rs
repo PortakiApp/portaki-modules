@@ -5,7 +5,7 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{
-    Card, Field, Form, Grid, InfoBanner, Page, Stack, TextArea, TextInput, Toggle, ToggleRow,
+    Card, Field, Form, Grid, InfoBanner, Page, Stack, TextArea, TextInput, ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -76,14 +76,11 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                 .into(),
         );
         airbnb_children.push(
-            Field::new()
+            ToggleRow::new()
                 .name("show_qr_code")
                 .label("i18n:host.qr.label")
-                .child(
-                    Toggle::new()
-                        .name("show_qr_code")
-                        .checked(ctx.input_bool("show_qr_code", config.show_qr_code)),
-                )
+                .description("i18n:host.qr.desc")
+                .checked(ctx.input_bool("show_qr_code", config.show_qr_code))
                 .into(),
         );
 
@@ -122,10 +119,12 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     .with_id(crate::ids::HOST_MAIN)
 }
 
+/// `label` is an i18n key; its `.desc` sibling is the line under it.
 fn platform_toggle(name: &str, label: &str, icon: &str, checked: bool) -> Component {
     ToggleRow::new()
         .name(name)
         .label(label)
+        .description(format!("{label}.desc"))
         .icon(icon)
         .checked(checked)
         .into()
