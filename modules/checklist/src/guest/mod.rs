@@ -1,6 +1,6 @@
 //! Guest booklet surfaces.
 
-mod depart;
+pub(crate) mod depart;
 mod empty;
 mod home;
 mod load;
@@ -12,22 +12,26 @@ use empty::{empty_not_yet_card, empty_runtime_error_state, log_render_failure};
 use home::build_home_card;
 use load::{load_guest_checklist, GuestLoad};
 
-/// Guest home card — progress + inline toggles (no overlay).
+/// Guest home card — the open guest lists, progress + inline toggles (no overlay).
 #[portaki_sdk::surface(guest, id = "home.card")]
 pub fn render_home_card(ctx: GuestContext) -> Surface {
-    match render_with_data(&ctx) {
-        Ok(surface) => surface,
-        Err(error) => {
-            log_render_failure(crate::ids::HOME_CARD, &error);
-            empty_runtime_error_state(crate::ids::HOME_CARD)
-        }
-    }
+    render_card(&ctx, crate::ids::HOME_CARD, false)
 }
 
-fn render_with_data(ctx: &GuestContext) -> Result<Surface> {
-    match load_guest_checklist(ctx)? {
-        GuestLoad::Empty(surface) => Ok(*surface),
-        GuestLoad::NotYet => Ok(empty_not_yet_card(crate::ids::HOME_CARD)),
-        GuestLoad::Ready(data) => Ok(build_home_card(&data)),
-    }
+/// End-of-stay card — the departure lists, still tickable once the stay is over.
+#[portaki_sdk::surface(guest, id = "post-stay.card")]
+pub fn render_post_stay_card(ctx: GuestContext) -> Surface {
+    render_card(&ctx, crate::ids::POST_STAY_CARD, true)
+}
+
+fn render_card(ctx: &GuestContext, surface_id: SurfaceId, departure_only: bool) -> Surface {
+    let rendered = load_guest_checklist(ctx, surface_id, departure_only).map(|load| match load {
+        GuestLoad::Empty(surface) => *surface,
+        GuestLoad::NotYet => empty_not_yet_card(surface_id),
+        GuestLoad::Ready(data) => build_home_card(&data, surface_id),
+    });
+    rendered.unwrap_or_else(|error| {
+        log_render_failure(surface_id, &error);
+        empty_runtime_error_state(surface_id)
+    })
 }

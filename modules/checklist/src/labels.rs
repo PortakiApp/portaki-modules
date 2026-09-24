@@ -2,9 +2,13 @@
 
 use std::collections::BTreeMap;
 
+use portaki_sdk::contracts::i18n::I18nText;
 use serde_json::Value;
 
 use crate::entities::ChecklistItem;
+
+/// Label per language code (`fr`, `en`, …).
+pub type Labels = BTreeMap<String, String>;
 
 pub fn lang_code(locale: &str) -> String {
     let trimmed = locale.trim();
@@ -20,7 +24,7 @@ pub fn lang_code(locale: &str) -> String {
     }
 }
 
-pub fn labels_from_item(item: &ChecklistItem) -> BTreeMap<String, String> {
+pub fn labels_from_item(item: &ChecklistItem) -> Labels {
     let trimmed = item.label_fr.trim();
     if let Ok(Value::Object(map)) = serde_json::from_str::<Value>(trimmed) {
         let mut out = BTreeMap::new();
@@ -49,7 +53,7 @@ pub fn labels_from_item(item: &ChecklistItem) -> BTreeMap<String, String> {
     out
 }
 
-pub fn encode_labels(labels: &BTreeMap<String, String>) -> (String, String) {
+pub fn encode_labels(labels: &Labels) -> (String, String) {
     let cleaned: BTreeMap<String, String> = labels
         .iter()
         .filter(|(_, v)| !v.trim().is_empty())
@@ -59,11 +63,7 @@ pub fn encode_labels(labels: &BTreeMap<String, String>) -> (String, String) {
     (json, String::new())
 }
 
-pub fn pick_label(
-    labels: &BTreeMap<String, String>,
-    guest_locale: &str,
-    property_locale: &str,
-) -> String {
+pub fn pick_label(labels: &Labels, guest_locale: &str, property_locale: &str) -> String {
     let candidates = [
         lang_code(guest_locale),
         lang_code(property_locale),
@@ -90,4 +90,13 @@ pub fn pick_label(
 pub fn get_label(item: &ChecklistItem, locale: &str) -> String {
     let labels = labels_from_item(item);
     labels.get(&lang_code(locale)).cloned().unwrap_or_default()
+}
+
+/// French and English label of an item, each falling back on the other.
+pub fn i18n_label(item: &ChecklistItem) -> I18nText {
+    let labels = labels_from_item(item);
+    I18nText::new(
+        pick_label(&labels, "fr", "en"),
+        pick_label(&labels, "en", "fr"),
+    )
 }

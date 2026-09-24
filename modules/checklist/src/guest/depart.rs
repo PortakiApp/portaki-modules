@@ -32,7 +32,7 @@ fn weekday_key(weekday: Weekday) -> String {
     .to_string()
 }
 
-fn offset_for_iana(tz_name: &str, at: DateTime<Utc>) -> FixedOffset {
+pub(crate) fn offset_for_iana(tz_name: &str, at: DateTime<Utc>) -> FixedOffset {
     let name = tz_name.trim();
     if name.is_empty()
         || name.eq_ignore_ascii_case("UTC")

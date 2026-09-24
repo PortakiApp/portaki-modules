@@ -1,31 +1,25 @@
-//! Guest checklist availability from `ModuleConfig.show_when` + stay window.
+//! Guest checklist availability from the list trigger + stay window.
 
 use chrono::{DateTime, Duration, TimeZone, Utc};
 
-use crate::config::ShowWhen;
+use crate::lists;
 
-/// Whether the guest checklist should be shown right now.
+/// Whether a guest list with `trigger` should be shown right now.
+///
+/// `beforeArrival` shows from the booking, `duringStay` from the check-in day, `atDeparture`
+/// 48 h before check-out. A missing stay date fails open.
 pub fn is_checklist_available(
-    policy: ShowWhen,
+    trigger: &str,
     now: DateTime<Utc>,
     checkin_at: Option<DateTime<Utc>>,
     checkout_at: Option<DateTime<Utc>>,
 ) -> bool {
-    match policy {
-        ShowWhen::Always => true,
-        ShowWhen::FromCheckin => match checkin_at {
-            // No check-in yet — fail open so the checklist stays reachable.
-            None => true,
-            Some(checkin) => now >= start_of_utc_day(checkin),
-        },
-        ShowWhen::BeforeCheckout => match checkout_at {
-            None => true,
-            Some(checkout) => now >= checkout - Duration::hours(48),
-        },
-        ShowWhen::CheckoutDay => match checkout_at {
-            None => false,
-            Some(checkout) => now >= start_of_utc_day(checkout),
-        },
+    match trigger {
+        lists::DURING_STAY => checkin_at.is_none_or(|checkin| now >= start_of_utc_day(checkin)),
+        lists::AT_DEPARTURE => {
+            checkout_at.is_none_or(|checkout| now >= checkout - Duration::hours(48))
+        }
+        _ => true,
     }
 }
 
@@ -45,9 +39,9 @@ mod tests {
     }
 
     #[test]
-    fn always_available() {
+    fn before_arrival_always_available() {
         assert!(is_checklist_available(
-            ShowWhen::Always,
+            lists::BEFORE_ARRIVAL,
             utc("2026-07-01T10:00:00Z"),
             None,
             None
@@ -55,53 +49,38 @@ mod tests {
     }
 
     #[test]
-    fn from_checkin_opens_on_checkin_day() {
-        let checkin = utc("2026-07-20T15:00:00Z");
+    fn during_stay_opens_on_checkin_day() {
+        let checkin = Some(utc("2026-07-20T15:00:00Z"));
+        let during = lists::DURING_STAY;
         assert!(!is_checklist_available(
-            ShowWhen::FromCheckin,
+            during,
             utc("2026-07-19T23:59:00Z"),
-            Some(checkin),
+            checkin,
             None
         ));
         assert!(is_checklist_available(
-            ShowWhen::FromCheckin,
+            during,
             utc("2026-07-20T00:00:00Z"),
-            Some(checkin),
+            checkin,
             None
         ));
     }
 
     #[test]
-    fn before_checkout_opens_48h_prior() {
-        let checkout = utc("2026-07-22T11:00:00Z");
+    fn at_departure_opens_48h_prior() {
+        let checkout = Some(utc("2026-07-22T11:00:00Z"));
+        let departure = lists::AT_DEPARTURE;
         assert!(!is_checklist_available(
-            ShowWhen::BeforeCheckout,
+            departure,
             utc("2026-07-20T10:59:00Z"),
             None,
-            Some(checkout)
+            checkout
         ));
         assert!(is_checklist_available(
-            ShowWhen::BeforeCheckout,
+            departure,
             utc("2026-07-20T11:00:00Z"),
             None,
-            Some(checkout)
-        ));
-    }
-
-    #[test]
-    fn checkout_day_opens_on_checkout_day() {
-        let checkout = utc("2026-07-22T11:00:00Z");
-        assert!(!is_checklist_available(
-            ShowWhen::CheckoutDay,
-            utc("2026-07-21T23:59:00Z"),
-            None,
-            Some(checkout)
-        ));
-        assert!(is_checklist_available(
-            ShowWhen::CheckoutDay,
-            utc("2026-07-22T00:00:00Z"),
-            None,
-            Some(checkout)
+            checkout
         ));
     }
 }
