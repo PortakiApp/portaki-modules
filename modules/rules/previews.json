@@ -1,0 +1,59 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "nav.rules": "Règlement intérieur"
+      },
+      "surfaceId": "explore.detail",
+      "title": "Règlement intérieur",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "leading": "clock-circle",
+                    "subtitle": "Merci de penser au voisinage",
+                    "title": "Calme après 22 h",
+                    "type": "ListItem"
+                  },
+                  {
+                    "leading": "x",
+                    "subtitle": "Vous pouvez fumer sur la terrasse",
+                    "title": "Logement non-fumeur",
+                    "type": "ListItem"
+                  },
+                  {
+                    "leading": "users",
+                    "title": "Pas de fête ni d'événement",
+                    "type": "ListItem"
+                  },
+                  {
+                    "leading": "check-circle",
+                    "subtitle": "Prévenez-nous avant votre arrivée",
+                    "title": "Animaux bienvenus",
+                    "type": "ListItem"
+                  },
+                  {
+                    "leading": "clock-circle",
+                    "subtitle": "Laissez les clés sur la table de la cuisine",
+                    "title": "Départ avant 10 h",
+                    "type": "ListItem"
+                  }
+                ],
+                "gap": 0.0,
+                "type": "Stack"
+              }
+            ],
+            "surface": "elevated",
+            "type": "Card"
+          }
+        ],
+        "gap": 0.0,
+        "type": "Stack"
+      }
+    }
+  ]
+}

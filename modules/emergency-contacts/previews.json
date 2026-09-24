@@ -22,11 +22,11 @@
           {
             "action": {
               "type": "external",
-              "url": "tel:0600000000"
+              "url": "tel:0639981234"
             },
             "children": [
               {
-                "subtitle": "06 00 00 00 00",
+                "subtitle": "06 39 98 12 34",
                 "title": "i18n:guest.host.label",
                 "trailing": "i18n:guest.call",
                 "type": "ListItem"
@@ -59,18 +59,18 @@
           {
             "action": {
               "type": "external",
-              "url": "tel:0493000000"
+              "url": "tel:0199001234"
             },
             "children": [
               {
                 "children": [
                   {
-                    "text": "Dr Martin, sur rendez-vous",
+                    "text": "Cabinet du centre, sur rendez-vous",
                     "type": "Text",
                     "variant": "caption"
                   }
                 ],
-                "subtitle": "04 93 00 00 00",
+                "subtitle": "01 99 00 12 34",
                 "title": "Médecin généraliste",
                 "trailing": "i18n:guest.call",
                 "type": "ListItem"

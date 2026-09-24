@@ -1,0 +1,60 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "guest.copy.toast": "Mot de passe copié",
+        "guest.copyPassword": "Copier le mot de passe",
+        "guest.password": "Mot de passe",
+        "guest.security.message": "Utilisez ce Wi-Fi pour votre séjour. Ne partagez pas le mot de passe en dehors de votre groupe.",
+        "guest.security.title": "Réseau invité uniquement",
+        "guest.ssid": "Réseau",
+        "nav.wifi-guest": "Wi-Fi & codes"
+      },
+      "surfaceId": "explore.detail",
+      "title": "Wi-Fi & codes",
+      "tree": {
+        "children": [
+          {
+            "message": "i18n:guest.security.message",
+            "title": "i18n:guest.security.title",
+            "type": "InfoBanner"
+          },
+          {
+            "key": "i18n:guest.ssid",
+            "type": "KeyValue",
+            "value": "Maison-Invites"
+          },
+          {
+            "key": "i18n:guest.password",
+            "mono": true,
+            "type": "KeyValue",
+            "value": "soleil-2026"
+          },
+          {
+            "action": {
+              "toast_key": "i18n:guest.copy.toast",
+              "type": "copy",
+              "value": "soleil-2026"
+            },
+            "label": "i18n:guest.copyPassword",
+            "type": "Button",
+            "variant": "outline"
+          },
+          {
+            "text": "Le réseau 5 GHz est plus rapide dans le salon.",
+            "type": "Text",
+            "variant": "caption"
+          },
+          {
+            "text": "Choisissez « Maison-Invites » dans les réglages Wi-Fi, puis saisissez le mot de passe.",
+            "type": "Text",
+            "variant": "body"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    }
+  ]
+}

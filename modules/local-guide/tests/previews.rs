@@ -4,7 +4,7 @@
 mod previews;
 
 use local_guide::{render_explore_detail, render_upcoming_card};
-use portaki_test_utils::Property;
+
 use serde_json::json;
 
 /// Trois adresses d'exemple autour du logement fictif des fixtures (Cannes). Activités et
@@ -46,9 +46,7 @@ fn sample_config() -> Vec<u8> {
 #[test]
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
-    let context = previews::guest(root)
-        .with_property(Property::default())
-        .with_kv("config", sample_config());
+    let context = previews::guest(root).with_kv("config", sample_config());
     let detail = context.clone().run(render_explore_detail);
     let upcoming = context.run(render_upcoming_card);
     previews::check(

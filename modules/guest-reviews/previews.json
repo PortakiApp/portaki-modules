@@ -1,0 +1,104 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "guest.comment": "Un mot sur votre séjour",
+        "guest.commentPlaceholder": "Un mot sur votre séjour…",
+        "guest.rating": "Votre note",
+        "guest.submit": "Envoyer mon avis",
+        "home.card.title": "Votre avis",
+        "nav.guest-reviews": "Votre avis"
+      },
+      "surfaceId": "post-stay.card",
+      "title": "Votre avis",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "text": "Comment s'est passé votre séjour à Villa Azur ?",
+                "type": "Text",
+                "variant": "title"
+              },
+              {
+                "text": "Merci pour votre séjour ! Votre avis aide les prochains voyageurs à nous choisir.",
+                "type": "Text",
+                "variant": "body"
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "name": "rating",
+                        "options": [
+                          {
+                            "label": "★",
+                            "value": "1"
+                          },
+                          {
+                            "label": "★★",
+                            "value": "2"
+                          },
+                          {
+                            "label": "★★★",
+                            "value": "3"
+                          },
+                          {
+                            "label": "★★★★",
+                            "value": "4"
+                          },
+                          {
+                            "label": "★★★★★",
+                            "value": "5"
+                          }
+                        ],
+                        "type": "Select",
+                        "value": "5"
+                      }
+                    ],
+                    "label": "i18n:guest.rating",
+                    "name": "rating",
+                    "type": "Field"
+                  },
+                  {
+                    "children": [
+                      {
+                        "name": "comment",
+                        "placeholder": "i18n:guest.commentPlaceholder",
+                        "type": "TextArea"
+                      }
+                    ],
+                    "label": "i18n:guest.comment",
+                    "name": "comment",
+                    "type": "Field"
+                  },
+                  {
+                    "action": {
+                      "args": {
+                        "comment": "",
+                        "rating": 5
+                      },
+                      "module_id": "guest-reviews",
+                      "name": "submitReview",
+                      "type": "command"
+                    },
+                    "label": "i18n:guest.submit",
+                    "type": "Button"
+                  }
+                ],
+                "type": "Form"
+              }
+            ],
+            "gap": 12.0,
+            "type": "Stack"
+          }
+        ],
+        "icon": "star",
+        "title": "i18n:home.card.title",
+        "type": "Card"
+      }
+    }
+  ]
+}
