@@ -4,6 +4,7 @@ use portaki_sdk::files::FileRef;
 use portaki_sdk::host::email::{
     self, EmailAudience, LocalizedEmailText, ModuleEmailCta, ModuleEmailSdui, SendEmailArgs,
 };
+use portaki_sdk::host::events;
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
@@ -104,8 +105,17 @@ pub fn resolve(ctx: Context, args: ResolveArgs) -> Result<()> {
     if ctx.guest.is_some() {
         return Err(PortakiError::Host("host_only".to_string()));
     }
-    let _ = storage::resolve(args.report_id)?;
-    Ok(())
+    let report = storage::resolve(args.report_id)?;
+    // Activity log of the workspace (journal).
+    events::emit(
+        crate::ids::WORKSPACE_ACTIVITY_RECORD,
+        &serde_json::json!({
+            "eventId": "issue-report.resolved",
+            "propertyId": ctx.property_id,
+            "payload": { "reportId": report.id, "stayId": report.stay_id, "category": report.category },
+            "display": { "chips": [{ "label": "Signalement", "value": report.summary }] },
+        }),
+    )
 }
 
 fn require_summary(raw: &str) -> Result<String> {

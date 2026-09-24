@@ -1,24 +1,66 @@
-//! Property stats tab — `property-stats-card` host surface (design `tabStats` → « Signalements »).
+//! Property statistics « Signalements » — the tile (`statsSummary`) and the
+//! `property-stats-detail` surface (design `tabStats` → `issues`).
 //!
 //! The dashboard passes the selected period as `input.periodDays` (30, 90 or 365).
-//! « Avec photo » counts the period's reports that carry a guest photo. The recent reports list
-//! (with « Marquer comme résolu ») sits under the panels — the module has no config tab.
+//! « Avec photo » counts the period's reports that carry a guest photo. The recent reports feed
+//! sits under the panels — the module has no config tab.
 
 use chrono::{DateTime, Datelike, Duration, Utc};
+use portaki_sdk::contracts::stats::{self, AttentionLevel, StatsSummary, StatsSummaryArgs};
+use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{Card, Chart, EmptyState, Grid, Page, Stack, Stat};
 use portaki_sdk::sdui::surface::Surface;
 use portaki_sdk::sdui::{ChartKind, ChartPoint};
 
+use uuid::Uuid;
+
 use crate::category;
 use crate::entities::IssueReport;
-use crate::storage;
+use crate::{i18n, storage};
+
+/// Tile: reports of the period, and the open ones to handle.
+#[portaki_sdk::query(name = "statsSummary")]
+pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummary> {
+    let days = i64::from(args.period);
+    let reports = storage::list_since(time::now()? - Duration::days(days))?;
+    let open = reports.iter().filter(|r| r.resolved_at.is_none()).count();
+    let tile = stats::summary(
+        reports.len().to_string(),
+        i18n::text(&format!("stats.tile.{}", period_key(days)), &[]),
+    );
+    if open == 0 {
+        return Ok(tile);
+    }
+    let count = open.to_string();
+    Ok(tile.attention(
+        AttentionLevel::Action,
+        i18n::text("stats.tile.open", &[("count", &count)]),
+    ))
+}
+
+/// Bundle suffix of a period: 30, 90 or 365 (anything else reads as 30).
+fn period_key(days: i64) -> i64 {
+    match days {
+        90 | 365 => days,
+        _ => 30,
+    }
+}
 
 #[portaki_sdk::surface(host, id = "issue-stats")]
 pub fn render_host_stats(ctx: HostContext) -> Surface {
     let fr = ctx.locale.to_ascii_lowercase().starts_with("fr");
     let days = period_days(&ctx);
     let now = super::host_now();
+    // The dashboard re-renders this surface in its detail modal with the row's `issueId`.
+    if let Some(report) = ctx
+        .input_str("issueId")
+        .and_then(|id| Uuid::parse_str(id).ok())
+        .and_then(|id| storage::find_by_id(id).ok().flatten())
+    {
+        return Surface::new(super::report_detail(&report, &ctx.locale))
+            .with_id(crate::ids::HOST_STATS);
+    }
     let reports = storage::list_since(now - Duration::days(days)).unwrap_or_default();
 
     let delays: Vec<Duration> = reports
@@ -113,11 +155,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
 
 /// Dashboard period selector: 30 j / 90 j / 12 mois; anything else falls back to 30.
 fn period_days(ctx: &HostContext) -> i64 {
-    match ctx.input_u64("periodDays") {
-        Some(90) => 90,
-        Some(365) => 365,
-        _ => 30,
-    }
+    period_key(ctx.input_u64("periodDays").unwrap_or(30) as i64)
 }
 
 fn window_note(days: i64, fr: bool) -> String {
@@ -144,7 +182,7 @@ fn average(delays: &[Duration]) -> Option<Duration> {
 }
 
 /// « < 1 h », « 6 h », then days past 48 h (« 3 j »).
-fn format_delay(delay: Duration, fr: bool) -> String {
+pub(crate) fn format_delay(delay: Duration, fr: bool) -> String {
     let hours = delay.num_hours();
     if hours < 1 {
         "< 1 h".into()

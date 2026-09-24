@@ -14,8 +14,8 @@
     "en": "A form to report a problem by category (appliance, cleanliness, noise, access…), with a summary, details and a photo, then the list of the stay's reports."
   },
   "hostSurface": {
-    "fr": "Un onglet Signalements dans les statistiques du logement : volume, délai de résolution, catégories, puis les 20 derniers signalements, photo comprise, à marquer comme résolus. Rien à configurer, et un e-mail à chaque signalement.",
-    "en": "An Issue reports tab in the property stats: volume, time to resolve, categories, then the 20 latest reports, photos included, to mark as resolved. Nothing to set up, and an email for every report."
+    "fr": "Une tuile et une page Signalements dans les statistiques du logement : volume, délai de résolution, catégories, puis les 20 derniers signalements. Rien à configurer, et un e-mail à chaque signalement.",
+    "en": "An Issue reports tile and page in the property stats: volume, time to resolve, categories, then the 20 latest reports. Nothing to set up, and an email for every report."
   },
   "configItems": [],
   "capabilities": [],

@@ -6,8 +6,8 @@
     "en": "Report an issue"
   },
   "description": {
-    "fr": "Les voyageurs signalent un souci pendant le séjour — sans WhatsApp.",
-    "en": "Guests report a problem during the stay — no WhatsApp needed."
+    "fr": "Les voyageurs signalent un souci depuis le livret. Rien à configurer : le suivi est dans Statistiques.",
+    "en": "Guests report a problem from the booklet. Nothing to configure: follow-up is in Statistics."
   },
   "version": "0.6.0",
   "requiresModuleSdk": "6.12.0",
@@ -21,6 +21,7 @@
   "maturity": "stable",
   "permissions": [
     "email",
+    "events",
     "guest:files",
     "platform",
     "repo"
@@ -29,6 +30,15 @@
   "hostSurfaces": [
     {
       "type": "property-stats-card",
+      "pathSegment": "issue-stats",
+      "label": {
+        "fr": "Signalements",
+        "en": "Issue reports"
+      },
+      "icon": "danger-triangle"
+    },
+    {
+      "type": "property-stats-detail",
       "pathSegment": "issue-stats",
       "label": {
         "fr": "Signalements",

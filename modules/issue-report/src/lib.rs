@@ -7,6 +7,7 @@ mod email_text;
 mod entities;
 mod guest;
 mod host;
+mod i18n;
 mod ids;
 mod queries;
 mod storage;
@@ -15,7 +16,7 @@ pub use commands::{resolve, submit, ResolveArgs, SubmitArgs};
 pub use email_text::GUEST_TEXT_EMAIL_MAX_CHARS;
 pub use entities::IssueReport;
 pub use guest::{render_guest_form, render_home_card};
-pub use host::render_host_stats;
+pub use host::{render_host_stats, stats_summary};
 pub use queries::{list_for_stay, list_recent, IssueReportRow};
 pub use storage::reset_test_store;
 
