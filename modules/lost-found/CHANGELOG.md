@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.0.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v0.9.0...lost-found-v1.0.0) (2026-09-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* **lost-found:** fresh installs only. A database where lost-found is already installed keeps its old revisions; do not upgrade it to this version.
+* **checklist:** fresh installs only. A database where checklist is already installed keeps its old revisions; do not upgrade it to this version.
+
+### Features
+
+* **lost-found:** drop config, serve stats tile ([285c308](https://github.com/PortakiApp/portaki-modules/commit/285c30820005b4297f49e8dd891130b753863445))
+* **lost-found:** open guest operations explicitly ([fd7a855](https://github.com/PortakiApp/portaki-modules/commit/fd7a855848740c7088686d794748713a81629568))
+* **previews:** cover every module with guest surfaces ([0caf3cf](https://github.com/PortakiApp/portaki-modules/commit/0caf3cf90e2935b51940d8af5e9c0c3f7449631a))
+
+
+### Miscellaneous
+
+* **checklist:** squash migrations into v1 ([39a112a](https://github.com/PortakiApp/portaki-modules/commit/39a112a3bbd4204004e07621e7664e49663babb8))
+* **lost-found:** squash migrations into v1 ([dec5f31](https://github.com/PortakiApp/portaki-modules/commit/dec5f31ec5d8bd29efedef00ff7eaf1402effadf))
+
 ## [0.9.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v0.8.0...lost-found-v0.9.0) (2026-09-24)
 
 

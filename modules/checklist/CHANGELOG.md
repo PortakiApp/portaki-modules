@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.0.0](https://github.com/PortakiApp/portaki-modules/compare/checklist-v0.6.1...checklist-v1.0.0) (2026-09-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* **checklist:** fresh installs only. A database where checklist is already installed keeps its old revisions; do not upgrade it to this version.
+
+### Features
+
+* **checklist:** describe host task toggles ([59cb2ac](https://github.com/PortakiApp/portaki-modules/commit/59cb2ac76408d7511bb4aee434f1ef6d80c05142))
+* **checklist:** judge cleanings and flag unfilled lists ([d778df0](https://github.com/PortakiApp/portaki-modules/commit/d778df0701718fe8dc1c59aa2ada798e3c39232b))
+* **checklist:** open guest operations explicitly ([f073484](https://github.com/PortakiApp/portaki-modules/commit/f073484ea730f429c9603e195750638017a94e23))
+* **checklist:** turn into multi-list Checklists ([57745fb](https://github.com/PortakiApp/portaki-modules/commit/57745fb8c72710d8737702a9b5387a9cd2b94da4))
+
+
+### Bug Fixes
+
+* **checklist:** refuse guest ticks on host items ([e3953a7](https://github.com/PortakiApp/portaki-modules/commit/e3953a730d2318a20c8a5328bc927a9a2d252882))
+
+
+### Miscellaneous
+
+* **checklist:** squash migrations into v1 ([39a112a](https://github.com/PortakiApp/portaki-modules/commit/39a112a3bbd4204004e07621e7664e49663babb8))
+
 ## [0.6.1](https://github.com/PortakiApp/portaki-modules/compare/checklist-v0.6.0...checklist-v0.6.1) (2026-09-24)
 
 

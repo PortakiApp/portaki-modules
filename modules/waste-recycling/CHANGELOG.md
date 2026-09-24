@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v0.5.1...waste-recycling-v0.6.0) (2026-09-24)
+
+
+### Features
+
+* **previews:** cover every module with guest surfaces ([0caf3cf](https://github.com/PortakiApp/portaki-modules/commit/0caf3cf90e2935b51940d8af5e9c0c3f7449631a))
+
 ## [0.5.1](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v0.5.0...waste-recycling-v0.5.1) (2026-09-24)
 
 

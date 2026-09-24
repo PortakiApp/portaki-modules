@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v0.6.1...access-guide-v0.7.0) (2026-09-24)
+
+
+### Features
+
+* **access-guide:** check entry code before publish ([3eae845](https://github.com/PortakiApp/portaki-modules/commit/3eae84570cde22224bf72b747c0ac58dc28f045f))
+* **previews:** cover every module with guest surfaces ([0caf3cf](https://github.com/PortakiApp/portaki-modules/commit/0caf3cf90e2935b51940d8af5e9c0c3f7449631a))
+
 ## [0.6.1](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v0.6.0...access-guide-v0.6.1) (2026-09-24)
 
 

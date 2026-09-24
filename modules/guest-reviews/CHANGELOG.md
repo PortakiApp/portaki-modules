@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v0.5.1...guest-reviews-v0.6.0) (2026-09-24)
+
+
+### Features
+
+* **guest-reviews:** add stats tile and detail ([67d2a92](https://github.com/PortakiApp/portaki-modules/commit/67d2a92a170292093fa98b2eddb71785c220d899))
+* **guest-reviews:** describe host toggles ([80bffd4](https://github.com/PortakiApp/portaki-modules/commit/80bffd49853c3b5b0a730c547e357057eba0a90f))
+* **guest-reviews:** open guest operations explicitly ([fa5a509](https://github.com/PortakiApp/portaki-modules/commit/fa5a509e593331f916e2554df183c3d9cb3f4004))
+* **guest-reviews:** show response rate on stats detail ([25d70f0](https://github.com/PortakiApp/portaki-modules/commit/25d70f09a580d5cdb988fb56f9b755ec0f72c9bc))
+* **previews:** cover every module with guest surfaces ([0caf3cf](https://github.com/PortakiApp/portaki-modules/commit/0caf3cf90e2935b51940d8af5e9c0c3f7449631a))
+
 ## [0.5.1](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v0.5.0...guest-reviews-v0.5.1) (2026-09-24)
 
 

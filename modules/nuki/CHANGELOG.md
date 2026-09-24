@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/nuki-v0.5.1...nuki-v0.6.0) (2026-09-24)
+
+
+### Features
+
+* **nuki:** declare it feeds access-guide ([ac80359](https://github.com/PortakiApp/portaki-modules/commit/ac80359ddabe8efba612d9e180edac5d42eb89c3))
+* **nuki:** open guest operations explicitly ([fdbfc8b](https://github.com/PortakiApp/portaki-modules/commit/fdbfc8b2a96c16af14a030b1e6fb036ad6445d76))
+
+
+### Bug Fixes
+
+* **nuki:** refuse lock outside the stay window ([b4a8fb7](https://github.com/PortakiApp/portaki-modules/commit/b4a8fb7d90edb3b40860dfec1d2442d989d52c57))
+
 ## [0.5.1](https://github.com/PortakiApp/portaki-modules/compare/nuki-v0.5.0...nuki-v0.5.1) (2026-09-24)
 
 

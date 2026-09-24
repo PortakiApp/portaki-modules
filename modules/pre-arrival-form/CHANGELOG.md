@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.0.0](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v0.9.1...pre-arrival-form-v1.0.0) (2026-09-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* **pre-arrival-form:** fresh installs only. A database where pre-arrival-form is already installed keeps its old revisions; do not upgrade it to this version.
+* **checklist:** fresh installs only. A database where checklist is already installed keeps its old revisions; do not upgrade it to this version.
+
+### Features
+
+* **pre-arrival-form:** add publish readiness check ([b0cc38f](https://github.com/PortakiApp/portaki-modules/commit/b0cc38fe956d957e6f4ea27d8ba9959bd4d28d9a))
+* **pre-arrival-form:** open guest operations explicitly ([d7a54a4](https://github.com/PortakiApp/portaki-modules/commit/d7a54a45ee43c1d51358b55050f799aadfb1e55c))
+* **previews:** cover every module with guest surfaces ([0caf3cf](https://github.com/PortakiApp/portaki-modules/commit/0caf3cf90e2935b51940d8af5e9c0c3f7449631a))
+
+
+### Miscellaneous
+
+* **checklist:** squash migrations into v1 ([39a112a](https://github.com/PortakiApp/portaki-modules/commit/39a112a3bbd4204004e07621e7664e49663babb8))
+* **pre-arrival-form:** squash migrations into v1 ([6d68cad](https://github.com/PortakiApp/portaki-modules/commit/6d68cad684313cddeb5649dd69579bd57e71b3d7))
+
 ## [0.9.1](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v0.9.0...pre-arrival-form-v0.9.1) (2026-09-24)
 
 

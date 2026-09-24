@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.0.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v0.6.0...issue-report-v1.0.0) (2026-09-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* **issue-report:** fresh installs only. A database where issue-report is already installed keeps its old revisions; do not upgrade it to this version.
+* **checklist:** fresh installs only. A database where checklist is already installed keeps its old revisions; do not upgrade it to this version.
+
+### Features
+
+* **issue-report:** open guest operations explicitly ([f6b37b7](https://github.com/PortakiApp/portaki-modules/commit/f6b37b78ad716e4fc94447d9c960127a86541e88))
+* **issue-report:** serve stats tile and feed detail ([2db29ca](https://github.com/PortakiApp/portaki-modules/commit/2db29ca2c610049631967a657a439afc56d74d41))
+* **previews:** cover every module with guest surfaces ([0caf3cf](https://github.com/PortakiApp/portaki-modules/commit/0caf3cf90e2935b51940d8af5e9c0c3f7449631a))
+
+
+### Bug Fixes
+
+* **issue-report:** type submit category as enum ([77c44c5](https://github.com/PortakiApp/portaki-modules/commit/77c44c58dd6c15a6bfd2a844123dec061a5f5270))
+
+
+### Miscellaneous
+
+* **checklist:** squash migrations into v1 ([39a112a](https://github.com/PortakiApp/portaki-modules/commit/39a112a3bbd4204004e07621e7664e49663babb8))
+* **issue-report:** squash migrations into v1 ([4454b66](https://github.com/PortakiApp/portaki-modules/commit/4454b6678b2d4f04012ed3cf46bb818e00d51350))
+
 ## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v0.5.0...issue-report-v0.6.0) (2026-09-24)
 
 
