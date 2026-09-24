@@ -735,6 +735,19 @@ SUMMARY:Reserved\nDESCRIPTION:Name: Leo Martin\nEND:VEVENT\nEND:VCALENDAR\n";
             apply_feeds(ctx.clone(), feed(ics)).expect("apply");
             apply_feeds(ctx.clone(), feed("")).expect("failed run");
 
+            let tile = ical_sync::stats_summary(
+                ctx.clone(),
+                portaki_sdk::contracts::stats::StatsSummaryArgs {
+                    property_id: ctx.property_id,
+                    period: 30,
+                    key: "calendar-sync".into(),
+                },
+            )
+            .expect("statsSummary");
+            assert_eq!(tile.value, "0 min");
+            assert_eq!(tile.label.fr, "2 séjours importés");
+            assert_eq!(tile.attention.expect("conflict").text.fr, "1 conflit(s)");
+
             ctx.input = serde_json::json!({ "periodDays": 30 });
             let text = serde_json::to_value(ical_sync::render_host_stats(ctx))
                 .expect("surface json")

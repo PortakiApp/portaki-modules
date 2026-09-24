@@ -17,7 +17,8 @@ Host dashboard only — no guest booklet surfaces.
 | Type | pathSegment | Role |
 |------|-------------|------|
 | `property-module-sheet` | `ical-sync` | Config cards in the module configure sheet |
-| `property-stats-card` | `calendar-sync` | Compact card on the property stats page |
+| `property-stats-card` | `calendar-sync` | Tile served by `statsSummary`: time since the last sync, stays imported, conflicts as attention |
+| `property-stats-detail` | `calendar-sync` | Detail page: last sync, imports, conflicts, runs per day, stays per calendar |
 
 ## Scheduled / manual sync
 

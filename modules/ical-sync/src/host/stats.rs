@@ -1,4 +1,5 @@
-//! Property stats tab — `property-stats-card` host surface (design `tabStats` → « Synchro »).
+//! Property statistics « Synchro » — the tile (`statsSummary`) and the `property-stats-detail`
+//! surface (design `tabStats` → `sync`).
 //!
 //! Reads the dashboard period from `input.periodDays` (30, 90 or 365). Tiles and charts come
 //! from the KV sync snapshot: stays of the last feeds (dates, channel, email present) and the
@@ -6,6 +7,7 @@
 
 use chrono::{DateTime, Datelike, Duration, Utc};
 use portaki_sdk::contracts::booking_channel::BookingChannel;
+use portaki_sdk::contracts::stats::{self, AttentionLevel, StatsSummary, StatsSummaryArgs};
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{Card, Chart, Grid, InfoBanner, Page, Stack, Stat};
@@ -13,10 +15,50 @@ use portaki_sdk::sdui::surface::Surface;
 use portaki_sdk::sdui::{ChartKind, ChartPoint};
 
 use crate::config::load_config;
+use crate::i18n;
 use crate::sync_state::{load_sync_state, SeenStay, SyncState};
 
 /// Days shown by « Synchronisations par jour ».
 const CHART_DAYS: i64 = 14;
+
+/// Tile: time since the last sync, stays imported over the period, conflicts as attention.
+#[portaki_sdk::query(name = "statsSummary")]
+pub fn stats_summary(ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummary> {
+    let fr = ctx.locale.to_ascii_lowercase().starts_with("fr");
+    let now = time::now()?;
+    let state = load_sync_state()?;
+    let value = load_config()?
+        .last_sync_at
+        .as_deref()
+        .and_then(parse)
+        .map_or_else(|| "—".to_string(), |at| since(at, now, fr));
+    let imported = imported_since(&state, now - Duration::days(i64::from(args.period)));
+    let tile = stats::summary(
+        value,
+        i18n::text("stats.tile", &[("count", &imported.to_string())]),
+    );
+    let conflicts = count_conflicts(&upcoming(&state, now));
+    if conflicts == 0 {
+        return Ok(tile);
+    }
+    Ok(tile.attention(
+        AttentionLevel::Action,
+        i18n::text("stats.tile.conflicts", &[("count", &conflicts.to_string())]),
+    ))
+}
+
+/// Stays not over yet, with their parsed dates.
+fn upcoming(
+    state: &SyncState,
+    now: DateTime<Utc>,
+) -> Vec<(&SeenStay, DateTime<Utc>, DateTime<Utc>)> {
+    state
+        .uids
+        .values()
+        .filter_map(|s| Some((s, parse(&s.check_in_at)?, parse(&s.check_out_at)?)))
+        .filter(|(_, _, out)| *out > now)
+        .collect()
+}
 
 #[portaki_sdk::surface(host, id = "calendar-sync")]
 pub fn render_host_stats(ctx: HostContext) -> Surface {
@@ -25,12 +67,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
     let now = time::now().unwrap_or(DateTime::<Utc>::UNIX_EPOCH);
     let config = load_config().unwrap_or_default();
     let state = load_sync_state().unwrap_or_default();
-    let upcoming: Vec<(&SeenStay, DateTime<Utc>, DateTime<Utc>)> = state
-        .uids
-        .values()
-        .filter_map(|s| Some((s, parse(&s.check_in_at)?, parse(&s.check_out_at)?)))
-        .filter(|(_, _, out)| *out > now)
-        .collect();
+    let upcoming = upcoming(&state, now);
 
     let mut last_sync = Stat::new().label("i18n:stats.lastSync").value(
         config
@@ -163,6 +200,15 @@ fn relative(at: DateTime<Utc>, now: DateTime<Utc>, fr: bool) -> String {
         format!("il y a {n} {unit_fr}")
     } else {
         format!("{n} {unit_en} ago")
+    }
+}
+
+/// Tile value, at most 12 characters: « 12 min », « 3 h », « 2 j ».
+fn since(at: DateTime<Utc>, now: DateTime<Utc>, fr: bool) -> String {
+    match (now - at).num_minutes().max(0) {
+        m if m < 60 => format!("{m} min"),
+        m if m < 48 * 60 => format!("{} h", m / 60),
+        m => format!("{} {}", m / (24 * 60), if fr { "j" } else { "d" }),
     }
 }
 

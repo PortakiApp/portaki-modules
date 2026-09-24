@@ -4,7 +4,7 @@ use portaki_sdk::prelude::*;
 
 define_surface_ids! {
     HOST_MAIN = "main",
-    // property-stats-card pathSegment / Wasm surface id
+    // property-stats-card / property-stats-detail pathSegment
     HOST_STATS = "calendar-sync",
 }
 
@@ -13,6 +13,7 @@ define_operation_names! {
     UPDATE_CONFIG = "updateConfig",
     LIST_SOURCES = "listSources",
     APPLY_FEEDS = "applyFeeds",
+    STATS_SUMMARY = "statsSummary",
 }
 
 /// Catalog module id — kept for SDUI action builders.

@@ -12,7 +12,7 @@ use crate::config::{load_config, CalendarFeed, ModuleConfig, CALENDAR_SLOTS};
 
 mod stats;
 
-pub use stats::render_host_stats;
+pub use stats::{render_host_stats, stats_summary};
 
 #[portaki_sdk::surface(host, id = "main")]
 pub fn render_host_main(ctx: HostContext) -> Surface {
