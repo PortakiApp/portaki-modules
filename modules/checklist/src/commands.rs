@@ -152,14 +152,14 @@ pub struct ItemIdArgs {
     pub item_id: Uuid,
 }
 
-#[portaki_sdk::command(name = "completeItem")]
+#[portaki_sdk::command(name = "completeItem", guest)]
 pub fn complete_item(ctx: Context, args: ItemIdArgs) -> Result<()> {
     let stay_id = require_stay_id(&ctx)?;
     storage::complete_item(stay_id, args.item_id)?;
     emit_progress(ctx.property_id, stay_id)
 }
 
-#[portaki_sdk::command(name = "uncompleteItem")]
+#[portaki_sdk::command(name = "uncompleteItem", guest)]
 pub fn uncomplete_item(ctx: Context, args: ItemIdArgs) -> Result<()> {
     let stay_id = require_stay_id(&ctx)?;
     storage::uncomplete_item(stay_id, args.item_id)?;
