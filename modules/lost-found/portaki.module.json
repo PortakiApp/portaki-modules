@@ -10,7 +10,7 @@
     "en": "Declare a found item from a stay and the guest is notified. Follow-up is in Statistics."
   },
   "version": "0.9.0",
-  "requiresModuleSdk": "6.14.0",
+  "requiresModuleSdk": "6.16.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",
