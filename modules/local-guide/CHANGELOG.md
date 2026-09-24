@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.9.1...local-guide-v0.10.0) (2026-09-24)
+
+
+### Features
+
+* **previews:** cover every module with guest surfaces ([0caf3cf](https://github.com/PortakiApp/portaki-modules/commit/0caf3cf90e2935b51940d8af5e9c0c3f7449631a))
+* **previews:** render guest surfaces for the catalogue ([73dd3e5](https://github.com/PortakiApp/portaki-modules/commit/73dd3e53c3a649d2c3cb9aa6ac312bfd44d97618))
+
 ## [0.9.1](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.9.0...local-guide-v0.9.1) (2026-09-24)
 
 

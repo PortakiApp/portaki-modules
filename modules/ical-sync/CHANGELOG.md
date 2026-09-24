@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v0.7.1...ical-sync-v0.8.0) (2026-09-24)
+
+
+### Features
+
+* **ical-sync:** serve stats tile ([6fdb552](https://github.com/PortakiApp/portaki-modules/commit/6fdb552253e3520cb474ccd4fcc3536c445ab2b2))
+
 ## [0.7.1](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v0.7.0...ical-sync-v0.7.1) (2026-09-24)
 
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v0.4.1...wifi-guest-v0.5.0) (2026-09-24)
+
+
+### Features
+
+* **previews:** cover every module with guest surfaces ([0caf3cf](https://github.com/PortakiApp/portaki-modules/commit/0caf3cf90e2935b51940d8af5e9c0c3f7449631a))
+* **wifi-guest:** check network before publish ([5f9e8f1](https://github.com/PortakiApp/portaki-modules/commit/5f9e8f1cdd0dd9d0c9113bbff7e47726bb2ff7d7))
+
 ## [0.4.1](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v0.4.0...wifi-guest-v0.4.1) (2026-09-24)
 
 

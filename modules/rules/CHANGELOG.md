@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://github.com/PortakiApp/portaki-modules/compare/rules-v0.6.1...rules-v0.7.0) (2026-09-24)
+
+
+### Features
+
+* **previews:** cover every module with guest surfaces ([0caf3cf](https://github.com/PortakiApp/portaki-modules/commit/0caf3cf90e2935b51940d8af5e9c0c3f7449631a))
+* **rules:** require a rule before publish ([d086b5b](https://github.com/PortakiApp/portaki-modules/commit/d086b5b97894758cb07d3e08d24c81a075fb010f))
+
 ## [0.6.1](https://github.com/PortakiApp/portaki-modules/compare/rules-v0.6.0...rules-v0.6.1) (2026-09-24)
 
 

@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.0.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v0.5.1...consumables-v1.0.0) (2026-09-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* **consumables:** fresh installs only. A database where consumables is already installed keeps its old revisions; do not upgrade it to this version.
+* **checklist:** fresh installs only. A database where checklist is already installed keeps its old revisions; do not upgrade it to this version.
+
+### Features
+
+* **consumables:** chart shortages per stay and restock rhythm ([d3b9738](https://github.com/PortakiApp/portaki-modules/commit/d3b97388d3f52e3411b95499e707c1576d5155f9))
+* **consumables:** open guest operations explicitly ([542ca37](https://github.com/PortakiApp/portaki-modules/commit/542ca370203130687a4d000d0c70cf1a5c060b52))
+* **consumables:** serve stats tile and stock detail ([24f05eb](https://github.com/PortakiApp/portaki-modules/commit/24f05ebd1da29c59608e14b6fe49f160e0d1f8e5))
+* **previews:** cover every module with guest surfaces ([0caf3cf](https://github.com/PortakiApp/portaki-modules/commit/0caf3cf90e2935b51940d8af5e9c0c3f7449631a))
+
+
+### Bug Fixes
+
+* **consumables:** scope reports by property ([7288051](https://github.com/PortakiApp/portaki-modules/commit/728805192f45b427a9371a81cc550c3ce609bd20))
+
+
+### Miscellaneous
+
+* **checklist:** squash migrations into v1 ([39a112a](https://github.com/PortakiApp/portaki-modules/commit/39a112a3bbd4204004e07621e7664e49663babb8))
+* **consumables:** squash migrations into v1 ([8e515a4](https://github.com/PortakiApp/portaki-modules/commit/8e515a4f87e1cac72908d87e66a22c86582fda6c))
+
 ## [0.5.1](https://github.com/PortakiApp/portaki-modules/compare/consumables-v0.5.0...consumables-v0.5.1) (2026-09-24)
 
 
