@@ -135,5 +135,7 @@
   "stats.cleaning.row.doneAt": "done {date} · {time}",
   "stats.cleaning.row.lastAt": "last task {date} · {time}",
   "stats.cleaning.status.done": "Done",
-  "stats.cleaning.status.open": "In progress"
+  "stats.cleaning.status.open": "In progress",
+  "host.toggle.notifyAssignee.desc": "Notification in the mobile app, with the task list.",
+  "host.toggle.alertHost.desc": "An alert shows in To do at the deadline."
 }

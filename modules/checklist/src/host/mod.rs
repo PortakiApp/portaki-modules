@@ -217,6 +217,7 @@ fn edit_panel(list: &Checklist, items: &[&ChecklistItem], fr: bool) -> Component
             ToggleRow::new()
                 .name("notify_assignee")
                 .label("i18n:host.toggle.notifyAssignee")
+                .description("i18n:host.toggle.notifyAssignee.desc")
                 .icon("bell")
                 .checked(list.notify_assignee)
                 .into(),
@@ -225,6 +226,7 @@ fn edit_panel(list: &Checklist, items: &[&ChecklistItem], fr: bool) -> Component
             ToggleRow::new()
                 .name("alert_host")
                 .label("i18n:host.toggle.alertHost")
+                .description("i18n:host.toggle.alertHost.desc")
                 .icon("danger-triangle")
                 .checked(list.alert_host)
                 .into(),
