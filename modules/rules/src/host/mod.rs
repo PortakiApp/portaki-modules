@@ -18,7 +18,14 @@ const ITEM_SLOTS: usize = 12;
 /// Host editor — dynamic bilingual rule rows for the active `ctx.locale`.
 ///
 /// No in-form Save — workspace header owns Enregistrer → `updateConfig`.
-#[portaki_sdk::surface(host, id = "main")]
+#[portaki_sdk::surface(
+    host,
+    id = "main",
+    placement = "property-workspace-tab",
+    design_id = "rules-editor-v1",
+    label_key = "catalog.host.main",
+    icon = "scale"
+)]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = RulesBundle::lang_code(&ctx.locale);
     let row = store::load_content().ok().flatten();

@@ -29,14 +29,25 @@ fn render_card(ctx: &GuestContext, surface_id: SurfaceId) -> Surface {
 }
 
 /// Guest home card — teaser + open form overlay.
-#[portaki_sdk::surface(guest, id = "home.card")]
+#[portaki_sdk::surface(
+    guest,
+    id = "home.card",
+    path = "lost-found",
+    label_key = "nav.lost-found"
+)]
 pub fn render_home_card(ctx: GuestContext) -> Surface {
     render_card(&ctx, crate::ids::HOME_CARD)
 }
 
 /// End-of-stay card — same content as the home card, rendered on the dedicated
 /// post-stay screen once the stay is over.
-#[portaki_sdk::surface(guest, id = "post-stay.card")]
+#[portaki_sdk::surface(
+    guest,
+    id = "post-stay.card",
+    path = "post-stay",
+    label_key = "nav.lost-found",
+    role = "post-stay"
+)]
 pub fn render_post_stay_card(ctx: GuestContext) -> Surface {
     render_card(&ctx, crate::ids::POST_STAY_CARD)
 }

@@ -53,5 +53,7 @@
   "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
   "reveal.availableFrom.datetime": "{day}/{month}/{year} à {hour}:{minute}",
   "reveal.locked.withWhen": "Disponible à partir du {when}",
-  "reveal.locked.generic": "Le code barrière et le PIN borne seront disponibles à l’approche du check-in."
+  "reveal.locked.generic": "Le code barrière et le PIN borne seront disponibles à l’approche du check-in.",
+  "module.catalogDescription": "Place réservée, code barrière et PIN borne pour les voyageurs en véhicule électrique.",
+  "catalog.host.main": "Parking VE"
 }

@@ -1,7 +1,7 @@
 # Marketplace catalogue order
 
 Host marketplace and registry list sort by `maturity` then `sortOrder` (lower first).
-Declared in each module's `portaki.module.json`.
+Declared in each module's `portaki_module!(maturity = …, sort_order = …)`.
 
 ## Stable (shown first)
 

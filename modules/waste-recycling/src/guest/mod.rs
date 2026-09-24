@@ -27,7 +27,12 @@ pub fn render_home_card(ctx: GuestContext) -> Surface {
 }
 
 /// Bottom-sheet detail — enriched bins + schedule.
-#[portaki_sdk::surface(guest, id = "explore.detail")]
+#[portaki_sdk::surface(
+    guest,
+    id = "explore.detail",
+    path = "waste-recycling/detail",
+    label_key = "nav.waste-recycling"
+)]
 pub fn render_explore_detail(ctx: GuestContext) -> Surface {
     match render_with_data(&ctx, crate::ids::EXPLORE_DETAIL, build_detail_surface) {
         Ok(surface) => surface,

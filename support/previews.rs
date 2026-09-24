@@ -61,37 +61,35 @@ pub fn at(rfc3339: &str) -> DateTime<Utc> {
 
 /// Compare `previews.json` à ce que les surfaces rendent, ou le réécrit.
 ///
-/// Chaque surface voyageur du manifeste doit être rendue, et rien d'autre : un aperçu
-/// d'une surface que le livret ne sert pas mentirait sur le module.
-pub fn check(module_root: &str, rendered: Vec<(&str, Surface)>) {
+/// Chaque surface voyageur que le livret sert — un `#[surface(guest, path = …)]` — doit être
+/// rendue, et rien d'autre : un aperçu d'une surface que le livret ne sert pas mentirait sur le
+/// module.
+///
+/// `emissions` est le dossier où les macros du module ont écrit ses déclarations en compilant :
+/// `concat!(env!("OUT_DIR"), "/portaki-emissions")` depuis le test. Le manifeste n'est écrit que
+/// par `portaki build`, qui ne tourne pas avant `cargo test`.
+pub fn check(module_root: &str, emissions: &str, rendered: Vec<(&str, Surface)>) {
     let root = Path::new(module_root);
-    let manifest = read_json(&root.join("portaki.module.json"));
     let bundle = fr_bundle(module_root);
+    let declared = guest_routes(Path::new(emissions));
 
-    // Les deux formes du manifeste : `guestSurfaces[]` et `surfaces.guest[]`.
-    let declared: Vec<&Value> = manifest["guestSurfaces"]
-        .as_array()
-        .or_else(|| manifest["surfaces"]["guest"].as_array())
-        .map(|s| s.iter().collect())
-        .unwrap_or_default();
-    let ids: Vec<&str> = declared
-        .iter()
-        .filter_map(|s| s["surfaceId"].as_str())
-        .collect();
-    let got: Vec<&str> = rendered.iter().map(|(id, _)| *id).collect();
+    let mut got: Vec<&str> = rendered.iter().map(|(id, _)| *id).collect();
+    got.sort_unstable();
+    let ids: Vec<&str> = declared.keys().map(String::as_str).collect();
     assert_eq!(
         got, ids,
-        "un aperçu par surface voyageur du manifeste, dans son ordre"
+        "un aperçu par surface voyageur servie par le livret"
     );
 
     let mut ids_seen = Vec::new();
     let surfaces: Vec<Value> = rendered
         .into_iter()
-        .zip(declared)
-        .map(|((surface_id, surface), declared)| {
+        .map(|(surface_id, surface)| {
             let mut tree = serde_json::to_value(&surface.root).expect("arbre SDUI");
             stable_uuids(&mut tree, &mut ids_seen);
-            let label_key = declared["labelKey"].as_str().unwrap_or_default();
+            let label_key = declared[surface_id]["label_key"]
+                .as_str()
+                .unwrap_or_default();
             let mut keys = i18n_refs(&tree);
             keys.insert(label_key.to_string());
             let i18n: Map<String, Value> = keys
@@ -120,6 +118,26 @@ pub fn check(module_root: &str, rendered: Vec<(&str, Surface)>) {
         current == expected,
         "{FILE} ne correspond plus au rendu — PORTAKI_UPDATE_PREVIEWS=1 cargo test --test previews"
     );
+}
+
+/// Les surfaces voyageur que le livret sert, par id : celles dont le `#[surface]` donne une `path`.
+fn guest_routes(emissions: &Path) -> std::collections::BTreeMap<String, Value> {
+    fs::read_dir(emissions)
+        .expect("déclarations du module — compilé avec portaki-sdk-macros ?")
+        .flatten()
+        .filter(|entry| {
+            entry
+                .file_name()
+                .to_string_lossy()
+                .starts_with("surface-guest_")
+        })
+        .map(|entry| read_json(&entry.path()))
+        .filter(|surface| surface["catalog"]["path"].is_string())
+        .map(|surface| {
+            let id = surface["id"].as_str().unwrap_or_default().to_string();
+            (id, surface["catalog"].clone())
+        })
+        .collect()
 }
 
 fn fr_bundle(module_root: &str) -> Map<String, Value> {

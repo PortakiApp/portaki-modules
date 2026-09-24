@@ -30,9 +30,14 @@ pub use tiqets::{has_tiqets, FRESH_SECS, MAX_PRODUCTS, STALE_MAX_SECS};
 
 portaki_sdk::portaki_module!(
     id = "local-guide",
-    display_name_key = "module.displayName",
-    description_key = "module.description",
+    display_name_key = "module.catalogName",
+    description_key = "module.catalogDescription",
     author = "Portaki",
+    author_url = "https://portaki.app",
+    module_type = "official",
+    icon = "map-pin",
+    maturity = "stable",
+    sort_order = 140,
 );
 
 #[portaki_sdk::capability(required, id = "core.storage")]

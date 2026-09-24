@@ -22,5 +22,8 @@
   "module.status.incomplete.description": "Add a keypad code in the host dashboard",
   "module.status.incomplete.hint": "Open Modules → Nuki",
   "module.status.inactive.title": "Nuki module disabled",
-  "module.status.inactive.description": "This module is not active on this property"
+  "module.status.inactive.description": "This module is not active on this property",
+  "module.catalogDescription": "Nuki smart lock — keypad codes for the Access module.",
+  "feeds.access-guide": "the keypad code",
+  "catalog.host.main": "Nuki"
 }

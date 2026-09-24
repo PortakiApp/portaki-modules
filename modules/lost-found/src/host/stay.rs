@@ -25,7 +25,13 @@ fn host_now() -> chrono::DateTime<chrono::Utc> {
 /// When there are no reports, shows an empty-state card so the stay-detail tab
 /// is not blank. The stay-action « Déclarer un objet trouvé » button stays
 /// available regardless.
-#[portaki_sdk::surface(host, id = "stay")]
+#[portaki_sdk::surface(
+    host,
+    id = "stay",
+    placement = "stay-detail",
+    label_key = "catalog.host.stay",
+    icon = "search"
+)]
 pub fn render_host_stay(ctx: HostContext) -> Surface {
     let stay_id = ctx
         .input_str("stayId")

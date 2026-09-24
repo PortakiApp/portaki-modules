@@ -42,6 +42,7 @@ fn previews_match_the_rendered_surfaces() {
         });
     previews::check(
         root,
+        concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![
             ("home.card", card),
             ("guest.form", form),

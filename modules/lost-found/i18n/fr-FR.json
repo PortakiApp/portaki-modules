@@ -75,5 +75,9 @@
   "stats.detail.note": "Le voyageur choisit dans son e-mail : envoi à ses frais, récupération sur place, ou il n'en veut plus. Vous n'avez rien à renvoyer.",
   "stats.detail.openStay": "Ouvrir le séjour",
   "stats.detail.message": "Écrire au voyageur",
-  "stats.detail.markReturned": "Marquer comme rendu"
+  "stats.detail.markReturned": "Marquer comme rendu",
+  "catalog.host.create": "Déclarer un objet trouvé",
+  "catalog.host.lost-stats": "Objets trouvés",
+  "catalog.host.stay": "Objets déclarés",
+  "email.checkout-j2.description": "Relance objets perdus J+2 après départ"
 }

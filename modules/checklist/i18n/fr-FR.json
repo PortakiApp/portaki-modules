@@ -146,5 +146,9 @@
   "stats.cleaning.status.late": "En retard",
   "stats.cleaning.row.after": "Après le départ du {date}",
   "stats.cleaning.row.dueAt": "à terminer avant le {date} · {time}",
-  "stats.cleaning.row.lateBy": "fini le {date} · {time} · {delay} de retard"
+  "stats.cleaning.row.lateBy": "fini le {date} · {time} · {delay} de retard",
+  "catalog.host.checklist": "Checklist",
+  "catalog.host.cleaning": "Ménage",
+  "catalog.host.main": "Checklists",
+  "catalog.host.tasks": "Tâches"
 }

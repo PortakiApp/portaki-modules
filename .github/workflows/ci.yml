@@ -64,7 +64,7 @@ jobs:
 
       - uses: PortakiApp/portaki-release-action/install@v1
 
-      # `portaki ci modules` lit la disposition dans les manifestes et rend `modules`,
+      # `portaki ci modules` lit la disposition dans les crates et rend `modules`,
       # `any` et `reason` dans GITHUB_OUTPUT. Il remplace `changed-modules.sh` —
       # quatre-vingt-douze lignes de bash et de jq qui ne servaient que ce dépôt.
       - name: Detect changed modules
@@ -93,9 +93,9 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      # Vingt-deux endroits portent la version du SDK depuis que les manifestes la declarent :
-      # le pin du workspace, et les vingt et un `portaki.module.json`. Sans ce controle, la
-      # divergence n'apparaitrait qu'a la publication, module par module.
+      # Vingt-deux endroits portent la version du SDK : le pin du workspace, et le `Cargo.toml` de
+      # chaque module, qui l'ecrit pour que release-please attribue une montee a son chemin. Sans
+      # ce controle, la divergence n'apparaitrait qu'a la publication, module par module.
       - name: SDK pin
         run: ./scripts/check-sdk-pin.sh
 

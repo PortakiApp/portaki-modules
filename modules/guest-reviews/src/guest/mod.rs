@@ -33,7 +33,13 @@ pub fn render_home_card(ctx: GuestContext) -> Surface {
 
 /// End-of-stay card — same content as the home card, rendered on the dedicated
 /// post-stay screen once the stay is over.
-#[portaki_sdk::surface(guest, id = "post-stay.card")]
+#[portaki_sdk::surface(
+    guest,
+    id = "post-stay.card",
+    path = "post-stay",
+    label_key = "nav.guest-reviews",
+    role = "post-stay"
+)]
 pub fn render_post_stay_card(ctx: GuestContext) -> Surface {
     render_card(&ctx, crate::ids::POST_STAY_CARD)
 }

@@ -113,7 +113,14 @@ pub fn stats_summary(_ctx: Context, _args: StatsSummaryArgs) -> Result<StatsSumm
     Ok(tile.attention(AttentionLevel::Action, text))
 }
 
-#[portaki_sdk::surface(host, id = "stock")]
+#[portaki_sdk::surface(
+    host,
+    id = "stock",
+    placement = "property-stats-card",
+    placement = "property-stats-detail",
+    label_key = "catalog.host.stock",
+    icon = "package"
+)]
 pub fn render_host_stats(ctx: HostContext) -> Surface {
     let locale = ctx.locale.as_str();
     let fr = locale.to_ascii_lowercase().starts_with("fr");

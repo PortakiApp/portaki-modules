@@ -25,8 +25,17 @@ pub use queries::{
 portaki_sdk::portaki_module!(
     id = "ical-sync",
     display_name_key = "module.displayName",
-    description_key = "module.description",
+    description_key = "module.catalogDescription",
     author = "Portaki",
+    author_url = "https://portaki.app",
+    module_type = "official",
+    icon = "calendar",
+    maturity = "beta",
+    sort_order = 220,
+    audience = "host",
+    scheduled_sync_platform_fetch,
+    scheduled_sync_sources = "listSources",
+    scheduled_sync_apply = "applyFeeds",
 );
 
 #[portaki_sdk::capability(required, id = "core.storage")]

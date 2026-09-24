@@ -9,7 +9,14 @@ use crate::config::{load_config, ContactRow, Localized};
 
 const CONTACT_SLOTS: usize = 6;
 
-#[portaki_sdk::surface(host, id = "main")]
+#[portaki_sdk::surface(
+    host,
+    id = "main",
+    placement = "property-workspace-tab",
+    design_id = "emergency-editor-v1",
+    label_key = "catalog.host.main",
+    icon = "phone"
+)]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = Localized::lang_code(&ctx.locale);
     let config = load_config().unwrap_or_default();

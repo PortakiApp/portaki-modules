@@ -60,7 +60,14 @@ fn upcoming(
         .collect()
 }
 
-#[portaki_sdk::surface(host, id = "calendar-sync")]
+#[portaki_sdk::surface(
+    host,
+    id = "calendar-sync",
+    placement = "property-stats-card",
+    placement = "property-stats-detail",
+    label_key = "catalog.host.calendar-sync",
+    icon = "calendar"
+)]
 pub fn render_host_stats(ctx: HostContext) -> Surface {
     let fr = ctx.locale.to_ascii_lowercase().starts_with("fr");
     let days = period_days(&ctx);

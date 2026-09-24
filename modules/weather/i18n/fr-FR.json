@@ -73,5 +73,7 @@
   "email.condition.stormy": "orages possibles",
   "email.condition.foggy": "brume",
   "email.condition.variable": "conditions variables",
-  "day.strip": "{weekday} {day}"
+  "day.strip": "{weekday} {day}",
+  "module.catalogDescription": "Conditions actuelles et prévisions sur 5 jours pour vos voyageurs.",
+  "catalog.host.main": "Météo"
 }

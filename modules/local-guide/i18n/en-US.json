@@ -84,5 +84,8 @@
   "guest.tiqets.priceFrom": "From {price}",
   "guest.tiqets.rating": "★ {rating} ({count} reviews)",
   "guest.tiqets.attribution": "Tickets, prices and ratings provided by Tiqets.",
-  "guest.tiqets.disclosure": "Partner links: a commission may be earned on bookings, at no extra cost to you."
+  "guest.tiqets.disclosure": "Partner links: a commission may be earned on bookings, at no extra cost to you.",
+  "module.catalogName": "Local picks",
+  "module.catalogDescription": "Useful places and links, grouped by theme.",
+  "catalog.host.main": "Local picks"
 }

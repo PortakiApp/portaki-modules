@@ -90,6 +90,17 @@ pub struct SubmitArgs {
 }
 
 /// Scheduling tick / stay-created — module owns availability gate + email content.
+#[portaki_sdk::email(
+    id = "form-available",
+    audience = "guest",
+    dispatch_on_stay_created,
+    catch_up_on_property_publish,
+    catch_up_on_config_update,
+    requires_guest_email,
+    description_key = "email.form-available.description",
+    skip_when = "guest.email.missing",
+    skip_when = "stay.cancelled"
+)]
 #[portaki_sdk::command(name = "sendFormAvailable")]
 pub fn send_form_available(ctx: Context, _args: EmptyArgs) -> Result<()> {
     email_send::send_form_available(&ctx)

@@ -36,6 +36,11 @@ portaki_sdk::portaki_module!(
     display_name_key = "module.displayName",
     description_key = "module.description",
     author = "Portaki",
+    author_url = "https://portaki.app",
+    module_type = "official",
+    icon = "search",
+    maturity = "stable",
+    sort_order = 80,
 );
 
 #[portaki_sdk::capability(required, id = "core.storage")]

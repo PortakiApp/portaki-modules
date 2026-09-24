@@ -20,8 +20,13 @@ pub use queries::{get_config, publish_readiness};
 portaki_sdk::portaki_module!(
     id = "wifi-guest",
     display_name_key = "module.displayName",
-    description_key = "module.description",
+    description_key = "module.catalogDescription",
     author = "Portaki",
+    author_url = "https://portaki.app",
+    module_type = "official",
+    icon = "wifi",
+    maturity = "stable",
+    sort_order = 10,
 );
 
 #[portaki_sdk::capability(required, id = "core.storage")]

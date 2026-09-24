@@ -25,7 +25,20 @@ pub use stats::{render_stats_checklist, render_stats_cleaning, stats_summary};
 
 const SELECT_NEW: &str = "__new__";
 
-#[portaki_sdk::surface(host, id = "main")]
+#[portaki_sdk::nav(
+    placement = "workspace-timeline-task",
+    path = "tasks",
+    label_key = "catalog.host.tasks",
+    icon = "sparkles"
+)]
+#[portaki_sdk::surface(
+    host,
+    id = "main",
+    placement = "property-workspace-tab",
+    design_id = "checklist-editor-v1",
+    label_key = "catalog.host.main",
+    icon = "check-circle"
+)]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let fr = labels::lang_code(&ctx.locale) == "fr";
     let checklists = storage::list_checklists().unwrap_or_default();

@@ -67,5 +67,6 @@
   "host.detail.toResolve": "À résoudre",
   "host.detail.openStay": "Ouvrir le séjour",
   "host.detail.message": "Écrire au voyageur",
-  "host.detail.resolve": "Marquer comme résolu"
+  "host.detail.resolve": "Marquer comme résolu",
+  "catalog.host.issue-stats": "Signalements"
 }

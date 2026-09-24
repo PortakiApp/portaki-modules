@@ -50,5 +50,7 @@
   "publish.ssid.label": "Nom du réseau Wi-Fi",
   "publish.ssid.hint": "Il manque le nom du réseau Wi-Fi",
   "publish.password.label": "Mot de passe Wi-Fi",
-  "publish.password.hint": "Il manque le mot de passe, sauf si le réseau est ouvert"
+  "publish.password.hint": "Il manque le mot de passe, sauf si le réseau est ouvert",
+  "module.catalogDescription": "SSID et mot de passe Wi-Fi pour le livret, avec révélation programmée.",
+  "catalog.host.main": "Wi-Fi"
 }

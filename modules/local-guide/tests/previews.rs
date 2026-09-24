@@ -51,6 +51,7 @@ fn previews_match_the_rendered_surfaces() {
     let upcoming = context.run(render_upcoming_card);
     previews::check(
         root,
+        concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![("explore.detail", detail), ("upcoming.card", upcoming)],
     );
 }

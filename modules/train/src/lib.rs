@@ -13,6 +13,11 @@ pub use guest::{render_explore_detail, render_home_card, render_upcoming_card};
 portaki_sdk::portaki_module!(
     id = "train",
     display_name_key = "module.displayName",
-    description_key = "module.description",
+    description_key = "module.catalogDescription",
     author = "Portaki",
+    author_url = "https://portaki.app",
+    module_type = "official",
+    icon = "train",
+    maturity = "beta",
+    sort_order = 200,
 );

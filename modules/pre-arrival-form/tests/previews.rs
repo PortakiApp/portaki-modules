@@ -13,5 +13,9 @@ fn previews_match_the_rendered_surfaces() {
     let context = previews::guest(root);
     let card = context.clone().run(render_home_card);
     let form = context.run(render_guest_form);
-    previews::check(root, vec![("home.card", card), ("guest.form", form)]);
+    previews::check(
+        root,
+        concat!(env!("OUT_DIR"), "/portaki-emissions"),
+        vec![("home.card", card), ("guest.form", form)],
+    );
 }

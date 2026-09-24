@@ -79,5 +79,8 @@
   "stats.status.private": "Privé",
   "host.qr.desc": "Sous le bouton, pour ouvrir la page d'avis au téléphone.",
   "stats.responseRate": "Taux de réponse",
-  "stats.responseRate.note": "sur {count} départs"
+  "stats.responseRate.note": "sur {count} départs",
+  "module.catalogDescription": "Lien d'avis Airbnb / QR ou notation sur Portaki.",
+  "catalog.host.main": "Merci & avis",
+  "catalog.host.reviews": "Avis"
 }

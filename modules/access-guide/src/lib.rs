@@ -26,8 +26,13 @@ pub use texts::{lang_code, load_texts, ModuleTexts, StepText};
 portaki_sdk::portaki_module!(
     id = "access-guide",
     display_name_key = "module.displayName",
-    description_key = "module.description",
+    description_key = "module.catalogDescription",
     author = "Portaki",
+    author_url = "https://portaki.app",
+    module_type = "official",
+    icon = "key",
+    maturity = "stable",
+    sort_order = 20,
 );
 
 #[portaki_sdk::capability(required, id = "core.storage")]

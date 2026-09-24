@@ -37,5 +37,7 @@
   "module.status.incomplete.hint": "Required fields missing — open Modules → Recycling & waste",
   "module.status.inactive.title": "Recycling module disabled",
   "module.status.inactive.description": "This module is not active on this property",
-  "host.section.schedule": "Collection"
+  "host.section.schedule": "Collection",
+  "module.catalogDescription": "Bin by bin: what goes where, and collection days.",
+  "catalog.host.main": "Recycling"
 }

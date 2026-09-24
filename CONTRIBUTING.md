@@ -13,12 +13,16 @@ cargo install --git https://github.com/PortakiApp/portaki-sdk --branch main --lo
 
 ## Adding a module
 
-1. Create `modules/<module-id>/` with `Cargo.toml`, `portaki.module.json`, `src/`, `i18n/`, and `tests/`.
+1. Create `modules/<module-id>/` with `Cargo.toml`, `src/`, `i18n/`, and `tests/` — `portaki init`
+   does it. There is no manifest to write: `portaki build` derives it from `portaki_module!`,
+   `#[surface]`, `#[email]`, `#[nav]`, the `portaki-sdk` features (the permissions) and `i18n/`.
    `tests/conformance.rs` holds `portaki_test_utils::conformance!();` — the SDK's conformance
    battery, which `portaki publish` refuses to publish without.
-2. Keep `version` in sync between `Cargo.toml` and `portaki.module.json` (same SemVer string).
-   Add `listing.json` next to them: the public catalogue listing, published by CI with each release.
-3. Depend on workspace SDK crates (`portaki-sdk`, `portaki-connectors`, …).
+2. The version lives in `Cargo.toml` only. Add `listing.json` next to it: the public catalogue listing, published by CI with each release.
+3. Depend on `portaki-sdk` at the workspace's pinned version, written in the module's own
+   `Cargo.toml` with the features it uses (`kv`, `repo`, `email`, `events`, `platform`,
+   `guest-files`…) — `scripts/check-sdk-pin.sh` keeps the pins together. The other SDK crates
+   come from the workspace.
 4. Follow the Wasm crate layout: `ids.rs` (`define_surface_ids!` / `define_operation_names!` /
    `define_event_types!`), `guest/`, `host/` (omit if guest-only), `connectors` when needed.
    Boundary builders (`Action::command` / `open_overlay` / `emit` / `navigate`,
@@ -59,12 +63,11 @@ All user-facing copy must go through `i18n:` keys in bundles under `i18n/`. No h
 
 ## Publishing
 
-Versions are managed by **release-please** (multi-package, one entry per `modules/<id>/` that has both `Cargo.toml` and `portaki.module.json`).
+Versions are managed by **release-please** (multi-package, one entry per `modules/<id>/` crate).
 
 1. Land conventional commits on **`main`** scoped to a module (`feat(access-guide): …`, `fix(weather): …`).
 2. The `Release please` workflow opens/updates a draft release PR that bumps:
    - `modules/<id>/Cargo.toml` `package.version`
-   - `modules/<id>/portaki.module.json` `version`
    - `modules/<id>/CHANGELOG.md`
    - `.release-please-manifest.json`
 3. Merge the release PR. That push to `main` runs existing `ci` publish (GHCR) from the bumped Cargo.toml version.

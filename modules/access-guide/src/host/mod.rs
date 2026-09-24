@@ -17,7 +17,14 @@ use crate::texts::{load_texts_for_host, ModuleTexts};
 
 const STEP_SLOTS: usize = 8;
 
-#[portaki_sdk::surface(host, id = "main")]
+#[portaki_sdk::surface(
+    host,
+    id = "main",
+    placement = "property-workspace-tab",
+    design_id = "access-editor-v1",
+    label_key = "catalog.host.main",
+    icon = "key"
+)]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let config = load_config().unwrap_or_default();
     let texts = load_texts_for_host(&ctx.locale).unwrap_or_default();

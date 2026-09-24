@@ -25,7 +25,14 @@ fn host_now() -> chrono::DateTime<chrono::Utc> {
 /// Host main — catalog IndexedInputs + seed defaults + open shortage reports.
 ///
 /// Save chrome is owned by the modules sheet / workspace (`updateConfig`).
-#[portaki_sdk::surface(host, id = "main")]
+#[portaki_sdk::surface(
+    host,
+    id = "main",
+    placement = "property-workspace-tab",
+    design_id = "consumables-editor-v1",
+    label_key = "catalog.host.main",
+    icon = "package"
+)]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = lang_code(&ctx.locale);
     let items = storage::list_items().unwrap_or_default();

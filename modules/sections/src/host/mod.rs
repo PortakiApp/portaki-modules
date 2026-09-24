@@ -19,7 +19,14 @@ const SELECT_NEW: &str = "__new__";
 const LIST_ICONS: [&str; 3] = ["home", "map-pin", "star"];
 
 /// Host editor — sections list (left) + selected section form (right).
-#[portaki_sdk::surface(host, id = "main")]
+#[portaki_sdk::surface(
+    host,
+    id = "main",
+    placement = "property-workspace-tab",
+    design_id = "sections-editor-v1",
+    label_key = "catalog.host.main",
+    icon = "home"
+)]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = lang_code(&ctx.locale);
     let property_locale = ctx.property.locale.clone();

@@ -14,7 +14,13 @@ use crate::entities::PreArrivalResponse;
 use crate::storage;
 
 /// Stay detail embed — read-only pre-arrival responses for `input.stayId`.
-#[portaki_sdk::surface(host, id = "stay")]
+#[portaki_sdk::surface(
+    host,
+    id = "stay",
+    placement = "stay-detail",
+    label_key = "catalog.host.stay",
+    icon = "clipboard"
+)]
 pub fn render_host_stay(ctx: HostContext) -> Surface {
     let stay_id = ctx
         .input_str("stayId")

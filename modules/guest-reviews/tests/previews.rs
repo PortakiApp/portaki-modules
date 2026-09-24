@@ -26,5 +26,9 @@ fn previews_match_the_rendered_surfaces() {
     let card = previews::guest(root)
         .with_kv("config", sample_config())
         .run(render_post_stay_card);
-    previews::check(root, vec![("post-stay.card", card)]);
+    previews::check(
+        root,
+        concat!(env!("OUT_DIR"), "/portaki-emissions"),
+        vec![("post-stay.card", card)],
+    );
 }

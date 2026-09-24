@@ -25,5 +25,9 @@ fn previews_match_the_rendered_surfaces() {
     let detail = previews::guest(root)
         .with_kv("config", sample_config())
         .run(render_explore_detail);
-    previews::check(root, vec![("explore.detail", detail)]);
+    previews::check(
+        root,
+        concat!(env!("OUT_DIR"), "/portaki-emissions"),
+        vec![("explore.detail", detail)],
+    );
 }

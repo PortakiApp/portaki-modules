@@ -67,5 +67,6 @@
   "host.detail.toResolve": "To resolve",
   "host.detail.openStay": "Open the stay",
   "host.detail.message": "Message the guest",
-  "host.detail.resolve": "Mark as resolved"
+  "host.detail.resolve": "Mark as resolved",
+  "catalog.host.issue-stats": "Issue reports"
 }

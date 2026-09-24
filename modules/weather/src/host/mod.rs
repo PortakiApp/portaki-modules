@@ -8,7 +8,13 @@ use crate::config::load_config;
 use crate::entities::WeatherUnits;
 
 /// Host configuration surface (units + refresh cadence).
-#[portaki_sdk::surface(host, id = "main")]
+#[portaki_sdk::surface(
+    host,
+    id = "main",
+    placement = "property-module-sheet",
+    label_key = "catalog.host.main",
+    icon = "cloud-sun"
+)]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let _ = ctx;
     let config = load_config().unwrap_or_default();

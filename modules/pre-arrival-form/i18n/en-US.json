@@ -71,5 +71,9 @@
   "module.status.inactive.title": "Pre-arrival module disabled",
   "module.status.inactive.description": "This module is not active on this property",
   "publish.questions.label": "Guest questions",
-  "publish.questions.hint": "Turn on at least one form question"
+  "publish.questions.hint": "Turn on at least one form question",
+  "module.catalogName": "Pre-arrival form",
+  "catalog.host.main": "Pre-arrival form",
+  "catalog.host.stay": "Pre-arrival form",
+  "email.form-available.description": "Pre-arrival form available"
 }

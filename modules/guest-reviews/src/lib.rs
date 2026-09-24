@@ -23,8 +23,13 @@ pub use queries::get_config;
 portaki_sdk::portaki_module!(
     id = "guest-reviews",
     display_name_key = "module.displayName",
-    description_key = "module.description",
+    description_key = "module.catalogDescription",
     author = "Portaki",
+    author_url = "https://portaki.app",
+    module_type = "official",
+    icon = "star",
+    maturity = "stable",
+    sort_order = 100,
 );
 
 #[portaki_sdk::capability(required, id = "core.storage")]

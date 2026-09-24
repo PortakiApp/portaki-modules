@@ -31,5 +31,7 @@
   "module.status.incomplete.hint": "Champs requis manquants — ouvrez Modules → Horaires & accès",
   "module.status.inactive.title": "Module horaires désactivé",
   "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
-  "host.section.note": "Note générale"
+  "host.section.note": "Note générale",
+  "module.catalogDescription": "Piscine, spa, salle de sport : horaires par lieu.",
+  "catalog.host.main": "Horaires"
 }

@@ -20,8 +20,14 @@ pub use queries::get_config;
 portaki_sdk::portaki_module!(
     id = "nuki",
     display_name_key = "module.displayName",
-    description_key = "module.description",
+    description_key = "module.catalogDescription",
     author = "Portaki",
+    author_url = "https://portaki.app",
+    module_type = "official",
+    icon = "lock",
+    maturity = "beta",
+    sort_order = 230,
+    feeds = "access-guide",
 );
 
 #[portaki_sdk::capability(provided, id = "access.smart_lock")]

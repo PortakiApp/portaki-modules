@@ -37,5 +37,7 @@
   "host.section.hostPhone": "Host phone",
   "host.section.hostPhone.help": "Shown in the booklet when set.",
   "publish.host-phone.label": "Host phone number",
-  "publish.host-phone.hint": "Your phone number reachable during the stay is missing"
+  "publish.host-phone.hint": "Your phone number reachable during the stay is missing",
+  "module.catalogDescription": "Emergency numbers, pharmacy, doctor, and your direct line.",
+  "catalog.host.main": "Emergency"
 }

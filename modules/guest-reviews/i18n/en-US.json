@@ -79,5 +79,8 @@
   "stats.status.private": "Private",
   "host.qr.desc": "Under the button, to open the review page on a phone.",
   "stats.responseRate": "Response rate",
-  "stats.responseRate.note": "out of {count} check-outs"
+  "stats.responseRate.note": "out of {count} check-outs",
+  "module.catalogDescription": "Airbnb review link / QR or in-booklet Portaki rating.",
+  "catalog.host.main": "Thanks & reviews",
+  "catalog.host.reviews": "Reviews"
 }

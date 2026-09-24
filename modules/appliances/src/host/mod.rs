@@ -15,7 +15,14 @@ use crate::store;
 const SELECT_NEW: &str = "__new__";
 
 /// Host appliances editor — safety accordion (col-12) + list (col-3) / detail (col-9).
-#[portaki_sdk::surface(host, id = "main")]
+#[portaki_sdk::surface(
+    host,
+    id = "main",
+    placement = "property-workspace-tab",
+    design_id = "appliances-editor-v1",
+    label_key = "catalog.host.main",
+    icon = "plug"
+)]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let payload = store::load_payload_for(&ctx.locale, &ctx.property.locale).unwrap_or_default();
     let selected_id = ctx.input_str("selectedId").unwrap_or("").to_string();

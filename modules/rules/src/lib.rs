@@ -23,8 +23,13 @@ pub use store::reset_test_store;
 portaki_sdk::portaki_module!(
     id = "rules",
     display_name_key = "module.displayName",
-    description_key = "module.description",
+    description_key = "module.catalogDescription",
     author = "Portaki",
+    author_url = "https://portaki.app",
+    module_type = "official",
+    icon = "scale",
+    maturity = "stable",
+    sort_order = 30,
 );
 
 #[portaki_sdk::capability(required, id = "core.storage")]

@@ -26,7 +26,13 @@ pub fn render_home_card(ctx: GuestContext) -> Surface {
 }
 
 /// Compact pre-arrival prep card rendered on the guest timeline (`role: upcoming`).
-#[portaki_sdk::surface(guest, id = "upcoming.card")]
+#[portaki_sdk::surface(
+    guest,
+    id = "upcoming.card",
+    path = "upcoming",
+    label_key = "nav.train",
+    role = "upcoming"
+)]
 pub fn render_upcoming_card(ctx: GuestContext) -> Surface {
     match render_upcoming(&ctx) {
         Ok(surface) => surface,
@@ -39,7 +45,7 @@ pub fn render_upcoming_card(ctx: GuestContext) -> Surface {
 
 /// Full train page (body-only — shell supplies header). `dest` arrives via route
 /// params or the destination filter chips → `ctx.input.dest`.
-#[portaki_sdk::surface(guest, id = "explore.detail")]
+#[portaki_sdk::surface(guest, id = "explore.detail", path = "train", label_key = "nav.train")]
 pub fn render_explore_detail(ctx: GuestContext) -> Surface {
     let dest = ctx.input.get("dest").and_then(|value| value.as_str());
     let selected = normalize_destination(dest);

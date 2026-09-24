@@ -10,7 +10,14 @@ use portaki_sdk::sdui::surface::Surface;
 use crate::config::{load_config, FormQuestions, ShowWhen};
 
 /// Host main — editable pre-arrival timing + question toggles.
-#[portaki_sdk::surface(host, id = "main")]
+#[portaki_sdk::surface(
+    host,
+    id = "main",
+    placement = "property-workspace-tab",
+    design_id = "prearrival-editor-v1",
+    label_key = "catalog.host.main",
+    icon = "clipboard"
+)]
 pub fn render_host_main(_ctx: HostContext) -> Surface {
     let config = load_config().unwrap_or_default();
     let questions = &config.questions;

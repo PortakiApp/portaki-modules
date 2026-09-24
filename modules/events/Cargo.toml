@@ -12,7 +12,7 @@ publish = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-portaki-sdk = { workspace = true }
+portaki-sdk = { version = "7.0.0", features = ["kv", "platform"] }
 portaki-sdk-macros = { workspace = true }
 portaki-connectors = { workspace = true }
 serde = { workspace = true }
