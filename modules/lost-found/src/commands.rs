@@ -23,7 +23,7 @@ pub struct SubmitArgs {
     pub details: Option<String>,
 }
 
-#[portaki_sdk::command(name = "submit")]
+#[portaki_sdk::command(name = "submit", guest)]
 pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     let stay_id = require_guest_stay_id(&ctx)?;
     let kind = kind::parse_kind(&args.kind)?;
