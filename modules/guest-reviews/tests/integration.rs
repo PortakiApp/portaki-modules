@@ -375,10 +375,47 @@ fn stored_reviews_feed_the_stats() {
             assert_eq!(tile.value, "4,5 ★");
             assert_eq!(tile.label.fr, "2 avis · 30 j");
 
-            let detail = serde_json::to_string(&render_host_stats(ctx)).expect("json");
+            let detail = serde_json::to_string(&render_host_stats(ctx.clone())).expect("json");
             assert!(detail.contains("FeedItem"));
             assert!(detail.contains("i18n:stats.themes.cleanliness"));
             assert!(detail.contains("i18n:stats.themes.location"));
             assert!(!detail.contains("i18n:stats.themes.noise"));
+            // Sans les séjours de la période, pas de taux de réponse.
+            assert!(!detail.contains("i18n:stats.responseRate"));
+
+            // Quatre départs dans la période, un avant : 2 avis sur 4 départs.
+            let stays: Vec<serde_json::Value> = [2, 5, 9, 20, 45]
+                .iter()
+                .map(|days| {
+                    json!({
+                        "id": uuid_for(*days),
+                        "checkIn": chrono_like_days_ago(days + 3),
+                        "checkOut": chrono_like_days_ago(*days),
+                        "status": "COMPLETED",
+                    })
+                })
+                .collect();
+            let mut with_stays = ctx;
+            with_stays.input = json!({ "periodDays": 30, "stays": stays });
+            let detail = serde_json::to_string(&render_host_stats(with_stays)).expect("json");
+            assert!(detail.contains("i18n:stats.responseRate"));
+            assert!(detail.contains("\"50 %\""));
         });
+}
+
+/// RFC 3339 instant `days` days before now.
+#[allow(clippy::disallowed_methods)] // test natif : l'horloge du système y est disponible
+fn chrono_like_days_ago(days: i64) -> String {
+    let secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("clock")
+        .as_secs() as i64
+        - days * 86_400;
+    portaki_sdk::prelude::DateTime::<portaki_sdk::prelude::Utc>::from_timestamp(secs, 0)
+        .expect("instant")
+        .to_rfc3339()
+}
+
+fn uuid_for(days: i64) -> String {
+    format!("00000000-0000-4000-8000-{days:012}")
 }

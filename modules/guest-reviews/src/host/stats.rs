@@ -2,7 +2,8 @@
 //! surface (`reviews`), from the ratings left in the booklet.
 //!
 //! Those reviews go to the host only: all of them are private. Whether a guest then followed the
-//! Airbnb link, or how many guests were asked, is not known here.
+//! Airbnb link is not known here. The platform passes the period's stays to the detail page
+//! (`input.stays`): the response rate is the reviews of the period over its departures.
 
 use portaki_sdk::contracts::stats::{self, StatsSummary, StatsSummaryArgs};
 use portaki_sdk::host::time;
@@ -40,6 +41,23 @@ fn reviews_since(days: i64) -> Result<Vec<StoredReview>> {
         .into_iter()
         .filter(|r| r.at.is_none_or(|at| now - at.timestamp() <= days * 86_400))
         .collect())
+}
+
+/// Departures of the last `days` among the stays the platform passed; `None` when it passed none.
+fn departures(ctx: &HostContext, days: i64) -> Option<usize> {
+    #[derive(serde::Deserialize)]
+    struct Stay {
+        #[serde(rename = "checkOut")]
+        check_out: DateTime<Utc>,
+    }
+    let stays: Vec<Stay> = serde_json::from_value(ctx.input.get("stays")?.clone()).ok()?;
+    let now = time::now().ok()?.timestamp();
+    Some(
+        stays
+            .iter()
+            .filter(|stay| (0..days * 86_400).contains(&(now - stay.check_out.timestamp())))
+            .count(),
+    )
 }
 
 fn period_key(days: i64) -> i64 {
@@ -92,18 +110,30 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
     }
 
     let count = reviews.len();
-    let tiles = Grid::new().minColumnWidth(170.0).gap(12.0).children(vec![
-        Stat::new()
-            .label("i18n:stats.average")
-            .value(format!("{} / 5", average(&reviews, fr).unwrap_or_default()))
-            .delta(t!(&format!("stats.average.note.{days}"), count = count).unwrap_or_default())
-            .into(),
+    let mut tiles = vec![Stat::new()
+        .label("i18n:stats.average")
+        .value(format!("{} / 5", average(&reviews, fr).unwrap_or_default()))
+        .delta(t!(&format!("stats.average.note.{days}"), count = count).unwrap_or_default())
+        .into()];
+    if let Some(departed) = departures(&ctx, days).filter(|n| *n > 0) {
+        // ponytail: un avis laissé au début de la période peut venir d'un départ d'avant ; plafonné à 100 %.
+        let rate = (count * 100 / departed).min(100);
+        tiles.push(
+            Stat::new()
+                .label("i18n:stats.responseRate")
+                .value(format!("{rate} %"))
+                .delta(t!("stats.responseRate.note", count = departed).unwrap_or_default())
+                .into(),
+        );
+    }
+    tiles.push(
         Stat::new()
             .label("i18n:stats.private")
             .value(count.to_string())
             .delta("i18n:stats.private.note")
             .into(),
-    ]);
+    );
+    let tiles = Grid::new().minColumnWidth(170.0).gap(12.0).children(tiles);
 
     let stars = |rating: u8| reviews.iter().filter(|r| r.rating == rating).count();
     let low = reviews.iter().filter(|r| r.rating <= 2).count();
