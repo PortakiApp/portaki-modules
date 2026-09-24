@@ -135,5 +135,7 @@
   "stats.cleaning.row.doneAt": "fini le {date} · {time}",
   "stats.cleaning.row.lastAt": "dernière tâche le {date} · {time}",
   "stats.cleaning.status.done": "Fait",
-  "stats.cleaning.status.open": "En cours"
+  "stats.cleaning.status.open": "En cours",
+  "host.toggle.notifyAssignee.desc": "Notification sur l'app mobile, avec la liste des tâches.",
+  "host.toggle.alertHost.desc": "Une alerte apparaît dans À traiter à l'échéance."
 }
