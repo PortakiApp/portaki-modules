@@ -21,14 +21,15 @@ OCI image: `ghcr.io/portakiapp/portaki-modules-issue-report:<semver>`
 | Shell | Surface id | Description |
 |-------|------------|-------------|
 | guest | `home.card` | Category + summary form; list of this stay’s reports after submit |
-| host | `issue-stats` | `property-stats-card` — reports, resolved / open, resolution time and categories over `input.periodDays` (30 / 90 / 365), then the recent reports (up to 20) with « Marquer comme résolu » on open ones — no config tab |
+| host | `issue-stats` | `property-stats-detail` — reports, resolved / open, resolution time and categories over `input.periodDays` (30 / 90 / 365), then the recent reports (up to 20) as `FeedItem`s; a row opens the dashboard modal (`host.surface.overlay`), which renders this surface with `input.issueId` as the report detail — no config tab. The `property-stats-card` tile of the same key is served by `statsSummary` |
 
 ## Queries and commands
 
 - `listForStay` — reports for the current guest stay
 - `listRecent` — newest reports for the property (host)
 - `submit` — create report; emits `issue-report.submitted`
-- `resolve` — host marks a report resolved (`resolved_at`, first call wins)
+- `resolve` — host marks a report resolved (`resolved_at`, first call wins) and records `workspace-activity.record`
+- `statsSummary` — tile `issue-stats`: reports of the period, open ones as attention
 
 ## Development
 

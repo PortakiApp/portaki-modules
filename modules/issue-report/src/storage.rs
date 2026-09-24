@@ -118,7 +118,7 @@ pub fn resolve(id: Uuid) -> Result<IssueReport> {
     Ok(row)
 }
 
-fn find_by_id(id: Uuid) -> Result<Option<IssueReport>> {
+pub fn find_by_id(id: Uuid) -> Result<Option<IssueReport>> {
     if in_memory_enabled() {
         return Ok(TEST_ROWS.with(|store| store.borrow().iter().find(|row| row.id == id).cloned()));
     }

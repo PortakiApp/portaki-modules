@@ -5,10 +5,13 @@ use serial_test::serial;
 
 use issue_report::{
     list_for_stay, list_recent, render_guest_form, render_home_card, render_host_stats,
-    reset_test_store, resolve, submit, ResolveArgs, SubmitArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
+    reset_test_store, resolve, stats_summary, submit, ResolveArgs, SubmitArgs,
+    GUEST_TEXT_EMAIL_MAX_CHARS,
 };
+use portaki_sdk::contracts::stats::StatsSummaryArgs;
 use portaki_sdk::limits;
 use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
+use uuid::Uuid;
 
 #[test]
 #[serial]
@@ -108,12 +111,11 @@ fn host_stats_list_recent_after_guest_submit() {
             let surface = render_host_stats(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("Page"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("List"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("FeedItem"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("host.main.recentTitle"));
             assert!(json.contains("host.main.status.open"));
-            assert!(json.contains("danger-triangle") || json.contains("sparkles"));
+            assert!(json.contains("i18n:stats.category.cleanliness"));
         });
 }
 
@@ -175,13 +177,22 @@ fn host_stats_reflect_resolution_and_period() {
             // Second call keeps the first resolution time.
             resolve(ctx.clone(), ResolveArgs { report_id: oven.id }).expect("resolve again");
 
-            let main = serde_json::to_string(&render_host_stats(ctx)).expect("main json");
+            let main = serde_json::to_string(&render_host_stats(ctx.clone())).expect("main json");
             assert!(main.contains("host.main.status.resolved"));
-            assert_eq!(
-                main.matches("host.main.resolve").count(),
-                2,
-                "button on open rows only"
-            );
+            assert_eq!(main.matches("host.main.resolvedIn").count(), 1);
+
+            let tile = stats_summary(
+                ctx,
+                StatsSummaryArgs {
+                    property_id: Uuid::nil(),
+                    period: 30,
+                    key: "issue-stats".into(),
+                },
+            )
+            .expect("statsSummary");
+            assert_eq!(tile.value, "3");
+            assert_eq!(tile.label.fr, "signalements · 30 j");
+            assert_eq!(tile.attention.expect("open").text.fr, "2 en cours");
         });
 
     let text = render(t0 + Duration::hours(9), None);
@@ -307,11 +318,46 @@ fn a_guest_photo_reaches_the_host_screen_and_the_stats() {
         .with_property(Property::default())
         .run(|ctx| {
             let main = serde_json::to_string(&render_host_stats(ctx.clone())).expect("main json");
-            assert!(main.contains(&format!(r#""url":"{PHOTO}""#)));
-            assert!(main.contains(r#""size":"thumb""#));
+            assert!(main.contains("host.main.withPhoto"));
             let stats = serde_json::to_value(render_host_stats(ctx))
                 .expect("stats json")
                 .to_string();
             assert!(stats.contains(r#""label":"i18n:stats.withPhoto","type":"Stat","value":"1""#));
+        });
+}
+
+#[test]
+#[serial]
+fn a_feed_row_opens_the_report_detail() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            submit(
+                ctx,
+                SubmitArgs {
+                    category: "appliance".into(),
+                    summary: "Oven".into(),
+                    details: Some("Door stuck".into()),
+                    photo: None,
+                },
+            )
+            .expect("submit");
+        });
+
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|mut ctx| {
+            let feed = serde_json::to_string(&render_host_stats(ctx.clone())).expect("json");
+            assert!(feed.contains("host.surface.overlay"));
+            assert!(feed.contains("issueId"));
+
+            let report = list_recent(ctx.clone()).expect("recent").remove(0);
+            ctx.input = serde_json::json!({ "issueId": report.id, "periodDays": 30 });
+            let detail = serde_json::to_string(&render_host_stats(ctx)).expect("json");
+            assert!(detail.contains("Door stuck"));
+            assert!(detail.contains("host.detail.resolve"));
+            assert!(detail.contains(&format!("/stays/{}", report.stay_id)));
+            assert!(!detail.contains("FeedItem"));
         });
 }
