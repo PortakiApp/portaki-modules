@@ -155,6 +155,7 @@ pub struct ItemIdArgs {
 #[portaki_sdk::command(name = "completeItem", guest)]
 pub fn complete_item(ctx: Context, args: ItemIdArgs) -> Result<()> {
     let stay_id = require_stay_id(&ctx)?;
+    require_guest_item(args.item_id)?;
     storage::complete_item(stay_id, args.item_id)?;
     emit_progress(ctx.property_id, stay_id)
 }
@@ -162,8 +163,21 @@ pub fn complete_item(ctx: Context, args: ItemIdArgs) -> Result<()> {
 #[portaki_sdk::command(name = "uncompleteItem", guest)]
 pub fn uncomplete_item(ctx: Context, args: ItemIdArgs) -> Result<()> {
     let stay_id = require_stay_id(&ctx)?;
+    require_guest_item(args.item_id)?;
     storage::uncomplete_item(stay_id, args.item_id)?;
     emit_progress(ctx.property_id, stay_id)
+}
+
+/// A guest ticks only the lists written for guests, never the host's.
+fn require_guest_item(item_id: Uuid) -> Result<()> {
+    if crate::queries::guest_items()?
+        .iter()
+        .any(|item| item.id == item_id)
+    {
+        Ok(())
+    } else {
+        Err(PortakiError::Host("not_guest_item".to_string()))
+    }
 }
 
 fn require_stay_id(ctx: &Context) -> Result<Uuid> {
