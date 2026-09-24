@@ -33,5 +33,7 @@
   "module.status.incomplete.description": "Terminez la configuration du règlement dans le tableau de bord hôte",
   "module.status.incomplete.hint": "Ouvrez Modules → Règlement",
   "module.status.inactive.title": "Règlement désactivé",
-  "module.status.inactive.description": "Ce module n'est pas actif sur ce logement"
+  "module.status.inactive.description": "Ce module n'est pas actif sur ce logement",
+  "publish.rules.label": "Règles de la maison",
+  "publish.rules.hint": "Ajoutez au moins une règle"
 }

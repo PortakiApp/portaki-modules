@@ -33,5 +33,7 @@
   "module.status.incomplete.description": "Finish house rules configuration in the host dashboard",
   "module.status.incomplete.hint": "Open Modules → House rules",
   "module.status.inactive.title": "House rules disabled",
-  "module.status.inactive.description": "This module is not active on this property"
+  "module.status.inactive.description": "This module is not active on this property",
+  "publish.rules.label": "House rules",
+  "publish.rules.hint": "Add at least one rule"
 }
