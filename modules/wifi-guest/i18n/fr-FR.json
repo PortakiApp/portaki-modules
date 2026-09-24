@@ -46,5 +46,9 @@
   "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
   "reveal.availableFrom.datetime": "{day}/{month}/{year} à {hour}:{minute}",
   "reveal.locked.withWhen": "Disponible à partir du {when}",
-  "reveal.locked.generic": "Le mot de passe sera disponible à l’approche du check-in."
+  "reveal.locked.generic": "Le mot de passe sera disponible à l’approche du check-in.",
+  "publish.ssid.label": "Nom du réseau Wi-Fi",
+  "publish.ssid.hint": "Il manque le nom du réseau Wi-Fi",
+  "publish.password.label": "Mot de passe Wi-Fi",
+  "publish.password.hint": "Il manque le mot de passe, sauf si le réseau est ouvert"
 }

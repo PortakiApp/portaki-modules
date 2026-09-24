@@ -6,8 +6,8 @@ use serial_test::serial;
 use portaki_test_utils::{MockContext, SurfaceAssertions};
 use serde_json::json;
 use wifi_guest::{
-    get_config, render_explore_detail, render_home_card, render_host_main, update_config,
-    UpdateConfigArgs,
+    get_config, publish_readiness, render_explore_detail, render_home_card, render_host_main,
+    update_config, UpdateConfigArgs,
 };
 
 fn sample_config_bytes() -> Vec<u8> {
@@ -144,5 +144,23 @@ fn host_main_is_flat_drawer_form_without_cards() {
             assert!(
                 json.contains("\"tone\":\"warning\"") || json.contains("\"tone\": \"warning\"")
             );
+        });
+}
+
+#[test]
+#[serial]
+fn publish_readiness_requires_ssid_only() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            let items = publish_readiness(ctx).expect("publishReadiness").items;
+            assert!(items.iter().all(|item| !item.ok));
+        });
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv("config", sample_config_bytes())
+        .run(|ctx| {
+            let items = publish_readiness(ctx).expect("publishReadiness").items;
+            assert!(items.iter().all(|item| item.ok));
         });
 }
