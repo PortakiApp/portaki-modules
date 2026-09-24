@@ -24,7 +24,7 @@ pub const CONSUMABLE_ITEM_INDEXES: &[&str] = &["sort_order"];
 
 /// Stay-scoped guest shortage report (many per stay).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 1)]
+#[portaki_sdk::entity(schema_version = 2)]
 pub struct ConsumableReport {
     pub id: Uuid,
     pub stay_id: Uuid,
@@ -38,6 +38,9 @@ pub struct ConsumableReport {
     #[serde(default = "default_status")]
     pub status: String,
     pub created_at: DateTime<Utc>,
+    /// Set when the host marks it restocked.
+    #[serde(default)]
+    pub restocked_at: Option<DateTime<Utc>>,
 }
 
 fn default_status() -> String {

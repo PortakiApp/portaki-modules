@@ -51,8 +51,17 @@
       "type": "property-stats-card",
       "pathSegment": "stock",
       "label": {
-        "fr": "Stocks",
-        "en": "Stock"
+        "fr": "Consommables",
+        "en": "Consumables"
+      },
+      "icon": "package"
+    },
+    {
+      "type": "property-stats-detail",
+      "pathSegment": "stock",
+      "label": {
+        "fr": "Consommables",
+        "en": "Consumables"
       },
       "icon": "package"
     }

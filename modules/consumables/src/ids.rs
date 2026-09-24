@@ -17,6 +17,7 @@ define_operation_names! {
     LIST_OPEN_COUNT = "listOpenCount",
     REPLACE_ITEMS = "replaceItems",
     SEED_DEFAULTS = "seedDefaults",
+    STATS_SUMMARY = "statsSummary",
     SUBMIT = "submit",
     UPDATE_CONFIG = "updateConfig",
     UPDATE_STATUS = "updateStatus",
