@@ -137,5 +137,14 @@
   "stats.cleaning.status.done": "Done",
   "stats.cleaning.status.open": "In progress",
   "host.toggle.notifyAssignee.desc": "Notification in the mobile app, with the task list.",
-  "host.toggle.alertHost.desc": "An alert shows in To do at the deadline."
+  "host.toggle.alertHost.desc": "An alert shows in To do at the deadline.",
+  "stats.checklist.row.stay": "Stay from {from} to {to}",
+  "stats.checklist.row.departure": "checked out on {date}",
+  "stats.checklist.status.unfilled": "Not filled",
+  "stats.cleaning.onTime": "Done on time",
+  "stats.cleaning.onTime.note": "before the next arrival",
+  "stats.cleaning.status.late": "Late",
+  "stats.cleaning.row.after": "After the {date} check-out",
+  "stats.cleaning.row.dueAt": "to finish before {date} · {time}",
+  "stats.cleaning.row.lateBy": "finished on {date} · {time} · {delay} late"
 }

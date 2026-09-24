@@ -137,5 +137,14 @@
   "stats.cleaning.status.done": "Fait",
   "stats.cleaning.status.open": "En cours",
   "host.toggle.notifyAssignee.desc": "Notification sur l'app mobile, avec la liste des tâches.",
-  "host.toggle.alertHost.desc": "Une alerte apparaît dans À traiter à l'échéance."
+  "host.toggle.alertHost.desc": "Une alerte apparaît dans À traiter à l'échéance.",
+  "stats.checklist.row.stay": "Séjour du {from} au {to}",
+  "stats.checklist.row.departure": "départ le {date}",
+  "stats.checklist.status.unfilled": "Non remplie",
+  "stats.cleaning.onTime": "Faits à temps",
+  "stats.cleaning.onTime.note": "avant l'arrivée suivante",
+  "stats.cleaning.status.late": "En retard",
+  "stats.cleaning.row.after": "Après le départ du {date}",
+  "stats.cleaning.row.dueAt": "à terminer avant le {date} · {time}",
+  "stats.cleaning.row.lateBy": "fini le {date} · {time} · {delay} de retard"
 }
