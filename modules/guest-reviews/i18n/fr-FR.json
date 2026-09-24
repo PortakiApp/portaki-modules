@@ -76,5 +76,6 @@
   "stats.feed.subtitle": "Les avis laissés dans le livret vous sont réservés",
   "stats.row.stars": "{count} étoiles",
   "stats.row.noComment": "Sans commentaire",
-  "stats.status.private": "Privé"
+  "stats.status.private": "Privé",
+  "host.qr.desc": "Sous le bouton, pour ouvrir la page d'avis au téléphone."
 }
