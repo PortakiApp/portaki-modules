@@ -9,7 +9,7 @@ use uuid::Uuid;
 ///
 /// Wire values of `audience`, `trigger`, `placement` and `deadline` live in [`crate::lists`].
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 3)]
+#[portaki_sdk::entity(schema_version = 1)]
 pub struct Checklist {
     pub id: Uuid,
     pub name_fr: String,
@@ -39,7 +39,7 @@ pub const CHECKLIST_INDEXES: &[&str] = &["sort_order"];
 /// `label_fr` holds the JSON map of every language (`{"fr": …, "en": …}`), `label_en` the legacy
 /// English label — see [`crate::labels`].
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 3)]
+#[portaki_sdk::entity(schema_version = 1)]
 pub struct ChecklistItem {
     pub id: Uuid,
     pub checklist_id: Uuid,
@@ -60,7 +60,7 @@ pub const CHECKLIST_ITEM_INDEXES: &[&str] = &["checklist_id", "sort_order"];
 /// `property_id` is injected by typed-repo from invocation context; kept in the
 /// schema so SELECT/INSERT/DELETE with `WHERE property_id = …` succeed.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 2)]
+#[portaki_sdk::entity(schema_version = 1)]
 pub struct ChecklistCompletion {
     pub id: Uuid,
     pub stay_id: Uuid,
@@ -75,7 +75,7 @@ pub const CHECKLIST_COMPLETION_INDEXES: &[&str] = &["stay_id", "item_id"];
 /// Ticked state of one item of a host task. Tasks are computed from the stays; only this is
 /// stored.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 3)]
+#[portaki_sdk::entity(schema_version = 1)]
 pub struct TaskItemState {
     pub id: Uuid,
     /// `<checklistId>:<stayId>`.
