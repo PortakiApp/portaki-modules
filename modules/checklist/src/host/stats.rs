@@ -1,14 +1,16 @@
 //! Statistics — tiles (`statsSummary`) and details for « Checklist » (guest lists) and
 //! « Ménage » (host cleaning lists).
 //!
-//! Only what the module stores is shown: guest ticks per stay, host ticks per task. The module
-//! does not see the stays themselves, so a stay that never opened its list, a guest name or
-//! the task deadline are not known here.
+//! Only what the module stores is shown: guest ticks per stay, host ticks per task. The platform
+//! passes the period's stays to the detail page (`input.stays` — dates and status, no guest name):
+//! with them, a stay that never opened its list shows as « Non remplie » and a cleaning is judged
+//! against its deadline. Without them (developer preview, older platform), both stay unknown.
 
 use std::collections::BTreeMap;
 
 use chrono::{DateTime, Duration, Utc};
 use portaki_sdk::contracts::stats::{self, AttentionLevel, StatsSummary, StatsSummaryArgs};
+use portaki_sdk::contracts::timeline::TimelineStay;
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{Card, Chart, EmptyState, FeedItem, Grid, Page, Stack, Stat};
@@ -19,7 +21,7 @@ use uuid::Uuid;
 use crate::entities::{Checklist, ChecklistItem, TaskItemState};
 use crate::labels;
 use crate::lists;
-use crate::tasks::parse_task_id;
+use crate::tasks::{parse_task_id, plan_tasks, task_id};
 use crate::{i18n, storage};
 
 #[portaki_sdk::query(name = "statsSummary")]
@@ -72,6 +74,33 @@ fn period_days(ctx: &HostContext) -> i64 {
     }
 }
 
+/// The period's stays the platform passes to the detail page, oldest first; `None` when it sends
+/// none (developer preview, older platform).
+fn period_stays(ctx: &HostContext) -> Option<Vec<TimelineStay>> {
+    #[derive(serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Raw {
+        id: Uuid,
+        check_in: DateTime<Utc>,
+        check_out: DateTime<Utc>,
+        #[serde(default)]
+        status: String,
+    }
+    let raw: Vec<Raw> = serde_json::from_value(ctx.input.get("stays")?.clone()).ok()?;
+    let mut stays: Vec<TimelineStay> = raw
+        .into_iter()
+        .map(|stay| TimelineStay {
+            id: stay.id,
+            check_in: stay.check_in,
+            check_out: stay.check_out,
+            guest_name: String::new(),
+            status: stay.status,
+        })
+        .collect();
+    stays.sort_by_key(|stay| stay.check_in);
+    Some(stays)
+}
+
 // --- Checklist (guest) ----------------------------------------------------------------------
 
 /// Guest ticks of one stay over the guest items that still exist.
@@ -79,6 +108,8 @@ struct GuestStay {
     ticked: Vec<Uuid>,
     total: usize,
     last_at: DateTime<Utc>,
+    /// `(check-in, check-out)` when the platform passed the stay.
+    window: Option<(DateTime<Utc>, DateTime<Utc>)>,
 }
 
 impl GuestStay {
@@ -91,8 +122,8 @@ fn complete_count(stays: &[GuestStay]) -> usize {
     stays.iter().filter(|stay| stay.complete()).count()
 }
 
-/// Stays that ticked something since `since`, newest first.
-fn guest_stays(since: DateTime<Utc>) -> Result<Vec<GuestStay>> {
+/// Guest ticks per stay since `since`.
+fn ticks_by_stay(since: DateTime<Utc>) -> Result<BTreeMap<Uuid, GuestStay>> {
     let items = crate::queries::guest_items()?;
     let mut by_stay: BTreeMap<Uuid, GuestStay> = BTreeMap::new();
     for row in storage::list_completions(None)? {
@@ -103,13 +134,46 @@ fn guest_stays(since: DateTime<Utc>) -> Result<Vec<GuestStay>> {
             ticked: Vec::new(),
             total: items.len(),
             last_at: row.completed_at,
+            window: None,
         });
         stay.ticked.push(row.item_id);
         stay.last_at = stay.last_at.max(row.completed_at);
     }
-    let mut stays: Vec<GuestStay> = by_stay.into_values().collect();
+    Ok(by_stay)
+}
+
+/// Stays that ticked something since `since`, newest first.
+fn guest_stays(since: DateTime<Utc>) -> Result<Vec<GuestStay>> {
+    let mut stays: Vec<GuestStay> = ticks_by_stay(since)?.into_values().collect();
     stays.sort_by_key(|stay| std::cmp::Reverse(stay.last_at));
     Ok(stays)
+}
+
+/// Every departure of `(since, now]`, newest first, with what its guest ticked — none for a list
+/// never opened. Ticks are read from a week before the period: a guest ticks during the stay.
+fn departures(
+    stays: &[TimelineStay],
+    mut ticks: BTreeMap<Uuid, GuestStay>,
+    total: usize,
+    since: DateTime<Utc>,
+    now: DateTime<Utc>,
+) -> Vec<GuestStay> {
+    let mut out: Vec<GuestStay> = stays
+        .iter()
+        .filter(|stay| stay.check_out > since && stay.check_out <= now)
+        .map(|stay| {
+            let mut guest = ticks.remove(&stay.id).unwrap_or(GuestStay {
+                ticked: Vec::new(),
+                total,
+                last_at: stay.check_out,
+                window: None,
+            });
+            guest.window = Some((stay.check_in, stay.check_out));
+            guest
+        })
+        .collect();
+    out.sort_by_key(|stay| std::cmp::Reverse(stay.window.map(|(_, out)| out)));
+    out
 }
 
 #[portaki_sdk::surface(host, id = "checklist")]
@@ -118,7 +182,16 @@ pub fn render_stats_checklist(ctx: HostContext) -> Surface {
     let since = now - Duration::days(period_days(&ctx));
     let fr = labels::lang_code(&ctx.locale) == "fr";
     let items = crate::queries::guest_items().unwrap_or_default();
-    let stays = guest_stays(since).unwrap_or_default();
+    let stays = match period_stays(&ctx) {
+        Some(period) => departures(
+            &period,
+            ticks_by_stay(since - Duration::days(30)).unwrap_or_default(),
+            items.len(),
+            since,
+            now,
+        ),
+        None => guest_stays(since).unwrap_or_default(),
+    };
 
     let body: Component = if stays.is_empty() {
         empty("i18n:stats.checklist.empty", "check-circle")
@@ -165,17 +238,33 @@ pub fn render_stats_checklist(ctx: HostContext) -> Surface {
             .map(|stay| {
                 let (label, tone) = if stay.complete() {
                     ("i18n:stats.checklist.status.complete", Tone::Success)
+                } else if stay.ticked.is_empty() {
+                    ("i18n:stats.checklist.status.unfilled", Tone::Neutral)
                 } else {
                     ("i18n:stats.checklist.status.incomplete", Tone::Warning)
                 };
-                FeedItem::new()
-                    .title(
-                        t!(
-                            "stats.checklist.row.title",
-                            date = short_date(stay.last_at, fr)
-                        )
-                        .unwrap_or_default(),
+                let title = match stay.window {
+                    Some((check_in, check_out)) => t!(
+                        "stats.checklist.row.stay",
+                        from = short_date(check_in, fr),
+                        to = short_date(check_out, fr)
+                    ),
+                    None => t!(
+                        "stats.checklist.row.title",
+                        date = short_date(stay.last_at, fr)
+                    ),
+                }
+                .unwrap_or_default();
+                let date = match stay.window {
+                    Some((_, check_out)) => t!(
+                        "stats.checklist.row.departure",
+                        date = short_date(check_out, fr)
                     )
+                    .unwrap_or_default(),
+                    None => format_time(stay.last_at),
+                };
+                FeedItem::new()
+                    .title(title)
                     .meta(
                         t!(
                             "stats.checklist.row.meta",
@@ -184,7 +273,7 @@ pub fn render_stats_checklist(ctx: HostContext) -> Surface {
                         )
                         .unwrap_or_default(),
                     )
-                    .date(format_time(stay.last_at))
+                    .date(date)
                     .dotTone(tone)
                     .status(FeedStatus::new(label, tone))
                     .into()
@@ -227,11 +316,35 @@ struct CleaningTask<'a> {
     list: &'a Checklist,
     items: Vec<&'a ChecklistItem>,
     done: Vec<&'a TaskItemState>,
+    /// `(departure, deadline)` when the platform passed the stays.
+    plan: Option<(DateTime<Utc>, Option<DateTime<Utc>>)>,
+}
+
+/// Where a cleaning stands against its deadline.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Timing {
+    Open,
+    OnTime,
+    /// Finished after its deadline, or not finished once it has passed.
+    Late,
 }
 
 impl CleaningTask<'_> {
     fn finished(&self) -> bool {
         self.done.len() >= self.items.len()
+    }
+
+    fn deadline(&self) -> Option<DateTime<Utc>> {
+        self.plan.and_then(|(_, due)| due)
+    }
+
+    fn timing(&self, now: DateTime<Utc>) -> Timing {
+        match (self.finished(), self.deadline(), self.last_at()) {
+            (true, Some(due), Some(at)) if at > due => Timing::Late,
+            (true, _, _) => Timing::OnTime,
+            (false, Some(due), _) if now > due => Timing::Late,
+            (false, _, _) => Timing::Open,
+        }
     }
 
     fn first_at(&self) -> Option<DateTime<Utc>> {
@@ -292,6 +405,7 @@ fn cleaning_tasks_of(data: &CleaningData, since: DateTime<Utc>) -> Vec<CleaningT
                     .filter(|item| item.checklist_id == list.id)
                     .collect(),
                 done: Vec::new(),
+                plan: None,
             });
         if task.items.iter().any(|item| item.id == state.item_id) {
             task.done.push(state);
@@ -302,6 +416,51 @@ fn cleaning_tasks_of(data: &CleaningData, since: DateTime<Utc>) -> Vec<CleaningT
         .filter(|task| task.last_at().is_some_and(|at| at >= since))
         .collect();
     tasks.sort_by_key(|task| std::cmp::Reverse(task.last_at()));
+    tasks
+}
+
+/// One task per departure of `(since, now]` the list's trigger applies to — ticked or not — with
+/// its deadline, most recent departure first.
+fn planned_cleanings<'a>(
+    data: &'a CleaningData,
+    stays: &[TimelineStay],
+    timezone: &str,
+    since: DateTime<Utc>,
+    now: DateTime<Utc>,
+) -> Vec<CleaningTask<'a>> {
+    let mut tasks = Vec::new();
+    for list in &data.lists {
+        let items: Vec<&ChecklistItem> = data
+            .items
+            .iter()
+            .filter(|item| item.checklist_id == list.id)
+            .collect();
+        if items.is_empty() {
+            continue;
+        }
+        for plan in plan_tasks(list, stays, timezone) {
+            if plan.at <= since || plan.at > now {
+                continue;
+            }
+            let id = task_id(list.id, plan.stay_id);
+            let done = data
+                .states
+                .iter()
+                .filter(|state| {
+                    state.done
+                        && state.task_id == id
+                        && items.iter().any(|item| item.id == state.item_id)
+                })
+                .collect();
+            tasks.push(CleaningTask {
+                list,
+                items: items.clone(),
+                done,
+                plan: Some((plan.at, plan.due_at)),
+            });
+        }
+    }
+    tasks.sort_by_key(|task| std::cmp::Reverse(task.plan.map(|(at, _)| at)));
     tasks
 }
 
@@ -316,7 +475,11 @@ pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
         items: Vec::new(),
         states: Vec::new(),
     });
-    let tasks = cleaning_tasks_of(&data, since);
+    let tasks = match period_stays(&ctx) {
+        Some(stays) => planned_cleanings(&data, &stays, &ctx.property.timezone, since, now),
+        None => cleaning_tasks_of(&data, since),
+    };
+    let judged = tasks.iter().any(|task| task.deadline().is_some());
 
     let body: Component = if tasks.is_empty() {
         empty("i18n:stats.cleaning.empty", "sparkles")
@@ -341,18 +504,34 @@ pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
         });
         let with_photo = finished.iter().filter(|task| task.photos() > 0).count();
 
-        let mut tiles = vec![
+        // « À temps » sur les ménages déjà tranchés : finis, ou dont l'échéance est passée.
+        let decided: Vec<Timing> = tasks
+            .iter()
+            .map(|task| task.timing(now))
+            .filter(|timing| *timing != Timing::Open)
+            .collect();
+        let on_time = decided
+            .iter()
+            .filter(|timing| **timing == Timing::OnTime)
+            .count();
+        let mut tiles = vec![if judged {
+            Stat::new()
+                .label("i18n:stats.cleaning.onTime")
+                .value(percent(on_time, decided.len()))
+                .delta("i18n:stats.cleaning.onTime.note")
+                .into()
+        } else {
             Stat::new()
                 .label("i18n:stats.cleaning.done")
                 .value(percent(finished.len(), tasks.len()))
                 .delta(t!("stats.cleaning.done.note", count = tasks.len()).unwrap_or_default())
-                .into(),
-            Stat::new()
-                .label("i18n:stats.cleaning.duration")
-                .value(average(&durations).map_or_else(|| "—".to_string(), format_duration))
-                .delta("i18n:stats.cleaning.duration.note")
-                .into(),
-        ];
+                .into()
+        }];
+        tiles.extend([Stat::new()
+            .label("i18n:stats.cleaning.duration")
+            .value(average(&durations).map_or_else(|| "—".to_string(), format_duration))
+            .delta("i18n:stats.cleaning.duration.note")
+            .into()]);
         tiles.extend(most_forgotten(&rates, tasks.len(), fr, "stats.cleaning"));
         tiles.push(
             Stat::new()
@@ -367,18 +546,11 @@ pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
             .take(10)
             .map(|task| {
                 let at = task.last_at().unwrap_or(now);
-                let (label, tone, date_key) = if task.finished() {
-                    (
-                        "i18n:stats.cleaning.status.done",
-                        Tone::Success,
-                        "stats.cleaning.row.doneAt",
-                    )
-                } else {
-                    (
-                        "i18n:stats.cleaning.status.open",
-                        Tone::Warning,
-                        "stats.cleaning.row.lastAt",
-                    )
+                let timing = task.timing(now);
+                let (label, tone) = match timing {
+                    Timing::OnTime => ("i18n:stats.cleaning.status.done", Tone::Success),
+                    Timing::Late => ("i18n:stats.cleaning.status.late", Tone::Danger),
+                    Timing::Open => ("i18n:stats.cleaning.status.open", Tone::Warning),
                 };
                 let name = if fr {
                     &task.list.name_fr
@@ -397,13 +569,18 @@ pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
                 if task.photos() > 0 {
                     meta.push_str(&t!("stats.cleaning.row.photo").unwrap_or_default());
                 }
+                let title = match task.plan {
+                    Some((departure, _)) => {
+                        t!("stats.cleaning.row.after", date = short_date(departure, fr))
+                            .unwrap_or_default()
+                    }
+                    None => format!("{name} · {}", short_date(at, fr)),
+                };
+                let date = cleaning_date(task, timing, at, fr).unwrap_or_default();
                 FeedItem::new()
-                    .title(format!("{name} · {}", short_date(at, fr)))
+                    .title(title)
                     .meta(meta)
-                    .date(
-                        t!(date_key, date = short_date(at, fr), time = format_time(at))
-                            .unwrap_or_default(),
-                    )
+                    .date(date)
                     .dotTone(tone)
                     .status(FeedStatus::new(label, tone))
                     .into()
@@ -430,6 +607,32 @@ pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
             .into()
     };
     Surface::new(Page::new().child(body)).with_id(crate::ids::STATS_CLEANING)
+}
+
+/// « fini le 9 août · 13:20 », « … · 40 min de retard », « à terminer avant le 21 août · 14:00 ».
+fn cleaning_date(
+    task: &CleaningTask<'_>,
+    timing: Timing,
+    at: DateTime<Utc>,
+    fr: bool,
+) -> Result<String> {
+    let (date, time) = (short_date(at, fr), format_time(at));
+    match (task.finished(), task.deadline(), task.done.is_empty()) {
+        (true, Some(due), _) if timing == Timing::Late => t!(
+            "stats.cleaning.row.lateBy",
+            date = date,
+            time = time,
+            delay = format_duration(at - due)
+        ),
+        (true, _, _) => t!("stats.cleaning.row.doneAt", date = date, time = time),
+        (false, Some(due), _) => t!(
+            "stats.cleaning.row.dueAt",
+            date = short_date(due, fr),
+            time = format_time(due)
+        ),
+        (false, None, true) => Ok(String::new()),
+        (false, None, false) => t!("stats.cleaning.row.lastAt", date = date, time = time),
+    }
 }
 
 /// Finished tasks per week (30 and 90 days) or per month (12 months).

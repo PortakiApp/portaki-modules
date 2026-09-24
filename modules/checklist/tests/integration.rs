@@ -304,3 +304,94 @@ fn guest_ticks_feed_the_checklist_stats() {
             assert!(json.contains("stats.checklist.forgotten"));
         });
 }
+
+/// The period's stays as the platform passes them to a stats detail: dates and status, no name.
+fn with_period_stays(mut ctx: Context, stays: &[TimelineStay]) -> Context {
+    ctx.input = json!({
+        "periodDays": 30,
+        "stays": stays
+            .iter()
+            .map(|stay| json!({
+                "id": stay.id,
+                "checkIn": stay.check_in,
+                "checkOut": stay.check_out,
+                "status": stay.status,
+            }))
+            .collect::<Vec<Value>>(),
+    });
+    ctx
+}
+
+#[test]
+#[serial]
+fn a_cleaning_is_judged_against_the_next_arrival() {
+    reset_test_store();
+    MockContext::host().run(|ctx| {
+        create(&ctx, "cleaning");
+        let now = Utc::now();
+        let stay = |days_in: i64, days_out: i64| TimelineStay {
+            id: Uuid::new_v4(),
+            check_in: now + Duration::days(days_in),
+            check_out: now + Duration::days(days_out),
+            guest_name: String::new(),
+            status: "COMPLETED".into(),
+        };
+        let stays = vec![stay(-14, -10), stay(-8, -5), stay(2, 5)];
+
+        // The cleaning after the first departure is ticked now, days after the next arrival.
+        let tasks = timeline_tasks(
+            ctx.clone(),
+            TimelineTasksArgs {
+                property_id: Uuid::nil(),
+                from: now - Duration::days(30),
+                to: now,
+                stays: stays.clone(),
+            },
+        )
+        .expect("tasks")
+        .tasks;
+        let late = &tasks[0];
+        let photo = format!("portaki-file:{}", Uuid::new_v4());
+        for item in &late.items {
+            task_toggle(
+                ctx.clone(),
+                TaskToggleArgs {
+                    property_id: Uuid::nil(),
+                    task_id: late.id.clone(),
+                    item_id: item.id.clone(),
+                    done: true,
+                    photo: item.photo_required.then(|| photo.clone()),
+                },
+            )
+            .expect("tick");
+        }
+
+        let json = json_of(&render_stats_cleaning(with_period_stays(ctx, &stays)));
+        // Late for the first, still open for the second (its deadline is ahead); on time: none.
+        assert!(json.contains("stats.cleaning.status.late"));
+        assert!(json.contains("stats.cleaning.status.open"));
+        assert!(!json.contains("stats.cleaning.status.done"));
+        assert!(json.contains("stats.cleaning.onTime"));
+        assert!(json.contains("\"0 %\""));
+    });
+}
+
+#[test]
+#[serial]
+fn a_stay_that_never_opened_its_list_shows_unfilled() {
+    reset_test_store();
+    MockContext::host().run(|ctx| {
+        create(&ctx, "departure");
+        let now = Utc::now();
+        let departed = TimelineStay {
+            id: Uuid::new_v4(),
+            check_in: now - Duration::days(6),
+            check_out: now - Duration::days(2),
+            guest_name: String::new(),
+            status: "COMPLETED".into(),
+        };
+        let json = json_of(&render_stats_checklist(with_period_stays(ctx, &[departed])));
+        assert!(json.contains("stats.checklist.status.unfilled"));
+        assert!(json.contains("\"0 %\""));
+    });
+}
