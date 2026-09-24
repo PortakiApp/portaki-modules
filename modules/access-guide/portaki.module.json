@@ -10,7 +10,7 @@
     "en": "Entry method, optional layers, and when codes are revealed."
   },
   "version": "0.6.1",
-  "requiresModuleSdk": "6.12.0",
+  "requiresModuleSdk": "6.14.0",
   "author": {
     "name": "Portaki",
     "url": "https://portaki.app",

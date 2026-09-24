@@ -26,10 +26,6 @@
           {
             "children": [
               {
-                "message": "Les objets retrouvés sont gardés un mois ; l'envoi par la poste est à votre charge.",
-                "type": "InfoBanner"
-              },
-              {
                 "text": "i18n:home.card.thanks",
                 "type": "Text",
                 "variant": "body"
@@ -187,10 +183,6 @@
         "children": [
           {
             "children": [
-              {
-                "message": "Les objets retrouvés sont gardés un mois ; l'envoi par la poste est à votre charge.",
-                "type": "InfoBanner"
-              },
               {
                 "text": "i18n:home.card.thanks",
                 "type": "Text",
