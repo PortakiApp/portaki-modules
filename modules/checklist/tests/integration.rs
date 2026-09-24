@@ -77,6 +77,26 @@ fn departure_template_renders_toggles_and_ticks() {
 
 #[test]
 #[serial]
+fn a_guest_cannot_tick_a_host_item() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            create(&ctx, "cleaning");
+            let host_list = list_checklists().expect("lists")[0].id;
+            let item_id = items_of(host_list).expect("items")[0].id;
+            for result in [
+                complete_item(ctx.clone(), ItemIdArgs { item_id }),
+                uncomplete_item(ctx.clone(), ItemIdArgs { item_id }),
+            ] {
+                let err = result.expect_err("host item");
+                assert!(err.to_string().contains("not_guest_item"), "{err}");
+            }
+        });
+}
+
+#[test]
+#[serial]
 fn guest_list_waits_for_its_trigger() {
     reset_test_store();
     MockContext::guest()
