@@ -2,12 +2,12 @@
   "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/module.v1.json",
   "id": "checklist",
   "name": {
-    "fr": "Checklist de départ",
-    "en": "Checkout checklist"
+    "fr": "Checklists",
+    "en": "Checklists"
   },
   "description": {
-    "fr": "Items cochables, progression sauvegardée.",
-    "en": "Checkable items with saved progress."
+    "fr": "Plusieurs listes à cocher : départ du voyageur, ménage, état des lieux d'arrivée et de départ.",
+    "en": "Several lists to tick: guest departure, cleaning, check-in and check-out inspections."
   },
   "version": "0.6.1",
   "requiresModuleSdk": "6.12.0",
@@ -31,13 +31,71 @@
       "type": "property-workspace-tab",
       "pathSegment": "checklist",
       "label": {
-        "fr": "Checklist",
-        "en": "Checklist"
+        "fr": "Checklists",
+        "en": "Checklists"
       },
       "icon": "check-circle",
       "hostUi": {
         "designId": "checklist-editor-v1"
       }
+    },
+    {
+      "type": "property-stats-card",
+      "pathSegment": "checklist",
+      "label": {
+        "fr": "Checklist",
+        "en": "Checklist"
+      },
+      "icon": "check-circle"
+    },
+    {
+      "type": "property-stats-detail",
+      "pathSegment": "checklist",
+      "label": {
+        "fr": "Checklist",
+        "en": "Checklist"
+      },
+      "icon": "check-circle"
+    },
+    {
+      "type": "property-stats-card",
+      "pathSegment": "cleaning",
+      "label": {
+        "fr": "Ménage",
+        "en": "Cleaning"
+      },
+      "icon": "sparkles"
+    },
+    {
+      "type": "property-stats-detail",
+      "pathSegment": "cleaning",
+      "label": {
+        "fr": "Ménage",
+        "en": "Cleaning"
+      },
+      "icon": "sparkles"
+    },
+    {
+      "type": "workspace-timeline-task",
+      "pathSegment": "tasks",
+      "label": {
+        "fr": "Tâches",
+        "en": "Tasks"
+      },
+      "icon": "sparkles"
+    }
+  ],
+  "guestSurfaces": [
+    {
+      "surfaceId": "home.card",
+      "path": "checklist",
+      "labelKey": "home.card.title"
+    },
+    {
+      "surfaceId": "post-stay.card",
+      "path": "post-stay",
+      "role": "post-stay",
+      "labelKey": "home.card.title"
     }
   ]
 }

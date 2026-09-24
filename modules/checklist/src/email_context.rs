@@ -3,7 +3,6 @@
 use portaki_sdk::prelude::*;
 
 use crate::labels::{get_label, labels_from_item, pick_label};
-use crate::storage;
 
 const MAX_TIPS: usize = 3;
 
@@ -34,8 +33,7 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
     let locale = args.locale_or(ctx.locale.as_str());
     let property_locale = ctx.property.locale.as_str();
 
-    let mut items = storage::list_items()?;
-    items.sort_by_key(|item| item.sort_order);
+    let items = crate::queries::guest_items()?;
 
     let tips: Vec<String> = items
         .iter()
@@ -70,37 +68,29 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
 }
 
 #[cfg(test)]
-#[allow(clippy::disallowed_methods)] // tests natifs : l'horloge du système y est disponible
 mod tests {
     use super::*;
-    use crate::storage::seed_test_items;
-    use chrono::Utc;
+    use crate::{lists, storage};
     use portaki_test_utils::MockContext;
 
     #[test]
     fn when_lost_found_then_returns_top_tips() {
-        seed_test_items(
-            Utc::now(),
-            &[
-                ("Vider le frigo", "Empty the fridge"),
-                ("Fermer les volets", "Close shutters"),
-            ],
-        );
-
-        let (ctx, _host) = MockContext::guest()
+        storage::reset_test_store();
+        MockContext::guest()
             .with_capabilities(&[capability::core::STORAGE])
-            .build();
-        let out = build_email_context(
-            ctx,
-            EmailContextArgs {
-                template_key: Some(EmailTemplateKey::LostFound),
-                locale: Some("fr".into()),
-                ..Default::default()
-            },
-        )
-        .unwrap();
-        let tips = out.checkout_tips.expect("tips");
-        assert!(tips.contains("Vider le frigo"));
-        assert!(tips.contains("Fermer les volets"));
+            .run(|ctx| {
+                storage::create_from_template(lists::template("departure").unwrap()).unwrap();
+                let out = build_email_context(
+                    ctx,
+                    EmailContextArgs {
+                        template_key: Some(EmailTemplateKey::LostFound),
+                        locale: Some("fr".into()),
+                        ..Default::default()
+                    },
+                )
+                .unwrap();
+                let tips = out.checkout_tips.expect("tips");
+                assert!(tips.contains("Fermer les volets"));
+            });
     }
 }
