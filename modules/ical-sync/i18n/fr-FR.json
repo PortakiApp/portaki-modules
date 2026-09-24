@@ -65,5 +65,7 @@
   "module.status.incomplete.description": "Ajoutez au moins un lien calendrier .ics",
   "module.status.incomplete.hint": "Modules → Calendriers iCal",
   "module.status.inactive.title": "Module calendrier désactivé",
-  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement"
+  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
+  "stats.tile": "{count} séjours importés",
+  "stats.tile.conflicts": "{count} conflit(s)"
 }
