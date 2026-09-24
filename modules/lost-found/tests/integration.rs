@@ -6,10 +6,10 @@ use uuid::Uuid;
 
 use lost_found::{
     build_email_context, list_for_stay, list_recent, render_guest_form, render_home_card,
-    render_host_create, render_host_main, render_host_stay, render_post_stay_card,
-    reset_test_store, send_checkout_follow_up, submit, submit_found, update_config, update_status,
-    EmailContextArgs, ListForStayArgs, SubmitArgs, SubmitFoundArgs, UpdateConfigArgs,
-    UpdateStatusArgs, GUEST_TEXT_EMAIL_MAX_CHARS, STATUS_DEFAULT,
+    render_host_create, render_host_main, render_host_stats, render_host_stay,
+    render_post_stay_card, reset_test_store, send_checkout_follow_up, submit, submit_found,
+    update_config, update_status, EmailContextArgs, ListForStayArgs, SubmitArgs, SubmitFoundArgs,
+    UpdateConfigArgs, UpdateStatusArgs, GUEST_TEXT_EMAIL_MAX_CHARS, STATUS_DEFAULT,
 };
 use portaki_sdk::host::email::{EmailAudience, EmailError};
 use portaki_sdk::limits;
@@ -103,7 +103,7 @@ fn submit_allows_multiple_reports_and_shows_list() {
 
 #[test]
 #[serial]
-fn host_main_lists_recent_after_guest_submit() {
+fn host_stats_list_recent_after_guest_submit() {
     reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
@@ -126,21 +126,24 @@ fn host_main_lists_recent_after_guest_submit() {
             let recent = list_recent(ctx.clone()).expect("listRecent");
             assert_eq!(recent.len(), 1);
 
-            let surface = render_host_main(ctx);
+            let surface = render_host_stats(ctx.clone());
             assert!(SurfaceAssertions::new(&surface).contains_type("Page"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("List"));
             assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Pill"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Select"));
             let json = serde_json::to_string(&surface).expect("surface json");
-            assert!(json.contains("host.main.banner"));
             assert!(json.contains("host.main.recentTitle"));
             assert!(json.contains("updateStatus") || json.contains("host.main.updateStatus"));
-            // Create lives on stay surface — not the property editor.
+            // Create lives on stay surface — not the stats list.
             assert!(!json.contains("host.create.submit"));
+
+            // The config tab keeps the note only.
+            let main = serde_json::to_string(&render_host_main(ctx)).expect("main json");
+            assert!(main.contains("host.main.banner"));
+            assert!(!main.contains("host.main.recentTitle"));
         });
 }
 
@@ -402,7 +405,6 @@ fn host_main_editor_has_note_not_create_form() {
             let surface = render_host_main(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
             assert!(SurfaceAssertions::new(&surface).contains_type("RichTextEditor"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("host.hostNote.label") || json.contains("host_note"));
             assert!(json.contains("host.main.banner"));

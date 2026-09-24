@@ -9,6 +9,8 @@ define_surface_ids! {
     HOST_MAIN = "main",
     HOST_STAY = "stay",
     HOST_CREATE = "create",
+    // property-stats-card pathSegment / Wasm surface id
+    HOST_STATS = "lost-stats",
 }
 
 define_operation_names! {
