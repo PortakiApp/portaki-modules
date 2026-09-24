@@ -10,9 +10,9 @@ use chrono::{Duration, Utc};
 use portaki_sdk::prelude::StayContext;
 use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use pre_arrival_form::{
-    get_status, load_config, render_guest_form, render_home_card, render_host_main,
-    render_host_stay, reset_test_store, send_form_available, submit, update_config, ShowWhen,
-    SubmitArgs, UpdateConfigArgs,
+    get_status, load_config, publish_readiness, render_guest_form, render_home_card,
+    render_host_main, render_host_stay, reset_test_store, send_form_available, submit,
+    update_config, ShowWhen, SubmitArgs, UpdateConfigArgs,
 };
 use serde_json::json;
 
@@ -501,5 +501,32 @@ fn host_stay_surface_missing_stay_id() {
             let surface = render_host_stay(ctx);
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("host.stay.missingStay"));
+        });
+}
+
+#[test]
+#[serial]
+fn publish_readiness_recommends_one_question() {
+    let none_asked = serde_json::to_vec(&json!({
+        "questions": {
+            "ask_arrival_time": false,
+            "ask_occasion": false,
+            "ask_allergies": false,
+            "ask_guest_count": false
+        }
+    }))
+    .expect("config json");
+    MockContext::host()
+        .with_property(Property::default())
+        .with_kv("config", none_asked)
+        .run(|ctx| {
+            let item = &publish_readiness(ctx).expect("publishReadiness").items[0];
+            assert_eq!(item.id, "questions");
+            assert!(!item.ok);
+        });
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            assert!(publish_readiness(ctx).expect("publishReadiness").items[0].ok);
         });
 }

@@ -7,6 +7,7 @@ mod email_send;
 mod entities;
 mod guest;
 mod host;
+mod i18n;
 mod ids;
 mod queries;
 mod show_when;
@@ -17,7 +18,7 @@ pub use config::{load_config, FormQuestions, ModuleConfig, ShowWhen};
 pub use entities::PreArrivalResponse;
 pub use guest::{render_guest_form, render_home_card};
 pub use host::{render_host_main, render_host_stay};
-pub use queries::{get_status, PreArrivalStatus};
+pub use queries::{get_status, publish_readiness, PreArrivalStatus};
 pub use storage::reset_test_store;
 
 portaki_sdk::portaki_module!(
