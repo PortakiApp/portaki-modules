@@ -1,0 +1,158 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "guest.address": "Adresse",
+        "guest.building.gateCode": "Digicode",
+        "guest.building.intercom": "Interphone",
+        "guest.instructions": "Instructions",
+        "guest.keybox.code": "Code boîte à clés",
+        "guest.keybox.location": "Emplacement",
+        "guest.method": "Moyen d’accès",
+        "guest.method.keybox": "Boîte à clés",
+        "guest.note.title": "À savoir",
+        "guest.openMaps": "Ouvrir dans Maps",
+        "guest.parking": "Parking",
+        "host.step.kind.door": "Porte",
+        "host.step.kind.parking": "Parking",
+        "nav.access-guide": "Accès & parking"
+      },
+      "surfaceId": "explore.detail",
+      "title": "Accès & parking",
+      "tree": {
+        "children": [
+          {
+            "message": "Merci de refermer la boîte à clés après usage.",
+            "title": "i18n:guest.note.title",
+            "type": "InfoBanner"
+          },
+          {
+            "interactionMode": "none",
+            "isStatic": true,
+            "markers": [
+              {
+                "id": "property",
+                "kind": "property",
+                "label": "Logement",
+                "lat": 43.5513,
+                "lng": 7.0128
+              }
+            ],
+            "type": "Map",
+            "viewport": {
+              "center": {
+                "lat": 43.5513,
+                "lng": 7.0128
+              },
+              "zoom": 15.0
+            }
+          },
+          {
+            "key": "i18n:guest.address",
+            "type": "KeyValue",
+            "value": "12 rue des Oliviers, 06400 Cannes"
+          },
+          {
+            "key": "i18n:guest.method",
+            "type": "KeyValue",
+            "value": "i18n:guest.method.keybox"
+          },
+          {
+            "key": "i18n:guest.keybox.location",
+            "type": "KeyValue",
+            "value": "À droite de la porte d'entrée, sous la boîte aux lettres"
+          },
+          {
+            "key": "i18n:guest.keybox.code",
+            "mono": true,
+            "type": "KeyValue",
+            "value": "4821"
+          },
+          {
+            "key": "i18n:guest.instructions",
+            "type": "KeyValue",
+            "value": "Composez le code, tirez le volet vers le bas : les clés sont sur le crochet."
+          },
+          {
+            "key": "i18n:guest.building.gateCode",
+            "mono": true,
+            "type": "KeyValue",
+            "value": "A17B"
+          },
+          {
+            "key": "i18n:guest.building.intercom",
+            "type": "KeyValue",
+            "value": "Appartement 3, 2e étage"
+          },
+          {
+            "key": "i18n:guest.parking",
+            "type": "KeyValue",
+            "value": "Place n° 8 au sous-sol, badge sur le trousseau."
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://maps.example.com/parking"
+            },
+            "label": "i18n:guest.openMaps",
+            "type": "Button",
+            "variant": "outline"
+          },
+          {
+            "children": [
+              {
+                "label": "i18n:host.step.kind.parking",
+                "type": "Badge"
+              },
+              {
+                "text": "Rampe à gauche de l'immeuble, place n° 8.",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "title": "Garez-vous au sous-sol",
+            "type": "ListItem"
+          },
+          {
+            "children": [
+              {
+                "label": "i18n:host.step.kind.door",
+                "type": "Badge"
+              },
+              {
+                "text": "Digicode au portail, puis ascenseur jusqu'au 2e étage.",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "title": "Entrez dans l'immeuble",
+            "type": "ListItem"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.method.keybox": "Boîte à clés",
+        "nav.access-guide": "Accès & parking"
+      },
+      "surfaceId": "upcoming.card",
+      "title": "Accès & parking",
+      "tree": {
+        "children": [
+          {
+            "text": "i18n:guest.method.keybox",
+            "type": "Text",
+            "variant": "body"
+          }
+        ],
+        "icon": "car",
+        "title": "i18n:nav.access-guide",
+        "type": "Card"
+      }
+    }
+  ]
+}

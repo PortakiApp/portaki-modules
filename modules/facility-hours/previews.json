@@ -1,0 +1,70 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "guest.note.title": "À savoir",
+        "nav.facility-hours": "Horaires & accès"
+      },
+      "surfaceId": "explore.detail",
+      "title": "Horaires & accès",
+      "tree": {
+        "children": [
+          {
+            "message": "Horaires susceptibles de varier les jours fériés.",
+            "title": "i18n:guest.note.title",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "text": "Tous les jours, de juin à septembre",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "Enfants sous la surveillance d'un adulte",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "Bonnet de bain non obligatoire.",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "subtitle": "9 h – 20 h",
+            "title": "Piscine",
+            "type": "ListItem"
+          },
+          {
+            "children": [
+              {
+                "text": "Rez-de-chaussée, bâtiment B",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "subtitle": "7 h – 22 h",
+            "title": "Laverie",
+            "type": "ListItem"
+          },
+          {
+            "children": [
+              {
+                "text": "Du lundi au samedi",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "subtitle": "8 h 30 – 12 h · 14 h – 18 h",
+            "title": "Accueil de la résidence",
+            "type": "ListItem"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    }
+  ]
+}

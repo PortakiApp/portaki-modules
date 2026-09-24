@@ -1,0 +1,77 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "guest.chargerPin": "PIN borne",
+        "guest.copy.chargerPin.toast": "PIN borne copié",
+        "guest.copy.parkingCode.toast": "Code barrière copié",
+        "guest.copyChargerPin": "Copier le PIN borne",
+        "guest.copyParkingCode": "Copier le code barrière",
+        "guest.openMap": "Ouvrir la carte",
+        "guest.parkingCode": "Code barrière",
+        "guest.spot": "Votre place",
+        "nav.ev-parking": "Parking VE"
+      },
+      "surfaceId": "explore.detail",
+      "title": "Parking VE",
+      "tree": {
+        "children": [
+          {
+            "key": "i18n:guest.spot",
+            "type": "KeyValue",
+            "value": "Place n° 8, niveau -1"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://maps.example.com/parking"
+            },
+            "href": "https://maps.example.com/parking",
+            "label": "i18n:guest.openMap",
+            "type": "Link"
+          },
+          {
+            "key": "i18n:guest.parkingCode",
+            "mono": true,
+            "type": "KeyValue",
+            "value": "1357"
+          },
+          {
+            "action": {
+              "toast_key": "i18n:guest.copy.parkingCode.toast",
+              "type": "copy",
+              "value": "1357"
+            },
+            "label": "i18n:guest.copyParkingCode",
+            "type": "Button",
+            "variant": "outline"
+          },
+          {
+            "key": "i18n:guest.chargerPin",
+            "mono": true,
+            "type": "KeyValue",
+            "value": "2468"
+          },
+          {
+            "action": {
+              "toast_key": "i18n:guest.copy.chargerPin.toast",
+              "type": "copy",
+              "value": "2468"
+            },
+            "label": "i18n:guest.copyChargerPin",
+            "type": "Button",
+            "variant": "outline"
+          },
+          {
+            "text": "Branchez le câble Type 2 fourni, puis saisissez le PIN sur la borne.",
+            "type": "Text",
+            "variant": "caption"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    }
+  ]
+}

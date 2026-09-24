@@ -1,0 +1,150 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "home.card.title": "Avant votre arrivée",
+        "home.formalities.pending": "Formalités avant votre séjour",
+        "home.task.preArrival.label": "Formulaire de pré-arrivée",
+        "home.task.preArrival.sub": "Heure d’arrivée, occasion, allergies",
+        "nav.pre-arrival-form": "Pré-arrivée"
+      },
+      "surfaceId": "home.card",
+      "title": "Pré-arrivée",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "fragmentId": "regulatory.police-form",
+                "mode": "taskRow",
+                "type": "HostFragment"
+              },
+              {
+                "action": {
+                  "args": {
+                    "icon": "clipboard",
+                    "title": "i18n:home.card.title"
+                  },
+                  "presentation": "fullscreen",
+                  "surface_render": "guest.form",
+                  "type": "openOverlay"
+                },
+                "chevron": true,
+                "leading": "clipboard",
+                "subtitle": "i18n:home.task.preArrival.sub",
+                "title": "i18n:home.task.preArrival.label",
+                "type": "ListItem"
+              }
+            ],
+            "gap": 0.0,
+            "type": "Stack"
+          }
+        ],
+        "icon": "clock-circle",
+        "subtitle": "i18n:home.formalities.pending",
+        "title": "i18n:home.card.title",
+        "tone": "primary",
+        "type": "Card"
+      }
+    },
+    {
+      "i18n": {
+        "form.allergies.label": "Allergies / régime alimentaire",
+        "form.allergies.placeholder": "Optionnel",
+        "form.arrival.label": "Heure d’arrivée estimée",
+        "form.guestCount.label": "Nombre de voyageurs",
+        "form.guestCount.placeholder": "Ex. 2 adultes, 1 enfant",
+        "form.message.label": "Un message pour l’hôte ?",
+        "form.message.placeholder": "Ex. nous arriverons peut-être un peu en retard…",
+        "form.occasion.label": "Occasion spéciale ?",
+        "form.occasion.placeholder": "Anniversaire (optionnel)",
+        "form.submit": "Envoyer",
+        "home.card.intro": "Aidez-nous à préparer votre venue en 1 minute. Ces infos ne servent qu’à votre accueil.",
+        "nav.pre-arrival-form": "Pré-arrivée"
+      },
+      "surfaceId": "guest.form",
+      "title": "Pré-arrivée",
+      "tree": {
+        "children": [
+          {
+            "text": "i18n:home.card.intro",
+            "type": "Text",
+            "variant": "body"
+          },
+          {
+            "children": [
+              {
+                "name": "arrivalTimeEstimated",
+                "type": "TimePicker"
+              }
+            ],
+            "label": "i18n:form.arrival.label",
+            "name": "arrivalTimeEstimated",
+            "required": true,
+            "type": "Field"
+          },
+          {
+            "children": [
+              {
+                "name": "guestOccasion",
+                "placeholder": "i18n:form.occasion.placeholder",
+                "type": "TextInput"
+              }
+            ],
+            "label": "i18n:form.occasion.label",
+            "name": "guestOccasion",
+            "type": "Field"
+          },
+          {
+            "children": [
+              {
+                "name": "guestAllergies",
+                "placeholder": "i18n:form.allergies.placeholder",
+                "type": "TextInput"
+              }
+            ],
+            "label": "i18n:form.allergies.label",
+            "name": "guestAllergies",
+            "type": "Field"
+          },
+          {
+            "children": [
+              {
+                "name": "guestCount",
+                "placeholder": "i18n:form.guestCount.placeholder",
+                "type": "TextInput"
+              }
+            ],
+            "label": "i18n:form.guestCount.label",
+            "name": "guestCount",
+            "type": "Field"
+          },
+          {
+            "children": [
+              {
+                "name": "messageToHost",
+                "placeholder": "i18n:form.message.placeholder",
+                "type": "TextArea"
+              }
+            ],
+            "label": "i18n:form.message.label",
+            "name": "messageToHost",
+            "type": "Field"
+          },
+          {
+            "action": {
+              "args": {},
+              "module_id": "pre-arrival-form",
+              "name": "submit",
+              "type": "command"
+            },
+            "label": "i18n:form.submit",
+            "type": "Button"
+          }
+        ],
+        "type": "Form"
+      }
+    }
+  ]
+}

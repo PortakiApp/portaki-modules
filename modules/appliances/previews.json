@@ -1,0 +1,143 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "nav.appliances": "Appareils"
+      },
+      "surfaceId": "explore.detail",
+      "title": "Appareils",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "action": {
+                  "to": "appliances/plaques",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "leading": "🍳",
+                "subtitle": "Cuisine",
+                "title": "Plaques à induction",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "to": "appliances/lave-linge",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "leading": "🌀",
+                "subtitle": "Salle de bain",
+                "title": "Lave-linge",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "to": "appliances/tv",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "leading": "📺",
+                "subtitle": "Salon",
+                "title": "Télévision",
+                "type": "ListItem"
+              }
+            ],
+            "surface": "elevated",
+            "type": "Card"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "explore.item.contactHost": "Un souci avec cet appareil ?",
+        "explore.item.howto": "Mode d'emploi",
+        "explore.item.manual": "Notice / manuel",
+        "nav.appliance": "Appareil"
+      },
+      "surfaceId": "explore.item",
+      "title": "Appareil",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "text": "🍳",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "children": [
+                  {
+                    "text": "Plaques à induction",
+                    "type": "Text",
+                    "variant": "display"
+                  },
+                  {
+                    "emphasis": "subtle",
+                    "text": "Cuisine",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 4.0,
+                "type": "Stack"
+              }
+            ],
+            "direction": "horizontal",
+            "gap": 12.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "text": "i18n:explore.item.howto",
+                "type": "Eyebrow"
+              },
+              {
+                "content": "<p>Appuyez 2 secondes sur la touche marche, puis choisissez le foyer.</p><p>Seules les casseroles à fond aimanté chauffent.</p>",
+                "type": "RichText"
+              }
+            ],
+            "surface": "elevated",
+            "type": "Card"
+          },
+          {
+            "message": "La surface reste chaude quelques minutes après l'arrêt.",
+            "type": "InfoBanner"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://example.com/notice-plaques.pdf"
+            },
+            "href": "https://example.com/notice-plaques.pdf",
+            "label": "i18n:explore.item.manual",
+            "type": "Link"
+          },
+          {
+            "action": {
+              "event": "openHostChat",
+              "payload": {
+                "applianceId": "plaques",
+                "applianceName": "Plaques à induction",
+                "context": "Appuyez 2 secondes sur la touche marche, puis choisissez le foyer.\nSeules les casseroles à fond aimanté chauffent."
+              },
+              "type": "emit"
+            },
+            "label": "i18n:explore.item.contactHost",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    }
+  ]
+}

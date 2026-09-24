@@ -1,0 +1,179 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "form.category.appliance": "Appareil ou équipement",
+        "home.card.openForm": "Nouveau signalement",
+        "home.card.thanks": "Merci — votre hôte a été prévenu.",
+        "home.card.title": "Signaler un problème",
+        "home.card.yourReports": "Vos signalements ce séjour",
+        "nav.issue-report": "Signaler un problème"
+      },
+      "surfaceId": "home.card",
+      "title": "Signaler un problème",
+      "tree": {
+        "action": {
+          "args": {
+            "icon": "danger-triangle",
+            "title": "i18n:home.card.title"
+          },
+          "presentation": "bottomSheet",
+          "surface_render": "guest.form",
+          "type": "openOverlay"
+        },
+        "children": [
+          {
+            "children": [
+              {
+                "text": "i18n:home.card.thanks",
+                "type": "Text",
+                "variant": "body"
+              },
+              {
+                "text": "i18n:home.card.yourReports",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "subtitle": "i18n:form.category.appliance",
+                "title": "Le four ne chauffe plus",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "args": {
+                    "icon": "danger-triangle",
+                    "title": "i18n:home.card.title"
+                  },
+                  "presentation": "bottomSheet",
+                  "surface_render": "guest.form",
+                  "type": "openOverlay"
+                },
+                "chevron": true,
+                "leading": "danger-triangle",
+                "title": "i18n:home.card.openForm",
+                "type": "ListItem"
+              }
+            ],
+            "gap": 12.0,
+            "type": "Stack"
+          }
+        ],
+        "icon": "danger-triangle",
+        "title": "i18n:home.card.title",
+        "type": "Card"
+      }
+    },
+    {
+      "i18n": {
+        "form.category.access": "Accès ou clés",
+        "form.category.appliance": "Appareil ou équipement",
+        "form.category.cleanliness": "Propreté",
+        "form.category.label": "Catégorie",
+        "form.category.noise": "Bruit ou nuisance",
+        "form.category.other": "Autre",
+        "form.details.label": "Détails",
+        "form.details.placeholder": "Optionnel — quoi, quand, où",
+        "form.photo.label": "Photo",
+        "form.submit": "Envoyer",
+        "form.summary.label": "Résumé court",
+        "form.summary.placeholder": "ex. Lave-vaisselle ne se vide pas",
+        "nav.issue-report": "Signaler un problème"
+      },
+      "surfaceId": "guest.form",
+      "title": "Signaler un problème",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "choices": [
+                  {
+                    "icon": "plug",
+                    "label": "i18n:form.category.appliance",
+                    "value": "appliance"
+                  },
+                  {
+                    "icon": "sparkles",
+                    "label": "i18n:form.category.cleanliness",
+                    "value": "cleanliness"
+                  },
+                  {
+                    "icon": "volume-2",
+                    "label": "i18n:form.category.noise",
+                    "value": "noise"
+                  },
+                  {
+                    "icon": "key",
+                    "label": "i18n:form.category.access",
+                    "value": "access"
+                  },
+                  {
+                    "icon": "message-circle",
+                    "label": "i18n:form.category.other",
+                    "value": "other"
+                  }
+                ],
+                "layout": "compact",
+                "name": "category",
+                "type": "ChoiceList"
+              }
+            ],
+            "label": "i18n:form.category.label",
+            "name": "category",
+            "required": true,
+            "type": "Field"
+          },
+          {
+            "children": [
+              {
+                "name": "summary",
+                "placeholder": "i18n:form.summary.placeholder",
+                "type": "TextInput"
+              }
+            ],
+            "label": "i18n:form.summary.label",
+            "name": "summary",
+            "required": true,
+            "type": "Field"
+          },
+          {
+            "children": [
+              {
+                "name": "details",
+                "placeholder": "i18n:form.details.placeholder",
+                "type": "TextArea"
+              }
+            ],
+            "label": "i18n:form.details.label",
+            "name": "details",
+            "type": "Field"
+          },
+          {
+            "children": [
+              {
+                "name": "photo",
+                "type": "ImageUpload"
+              }
+            ],
+            "label": "i18n:form.photo.label",
+            "name": "photo",
+            "type": "Field"
+          },
+          {
+            "action": {
+              "args": {},
+              "module_id": "issue-report",
+              "name": "submit",
+              "type": "command"
+            },
+            "label": "i18n:form.submit",
+            "type": "Button"
+          }
+        ],
+        "type": "Form"
+      }
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "guest.disclaimer.title": "Info",
+        "guest.openLink": "Ouvrir le lien",
+        "nav.events": "Événements locaux"
+      },
+      "surfaceId": "explore.detail",
+      "title": "Événements locaux",
+      "tree": {
+        "children": [
+          {
+            "interactionMode": "none",
+            "isStatic": true,
+            "markers": [
+              {
+                "id": "marche-nocturne",
+                "kind": "poi",
+                "label": "Marché nocturne des artisans",
+                "lat": 43.5528,
+                "lng": 7.0171
+              }
+            ],
+            "type": "Map",
+            "viewport": {
+              "center": {
+                "lat": 43.5528,
+                "lng": 7.0171
+              },
+              "zoom": 13.0
+            }
+          },
+          {
+            "message": "Programme indicatif, à vérifier auprès des organisateurs.",
+            "title": "i18n:guest.disclaimer.title",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "text": "Entrée libre",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "leading": "mar. 02",
+            "subtitle": "Place du village · à 18:00",
+            "title": "Marché nocturne des artisans",
+            "type": "ListItem"
+          },
+          {
+            "children": [
+              {
+                "action": {
+                  "type": "external",
+                  "url": "https://example.com/concert"
+                },
+                "href": "https://example.com/concert",
+                "label": "i18n:guest.openLink",
+                "type": "Link"
+              }
+            ],
+            "leading": "jeu. 04",
+            "subtitle": "Jardin public · à 20:30",
+            "title": "Concert de jazz en plein air",
+            "type": "ListItem"
+          },
+          {
+            "leading": "dim. 07",
+            "subtitle": "Parking de la plage · à 08:00",
+            "title": "Vide-grenier du dimanche",
+            "type": "ListItem"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "home.card.title": "Événements",
+        "nav.events": "Événements locaux"
+      },
+      "surfaceId": "upcoming.card",
+      "title": "Événements locaux",
+      "tree": {
+        "action": {
+          "args": {
+            "icon": "calendar",
+            "title": "i18n:home.card.title"
+          },
+          "presentation": "bottomSheet",
+          "surface_render": "explore.detail",
+          "type": "openOverlay"
+        },
+        "children": [
+          {
+            "text": "Marché nocturne des artisans · à 18:00",
+            "type": "Text",
+            "variant": "caption"
+          }
+        ],
+        "icon": "calendar",
+        "title": "i18n:home.card.title",
+        "type": "Card"
+      }
+    }
+  ]
+}

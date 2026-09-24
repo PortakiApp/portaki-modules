@@ -18,20 +18,45 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
 
+use portaki_sdk::context::StayContext;
+use portaki_sdk::prelude::{DateTime, Utc, Uuid};
 use portaki_sdk::sdui::surface::Surface;
-use portaki_test_utils::MockContext;
+use portaki_test_utils::{MockContext, Property};
 use serde_json::{json, Map, Value};
 
 pub const LOCALE: &str = "fr-FR";
 const FILE: &str = "previews.json";
 
 /// Un contexte voyageur en français, les traductions du module chargées.
+///
+/// Le logement des fixtures, un séjour du 1er au 8 juin 2026 et une horloge figée la veille
+/// de l'arrivée : un aperçu ne doit dépendre ni du jour où le test tourne, ni d'un
+/// identifiant tiré au hasard.
 pub fn guest(module_root: &str) -> portaki_test_utils::MockContextBuilder {
+    let stay = StayContext {
+        stay_id: Uuid::from_u128(0x2222_2222_2222_2222_2222_2222_2222_2222),
+        checkin_at: Some(at("2026-06-01T15:00:00Z")),
+        checkout_at: Some(at("2026-06-08T10:00:00Z")),
+        ..StayContext::default()
+    };
     fr_bundle(module_root)
         .into_iter()
         .fold(MockContext::guest(), |builder, (key, value)| {
             builder.with_translation(key, value.as_str().unwrap_or_default())
         })
+        .with_property(Property::default())
+        .with_stay(stay)
+        .with_now(at(NOW))
+}
+
+/// L'instant des aperçus : la veille de l'arrivée.
+pub const NOW: &str = "2026-05-31T10:00:00Z";
+
+/// Un instant RFC 3339, en UTC.
+pub fn at(rfc3339: &str) -> DateTime<Utc> {
+    DateTime::parse_from_rfc3339(rfc3339)
+        .expect("date")
+        .with_timezone(&Utc)
 }
 
 /// Compare `previews.json` à ce que les surfaces rendent, ou le réécrit.
@@ -43,8 +68,10 @@ pub fn check(module_root: &str, rendered: Vec<(&str, Surface)>) {
     let manifest = read_json(&root.join("portaki.module.json"));
     let bundle = fr_bundle(module_root);
 
+    // Les deux formes du manifeste : `guestSurfaces[]` et `surfaces.guest[]`.
     let declared: Vec<&Value> = manifest["guestSurfaces"]
         .as_array()
+        .or_else(|| manifest["surfaces"]["guest"].as_array())
         .map(|s| s.iter().collect())
         .unwrap_or_default();
     let ids: Vec<&str> = declared
@@ -57,11 +84,13 @@ pub fn check(module_root: &str, rendered: Vec<(&str, Surface)>) {
         "un aperçu par surface voyageur du manifeste, dans son ordre"
     );
 
+    let mut ids_seen = Vec::new();
     let surfaces: Vec<Value> = rendered
         .into_iter()
         .zip(declared)
         .map(|((surface_id, surface), declared)| {
-            let tree = serde_json::to_value(&surface.root).expect("arbre SDUI");
+            let mut tree = serde_json::to_value(&surface.root).expect("arbre SDUI");
+            stable_uuids(&mut tree, &mut ids_seen);
             let label_key = declared["labelKey"].as_str().unwrap_or_default();
             let mut keys = i18n_refs(&tree);
             keys.insert(label_key.to_string());
@@ -106,6 +135,42 @@ fn fr_bundle(module_root: &str) -> Map<String, Value> {
 
 fn read_json(path: &Path) -> Value {
     serde_json::from_str(&fs::read_to_string(path).expect("lecture")).expect("json")
+}
+
+/// Remplace chaque UUID de l'arbre par un identifiant stable, numéroté dans l'ordre d'apparition.
+///
+/// Un module qui range ses lignes sous un `Uuid::new_v4` les expose dans ses actions ; sans ça,
+/// l'aperçu changerait à chaque exécution.
+fn stable_uuids(value: &mut Value, seen: &mut Vec<Uuid>) {
+    match value {
+        Value::String(text) => {
+            let mut out = String::with_capacity(text.len());
+            let mut rest = text.as_str();
+            while !rest.is_empty() {
+                match rest.get(..36).and_then(|head| Uuid::try_parse(head).ok()) {
+                    Some(id) => {
+                        let index = seen.iter().position(|s| *s == id).unwrap_or_else(|| {
+                            seen.push(id);
+                            seen.len() - 1
+                        });
+                        out.push_str(&Uuid::from_u128(index as u128 + 1).to_string());
+                        rest = &rest[36..];
+                    }
+                    None => {
+                        let next = rest.chars().next().expect("non vide");
+                        out.push(next);
+                        rest = &rest[next.len_utf8()..];
+                    }
+                }
+            }
+            *text = out;
+        }
+        Value::Array(items) => items.iter_mut().for_each(|item| stable_uuids(item, seen)),
+        Value::Object(fields) => fields
+            .values_mut()
+            .for_each(|item| stable_uuids(item, seen)),
+        _ => {}
+    }
 }
 
 /// Toutes les clés `i18n:` que l'arbre référence.

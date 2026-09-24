@@ -1,0 +1,44 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "guest.collection.title": "Collecte",
+        "nav.waste-recycling": "Tri & déchets"
+      },
+      "surfaceId": "explore.detail",
+      "title": "Tri & déchets",
+      "tree": {
+        "children": [
+          {
+            "label": "Bac jaune — Emballages plastique et métal, Cartons et papiers",
+            "swatch": "yellow",
+            "type": "ColorDotItem"
+          },
+          {
+            "label": "Colonne à verre — Bouteilles et bocaux, sans bouchon",
+            "swatch": "green",
+            "type": "ColorDotItem"
+          },
+          {
+            "label": "Bac à biodéchets — Épluchures, marc de café, restes de repas",
+            "swatch": "brown",
+            "type": "ColorDotItem"
+          },
+          {
+            "label": "Ordures ménagères — Tout le reste, en sac fermé",
+            "swatch": "grey",
+            "type": "ColorDotItem"
+          },
+          {
+            "message": "Bacs à sortir la veille au soir : mardi pour le jaune, vendredi pour les ordures ménagères.",
+            "title": "i18n:guest.collection.title",
+            "type": "InfoBanner"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    }
+  ]
+}

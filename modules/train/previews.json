@@ -1,0 +1,162 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "explore.detail.disclaimer": "Horaires indicatifs · TER SUD PACA",
+        "explore.detail.from": "Départ",
+        "explore.detail.to": "Destination",
+        "explore.detail.upcoming": "Prochains départs",
+        "nav.train": "Horaires trains"
+      },
+      "surfaceId": "explore.detail",
+      "title": "Horaires trains",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "key": "i18n:explore.detail.from",
+                "type": "KeyValue",
+                "value": "Gare d'Antibes · 2,3 km"
+              },
+              {
+                "key": "i18n:explore.detail.to",
+                "type": "KeyValue",
+                "value": "Nice-Ville"
+              }
+            ],
+            "surface": "elevated",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "action": {
+                  "params": {
+                    "dest": "Nice-Ville"
+                  },
+                  "to": "train",
+                  "type": "navigate"
+                },
+                "label": "Nice-Ville",
+                "selected": true,
+                "type": "FilterChip"
+              },
+              {
+                "action": {
+                  "params": {
+                    "dest": "Cannes"
+                  },
+                  "to": "train",
+                  "type": "navigate"
+                },
+                "label": "Cannes",
+                "selected": false,
+                "type": "FilterChip"
+              },
+              {
+                "action": {
+                  "params": {
+                    "dest": "Monaco"
+                  },
+                  "to": "train",
+                  "type": "navigate"
+                },
+                "label": "Monaco",
+                "selected": false,
+                "type": "FilterChip"
+              },
+              {
+                "action": {
+                  "params": {
+                    "dest": "Grasse"
+                  },
+                  "to": "train",
+                  "type": "navigate"
+                },
+                "label": "Grasse",
+                "selected": false,
+                "type": "FilterChip"
+              }
+            ],
+            "type": "FilterBar"
+          },
+          {
+            "text": "i18n:explore.detail.upcoming",
+            "type": "Text",
+            "variant": "title"
+          },
+          {
+            "children": [
+              {
+                "subtitle": "quai 2 · direct",
+                "time": "08:12",
+                "title": "Nice-Ville",
+                "type": "TimedEntry"
+              },
+              {
+                "subtitle": "quai 1 · direct",
+                "time": "08:42",
+                "title": "Nice-Ville",
+                "type": "TimedEntry"
+              },
+              {
+                "subtitle": "quai 2 · 1 arrêt",
+                "time": "09:05",
+                "title": "Nice-Ville",
+                "type": "TimedEntry"
+              },
+              {
+                "subtitle": "quai 1 · direct",
+                "time": "09:38",
+                "title": "Nice-Ville",
+                "type": "TimedEntry"
+              }
+            ],
+            "surface": "elevated",
+            "type": "Card"
+          },
+          {
+            "emphasis": "subtle",
+            "text": "i18n:explore.detail.disclaimer",
+            "type": "Text",
+            "variant": "caption"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "home.card.title": "Horaires trains",
+        "nav.train": "Horaires trains"
+      },
+      "surfaceId": "upcoming.card",
+      "title": "Horaires trains",
+      "tree": {
+        "action": {
+          "args": {
+            "icon": "train",
+            "title": "i18n:home.card.title"
+          },
+          "presentation": "fullscreen",
+          "surface_render": "explore.detail",
+          "type": "openOverlay"
+        },
+        "children": [
+          {
+            "emphasis": "subtle",
+            "text": "Gare d'Antibes → Nice-Ville · 08:12",
+            "type": "Text",
+            "variant": "caption"
+          }
+        ],
+        "icon": "train",
+        "title": "i18n:home.card.title",
+        "type": "Card"
+      }
+    }
+  ]
+}

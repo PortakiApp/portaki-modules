@@ -1,0 +1,235 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "form.kind.lost": "J'ai perdu quelque chose",
+        "home.card.openForm": "Nouvelle déclaration",
+        "home.card.thanks": "Merci — votre hôte a été prévenu.",
+        "home.card.title": "Objets perdus ou trouvés",
+        "home.card.yourReports": "Vos signalements ce séjour",
+        "nav.lost-found": "Objets trouvés"
+      },
+      "surfaceId": "home.card",
+      "title": "Objets trouvés",
+      "tree": {
+        "action": {
+          "args": {
+            "icon": "search",
+            "title": "i18n:home.card.title"
+          },
+          "presentation": "bottomSheet",
+          "surface_render": "guest.form",
+          "type": "openOverlay"
+        },
+        "children": [
+          {
+            "children": [
+              {
+                "message": "Les objets retrouvés sont gardés un mois ; l'envoi par la poste est à votre charge.",
+                "type": "InfoBanner"
+              },
+              {
+                "text": "i18n:home.card.thanks",
+                "type": "Text",
+                "variant": "body"
+              },
+              {
+                "text": "i18n:home.card.yourReports",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "subtitle": "i18n:form.kind.lost",
+                "title": "Chargeur de téléphone blanc",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "args": {
+                    "icon": "search",
+                    "title": "i18n:home.card.title"
+                  },
+                  "presentation": "bottomSheet",
+                  "surface_render": "guest.form",
+                  "type": "openOverlay"
+                },
+                "chevron": true,
+                "leading": "search",
+                "title": "i18n:home.card.openForm",
+                "type": "ListItem"
+              }
+            ],
+            "gap": 12.0,
+            "type": "Stack"
+          }
+        ],
+        "icon": "search",
+        "title": "i18n:home.card.title",
+        "type": "Card"
+      }
+    },
+    {
+      "i18n": {
+        "form.contactHint.label": "Comment vous joindre (optionnel)",
+        "form.contactHint.placeholder": "Téléphone ou e-mail",
+        "form.details.label": "Détails",
+        "form.details.placeholder": "Optionnel — où, quand, couleur, marque…",
+        "form.itemDescription.label": "De quoi s'agit-il ?",
+        "form.itemDescription.placeholder": "ex. Écharpe bleue, clé de chambre",
+        "form.kind.found": "J'ai trouvé quelque chose",
+        "form.kind.label": "Type",
+        "form.kind.lost": "J'ai perdu quelque chose",
+        "form.submit": "Envoyer",
+        "nav.lost-found": "Objets trouvés"
+      },
+      "surfaceId": "guest.form",
+      "title": "Objets trouvés",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "choices": [
+                  {
+                    "icon": "search-x",
+                    "label": "i18n:form.kind.lost",
+                    "value": "lost"
+                  },
+                  {
+                    "icon": "package-search",
+                    "label": "i18n:form.kind.found",
+                    "value": "found"
+                  }
+                ],
+                "layout": "compact",
+                "name": "kind",
+                "type": "ChoiceList"
+              }
+            ],
+            "label": "i18n:form.kind.label",
+            "name": "kind",
+            "required": true,
+            "type": "Field"
+          },
+          {
+            "children": [
+              {
+                "name": "itemDescription",
+                "placeholder": "i18n:form.itemDescription.placeholder",
+                "type": "TextInput"
+              }
+            ],
+            "label": "i18n:form.itemDescription.label",
+            "name": "itemDescription",
+            "required": true,
+            "type": "Field"
+          },
+          {
+            "children": [
+              {
+                "name": "contactHint",
+                "placeholder": "i18n:form.contactHint.placeholder",
+                "type": "TextInput"
+              }
+            ],
+            "label": "i18n:form.contactHint.label",
+            "name": "contactHint",
+            "type": "Field"
+          },
+          {
+            "children": [
+              {
+                "name": "details",
+                "placeholder": "i18n:form.details.placeholder",
+                "type": "TextArea"
+              }
+            ],
+            "label": "i18n:form.details.label",
+            "name": "details",
+            "type": "Field"
+          },
+          {
+            "action": {
+              "args": {},
+              "module_id": "lost-found",
+              "name": "submit",
+              "type": "command"
+            },
+            "label": "i18n:form.submit",
+            "type": "Button"
+          }
+        ],
+        "type": "Form"
+      }
+    },
+    {
+      "i18n": {
+        "form.kind.lost": "J'ai perdu quelque chose",
+        "home.card.openForm": "Nouvelle déclaration",
+        "home.card.thanks": "Merci — votre hôte a été prévenu.",
+        "home.card.title": "Objets perdus ou trouvés",
+        "home.card.yourReports": "Vos signalements ce séjour",
+        "nav.lost-found": "Objets trouvés"
+      },
+      "surfaceId": "post-stay.card",
+      "title": "Objets trouvés",
+      "tree": {
+        "action": {
+          "args": {
+            "icon": "search",
+            "title": "i18n:home.card.title"
+          },
+          "presentation": "bottomSheet",
+          "surface_render": "guest.form",
+          "type": "openOverlay"
+        },
+        "children": [
+          {
+            "children": [
+              {
+                "message": "Les objets retrouvés sont gardés un mois ; l'envoi par la poste est à votre charge.",
+                "type": "InfoBanner"
+              },
+              {
+                "text": "i18n:home.card.thanks",
+                "type": "Text",
+                "variant": "body"
+              },
+              {
+                "text": "i18n:home.card.yourReports",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "subtitle": "i18n:form.kind.lost",
+                "title": "Chargeur de téléphone blanc",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "args": {
+                    "icon": "search",
+                    "title": "i18n:home.card.title"
+                  },
+                  "presentation": "bottomSheet",
+                  "surface_render": "guest.form",
+                  "type": "openOverlay"
+                },
+                "chevron": true,
+                "leading": "search",
+                "title": "i18n:home.card.openForm",
+                "type": "ListItem"
+              }
+            ],
+            "gap": 12.0,
+            "type": "Stack"
+          }
+        ],
+        "icon": "search",
+        "title": "i18n:home.card.title",
+        "type": "Card"
+      }
+    }
+  ]
+}

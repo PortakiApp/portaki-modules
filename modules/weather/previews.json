@@ -1,0 +1,464 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "explore.forecast.hint": "Prévisions sur 5 jours",
+        "nav.forecast": "Prévisions",
+        "weather.col.day": "Jour",
+        "weather.col.humidity": "Hum.",
+        "weather.col.max": "Max",
+        "weather.col.min": "Min",
+        "weather.col.precip": "Pluie",
+        "weather.col.wind": "Vent",
+        "weather.description.sunny": "Ensoleillé",
+        "weather.humidity": "Humidité",
+        "weather.uv": "UV",
+        "weather.uv.high": "UV élevé",
+        "weather.wind": "Vent"
+      },
+      "surfaceId": "explore.forecast",
+      "title": "Prévisions",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "name": "sun",
+                "size": 56.0,
+                "type": "Icon"
+              },
+              {
+                "children": [
+                  {
+                    "tone": "warning",
+                    "type": "Temperature",
+                    "unit": "C",
+                    "value": 23.0,
+                    "variant": "hero"
+                  },
+                  {
+                    "text": "i18n:weather.description.sunny",
+                    "type": "Text",
+                    "variant": "caption"
+                  },
+                  {
+                    "text": "Cannes",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 4.0,
+                "type": "Stack"
+              }
+            ],
+            "direction": "horizontal",
+            "gap": 16.0,
+            "type": "Stack"
+          },
+          {
+            "type": "Divider"
+          },
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "name": "droplets",
+                        "size": 14.0,
+                        "type": "Icon"
+                      },
+                      {
+                        "emphasis": "strong",
+                        "text": "i18n:weather.humidity",
+                        "type": "Text",
+                        "variant": "caption"
+                      }
+                    ],
+                    "direction": "horizontal",
+                    "gap": 6.0,
+                    "type": "Stack"
+                  },
+                  {
+                    "text": "58%",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 2.0,
+                "type": "Stack"
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "name": "sun",
+                        "size": 14.0,
+                        "type": "Icon"
+                      },
+                      {
+                        "emphasis": "strong",
+                        "text": "i18n:weather.uv",
+                        "type": "Text",
+                        "variant": "caption"
+                      }
+                    ],
+                    "direction": "horizontal",
+                    "gap": 6.0,
+                    "type": "Stack"
+                  },
+                  {
+                    "text": "i18n:weather.uv.high",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 2.0,
+                "type": "Stack"
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "name": "wind",
+                        "size": 14.0,
+                        "type": "Icon"
+                      },
+                      {
+                        "emphasis": "strong",
+                        "text": "i18n:weather.wind",
+                        "type": "Text",
+                        "variant": "caption"
+                      }
+                    ],
+                    "direction": "horizontal",
+                    "gap": 6.0,
+                    "type": "Stack"
+                  },
+                  {
+                    "text": "12 km/h",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 2.0,
+                "type": "Stack"
+              }
+            ],
+            "columns": 2,
+            "gap": 12.0,
+            "type": "Grid"
+          },
+          {
+            "type": "Divider"
+          },
+          {
+            "text": "i18n:explore.forecast.hint",
+            "type": "Text",
+            "variant": "title"
+          },
+          {
+            "children": [
+              {
+                "emphasis": "strong",
+                "text": "i18n:weather.col.day",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "emphasis": "strong",
+                "text": "",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "emphasis": "strong",
+                "text": "i18n:weather.col.min",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "emphasis": "strong",
+                "text": "i18n:weather.col.max",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "children": [
+                  {
+                    "name": "cloud-rain",
+                    "size": 14.0,
+                    "type": "Icon"
+                  },
+                  {
+                    "emphasis": "strong",
+                    "text": "i18n:weather.col.precip",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "direction": "horizontal",
+                "gap": 6.0,
+                "type": "Stack"
+              },
+              {
+                "children": [
+                  {
+                    "name": "droplets",
+                    "size": 14.0,
+                    "type": "Icon"
+                  },
+                  {
+                    "emphasis": "strong",
+                    "text": "i18n:weather.col.humidity",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "direction": "horizontal",
+                "gap": 6.0,
+                "type": "Stack"
+              },
+              {
+                "children": [
+                  {
+                    "name": "wind",
+                    "size": 14.0,
+                    "type": "Icon"
+                  },
+                  {
+                    "emphasis": "strong",
+                    "text": "i18n:weather.col.wind",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "direction": "horizontal",
+                "gap": 6.0,
+                "type": "Stack"
+              },
+              {
+                "emphasis": "strong",
+                "text": "Lun 1",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "name": "sun",
+                "size": 28.0,
+                "type": "Icon"
+              },
+              {
+                "text": "17°",
+                "tone": "success",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "25°",
+                "tone": "warning",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "0%",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "55%",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "11 km/h",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "emphasis": "strong",
+                "text": "Mar 2",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "name": "cloud-sun",
+                "size": 28.0,
+                "type": "Icon"
+              },
+              {
+                "text": "18°",
+                "tone": "success",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "24°",
+                "tone": "warning",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "20%",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "62%",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "14 km/h",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "emphasis": "strong",
+                "text": "Mer 3",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "name": "cloud-rain",
+                "size": 28.0,
+                "type": "Icon"
+              },
+              {
+                "text": "16°",
+                "tone": "success",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "21°",
+                "tone": "warning",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "80%",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "81%",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "23 km/h",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "emphasis": "strong",
+                "text": "Jeu 4",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "name": "cloud-sun",
+                "size": 28.0,
+                "type": "Icon"
+              },
+              {
+                "text": "17°",
+                "tone": "success",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "23°",
+                "tone": "warning",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "30%",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "66%",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "16 km/h",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "emphasis": "strong",
+                "text": "Ven 5",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "name": "sun",
+                "size": 28.0,
+                "type": "Icon"
+              },
+              {
+                "text": "18°",
+                "tone": "success",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "27°",
+                "tone": "warning",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "0%",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "52%",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "10 km/h",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "columns": 7,
+            "gap": 10.0,
+            "type": "Grid"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "nav.weather": "Météo"
+      },
+      "surfaceId": "upcoming.card",
+      "title": "Météo",
+      "tree": {
+        "children": [
+          {
+            "text": "23°C · Ensoleillé",
+            "type": "Text",
+            "variant": "body"
+          }
+        ],
+        "icon": "cloud-sun",
+        "title": "i18n:nav.weather",
+        "type": "Card"
+      }
+    }
+  ]
+}
