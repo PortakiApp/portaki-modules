@@ -5,9 +5,10 @@ use portaki_sdk::limits;
 use serial_test::serial;
 
 use guest_reviews::{
-    get_config, render_home_card, render_post_stay_card, submit_review, update_config,
-    SubmitReviewArgs, UpdateConfigArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
+    get_config, render_home_card, render_host_stats, render_post_stay_card, stats_summary,
+    submit_review, update_config, SubmitReviewArgs, UpdateConfigArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
 };
+use portaki_sdk::contracts::stats::StatsSummaryArgs;
 use portaki_test_utils::{MockContext, SurfaceAssertions};
 use serde_json::json;
 
@@ -335,5 +336,49 @@ fn long_comment_is_stored_whole_and_quoted_in_the_host_email() {
             assert_eq!(cta.label.en, "See more");
             assert_eq!(email.property_id, Some(ctx.property_id));
             assert!(email.action_url.is_none());
+        });
+}
+
+#[test]
+#[serial]
+fn stored_reviews_feed_the_stats() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv(
+            "config",
+            serde_json::to_vec(&json!({
+                "platform_airbnb": false,
+                "platform_portaki": true
+            }))
+            .unwrap(),
+        )
+        .run(|ctx| {
+            for (rating, comment) in [(5, "Très propre, super emplacement"), (4, "")] {
+                submit_review(
+                    ctx.clone(),
+                    SubmitReviewArgs {
+                        rating,
+                        comment: comment.into(),
+                    },
+                )
+                .expect("submit");
+            }
+            let tile = stats_summary(
+                ctx.clone(),
+                StatsSummaryArgs {
+                    property_id: ctx.property_id,
+                    period: 30,
+                    key: "reviews".into(),
+                },
+            )
+            .expect("statsSummary");
+            assert_eq!(tile.value, "4,5 ★");
+            assert_eq!(tile.label.fr, "2 avis · 30 j");
+
+            let detail = serde_json::to_string(&render_host_stats(ctx)).expect("json");
+            assert!(detail.contains("FeedItem"));
+            assert!(detail.contains("i18n:stats.themes.cleanliness"));
+            assert!(detail.contains("i18n:stats.themes.location"));
+            assert!(!detail.contains("i18n:stats.themes.noise"));
         });
 }

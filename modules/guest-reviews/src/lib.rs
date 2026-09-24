@@ -6,15 +6,18 @@ mod email_i18n;
 mod email_text;
 mod guest;
 mod host;
+mod i18n;
 mod ids;
 mod localized;
 mod queries;
 
-pub use commands::{submit_review, update_config, SubmitReviewArgs, UpdateConfigArgs};
+pub use commands::{
+    submit_review, update_config, StoredReview, SubmitReviewArgs, UpdateConfigArgs,
+};
 pub use config::{load_config, ModuleConfig};
 pub use email_text::GUEST_TEXT_EMAIL_MAX_CHARS;
 pub use guest::{render_home_card, render_post_stay_card};
-pub use host::render_host_main;
+pub use host::{render_host_main, render_host_stats, stats_summary};
 pub use queries::get_config;
 
 portaki_sdk::portaki_module!(

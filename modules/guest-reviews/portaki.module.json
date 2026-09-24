@@ -37,6 +37,24 @@
       "hostUi": {
         "designId": "reviews-editor-v1"
       }
+    },
+    {
+      "type": "property-stats-card",
+      "pathSegment": "reviews",
+      "label": {
+        "fr": "Avis",
+        "en": "Reviews"
+      },
+      "icon": "star"
+    },
+    {
+      "type": "property-stats-detail",
+      "pathSegment": "reviews",
+      "label": {
+        "fr": "Avis",
+        "en": "Reviews"
+      },
+      "icon": "star"
     }
   ],
   "guestSurfaces": [

@@ -6,10 +6,13 @@ define_surface_ids! {
     HOME_CARD = "home.card",
     POST_STAY_CARD = "post-stay.card",
     HOST_MAIN = "main",
+    // property-stats-card / property-stats-detail pathSegment
+    HOST_STATS = "reviews",
 }
 
 define_operation_names! {
     GET_CONFIG = "getConfig",
+    STATS_SUMMARY = "statsSummary",
     SUBMIT_REVIEW = "submitReview",
     UPDATE_CONFIG = "updateConfig",
 }
