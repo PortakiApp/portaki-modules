@@ -12,9 +12,9 @@ const EVENT_SLOTS: usize = 6;
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-module-sheet",
+    placement = HostPlacement::PropertyModuleSheet,
     label_key = "catalog.host.main",
-    icon = "calendar"
+    icon = IconName::Calendar
 )]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = Localized::lang_code(&ctx.locale);
@@ -32,7 +32,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         Card::new()
             .title("i18n:host.section.disclaimer")
             .subtitle("i18n:host.section.disclaimer.help")
-            .icon("info-circle")
+            .icon(IconName::InfoCircle)
             .children(vec![Field::new()
                 .name("disclaimer")
                 .label("i18n:host.disclaimer.label")
@@ -75,7 +75,7 @@ fn nearby_card(config: &crate::config::ModuleConfig, open_agenda: bool) -> Compo
     Card::new()
         .title("i18n:host.section.nearby")
         .subtitle("i18n:host.section.nearby.help")
-        .icon("map-pin")
+        .icon(IconName::MapPin)
         .children(vec![
             Field::new()
                 .name("nearby_enabled")
@@ -131,7 +131,7 @@ fn event_slot_card(index: usize, event: Option<&EventRow>, lang: &str) -> Compon
 
     Card::new()
         .title(format!("i18n:host.event.slot{slot}"))
-        .icon("calendar")
+        .icon(IconName::Calendar)
         .children(vec![
             Field::new()
                 .name(format!("events.{index}.title"))

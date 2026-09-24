@@ -28,10 +28,10 @@ fn host_now() -> chrono::DateTime<chrono::Utc> {
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-workspace-tab",
-    design_id = "consumables-editor-v1",
+    placement = HostPlacement::PropertyWorkspaceTab,
+    design_id = DesignId::ConsumablesEditorV1,
     label_key = "catalog.host.main",
-    icon = "package"
+    icon = IconName::Package
 )]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = lang_code(&ctx.locale);
@@ -61,7 +61,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         Card::new()
             .title("i18n:host.main.catalogTitle")
             .subtitle("i18n:host.main.catalogHelp")
-            .icon("package")
+            .icon(IconName::Package)
             .child(
                 Grid::new()
                     .columns(4)
@@ -74,7 +74,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     let seed_card = Card::new()
         .title("i18n:host.main.seedDefaults")
         .subtitle("i18n:host.main.seedHelp")
-        .icon("sparkles")
+        .icon(IconName::Sparkles)
         .child(
             Form::new().child(
                 Button::new()
@@ -87,7 +87,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         vec![EmptyState::new()
             .title("i18n:host.main.emptyRecent")
             .description("i18n:host.main.emptyRecent.help")
-            .icon("package")
+            .icon(IconName::Package)
             .into()]
     } else {
         let now = host_now();
@@ -107,7 +107,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     let recent_card = Card::new()
         .title("i18n:host.main.recentTitle")
         .subtitle("i18n:host.main.recentHelp")
-        .icon("package")
+        .icon(IconName::Package)
         .children(recent_body);
 
     let mut children: Vec<Component> = vec![

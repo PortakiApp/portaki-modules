@@ -14,14 +14,15 @@ pub fn description_key_for_condition(condition: &str) -> String {
 }
 
 /// Maps OpenWeather condition → Lucide / pk-icon name.
-pub fn icon_name_for_condition(condition: &str) -> &'static str {
+pub fn icon_name_for_condition(condition: &str) -> portaki_sdk::vocab::IconName {
+    use portaki_sdk::vocab::IconName;
     match classify(condition) {
-        ConditionKind::Storm => "cloud-lightning",
-        ConditionKind::Snow => "cloud-snow",
-        ConditionKind::Rain => "cloud-rain",
-        ConditionKind::Fog => "cloud-fog",
-        ConditionKind::Clear => "sun",
-        ConditionKind::Cloudy => "cloud-sun",
+        ConditionKind::Storm => IconName::CloudLightning,
+        ConditionKind::Snow => IconName::CloudSnow,
+        ConditionKind::Rain => IconName::CloudRain,
+        ConditionKind::Fog => IconName::CloudFog,
+        ConditionKind::Clear => IconName::Sun,
+        ConditionKind::Cloudy => IconName::CloudSun,
     }
 }
 

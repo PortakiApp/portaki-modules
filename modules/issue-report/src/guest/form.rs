@@ -87,10 +87,11 @@ fn category_choice_list() -> ChoiceList {
         .name("category")
         .layout(ChoiceListLayout::Compact)
         .choices(vec![
-            ChoiceOption::new("appliance", "i18n:form.category.appliance").icon("plug"),
-            ChoiceOption::new("cleanliness", "i18n:form.category.cleanliness").icon("sparkles"),
-            ChoiceOption::new("noise", "i18n:form.category.noise").icon("volume-2"),
-            ChoiceOption::new("access", "i18n:form.category.access").icon("key"),
-            ChoiceOption::new("other", "i18n:form.category.other").icon("message-circle"),
+            ChoiceOption::new("appliance", "i18n:form.category.appliance").icon(IconName::Plug),
+            ChoiceOption::new("cleanliness", "i18n:form.category.cleanliness")
+                .icon(IconName::Sparkles),
+            ChoiceOption::new("noise", "i18n:form.category.noise").icon(IconName::Volume2),
+            ChoiceOption::new("access", "i18n:form.category.access").icon(IconName::Key),
+            ChoiceOption::new("other", "i18n:form.category.other").icon(IconName::MessageCircle),
         ])
 }

@@ -15,10 +15,10 @@ const BIN_SLOTS: usize = 6;
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-workspace-tab",
-    design_id = "waste-editor-v1",
+    placement = HostPlacement::PropertyWorkspaceTab,
+    design_id = DesignId::WasteEditorV1,
     label_key = "catalog.host.main",
-    icon = "recycle"
+    icon = IconName::Recycle
 )]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = Localized::lang_code(&ctx.locale);
@@ -40,7 +40,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     cards.push(
         Card::new()
             .title("i18n:host.section.schedule")
-            .icon("calendar")
+            .icon(IconName::Calendar)
             .children(vec![Field::new()
                 .name("collection_schedule")
                 .label("i18n:host.schedule.label")
@@ -104,7 +104,7 @@ fn bin_card(index: usize, bin: Option<&BinRow>, lang: &str) -> Component {
 
     Card::new()
         .title(format!("i18n:host.bin.slot{slot}"))
-        .icon("refresh")
+        .icon(IconName::Refresh)
         .children(vec![
             Field::new()
                 .name(format!("bins.{index}.title"))

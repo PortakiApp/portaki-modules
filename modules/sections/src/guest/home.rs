@@ -12,13 +12,13 @@ const CARD_SECTION_LIMIT: usize = 2;
 pub fn build_home_card(sections: &[SectionView]) -> Surface {
     Surface::new(
         Card::new()
-            .icon("home")
+            .icon(IconName::Home)
             .title("i18n:home.card.title")
             .action(Action::open_overlay(
                 OverlayPresentation::BottomSheet,
                 crate::ids::EXPLORE_SHEET,
                 OverlayArgs::new()
-                    .icon("home")
+                    .icon(IconName::Home)
                     .title("i18n:home.card.title"),
             ))
             .children(section_blocks(sections, CARD_SECTION_LIMIT)),

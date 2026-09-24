@@ -23,9 +23,9 @@ portaki_sdk::portaki_module!(
     description_key = "module.catalogDescription",
     author = "Portaki",
     author_url = "https://portaki.app",
-    module_type = "official",
-    icon = "lock",
-    maturity = "beta",
+    module_type = ModuleType::Official,
+    icon = IconName::Lock,
+    maturity = Maturity::Beta,
     sort_order = 230,
     feeds = "access-guide",
 );

@@ -12,13 +12,13 @@ use crate::time_format::format_starts_at_display;
 pub fn build_home_card(data: &GuestData) -> Surface {
     Surface::new(
         Card::new()
-            .icon("calendar")
+            .icon(IconName::Calendar)
             .title("i18n:home.card.title")
             .action(Action::open_overlay(
                 OverlayPresentation::BottomSheet,
                 crate::ids::EXPLORE_DETAIL,
                 OverlayArgs::new()
-                    .icon("calendar")
+                    .icon(IconName::Calendar)
                     .title("i18n:home.card.title"),
             ))
             .children(build_events_body(data, false)),
@@ -33,13 +33,13 @@ pub fn build_home_card(data: &GuestData) -> Surface {
 /// minimal card with just the title.
 pub fn build_upcoming_card(data: &GuestData) -> Surface {
     let mut card = Card::new()
-        .icon("calendar")
+        .icon(IconName::Calendar)
         .title("i18n:home.card.title")
         .action(Action::open_overlay(
             OverlayPresentation::BottomSheet,
             crate::ids::EXPLORE_DETAIL,
             OverlayArgs::new()
-                .icon("calendar")
+                .icon(IconName::Calendar)
                 .title("i18n:home.card.title"),
         ));
 

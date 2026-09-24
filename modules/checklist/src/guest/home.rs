@@ -59,7 +59,7 @@ pub fn build_home_card(data: &GuestChecklistData, surface_id: SurfaceId) -> Surf
 
     Surface::new(
         Card::new()
-            .icon("list-checks")
+            .icon(IconName::ListChecks)
             .title(title)
             .subtitle(subtitle)
             .children(children),

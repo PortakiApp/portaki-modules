@@ -27,7 +27,7 @@ pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
         OverlayPresentation::Fullscreen,
         crate::ids::GUEST_FORM,
         OverlayArgs::new()
-            .icon("clipboard")
+            .icon(IconName::Clipboard)
             .title("i18n:home.card.title"),
     );
 
@@ -38,8 +38,8 @@ pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
     };
 
     let icon = match form_state {
-        FormTaskState::Done => "check-circle",
-        FormTaskState::NotYet | FormTaskState::Pending => "clock-circle",
+        FormTaskState::Done => IconName::CheckCircle,
+        FormTaskState::NotYet | FormTaskState::Pending => IconName::ClockCircle,
     };
 
     let mut children: Vec<Component> = Vec::new();

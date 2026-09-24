@@ -7,7 +7,7 @@
 use portaki_sdk::prelude::*;
 
 /// Icon id used on the home card and module manifest.
-pub const MODULE_ICON: &str = "train";
+pub const MODULE_ICON: portaki_sdk::vocab::IconName = portaki_sdk::vocab::IconName::Train;
 
 /// Nearest station label (fallback until host config exists).
 pub const DEFAULT_STATION_LABEL: &str = "Gare d'Antibes";

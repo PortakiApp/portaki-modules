@@ -53,7 +53,7 @@ pub fn pick(raw: &str, allowed: &[&'static str]) -> &'static str {
 pub struct Template {
     pub id: &'static str,
     pub audience: &'static str,
-    pub icon: &'static str,
+    pub icon: portaki_sdk::vocab::IconName,
     pub trigger: &'static str,
     pub deadline: Option<&'static str>,
     pub items: usize,
@@ -65,7 +65,7 @@ pub const TEMPLATES: &[Template] = &[
     Template {
         id: "departure",
         audience: GUEST,
-        icon: "logout",
+        icon: portaki_sdk::vocab::IconName::Logout,
         trigger: AT_DEPARTURE,
         deadline: None,
         items: 5,
@@ -74,7 +74,7 @@ pub const TEMPLATES: &[Template] = &[
     Template {
         id: "cleaning",
         audience: HOST,
-        icon: "sparkles",
+        icon: portaki_sdk::vocab::IconName::Sparkles,
         trigger: AFTER_EACH_DEPARTURE,
         deadline: Some(NEXT_ARRIVAL_MINUS_2H),
         items: 7,
@@ -83,7 +83,7 @@ pub const TEMPLATES: &[Template] = &[
     Template {
         id: "checkIn",
         audience: HOST,
-        icon: "home",
+        icon: portaki_sdk::vocab::IconName::Home,
         trigger: BEFORE_EACH_ARRIVAL,
         deadline: Some(ARRIVAL),
         items: 5,
@@ -92,7 +92,7 @@ pub const TEMPLATES: &[Template] = &[
     Template {
         id: "checkOut",
         audience: HOST,
-        icon: "search",
+        icon: portaki_sdk::vocab::IconName::Search,
         trigger: AT_DEPARTURE_BEFORE_CLEANING,
         deadline: Some(DEPARTURE_EVENING),
         items: 4,
@@ -101,7 +101,7 @@ pub const TEMPLATES: &[Template] = &[
     Template {
         id: "emptyGuest",
         audience: GUEST,
-        icon: "check-circle",
+        icon: portaki_sdk::vocab::IconName::CheckCircle,
         trigger: AT_DEPARTURE,
         deadline: None,
         items: 0,
@@ -110,7 +110,7 @@ pub const TEMPLATES: &[Template] = &[
     Template {
         id: "emptyHost",
         audience: HOST,
-        icon: "clipboard",
+        icon: portaki_sdk::vocab::IconName::Clipboard,
         trigger: AFTER_EACH_DEPARTURE,
         deadline: Some(NEXT_ARRIVAL),
         items: 0,

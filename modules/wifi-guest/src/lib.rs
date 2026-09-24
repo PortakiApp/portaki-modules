@@ -23,9 +23,9 @@ portaki_sdk::portaki_module!(
     description_key = "module.catalogDescription",
     author = "Portaki",
     author_url = "https://portaki.app",
-    module_type = "official",
-    icon = "wifi",
-    maturity = "stable",
+    module_type = ModuleType::Official,
+    icon = IconName::Wifi,
+    maturity = Maturity::Stable,
     sort_order = 10,
 );
 

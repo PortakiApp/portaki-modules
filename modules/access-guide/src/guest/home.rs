@@ -13,13 +13,13 @@ pub fn build_home_card(data: &GuestData) -> Surface {
     // `home.card.title` from another module bundle cannot overwrite this label.
     Surface::new(
         Card::new()
-            .icon("car")
+            .icon(IconName::Car)
             .title("i18n:nav.access-guide")
             .action(Action::open_overlay(
                 OverlayPresentation::Fullscreen,
                 crate::ids::EXPLORE_DETAIL,
                 OverlayArgs::new()
-                    .icon("car")
+                    .icon(IconName::Car)
                     .title("i18n:nav.access-guide"),
             ))
             .children(build_access_glance(data)),

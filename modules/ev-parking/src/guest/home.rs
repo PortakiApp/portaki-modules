@@ -10,12 +10,14 @@ use super::load::GuestData;
 pub fn build_home_card(data: &GuestData) -> Surface {
     Surface::new(
         Card::new()
-            .icon("zap")
+            .icon(IconName::Zap)
             .title("i18n:nav.ev-parking")
             .action(Action::open_overlay(
                 OverlayPresentation::BottomSheet,
                 crate::ids::EXPLORE_DETAIL,
-                OverlayArgs::new().icon("zap").title("i18n:nav.ev-parking"),
+                OverlayArgs::new()
+                    .icon(IconName::Zap)
+                    .title("i18n:nav.ev-parking"),
             ))
             .children(build_ev_parking_body(data)),
     )

@@ -8,7 +8,7 @@ use portaki_sdk::sdui::surface::Surface;
 pub fn empty_no_items_card(surface_id: SurfaceId) -> Surface {
     Surface::new(
         Card::new()
-            .icon("package")
+            .icon(IconName::Package)
             .title("i18n:home.card.title")
             .child(
                 Text::new()
@@ -24,7 +24,7 @@ pub fn empty_runtime_error_state(surface_id: SurfaceId) -> Surface {
         EmptyState::new()
             .title("i18n:home.card.error.title")
             .description("i18n:home.card.error.description")
-            .icon("package")
+            .icon(IconName::Package)
             .child(
                 Text::new()
                     .text("i18n:home.card.unavailable")
@@ -39,7 +39,7 @@ fn empty_config_state(surface_id: SurfaceId) -> Surface {
         EmptyState::new()
             .title("i18n:module.status.incomplete.title")
             .description("i18n:module.status.incomplete.description")
-            .icon("sliders")
+            .icon(IconName::Sliders)
             .child(
                 Text::new()
                     .text("i18n:module.status.incomplete.hint")
@@ -54,7 +54,7 @@ fn empty_inactive_state(surface_id: SurfaceId) -> Surface {
         EmptyState::new()
             .title("i18n:module.status.inactive.title")
             .description("i18n:module.status.inactive.description")
-            .icon("package"),
+            .icon(IconName::Package),
     )
     .with_id(surface_id)
 }

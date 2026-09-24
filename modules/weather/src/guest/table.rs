@@ -20,9 +20,9 @@ pub fn build_forecast_table(forecast: &WeatherForecast, units: &WeatherUnits) ->
         table_header_cell(""),
         table_header_cell("i18n:weather.col.min"),
         table_header_cell("i18n:weather.col.max"),
-        metric_label("cloud-rain", "i18n:weather.col.precip"),
-        metric_label("droplets", "i18n:weather.col.humidity"),
-        metric_label("wind", "i18n:weather.col.wind"),
+        metric_label(IconName::CloudRain, "i18n:weather.col.precip"),
+        metric_label(IconName::Droplets, "i18n:weather.col.humidity"),
+        metric_label(IconName::Wind, "i18n:weather.col.wind"),
     ];
 
     for day in &forecast.days {

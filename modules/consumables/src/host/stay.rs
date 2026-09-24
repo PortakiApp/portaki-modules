@@ -24,9 +24,9 @@ fn host_now() -> chrono::DateTime<chrono::Utc> {
 #[portaki_sdk::surface(
     host,
     id = "stay",
-    placement = "stay-detail",
+    placement = HostPlacement::StayDetail,
     label_key = "catalog.host.stay",
-    icon = "package"
+    icon = IconName::Package
 )]
 pub fn render_host_stay(ctx: HostContext) -> Surface {
     let stay_id = ctx
@@ -51,7 +51,7 @@ pub fn render_host_stay(ctx: HostContext) -> Surface {
                     .collect();
                 vec![Card::new()
                     .title("i18n:host.stay.listTitle")
-                    .icon("package")
+                    .icon(IconName::Package)
                     .children(vec![Component::List(List::new().children(items))])
                     .into()]
             }
@@ -64,11 +64,11 @@ pub fn render_host_stay(ctx: HostContext) -> Surface {
 fn empty_stay_card() -> Component {
     Card::new()
         .title("i18n:host.stay.listTitle")
-        .icon("package")
+        .icon(IconName::Package)
         .children(vec![EmptyState::new()
             .title("i18n:host.stay.empty")
             .description("i18n:host.stay.empty.help")
-            .icon("package")
+            .icon(IconName::Package)
             .into()])
         .into()
 }

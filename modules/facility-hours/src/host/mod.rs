@@ -14,10 +14,10 @@ const FACILITY_SLOTS: usize = 6;
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-workspace-tab",
-    design_id = "facility-editor-v1",
+    placement = HostPlacement::PropertyWorkspaceTab,
+    design_id = DesignId::FacilityEditorV1,
     label_key = "catalog.host.main",
-    icon = "clock-circle"
+    icon = IconName::ClockCircle
 )]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = Localized::lang_code(&ctx.locale);
@@ -39,7 +39,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     cards.push(
         Card::new()
             .title("i18n:host.section.note")
-            .icon("info-circle")
+            .icon(IconName::InfoCircle)
             .children(vec![Field::new()
                 .name("general_note")
                 .label("i18n:host.note.label")
@@ -94,7 +94,7 @@ fn facility_card(index: usize, facility: Option<&FacilityRow>, lang: &str) -> Co
 
     Card::new()
         .title(format!("i18n:host.facility.slot{slot}"))
-        .icon("clock-circle")
+        .icon(IconName::ClockCircle)
         .children(vec![
             Field::new()
                 .name(format!("facilities.{index}.name"))

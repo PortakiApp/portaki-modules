@@ -27,9 +27,9 @@ portaki_sdk::portaki_module!(
     description_key = "module.description",
     author = "Portaki",
     author_url = "https://portaki.app",
-    module_type = "official",
-    icon = "danger-triangle",
-    maturity = "stable",
+    module_type = ModuleType::Official,
+    icon = IconName::DangerTriangle,
+    maturity = Maturity::Stable,
     sort_order = 90,
 );
 

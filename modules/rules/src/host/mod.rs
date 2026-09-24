@@ -21,10 +21,10 @@ const ITEM_SLOTS: usize = 12;
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-workspace-tab",
-    design_id = "rules-editor-v1",
+    placement = HostPlacement::PropertyWorkspaceTab,
+    design_id = DesignId::RulesEditorV1,
     label_key = "catalog.host.main",
-    icon = "scale"
+    icon = IconName::Scale
 )]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = RulesBundle::lang_code(&ctx.locale);
@@ -54,7 +54,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                 Card::new()
                     .title("i18n:host.section.title")
                     .subtitle("i18n:host.section.subtitle")
-                    .icon("scale")
+                    .icon(IconName::Scale)
                     .child(
                         StepList::new()
                             .addLabel("i18n:host.rules.add")

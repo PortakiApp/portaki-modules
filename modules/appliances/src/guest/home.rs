@@ -17,19 +17,21 @@ pub fn build_home_card(payload: &AppliancesPayload) -> Surface {
 
     Surface::new(
         Card::new()
-            .icon("plug")
+            .icon(IconName::Plug)
             .title("i18n:nav.appliances")
             .action(Action::open_overlay(
                 OverlayPresentation::Fullscreen,
                 crate::ids::EXPLORE_DETAIL,
-                OverlayArgs::new().icon("plug").title("i18n:nav.appliances"),
+                OverlayArgs::new()
+                    .icon(IconName::Plug)
+                    .title("i18n:nav.appliances"),
             ))
             .children(if children.is_empty() {
                 vec![Component::EmptyState(
                     EmptyState::new()
                         .title("i18n:home.card.featured.empty.title")
                         .description("i18n:home.card.featured.empty.description")
-                        .icon("plug"),
+                        .icon(IconName::Plug),
                 )]
             } else {
                 children
@@ -71,7 +73,7 @@ pub fn devices_list(payload: &AppliancesPayload) -> Vec<Component> {
             EmptyState::new()
                 .title("i18n:explore.detail.empty.title")
                 .description("i18n:explore.detail.empty.description")
-                .icon("plug"),
+                .icon(IconName::Plug),
         ));
     }
     children

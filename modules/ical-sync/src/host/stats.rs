@@ -63,10 +63,10 @@ fn upcoming(
 #[portaki_sdk::surface(
     host,
     id = "calendar-sync",
-    placement = "property-stats-card",
-    placement = "property-stats-detail",
+    placement = HostPlacement::PropertyStatsCard,
+    placement = HostPlacement::PropertyStatsDetail,
     label_key = "catalog.host.calendar-sync",
-    icon = "calendar"
+    icon = IconName::Calendar
 )]
 pub fn render_host_stats(ctx: HostContext) -> Surface {
     let fr = ctx.locale.to_ascii_lowercase().starts_with("fr");
@@ -129,13 +129,13 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
         Card::new()
             .title("i18n:stats.runs.title")
             .subtitle("i18n:stats.runs.subtitle")
-            .icon("refresh")
+            .icon(IconName::Refresh)
             .children(vec![runs_chart(&state, now, fr)])
             .into(),
         Card::new()
             .title("i18n:stats.channels.title")
             .subtitle("i18n:stats.channels.subtitle")
-            .icon("calendar")
+            .icon(IconName::Calendar)
             .children(vec![channels_chart(&state, fr)])
             .into(),
     ]);

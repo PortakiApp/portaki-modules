@@ -89,7 +89,7 @@ fn kind_choice_list() -> ChoiceList {
         .name("kind")
         .layout(ChoiceListLayout::Compact)
         .choices(vec![
-            ChoiceOption::new("lost", "i18n:form.kind.lost").icon("search-x"),
-            ChoiceOption::new("found", "i18n:form.kind.found").icon("package-search"),
+            ChoiceOption::new("lost", "i18n:form.kind.lost").icon(IconName::SearchX),
+            ChoiceOption::new("found", "i18n:form.kind.found").icon(IconName::PackageSearch),
         ])
 }

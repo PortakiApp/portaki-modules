@@ -20,10 +20,10 @@ const STEP_SLOTS: usize = 8;
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-workspace-tab",
-    design_id = "access-editor-v1",
+    placement = HostPlacement::PropertyWorkspaceTab,
+    design_id = DesignId::AccessEditorV1,
     label_key = "catalog.host.main",
-    icon = "key"
+    icon = IconName::Key
 )]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let config = load_config().unwrap_or_default();
@@ -56,13 +56,13 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         Card::new()
             .title("i18n:host.section.primary")
             .subtitle("i18n:host.section.primary.help")
-            .icon("key")
+            .icon(IconName::Key)
             .children(vec![method_choice_list(draft_method).into()])
             .into(),
         Card::new()
             .title("i18n:host.section.methodDetails")
             .subtitle("i18n:host.section.methodDetails.help")
-            .icon("lock")
+            .icon(IconName::Lock)
             .children(method_detail_children(draft_method, &config, &texts))
             .into(),
         Grid::new()
@@ -76,7 +76,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         Card::new()
             .title("i18n:host.section.arrival")
             .subtitle("i18n:host.section.arrival.help")
-            .icon("map-pin")
+            .icon(IconName::MapPin)
             .children(arrival_children(&config, &texts, steps_count))
             .into(),
     ];
@@ -86,7 +86,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
             Card::new()
                 .title("i18n:host.section.reveal")
                 .subtitle("i18n:host.section.reveal.help")
-                .icon("clock-circle")
+                .icon(IconName::ClockCircle)
                 .children(vec![reveal_choice_list(config.reveal_policy).into()])
                 .into(),
         );
@@ -169,40 +169,40 @@ fn method_choice_list(selected: PrimaryMethod) -> ChoiceList {
         .choices(vec![
             ChoiceOption::new(PrimaryMethod::Keybox.as_wire(), "i18n:host.method.keybox")
                 .description("i18n:host.method.keybox.desc")
-                .icon("key"),
+                .icon(IconName::Key),
             ChoiceOption::new(
                 PrimaryMethod::DoorCode.as_wire(),
                 "i18n:host.method.door_code",
             )
             .description("i18n:host.method.door_code.desc")
-            .icon("grid"),
+            .icon(IconName::Grid),
             ChoiceOption::new(
                 PrimaryMethod::SmartLock.as_wire(),
                 "i18n:host.method.smart_lock",
             )
             .description("i18n:host.method.smart_lock.desc")
-            .icon("lock"),
+            .icon(IconName::Lock),
             ChoiceOption::new(
                 PrimaryMethod::InPerson.as_wire(),
                 "i18n:host.method.in_person",
             )
             .description("i18n:host.method.in_person.desc")
-            .icon("users"),
+            .icon(IconName::Users),
             ChoiceOption::new(
                 PrimaryMethod::BuildingStaff.as_wire(),
                 "i18n:host.method.building_staff",
             )
             .description("i18n:host.method.building_staff.desc")
-            .icon("building"),
+            .icon(IconName::Building),
             ChoiceOption::new(
                 PrimaryMethod::HostGreets.as_wire(),
                 "i18n:host.method.host_greets",
             )
             .description("i18n:host.method.host_greets.desc")
-            .icon("smile"),
+            .icon(IconName::Smile),
             ChoiceOption::new(PrimaryMethod::Other.as_wire(), "i18n:host.method.other")
                 .description("i18n:host.method.other.desc")
-                .icon("more-horizontal"),
+                .icon(IconName::MoreHorizontal),
         ])
 }
 
@@ -214,25 +214,25 @@ fn reveal_choice_list(policy: RevealPolicy) -> ChoiceList {
         .choices(vec![
             ChoiceOption::new(RevealPolicy::Always.as_wire(), "i18n:host.reveal.always")
                 .description("i18n:host.reveal.always.desc")
-                .icon("clock-circle"),
+                .icon(IconName::ClockCircle),
             ChoiceOption::new(
                 RevealPolicy::HoursBefore24.as_wire(),
                 "i18n:host.reveal.hoursBefore24",
             )
             .description("i18n:host.reveal.hoursBefore24.desc")
-            .icon("clock-circle"),
+            .icon(IconName::ClockCircle),
             ChoiceOption::new(
                 RevealPolicy::DayBefore16h.as_wire(),
                 "i18n:host.reveal.dayBefore16h",
             )
             .description("i18n:host.reveal.dayBefore16h.desc")
-            .icon("clock-circle"),
+            .icon(IconName::ClockCircle),
             ChoiceOption::new(
                 RevealPolicy::AtCheckin.as_wire(),
                 "i18n:host.reveal.atCheckin",
             )
             .description("i18n:host.reveal.atCheckin.desc")
-            .icon("clock-circle"),
+            .icon(IconName::ClockCircle),
         ])
 }
 
@@ -572,7 +572,7 @@ fn layer_card_building(enabled: bool, config: &ModuleConfig, texts: &ModuleTexts
     Card::new()
         .title("i18n:host.section.building")
         .subtitle("i18n:host.section.building.help")
-        .icon("building")
+        .icon(IconName::Building)
         .children(children)
         .into()
 }
@@ -617,7 +617,7 @@ fn layer_card_parking(enabled: bool, config: &ModuleConfig, texts: &ModuleTexts)
     Card::new()
         .title("i18n:host.section.parking")
         .subtitle("i18n:host.section.parking.help")
-        .icon("car")
+        .icon(IconName::Car)
         .children(children)
         .into()
 }

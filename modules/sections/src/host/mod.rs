@@ -22,10 +22,10 @@ const LIST_ICONS: [&str; 3] = ["home", "map-pin", "star"];
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-workspace-tab",
-    design_id = "sections-editor-v1",
+    placement = HostPlacement::PropertyWorkspaceTab,
+    design_id = DesignId::SectionsEditorV1,
     label_key = "catalog.host.main",
-    icon = "home"
+    icon = IconName::Home
 )]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = lang_code(&ctx.locale);
@@ -120,7 +120,7 @@ fn build_detail_panel(sections: &[SectionView], selected_id: &str, lang: &str) -
                 EmptyState::new()
                     .title("i18n:host.detail.empty.title")
                     .description("i18n:host.detail.empty.description")
-                    .icon("home"),
+                    .icon(IconName::Home),
             ),
         );
     }
@@ -138,7 +138,7 @@ fn build_detail_panel(sections: &[SectionView], selected_id: &str, lang: &str) -
                 EmptyState::new()
                     .title("i18n:host.detail.missing.title")
                     .description("i18n:host.detail.missing.description")
-                    .icon("home"),
+                    .icon(IconName::Home),
             ),
         );
     }

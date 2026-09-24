@@ -13,10 +13,10 @@ use crate::config::{load_config, FormQuestions, ShowWhen};
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-workspace-tab",
-    design_id = "prearrival-editor-v1",
+    placement = HostPlacement::PropertyWorkspaceTab,
+    design_id = DesignId::PrearrivalEditorV1,
     label_key = "catalog.host.main",
-    icon = "clipboard"
+    icon = IconName::Clipboard
 )]
 pub fn render_host_main(_ctx: HostContext) -> Surface {
     let config = load_config().unwrap_or_default();
@@ -26,13 +26,13 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
         Card::new()
             .title("i18n:host.section.when")
             .subtitle("i18n:host.section.when.help")
-            .icon("clock-circle")
+            .icon(IconName::ClockCircle)
             .children(vec![when_choice_list(config.show_when).into()])
             .into(),
         Card::new()
             .title("i18n:host.section.questions")
             .subtitle("i18n:host.section.questions.help")
-            .icon("clipboard")
+            .icon(IconName::Clipboard)
             .children(vec![Grid::new()
                 .columns(2)
                 .gap(8.0)
@@ -57,13 +57,13 @@ fn when_choice_list(selected: ShowWhen) -> ChoiceList {
         .choices(vec![
             ChoiceOption::new("confirm", "i18n:host.when.confirm")
                 .description("i18n:host.when.confirm.desc")
-                .icon("check-circle"),
+                .icon(IconName::CheckCircle),
             ChoiceOption::new("before", "i18n:host.when.before")
                 .description("i18n:host.when.before.desc")
-                .icon("clock-circle"),
+                .icon(IconName::ClockCircle),
             ChoiceOption::new("checkin", "i18n:host.when.checkin")
                 .description("i18n:host.when.checkin.desc")
-                .icon("key"),
+                .icon(IconName::Key),
         ])
 }
 
@@ -72,43 +72,43 @@ fn question_toggle_rows(questions: &FormQuestions) -> Vec<Component> {
         toggle_row(
             "ask_arrival_time",
             "i18n:host.question.arrival",
-            "clock-circle",
+            IconName::ClockCircle,
             questions.ask_arrival_time,
         ),
         toggle_row(
             "ask_occasion",
             "i18n:host.question.occasion",
-            "gift",
+            IconName::Gift,
             questions.ask_occasion,
         ),
         toggle_row(
             "ask_allergies",
             "i18n:host.question.allergies",
-            "info-circle",
+            IconName::InfoCircle,
             questions.ask_allergies,
         ),
         toggle_row(
             "ask_guest_count",
             "i18n:host.question.guestCount",
-            "users",
+            IconName::Users,
             questions.ask_guest_count,
         ),
         toggle_row(
             "ask_special_needs",
             "i18n:host.question.specialNeeds",
-            "home",
+            IconName::Home,
             questions.ask_special_needs,
         ),
         toggle_row(
             "ask_id_document",
             "i18n:host.question.idDocument",
-            "clipboard",
+            IconName::Clipboard,
             questions.ask_id_document,
         ),
     ]
 }
 
-fn toggle_row(name: &str, label: &str, icon: &str, checked: bool) -> Component {
+fn toggle_row(name: &str, label: &str, icon: IconName, checked: bool) -> Component {
     // Bordered tile + leading icon chip (design `editorPrearrival` question grid).
     ToggleRow::new()
         .name(name)

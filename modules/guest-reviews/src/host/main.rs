@@ -14,10 +14,10 @@ use crate::config::{load_config, normalize_url, Localized};
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-workspace-tab",
-    design_id = "reviews-editor-v1",
+    placement = HostPlacement::PropertyWorkspaceTab,
+    design_id = DesignId::ReviewsEditorV1,
     label_key = "catalog.host.main",
-    icon = "star"
+    icon = IconName::Star
 )]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = Localized::lang_code(&ctx.locale);
@@ -35,7 +35,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     let mut form_children: Vec<Component> = vec![Card::new()
         .title("i18n:host.section.channel")
         .subtitle("i18n:host.section.channel.help")
-        .icon("star")
+        .icon(IconName::Star)
         .children(vec![Grid::new()
             .columns(2)
             .gap(8.0)
@@ -44,13 +44,13 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                 platform_toggle(
                     "platform_airbnb",
                     "i18n:host.channel.airbnb",
-                    "star",
+                    IconName::Star,
                     platform_airbnb,
                 ),
                 platform_toggle(
                     "platform_portaki",
                     "i18n:host.channel.portaki",
-                    "sparkles",
+                    IconName::Sparkles,
                     platform_portaki,
                 ),
             ])
@@ -95,7 +95,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
             Card::new()
                 .title("i18n:host.section.airbnb")
                 .subtitle("i18n:host.section.airbnb.help")
-                .icon("link")
+                .icon(IconName::Link)
                 .children(airbnb_children)
                 .into(),
         );
@@ -105,7 +105,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         Card::new()
             .title("i18n:host.section.thanks")
             .subtitle("i18n:host.section.thanks.help")
-            .icon("message")
+            .icon(IconName::Message)
             .children(vec![Field::new()
                 .name("thank_you_message")
                 .label("i18n:host.thanks.label")
@@ -127,7 +127,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
 }
 
 /// `label` is an i18n key; its `.desc` sibling is the line under it.
-fn platform_toggle(name: &str, label: &str, icon: &str, checked: bool) -> Component {
+fn platform_toggle(name: &str, label: &str, icon: IconName, checked: bool) -> Component {
     ToggleRow::new()
         .name(name)
         .label(label)

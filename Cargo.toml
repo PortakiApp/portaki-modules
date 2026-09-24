@@ -52,3 +52,11 @@ extism-pdk = "1.4"
 opt-level = "s"
 lto = true
 codegen-units = 1
+
+# Le SDK 8 (valeurs typées) n'est pas encore publié : la migration le suit sur sa branche. À
+# retirer, avec la montée des vingt et un `Cargo.toml`, dès la version publiée.
+[patch.crates-io]
+portaki-sdk = { git = "https://github.com/PortakiApp/portaki-sdk", branch = "feat/typed-vocabulary" }
+portaki-sdk-macros = { git = "https://github.com/PortakiApp/portaki-sdk", branch = "feat/typed-vocabulary" }
+portaki-connectors = { git = "https://github.com/PortakiApp/portaki-sdk", branch = "feat/typed-vocabulary" }
+portaki-test-utils = { git = "https://github.com/PortakiApp/portaki-sdk", branch = "feat/typed-vocabulary" }

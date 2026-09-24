@@ -32,9 +32,9 @@ portaki_sdk::portaki_module!(
     description_key = "module.description",
     author = "Portaki",
     author_url = "https://portaki.app",
-    module_type = "official",
-    icon = "check-circle",
-    maturity = "stable",
+    module_type = ModuleType::Official,
+    icon = IconName::CheckCircle,
+    maturity = Maturity::Stable,
     sort_order = 60,
 );
 

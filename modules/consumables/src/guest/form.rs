@@ -87,7 +87,7 @@ fn item_choice_list(data: &GuestConsumablesData, selected: &str) -> ChoiceList {
                 &data.locale,
                 &data.property_locale,
             );
-            ChoiceOption::new(item.id.to_string(), label).icon("package")
+            ChoiceOption::new(item.id.to_string(), label).icon(IconName::Package)
         })
         .collect();
 
@@ -107,7 +107,7 @@ fn level_choice_list() -> ChoiceList {
         .layout(ChoiceListLayout::Compact)
         .value(level::DEFAULT)
         .choices(vec![
-            ChoiceOption::new("missing", "i18n:form.level.missing").icon("circle-x"),
-            ChoiceOption::new("low", "i18n:form.level.low").icon("gauge"),
+            ChoiceOption::new("missing", "i18n:form.level.missing").icon(IconName::CircleX),
+            ChoiceOption::new("low", "i18n:form.level.low").icon(IconName::Gauge),
         ])
 }

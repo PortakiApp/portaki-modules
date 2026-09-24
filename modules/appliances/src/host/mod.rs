@@ -18,10 +18,10 @@ const SELECT_NEW: &str = "__new__";
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-workspace-tab",
-    design_id = "appliances-editor-v1",
+    placement = HostPlacement::PropertyWorkspaceTab,
+    design_id = DesignId::AppliancesEditorV1,
     label_key = "catalog.host.main",
-    icon = "plug"
+    icon = IconName::Plug
 )]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let payload = store::load_payload_for(&ctx.locale, &ctx.property.locale).unwrap_or_default();
@@ -111,7 +111,7 @@ fn build_detail_panel(devices: &[Appliance], selected_id: &str) -> Component {
                 EmptyState::new()
                     .title("i18n:host.detail.empty.title")
                     .description("i18n:host.detail.empty.description")
-                    .icon("plug"),
+                    .icon(IconName::Plug),
             ),
         );
     }
@@ -129,7 +129,7 @@ fn build_detail_panel(devices: &[Appliance], selected_id: &str) -> Component {
                 EmptyState::new()
                     .title("i18n:host.detail.missing.title")
                     .description("i18n:host.detail.missing.description")
-                    .icon("plug"),
+                    .icon(IconName::Plug),
             ),
         );
     }

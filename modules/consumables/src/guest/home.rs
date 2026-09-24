@@ -14,7 +14,7 @@ pub fn build_home_card(data: &GuestConsumablesData) -> Surface {
         OverlayPresentation::BottomSheet,
         crate::ids::GUEST_FORM,
         OverlayArgs::new()
-            .icon("package")
+            .icon(IconName::Package)
             .title("i18n:home.card.title"),
     );
 
@@ -56,7 +56,7 @@ pub fn build_home_card(data: &GuestConsumablesData) -> Surface {
 
     Surface::new(
         Card::new()
-            .icon("package")
+            .icon(IconName::Package)
             .title("i18n:home.card.title")
             .action(open_form)
             .child(Stack::new().gap(12.0).children(children)),

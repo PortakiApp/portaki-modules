@@ -11,7 +11,9 @@ use portaki_sdk::sdui::surface::Surface;
 use super::load::GuestData;
 
 pub fn build_upcoming_card(data: &GuestData) -> Surface {
-    let mut card = Card::new().icon("map-pin").title("i18n:nav.local-guide");
+    let mut card = Card::new()
+        .icon(IconName::MapPin)
+        .title("i18n:nav.local-guide");
     if let Some(headline) = headline_value(data) {
         card = card.child(Text::new().text(headline).variant(TextVariant::Body));
     }

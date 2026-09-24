@@ -31,7 +31,7 @@ pub fn render_home_card(ctx: GuestContext) -> Surface {
     id = "upcoming.card",
     path = "upcoming",
     label_key = "nav.train",
-    role = "upcoming"
+    role = GuestRole::Upcoming
 )]
 pub fn render_upcoming_card(ctx: GuestContext) -> Surface {
     match render_upcoming(&ctx) {
