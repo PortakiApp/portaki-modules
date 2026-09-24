@@ -10,7 +10,7 @@ pub fn empty_content_state(surface_id: SurfaceId) -> Surface {
         EmptyState::new()
             .title("i18n:home.card.empty.title")
             .description("i18n:home.card.empty.description")
-            .icon("plug")
+            .icon(IconName::Plug)
             .child(
                 Text::new()
                     .text("i18n:home.card.empty.hint")
@@ -25,7 +25,7 @@ pub fn empty_runtime_error_state(surface_id: SurfaceId) -> Surface {
         EmptyState::new()
             .title("i18n:home.card.error.title")
             .description("i18n:home.card.error.description")
-            .icon("plug"),
+            .icon(IconName::Plug),
     )
     .with_id(surface_id)
 }
@@ -35,7 +35,7 @@ fn empty_config_state(surface_id: SurfaceId) -> Surface {
         EmptyState::new()
             .title("i18n:module.status.incomplete.title")
             .description("i18n:module.status.incomplete.description")
-            .icon("sliders"),
+            .icon(IconName::Sliders),
     )
     .with_id(surface_id)
 }
@@ -45,7 +45,7 @@ fn empty_inactive_state(surface_id: SurfaceId) -> Surface {
         EmptyState::new()
             .title("i18n:module.status.inactive.title")
             .description("i18n:module.status.inactive.description")
-            .icon("plug"),
+            .icon(IconName::Plug),
     )
     .with_id(surface_id)
 }

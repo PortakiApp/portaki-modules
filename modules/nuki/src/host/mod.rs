@@ -11,10 +11,10 @@ use crate::config::load_config;
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-workspace-tab",
-    design_id = "nuki-editor-v1",
+    placement = HostPlacement::PropertyWorkspaceTab,
+    design_id = DesignId::NukiEditorV1,
     label_key = "catalog.host.main",
-    icon = "lock"
+    icon = IconName::Lock
 )]
 pub fn render_host_main(_ctx: HostContext) -> Surface {
     let config = load_config().unwrap_or_default();
@@ -27,7 +27,7 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
         Card::new()
             .title("i18n:host.section.device")
             .subtitle("i18n:host.section.device.help")
-            .icon("lock")
+            .icon(IconName::Lock)
             .children(vec![
                 Field::new()
                     .name("device_name")

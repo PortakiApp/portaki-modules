@@ -11,13 +11,13 @@ use super::load::GuestData;
 pub fn build_home_card(data: &GuestData) -> Surface {
     Surface::new(
         Card::new()
-            .icon("clock")
+            .icon(IconName::Clock)
             .title("i18n:home.card.title")
             .action(Action::open_overlay(
                 OverlayPresentation::BottomSheet,
                 crate::ids::EXPLORE_DETAIL,
                 OverlayArgs::new()
-                    .icon("clock")
+                    .icon(IconName::Clock)
                     .title("i18n:home.card.title"),
             ))
             .children(build_hours_body(data, false)),

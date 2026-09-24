@@ -20,8 +20,8 @@ pub use form::render_guest_form;
     id = "home.card",
     path = "pre-arrival-form",
     label_key = "nav.pre-arrival-form",
-    role = "arrival-formality",
-    embeds = "regulatory.police-form"
+    role = GuestRole::ArrivalFormality,
+    embeds = HostFragmentId::PoliceForm
 )]
 pub fn render_home_card(ctx: GuestContext) -> Surface {
     match render_with_data(&ctx) {

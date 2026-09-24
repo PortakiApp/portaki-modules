@@ -93,10 +93,10 @@ pub fn stats_summary(ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummar
 #[portaki_sdk::surface(
     host,
     id = "reviews",
-    placement = "property-stats-card",
-    placement = "property-stats-detail",
+    placement = HostPlacement::PropertyStatsCard,
+    placement = HostPlacement::PropertyStatsDetail,
     label_key = "catalog.host.reviews",
-    icon = "star"
+    icon = IconName::Star
 )]
 pub fn render_host_stats(ctx: HostContext) -> Surface {
     let fr = ctx.locale.to_ascii_lowercase().starts_with("fr");
@@ -110,7 +110,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
                 EmptyState::new()
                     .title("i18n:stats.empty")
                     .description("i18n:stats.empty.help")
-                    .icon("star"),
+                    .icon(IconName::Star),
             ),
         )
         .with_id(crate::ids::HOST_STATS);
@@ -175,7 +175,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
         EmptyState::new()
             .title("i18n:stats.empty")
             .description("i18n:stats.themes.empty")
-            .icon("message")
+            .icon(IconName::Message)
             .into()
     } else {
         Chart::new()

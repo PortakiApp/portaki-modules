@@ -16,8 +16,8 @@ portaki_sdk::portaki_module!(
     description_key = "module.catalogDescription",
     author = "Portaki",
     author_url = "https://portaki.app",
-    module_type = "official",
-    icon = "train",
-    maturity = "beta",
+    module_type = ModuleType::Official,
+    icon = IconName::Train,
+    maturity = Maturity::Beta,
     sort_order = 200,
 );

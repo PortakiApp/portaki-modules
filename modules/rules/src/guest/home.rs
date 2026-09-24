@@ -33,12 +33,14 @@ pub fn build_home_card(payload: &RulesPayload) -> Surface {
     // Prefer nav.* — shell ships `nav.rules`; avoids colliding home.card titles.
     Surface::new(
         Card::new()
-            .icon("scale")
+            .icon(IconName::Scale)
             .title("i18n:nav.rules")
             .action(Action::open_overlay(
                 OverlayPresentation::Fullscreen,
                 crate::ids::EXPLORE_DETAIL,
-                OverlayArgs::new().icon("scale").title("i18n:nav.rules"),
+                OverlayArgs::new()
+                    .icon(IconName::Scale)
+                    .title("i18n:nav.rules"),
             ))
             .children(children),
     )

@@ -10,7 +10,7 @@ pub fn empty_runtime_error_state(surface_id: SurfaceId) -> Surface {
         EmptyState::new()
             .title("i18n:home.card.error.title")
             .description("i18n:home.card.error.description")
-            .icon("danger-triangle")
+            .icon(IconName::DangerTriangle)
             .child(
                 Text::new()
                     .text("i18n:home.card.unavailable")
@@ -25,7 +25,7 @@ fn empty_config_state(surface_id: SurfaceId) -> Surface {
         EmptyState::new()
             .title("i18n:module.status.incomplete.title")
             .description("i18n:module.status.incomplete.description")
-            .icon("sliders")
+            .icon(IconName::Sliders)
             .child(
                 Text::new()
                     .text("i18n:module.status.incomplete.hint")
@@ -40,7 +40,7 @@ fn empty_inactive_state(surface_id: SurfaceId) -> Surface {
         EmptyState::new()
             .title("i18n:module.status.inactive.title")
             .description("i18n:module.status.inactive.description")
-            .icon("danger-triangle"),
+            .icon(IconName::DangerTriangle),
     )
     .with_id(surface_id)
 }

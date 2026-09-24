@@ -11,13 +11,13 @@ use super::load::GuestData;
 pub fn build_home_card(data: &GuestData) -> Surface {
     Surface::new(
         Card::new()
-            .icon("phone")
+            .icon(IconName::Phone)
             .title("i18n:home.card.title")
             .action(Action::open_overlay(
                 OverlayPresentation::BottomSheet,
                 crate::ids::EXPLORE_DETAIL,
                 OverlayArgs::new()
-                    .icon("phone")
+                    .icon(IconName::Phone)
                     .title("i18n:home.card.title"),
             ))
             .children(build_contacts_body(data, false)),

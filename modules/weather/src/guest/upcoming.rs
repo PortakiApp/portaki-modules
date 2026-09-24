@@ -13,7 +13,9 @@ use crate::weather::{convert_temp, format_temp_label};
 use super::load::GuestWeatherData;
 
 pub fn build_upcoming_card(data: &GuestWeatherData) -> Surface {
-    let mut card = Card::new().icon("cloud-sun").title("i18n:nav.weather");
+    let mut card = Card::new()
+        .icon(IconName::CloudSun)
+        .title("i18n:nav.weather");
     if let Some(headline) = headline_value(data) {
         card = card.child(Text::new().text(headline).variant(TextVariant::Body));
     }

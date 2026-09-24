@@ -20,9 +20,9 @@ portaki_sdk::portaki_module!(
     description_key = "module.catalogDescription",
     author = "Portaki",
     author_url = "https://portaki.app",
-    module_type = "official",
-    icon = "recycle",
-    maturity = "stable",
+    module_type = ModuleType::Official,
+    icon = IconName::Recycle,
+    maturity = Maturity::Stable,
     sort_order = 160,
 );
 

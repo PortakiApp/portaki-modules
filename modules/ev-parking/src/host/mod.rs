@@ -11,10 +11,10 @@ use crate::config::{load_config, RevealPolicy};
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-workspace-tab",
-    design_id = "evparking-editor-v1",
+    placement = HostPlacement::PropertyWorkspaceTab,
+    design_id = DesignId::EvparkingEditorV1,
     label_key = "catalog.host.main",
-    icon = "zap"
+    icon = IconName::Zap
 )]
 pub fn render_host_main(_ctx: HostContext) -> Surface {
     let config = load_config().unwrap_or_default();
@@ -23,7 +23,7 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
         Card::new()
             .title("i18n:host.section.spot")
             .subtitle("i18n:host.section.spot.help")
-            .icon("zap")
+            .icon(IconName::Zap)
             .children(vec![
                 Field::new()
                     .name("spot_label")
@@ -70,7 +70,7 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
         Card::new()
             .title("i18n:host.section.instructions")
             .subtitle("i18n:host.section.instructions.help")
-            .icon("info-circle")
+            .icon(IconName::InfoCircle)
             .children(vec![Field::new()
                 .name("instructions")
                 .label("i18n:host.instructions.label")
@@ -86,7 +86,7 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
         Card::new()
             .title("i18n:host.section.reveal")
             .subtitle("i18n:host.section.reveal.help")
-            .icon("clock-circle")
+            .icon(IconName::ClockCircle)
             .children(vec![reveal_choice_list(config.reveal_policy).into()])
             .into(),
     ];
@@ -105,24 +105,24 @@ fn reveal_choice_list(policy: RevealPolicy) -> ChoiceList {
         .choices(vec![
             ChoiceOption::new(RevealPolicy::Always.as_wire(), "i18n:host.reveal.always")
                 .description("i18n:host.reveal.always.desc")
-                .icon("clock-circle"),
+                .icon(IconName::ClockCircle),
             ChoiceOption::new(
                 RevealPolicy::HoursBefore24.as_wire(),
                 "i18n:host.reveal.hoursBefore24",
             )
             .description("i18n:host.reveal.hoursBefore24.desc")
-            .icon("clock-circle"),
+            .icon(IconName::ClockCircle),
             ChoiceOption::new(
                 RevealPolicy::DayBefore16h.as_wire(),
                 "i18n:host.reveal.dayBefore16h",
             )
             .description("i18n:host.reveal.dayBefore16h.desc")
-            .icon("clock-circle"),
+            .icon(IconName::ClockCircle),
             ChoiceOption::new(
                 RevealPolicy::AtCheckin.as_wire(),
                 "i18n:host.reveal.atCheckin",
             )
             .description("i18n:host.reveal.atCheckin.desc")
-            .icon("key"),
+            .icon(IconName::Key),
         ])
 }

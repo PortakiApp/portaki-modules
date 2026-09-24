@@ -17,9 +17,9 @@ pub use stats::{render_host_stats, stats_summary};
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-module-sheet",
+    placement = HostPlacement::PropertyModuleSheet,
     label_key = "catalog.host.main",
-    icon = "calendar"
+    icon = IconName::Calendar
 )]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let config = load_config().unwrap_or_default();
@@ -50,7 +50,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         Card::new()
             .title("i18n:host.section.feeds")
             .subtitle("i18n:host.section.feeds.help")
-            .icon("calendar")
+            .icon(IconName::Calendar)
             .children(vec![StepList::new()
                 .label("i18n:host.calendars.label")
                 .hint("i18n:host.calendars.hint")
@@ -68,7 +68,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         Card::new()
             .title("i18n:host.section.status")
             .subtitle("i18n:host.section.status.help")
-            .icon("refresh")
+            .icon(IconName::Refresh)
             .children(vec![
                 Field::new()
                     .name("last_sync_at")

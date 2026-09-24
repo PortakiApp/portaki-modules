@@ -335,7 +335,7 @@ mod tests {
             name_fr: "Ménage".into(),
             name_en: "Cleaning".into(),
             audience: lists::HOST.into(),
-            icon: "sparkles".into(),
+            icon: portaki_sdk::vocab::IconName::Sparkles.to_string(),
             trigger: trigger.into(),
             placement: lists::BOOKLET.into(),
             assignee_name: None,

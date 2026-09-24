@@ -16,9 +16,9 @@ use crate::config::{load_config, RevealPolicy};
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-module-sheet",
+    placement = HostPlacement::PropertyModuleSheet,
     label_key = "catalog.host.main",
-    icon = "wifi"
+    icon = IconName::Wifi
 )]
 pub fn render_host_main(_ctx: HostContext) -> Surface {
     let config = load_config().unwrap_or_default();
@@ -106,24 +106,24 @@ fn reveal_choice_list(policy: RevealPolicy) -> ChoiceList {
         .choices(vec![
             ChoiceOption::new(RevealPolicy::Always.as_wire(), "i18n:host.reveal.always")
                 .description("i18n:host.reveal.always.desc")
-                .icon("clock-circle"),
+                .icon(IconName::ClockCircle),
             ChoiceOption::new(
                 RevealPolicy::HoursBefore24.as_wire(),
                 "i18n:host.reveal.hoursBefore24",
             )
             .description("i18n:host.reveal.hoursBefore24.desc")
-            .icon("clock-circle"),
+            .icon(IconName::ClockCircle),
             ChoiceOption::new(
                 RevealPolicy::DayBefore16h.as_wire(),
                 "i18n:host.reveal.dayBefore16h",
             )
             .description("i18n:host.reveal.dayBefore16h.desc")
-            .icon("clock-circle"),
+            .icon(IconName::ClockCircle),
             ChoiceOption::new(
                 RevealPolicy::AtCheckin.as_wire(),
                 "i18n:host.reveal.atCheckin",
             )
             .description("i18n:host.reveal.atCheckin.desc")
-            .icon("key"),
+            .icon(IconName::Key),
         ])
 }

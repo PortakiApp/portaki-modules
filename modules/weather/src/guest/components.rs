@@ -4,7 +4,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::{Emphasis, Tone};
 use portaki_sdk::sdui::primitives::{Icon, Stack, Text};
 
-pub fn metric_label(icon: &str, label: &str) -> Component {
+pub fn metric_label(icon: IconName, label: &str) -> Component {
     Component::Stack(
         Stack::new()
             .direction(StackDirection::Horizontal)
@@ -20,7 +20,12 @@ pub fn metric_label(icon: &str, label: &str) -> Component {
 }
 
 /// One metric tile: icon + label on top, value below — two tiles per grid row.
-pub fn metric_tile(icon: &str, label: &str, value: &str, value_tone: Option<Tone>) -> Component {
+pub fn metric_tile(
+    icon: IconName,
+    label: &str,
+    value: &str,
+    value_tone: Option<Tone>,
+) -> Component {
     let mut value_text = Text::new().text(value).variant(TextVariant::Caption);
     if let Some(tone) = value_tone {
         value_text = value_text.tone(tone);

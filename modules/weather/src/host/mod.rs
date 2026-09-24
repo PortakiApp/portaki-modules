@@ -11,9 +11,9 @@ use crate::entities::WeatherUnits;
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-module-sheet",
+    placement = HostPlacement::PropertyModuleSheet,
     label_key = "catalog.host.main",
-    icon = "cloud-sun"
+    icon = IconName::CloudSun
 )]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let _ = ctx;
@@ -28,7 +28,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         Card::new()
             .title("i18n:host.section.display")
             .subtitle("i18n:host.section.display.help")
-            .icon("cloud-sun")
+            .icon(IconName::CloudSun)
             .children(vec![
                 Field::new()
                     .name("units")

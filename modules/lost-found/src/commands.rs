@@ -109,13 +109,13 @@ pub fn submit_found(ctx: Context, args: SubmitFoundArgs) -> Result<()> {
 /// Scheduled J+2 tick — module owns gate + guest email content.
 #[portaki_sdk::email(
     id = "checkout-j2",
-    audience = "guest",
-    trigger = "relativeToCheckOut",
-    offset = "P2D",
+    audience = EmailAudience::Guest,
+    trigger = EmailTrigger::RelativeToCheckOut,
+    offset_days = 2,
     requires_guest_email,
     description_key = "email.checkout-j2.description",
-    skip_when = "guest.email.missing",
-    skip_when = "stay.cancelled"
+    skip_when = SkipWhen::GuestEmailMissing,
+    skip_when = SkipWhen::StayCancelled
 )]
 #[portaki_sdk::command(name = "sendCheckoutFollowUp")]
 pub fn send_checkout_follow_up(ctx: Context, _args: EmptyArgs) -> Result<()> {

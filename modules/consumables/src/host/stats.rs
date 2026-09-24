@@ -116,10 +116,10 @@ pub fn stats_summary(_ctx: Context, _args: StatsSummaryArgs) -> Result<StatsSumm
 #[portaki_sdk::surface(
     host,
     id = "stock",
-    placement = "property-stats-card",
-    placement = "property-stats-detail",
+    placement = HostPlacement::PropertyStatsCard,
+    placement = HostPlacement::PropertyStatsDetail,
     label_key = "catalog.host.stock",
-    icon = "package"
+    icon = IconName::Package
 )]
 pub fn render_host_stats(ctx: HostContext) -> Surface {
     let locale = ctx.locale.as_str();
@@ -143,7 +143,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
                 EmptyState::new()
                     .title("i18n:stats.empty")
                     .description("i18n:stats.emptyHint")
-                    .icon("package"),
+                    .icon(IconName::Package),
             ),
         )
         .with_id(crate::ids::HOST_STATS);
@@ -226,7 +226,7 @@ fn nothing(description: &str) -> Component {
     EmptyState::new()
         .title("i18n:stats.empty")
         .description(description)
-        .icon("package")
+        .icon(IconName::Package)
         .into()
 }
 

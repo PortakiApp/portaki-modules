@@ -13,7 +13,7 @@ pub fn build_home_card(reports: &[IssueReport]) -> Surface {
         OverlayPresentation::BottomSheet,
         crate::ids::GUEST_FORM,
         OverlayArgs::new()
-            .icon("danger-triangle")
+            .icon(IconName::DangerTriangle)
             .title("i18n:home.card.title"),
     );
 
@@ -55,7 +55,7 @@ pub fn build_home_card(reports: &[IssueReport]) -> Surface {
 
     Surface::new(
         Card::new()
-            .icon("danger-triangle")
+            .icon(IconName::DangerTriangle)
             .title("i18n:home.card.title")
             .action(open_form)
             .child(Stack::new().gap(12.0).children(children)),

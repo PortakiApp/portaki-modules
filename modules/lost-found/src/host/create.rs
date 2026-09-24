@@ -63,9 +63,9 @@ pub(crate) fn build_create_found_form(ctx: &HostContext) -> Component {
 #[portaki_sdk::surface(
     host,
     id = "create",
-    placement = "stay-action",
+    placement = HostPlacement::StayAction,
     label_key = "catalog.host.create",
-    icon = "search"
+    icon = IconName::Search
 )]
 pub fn render_host_create(ctx: HostContext) -> Surface {
     Surface::new(Page::new().child(build_create_found_form(&ctx))).with_id(crate::ids::HOST_CREATE)

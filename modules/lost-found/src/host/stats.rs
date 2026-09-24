@@ -79,10 +79,10 @@ pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSumma
 #[portaki_sdk::surface(
     host,
     id = "lost-stats",
-    placement = "property-stats-card",
-    placement = "property-stats-detail",
+    placement = HostPlacement::PropertyStatsCard,
+    placement = HostPlacement::PropertyStatsDetail,
     label_key = "catalog.host.lost-stats",
-    icon = "search"
+    icon = IconName::Search
 )]
 pub fn render_host_stats(ctx: HostContext) -> Surface {
     let locale = ctx.locale.as_str();
@@ -131,7 +131,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
         EmptyState::new()
             .title("i18n:host.main.emptyRecent")
             .description("i18n:host.main.emptyRecent.help")
-            .icon("search")
+            .icon(IconName::Search)
             .into()
     } else {
         Stack::new()

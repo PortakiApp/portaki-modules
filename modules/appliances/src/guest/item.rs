@@ -38,7 +38,7 @@ pub fn build_item_detail(payload: &AppliancesPayload, device_id: Option<&str>) -
                 EmptyState::new()
                     .title("i18n:explore.item.notFound")
                     .description("i18n:explore.item.notFound.description")
-                    .icon("plug"),
+                    .icon(IconName::Plug),
             ),
         )
         .with_id(crate::ids::EXPLORE_ITEM);

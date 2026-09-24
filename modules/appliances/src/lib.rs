@@ -34,9 +34,9 @@ portaki_sdk::portaki_module!(
     description_key = "module.catalogDescription",
     author = "Portaki",
     author_url = "https://portaki.app",
-    module_type = "official",
-    icon = "plug",
-    maturity = "stable",
+    module_type = ModuleType::Official,
+    icon = IconName::Plug,
+    maturity = Maturity::Stable,
     sort_order = 120,
 );
 

@@ -179,10 +179,10 @@ fn departures(
 #[portaki_sdk::surface(
     host,
     id = "checklist",
-    placement = "property-stats-card",
-    placement = "property-stats-detail",
+    placement = HostPlacement::PropertyStatsCard,
+    placement = HostPlacement::PropertyStatsDetail,
     label_key = "catalog.host.checklist",
-    icon = "check-circle"
+    icon = IconName::CheckCircle
 )]
 pub fn render_stats_checklist(ctx: HostContext) -> Surface {
     let now = time::now().unwrap_or(DateTime::<Utc>::UNIX_EPOCH);
@@ -201,7 +201,7 @@ pub fn render_stats_checklist(ctx: HostContext) -> Surface {
     };
 
     let body: Component = if stays.is_empty() {
-        empty("i18n:stats.checklist.empty", "check-circle")
+        empty("i18n:stats.checklist.empty", IconName::CheckCircle)
     } else {
         let rates = item_rates(&items, |item| {
             stays
@@ -474,10 +474,10 @@ fn planned_cleanings<'a>(
 #[portaki_sdk::surface(
     host,
     id = "cleaning",
-    placement = "property-stats-card",
-    placement = "property-stats-detail",
+    placement = HostPlacement::PropertyStatsCard,
+    placement = HostPlacement::PropertyStatsDetail,
     label_key = "catalog.host.cleaning",
-    icon = "sparkles"
+    icon = IconName::Sparkles
 )]
 pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
     let now = time::now().unwrap_or(DateTime::<Utc>::UNIX_EPOCH);
@@ -496,7 +496,7 @@ pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
     let judged = tasks.iter().any(|task| task.deadline().is_some());
 
     let body: Component = if tasks.is_empty() {
-        empty("i18n:stats.cleaning.empty", "sparkles")
+        empty("i18n:stats.cleaning.empty", IconName::Sparkles)
     } else {
         let finished: Vec<&CleaningTask<'_>> = tasks.iter().filter(|t| t.finished()).collect();
         let durations: Vec<Duration> = finished
@@ -757,7 +757,7 @@ fn feed_card(key: &str, rows: Vec<Component>) -> Component {
         .into()
 }
 
-fn empty(description: &str, icon: &str) -> Component {
+fn empty(description: &str, icon: IconName) -> Component {
     EmptyState::new()
         .title("i18n:stats.empty")
         .description(description)

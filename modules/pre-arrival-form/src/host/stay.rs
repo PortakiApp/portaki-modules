@@ -17,9 +17,9 @@ use crate::storage;
 #[portaki_sdk::surface(
     host,
     id = "stay",
-    placement = "stay-detail",
+    placement = HostPlacement::StayDetail,
     label_key = "catalog.host.stay",
-    icon = "clipboard"
+    icon = IconName::Clipboard
 )]
 pub fn render_host_stay(ctx: HostContext) -> Surface {
     let stay_id = ctx
@@ -40,7 +40,7 @@ pub fn render_host_stay(ctx: HostContext) -> Surface {
 fn missing_stay_card() -> Component {
     Component::Card(
         Card::new()
-            .icon("clipboard")
+            .icon(IconName::Clipboard)
             .title("i18n:surface.host.stay.title")
             .child(
                 Text::new()
@@ -57,7 +57,7 @@ fn pending_card() -> Component {
 
     Component::Card(
         Card::new()
-            .icon("clipboard")
+            .icon(IconName::Clipboard)
             .title("i18n:surface.host.stay.title")
             .child(status)
             .child(
@@ -150,7 +150,7 @@ fn completed_card(row: &PreArrivalResponse) -> Component {
 
     Component::Card(
         Card::new()
-            .icon("clipboard")
+            .icon(IconName::Clipboard)
             .title("i18n:surface.host.stay.title")
             .child(status)
             .child(Stack::new().gap(0.0).children(rows)),

@@ -46,7 +46,7 @@ pub fn render_home_card(ctx: GuestContext) -> Surface {
     id = "post-stay.card",
     path = "post-stay",
     label_key = "nav.lost-found",
-    role = "post-stay"
+    role = GuestRole::PostStay
 )]
 pub fn render_post_stay_card(ctx: GuestContext) -> Surface {
     render_card(&ctx, crate::ids::POST_STAY_CARD)

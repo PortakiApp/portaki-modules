@@ -26,10 +26,10 @@ fn activity_slots(filled: usize) -> usize {
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-workspace-tab",
-    design_id = "guide-editor-v1",
+    placement = HostPlacement::PropertyWorkspaceTab,
+    design_id = DesignId::GuideEditorV1,
     label_key = "catalog.host.main",
-    icon = "map-pin"
+    icon = IconName::MapPin
 )]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = Localized::lang_code(&ctx.locale);
@@ -100,7 +100,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     cards.push(
         Card::new()
             .title("i18n:host.section.disclaimer")
-            .icon("info-circle")
+            .icon(IconName::InfoCircle)
             .children(vec![Field::new()
                 .name("disclaimer")
                 .label("i18n:host.disclaimer.label")
@@ -149,7 +149,7 @@ fn activities_card(
     let mut children: Vec<Component> = vec![ToggleRow::new()
         .name("activities_enabled")
         .label("i18n:host.activities.enabled")
-        .icon("ticket")
+        .icon(IconName::Ticket)
         .checked(enabled)
         .into()];
 
@@ -260,7 +260,7 @@ fn activities_card(
     Card::new()
         .title("i18n:host.section.activities")
         .subtitle("i18n:host.section.activities.help")
-        .icon("ticket")
+        .icon(IconName::Ticket)
         .children(children)
         .into()
 }
@@ -285,7 +285,7 @@ fn tiqets_card(enabled: bool, radius: &str, min_rating: &str, status: TiqetsStat
         ToggleRow::new()
             .name("tiqets_enabled")
             .label("i18n:host.tiqets.enabled")
-            .icon("ticket")
+            .icon(IconName::Ticket)
             .checked(enabled)
             .into(),
         Field::new()
@@ -341,7 +341,7 @@ fn tiqets_card(enabled: bool, radius: &str, min_rating: &str, status: TiqetsStat
     Card::new()
         .title("i18n:host.section.tiqets")
         .subtitle("i18n:host.section.tiqets.help")
-        .icon("ticket")
+        .icon(IconName::Ticket)
         .children(children)
         .into()
 }
@@ -393,7 +393,7 @@ fn spot_card(index: usize, spot: Option<&SpotRow>, lang: &str) -> Component {
 
     Card::new()
         .title(format!("i18n:host.spot.slot{slot}"))
-        .icon("map-pin")
+        .icon(IconName::MapPin)
         .children(vec![
             Field::new()
                 .name(format!("spots.{index}.name"))

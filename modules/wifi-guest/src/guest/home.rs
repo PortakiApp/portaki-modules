@@ -10,12 +10,14 @@ use super::load::GuestData;
 pub fn build_home_card(data: &GuestData) -> Surface {
     Surface::new(
         Card::new()
-            .icon("wifi")
+            .icon(IconName::Wifi)
             .title("i18n:nav.wifi-guest")
             .action(Action::open_overlay(
                 OverlayPresentation::BottomSheet,
                 crate::ids::EXPLORE_DETAIL,
-                OverlayArgs::new().icon("wifi").title("i18n:nav.wifi-guest"),
+                OverlayArgs::new()
+                    .icon(IconName::Wifi)
+                    .title("i18n:nav.wifi-guest"),
             ))
             .children(build_wifi_body(data, false)),
     )

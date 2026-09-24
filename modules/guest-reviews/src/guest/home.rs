@@ -106,7 +106,7 @@ pub fn build_home_card(data: &GuestData) -> Surface {
 
     Surface::new(
         Card::new()
-            .icon("star")
+            .icon(IconName::Star)
             .title("i18n:home.card.title")
             .child(Stack::new().gap(12.0).children(children)),
     )

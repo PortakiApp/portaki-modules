@@ -26,18 +26,18 @@ pub use stats::{render_stats_checklist, render_stats_cleaning, stats_summary};
 const SELECT_NEW: &str = "__new__";
 
 #[portaki_sdk::nav(
-    placement = "workspace-timeline-task",
+    placement = HostPlacement::WorkspaceTimelineTask,
     path = "tasks",
     label_key = "catalog.host.tasks",
-    icon = "sparkles"
+    icon = IconName::Sparkles
 )]
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-workspace-tab",
-    design_id = "checklist-editor-v1",
+    placement = HostPlacement::PropertyWorkspaceTab,
+    design_id = DesignId::ChecklistEditorV1,
     label_key = "catalog.host.main",
-    icon = "check-circle"
+    icon = IconName::CheckCircle
 )]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let fr = labels::lang_code(&ctx.locale) == "fr";
@@ -59,7 +59,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                 .value(list.id.to_string())
                 .label(name(list, fr))
                 .description(meta)
-                .icon(list.icon.clone())
+                .icon(stored_icon(&list.icon))
                 .selected(list.id.to_string() == selected)
                 .action(select(&list.id.to_string()))
                 .into(),
@@ -231,7 +231,7 @@ fn edit_panel(list: &Checklist, items: &[&ChecklistItem], fr: bool) -> Component
                 .name("notify_assignee")
                 .label("i18n:host.toggle.notifyAssignee")
                 .description("i18n:host.toggle.notifyAssignee.desc")
-                .icon("bell")
+                .icon(IconName::Bell)
                 .checked(list.notify_assignee)
                 .into(),
         );
@@ -240,7 +240,7 @@ fn edit_panel(list: &Checklist, items: &[&ChecklistItem], fr: bool) -> Component
                 .name("alert_host")
                 .label("i18n:host.toggle.alertHost")
                 .description("i18n:host.toggle.alertHost.desc")
-                .icon("danger-triangle")
+                .icon(IconName::DangerTriangle)
                 .checked(list.alert_host)
                 .into(),
         );
@@ -264,7 +264,7 @@ fn edit_panel(list: &Checklist, items: &[&ChecklistItem], fr: bool) -> Component
     );
 
     Card::new()
-        .icon(list.icon.clone())
+        .icon(stored_icon(&list.icon))
         .child(Form::new().child(Stack::new().gap(16.0).children(form)))
         .into()
 }
@@ -291,7 +291,13 @@ fn new_panel() -> Component {
     Card::new()
         .title("i18n:host.new.title")
         .subtitle("i18n:host.new.subtitle")
-        .icon("plus")
+        .icon(IconName::Plus)
         .child(Grid::new().minColumnWidth(220.0).gap(10.0).children(cards))
         .into()
+}
+
+/// The icon a list was saved with. Stored as text, so a row written before the vocabulary was
+/// typed may name a token no shell draws: it falls back to the checklist's own icon.
+fn stored_icon(wire: &str) -> IconName {
+    IconName::from_wire(wire).unwrap_or(IconName::CheckCircle)
 }

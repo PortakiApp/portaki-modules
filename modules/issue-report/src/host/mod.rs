@@ -37,7 +37,7 @@ pub(crate) fn recent_reports_card(locale: &str) -> Component {
         EmptyState::new()
             .title("i18n:host.main.emptyRecent")
             .description("i18n:host.main.emptyRecent.help")
-            .icon("danger-triangle")
+            .icon(IconName::DangerTriangle)
             .into()
     } else {
         let now = host_now();

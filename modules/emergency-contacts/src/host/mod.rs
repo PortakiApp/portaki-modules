@@ -12,10 +12,10 @@ const CONTACT_SLOTS: usize = 6;
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = "property-workspace-tab",
-    design_id = "emergency-editor-v1",
+    placement = HostPlacement::PropertyWorkspaceTab,
+    design_id = DesignId::EmergencyEditorV1,
     label_key = "catalog.host.main",
-    icon = "phone"
+    icon = IconName::Phone
 )]
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let lang = Localized::lang_code(&ctx.locale);
@@ -32,7 +32,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     let mut cards: Vec<Component> = vec![Card::new()
         .title("i18n:host.section.hostPhone")
         .subtitle("i18n:host.section.hostPhone.help")
-        .icon("info-circle")
+        .icon(IconName::InfoCircle)
         .children(vec![Field::new()
             .name("host_visible_phone")
             .label("i18n:host.phone.label")
@@ -87,7 +87,7 @@ fn contact_card(index: usize, contact: Option<&ContactRow>, lang: &str) -> Compo
 
     Card::new()
         .title(format!("i18n:host.contact.slot{slot}"))
-        .icon("users")
+        .icon(IconName::Users)
         .children(vec![
             Field::new()
                 .name(format!("contacts.{index}.label"))

@@ -26,9 +26,9 @@ portaki_sdk::portaki_module!(
     description_key = "module.description",
     author = "Portaki",
     author_url = "https://portaki.app",
-    module_type = "official",
-    icon = "home",
-    maturity = "stable",
+    module_type = ModuleType::Official,
+    icon = IconName::Home,
+    maturity = Maturity::Stable,
     sort_order = 40,
 );
 

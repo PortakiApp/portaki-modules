@@ -50,10 +50,10 @@ fn period_key(days: i64) -> i64 {
 #[portaki_sdk::surface(
     host,
     id = "issue-stats",
-    placement = "property-stats-card",
-    placement = "property-stats-detail",
+    placement = HostPlacement::PropertyStatsCard,
+    placement = HostPlacement::PropertyStatsDetail,
     label_key = "catalog.host.issue-stats",
-    icon = "danger-triangle"
+    icon = IconName::DangerTriangle
 )]
 pub fn render_host_stats(ctx: HostContext) -> Surface {
     let fr = ctx.locale.to_ascii_lowercase().starts_with("fr");
@@ -114,7 +114,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
 
     let by_category = count_by_category(&reports);
     let category_body = if by_category.is_empty() {
-        empty("i18n:stats.byCategory.empty", "danger-triangle")
+        empty("i18n:stats.byCategory.empty", IconName::DangerTriangle)
     } else {
         Chart::new()
             .kind(ChartKind::HorizontalBars)
@@ -132,7 +132,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
     };
 
     let delay_body = if delays.is_empty() {
-        empty("i18n:stats.delay.empty", "clock-circle")
+        empty("i18n:stats.delay.empty", IconName::ClockCircle)
     } else {
         delay_chart(&reports, now, days, fr)
     };
@@ -141,13 +141,13 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
         Card::new()
             .title("i18n:stats.byCategory.title")
             .subtitle("i18n:stats.byCategory.subtitle")
-            .icon("danger-triangle")
+            .icon(IconName::DangerTriangle)
             .children(vec![category_body])
             .into(),
         Card::new()
             .title("i18n:stats.delay.title")
             .subtitle("i18n:stats.delay.subtitle")
-            .icon("clock-circle")
+            .icon(IconName::ClockCircle)
             .children(vec![delay_body])
             .into(),
     ]);
@@ -249,7 +249,7 @@ fn month_initial(month: u32) -> &'static str {
     ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"][(month as usize + 11) % 12]
 }
 
-fn empty(description: &str, icon: &str) -> Component {
+fn empty(description: &str, icon: IconName) -> Component {
     EmptyState::new()
         .title("i18n:stats.empty")
         .description(description)

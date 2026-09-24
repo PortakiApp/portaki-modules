@@ -88,20 +88,20 @@ pub fn list_sources(_ctx: Context) -> Result<ListSourcesResponse> {
 /// via `host::email::send`.
 #[portaki_sdk::email(
     id = "sync-failed",
-    audience = "host",
-    trigger = "onApplyFeeds",
+    audience = EmailAudience::Host,
+    trigger = EmailTrigger::OnApplyFeeds,
     description_key = "email.sync-failed.description"
 )]
 #[portaki_sdk::email(
     id = "stay-imported",
-    audience = "host",
-    trigger = "onApplyFeeds",
+    audience = EmailAudience::Host,
+    trigger = EmailTrigger::OnApplyFeeds,
     description_key = "email.stay-imported.description"
 )]
 #[portaki_sdk::email(
     id = "sync-summary",
-    audience = "host",
-    trigger = "onApplyFeeds",
+    audience = EmailAudience::Host,
+    trigger = EmailTrigger::OnApplyFeeds,
     description_key = "email.sync-summary.description"
 )]
 #[portaki_sdk::query(name = "applyFeeds")]

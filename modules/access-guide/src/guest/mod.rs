@@ -32,7 +32,7 @@ pub fn render_home_card(ctx: GuestContext) -> Surface {
     id = "upcoming.card",
     path = "upcoming",
     label_key = "nav.access-guide",
-    role = "upcoming"
+    role = GuestRole::Upcoming
 )]
 pub fn render_upcoming_card(ctx: GuestContext) -> Surface {
     match render_with_data(&ctx, crate::ids::UPCOMING_CARD, build_upcoming_card) {
