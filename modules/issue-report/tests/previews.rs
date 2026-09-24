@@ -3,7 +3,9 @@
 #[path = "../../../support/previews.rs"]
 mod previews;
 
-use issue_report::{render_guest_form, render_home_card, reset_test_store, submit, SubmitArgs};
+use issue_report::{
+    render_guest_form, render_home_card, reset_test_store, submit, Category, SubmitArgs,
+};
 
 /// Un signalement déjà envoyé, pour que la carte montre son suivi.
 #[test]
@@ -14,7 +16,7 @@ fn previews_match_the_rendered_surfaces() {
         submit(
             ctx.clone(),
             SubmitArgs {
-                category: "appliance".into(),
+                category: Category::Appliance,
                 summary: "Le four ne chauffe plus".into(),
                 details: Some("Le voyant s'allume mais la température ne monte pas.".into()),
                 photo: None,

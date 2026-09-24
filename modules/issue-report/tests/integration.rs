@@ -5,7 +5,7 @@ use serial_test::serial;
 
 use issue_report::{
     list_for_stay, list_recent, render_guest_form, render_home_card, render_host_stats,
-    reset_test_store, resolve, stats_summary, submit, ResolveArgs, SubmitArgs,
+    reset_test_store, resolve, stats_summary, submit, Category, ResolveArgs, SubmitArgs,
     GUEST_TEXT_EMAIL_MAX_CHARS,
 };
 use portaki_sdk::contracts::stats::StatsSummaryArgs;
@@ -48,7 +48,7 @@ fn submit_allows_multiple_reports_and_shows_list() {
             submit(
                 ctx.clone(),
                 SubmitArgs {
-                    category: "appliance".into(),
+                    category: Category::Appliance,
                     summary: "Oven broken".into(),
                     details: Some("Won't heat".into()),
                     photo: None,
@@ -64,7 +64,7 @@ fn submit_allows_multiple_reports_and_shows_list() {
             submit(
                 ctx.clone(),
                 SubmitArgs {
-                    category: "noise".into(),
+                    category: Category::Noise,
                     summary: "Loud neighbors".into(),
                     details: None,
                     photo: None,
@@ -93,7 +93,7 @@ fn host_stats_list_recent_after_guest_submit() {
             submit(
                 ctx,
                 SubmitArgs {
-                    category: "cleanliness".into(),
+                    category: Category::Cleanliness,
                     summary: "Bathroom not clean".into(),
                     details: None,
                     photo: None,
@@ -131,14 +131,14 @@ fn host_stats_reflect_resolution_and_period() {
         .with_now(t0)
         .run(|ctx| {
             for (category, summary) in [
-                ("appliance", "Oven"),
-                ("appliance", "Boiler"),
-                ("access", "Code"),
+                (Category::Appliance, "Oven"),
+                (Category::Appliance, "Boiler"),
+                (Category::Access, "Code"),
             ] {
                 submit(
                     ctx.clone(),
                     SubmitArgs {
-                        category: category.into(),
+                        category,
                         summary: summary.into(),
                         details: None,
                         photo: None,
@@ -238,7 +238,7 @@ fn long_details_are_stored_whole_and_quoted_in_the_host_email() {
             submit(
                 ctx.clone(),
                 SubmitArgs {
-                    category: "appliance".into(),
+                    category: Category::Appliance,
                     summary: "Fuite sous l'évier".into(),
                     details: Some(details.clone()),
                     photo: None,
@@ -284,7 +284,7 @@ fn a_guest_photo_reaches_the_host_screen_and_the_stats() {
             let refused = submit(
                 ctx.clone(),
                 SubmitArgs {
-                    category: "other".into(),
+                    category: Category::Other,
                     summary: "Tracker".into(),
                     details: None,
                     photo: Some("https://evil.example/pixel.png".into()),
@@ -296,7 +296,7 @@ fn a_guest_photo_reaches_the_host_screen_and_the_stats() {
                 submit(
                     ctx.clone(),
                     SubmitArgs {
-                        category: "appliance".into(),
+                        category: Category::Appliance,
                         summary: "Oven".into(),
                         details: None,
                         photo,
@@ -336,7 +336,7 @@ fn a_feed_row_opens_the_report_detail() {
             submit(
                 ctx,
                 SubmitArgs {
-                    category: "appliance".into(),
+                    category: Category::Appliance,
                     summary: "Oven".into(),
                     details: Some("Door stuck".into()),
                     photo: None,

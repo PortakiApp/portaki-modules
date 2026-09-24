@@ -8,7 +8,7 @@ use portaki_sdk::host::events;
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
-use crate::category;
+use crate::category::Category;
 use crate::email_text;
 use crate::storage;
 
@@ -16,7 +16,7 @@ use crate::storage;
 #[portaki_sdk::wire]
 #[portaki_sdk::params]
 pub struct SubmitArgs {
-    pub category: String,
+    pub category: Category,
     pub summary: String,
     #[serde(default)]
     pub details: Option<String>,
@@ -28,14 +28,14 @@ pub struct SubmitArgs {
 #[portaki_sdk::command(name = "submit")]
 pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     let stay_id = require_stay_id(&ctx)?;
-    let category = category::parse_category(&args.category)?;
+    let category = args.category.as_str();
     let summary = require_summary(&args.summary)?;
     let details = normalize_optional(args.details);
     let photo = parse_photo(args.photo)?;
 
     let _ = storage::create(
         stay_id,
-        category.clone(),
+        category.to_string(),
         summary.clone(),
         details.clone(),
         photo,

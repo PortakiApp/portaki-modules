@@ -12,6 +12,7 @@ mod ids;
 mod queries;
 mod storage;
 
+pub use category::Category;
 pub use commands::{resolve, submit, ResolveArgs, SubmitArgs};
 pub use email_text::GUEST_TEXT_EMAIL_MAX_CHARS;
 pub use entities::IssueReport;

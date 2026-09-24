@@ -5,13 +5,29 @@ use portaki_sdk::prelude::*;
 /// Allowed category values on the wire.
 pub const WIRE_VALUES: &[&str] = &["appliance", "cleanliness", "noise", "access", "other"];
 
-/// Validates and normalizes a category string from the form.
-pub fn parse_category(raw: &str) -> Result<String> {
-    let trimmed = raw.trim();
-    if WIRE_VALUES.contains(&trimmed) {
-        return Ok(trimmed.to_string());
+/// Issue category picked in the guest form; serde rejects any other value.
+#[portaki_sdk::params]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum Category {
+    Appliance,
+    Cleanliness,
+    Noise,
+    Access,
+    Other,
+}
+
+impl Category {
+    /// Wire value, as stored.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Appliance => "appliance",
+            Self::Cleanliness => "cleanliness",
+            Self::Noise => "noise",
+            Self::Access => "access",
+            Self::Other => "other",
+        }
     }
-    Err(PortakiError::Host(format!("invalid_category:{trimmed}")))
 }
 
 /// i18n key for a stored category wire value.
