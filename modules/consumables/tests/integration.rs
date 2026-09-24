@@ -132,6 +132,8 @@ fn stock_args() -> StatsSummaryArgs {
 fn host_mark_restocked_clears_open_list() {
     reset_test_store();
     let mut report_id = Uuid::nil();
+    let mut stay_id = Uuid::nil();
+    let mut item_id = Uuid::nil();
 
     MockContext::guest()
         .with_property(Property::default())
@@ -150,7 +152,7 @@ fn host_mark_restocked_clears_open_list() {
                 },
             )
             .expect("replace");
-            let item_id = list_items(ctx.clone()).expect("items")[0].id;
+            item_id = list_items(ctx.clone()).expect("items")[0].id;
             submit(
                 ctx.clone(),
                 SubmitArgs {
@@ -160,7 +162,9 @@ fn host_mark_restocked_clears_open_list() {
                 },
             )
             .expect("submit");
-            report_id = list_for_stay(ctx, ListForStayArgs::default()).expect("list")[0].id;
+            let report = &list_for_stay(ctx, ListForStayArgs::default()).expect("list")[0];
+            report_id = report.id;
+            stay_id = report.stay_id;
         });
 
     MockContext::host()
@@ -193,6 +197,28 @@ fn host_mark_restocked_clears_open_list() {
             assert!(stats.contains("stats.stock.ok"));
             assert!(stats.contains("stats.row.restockedAt"));
             assert!(stats.contains("/modules/consumables"));
+            // Sans séjours : les signalements par article ; un seul réassort, pas encore de rythme.
+            assert!(stats.contains("stats.byItem.title"));
+            assert!(stats.contains("stats.restock.empty"));
+
+            // Deux départs dans la période, dont celui qui a signalé le savon : 50 %.
+            let mut with_stays = ctx.clone();
+            let now = portaki_sdk::host::time::now().expect("now");
+            let stay = |id: Uuid, days: i64| {
+                serde_json::json!({
+                    "id": id,
+                    "checkIn": now - chrono::Duration::days(days + 3),
+                    "checkOut": now - chrono::Duration::days(days),
+                    "status": "COMPLETED",
+                })
+            };
+            with_stays.input = serde_json::json!({
+                "periodDays": 30,
+                "stays": [stay(stay_id, 0), stay(Uuid::new_v4(), 4)],
+            });
+            let stats = serde_json::to_string(&render_host_stats(with_stays)).expect("json");
+            assert!(stats.contains("stats.perStay.title"));
+            assert!(stats.contains("\"50 %\""));
 
             let surface = render_host_main(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("IndexedInput"));

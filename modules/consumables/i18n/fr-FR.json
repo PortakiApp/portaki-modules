@@ -69,5 +69,12 @@
   "stats.stock.low": "Bientôt",
   "stats.stock.ok": "OK",
   "stats.row.reportedAt": "signalé le {date}",
-  "stats.row.restockedAt": "réassort le {date}"
+  "stats.row.restockedAt": "réassort le {date}",
+  "stats.perStay.title": "Manques par séjour",
+  "stats.perStay.subtitle": "Part des séjours terminés où l'article a manqué",
+  "stats.perStay.empty": "Aucun manque signalé sur les séjours de la période.",
+  "stats.restock.title": "Quand il faut racheter",
+  "stats.restock.subtitle": "Jours entre un réassort et le manque suivant, en moyenne",
+  "stats.restock.empty": "Pas encore assez de réassorts pour estimer un rythme.",
+  "stats.restock.unit": "{count} j"
 }
