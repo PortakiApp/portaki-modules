@@ -1,9 +1,12 @@
 //! Module queries — pre-arrival form status.
 
 use chrono::{DateTime, Utc};
+use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
+use crate::config::load_config;
+use crate::i18n::text;
 use crate::storage;
 
 /// Status DTO returned by `getStatus`.
@@ -61,6 +64,27 @@ pub fn get_status(ctx: Context) -> Result<PreArrivalStatus> {
         id_document: row.id_document,
         message_to_host: row.guest_message,
         completed_at: Some(row.completed_at),
+    })
+}
+
+/// Recommends asking the guest at least one question; never blocks.
+#[portaki_sdk::query(name = "publishReadiness")]
+pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
+    let q = load_config()?.questions;
+    let ok = q.ask_arrival_time
+        || q.ask_occasion
+        || q.ask_allergies
+        || q.ask_guest_count
+        || q.ask_special_needs
+        || q.ask_id_document;
+    Ok(PublishReadiness {
+        items: vec![PublishCheck {
+            id: "questions".into(),
+            level: PublishLevel::Recommended,
+            ok,
+            label: text("publish.questions.label"),
+            hint: text("publish.questions.hint"),
+        }],
     })
 }
 

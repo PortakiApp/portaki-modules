@@ -69,5 +69,7 @@
   "module.status.incomplete.description": "Finish the module in the host dashboard",
   "module.status.incomplete.hint": "Open Modules → Pre-arrival form",
   "module.status.inactive.title": "Pre-arrival module disabled",
-  "module.status.inactive.description": "This module is not active on this property"
+  "module.status.inactive.description": "This module is not active on this property",
+  "publish.questions.label": "Guest questions",
+  "publish.questions.hint": "Turn on at least one form question"
 }

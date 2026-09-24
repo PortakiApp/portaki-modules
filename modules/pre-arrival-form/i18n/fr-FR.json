@@ -69,5 +69,7 @@
   "module.status.incomplete.description": "Finalisez le module dans le tableau de bord hôte",
   "module.status.incomplete.hint": "Ouvrez Modules → Formulaire pré-arrivée",
   "module.status.inactive.title": "Module pré-arrivée désactivé",
-  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement"
+  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
+  "publish.questions.label": "Questions aux voyageurs",
+  "publish.questions.hint": "Activez au moins une question du formulaire"
 }
