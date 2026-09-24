@@ -54,7 +54,7 @@ pub fn update_config(_ctx: Context, args: UpdateConfigArgs) -> Result<()> {
     })
 }
 
-#[portaki_sdk::command(name = "getGuestCredential")]
+#[portaki_sdk::command(name = "getGuestCredential", guest)]
 pub fn get_guest_credential(_ctx: Context, _args: StayArgs) -> Result<GuestCredentialResponse> {
     let config = load_config()?;
     let code = require_keypad_code(&config)?;
@@ -65,7 +65,7 @@ pub fn get_guest_credential(_ctx: Context, _args: StayArgs) -> Result<GuestCrede
     })
 }
 
-#[portaki_sdk::command(name = "unlock")]
+#[portaki_sdk::command(name = "unlock", guest)]
 pub fn unlock(ctx: Context, _args: StayArgs) -> Result<UnlockResponse> {
     let config = load_config()?;
     let keypad = config.keypad_code_trimmed().to_string();
