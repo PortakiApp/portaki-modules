@@ -28,18 +28,6 @@
   "sortOrder": 90,
   "hostSurfaces": [
     {
-      "type": "property-workspace-tab",
-      "pathSegment": "issue-report",
-      "label": {
-        "fr": "Signalements",
-        "en": "Issue reports"
-      },
-      "icon": "danger-triangle",
-      "hostUi": {
-        "designId": "issuereport-editor-v1"
-      }
-    },
-    {
       "type": "property-stats-card",
       "pathSegment": "issue-stats",
       "label": {
