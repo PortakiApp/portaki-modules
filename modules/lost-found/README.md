@@ -14,7 +14,7 @@ OCI image: `ghcr.io/portakiapp/portaki-modules-lost-found:<semver>`
 
 | Capability | Required | Purpose |
 |------------|----------|---------|
-| `core.storage` | Yes | `LostFoundReport` entity (many per stay) + KV config (`host_note`) |
+| `core.storage` | Yes | `LostFoundReport` entity (many per stay) |
 
 ## Data model
 
@@ -31,9 +31,8 @@ OCI image: `ghcr.io/portakiapp/portaki-modules-lost-found:<semver>`
 
 | Shell | Surface id | Description |
 |-------|------------|-------------|
-| guest | `home.card` | Kind + description form; optional host tip banner; stay report list after submit |
-| host | `main` | Design editor: info banner, TipTap guest note (`host_note`) |
-| host | `lost-stats` | `property-stats-card` — recent reports with status pills + update |
+| guest | `home.card` | Kind + description form; stay report list after submit |
+| host | `lost-stats` | `property-stats-detail` — counters (declared, returned, waiting, no answer) and the declared items as `FeedItem`s, no chart; a row opens the dashboard modal (`host.surface.overlay`), which renders this surface with `input.itemId` as the item detail |
 | host | `create` | Stay-action modal body: TipTap description (`RichTextEditor`), hint, « Envoyer au voyageur » |
 | host | `stay` | Stay-detail Card list + status when reports exist; empty tree when none (no empty-state copy) |
 
@@ -48,8 +47,8 @@ Create always defaults status to `to_collect` — no status field on create.
 - `submit` — guest create report; `host::email::send` → host notify (module SDUI)
 - `submitFound` — host create found report(s); `host::email::send` → guest (module SDUI)
 - `sendCheckoutFollowUp` — J+2 tick; guest mail only when a stay declaration exists
-- `updateStatus` — host change report status (`to_collect` \| `sent` \| `returned`) after create
-- `updateConfig` — persists optional `host_note` in KV (TipTap JSON ok)
+- `updateStatus` — host change report status (`to_collect` \| `sent` \| `returned`) after create; records `workspace-activity.record`
+- `statsSummary` — tile `lost-stats`: items declared over the period, waiting ones as attention
 - `emailContext` — optional Portaki snippets: `checkoutTips`, `lostItemDescription` + `hasDeclaration`
 
 ## Development

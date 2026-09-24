@@ -34,7 +34,7 @@ fn status_label_i18n(wire: &str) -> &'static str {
     }
 }
 
-fn report_title(report: &LostFoundReport) -> String {
+pub(crate) fn report_title(report: &LostFoundReport) -> String {
     let title = description::to_plain_text(&report.item_description);
     if title.is_empty() {
         report.item_description.clone()
@@ -44,7 +44,7 @@ fn report_title(report: &LostFoundReport) -> String {
 }
 
 /// Source chip in the subtitle — resolved in-module (subtitle is not an i18n key).
-fn source_label(kind: &str, locale: &str) -> &'static str {
+pub(crate) fn source_label(kind: &str, locale: &str) -> &'static str {
     let fr = locale.to_ascii_lowercase().starts_with("fr");
     if kind == "found" {
         if fr {
@@ -96,7 +96,7 @@ fn month_abbr(month: u32, locale: &str) -> &'static str {
     }
 }
 
-fn format_short_date(created_at: DateTime<Utc>, locale: &str) -> String {
+pub(crate) fn format_short_date(created_at: DateTime<Utc>, locale: &str) -> String {
     format!(
         "{} {}",
         created_at.day(),

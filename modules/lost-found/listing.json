@@ -17,12 +17,7 @@
     "fr": "Un bouton « Déclarer un objet trouvé » dans le détail de chaque séjour, qui prévient le voyageur par e-mail ; la liste des objets à suivre (à récupérer, envoyé, récupéré) dans les statistiques du logement, et un e-mail à chaque déclaration d’un voyageur.",
     "en": "A “Declare a found item” button on each stay's detail page that emails the guest; the list of items to track (to collect, sent, returned) in the property stats, and an email for every guest report."
   },
-  "configItems": [
-    {
-      "fr": "Message pour le voyageur, repris dans l’e-mail (facultatif)",
-      "en": "Message for the guest, included in the email (optional)"
-    }
-  ],
+  "configItems": [],
   "capabilities": [],
   "publishedLangs": [
     "fr",

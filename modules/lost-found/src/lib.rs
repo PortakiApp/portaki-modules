@@ -1,7 +1,6 @@
 //! Portaki lost-found module — guest reports + host-declared found items.
 
 mod commands;
-mod config;
 mod description;
 mod email_context;
 mod email_i18n;
@@ -10,6 +9,7 @@ mod email_text;
 mod entities;
 mod guest;
 mod host;
+mod i18n;
 mod ids;
 mod kind;
 mod queries;
@@ -17,17 +17,16 @@ mod status;
 mod storage;
 
 pub use commands::{
-    send_checkout_follow_up, submit, submit_found, update_config, update_status, SubmitArgs,
-    SubmitFoundArgs, UpdateConfigArgs, UpdateStatusArgs,
+    send_checkout_follow_up, submit, submit_found, update_status, SubmitArgs, SubmitFoundArgs,
+    UpdateStatusArgs,
 };
-pub use config::{load_config, ModuleConfig};
 pub use email_context::{
     build_email_context, email_context, EmailContextArgs, EmailContextResponse,
 };
 pub use email_text::GUEST_TEXT_EMAIL_MAX_CHARS;
 pub use entities::LostFoundReport;
 pub use guest::{render_guest_form, render_home_card, render_post_stay_card};
-pub use host::{render_host_create, render_host_main, render_host_stats, render_host_stay};
+pub use host::{render_host_create, render_host_stats, render_host_stay, stats_summary};
 pub use queries::{list_for_stay, list_recent, ListForStayArgs, LostFoundReportRow};
 pub use status::{DEFAULT as STATUS_DEFAULT, WIRE_VALUES as STATUS_WIRE_VALUES};
 pub use storage::reset_test_store;

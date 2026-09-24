@@ -1,6 +1,7 @@
 //! Lost/found report persistence via `host::repo`.
 
-use portaki_sdk::host::repo::{self, eq, find, Query};
+use chrono::{DateTime, Utc};
+use portaki_sdk::host::repo::{self, eq, find, gte, Query};
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
@@ -61,6 +62,24 @@ pub fn list_recent() -> Result<Vec<LostFoundReport>> {
     };
     sort_newest_first(&mut rows);
     rows.truncate(20);
+    Ok(rows)
+}
+
+/// Lists the property's reports created at or after `since` (host stats window), newest first.
+pub fn list_since(since: DateTime<Utc>) -> Result<Vec<LostFoundReport>> {
+    let mut rows: Vec<LostFoundReport> = if in_memory_enabled() {
+        TEST_ROWS.with(|store| store.borrow().clone())
+    } else {
+        // ponytail: one 1000-row page caps the window; paginate if a property outgrows it.
+        find::<LostFoundReport, LostFoundReport>(
+            Query::<LostFoundReport>::new()
+                .r#where(gte("created_at", since))
+                .limit(1000),
+        )?
+        .items
+    };
+    rows.retain(|row| row.created_at >= since);
+    sort_newest_first(&mut rows);
     Ok(rows)
 }
 
