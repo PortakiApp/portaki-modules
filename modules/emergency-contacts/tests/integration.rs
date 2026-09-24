@@ -4,7 +4,8 @@ use portaki_sdk::capability;
 use serial_test::serial;
 
 use emergency_contacts::{
-    get_config, render_explore_detail, render_home_card, update_config, UpdateConfigArgs,
+    get_config, publish_readiness, render_explore_detail, render_home_card, update_config,
+    UpdateConfigArgs,
 };
 use portaki_test_utils::{MockContext, SurfaceAssertions};
 use serde_json::json;
@@ -73,5 +74,23 @@ fn update_config_roundtrip() {
             .expect("updateConfig");
             let config = get_config(ctx).expect("getConfig");
             assert_eq!(config.host_visible_phone, "+331234");
+        });
+}
+
+#[test]
+#[serial]
+fn publish_readiness_requires_host_phone() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            let items = publish_readiness(ctx).expect("publishReadiness").items;
+            assert_eq!(items[0].id, "host-phone");
+            assert!(!items[0].ok);
+        });
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv("config", sample_config_bytes())
+        .run(|ctx| {
+            assert!(publish_readiness(ctx).expect("publishReadiness").items[0].ok);
         });
 }
