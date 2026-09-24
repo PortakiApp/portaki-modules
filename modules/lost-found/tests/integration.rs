@@ -6,11 +6,12 @@ use uuid::Uuid;
 
 use lost_found::{
     build_email_context, list_for_stay, list_recent, render_guest_form, render_home_card,
-    render_host_create, render_host_main, render_host_stats, render_host_stay,
-    render_post_stay_card, reset_test_store, send_checkout_follow_up, submit, submit_found,
-    update_config, update_status, EmailContextArgs, ListForStayArgs, SubmitArgs, SubmitFoundArgs,
-    UpdateConfigArgs, UpdateStatusArgs, GUEST_TEXT_EMAIL_MAX_CHARS, STATUS_DEFAULT,
+    render_host_create, render_host_stats, render_host_stay, render_post_stay_card,
+    reset_test_store, send_checkout_follow_up, stats_summary, submit, submit_found, update_status,
+    EmailContextArgs, ListForStayArgs, SubmitArgs, SubmitFoundArgs, UpdateStatusArgs,
+    GUEST_TEXT_EMAIL_MAX_CHARS, STATUS_DEFAULT,
 };
+use portaki_sdk::contracts::stats::StatsSummaryArgs;
 use portaki_sdk::host::email::{EmailAudience, EmailError};
 use portaki_sdk::limits;
 use portaki_sdk::prelude::{EmailTemplateKey, PortakiError};
@@ -127,23 +128,31 @@ fn host_stats_list_recent_after_guest_submit() {
             assert_eq!(recent.len(), 1);
 
             let surface = render_host_stats(ctx.clone());
-            assert!(SurfaceAssertions::new(&surface).contains_type("Page"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("List"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("Pill"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("Select"));
+            let assertions = SurfaceAssertions::new(&surface);
+            assert!(assertions.contains_type("Stat"));
+            assert!(assertions.contains_type("FeedItem"));
+            assert!(
+                !assertions.contains_type("Chart"),
+                "no chart for found items"
+            );
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("host.main.recentTitle"));
-            assert!(json.contains("updateStatus") || json.contains("host.main.updateStatus"));
+            assert!(json.contains("stats.status.waiting"));
             // Create lives on stay surface — not the stats list.
             assert!(!json.contains("host.create.submit"));
 
-            // The config tab keeps the note only.
-            let main = serde_json::to_string(&render_host_main(ctx)).expect("main json");
-            assert!(main.contains("host.main.banner"));
-            assert!(!main.contains("host.main.recentTitle"));
+            let tile = stats_summary(
+                ctx,
+                StatsSummaryArgs {
+                    property_id: Uuid::nil(),
+                    period: 90,
+                    key: "lost-stats".into(),
+                },
+            )
+            .expect("statsSummary");
+            assert_eq!(tile.value, "1");
+            assert_eq!(tile.label.fr, "objets déclarés · 90 j");
+            assert_eq!(tile.attention.expect("waiting").text.fr, "1 en attente");
         });
 }
 
@@ -395,81 +404,6 @@ fn host_stay_surface_card_when_reports_exist() {
         });
 }
 
-#[test]
-#[serial]
-fn host_main_editor_has_note_not_create_form() {
-    reset_test_store();
-    MockContext::host()
-        .with_property(Property::default())
-        .run(|ctx| {
-            let surface = render_host_main(ctx);
-            assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("RichTextEditor"));
-            let json = serde_json::to_string(&surface).expect("surface json");
-            assert!(json.contains("host.hostNote.label") || json.contains("host_note"));
-            assert!(json.contains("host.main.banner"));
-            assert!(!json.contains("host.create.submit"));
-            assert!(!json.contains("submitFound"));
-        });
-}
-
-#[test]
-#[serial]
-fn host_note_shows_on_guest_card_and_email_context() {
-    reset_test_store();
-    let config_bytes = serde_json::to_vec(&serde_json::json!({
-        "host_note": "Leave found items in the lobby closet."
-    }))
-    .expect("config json");
-
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[portaki_sdk::capability::core::STORAGE])
-        .with_kv("config", config_bytes)
-        .run(|ctx| {
-            let surface = render_home_card(ctx.clone());
-            assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
-            let json = serde_json::to_string(&surface).expect("surface json");
-            assert!(json.contains("Leave found items in the lobby closet."));
-
-            let out = build_email_context(
-                ctx,
-                EmailContextArgs {
-                    template_key: Some(EmailTemplateKey::LostFound),
-                    locale: None,
-                    ..Default::default()
-                },
-            )
-            .expect("emailContext");
-            assert_eq!(
-                out.checkout_tips.as_deref(),
-                Some("Leave found items in the lobby closet.")
-            );
-        });
-}
-
-#[test]
-#[serial]
-fn update_config_persists_host_note() {
-    reset_test_store();
-    MockContext::host()
-        .with_property(Property::default())
-        .with_capabilities(&[portaki_sdk::capability::core::STORAGE])
-        .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    host_note: "Lobby closet.".into(),
-                },
-            )
-            .expect("updateConfig");
-
-            let surface = render_host_main(ctx);
-            let json = serde_json::to_string(&surface).expect("surface json");
-            assert!(json.contains("Lobby closet."));
-        });
-}
-
 /// The J+2 tick lands inside the platform's guest window (checkout + 7 days), so the
 /// after-stay rule lets it through; the same send past the window is refused.
 #[test]
@@ -658,5 +592,49 @@ fn checkout_follow_up_quotes_long_declarations_within_the_body_cap() {
             }
             assert!(body.fr.contains('…'));
             assert_eq!(email.content.cta.expect("cta").label.fr, "Voir plus");
+        });
+}
+
+#[test]
+#[serial]
+fn a_feed_row_opens_the_item_detail() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            submit(
+                ctx,
+                SubmitArgs {
+                    kind: "lost".into(),
+                    item_description: "Blue scarf".into(),
+                    contact_hint: None,
+                    details: None,
+                },
+            )
+            .expect("submit");
+        });
+
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|mut ctx| {
+            let feed = serde_json::to_string(&render_host_stats(ctx.clone())).expect("json");
+            assert!(feed.contains("host.surface.overlay"));
+
+            let item = list_recent(ctx.clone()).expect("recent").remove(0);
+            ctx.input = serde_json::json!({ "itemId": item.id });
+            let detail = serde_json::to_string(&render_host_stats(ctx.clone())).expect("json");
+            assert!(detail.contains("stats.detail.note"));
+            assert!(detail.contains("stats.detail.markReturned"));
+
+            update_status(
+                ctx.clone(),
+                UpdateStatusArgs {
+                    report_id: item.id,
+                    status: "returned".into(),
+                },
+            )
+            .expect("returned");
+            let detail = serde_json::to_string(&render_host_stats(ctx)).expect("json");
+            assert!(!detail.contains("stats.detail.markReturned"));
         });
 }

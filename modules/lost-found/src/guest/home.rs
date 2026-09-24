@@ -2,10 +2,9 @@
 
 use portaki_sdk::prelude::*;
 
-use portaki_sdk::sdui::primitives::{Card, InfoBanner, ListItem, Stack, Text};
+use portaki_sdk::sdui::primitives::{Card, ListItem, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::load_config;
 use crate::description;
 use crate::entities::LostFoundReport;
 use crate::kind;
@@ -19,15 +18,7 @@ pub fn build_home_card(reports: &[LostFoundReport]) -> Surface {
             .title("i18n:home.card.title"),
     );
 
-    let config = load_config().unwrap_or_default();
     let mut children: Vec<Component> = Vec::new();
-
-    if let Some(note) = config.host_note_text() {
-        let plain = description::to_plain_text(note);
-        if !plain.is_empty() {
-            children.push(InfoBanner::new().message(plain).into());
-        }
-    }
 
     if reports.is_empty() {
         children.push(

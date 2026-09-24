@@ -1,10 +1,9 @@
-//! Module commands — guest submit, host submitFound / updateStatus, host config.
+//! Module commands — guest submit, host submitFound / updateStatus.
 
+use portaki_sdk::host::events;
 use portaki_sdk::prelude::*;
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::config::{save_config, ModuleConfig};
 use crate::description;
 use crate::email_send;
 use crate::email_text;
@@ -128,27 +127,20 @@ pub fn update_status(ctx: Context, args: UpdateStatusArgs) -> Result<()> {
     }
 
     let status = status::parse_status(&args.status)?;
-    let _ = storage::update_status(args.report_id, status)?;
-    Ok(())
-}
-
-/// Arguments for `updateConfig`.
-#[portaki_sdk::params]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UpdateConfigArgs {
-    #[serde(default)]
-    pub host_note: String,
-}
-
-#[portaki_sdk::command(name = "updateConfig")]
-pub fn update_config(_ctx: Context, args: UpdateConfigArgs) -> Result<()> {
-    let trimmed = args.host_note.trim();
-    let host_note = if trimmed.is_empty() {
-        None
-    } else {
-        Some(trimmed.to_string())
-    };
-    save_config(&ModuleConfig { host_note })
+    let report = storage::update_status(args.report_id, status)?;
+    // Activity log of the workspace (journal).
+    events::emit(
+        crate::ids::WORKSPACE_ACTIVITY_RECORD,
+        &serde_json::json!({
+            "eventId": "lost-found.status-updated",
+            "propertyId": ctx.property_id,
+            "payload": { "reportId": report.id, "stayId": report.stay_id, "status": report.status },
+            "display": { "chips": [{
+                "label": "Objet",
+                "value": description::to_plain_text(&report.item_description),
+            }] },
+        }),
+    )
 }
 
 fn resolve_stay_ids(args: &SubmitFoundArgs) -> Result<Vec<Uuid>> {
