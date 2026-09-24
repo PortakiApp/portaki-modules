@@ -25,7 +25,7 @@ pub struct SubmitArgs {
     pub photo: Option<String>,
 }
 
-#[portaki_sdk::command(name = "submit")]
+#[portaki_sdk::command(name = "submit", guest)]
 pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     let stay_id = require_stay_id(&ctx)?;
     let category = category::parse_category(&args.category)?;
