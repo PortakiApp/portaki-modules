@@ -1,7 +1,8 @@
 //! Property stats tab — `property-stats-card` host surface (design `tabStats` → « Signalements »).
 //!
 //! The dashboard passes the selected period as `input.periodDays` (30, 90 or 365).
-//! « Avec photo » counts the period's reports that carry a guest photo.
+//! « Avec photo » counts the period's reports that carry a guest photo. The recent reports list
+//! (with « Marquer comme résolu ») sits under the panels — the module has no config tab.
 
 use chrono::{DateTime, Datelike, Duration, Utc};
 use portaki_sdk::prelude::*;
@@ -58,6 +59,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
                     .count()
                     .to_string(),
             )
+            .delta("i18n:stats.withPhoto.note")
             .into(),
     ]);
 
@@ -101,13 +103,11 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
             .into(),
     ]);
 
-    Surface::new(
-        Page::new().child(
-            Stack::new()
-                .gap(16.0)
-                .children(vec![tiles.into(), panels.into()]),
-        ),
-    )
+    Surface::new(Page::new().child(Stack::new().gap(16.0).children(vec![
+        tiles.into(),
+        panels.into(),
+        super::recent_reports_card(&ctx.locale),
+    ])))
     .with_id(crate::ids::HOST_STATS)
 }
 

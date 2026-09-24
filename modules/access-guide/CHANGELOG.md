@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v0.5.1...access-guide-v0.6.0) (2026-09-23)
+
+
+### Features
+
+* **access-guide:** add catalogue listing ([2b27528](https://github.com/PortakiApp/portaki-modules/commit/2b27528290a0f853726e60977c78fbd0619a868a))
+
 ## [0.5.1](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v0.5.0...access-guide-v0.5.1) (2026-09-23)
 
 

@@ -1,20 +1,21 @@
 {
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
   "category": "stay",
   "tagline": {
     "fr": "Les voyageurs signalent un souci pendant le séjour, vous êtes prévenu aussitôt.",
     "en": "Guests report a problem during their stay and you hear about it right away."
   },
   "description": {
-    "fr": "Le voyageur signale un problème depuis son livret en choisissant une catégorie (appareil, propreté, bruit, accès…), avec un résumé, des détails et une photo. L’hôte est prévenu par e-mail, retrouve les signalements dans son tableau de bord et les marque comme résolus ; une carte de statistiques suit le volume, les catégories et le délai de résolution.",
-    "en": "Guests report a problem from their booklet by choosing a category (appliance, cleanliness, noise, access…), with a summary, details and a photo. The host is notified by email, finds the reports in their dashboard and marks them as resolved; a stats card tracks volume, categories and time to resolve."
+    "fr": "Le voyageur signale un problème depuis son livret en choisissant une catégorie (appareil, propreté, bruit, accès…), avec un résumé, des détails et une photo. L’hôte est prévenu par e-mail, retrouve les signalements dans les statistiques du logement et les marque comme résolus ; ces statistiques suivent aussi le volume, les catégories et le délai de résolution.",
+    "en": "Guests report a problem from their booklet by choosing a category (appliance, cleanliness, noise, access…), with a summary, details and a photo. The host is notified by email, finds the reports in the property stats and marks them as resolved; the same stats track volume, categories and time to resolve."
   },
   "guestSurface": {
     "fr": "Un formulaire pour signaler un problème par catégorie (appareil, propreté, bruit, accès…), avec un résumé, des détails et une photo, puis la liste des signalements du séjour.",
     "en": "A form to report a problem by category (appliance, cleanliness, noise, access…), with a summary, details and a photo, then the list of the stay's reports."
   },
   "hostSurface": {
-    "fr": "Un onglet Signalements avec les 20 derniers signalements, photo comprise, à marquer comme résolus, une carte de statistiques (volume, délai de résolution, catégories) et un e-mail à chaque signalement.",
-    "en": "An Issue reports tab with the 20 latest reports, photos included, to mark as resolved, a stats card (volume, time to resolve, categories), and an email for every report."
+    "fr": "Un onglet Signalements dans les statistiques du logement : volume, délai de résolution, catégories, puis les 20 derniers signalements, photo comprise, à marquer comme résolus. Rien à configurer, et un e-mail à chaque signalement.",
+    "en": "An Issue reports tab in the property stats: volume, time to resolve, categories, then the 20 latest reports, photos included, to mark as resolved. Nothing to set up, and an email for every report."
   },
   "configItems": [],
   "capabilities": [],

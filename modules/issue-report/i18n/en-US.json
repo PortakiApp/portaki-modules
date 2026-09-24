@@ -3,8 +3,6 @@
   "module.description": "Guests report a problem during the stay — appliance, cleanliness, noise, and more",
   "surface.host.main.title": "Issue reports",
   "surface.host.main.subtitle": "Guests send stay-scoped reports from the booklet — no WhatsApp.",
-  "host.main.banner": "This module has no settings: guests report a problem from their booklet (category + description), and you get it here and by email. Nothing to fill in.",
-  "host.main.help": "No host configuration. You are notified when a guest submits a report.",
   "host.main.recentTitle": "Recent reports",
   "host.main.recentHelp": "The latest 20 reports for this property, across all stays.",
   "host.main.emptyRecent": "No reports yet",
@@ -55,5 +53,6 @@
   "stats.category.access": "Access",
   "stats.category.other": "Other",
   "form.photo.label": "Photo",
-  "host.main.photoAlt": "Photo attached by the guest"
+  "host.main.photoAlt": "Photo attached by the guest",
+  "stats.withPhoto.note": "attached by the guest"
 }

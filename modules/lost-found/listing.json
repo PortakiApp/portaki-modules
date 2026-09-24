@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
   "category": "formalities",
   "tagline": {
     "fr": "Objet oublié ou retrouvé : le voyageur et vous êtes prévenus par e-mail.",
@@ -13,8 +14,8 @@
     "en": "A form to report an item lost or found, during or after the stay, with the host's message if any, then the list of reports sent."
   },
   "hostSurface": {
-    "fr": "Un bouton « Déclarer un objet trouvé » dans le détail de chaque séjour, qui prévient le voyageur par e-mail ; un onglet pour suivre les objets (à récupérer, envoyé, récupéré) et un e-mail à chaque déclaration d’un voyageur.",
-    "en": "A “Declare a found item” button on each stay's detail page that emails the guest; a tab to track items (to collect, sent, returned), and an email for every guest report."
+    "fr": "Un bouton « Déclarer un objet trouvé » dans le détail de chaque séjour, qui prévient le voyageur par e-mail ; la liste des objets à suivre (à récupérer, envoyé, récupéré) dans les statistiques du logement, et un e-mail à chaque déclaration d’un voyageur.",
+    "en": "A “Declare a found item” button on each stay's detail page that emails the guest; the list of items to track (to collect, sent, returned) in the property stats, and an email for every guest report."
   },
   "configItems": [
     {

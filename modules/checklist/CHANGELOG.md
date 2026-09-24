@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/checklist-v0.5.0...checklist-v0.6.0) (2026-09-23)
+
+
+### Features
+
+* **checklist:** add catalogue listing ([4ab1a1e](https://github.com/PortakiApp/portaki-modules/commit/4ab1a1e236457ae4cd3c42eb74335a816167b7e8))
+
 ## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/checklist-v0.4.3...checklist-v0.5.0) (2026-09-23)
 
 

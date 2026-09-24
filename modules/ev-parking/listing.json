@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
   "category": "arrival",
   "tagline": {
     "fr": "Place réservée, code d’accès et code de la borne pour les voyageurs en électrique.",

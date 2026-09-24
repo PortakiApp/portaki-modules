@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v0.4.0...issue-report-v0.5.0) (2026-09-23)
+
+
+### Features
+
+* **issue-report:** add catalogue listing ([e6c790c](https://github.com/PortakiApp/portaki-modules/commit/e6c790c8158747efbde1153a7b37b9d2130e571a))
+
 ## [0.4.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v0.3.2...issue-report-v0.4.0) (2026-09-23)
 
 

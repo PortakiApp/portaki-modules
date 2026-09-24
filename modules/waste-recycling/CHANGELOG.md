@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v0.4.0...waste-recycling-v0.5.0) (2026-09-23)
+
+
+### Features
+
+* **waste-recycling:** add catalogue listing ([2baf761](https://github.com/PortakiApp/portaki-modules/commit/2baf76108d64b82ac4e8d4f87c890013bf56cecf))
+
 ## [0.4.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v0.3.2...waste-recycling-v0.4.0) (2026-09-23)
 
 

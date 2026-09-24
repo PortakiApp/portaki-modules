@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/nuki-v0.4.1...nuki-v0.5.0) (2026-09-23)
+
+
+### Features
+
+* **nuki:** add catalogue listing ([bc34bf1](https://github.com/PortakiApp/portaki-modules/commit/bc34bf1f455c65ccda81828d30b810b38c83dcfa))
+
 ## [0.4.1](https://github.com/PortakiApp/portaki-modules/compare/nuki-v0.4.0...nuki-v0.4.1) (2026-09-23)
 
 

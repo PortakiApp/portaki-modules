@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v0.7.0...lost-found-v0.8.0) (2026-09-23)
+
+
+### Features
+
+* **lost-found:** add catalogue listing ([28ed2c1](https://github.com/PortakiApp/portaki-modules/commit/28ed2c11b46084aa9d8df740b0412671b0e710d6))
+
 ## [0.7.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v0.6.2...lost-found-v0.7.0) (2026-09-23)
 
 

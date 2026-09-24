@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v0.5.0...appliances-v0.6.0) (2026-09-23)
+
+
+### Features
+
+* **appliances:** add catalogue listing ([cccfee9](https://github.com/PortakiApp/portaki-modules/commit/cccfee989b99454d5b515414aebf4b9f46ae1875))
+
 ## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v0.4.2...appliances-v0.5.0) (2026-09-23)
 
 
