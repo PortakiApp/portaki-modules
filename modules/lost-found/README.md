@@ -32,7 +32,8 @@ OCI image: `ghcr.io/portakiapp/portaki-modules-lost-found:<semver>`
 | Shell | Surface id | Description |
 |-------|------------|-------------|
 | guest | `home.card` | Kind + description form; optional host tip banner; stay report list after submit |
-| host | `main` | Design editor: info banner, TipTap guest note (`host_note`), recent reports with status pills + update |
+| host | `main` | Design editor: info banner, TipTap guest note (`host_note`) |
+| host | `lost-stats` | `property-stats-card` — recent reports with status pills + update |
 | host | `create` | Stay-action modal body: TipTap description (`RichTextEditor`), hint, « Envoyer au voyageur » |
 | host | `stay` | Stay-detail Card list + status when reports exist; empty tree when none (no empty-state copy) |
 
