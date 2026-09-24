@@ -23,8 +23,11 @@ pub struct ConsumableItem {
 pub const CONSUMABLE_ITEM_INDEXES: &[&str] = &["sort_order"];
 
 /// Stay-scoped guest shortage report (many per stay).
+///
+/// `property_id` is injected by typed-repo from invocation context; kept in the
+/// schema so SELECT/INSERT/DELETE with `WHERE property_id = …` succeed.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 2)]
+#[portaki_sdk::entity(schema_version = 3)]
 pub struct ConsumableReport {
     pub id: Uuid,
     pub stay_id: Uuid,
