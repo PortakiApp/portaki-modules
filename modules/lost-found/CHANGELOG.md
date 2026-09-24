@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.9.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v0.8.0...lost-found-v0.9.0) (2026-09-24)
+
+
+### Features
+
+* **lost-found:** list declared items in stats tab ([f3a734a](https://github.com/PortakiApp/portaki-modules/commit/f3a734a1209a62d3c568221cdd5f83f9d5cb40fb))
+
+
+### Bug Fixes
+
+* **deps:** build modules against portaki-sdk 6.11 ([18cec5f](https://github.com/PortakiApp/portaki-modules/commit/18cec5fd259c0578979ae06566a86955e8b5d83d))
+
 ## [0.8.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v0.7.0...lost-found-v0.8.0) (2026-09-23)
 
 

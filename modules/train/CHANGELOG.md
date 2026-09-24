@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/PortakiApp/portaki-modules/compare/train-v0.3.0...train-v0.3.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* **deps:** build modules against portaki-sdk 6.11 ([18cec5f](https://github.com/PortakiApp/portaki-modules/commit/18cec5fd259c0578979ae06566a86955e8b5d83d))
+
 ## [0.3.0](https://github.com/PortakiApp/portaki-modules/compare/train-v0.2.2...train-v0.3.0) (2026-09-23)
 
 
