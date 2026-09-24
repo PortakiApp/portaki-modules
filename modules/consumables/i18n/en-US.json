@@ -69,5 +69,12 @@
   "stats.stock.low": "Soon",
   "stats.stock.ok": "OK",
   "stats.row.reportedAt": "reported {date}",
-  "stats.row.restockedAt": "restocked {date}"
+  "stats.row.restockedAt": "restocked {date}",
+  "stats.perStay.title": "Shortages per stay",
+  "stats.perStay.subtitle": "Share of completed stays where the item ran short",
+  "stats.perStay.empty": "No shortage reported on the period's stays.",
+  "stats.restock.title": "When to buy again",
+  "stats.restock.subtitle": "Days between a restock and the next shortage, on average",
+  "stats.restock.empty": "Not enough restocks yet to estimate a rhythm.",
+  "stats.restock.unit": "{count} d"
 }
