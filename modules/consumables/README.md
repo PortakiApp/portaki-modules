@@ -28,7 +28,7 @@ Properties pin a digest — bump semver on every runtime change before republish
 
 `ConsumableItem` (schema v1): bilingual labels (`label_fr` JSON map + legacy `label_en`), `sort_order`, optional `low_threshold` (0 = unused in v0.1 UI).
 
-`ConsumableReport` (schema v1): `stay_id`, `item_id`, `item_label` snapshot, `level` (`missing` \| `low`), optional `note`, `status` (`open` \| `restocked`).
+`ConsumableReport` (schema v2): `stay_id`, `item_id`, `item_label` snapshot, `level` (`missing` \| `low`), optional `note`, `status` (`open` \| `restocked`), `restocked_at`.
 
 ## Surfaces
 
@@ -37,7 +37,7 @@ Properties pin a digest — bump semver on every runtime change before republish
 | guest | `home.card` | Catalog ChoiceList + missing/low + note; stay report list |
 | host | `main` | Catalog editor (Save → `updateConfig`), seed defaults, open reports + mark restocked |
 | host | `stay` | Stay-detail reports when any exist (empty tree otherwise) |
-| host | `stock` | Stats card: catalog size + open reports |
+| host | `stock` | `property-stats-detail`: tracked, to buy, reported, last restock, reports per item and stock status (`FeedItem`, click opens the config). The `property-stats-card` tile of the same key is served by `statsSummary` |
 
 Host apps only embed `HostSurfacePanel` / stats registry. No module-named React feature.
 

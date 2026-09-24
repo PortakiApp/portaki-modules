@@ -7,6 +7,7 @@ mod email_text;
 mod entities;
 mod guest;
 mod host;
+mod i18n;
 mod ids;
 mod labels;
 mod level;
@@ -21,7 +22,7 @@ pub use commands::{
 pub use email_text::GUEST_TEXT_EMAIL_MAX_CHARS;
 pub use entities::{ConsumableItem, ConsumableReport};
 pub use guest::{render_guest_form, render_home_card};
-pub use host::{render_host_main, render_host_stats, render_host_stay};
+pub use host::{render_host_main, render_host_stats, render_host_stay, stats_summary};
 pub use level::DEFAULT as LEVEL_DEFAULT;
 pub use queries::{
     list_for_stay, list_items, list_open_count, list_recent, ConsumableItemDto,

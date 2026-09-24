@@ -6,10 +6,11 @@ use uuid::Uuid;
 use consumables::{
     list_for_stay, list_items, list_open_count, render_guest_form, render_home_card,
     render_host_main, render_host_stats, render_host_stay, replace_items, reset_test_store,
-    seed_defaults, submit, update_config, update_status, ConsumableItemInput, ListForStayArgs,
-    ReplaceItemsArgs, SubmitArgs, UpdateConfigArgs, UpdateStatusArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
-    LEVEL_DEFAULT, STATUS_DEFAULT,
+    seed_defaults, stats_summary, submit, update_config, update_status, ConsumableItemInput,
+    ListForStayArgs, ReplaceItemsArgs, SubmitArgs, UpdateConfigArgs, UpdateStatusArgs,
+    GUEST_TEXT_EMAIL_MAX_CHARS, LEVEL_DEFAULT, STATUS_DEFAULT,
 };
+use portaki_sdk::contracts::stats::StatsSummaryArgs;
 use portaki_sdk::limits;
 use portaki_sdk::prelude::EmptyArgs;
 use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
@@ -118,6 +119,14 @@ fn submit_creates_open_report_and_lists_on_card() {
         });
 }
 
+fn stock_args() -> StatsSummaryArgs {
+    StatsSummaryArgs {
+        property_id: Uuid::nil(),
+        period: 30,
+        key: "stock".into(),
+    }
+}
+
 #[test]
 #[serial]
 fn host_mark_restocked_clears_open_list() {
@@ -159,6 +168,9 @@ fn host_mark_restocked_clears_open_list() {
         .run(|ctx| {
             let open = list_open_count(ctx.clone()).expect("open count");
             assert_eq!(open.open_count, 1);
+            let tile = stats_summary(ctx.clone(), stock_args()).expect("tile");
+            assert_eq!(tile.value, "1");
+            assert!(tile.attention.is_none(), "running low is no stock-out");
 
             update_status(
                 ctx.clone(),
@@ -171,6 +183,16 @@ fn host_mark_restocked_clears_open_list() {
 
             let open = list_open_count(ctx.clone()).expect("open after");
             assert_eq!(open.open_count, 0);
+            assert_eq!(
+                stats_summary(ctx.clone(), stock_args())
+                    .expect("tile")
+                    .value,
+                "0"
+            );
+            let stats = serde_json::to_string(&render_host_stats(ctx.clone())).expect("json");
+            assert!(stats.contains("stats.stock.ok"));
+            assert!(stats.contains("stats.row.restockedAt"));
+            assert!(stats.contains("/modules/consumables"));
 
             let surface = render_host_main(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("IndexedInput"));
@@ -234,10 +256,8 @@ fn host_main_and_stats_render() {
             assert!(SurfaceAssertions::new(&main).contains_type("Button"));
 
             let stats = render_host_stats(ctx);
-            assert!(SurfaceAssertions::new(&stats).contains_type("Card"));
             let json = serde_json::to_string(&stats).expect("stats json");
-            assert!(json.contains("stats.catalog"));
-            assert!(json.contains("stats.open"));
+            assert!(json.contains("stats.emptyHint"), "empty catalog");
         });
 }
 

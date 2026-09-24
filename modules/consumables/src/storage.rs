@@ -80,16 +80,21 @@ pub fn list_by_stay(stay_id: Uuid) -> Result<Vec<ConsumableReport>> {
 
 /// Lists the most recent reports for the property (host scope), newest first, max 40.
 pub fn list_recent() -> Result<Vec<ConsumableReport>> {
+    let mut rows = list_all()?;
+    rows.truncate(40);
+    Ok(rows)
+}
+
+/// Every report of the property, newest first (host stats).
+pub fn list_all() -> Result<Vec<ConsumableReport>> {
     let mut rows = if in_memory_enabled() {
         TEST_REPORTS.with(|store| store.borrow().clone())
     } else {
-        let page = find::<ConsumableReport, ConsumableReport>(
-            Query::<ConsumableReport>::new().limit(200),
-        )?;
-        page.items
+        // ponytail: one 1000-row page; paginate if a property outgrows it.
+        find::<ConsumableReport, ConsumableReport>(Query::<ConsumableReport>::new().limit(1000))?
+            .items
     };
     sort_newest_first(&mut rows);
-    rows.truncate(40);
     Ok(rows)
 }
 
@@ -127,6 +132,7 @@ pub fn create_report(
         note,
         status: status::DEFAULT.to_string(),
         created_at: now,
+        restocked_at: None,
     };
     persist_report(row.clone())?;
     Ok(row)
@@ -149,6 +155,11 @@ pub fn update_status(id: Uuid, status: String) -> Result<ConsumableReport> {
         status::DEFAULT.to_string()
     } else {
         status
+    };
+    row.restocked_at = if row.status == status::DEFAULT {
+        None
+    } else {
+        row.restocked_at.or(Some(time::now()?))
     };
     persist_report(row.clone())?;
     Ok(row)
