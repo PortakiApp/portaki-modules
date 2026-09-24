@@ -9,7 +9,7 @@
     "fr": "Sorties, concerts et animations à proximité — agenda local et sélection de l’hôte.",
     "en": "Local happenings near the stay — local listings plus your own picks."
   },
-  "version": "0.6.0",
+  "version": "0.6.1",
   "requiresModuleSdk": "6.12.0",
   "author": {
     "name": "Portaki",

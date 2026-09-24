@@ -9,7 +9,7 @@
     "fr": "Prochains départs depuis la gare la plus proche du logement.",
     "en": "Upcoming departures from the property's nearest station."
   },
-  "version": "0.3.0",
+  "version": "0.3.1",
   "requiresModuleSdk": "6.12.0",
   "author": {
     "name": "Portaki",

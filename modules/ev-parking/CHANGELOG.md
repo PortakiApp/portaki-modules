@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v0.5.0...ev-parking-v0.5.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* **deps:** build modules against portaki-sdk 6.11 ([18cec5f](https://github.com/PortakiApp/portaki-modules/commit/18cec5fd259c0578979ae06566a86955e8b5d83d))
+
 ## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v0.4.0...ev-parking-v0.5.0) (2026-09-23)
 
 

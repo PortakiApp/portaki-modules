@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v0.5.0...issue-report-v0.6.0) (2026-09-24)
+
+
+### Features
+
+* **issue-report:** move recent reports to stats tab ([889e681](https://github.com/PortakiApp/portaki-modules/commit/889e6815c6aabb2e40160b2b4a72f1ec9a7ab8ce))
+
+
+### Bug Fixes
+
+* **deps:** build modules against portaki-sdk 6.11 ([18cec5f](https://github.com/PortakiApp/portaki-modules/commit/18cec5fd259c0578979ae06566a86955e8b5d83d))
+
 ## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v0.4.0...issue-report-v0.5.0) (2026-09-23)
 
 
