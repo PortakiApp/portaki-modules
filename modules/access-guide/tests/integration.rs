@@ -5,8 +5,9 @@ use portaki_sdk::capability;
 use serial_test::serial;
 
 use access_guide::{
-    get_config, render_explore_detail, render_home_card, render_host_main, render_upcoming_card,
-    update_config, MethodFields, PrimaryMethod, RevealPolicy, UpdateConfigArgs,
+    get_config, publish_readiness, render_explore_detail, render_home_card, render_host_main,
+    render_upcoming_card, update_config, MethodFields, PrimaryMethod, RevealPolicy,
+    UpdateConfigArgs,
 };
 use portaki_sdk::context::StayContext;
 use portaki_sdk::host::with_host;
@@ -470,4 +471,46 @@ fn update_config_saves_texts_for_active_locale() {
             .expect("kv")
             .is_some());
     });
+}
+
+#[test]
+#[serial]
+fn publish_readiness_requires_code_for_code_methods() {
+    let keybox = |code: &str| {
+        serde_json::to_vec(&json!({
+            "primary_method": "keybox",
+            "method": { "kind": "keybox", "location": "Porte", "code": code }
+        }))
+        .expect("config json")
+    };
+    for (code, ok) in [("", false), ("4821", true)] {
+        MockContext::host()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_kv("config", keybox(code))
+            .run(|ctx| {
+                let items = publish_readiness(ctx).expect("publishReadiness").items;
+                assert_eq!(items.len(), 1);
+                assert_eq!(items[0].id, "entry-code");
+                assert_eq!(items[0].ok, ok);
+            });
+    }
+}
+
+#[test]
+#[serial]
+fn publish_readiness_empty_without_code_method() {
+    let in_person = serde_json::to_vec(&json!({
+        "primary_method": "in_person",
+        "method": { "kind": "in_person", "meeting_place": "Gare" }
+    }))
+    .expect("config json");
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv("config", in_person)
+        .run(|ctx| {
+            assert!(publish_readiness(ctx)
+                .expect("publishReadiness")
+                .items
+                .is_empty());
+        });
 }

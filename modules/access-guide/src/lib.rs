@@ -6,6 +6,7 @@ mod email_context;
 mod email_i18n;
 mod guest;
 mod host;
+mod i18n;
 mod ids;
 mod queries;
 mod reveal;
@@ -19,7 +20,7 @@ pub use config::{
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use guest::{render_explore_detail, render_home_card, render_upcoming_card};
 pub use host::render_host_main;
-pub use queries::get_config;
+pub use queries::{get_config, publish_readiness};
 pub use texts::{lang_code, load_texts, ModuleTexts, StepText};
 
 portaki_sdk::portaki_module!(

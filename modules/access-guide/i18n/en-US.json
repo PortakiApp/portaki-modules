@@ -184,5 +184,7 @@
   "email.callout.buildingStaff": "Check in at the building desk from {time} to get the keys.",
   "email.callout.hostGreets": "Your host greets you on arrival (from {time}).",
   "email.callout.other.withCode": "Here is your access code, valid from {time}.",
-  "email.callout.other.withoutCode": "Access details are on your stay page."
+  "email.callout.other.withoutCode": "Access details are on your stay page.",
+  "publish.entry-code.label": "Entry code",
+  "publish.entry-code.hint": "The entry code is missing"
 }
