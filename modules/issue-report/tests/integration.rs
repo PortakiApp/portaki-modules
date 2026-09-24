@@ -4,9 +4,8 @@ use chrono::{DateTime, Duration, Utc};
 use serial_test::serial;
 
 use issue_report::{
-    list_for_stay, list_recent, render_guest_form, render_home_card, render_host_main,
-    render_host_stats, reset_test_store, resolve, submit, ResolveArgs, SubmitArgs,
-    GUEST_TEXT_EMAIL_MAX_CHARS,
+    list_for_stay, list_recent, render_guest_form, render_home_card, render_host_stats,
+    reset_test_store, resolve, submit, ResolveArgs, SubmitArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
 };
 use portaki_sdk::limits;
 use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
@@ -83,7 +82,7 @@ fn submit_allows_multiple_reports_and_shows_list() {
 
 #[test]
 #[serial]
-fn host_main_lists_recent_after_guest_submit() {
+fn host_stats_list_recent_after_guest_submit() {
     reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
@@ -106,13 +105,13 @@ fn host_main_lists_recent_after_guest_submit() {
             let recent = list_recent(ctx.clone()).expect("listRecent");
             assert_eq!(recent.len(), 1);
 
-            let surface = render_host_main(ctx);
+            let surface = render_host_stats(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("Page"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("List"));
             assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
             let json = serde_json::to_string(&surface).expect("surface json");
-            assert!(json.contains("host.main.banner"));
+            assert!(json.contains("host.main.recentTitle"));
             assert!(json.contains("host.main.status.open"));
             assert!(json.contains("danger-triangle") || json.contains("sparkles"));
         });
@@ -176,7 +175,7 @@ fn host_stats_reflect_resolution_and_period() {
             // Second call keeps the first resolution time.
             resolve(ctx.clone(), ResolveArgs { report_id: oven.id }).expect("resolve again");
 
-            let main = serde_json::to_string(&render_host_main(ctx)).expect("main json");
+            let main = serde_json::to_string(&render_host_stats(ctx)).expect("main json");
             assert!(main.contains("host.main.status.resolved"));
             assert_eq!(
                 main.matches("host.main.resolve").count(),
@@ -307,7 +306,7 @@ fn a_guest_photo_reaches_the_host_screen_and_the_stats() {
     MockContext::host()
         .with_property(Property::default())
         .run(|ctx| {
-            let main = serde_json::to_string(&render_host_main(ctx.clone())).expect("main json");
+            let main = serde_json::to_string(&render_host_stats(ctx.clone())).expect("main json");
             assert!(main.contains(&format!(r#""url":"{PHOTO}""#)));
             assert!(main.contains(r#""size":"thumb""#));
             let stats = serde_json::to_value(render_host_stats(ctx))

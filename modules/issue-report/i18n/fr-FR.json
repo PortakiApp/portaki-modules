@@ -3,8 +3,6 @@
   "module.description": "Les voyageurs signalent un souci pendant le séjour — appareil, ménage, bruit, etc.",
   "surface.host.main.title": "Signalements",
   "surface.host.main.subtitle": "Les voyageurs envoient un signalement depuis le livret — sans WhatsApp.",
-  "host.main.banner": "Ce module ne se configure pas : les voyageurs signalent un problème depuis leur livret (catégorie + description), et vous recevez le signalement ici et par email. Aucune donnée à saisir.",
-  "host.main.help": "Aucune configuration hôte. Vous êtes notifié quand un voyageur envoie un signalement.",
   "host.main.recentTitle": "Signalements récents",
   "host.main.recentHelp": "Les 20 derniers signalements du logement, toutes réservations confondues.",
   "host.main.emptyRecent": "Aucun signalement",
@@ -55,5 +53,6 @@
   "stats.category.access": "Accès",
   "stats.category.other": "Autre",
   "form.photo.label": "Photo",
-  "host.main.photoAlt": "Photo jointe par le voyageur"
+  "host.main.photoAlt": "Photo jointe par le voyageur",
+  "stats.withPhoto.note": "joints par le voyageur"
 }

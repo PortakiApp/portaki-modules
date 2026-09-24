@@ -1,16 +1,15 @@
-//! Host dashboard surface — design `editorIssueReport` / `issuereport-editor-v1`.
+//! Host dashboard — no config tab; the recent reports live under the property stats tab.
 //!
-//! No host config: info banner + recent reports with category icons and status pills.
-//! Open rows carry a « Marquer comme résolu » button (`resolve` command).
+//! Rows carry category icons and status pills; open ones a « Marquer comme résolu » button
+//! (`resolve` command).
 
 use chrono::{DateTime, Datelike, Utc};
 use portaki_sdk::files::FileRef;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::{ImageSize, Tone};
 use portaki_sdk::sdui::primitives::{
-    Button, Card, EmptyState, Image, InfoBanner, List, ListItem, Page, Pill, Stack, Text,
+    Button, Card, EmptyState, Image, List, ListItem, Pill, Stack, Text,
 };
-use portaki_sdk::sdui::surface::Surface;
 
 use portaki_sdk::host::time;
 
@@ -28,10 +27,8 @@ pub(crate) fn host_now() -> DateTime<Utc> {
     time::now().unwrap_or_else(|_| DateTime::<Utc>::from_timestamp(0, 0).expect("epoch is valid"))
 }
 
-/// Host main — banner + recent property reports (max 20).
-#[portaki_sdk::surface(host, id = "main")]
-pub fn render_host_main(ctx: HostContext) -> Surface {
-    let locale = ctx.locale.as_str();
+/// « Signalements récents » — the property's latest reports (max 20).
+pub(crate) fn recent_reports_card(locale: &str) -> Component {
     let reports = storage::list_recent().unwrap_or_default();
 
     let recent_body: Vec<Component> = if reports.is_empty() {
@@ -49,18 +46,12 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         vec![Component::List(List::new().children(items))]
     };
 
-    let children: Vec<Component> = vec![
-        InfoBanner::new().message("i18n:host.main.banner").into(),
-        Card::new()
-            .title("i18n:host.main.recentTitle")
-            .subtitle("i18n:host.main.recentHelp")
-            .icon("danger-triangle")
-            .children(recent_body)
-            .into(),
-    ];
-
-    Surface::new(Page::new().child(Stack::new().gap(16.0).children(children)))
-        .with_id(crate::ids::HOST_MAIN)
+    Card::new()
+        .title("i18n:host.main.recentTitle")
+        .subtitle("i18n:host.main.recentHelp")
+        .icon("danger-triangle")
+        .children(recent_body)
+        .into()
 }
 
 fn category_icon(wire: &str) -> &'static str {
