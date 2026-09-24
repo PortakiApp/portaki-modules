@@ -119,7 +119,7 @@ pub fn load_reviews() -> Result<Vec<StoredReview>> {
         .unwrap_or_default())
 }
 
-#[portaki_sdk::command(name = "submitReview")]
+#[portaki_sdk::command(name = "submitReview", guest)]
 pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
     let config = load_config().unwrap_or_default();
     if !config.portaki_feasible() {
