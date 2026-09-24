@@ -27,7 +27,7 @@ pub const CONSUMABLE_ITEM_INDEXES: &[&str] = &["sort_order"];
 /// `property_id` is injected by typed-repo from invocation context; kept in the
 /// schema so SELECT/INSERT/DELETE with `WHERE property_id = …` succeed.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 3)]
+#[portaki_sdk::entity(schema_version = 1)]
 pub struct ConsumableReport {
     pub id: Uuid,
     pub stay_id: Uuid,
