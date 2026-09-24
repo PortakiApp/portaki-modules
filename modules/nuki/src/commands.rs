@@ -54,8 +54,9 @@ pub fn update_config(_ctx: Context, args: UpdateConfigArgs) -> Result<()> {
     })
 }
 
-#[portaki_sdk::command(name = "getGuestCredential")]
-pub fn get_guest_credential(_ctx: Context, _args: StayArgs) -> Result<GuestCredentialResponse> {
+#[portaki_sdk::command(name = "getGuestCredential", guest)]
+pub fn get_guest_credential(ctx: Context, _args: StayArgs) -> Result<GuestCredentialResponse> {
+    require_stay_window(&ctx)?;
     let config = load_config()?;
     let code = require_keypad_code(&config)?;
     Ok(GuestCredentialResponse {
@@ -65,8 +66,9 @@ pub fn get_guest_credential(_ctx: Context, _args: StayArgs) -> Result<GuestCrede
     })
 }
 
-#[portaki_sdk::command(name = "unlock")]
+#[portaki_sdk::command(name = "unlock", guest)]
 pub fn unlock(ctx: Context, _args: StayArgs) -> Result<UnlockResponse> {
+    require_stay_window(&ctx)?;
     let config = load_config()?;
     let keypad = config.keypad_code_trimmed().to_string();
     let smartlock_id = config.smartlock_id.trim().to_string();
@@ -100,6 +102,28 @@ pub fn unlock(ctx: Context, _args: StayArgs) -> Result<UnlockResponse> {
         mode: "credential_fallback",
         code: keypad,
     })
+}
+
+/// How long before check-in the lock answers. access-guide's reveal policy is not readable
+/// from here; its default (J-1 16:00, property time) always falls at least 8 h before check-in,
+/// whatever the check-in hour — so 8 h never opens earlier than it.
+const OPENS_BEFORE_CHECKIN_SECS: i64 = 8 * 3600;
+
+/// The lock only answers from shortly before check-in until check-out; no stay, no dates → no.
+fn require_stay_window(ctx: &Context) -> Result<()> {
+    let now = host::time::now()?.timestamp();
+    let within = ctx
+        .stay
+        .as_ref()
+        .and_then(|stay| Some((stay.checkin_at?, stay.checkout_at?)))
+        .is_some_and(|(checkin, checkout)| {
+            now >= checkin.timestamp() - OPENS_BEFORE_CHECKIN_SECS && now <= checkout.timestamp()
+        });
+    if within {
+        Ok(())
+    } else {
+        Err(PortakiError::Host("outside_stay_window".into()))
+    }
 }
 
 fn has_nuki_byok(ctx: &Context) -> bool {
