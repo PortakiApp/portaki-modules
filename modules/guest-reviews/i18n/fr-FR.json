@@ -82,5 +82,6 @@
   "stats.responseRate.note": "sur {count} départs",
   "module.catalogDescription": "Lien d'avis Airbnb / QR ou notation sur Portaki.",
   "catalog.host.main": "Merci & avis",
-  "catalog.host.reviews": "Avis"
+  "catalog.host.reviews": "Avis",
+  "publish.platform.label": "Plateforme d’avis"
 }

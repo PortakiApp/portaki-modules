@@ -230,32 +230,48 @@ fn host_form_shows_the_message_in_the_host_language() {
         });
 }
 
-/// Airbnb selected without its URL: recommended, never blocking; Airbnb off: nothing.
+/// No platform ticked: blocks. Airbnb selected without its URL: recommended, never blocking.
 #[test]
 #[serial]
-fn publish_readiness_recommends_the_airbnb_url_when_selected() {
-    for (config, expected) in [
-        (
-            json!({ "platform_airbnb": true, "airbnb_review_url": "" }),
-            Some(false),
-        ),
-        (
-            json!({ "platform_airbnb": true, "airbnb_review_url": "https://airbnb.com/r/1" }),
-            Some(true),
-        ),
-        (json!({ "platform_airbnb": false }), None),
-    ] {
+fn publish_readiness_requires_a_platform_and_recommends_the_airbnb_url() {
+    let check = |config: serde_json::Value| {
         MockContext::host()
             .with_capabilities(&[capability::core::STORAGE])
             .with_config(&config)
             .run(|ctx| {
-                let items = publish_readiness(ctx).expect("publishReadiness").items;
-                assert_eq!(items.first().map(|item| item.ok), expected, "{config}");
-                assert!(items
-                    .iter()
-                    .all(|item| item.level == PublishLevel::Recommended));
-            });
-    }
+                publish_readiness(ctx)
+                    .expect("publishReadiness")
+                    .items
+                    .into_iter()
+                    .map(|item| (item.id, item.level, item.ok))
+                    .collect::<Vec<_>>()
+            })
+    };
+    let platform = |ok| ("platform".to_string(), PublishLevel::Required, ok);
+    let url = |ok| {
+        (
+            "airbnb-review-url".to_string(),
+            PublishLevel::Recommended,
+            ok,
+        )
+    };
+
+    assert_eq!(
+        check(json!({ "platform_airbnb": false, "platform_portaki": false })),
+        vec![platform(false)]
+    );
+    assert_eq!(
+        check(json!({ "platform_airbnb": false, "platform_portaki": true })),
+        vec![platform(true)]
+    );
+    assert_eq!(
+        check(json!({ "platform_airbnb": true, "airbnb_review_url": "" })),
+        vec![platform(true), url(false)]
+    );
+    assert_eq!(
+        check(json!({ "platform_airbnb": true, "airbnb_review_url": "https://airbnb.com/r/1" })),
+        vec![platform(true), url(true)]
+    );
 }
 
 /// A 20 000-char comment: the stored review keeps it whole, the host email quotes at most
