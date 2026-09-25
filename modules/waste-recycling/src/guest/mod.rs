@@ -16,7 +16,7 @@ use load::load_guest_data;
 /// Guest home booklet card — bins glance + collection chip.
 #[portaki_sdk::surface(guest, id = "home.card")]
 pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
-    render_with_data(&ctx, crate::ids::HOME_CARD, build_home_card)
+    render_with_data(&ctx, HOME_CARD, build_home_card)
 }
 
 /// Bottom-sheet detail — enriched bins + schedule.
@@ -27,7 +27,7 @@ pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
     label_key = "nav.waste-recycling"
 )]
 pub fn render_explore_detail(ctx: GuestContext) -> Result<Surface> {
-    render_with_data(&ctx, crate::ids::EXPLORE_DETAIL, build_detail_surface)
+    render_with_data(&ctx, EXPLORE_DETAIL, build_detail_surface)
 }
 
 fn render_with_data(

@@ -31,7 +31,7 @@ pub fn build_home_card(data: &GuestWeatherData) -> Surface {
             .subtitle(teaser)
             .action(Action::open_overlay(
                 OverlayPresentation::BottomSheet,
-                crate::ids::EXPLORE_FORECAST,
+                crate::guest::EXPLORE_FORECAST,
                 OverlayArgs::new().icon(icon).title("i18n:nav.weather"),
             ))
             .children(build_weather_glance(
@@ -41,5 +41,5 @@ pub fn build_home_card(data: &GuestWeatherData) -> Surface {
                 data.city.as_deref(),
             )),
     )
-    .with_id(crate::ids::HOME_CARD)
+    .with_id(crate::guest::HOME_CARD)
 }

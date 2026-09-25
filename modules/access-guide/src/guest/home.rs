@@ -17,12 +17,12 @@ pub fn build_home_card(data: &GuestData) -> Surface {
             .title("i18n:nav.access-guide")
             .action(Action::open_overlay(
                 OverlayPresentation::Fullscreen,
-                crate::ids::EXPLORE_DETAIL,
+                crate::guest::EXPLORE_DETAIL,
                 OverlayArgs::new()
                     .icon(IconName::Car)
                     .title("i18n:nav.access-guide"),
             ))
             .children(build_access_glance(data)),
     )
-    .with_id(crate::ids::HOME_CARD)
+    .with_id(crate::guest::HOME_CARD)
 }

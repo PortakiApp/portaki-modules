@@ -25,7 +25,7 @@ pub enum FormTaskState {
 pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
     let open_form = Action::open_overlay(
         OverlayPresentation::Fullscreen,
-        crate::ids::GUEST_FORM,
+        crate::guest::form::GUEST_FORM,
         OverlayArgs::new()
             .icon(IconName::Clipboard)
             .title("i18n:home.card.title"),
@@ -91,7 +91,7 @@ pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
             })
             .child(Stack::new().gap(0.0).children(children)),
     )
-    .with_id(crate::ids::HOME_CARD)
+    .with_id(crate::guest::HOME_CARD)
 }
 
 /// Fullscreen overlay form body (design `prearrivalBody` — no nested Card chrome).
@@ -105,7 +105,7 @@ pub fn build_form_surface(
 ) -> Surface {
     use portaki_sdk::sdui::primitives::{Button, Field, Form, Text, TextArea, TimePicker};
 
-    let submit_action = crate::ids::module_id().command_empty(crate::ids::SUBMIT);
+    let submit_action = crate::ids::module_id().command_empty(crate::commands::SUBMIT);
     let submit_label = if completed {
         "i18n:form.submitUpdate"
     } else {
@@ -223,7 +223,7 @@ pub fn build_form_surface(
     );
 
     // Page chrome owns the title; body is the form only (no nested Card).
-    Surface::new(Form::new().children(form_children)).with_id(crate::ids::GUEST_FORM)
+    Surface::new(Form::new().children(form_children)).with_id(crate::guest::form::GUEST_FORM)
 }
 
 /// Read-only summary after check-in (answers no longer editable).
@@ -299,7 +299,7 @@ pub fn build_readonly_surface(questions: &ModuleConfig, response: &PreArrivalRes
         ));
     }
 
-    Surface::new(Stack::new().gap(8.0).children(children)).with_id(crate::ids::GUEST_FORM)
+    Surface::new(Stack::new().gap(8.0).children(children)).with_id(crate::guest::form::GUEST_FORM)
 }
 
 fn text_input(

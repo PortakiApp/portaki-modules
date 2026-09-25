@@ -22,14 +22,14 @@ pub fn build_home_card(_ctx: &GuestContext) -> Surface {
             .title("i18n:home.card.title")
             .action(Action::open_overlay(
                 OverlayPresentation::Fullscreen,
-                crate::ids::EXPLORE_DETAIL,
+                crate::guest::EXPLORE_DETAIL,
                 OverlayArgs::new()
                     .icon(MODULE_ICON)
                     .title("i18n:home.card.title"),
             ))
             .children(children),
     )
-    .with_id(crate::ids::HOME_CARD)
+    .with_id(crate::guest::HOME_CARD)
 }
 
 /// Compact pre-arrival prep card — icon + title + a single next-departure line.
@@ -51,14 +51,14 @@ pub fn build_upcoming_card(_ctx: &GuestContext) -> Surface {
             .title("i18n:home.card.title")
             .action(Action::open_overlay(
                 OverlayPresentation::Fullscreen,
-                crate::ids::EXPLORE_DETAIL,
+                crate::guest::EXPLORE_DETAIL,
                 OverlayArgs::new()
                     .icon(MODULE_ICON)
                     .title("i18n:home.card.title"),
             ))
             .children(children),
     )
-    .with_id(crate::ids::UPCOMING_CARD)
+    .with_id(crate::guest::UPCOMING_CARD)
 }
 
 /// One-line headline for the compact card: nearest departure, or the station

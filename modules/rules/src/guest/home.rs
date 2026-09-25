@@ -37,14 +37,14 @@ pub fn build_home_card(payload: &RulesPayload) -> Surface {
             .title("i18n:nav.rules")
             .action(Action::open_overlay(
                 OverlayPresentation::Fullscreen,
-                crate::ids::EXPLORE_DETAIL,
+                crate::guest::EXPLORE_DETAIL,
                 OverlayArgs::new()
                     .icon(IconName::Scale)
                     .title("i18n:nav.rules"),
             ))
             .children(children),
     )
-    .with_id(crate::ids::HOME_CARD)
+    .with_id(crate::guest::HOME_CARD)
 }
 
 pub fn rule_list_item(item: &RuleItem) -> Component {

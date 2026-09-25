@@ -119,7 +119,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
                     .icon(IconName::Star),
             ),
         )
-        .with_id(crate::ids::HOST_STATS);
+        .with_id(REVIEWS);
     }
 
     let count = reviews.len();
@@ -245,5 +245,5 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
             .into(),
         panel("feed", Stack::new().gap(0.0).children(rows).into()),
     ])))
-    .with_id(crate::ids::HOST_STATS)
+    .with_id(REVIEWS)
 }

@@ -18,11 +18,11 @@ pub fn render_guest_form(_ctx: GuestContext) -> Result<Surface> {
 }
 
 pub fn build_form_surface() -> Surface {
-    Surface::new(build_form()).with_id(crate::ids::GUEST_FORM)
+    Surface::new(build_form()).with_id(GUEST_FORM)
 }
 
 fn build_form() -> Form {
-    let submit_action = crate::ids::module_id().command_empty(crate::ids::SUBMIT);
+    let submit_action = crate::ids::module_id().command_empty(crate::commands::SUBMIT);
 
     Form::new()
         .child(

@@ -89,7 +89,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                 .children(vec![Stack::new().gap(8.0).children(column).into(), panel]),
         ),
     )
-    .with_id(crate::ids::HOST_MAIN)
+    .with_id(MAIN)
 }
 
 #[portaki_sdk::wire(serialize)]
@@ -257,7 +257,7 @@ fn edit_panel(list: &Checklist, items: &[&ChecklistItem], fr: bool) -> Component
             .variant(ButtonVariant::Ghost)
             .tone(Tone::Danger)
             .action(crate::ids::module_id().command(
-                crate::ids::DELETE_CHECKLIST,
+                crate::commands::DELETE_CHECKLIST,
                 DeleteChecklistArgs { id: list.id },
             ))
             .into(),
@@ -280,7 +280,7 @@ fn new_panel() -> Component {
                 .description(format!("i18n:template.{}.desc", template.id))
                 .icon(template.icon)
                 .action(crate::ids::module_id().command(
-                    crate::ids::CREATE_CHECKLIST,
+                    crate::commands::CREATE_CHECKLIST,
                     CreateChecklistArgs {
                         template: template.id.to_string(),
                     },

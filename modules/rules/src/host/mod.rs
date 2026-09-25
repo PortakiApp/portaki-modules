@@ -70,7 +70,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
             ),
         ),
     )
-    .with_id(crate::ids::HOST_MAIN)
+    .with_id(MAIN)
 }
 
 fn draft_items_count(ctx: &HostContext, payload: &RulesPayload) -> usize {

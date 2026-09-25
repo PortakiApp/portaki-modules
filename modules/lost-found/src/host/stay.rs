@@ -62,7 +62,7 @@ pub fn render_host_stay(ctx: HostContext) -> Surface {
         }
     };
 
-    Surface::new(Page::new().children(children)).with_id(crate::ids::HOST_STAY)
+    Surface::new(Page::new().children(children)).with_id(STAY)
 }
 
 fn empty_stay_card() -> Component {

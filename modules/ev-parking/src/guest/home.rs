@@ -14,12 +14,12 @@ pub fn build_home_card(data: &GuestData) -> Surface {
             .title("i18n:nav.ev-parking")
             .action(Action::open_overlay(
                 OverlayPresentation::BottomSheet,
-                crate::ids::EXPLORE_DETAIL,
+                crate::guest::EXPLORE_DETAIL,
                 OverlayArgs::new()
                     .icon(IconName::Zap)
                     .title("i18n:nav.ev-parking"),
             ))
             .children(build_ev_parking_body(data)),
     )
-    .with_id(crate::ids::HOME_CARD)
+    .with_id(crate::guest::HOME_CARD)
 }

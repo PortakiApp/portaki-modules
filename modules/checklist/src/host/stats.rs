@@ -325,7 +325,7 @@ pub fn render_stats_checklist(ctx: HostContext) -> Surface {
             ])
             .into()
     };
-    Surface::new(Page::new().child(body)).with_id(crate::ids::STATS_CHECKLIST)
+    Surface::new(Page::new().child(body)).with_id(CHECKLIST)
 }
 
 // --- Ménage (host) --------------------------------------------------------------------------
@@ -636,7 +636,7 @@ pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
             ])
             .into()
     };
-    Surface::new(Page::new().child(body)).with_id(crate::ids::STATS_CLEANING)
+    Surface::new(Page::new().child(body)).with_id(CLEANING)
 }
 
 /// « fini le 9 août · 13:20 », « … · 40 min de retard », « à terminer avant le 21 août · 14:00 ».

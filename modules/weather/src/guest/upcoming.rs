@@ -19,7 +19,7 @@ pub fn build_upcoming_card(data: &GuestWeatherData) -> Surface {
     if let Some(headline) = headline_value(data) {
         card = card.child(Text::new().text(headline).variant(TextVariant::Body));
     }
-    Surface::new(card).with_id(crate::ids::UPCOMING_CARD)
+    Surface::new(card).with_id(crate::guest::UPCOMING_CARD)
 }
 
 /// One key live value: `"26°C · Ensoleillé"` from current conditions.

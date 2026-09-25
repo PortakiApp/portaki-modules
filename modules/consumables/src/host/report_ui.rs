@@ -68,7 +68,7 @@ pub(crate) fn build_restock_form(report: &ConsumableReport) -> Option<Component>
     }
 
     let action = crate::ids::module_id().command(
-        crate::ids::UPDATE_STATUS,
+        crate::commands::UPDATE_STATUS,
         UpdateStatusArgs {
             report_id: report.id,
             status: "restocked".to_string(),

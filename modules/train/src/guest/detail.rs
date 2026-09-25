@@ -32,7 +32,7 @@ pub fn build_detail_page(_ctx: &GuestContext, selected: &str) -> Surface {
                     .emphasis(Emphasis::Subtle),
             ),
         ]))
-    .with_id(crate::ids::EXPLORE_DETAIL)
+    .with_id(crate::guest::EXPLORE_DETAIL)
 }
 
 fn from_to_card(selected: &str) -> Card {

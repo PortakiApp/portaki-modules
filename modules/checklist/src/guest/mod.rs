@@ -19,7 +19,7 @@ use load::{load_guest_checklist, GuestLoad};
     label_key = "home.card.title"
 )]
 pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
-    render_card(&ctx, crate::ids::HOME_CARD, false)
+    render_card(&ctx, HOME_CARD, false)
 }
 
 /// End-of-stay card — the departure lists, still tickable once the stay is over.
@@ -31,7 +31,7 @@ pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
     role = GuestRole::PostStay
 )]
 pub fn render_post_stay_card(ctx: GuestContext) -> Result<Surface> {
-    render_card(&ctx, crate::ids::POST_STAY_CARD, true)
+    render_card(&ctx, POST_STAY_CARD, true)
 }
 
 fn render_card(ctx: &GuestContext, surface_id: SurfaceId, departure_only: bool) -> Result<Surface> {

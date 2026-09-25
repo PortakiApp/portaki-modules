@@ -40,7 +40,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                     .children(vec![list_card, detail_panel]),
             ),
         ]))
-    .with_id(crate::ids::HOST_MAIN)
+    .with_id(MAIN)
 }
 
 #[portaki_sdk::wire(serialize)]
@@ -150,7 +150,7 @@ fn build_detail_panel(devices: &[Appliance], selected_id: &str) -> Component {
         })
         .unwrap_or("active");
 
-    let save_action = crate::ids::module_id().command_empty(crate::ids::SAVE_APPLIANCE);
+    let save_action = crate::ids::module_id().command_empty(crate::commands::SAVE_APPLIANCE);
 
     let mut form_children: Vec<Component> = vec![
         TextInput::new().name("id").value(id).into(),
@@ -211,7 +211,7 @@ fn build_detail_panel(devices: &[Appliance], selected_id: &str) -> Component {
 
     if let Some(existing) = device {
         let delete_action = crate::ids::module_id().command(
-            crate::ids::DELETE_APPLIANCE,
+            crate::commands::DELETE_APPLIANCE,
             crate::commands::DeleteApplianceArgs {
                 id: existing.id.clone(),
             },
@@ -237,7 +237,7 @@ fn build_detail_panel(devices: &[Appliance], selected_id: &str) -> Component {
 }
 
 fn build_safety_accordion(safety_notice: &str) -> Component {
-    let save_action = crate::ids::module_id().command_empty(crate::ids::SAVE_SAFETY_NOTICE);
+    let save_action = crate::ids::module_id().command_empty(crate::commands::SAVE_SAFETY_NOTICE);
     let has_value = !description_plain_text(safety_notice).trim().is_empty();
     // Shell Accordion: `:collapsed` → closed by default; otherwise open.
     let accordion_id = if has_value {

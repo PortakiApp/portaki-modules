@@ -99,7 +99,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
         .and_then(|id| Uuid::parse_str(id).ok())
         .and_then(|id| storage::find_by_id(id).ok().flatten())
     {
-        return Surface::new(item_detail(&report, now, locale)).with_id(crate::ids::HOST_STATS);
+        return Surface::new(item_detail(&report, now, locale)).with_id(LOST_STATS);
     }
     let reports = storage::list_since(now - Duration::days(days)).unwrap_or_default();
 
@@ -164,7 +164,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
                     .child(feed)
                     .into(),
             ])))
-    .with_id(crate::ids::HOST_STATS)
+    .with_id(LOST_STATS)
 }
 
 /// Status key and tone of an item.
@@ -260,7 +260,7 @@ fn item_detail(report: &LostFoundReport, now: DateTime<Utc>, locale: &str) -> Co
             Button::new()
                 .label("i18n:stats.detail.markReturned")
                 .action(crate::ids::module_id().command(
-                    crate::ids::UPDATE_STATUS,
+                    crate::commands::UPDATE_STATUS,
                     UpdateStatusArgs {
                         report_id: report.id,
                         status: "returned".into(),

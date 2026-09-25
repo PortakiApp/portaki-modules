@@ -40,9 +40,9 @@ pub fn build_home_card(data: &GuestChecklistData, surface_id: SurfaceId) -> Surf
                 &data.property_locale,
             );
             let command_name = if checked {
-                crate::ids::UNCOMPLETE_ITEM
+                crate::commands::UNCOMPLETE_ITEM
             } else {
-                crate::ids::COMPLETE_ITEM
+                crate::commands::COMPLETE_ITEM
             };
             let action = crate::ids::module_id().command(
                 command_name,

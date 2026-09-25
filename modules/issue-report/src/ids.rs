@@ -1,22 +1,6 @@
-//! Typed surface / operation catalogs for this module.
-#![allow(deprecated)]
+//! Event types and catalog id for this module.
 
 use portaki_sdk::prelude::*;
-
-define_surface_ids! {
-    HOME_CARD = "home.card",
-    GUEST_FORM = "guest.form",
-    // property-stats-card / property-stats-detail pathSegment
-    HOST_STATS = "issue-stats",
-}
-
-define_operation_names! {
-    LIST_FOR_STAY = "listForStay",
-    LIST_RECENT = "listRecent",
-    SUBMIT = "submit",
-    RESOLVE = "resolve",
-    STATS_SUMMARY = "statsSummary",
-}
 
 define_event_types! {
     WORKSPACE_ACTIVITY_RECORD = "workspace-activity.record",

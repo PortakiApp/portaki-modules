@@ -71,8 +71,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
         .and_then(|id| Uuid::parse_str(id).ok())
         .and_then(|id| storage::find_by_id(id).ok().flatten())
     {
-        return Surface::new(super::report_detail(&report, &ctx.locale))
-            .with_id(crate::ids::HOST_STATS);
+        return Surface::new(super::report_detail(&report, &ctx.locale)).with_id(ISSUE_STATS);
     }
     let reports = storage::list_since(now - Duration::days(days)).unwrap_or_default();
 
@@ -167,7 +166,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
         panels.into(),
         super::recent_reports_card(&ctx.locale),
     ])))
-    .with_id(crate::ids::HOST_STATS)
+    .with_id(ISSUE_STATS)
 }
 
 /// Dashboard period selector: 30 j / 90 j / 12 mois; anything else falls back to 30.

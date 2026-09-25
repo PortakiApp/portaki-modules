@@ -32,7 +32,7 @@ pub(crate) fn build_create_found_form(ctx: &HostContext) -> Component {
     };
 
     let submit_action = crate::ids::module_id().command(
-        crate::ids::SUBMIT_FOUND,
+        crate::commands::SUBMIT_FOUND,
         SubmitFoundArgs {
             stay_ids: vec![stay_id],
             stay_id: Some(stay_id),
@@ -68,5 +68,5 @@ pub(crate) fn build_create_found_form(ctx: &HostContext) -> Component {
     icon = IconName::Search
 )]
 pub fn render_host_create(ctx: HostContext) -> Surface {
-    Surface::new(Page::new().child(build_create_found_form(&ctx))).with_id(crate::ids::HOST_CREATE)
+    Surface::new(Page::new().child(build_create_found_form(&ctx))).with_id(CREATE)
 }

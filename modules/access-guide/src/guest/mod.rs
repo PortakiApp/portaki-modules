@@ -17,7 +17,7 @@ use upcoming::build_upcoming_card;
 
 #[portaki_sdk::surface(guest, id = "home.card")]
 pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
-    render_with_data(&ctx, crate::ids::HOME_CARD, build_home_card)
+    render_with_data(&ctx, HOME_CARD, build_home_card)
 }
 
 #[portaki_sdk::surface(
@@ -28,7 +28,7 @@ pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
     role = GuestRole::Upcoming
 )]
 pub fn render_upcoming_card(ctx: GuestContext) -> Result<Surface> {
-    render_with_data(&ctx, crate::ids::UPCOMING_CARD, build_upcoming_card)
+    render_with_data(&ctx, UPCOMING_CARD, build_upcoming_card)
 }
 
 #[portaki_sdk::surface(
@@ -38,7 +38,7 @@ pub fn render_upcoming_card(ctx: GuestContext) -> Result<Surface> {
     label_key = "nav.access-guide"
 )]
 pub fn render_explore_detail(ctx: GuestContext) -> Result<Surface> {
-    render_with_data(&ctx, crate::ids::EXPLORE_DETAIL, build_detail_surface)
+    render_with_data(&ctx, EXPLORE_DETAIL, build_detail_surface)
 }
 
 fn render_with_data(

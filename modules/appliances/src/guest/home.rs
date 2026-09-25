@@ -21,7 +21,7 @@ pub fn build_home_card(payload: &AppliancesPayload) -> Surface {
             .title("i18n:nav.appliances")
             .action(Action::open_overlay(
                 OverlayPresentation::Fullscreen,
-                crate::ids::EXPLORE_DETAIL,
+                crate::guest::EXPLORE_DETAIL,
                 OverlayArgs::new()
                     .icon(IconName::Plug)
                     .title("i18n:nav.appliances"),
@@ -37,7 +37,7 @@ pub fn build_home_card(payload: &AppliancesPayload) -> Surface {
                 children
             }),
     )
-    .with_id(crate::ids::HOME_CARD)
+    .with_id(crate::guest::HOME_CARD)
 }
 
 /// List row matching Portaki Guest design: emoji leading, name, location, chevron.

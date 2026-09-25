@@ -7,7 +7,6 @@ mod config;
 mod connectors;
 mod host;
 mod i18n;
-mod ids;
 mod queries;
 
 pub use commands::{

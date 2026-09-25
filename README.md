@@ -78,7 +78,7 @@ On every push to **`main`**, CI builds and publishes:
 portaki-modules/
 ├── Cargo.toml                 # workspace + shared SDK git deps (portaki-sdk main / 2.1+)
 ├── modules/
-│   ├── access-guide/          # each crate: ids.rs, guest/, host/, …
+│   ├── access-guide/          # each crate: guest/, host/, …
 │   ├── appliances/
 │   ├── checklist/
 │   ├── consumables/

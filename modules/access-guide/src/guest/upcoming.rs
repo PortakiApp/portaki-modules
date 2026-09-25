@@ -23,7 +23,7 @@ pub fn build_upcoming_card(data: &GuestData) -> Surface {
                     .variant(TextVariant::Body),
             ),
     )
-    .with_id(crate::ids::UPCOMING_CARD)
+    .with_id(crate::guest::UPCOMING_CARD)
 }
 
 /// One key live value: the primary access method label (i18n reference).

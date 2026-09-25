@@ -130,3 +130,18 @@ fn require_keypad_code(config: &ModuleConfig) -> Result<String> {
     }
     Ok(code.to_string())
 }
+
+#[cfg(test)]
+mod tests {
+    use portaki_sdk::contracts::smart_lock;
+
+    /// UNLOCK / GET_GUEST_CREDENTIAL must stay aligned with the peer protocol.
+    #[test]
+    fn smart_lock_ops_match_sdk_contract() {
+        assert_eq!(super::UNLOCK, smart_lock::UNLOCK);
+        assert_eq!(
+            super::GET_GUEST_CREDENTIAL,
+            smart_lock::GET_GUEST_CREDENTIAL
+        );
+    }
+}

@@ -4,7 +4,6 @@ mod config;
 mod email_context;
 mod guest;
 mod host;
-mod ids;
 
 pub use config::{ContactRow, ModuleConfig};
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};

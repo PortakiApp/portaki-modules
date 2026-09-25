@@ -181,7 +181,7 @@ pub(crate) fn build_report_list_item(
 /// Compact status update form under a report row (SDUI has no clickable pill).
 pub(crate) fn build_status_update_form(report: &LostFoundReport) -> Component {
     let update_action = crate::ids::module_id().command(
-        crate::ids::UPDATE_STATUS,
+        crate::commands::UPDATE_STATUS,
         UpdateStatusArgs {
             report_id: report.id,
             status: report.status.clone(),

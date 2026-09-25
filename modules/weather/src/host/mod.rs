@@ -65,8 +65,5 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     ];
 
     // No Page title / Save — the modules sheet owns chrome + footer Save.
-    Ok(
-        Surface::new(Page::new().child(Form::new().children(form_children)))
-            .with_id(crate::ids::HOST_MAIN),
-    )
+    Ok(Surface::new(Page::new().child(Form::new().children(form_children))).with_id(MAIN))
 }

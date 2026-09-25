@@ -14,5 +14,5 @@ pub fn build_detail_page(payload: &AppliancesPayload) -> Surface {
                 .surface(portaki_sdk::sdui::common::SurfaceLevel::Elevated)
                 .children(devices_list(payload)),
         )]))
-    .with_id(crate::ids::EXPLORE_DETAIL)
+    .with_id(crate::guest::EXPLORE_DETAIL)
 }

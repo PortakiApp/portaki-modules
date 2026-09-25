@@ -11,7 +11,7 @@ use crate::entities::IssueReport;
 pub fn build_home_card(reports: &[IssueReport]) -> Surface {
     let open_form = Action::open_overlay(
         OverlayPresentation::BottomSheet,
-        crate::ids::GUEST_FORM,
+        crate::guest::form::GUEST_FORM,
         OverlayArgs::new()
             .icon(IconName::DangerTriangle)
             .title("i18n:home.card.title"),
@@ -60,7 +60,7 @@ pub fn build_home_card(reports: &[IssueReport]) -> Surface {
             .action(open_form)
             .child(Stack::new().gap(12.0).children(children)),
     )
-    .with_id(crate::ids::HOME_CARD)
+    .with_id(crate::guest::HOME_CARD)
 }
 
 fn report_list_item(report: &IssueReport) -> ListItem {

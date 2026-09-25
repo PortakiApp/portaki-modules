@@ -17,7 +17,7 @@ pub fn build_upcoming_card(data: &GuestData) -> Surface {
     if let Some(headline) = headline_value(data) {
         card = card.child(Text::new().text(headline).variant(TextVariant::Body));
     }
-    Surface::new(card).with_id(crate::ids::UPCOMING_CARD)
+    Surface::new(card).with_id(crate::guest::UPCOMING_CARD)
 }
 
 /// One key live value: `"6 adresses"` — the count of curated spots.
