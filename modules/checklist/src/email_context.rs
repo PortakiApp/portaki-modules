@@ -18,7 +18,17 @@ pub struct EmailContextResponse {
 }
 
 /// Top checklist labels for Portaki guest templates.
-#[portaki_sdk::query(name = "emailContext")]
+#[portaki_sdk::query(
+    name = "emailContext",
+    example(
+        label = "E-mail après l'arrivée",
+        input = r#"{"templateKey":"post-arrival"}"#
+    ),
+    example(
+        label = "E-mail objet oublié, en anglais",
+        input = r#"{"templateKey":"lost-found","locale":"en-US"}"#
+    )
+)]
 pub fn email_context(ctx: Context, args: EmailContextArgs) -> Result<EmailContextResponse> {
     build_email_context(ctx, args)
 }

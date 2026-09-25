@@ -126,7 +126,14 @@ pub struct CreateChecklistArgs {
     pub template: String,
 }
 
-#[portaki_sdk::command(name = "createChecklist")]
+#[portaki_sdk::command(
+    name = "createChecklist",
+    example(label = "Liste de départ", input = r#"{"template":"departure"}"#),
+    example(
+        label = "Ménage entre deux séjours",
+        input = r#"{"template":"cleaning"}"#
+    )
+)]
 pub fn create_checklist(_ctx: Context, args: CreateChecklistArgs) -> Result<()> {
     let template = lists::template(&args.template)
         .ok_or_else(|| PortakiError::Host(format!("unknown_template:{}", args.template)))?;
