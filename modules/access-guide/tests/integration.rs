@@ -498,6 +498,19 @@ fn publish_readiness_requires_code_for_code_methods() {
 
 #[test]
 #[serial]
+fn publish_readiness_blocks_until_configured() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            let items = publish_readiness(ctx).expect("publishReadiness").items;
+            assert_eq!(items.len(), 1);
+            assert_eq!(items[0].id, "access-method");
+            assert!(!items[0].ok);
+        });
+}
+
+#[test]
+#[serial]
 fn publish_readiness_empty_without_code_method() {
     let in_person = serde_json::to_vec(&json!({
         "primary_method": "in_person",
