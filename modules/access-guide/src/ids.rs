@@ -11,12 +11,4 @@ define_surface_ids! {
 
 define_operation_names! {
     EMAIL_CONTEXT = "emailContext",
-    GET_CONFIG = "getConfig",
-    PUBLISH_READINESS = "publishReadiness",
-    UPDATE_CONFIG = "updateConfig",
-}
-
-/// Catalog module id (`access-guide`).
-pub fn module_id() -> ModuleId {
-    ModuleId::from_static("access-guide")
 }

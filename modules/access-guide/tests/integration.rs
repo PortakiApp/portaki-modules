@@ -5,9 +5,8 @@ use portaki_sdk::capability;
 use serial_test::serial;
 
 use access_guide::{
-    get_config, publish_readiness, render_explore_detail, render_home_card, render_host_main,
-    render_upcoming_card, update_config, MethodFields, PrimaryMethod, RevealPolicy,
-    UpdateConfigArgs,
+    publish_readiness, render_explore_detail, render_home_card, render_host_main,
+    render_upcoming_card, HostConfig, PrimaryMethod, RevealPolicy, StepRow, StepTextRow,
 };
 use portaki_sdk::context::StayContext;
 use portaki_sdk::host::with_host;
@@ -30,56 +29,47 @@ fn sample_config_bytes() -> Vec<u8> {
     .expect("config json")
 }
 
-fn always_reveal_config_bytes() -> Vec<u8> {
-    serde_json::to_vec(&json!({
-        "primary_method": "keybox",
-        "method": {
-            "kind": "keybox",
-            "location": "À droite de la porte",
-            "code": "4821"
-        },
-        "building_access": { "gate_code": "A17B" },
-        "parking": { "map_url": "https://maps.example.com" },
-        "arrival": {
-            "address": "Ch. des Douaniers",
-            "arrival_video_url": "https://video.example.com",
-            "steps": [{"id":"1","kind":"parking"}]
-        },
-        "reveal_policy": "always"
-    }))
-    .expect("config json")
-}
+// The form is checked across methods (one surface shows one method): the key sets, not the
+// single-surface assertion.
+#[allow(dead_code)]
+#[path = "../../../support/config_form.rs"]
+mod config_form;
 
-fn always_reveal_texts_fr_bytes() -> Vec<u8> {
-    serde_json::to_vec(&json!({
-        "parking_info": "Rue A",
-        "global_note": "Sonnette à gauche",
-        "steps": [{"id":"1","title":"Se garer","detail":"Place résident"}]
-    }))
-    .expect("texts json")
-}
-
-fn smart_lock_config_bytes(provider: Option<&str>) -> Vec<u8> {
-    let mut cfg = json!({
-        "primary_method": "smart_lock",
-        "method": {
-            "kind": "smart_lock",
-            "manual_code": "9999"
-        },
-        "arrival": { "address": "1 rue Test" },
-        "reveal_policy": "always"
-    });
-    if let Some(id) = provider {
-        cfg["smart_lock_provider_module_id"] = json!(id);
+fn always_reveal_config() -> HostConfig {
+    HostConfig {
+        primary_method: "keybox".into(),
+        keybox_location: "À droite de la porte".into(),
+        keybox_code: "4821".into(),
+        building_access_enabled: true,
+        building_access_gate_code: "A17B".into(),
+        parking_enabled: true,
+        parking_map_url: "https://maps.example.com".into(),
+        parking_info_fr: "Rue A".into(),
+        address: "Ch. des Douaniers".into(),
+        arrival_video_url: "https://video.example.com".into(),
+        reveal_policy: "always".into(),
+        global_note_fr: "Sonnette à gauche".into(),
+        steps: vec![StepRow {
+            kind: Some("parking".into()),
+        }],
+        steps_fr: vec![StepTextRow {
+            title: "Se garer".into(),
+            detail: "Place résident".into(),
+        }],
+        ..HostConfig::default()
     }
-    serde_json::to_vec(&cfg).expect("config json")
 }
 
-fn smart_lock_texts_fr_bytes() -> Vec<u8> {
-    serde_json::to_vec(&json!({
-        "method_instructions": "Appuyer sur unlock"
-    }))
-    .expect("texts json")
+fn smart_lock_config(provider: Option<&str>) -> HostConfig {
+    HostConfig {
+        primary_method: "smart_lock".into(),
+        smart_lock_manual_code: "9999".into(),
+        smart_lock_provider_module_id: provider.unwrap_or_default().into(),
+        address: "1 rue Test".into(),
+        reveal_policy: "always".into(),
+        method_instructions_fr: "Appuyer sur unlock".into(),
+        ..HostConfig::default()
+    }
 }
 
 #[test]
@@ -129,7 +119,7 @@ fn upcoming_card_empty_without_config() {
 #[serial]
 fn home_card_masks_secrets_without_stay() {
     // Legacy config defaults to day_before_16h; no checkin → fail-safe lock.
-    // load_config migrates embeds into texts/fr.
+    // Before the platform holds the config: the flat legacy blob, texts embedded.
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .with_kv("config", sample_config_bytes())
@@ -165,8 +155,7 @@ fn home_card_masks_secrets_without_stay() {
 fn home_card_emits_keybox_location_i18n_when_configured() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", always_reveal_config_bytes())
-        .with_kv("texts/fr", always_reveal_texts_fr_bytes())
+        .with_config(&always_reveal_config())
         .run(|ctx| {
             let surface = render_home_card(ctx);
             let json = serde_json::to_string(&surface).expect("json");
@@ -182,8 +171,7 @@ fn home_card_emits_keybox_location_i18n_when_configured() {
 fn home_card_reveals_secrets_when_policy_always() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", always_reveal_config_bytes())
-        .with_kv("texts/fr", always_reveal_texts_fr_bytes())
+        .with_config(&always_reveal_config())
         .run(|ctx| {
             let surface = render_home_card(ctx);
             let json = serde_json::to_string(&surface).expect("json");
@@ -198,8 +186,7 @@ fn home_card_reveals_secrets_when_policy_always() {
 fn detail_has_steps_and_video() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", always_reveal_config_bytes())
-        .with_kv("texts/fr", always_reveal_texts_fr_bytes())
+        .with_config(&always_reveal_config())
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
@@ -215,8 +202,7 @@ fn detail_has_steps_and_video() {
 fn smart_lock_provider_emits_unlock_commands_when_revealed() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", smart_lock_config_bytes(Some("nuki")))
-        .with_kv("texts/fr", smart_lock_texts_fr_bytes())
+        .with_config(&smart_lock_config(Some("nuki")))
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
             let json = serde_json::to_string(&surface).expect("json");
@@ -235,8 +221,7 @@ fn smart_lock_provider_emits_unlock_commands_when_revealed() {
 fn smart_lock_without_provider_shows_manual_fallback_only() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", smart_lock_config_bytes(None))
-        .with_kv("texts/fr", smart_lock_texts_fr_bytes())
+        .with_config(&smart_lock_config(None))
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
             let json = serde_json::to_string(&surface).expect("json");
@@ -249,21 +234,12 @@ fn smart_lock_without_provider_shows_manual_fallback_only() {
 #[test]
 #[serial]
 fn smart_lock_provider_hides_cta_when_not_revealed() {
-    let cfg = serde_json::to_vec(&json!({
-        "primary_method": "smart_lock",
-        "method": {
-            "kind": "smart_lock",
-            "manual_code": "9999"
-        },
-        "arrival": { "address": "1 rue Test" },
-        "reveal_policy": "at_checkin",
-        "smart_lock_provider_module_id": "nuki"
-    }))
-    .expect("json");
-
     let (mut ctx, host) = MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", cfg)
+        .with_config(&HostConfig {
+            reveal_policy: "at_checkin".into(),
+            ..smart_lock_config(Some("nuki"))
+        })
         .build();
     ctx.timezone = "Europe/Paris".into();
     ctx.property.timezone = "Europe/Paris".into();
@@ -307,7 +283,7 @@ fn host_main_hides_reveal_for_no_code_methods_without_layers() {
                     "building_access_enabled": false,
                     "parking_enabled": false,
                 });
-                let surface = render_host_main(ctx);
+                let surface = render_host_main(ctx).expect("host main");
                 let json = serde_json::to_string(&surface).expect("json");
                 assert!(
                     !json.contains("i18n:host.section.reveal"),
@@ -334,7 +310,7 @@ fn host_main_shows_reveal_for_code_methods() {
                     "building_access_enabled": false,
                     "parking_enabled": false,
                 });
-                let surface = render_host_main(ctx);
+                let surface = render_host_main(ctx).expect("host main");
                 let json = serde_json::to_string(&surface).expect("json");
                 assert!(
                     json.contains("i18n:host.section.reveal"),
@@ -356,7 +332,7 @@ fn host_main_shows_reveal_for_in_person_when_building_layer_enabled() {
                 "building_access_enabled": true,
                 "parking_enabled": false,
             });
-            let surface = render_host_main(ctx);
+            let surface = render_host_main(ctx).expect("host main");
             let json = serde_json::to_string(&surface).expect("json");
             assert!(
                 json.contains("i18n:host.section.reveal"),
@@ -365,128 +341,213 @@ fn host_main_shows_reveal_for_in_person_when_building_layer_enabled() {
         });
 }
 
+/// Every method, both layers on, both languages: the union of what the form sends.
+fn host_forms() -> Vec<(String, portaki_sdk::sdui::surface::Surface)> {
+    let mut surfaces = Vec::new();
+    for locale in ["fr-FR", "en-US"] {
+        for method in PrimaryMethod::ALL {
+            let (mut ctx, host) = MockContext::host()
+                .with_capabilities(&[capability::core::STORAGE])
+                .with_config(&always_reveal_config())
+                .build();
+            ctx.locale = locale.into();
+            ctx.input = json!({
+                "primary_method": method.as_wire(),
+                "building_access_enabled": true,
+                "parking_enabled": true,
+            });
+            let surface =
+                with_host(host, ctx.clone(), || render_host_main(ctx)).expect("host main");
+            surfaces.push((format!("{locale} {method:?}"), surface));
+        }
+    }
+    surfaces
+}
+
+/// `config_form::form_keys` reads `name`; the map picker names its three inputs apart.
+fn picker_keys(surface: &portaki_sdk::sdui::surface::Surface) -> Vec<String> {
+    fn walk(value: &serde_json::Value, out: &mut Vec<String>) {
+        match value {
+            serde_json::Value::Object(object) => {
+                for key in ["addressName", "latName", "lngName"] {
+                    if let Some(name) = object.get(key).and_then(|v| v.as_str()) {
+                        out.push(name.to_string());
+                    }
+                }
+                object.values().for_each(|v| walk(v, out));
+            }
+            serde_json::Value::Array(items) => items.iter().for_each(|v| walk(v, out)),
+            _ => {}
+        }
+    }
+    let mut out = Vec::new();
+    walk(&serde_json::to_value(surface).unwrap(), &mut out);
+    out
+}
+
 #[test]
-fn update_config_args_choice_list_reveal_policy_wires() {
-    for wire in RevealPolicy::CHOICE_LIST_WIRE_VALUES {
-        let args: UpdateConfigArgs = serde_json::from_value(json!({
-            "primary_method": "keybox",
-            "reveal_policy": wire,
-            "keybox_location": "door",
-            "keybox_code": "1234",
-        }))
-        .unwrap_or_else(|e| panic!("reveal_policy={wire:?}: {e}"));
-        assert_eq!(args.reveal_policy.map(|p| p.as_wire()), Some(*wire));
+#[serial]
+fn the_host_form_sends_the_declared_keys() {
+    let declared = config_form::declared_keys(concat!(env!("OUT_DIR"), "/portaki-emissions"));
+    let mut sent = std::collections::BTreeSet::new();
+    for (case, surface) in host_forms() {
+        let mut keys = config_form::form_keys(&surface);
+        keys.extend(picker_keys(&surface));
+        let unknown: Vec<_> = keys.difference(&declared).collect();
+        assert!(
+            unknown.is_empty(),
+            "{case}: the platform would refuse {unknown:?}"
+        );
+        sent.extend(keys);
+    }
+    let missing: Vec<_> = declared.difference(&sent).collect();
+    assert!(missing.is_empty(), "no form fills {missing:?}");
+}
+
+#[test]
+#[serial]
+fn codes_are_never_sent_back_to_the_form() {
+    let codes = HostConfig {
+        door_code: "D00R".into(),
+        smart_lock_manual_code: "SM4RT".into(),
+        parking_code: "P4RK".into(),
+        ..always_reveal_config()
+    };
+    for method in [
+        PrimaryMethod::Keybox,
+        PrimaryMethod::DoorCode,
+        PrimaryMethod::SmartLock,
+    ] {
+        MockContext::host()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&codes)
+            .run(|ctx| {
+                let mut ctx = ctx;
+                ctx.input = json!({ "primary_method": method.as_wire() });
+                let json = serde_json::to_string(&render_host_main(ctx).expect("host main"))
+                    .expect("json");
+                for code in ["4821", "A17B", "D00R", "SM4RT", "P4RK"] {
+                    assert!(!json.contains(code), "{method:?} sends {code} back");
+                }
+                assert!(json.contains("i18n:host.secret.keep"));
+                assert!(json.contains("À droite de la porte") || method != PrimaryMethod::Keybox);
+            });
     }
 }
 
 #[test]
 #[serial]
-fn update_config_legacy_args_migrate_to_new_shape() {
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    address: "Rue X".into(),
-                    gate_code: "1".into(),
-                    ..UpdateConfigArgs::default()
-                },
-            )
-            .expect("ok");
-            let response = get_config(ctx).expect("cfg");
-            assert_eq!(response.config.arrival.address, "Rue X");
-            assert_eq!(response.config.primary_method, PrimaryMethod::DoorCode);
-            assert_eq!(response.config.reveal_policy, RevealPolicy::DayBefore16h);
-            match &response.config.method {
-                MethodFields::DoorCode { code, .. } => assert_eq!(code, "1"),
-                other => panic!("expected DoorCode, got {other:?}"),
-            }
-        });
-}
-
-#[test]
-#[serial]
-fn load_legacy_kv_migrates_keybox_primary_and_seeds_texts_fr() {
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
-        .run(|ctx| {
-            let response = get_config(ctx.clone()).expect("cfg");
-            assert_eq!(response.config.primary_method, PrimaryMethod::Keybox);
-            assert_eq!(response.config.keybox_code(), Some("4821"));
-            assert_eq!(
-                response
-                    .config
-                    .building_access
-                    .as_ref()
-                    .and_then(|b| b.gate_code.as_deref()),
-                Some("A17B")
-            );
-            assert_eq!(response.config.reveal_policy, RevealPolicy::DayBefore16h);
-            assert_eq!(response.config.parse_steps().len(), 1);
-            assert_eq!(response.lang, "fr");
-            assert_eq!(response.texts.global_note, "Sonnette à gauche");
-            assert_eq!(response.texts.parking_info, "Résident · rue Aubernon");
-            assert_eq!(response.texts.steps[0].title, "Se garer");
-            // Shared config must not keep embeds that would overwrite texts.
-            let stored = portaki_sdk::host::kv::get("config")
-                .expect("kv")
-                .expect("config present");
-            let value: serde_json::Value = serde_json::from_slice(&stored).expect("json");
-            assert!(value.get("global_note").is_none());
-            assert!(value.get("parking_info").is_none());
-            assert!(value.pointer("/arrival/global_note").is_none());
-            assert!(value.pointer("/parking/info").is_none());
-        });
-}
-
-#[test]
-#[serial]
-fn update_config_saves_texts_for_active_locale() {
+fn the_host_edits_the_copy_of_its_own_language() {
+    let config = HostConfig {
+        global_note_en: "Ring twice".into(),
+        ..always_reveal_config()
+    };
     let (mut ctx, host) = MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&config)
         .build();
     ctx.locale = "en-US".into();
-
-    with_host(host, ctx.clone(), || {
-        update_config(
-            ctx.clone(),
-            UpdateConfigArgs {
-                primary_method: Some(PrimaryMethod::Other),
-                other_instructions: "Ring the bell".into(),
-                global_note: "Note EN".into(),
-                ..UpdateConfigArgs::default()
-            },
-        )
-        .expect("ok");
-        let response = get_config(ctx).expect("cfg");
-        assert_eq!(response.lang, "en");
-        assert_eq!(
-            response.texts.method_instructions.as_deref(),
-            Some("Ring the bell")
-        );
-        assert_eq!(response.texts.global_note, "Note EN");
-        assert!(portaki_sdk::host::kv::get("texts/en")
-            .expect("kv")
-            .is_some());
+    let json = with_host(host, ctx.clone(), || {
+        serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json")
     });
+    assert!(json.contains("global_note_en") && json.contains("Ring twice"));
+    assert!(!json.contains("global_note_fr") && !json.contains("Sonnette à gauche"));
+}
+
+/// Before the platform held it, the KV kept a flat blob; the import takes only the keys the
+/// form still uses (`address`, `keybox_code`…). The gate code, the copy and the steps are still
+/// read from the KV.
+#[test]
+#[serial]
+fn a_flat_legacy_blob_survives_the_import() {
+    let imported = json!({
+        "address": "Ch. des Douaniers",
+        "keybox_code": "4821",
+        "parking_map_url": "https://maps.example.com",
+        "arrival_video_url": "https://video.example.com"
+    });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_kv("config", sample_config_bytes())
+        .with_config(&imported)
+        .run(|ctx| {
+            let config = HostConfig::read(&ctx).expect("config");
+            assert_eq!(config.method(), Some(PrimaryMethod::Keybox));
+            assert_eq!(config.keybox_code, "4821");
+            assert!(config.building_access_enabled);
+            assert_eq!(config.building_access_gate_code, "A17B");
+            assert_eq!(config.global_note_fr, "Sonnette à gauche");
+            assert_eq!(config.parking_info_fr, "Résident · rue Aubernon");
+            assert_eq!(config.steps_fr[0].title, "Se garer");
+            assert_eq!(config.steps_en[0].title, "Park");
+            assert_eq!(config.reveal(), RevealPolicy::DayBefore16h);
+            let texts = config.guest_texts("en-US", "fr-FR");
+            assert_eq!(texts.steps[0].title, "Park");
+        });
+}
+
+/// The redesigned blob nested the method and kept the copy in `texts/{lang}`: both still read,
+/// the pre-rename policy included — until the platform holds the key, even empty.
+#[test]
+#[serial]
+fn a_nested_blob_and_its_texts_survive_the_import() {
+    let blob = json!({
+        "primary_method": "keybox",
+        "method": { "kind": "keybox", "location": "Sous le pot", "code": "4821" },
+        "arrival": { "address": "Rue X", "steps": [{ "id": "a", "kind": "door" }] },
+        "reveal_policy": "hours_before24"
+    });
+    let texts = |note: &str| {
+        serde_json::to_vec(&json!({
+            "global_note": note,
+            "steps": [{ "id": "a", "title": note }]
+        }))
+        .unwrap()
+    };
+    let run = |held: serde_json::Value, check: &dyn Fn(HostConfig)| {
+        MockContext::guest()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_kv("config", serde_json::to_vec(&blob).unwrap())
+            .with_kv("texts/fr", texts("Note FR"))
+            .with_kv("texts/en", texts("Note EN"))
+            .with_config(&held)
+            .run(|ctx| check(HostConfig::read(&ctx).expect("config")));
+    };
+    run(json!({ "primary_method": "keybox" }), &|config| {
+        assert_eq!(config.keybox_location, "Sous le pot");
+        assert_eq!(config.keybox_code, "4821");
+        assert_eq!(config.address, "Rue X");
+        assert_eq!(config.reveal(), RevealPolicy::HoursBefore24);
+        assert_eq!(config.texts("fr").global_note, "Note FR");
+        assert_eq!(config.texts("en").global_note, "Note EN");
+        assert_eq!(config.texts("en").steps[0].title, "Note EN");
+        assert_eq!(
+            config.to_model().parse_steps()[0].kind.as_deref(),
+            Some("door")
+        );
+    });
+    run(
+        json!({ "primary_method": "keybox", "global_note_fr": "", "reveal_policy": "always" }),
+        &|config| {
+            assert_eq!(config.texts("fr").global_note, "");
+            assert_eq!(config.texts("en").global_note, "Note EN");
+            assert_eq!(config.reveal(), RevealPolicy::Always);
+        },
+    );
 }
 
 #[test]
 #[serial]
 fn publish_readiness_requires_code_for_code_methods() {
-    let keybox = |code: &str| {
-        serde_json::to_vec(&json!({
-            "primary_method": "keybox",
-            "method": { "kind": "keybox", "location": "Porte", "code": code }
-        }))
-        .expect("config json")
-    };
     for (code, ok) in [("", false), ("4821", true)] {
         MockContext::host()
             .with_capabilities(&[capability::core::STORAGE])
-            .with_kv("config", keybox(code))
+            .with_config(&HostConfig {
+                primary_method: "keybox".into(),
+                keybox_location: "Porte".into(),
+                keybox_code: code.into(),
+                ..HostConfig::default()
+            })
             .run(|ctx| {
                 let items = publish_readiness(ctx).expect("publishReadiness").items;
                 assert_eq!(items.len(), 1);
@@ -496,34 +557,26 @@ fn publish_readiness_requires_code_for_code_methods() {
     }
 }
 
-#[test]
-#[serial]
-fn publish_readiness_blocks_until_configured() {
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            let items = publish_readiness(ctx).expect("publishReadiness").items;
-            assert_eq!(items.len(), 1);
-            assert_eq!(items[0].id, "access-method");
-            assert!(!items[0].ok);
-        });
-}
-
+/// No method yet: the declared `primary_method` (required) blocks, not this check.
 #[test]
 #[serial]
 fn publish_readiness_empty_without_code_method() {
-    let in_person = serde_json::to_vec(&json!({
-        "primary_method": "in_person",
-        "method": { "kind": "in_person", "meeting_place": "Gare" }
-    }))
-    .expect("config json");
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", in_person)
-        .run(|ctx| {
-            assert!(publish_readiness(ctx)
-                .expect("publishReadiness")
-                .items
-                .is_empty());
-        });
+    for config in [
+        HostConfig::default(),
+        HostConfig {
+            primary_method: "in_person".into(),
+            in_person_meeting_place: "Gare".into(),
+            ..HostConfig::default()
+        },
+    ] {
+        MockContext::host()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&config)
+            .run(|ctx| {
+                assert!(publish_readiness(ctx)
+                    .expect("publishReadiness")
+                    .items
+                    .is_empty());
+            });
+    }
 }
