@@ -13,6 +13,10 @@ use serde_json::{json, Value};
 
 #[path = "../../../support/config_form.rs"]
 mod config_form;
+#[path = "../../../support/config_save.rs"]
+mod config_save;
+
+const EMISSIONS: &str = concat!(env!("OUT_DIR"), "/portaki-emissions");
 
 fn sample_config() -> Value {
     json!({
@@ -139,5 +143,57 @@ fn an_inactive_module_shows_the_sdk_state() {
         .run(|ctx| {
             let surface = portaki_sdk::guest_shell::render(ctx, "home.card", render_home_card);
             assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
+        });
+}
+
+/// A host writing in English: the French spot and instructions stay.
+#[test]
+#[serial]
+fn a_save_in_english_keeps_the_french() {
+    assert_eq!(
+        config_save::localized_paths(EMISSIONS),
+        ["instructions", "spot_label"]
+    );
+    let stored = json!({
+        "spot_label": { "fr": "Place 14", "en": "Spot 14" },
+        "instructions": { "fr": "À gauche après la barrière" },
+        "charger_pin": "4821",
+        "reveal_policy": "always"
+    });
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&stored)
+        .run(|mut ctx| {
+            ctx.locale = "en-US".into();
+            let surface = render_host_main(ctx).expect("host main");
+            let sent = config_save::form_args(&surface);
+            assert_eq!(sent["spot_label"], "Spot 14");
+            assert_eq!(sent["instructions"], "À gauche après la barrière");
+
+            let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
+            assert_eq!(saved["spot_label"], stored["spot_label"]);
+            assert_eq!(saved["instructions"]["fr"], "À gauche après la barrière");
+            assert_eq!(saved["charger_pin"], "4821");
+        });
+}
+
+/// The arrival email reads the spot in the guest's language.
+#[test]
+#[serial]
+fn email_context_picks_the_email_locale() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({ "spot_label": { "fr": "Place 14", "en": "Spot 14" } }))
+        .run(|ctx| {
+            let response = email_context(
+                ctx,
+                EmailContextArgs {
+                    template_key: Some(EmailTemplateKey::Arrival),
+                    locale: Some("en-GB".into()),
+                    ..Default::default()
+                },
+            )
+            .expect("emailContext");
+            assert_eq!(response.ev_parking_spot.as_deref(), Some("Spot 14"));
         });
 }

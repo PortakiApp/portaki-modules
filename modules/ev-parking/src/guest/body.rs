@@ -60,8 +60,7 @@ pub fn build_ev_parking_body(data: &GuestData) -> Vec<Component> {
 
     push_reveal_banner(&mut children, data);
 
-    let spot = data.config.spot_label.trim();
-    if !spot.is_empty() {
+    if let Some(spot) = data.config.spot_text(&data.locale) {
         children.push(kv_row("i18n:guest.spot", spot, false));
     }
 
@@ -92,7 +91,7 @@ pub fn build_ev_parking_body(data: &GuestData) -> Vec<Component> {
         &data.config.charger_pin,
     );
 
-    if let Some(instructions) = data.config.instructions_text() {
+    if let Some(instructions) = data.config.instructions_text(&data.locale) {
         children.push(
             Text::new()
                 .text(instructions)
