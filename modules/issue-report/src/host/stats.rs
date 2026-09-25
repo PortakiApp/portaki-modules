@@ -85,6 +85,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
 
     let mut resolved = Stat::new()
         .label("i18n:stats.resolved")
+        .icon(IconName::CheckCircle)
         .value(delays.len().to_string());
     if let Some(avg) = average(&delays) {
         let prefix = if fr { "délai moyen" } else { "avg." };
@@ -92,6 +93,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
     }
     let mut open = Stat::new()
         .label("i18n:stats.open")
+        .icon(IconName::ClockCircle)
         .value(open_reports.len().to_string());
     if let Some(newest) = open_reports.iter().max_by_key(|r| r.created_at) {
         open = open.delta(newest.summary.clone());
@@ -100,6 +102,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
     let tiles = Grid::new().minColumnWidth(170.0).gap(12.0).children(vec![
         Stat::new()
             .label("i18n:stats.reports")
+            .icon(IconName::DangerTriangle)
             .value(reports.len().to_string())
             .delta(window_note(days, fr))
             .into(),

@@ -86,13 +86,16 @@ pub fn render_host_stats(ctx: HostContext) -> Result<Surface> {
     let state = load_sync_state().unwrap_or_default();
     let upcoming = upcoming(&state, now);
 
-    let mut last_sync = Stat::new().label("i18n:stats.lastSync").value(
-        state
-            .last_run_at
-            .as_deref()
-            .and_then(parse)
-            .map_or_else(|| "—".to_string(), |at| relative(at, now, fr)),
-    );
+    let mut last_sync = Stat::new()
+        .label("i18n:stats.lastSync")
+        .icon(IconName::Refresh)
+        .value(
+            state
+                .last_run_at
+                .as_deref()
+                .and_then(parse)
+                .map_or_else(|| "—".to_string(), |at| relative(at, now, fr)),
+        );
     let sources: Vec<String> = config
         .connected_calendars()
         .iter()
@@ -116,12 +119,14 @@ pub fn render_host_stats(ctx: HostContext) -> Result<Surface> {
         last_sync.into(),
         Stat::new()
             .label("i18n:stats.imported")
+            .icon(IconName::Calendar)
             .value(imported_since(&state, now - Duration::days(days)).to_string())
             .delta(window_note(days, fr))
             .into(),
         with_note(
             Stat::new()
                 .label("i18n:stats.conflicts")
+                .icon(IconName::DangerTriangle)
                 .value(conflicts.to_string()),
             conflicts > 0,
             "i18n:stats.conflicts.note",
@@ -129,6 +134,7 @@ pub fn render_host_stats(ctx: HostContext) -> Result<Surface> {
         with_note(
             Stat::new()
                 .label("i18n:stats.incomplete")
+                .icon(IconName::Mail)
                 .value(incomplete.to_string()),
             incomplete > 0,
             "i18n:stats.incomplete.note",

@@ -163,20 +163,24 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
     let tiles = Grid::new().minColumnWidth(170.0).gap(12.0).children(vec![
         Stat::new()
             .label("i18n:stats.tracked")
+            .icon(IconName::Package)
             .value(items.len().to_string())
             .into(),
         Stat::new()
             .label("i18n:stats.toBuy")
+            .icon(IconName::DangerTriangle)
             .value(to_buy.to_string())
             .delta("i18n:stats.toBuy.note")
             .into(),
         Stat::new()
             .label("i18n:stats.reported")
+            .icon(IconName::Message)
             .value(period.len().to_string())
             .delta(t!(&format!("stats.window.{days}")).unwrap_or_default())
             .into(),
         Stat::new()
             .label("i18n:stats.lastRestock")
+            .icon(IconName::Calendar)
             .value(last_restock.map_or_else(|| "—".to_string(), |at| short_date(at, fr)))
             .into(),
     ]);

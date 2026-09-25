@@ -103,9 +103,10 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
     }
     let reports = storage::list_since(now - Duration::days(days)).unwrap_or_default();
 
-    let stat = |label: &str, value: usize, note: String| -> Component {
+    let stat = |label: &str, icon: IconName, value: usize, note: String| -> Component {
         Stat::new()
             .label(format!("i18n:stats.{label}"))
+            .icon(icon)
             .value(value.to_string())
             .delta(note)
             .into()
@@ -113,21 +114,25 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
     let tiles = Grid::new().minColumnWidth(170.0).gap(12.0).children(vec![
         stat(
             "declared",
+            IconName::Search,
             reports.len(),
             t!(&format!("stats.window.{days}")).unwrap_or_default(),
         ),
         stat(
             "returned",
+            IconName::CheckCircle,
             count(&reports, now, Stage::Returned),
             "i18n:stats.returned.note".into(),
         ),
         stat(
             "waiting",
+            IconName::ClockCircle,
             count(&reports, now, Stage::Waiting),
             "i18n:stats.waiting.note".into(),
         ),
         stat(
             "noAnswer",
+            IconName::Mail,
             count(&reports, now, Stage::NoAnswer),
             "i18n:stats.noAnswer.note".into(),
         ),

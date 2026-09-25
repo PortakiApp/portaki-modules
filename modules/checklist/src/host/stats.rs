@@ -224,6 +224,7 @@ pub fn render_stats_checklist(ctx: HostContext) -> Surface {
         let mut tiles = vec![
             Stat::new()
                 .label("i18n:stats.checklist.completed")
+                .icon(IconName::CheckCircle)
                 .value(percent(complete_count(&stays), stays.len()))
                 .delta(
                     t!("stats.checklist.completed.note", count = stays.len()).unwrap_or_default(),
@@ -231,6 +232,7 @@ pub fn render_stats_checklist(ctx: HostContext) -> Surface {
                 .into(),
             Stat::new()
                 .label("i18n:stats.checklist.ticked")
+                .icon(IconName::Clipboard)
                 .value(format!("{} / {}", decimal(average, fr), items.len()))
                 .delta("i18n:stats.checklist.ticked.note")
                 .into(),
@@ -541,18 +543,21 @@ pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
         let mut tiles = vec![if judged {
             Stat::new()
                 .label("i18n:stats.cleaning.onTime")
+                .icon(IconName::CheckCircle)
                 .value(percent(on_time, decided.len()))
                 .delta("i18n:stats.cleaning.onTime.note")
                 .into()
         } else {
             Stat::new()
                 .label("i18n:stats.cleaning.done")
+                .icon(IconName::CheckCircle)
                 .value(percent(finished.len(), tasks.len()))
                 .delta(t!("stats.cleaning.done.note", count = tasks.len()).unwrap_or_default())
                 .into()
         }];
         tiles.extend([Stat::new()
             .label("i18n:stats.cleaning.duration")
+            .icon(IconName::ClockCircle)
             .value(average(&durations).map_or_else(|| "—".to_string(), format_duration))
             .delta("i18n:stats.cleaning.duration.note")
             .into()]);
@@ -731,6 +736,7 @@ fn most_forgotten(
     Some(
         Stat::new()
             .label(format!("i18n:{prefix}.forgotten"))
+            .icon(IconName::DangerTriangle)
             .value(if fr { label.fr } else { label.en })
             .delta(
                 t!(

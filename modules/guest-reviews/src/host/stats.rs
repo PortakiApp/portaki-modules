@@ -125,6 +125,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
     let count = reviews.len();
     let mut tiles = vec![Stat::new()
         .label("i18n:stats.average")
+        .icon(IconName::Star)
         .value(format!("{} / 5", average(&reviews, fr).unwrap_or_default()))
         .delta(t!(&format!("stats.average.note.{days}"), count = count).unwrap_or_default())
         .into()];
@@ -134,6 +135,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
         tiles.push(
             Stat::new()
                 .label("i18n:stats.responseRate")
+                .icon(IconName::Message)
                 .value(format!("{rate} %"))
                 .delta(t!("stats.responseRate.note", count = departed).unwrap_or_default())
                 .into(),
@@ -142,6 +144,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
     tiles.push(
         Stat::new()
             .label("i18n:stats.private")
+            .icon(IconName::Lock)
             .value(count.to_string())
             .delta("i18n:stats.private.note")
             .into(),
