@@ -34,7 +34,7 @@ fn previews_match_the_rendered_surfaces() {
             },
         )
         .expect("save");
-        render_explore_detail(ctx)
+        render_explore_detail(ctx).expect("render")
     });
     previews::check(
         root,
