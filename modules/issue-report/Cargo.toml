@@ -13,7 +13,7 @@ crate-type = ["cdylib", "rlib"]
 name = "issue_report"
 
 [dependencies]
-portaki-sdk = { version = "8.5.0", features = ["email", "events", "guest-files", "platform", "repo"] }
+portaki-sdk = { version = "8.6.0", features = ["email", "events", "guest-files", "platform", "repo"] }
 portaki-sdk-macros = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
