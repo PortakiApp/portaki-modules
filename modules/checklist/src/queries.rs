@@ -1,9 +1,11 @@
 //! Module queries — guest items and stay completions.
 
+use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
 use crate::entities::ChecklistItem;
+use crate::i18n::text;
 use crate::lists;
 use crate::storage;
 
@@ -60,4 +62,20 @@ pub fn list_completions(ctx: Context) -> Result<Vec<Uuid>> {
         .into_iter()
         .map(|row| row.item_id)
         .collect())
+}
+
+/// Blocks publication until a list has an item: an empty list shows nothing to the guest and
+/// gives the host no task.
+#[portaki_sdk::query(name = "publishReadiness")]
+pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
+    let ok = !storage::list_items()?.is_empty();
+    Ok(PublishReadiness {
+        items: vec![PublishCheck {
+            id: "checklist".into(),
+            level: PublishLevel::Required,
+            ok,
+            label: text("publish.checklist.label", &[]),
+            hint: text("publish.checklist.hint", &[]),
+        }],
+    })
 }

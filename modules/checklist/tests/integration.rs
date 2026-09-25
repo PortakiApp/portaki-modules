@@ -15,9 +15,9 @@ use uuid::Uuid;
 
 use checklist::{
     complete_item, create_checklist, items_of, list_checklists, list_completions, list_items,
-    render_home_card, render_host_main, render_post_stay_card, render_stats_checklist,
-    render_stats_cleaning, reset_test_store, stats_summary, task_complete, task_toggle,
-    timeline_tasks, uncomplete_item, update_config, CreateChecklistArgs, ItemIdArgs,
+    publish_readiness, render_home_card, render_host_main, render_post_stay_card,
+    render_stats_checklist, render_stats_cleaning, reset_test_store, stats_summary, task_complete,
+    task_toggle, timeline_tasks, uncomplete_item, update_config, CreateChecklistArgs, ItemIdArgs,
     UpdateConfigArgs,
 };
 use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
@@ -394,4 +394,20 @@ fn a_stay_that_never_opened_its_list_shows_unfilled() {
         assert!(json.contains("stats.checklist.status.unfilled"));
         assert!(json.contains("\"0 %\""));
     });
+}
+
+#[test]
+#[serial]
+fn publish_readiness_requires_an_item() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let ok = |ctx: &Context| publish_readiness(ctx.clone()).expect("readiness").items[0].ok;
+            assert!(!ok(&ctx));
+            create(&ctx, "emptyGuest");
+            assert!(!ok(&ctx), "an empty list shows nothing");
+            create(&ctx, "cleaning");
+            assert!(ok(&ctx));
+        });
 }
