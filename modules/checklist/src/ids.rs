@@ -18,6 +18,7 @@ define_operation_names! {
     EMAIL_CONTEXT = "emailContext",
     LIST_COMPLETIONS = "listCompletions",
     LIST_ITEMS = "listItems",
+    PUBLISH_READINESS = "publishReadiness",
     STATS_SUMMARY = "statsSummary",
     TASK_COMPLETE = "taskComplete",
     TASK_TOGGLE = "taskToggle",

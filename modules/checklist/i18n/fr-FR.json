@@ -150,5 +150,7 @@
   "catalog.host.checklist": "Checklist",
   "catalog.host.cleaning": "Ménage",
   "catalog.host.main": "Checklists",
-  "catalog.host.tasks": "Tâches"
+  "catalog.host.tasks": "Tâches",
+  "publish.checklist.label": "Checklists",
+  "publish.checklist.hint": "Ajoutez au moins un élément à une liste"
 }
