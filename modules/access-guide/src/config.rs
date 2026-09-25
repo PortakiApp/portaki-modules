@@ -719,6 +719,11 @@ fn document_has_embedded_texts(root: &Value) -> bool {
     !fr.is_empty() || !en.is_empty()
 }
 
+/// True once the host has saved a config — the default one describes no way in.
+pub fn is_configured() -> Result<bool> {
+    Ok(host::kv::get(CONFIG_KEY)?.is_some())
+}
+
 /// Load shared config; migrate legacy embeds into `texts/{lang}` once, then rewrite `config`.
 pub fn load_config() -> Result<ModuleConfig> {
     let Some(bytes) = host::kv::get(CONFIG_KEY)? else {

@@ -4,7 +4,7 @@ use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadine
 use portaki_sdk::prelude::*;
 use serde::Serialize;
 
-use crate::config::{load_config, MethodFields, ModuleConfig};
+use crate::config::{is_configured, load_config, MethodFields, ModuleConfig};
 use crate::i18n::text;
 use crate::texts::{lang_code, load_texts_for_host, ModuleTexts};
 
@@ -28,9 +28,20 @@ pub fn get_config(ctx: Context) -> Result<GetConfigResponse> {
     })
 }
 
-/// Blocks publication while a code-bearing access method has no code.
+/// Blocks publication until an access method is saved, and while a code-bearing one has no code.
 #[portaki_sdk::query(name = "publishReadiness")]
 pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
+    if !is_configured()? {
+        return Ok(PublishReadiness {
+            items: vec![PublishCheck {
+                id: "access-method".into(),
+                level: PublishLevel::Required,
+                ok: false,
+                label: text("publish.access-method.label"),
+                hint: text("publish.access-method.hint"),
+            }],
+        });
+    }
     let config = load_config()?;
     let ok = match &config.method {
         MethodFields::Keybox { .. } => config.keybox_code().is_some(),
