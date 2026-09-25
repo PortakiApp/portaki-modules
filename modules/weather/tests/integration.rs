@@ -5,6 +5,9 @@ use serial_test::serial;
 
 use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use serde_json::json;
+
+#[path = "../../../support/config_form.rs"]
+mod config_form;
 use std::sync::atomic::Ordering;
 
 use portaki_sdk::prelude::EmailTemplateKey;
@@ -328,4 +331,25 @@ fn get_forecast_returns_five_days() {
 #[ignore = "requires wasm32 build pipeline — run on main CI"]
 fn wasm_render_home_card_end_to_end() {
     // Placeholder for CI wasm snapshot test (portaki build + wasmtime harness).
+}
+
+#[test]
+#[serial]
+fn the_host_form_sends_the_declared_keys() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({ "units": "fahrenheit" }))
+        .run(|ctx| {
+            let config = weather::ModuleConfig::load(&ctx).expect("config");
+            assert_eq!(config.units, weather::WeatherUnits::Fahrenheit);
+            assert_eq!(config.refresh_interval, "1h");
+            let surface = weather::render_host_main(ctx).expect("host main");
+            config_form::assert_form_matches_config(
+                concat!(env!("OUT_DIR"), "/portaki-emissions"),
+                &surface,
+                &[],
+            );
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains(r#""value":"fahrenheit""#), "{json}");
+        });
 }

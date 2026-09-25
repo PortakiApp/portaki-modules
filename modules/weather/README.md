@@ -14,7 +14,7 @@ OCI image: `ghcr.io/portakiapp/portaki-modules-weather:<semver>`
 
 | Capability | Required | Purpose |
 |------------|----------|---------|
-| `core.storage` | Yes | KV config + `WeatherCache` entity |
+| `core.storage` | Yes | `WeatherCache` entity (+ the pre-platform KV config, read once by the import) |
 | `external.open-weather.pool` | No | Platform OpenWeather pool token |
 | `external.open-weather.byok` | No | Property BYOK OpenWeather key |
 
@@ -45,7 +45,7 @@ Author guide: [portaki-sdk — connectors and credentials](https://github.com/Po
 - `getForecast` — cache TTL 6h (5 days)
 - `emailContext` — email-ready `weatherSummary` for Portaki guest templates (`arrival-day`)
 - `refreshForecast` — invalidates cache for property coordinates
-- `updateConfig` — persists host settings in KV
+- config (`units`, `refresh_interval`) is held by the platform (`#[portaki_sdk::config]`), which takes `updateConfig`
 - Event `core.booking.confirmed` — pre-warms the cache
 
 ## Development

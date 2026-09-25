@@ -45,9 +45,6 @@
   "day.sunday": "Sun",
   "host.units.label": "Temperature units",
   "host.refresh.label": "Refresh interval",
-  "host.hourly": "Every hour",
-  "host.3hours": "Every 3 hours",
-  "host.6hours": "Every 6 hours",
   "host.main.help": "Guest forecasts use the property coordinates.",
   "host.save": "Save",
   "home.card.title": "Weather",
@@ -75,5 +72,10 @@
   "email.condition.variable": "variable conditions",
   "day.strip": "{weekday} {day}",
   "module.catalogDescription": "Current conditions and a 5-day forecast for your guests.",
-  "catalog.host.main": "Weather"
+  "catalog.host.main": "Weather",
+  "host.units.label.celsius": "°C",
+  "host.units.label.fahrenheit": "°F",
+  "host.refresh.label.1h": "Every hour",
+  "host.refresh.label.3h": "Every 3 hours",
+  "host.refresh.label.6h": "Every 6 hours"
 }

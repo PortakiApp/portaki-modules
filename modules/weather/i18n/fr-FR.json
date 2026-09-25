@@ -45,9 +45,6 @@
   "day.sunday": "Dim",
   "host.units.label": "Unités de température",
   "host.refresh.label": "Fréquence de rafraîchissement",
-  "host.hourly": "Toutes les heures",
-  "host.3hours": "Toutes les 3 heures",
-  "host.6hours": "Toutes les 6 heures",
   "host.main.help": "Les prévisions invitées utilisent les coordonnées du bien.",
   "host.save": "Enregistrer",
   "home.card.title": "Météo",
@@ -75,5 +72,10 @@
   "email.condition.variable": "conditions variables",
   "day.strip": "{weekday} {day}",
   "module.catalogDescription": "Conditions actuelles et prévisions sur 5 jours pour vos voyageurs.",
-  "catalog.host.main": "Météo"
+  "catalog.host.main": "Météo",
+  "host.units.label.celsius": "°C",
+  "host.units.label.fahrenheit": "°F",
+  "host.refresh.label.1h": "Toutes les heures",
+  "host.refresh.label.3h": "Toutes les 3 heures",
+  "host.refresh.label.6h": "Toutes les 6 heures"
 }

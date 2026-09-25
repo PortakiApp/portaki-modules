@@ -1,19 +1,19 @@
-//! Host configuration stored in KV (`config` key).
+//! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
-use portaki_sdk::host;
-use portaki_sdk::Result;
 use serde::{Deserialize, Serialize};
 
 use crate::entities::WeatherUnits;
 
-const CONFIG_KEY: &str = "config";
-
-/// Owner-configurable module settings.
+/// Owner-configurable module settings. The keys are the names of the host form fields: the
+/// platform takes `updateConfig`, and a missing key reads as its [`Default`].
+#[portaki_sdk::config]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ModuleConfig {
     /// Temperature display unit.
+    #[field(kind = "select", options = ["celsius", "fahrenheit"], label = "host.units.label")]
     pub units: WeatherUnits,
     /// Cache refresh cadence label (`1h`, `3h`, `6h`).
+    #[field(kind = "select", options = ["1h", "3h", "6h"], label = "host.refresh.label")]
     pub refresh_interval: String,
 }
 
@@ -24,22 +24,4 @@ impl Default for ModuleConfig {
             refresh_interval: "1h".to_string(),
         }
     }
-}
-
-/// Loads configuration from KV or returns defaults.
-pub fn load_config() -> Result<ModuleConfig> {
-    let Some(bytes) = host::kv::get(CONFIG_KEY)? else {
-        return Ok(ModuleConfig::default());
-    };
-    serde_json::from_slice(&bytes).map_err(|error| {
-        portaki_sdk::PortakiError::Storage(format!("invalid config JSON: {error}"))
-    })
-}
-
-/// Persists configuration to KV.
-pub fn save_config(config: &ModuleConfig) -> Result<()> {
-    let bytes = serde_json::to_vec(config).map_err(|error| {
-        portaki_sdk::PortakiError::Storage(format!("config serialize: {error}"))
-    })?;
-    host::kv::set(CONFIG_KEY, &bytes, None)
 }
