@@ -1,7 +1,8 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
-use portaki_sdk::prelude::*;
+use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[portaki_sdk::params]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
@@ -39,7 +40,7 @@ impl RevealPolicy {
 
 /// The keys are the names of the host form fields: the platform takes `updateConfig` itself.
 /// No password is only recommended: an open network (captive portal) has none.
-#[portaki_sdk::config]
+#[portaki_sdk::config(legacy = legacy)]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ModuleConfig {
     #[field(required, label = "host.ssid.label")]
@@ -48,10 +49,10 @@ pub struct ModuleConfig {
     pub password: String,
     #[field(label = "host.hint.label")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub hint: Option<String>,
-    #[field(kind = "textarea", label = "host.connectionSteps.label")]
+    pub hint: Option<I18nText>,
+    #[field(label = "host.connectionSteps.label")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub connection_steps: Option<String>,
+    pub connection_steps: Option<I18nText>,
     #[field(
         kind = "select",
         options = ["always", "hours_before_24", "day_before_16h", "at_checkin"],
@@ -60,41 +61,36 @@ pub struct ModuleConfig {
     pub reveal_policy: RevealPolicy,
 }
 
-impl ModuleConfig {
-    /// The config of this install. The platform imports the old KV blob once, but skips a policy
-    /// spelled the pre-rename way (`hours_before24`), which is not one of the options: until the
-    /// host saves the form, that policy is still read from the KV rather than reset.
-    pub fn read(ctx: &Context) -> Result<Self> {
-        let mut config = Self::load(ctx)?;
-        let held = ctx.module_config.as_ref().and_then(|c| c.as_object());
-        if held.is_some_and(|held| !held.contains_key("reveal_policy")) {
-            if let Some(policy) = portaki_sdk::config::legacy_config()?
-                .get("reveal_policy")
-                .and_then(|raw| serde_json::from_value(raw.clone()).ok())
-            {
-                config.reveal_policy = policy;
-            }
+/// The old KV blob spelled two policies the pre-rename way (`hours_before24`, `day_before16h`),
+/// which are not options of the select: the platform would not import them.
+fn legacy(mut old: Value) -> Value {
+    if let Some(policy) = old.get_mut("reveal_policy") {
+        if let Ok(parsed) = serde_json::from_value::<RevealPolicy>(policy.clone()) {
+            *policy = parsed.as_wire().into();
         }
-        Ok(config)
     }
+    old
+}
 
+impl ModuleConfig {
     pub fn is_empty(&self) -> bool {
         self.ssid.trim().is_empty() && self.password.trim().is_empty()
     }
 
-    pub fn hint_text(&self) -> Option<&str> {
-        self.hint
-            .as_deref()
-            .map(str::trim)
-            .filter(|s| !s.is_empty())
+    /// The hint in `locale`, `None` when blank.
+    pub fn hint_text(&self, locale: &str) -> Option<&str> {
+        text_in(self.hint.as_ref(), locale)
     }
 
-    pub fn connection_steps_text(&self) -> Option<&str> {
-        self.connection_steps
-            .as_deref()
-            .map(str::trim)
-            .filter(|s| !s.is_empty())
+    /// The connection steps in `locale`, `None` when blank.
+    pub fn connection_steps_text(&self, locale: &str) -> Option<&str> {
+        text_in(self.connection_steps.as_ref(), locale)
     }
+}
+
+fn text_in<'a>(text: Option<&'a I18nText>, locale: &str) -> Option<&'a str> {
+    text.map(|text| text.get(locale).trim())
+        .filter(|s| !s.is_empty())
 }
 
 #[cfg(test)]
@@ -122,24 +118,56 @@ mod tests {
     }
 
     #[test]
+    fn legacy_renames_pre_rename_policies_and_keeps_plain_texts() {
+        let mapped = legacy(json!({
+            "ssid": "Villa",
+            "hint": "5 GHz au salon",
+            "connection_steps": "Choisir Villa",
+            "reveal_policy": "hours_before24"
+        }));
+        assert_eq!(
+            mapped,
+            json!({
+                "ssid": "Villa",
+                "hint": "5 GHz au salon",
+                "connection_steps": "Choisir Villa",
+                "reveal_policy": "hours_before_24"
+            })
+        );
+        assert_eq!(
+            legacy(json!({ "reveal_policy": "day_before16h" }))["reveal_policy"],
+            "day_before_16h"
+        );
+        // Already an option, or unknown: left as is.
+        assert_eq!(
+            legacy(json!({ "reveal_policy": "at_checkin" })),
+            json!({ "reveal_policy": "at_checkin" })
+        );
+        assert_eq!(
+            legacy(json!({ "reveal_policy": "weekly" })),
+            json!({ "reveal_policy": "weekly" })
+        );
+        let config: ModuleConfig = serde_json::from_value(mapped).unwrap();
+        assert_eq!(config.hint_text("en"), Some("5 GHz au salon"));
+        assert_eq!(config.connection_steps_text("de"), Some("Choisir Villa"));
+    }
+
+    #[test]
     #[serial_test::serial]
-    fn a_pre_rename_policy_survives_the_import() {
-        let legacy = json!({ "ssid": "Villa", "reveal_policy": "hours_before24" });
+    fn the_kv_is_read_through_legacy_until_the_platform_holds_the_config() {
+        let old = json!({ "ssid": "Villa", "reveal_policy": "hours_before24" });
         MockContext::guest()
-            .with_kv("config", serde_json::to_vec(&legacy).unwrap())
-            .with_config(&json!({ "ssid": "Villa" }))
+            .with_kv("config", serde_json::to_vec(&old).unwrap())
             .run(|ctx| {
-                let config = ModuleConfig::read(&ctx).unwrap();
+                let config = ModuleConfig::load(&ctx).unwrap();
                 assert_eq!(config.reveal_policy, RevealPolicy::HoursBefore24);
+                assert_eq!(config.ssid, "Villa");
             });
         MockContext::guest()
-            .with_kv("config", serde_json::to_vec(&legacy).unwrap())
-            .with_config(&json!({ "ssid": "Villa", "reveal_policy": "always" }))
+            .with_kv("config", serde_json::to_vec(&old).unwrap())
+            .with_config(&json!({}))
             .run(|ctx| {
-                assert_eq!(
-                    ModuleConfig::read(&ctx).unwrap().reveal_policy,
-                    RevealPolicy::Always
-                );
+                assert_eq!(ModuleConfig::load(&ctx).unwrap(), ModuleConfig::default());
             });
     }
 }

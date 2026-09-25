@@ -62,11 +62,11 @@ pub fn build_wifi_body(data: &GuestData, show_security_banner: bool) -> Vec<Comp
         }
     }
 
-    if let Some(hint) = data.config.hint_text() {
+    if let Some(hint) = data.config.hint_text(&data.locale) {
         children.push(Text::new().text(hint).variant(TextVariant::Caption).into());
     }
 
-    if let Some(steps) = data.config.connection_steps_text() {
+    if let Some(steps) = data.config.connection_steps_text(&data.locale) {
         children.push(Text::new().text(steps).variant(TextVariant::Body).into());
     }
 

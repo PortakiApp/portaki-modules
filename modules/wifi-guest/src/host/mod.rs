@@ -4,6 +4,7 @@
 //! (`configMode: "drawer"`): warning alert + labeled fields, no nested Cards.
 //! Drawer chrome (title, enable toggle, Annuler / Enregistrer) stays in the host.
 
+use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
@@ -21,7 +22,7 @@ use crate::config::{ModuleConfig, RevealPolicy};
     icon = IconName::Wifi
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
-    let config = ModuleConfig::read(&ctx)?;
+    let config = ModuleConfig::load(&ctx)?;
 
     let form_children: Vec<Component> = vec![
         InfoBanner::new()
@@ -60,7 +61,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
                 FieldHint::new().text("i18n:host.hint.desc").into(),
                 TextInput::new()
                     .name("hint")
-                    .value(config.hint.clone().unwrap_or_default())
+                    .value(host_value(config.hint.as_ref(), &ctx))
                     .placeholder("i18n:host.hint.placeholder")
                     .into(),
             ])
@@ -74,7 +75,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
                     .into(),
                 TextArea::new()
                     .name("connection_steps")
-                    .value(config.connection_steps.clone().unwrap_or_default())
+                    .value(host_value(config.connection_steps.as_ref(), &ctx))
                     .placeholder("i18n:host.connectionSteps.placeholder")
                     .into(),
             ])
@@ -125,4 +126,9 @@ fn reveal_choice_list(policy: RevealPolicy) -> ChoiceList {
             .description("i18n:host.reveal.atCheckin.desc")
             .icon(IconName::Key),
         ])
+}
+
+fn host_value(text: Option<&I18nText>, ctx: &HostContext) -> String {
+    text.map(|text| text.host_value(ctx).to_string())
+        .unwrap_or_default()
 }

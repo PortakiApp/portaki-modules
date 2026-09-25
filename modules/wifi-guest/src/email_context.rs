@@ -25,7 +25,7 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
         return Ok(EmailContextResponse { wifi_name: None });
     }
 
-    let config = ModuleConfig::read(&ctx)?;
+    let config = ModuleConfig::load(&ctx)?;
     let ssid = config.ssid.trim();
     Ok(EmailContextResponse {
         wifi_name: if ssid.is_empty() {
