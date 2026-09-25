@@ -22,7 +22,17 @@ use crate::sync_state::{load_sync_state, SeenStay, SyncState};
 const CHART_DAYS: i64 = 14;
 
 /// Tile: time since the last sync, stays imported over the period, conflicts as attention.
-#[portaki_sdk::query(name = "statsSummary")]
+#[portaki_sdk::query(
+    name = "statsSummary",
+    example(
+        label = "30 derniers jours",
+        input = r#"{"propertyId":"6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f","period":30,"key":"calendar-sync"}"#
+    ),
+    example(
+        label = "12 derniers mois",
+        input = r#"{"propertyId":"6f1c2d3e-4a5b-4c6d-8e7f-9a0b1c2d3e4f","period":365,"key":"calendar-sync"}"#
+    )
+)]
 pub fn stats_summary(ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummary> {
     let fr = ctx.locale.to_ascii_lowercase().starts_with("fr");
     let now = time::now()?;

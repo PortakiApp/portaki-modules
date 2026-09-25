@@ -58,7 +58,7 @@ pub struct ApplyFeedsResponse {
 }
 
 /// Returns HTTPS .ics URLs for the platform to fetch (`hostScheduledSync.sourcesQuery`).
-#[portaki_sdk::query(name = "listSources")]
+#[portaki_sdk::query(name = "listSources", example(label = "Calendriers à relever"))]
 pub fn list_sources(ctx: Context) -> Result<ListSourcesResponse> {
     let config = ModuleConfig::load(&ctx)?;
     let sources = config
@@ -98,7 +98,17 @@ pub fn list_sources(ctx: Context) -> Result<ListSourcesResponse> {
     trigger = EmailTrigger::OnApplyFeeds,
     description_key = "email.sync-summary.description"
 )]
-#[portaki_sdk::query(name = "applyFeeds")]
+#[portaki_sdk::query(
+    name = "applyFeeds",
+    example(
+        label = "Relevé Airbnb",
+        input = r#"{"guestLang":"fr","feeds":[{"id":"airbnb","provider":"airbnb","icsBody":"BEGIN:VCALENDAR\nPRODID:-//Airbnb Inc//Hosting Calendar 1.0//EN\nBEGIN:VEVENT\nUID:1418fb94e984-4a1c@airbnb.com\nDTSTART;VALUE=DATE:20260622\nDTEND;VALUE=DATE:20260629\nSUMMARY:Reserved\nDESCRIPTION:Reservation URL: https://www.airbnb.com/hosting/reservations/details/HMQ4XPR2ZE\\nPhone Number (Last 4 Digits): 4821\nEND:VEVENT\nBEGIN:VEVENT\nUID:7f3c2a90d1b8-bb2e@airbnb.com\nDTSTART;VALUE=DATE:20260710\nDTEND;VALUE=DATE:20260712\nSUMMARY:Airbnb (Not available)\nEND:VEVENT\nEND:VCALENDAR\n"}]}"#
+    ),
+    example(
+        label = "Airbnb et Booking, un flux en échec",
+        input = r#"{"guestLang":"fr","feeds":[{"id":"airbnb","provider":"airbnb","icsBody":"BEGIN:VCALENDAR\nPRODID:-//Airbnb Inc//Hosting Calendar 1.0//EN\nBEGIN:VEVENT\nUID:1418fb94e984-4a1c@airbnb.com\nDTSTART;VALUE=DATE:20260622\nDTEND;VALUE=DATE:20260629\nSUMMARY:Reserved\nDESCRIPTION:Reservation URL: https://www.airbnb.com/hosting/reservations/details/HMQ4XPR2ZE\\nPhone Number (Last 4 Digits): 4821\nEND:VEVENT\nBEGIN:VEVENT\nUID:7f3c2a90d1b8-bb2e@airbnb.com\nDTSTART;VALUE=DATE:20260710\nDTEND;VALUE=DATE:20260712\nSUMMARY:Airbnb (Not available)\nEND:VEVENT\nEND:VCALENDAR\n"},{"id":"booking","provider":"booking","icsBody":""}]}"#
+    )
+)]
 pub fn apply_feeds(ctx: Context, args: ApplyFeedsArgs) -> Result<ApplyFeedsResponse> {
     let guest_lang = if args.guest_lang.trim().is_empty() {
         "fr"
