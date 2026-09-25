@@ -11,8 +11,8 @@ use pre_arrival_form::{render_guest_form, render_home_card};
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
     let context = previews::guest(root);
-    let card = context.clone().run(render_home_card);
-    let form = context.run(render_guest_form);
+    let card = context.clone().run(render_home_card).expect("home card");
+    let form = context.run(render_guest_form).expect("form");
     previews::check(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),

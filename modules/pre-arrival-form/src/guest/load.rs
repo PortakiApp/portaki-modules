@@ -2,16 +2,13 @@
 
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::surface::Surface;
 
-use super::empty::empty_state_if_module_not_ready;
 use crate::config::ModuleConfig;
 use crate::entities::PreArrivalResponse;
 use crate::show_when::{is_editable_until_checkin, is_form_available};
 use crate::storage;
 
 pub enum GuestLoad {
-    Empty(Box<Surface>),
     NotYet,
     /// Form open for fill or edit (before check-in).
     Form {
@@ -25,10 +22,6 @@ pub enum GuestLoad {
 }
 
 pub fn load_guest_pre_arrival(ctx: &GuestContext) -> Result<GuestLoad> {
-    if let Some(surface) = empty_state_if_module_not_ready(crate::ids::HOME_CARD)? {
-        return Ok(GuestLoad::Empty(Box::new(surface)));
-    }
-
     let Some(guest) = ctx.guest.as_ref() else {
         return Ok(GuestLoad::Form {
             completed: false,

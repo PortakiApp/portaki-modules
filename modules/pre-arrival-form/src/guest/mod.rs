@@ -1,6 +1,6 @@
-//! Guest booklet surfaces.
+//! Guest booklet surfaces. The SDK's guest shell renders the inactive, incomplete and error
+//! states.
 
-mod empty;
 mod form;
 mod home;
 mod load;
@@ -8,7 +8,6 @@ mod load;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 
-use empty::{empty_runtime_error_state, log_render_failure};
 use home::{build_formalities_card, FormTaskState};
 use load::{load_guest_pre_arrival, GuestLoad};
 
@@ -23,19 +22,8 @@ pub use form::render_guest_form;
     role = GuestRole::ArrivalFormality,
     embeds = HostFragmentId::PoliceForm
 )]
-pub fn render_home_card(ctx: GuestContext) -> Surface {
-    match render_with_data(&ctx) {
-        Ok(surface) => surface,
-        Err(error) => {
-            log_render_failure(crate::ids::HOME_CARD, &error);
-            empty_runtime_error_state(crate::ids::HOME_CARD)
-        }
-    }
-}
-
-fn render_with_data(ctx: &GuestContext) -> Result<Surface> {
-    match load_guest_pre_arrival(ctx)? {
-        GuestLoad::Empty(surface) => Ok(*surface),
+pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
+    match load_guest_pre_arrival(&ctx)? {
         GuestLoad::NotYet => Ok(build_formalities_card(FormTaskState::NotYet)),
         GuestLoad::Form {
             completed: false, ..
