@@ -10,7 +10,7 @@ fn home_card_shows_board_glance() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            let card = render_home_card(ctx);
+            let card = render_home_card(ctx).expect("render");
             assert!(SurfaceAssertions::new(&card).contains_type("Card"));
             assert!(SurfaceAssertions::new(&card).contains_type("TimedEntry"));
 
@@ -26,7 +26,7 @@ fn upcoming_card_is_compact_with_single_headline() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            let card = render_upcoming_card(ctx);
+            let card = render_upcoming_card(ctx).expect("render");
             assert!(SurfaceAssertions::new(&card).contains_type("Card"));
             assert!(SurfaceAssertions::new(&card).contains_type("Text"));
             // Compact: no full departure board on the prep card.
@@ -43,7 +43,7 @@ fn explore_detail_defaults_to_nice_ville_and_lists_filter_chips() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            let detail = render_explore_detail(ctx);
+            let detail = render_explore_detail(ctx).expect("render");
             assert!(SurfaceAssertions::new(&detail).contains_type("FilterChip"));
             assert!(SurfaceAssertions::new(&detail).contains_type("TimedEntry"));
             assert!(SurfaceAssertions::new(&detail).contains_type("KeyValue"));
@@ -63,7 +63,7 @@ fn explore_detail_honors_dest_param() {
         .with_property(Property::default())
         .run(|mut ctx| {
             ctx.input = json!({ "dest": "Cannes" });
-            let detail = render_explore_detail(ctx);
+            let detail = render_explore_detail(ctx).expect("render");
             let detail_json = serde_json::to_string(&detail).expect("json");
             assert!(detail_json.contains("\"value\":\"Cannes\""));
             assert!(detail_json.contains("quai 3"));
@@ -76,7 +76,7 @@ fn explore_detail_falls_back_to_default_on_unknown_dest() {
         .with_property(Property::default())
         .run(|mut ctx| {
             ctx.input = json!({ "dest": "Marseille" });
-            let detail = render_explore_detail(ctx);
+            let detail = render_explore_detail(ctx).expect("render");
             let detail_json = serde_json::to_string(&detail).expect("json");
             assert!(detail_json.contains("\"value\":\"Nice-Ville\""));
         });
