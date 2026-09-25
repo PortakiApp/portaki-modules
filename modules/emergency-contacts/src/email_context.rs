@@ -2,7 +2,7 @@
 
 use portaki_sdk::prelude::*;
 
-use crate::config::load_config;
+use crate::config::ModuleConfig;
 
 /// Gateway `emailContext` args — shared SDK wire type.
 pub use portaki_sdk::EmailContextArgs;
@@ -21,7 +21,7 @@ pub fn email_context(ctx: Context, args: EmailContextArgs) -> Result<EmailContex
     build_email_context(ctx, args)
 }
 
-pub fn build_email_context(_ctx: Context, args: EmailContextArgs) -> Result<EmailContextResponse> {
+pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<EmailContextResponse> {
     if !args.allows_template(&[
         EmailTemplateKey::Arrival,
         EmailTemplateKey::ArrivalDay,
@@ -31,7 +31,7 @@ pub fn build_email_context(_ctx: Context, args: EmailContextArgs) -> Result<Emai
         return Ok(EmailContextResponse { host_phone: None });
     }
 
-    let config = load_config().unwrap_or_default();
+    let config = ModuleConfig::read(&ctx)?;
     let phone = config.host_visible_phone.trim();
     Ok(EmailContextResponse {
         host_phone: if phone.is_empty() {
@@ -54,13 +54,7 @@ mod tests {
     fn when_arrival_then_returns_host_phone() {
         let (ctx, host) = MockContext::guest()
             .with_capabilities(&[capability::core::STORAGE])
-            .with_kv(
-                "config",
-                serde_json::to_vec(&json!({
-                    "host_visible_phone": "+33 6 12 34 56 78"
-                }))
-                .unwrap(),
-            )
+            .with_config(&json!({ "host_visible_phone": "+33 6 12 34 56 78" }))
             .build();
 
         with_host(host, ctx.clone(), || {
@@ -82,13 +76,7 @@ mod tests {
     fn when_wrong_template_then_empty() {
         let (ctx, host) = MockContext::guest()
             .with_capabilities(&[capability::core::STORAGE])
-            .with_kv(
-                "config",
-                serde_json::to_vec(&json!({
-                    "host_visible_phone": "+33 6 12 34 56 78"
-                }))
-                .unwrap(),
-            )
+            .with_config(&json!({ "host_visible_phone": "+33 6 12 34 56 78" }))
             .build();
 
         with_host(host, ctx.clone(), || {

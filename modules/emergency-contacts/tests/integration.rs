@@ -3,19 +3,21 @@
 use portaki_sdk::capability;
 use serial_test::serial;
 
-use emergency_contacts::{
-    get_config, publish_readiness, render_explore_detail, render_home_card, update_config,
-    UpdateConfigArgs,
-};
+use emergency_contacts::{render_explore_detail, render_home_card, render_host_main};
 use portaki_test_utils::{MockContext, SurfaceAssertions};
-use serde_json::json;
+use serde_json::{json, Value};
 
-fn sample_config_bytes() -> Vec<u8> {
-    serde_json::to_vec(&json!({
-        "contacts_json": r#"[{"id":"samu","label":{"fr":"SAMU","en":"SAMU"},"phone":"15"},{"id":"pompiers","label":{"fr":"Pompiers","en":"Fire"},"phone":"18"}]"#,
+#[path = "../../../support/config_form.rs"]
+mod config_form;
+
+fn sample_config() -> Value {
+    json!({
+        "contacts": [
+            { "id": "samu", "label": { "fr": "SAMU", "en": "SAMU" }, "phone": "15" },
+            { "label": "Pompiers", "phone": "18" }
+        ],
         "host_visible_phone": "+33 6 12 34 56 78"
-    }))
-    .expect("config json")
+    })
 }
 
 #[test]
@@ -34,7 +36,7 @@ fn home_card_renders_empty_without_config() {
 fn home_card_renders_contacts() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
+        .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_home_card(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
@@ -49,48 +51,31 @@ fn home_card_renders_contacts() {
 fn detail_includes_emergency_banner() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
+        .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Link"));
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("Pompiers"));
         });
 }
 
 #[test]
 #[serial]
-fn update_config_roundtrip() {
+fn the_host_form_sends_the_declared_keys() {
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&sample_config())
         .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    contacts: Vec::new(),
-                    contacts_json: String::new(),
-                    host_visible_phone: "+331234".into(),
-                },
-            )
-            .expect("updateConfig");
-            let config = get_config(ctx).expect("getConfig");
-            assert_eq!(config.host_visible_phone, "+331234");
-        });
-}
-
-#[test]
-#[serial]
-fn publish_readiness_requires_host_phone() {
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            let items = publish_readiness(ctx).expect("publishReadiness").items;
-            assert_eq!(items[0].id, "host-phone");
-            assert!(!items[0].ok);
-        });
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
-        .run(|ctx| {
-            assert!(publish_readiness(ctx).expect("publishReadiness").items[0].ok);
+            let surface = render_host_main(ctx).expect("host main");
+            config_form::assert_form_matches_config(
+                concat!(env!("OUT_DIR"), "/portaki-emissions"),
+                &surface,
+                &[],
+            );
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("+33 6 12 34 56 78"));
+            assert!(json.contains("Pompiers"));
         });
 }
