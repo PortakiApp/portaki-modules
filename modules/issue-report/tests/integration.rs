@@ -20,7 +20,7 @@ fn home_card_opens_form_overlay_when_no_reports() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            let surface = render_home_card(ctx.clone());
+            let surface = render_home_card(ctx.clone()).expect("guest surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(!SurfaceAssertions::new(&surface).contains_type("Form"));
             let json = serde_json::to_string(&surface).expect("surface json");
@@ -29,7 +29,7 @@ fn home_card_opens_form_overlay_when_no_reports() {
             assert!(json.contains("guest.form"));
             assert!(json.contains("home.card.openForm"));
 
-            let form = render_guest_form(ctx);
+            let form = render_guest_form(ctx).expect("guest surface");
             assert!(SurfaceAssertions::new(&form).contains_type("Form"));
             assert!(SurfaceAssertions::new(&form).contains_type("Button"));
             assert!(!SurfaceAssertions::new(&form).contains_type("Card"));
@@ -75,7 +75,7 @@ fn submit_allows_multiple_reports_and_shows_list() {
             let rows = list_for_stay(ctx.clone()).expect("list after second");
             assert_eq!(rows.len(), 2);
 
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("guest surface");
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("home.card.thanks"));
             assert!(json.contains("home.card.yourReports"));
@@ -278,7 +278,7 @@ fn a_guest_photo_reaches_the_host_screen_and_the_stats() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            let form = render_guest_form(ctx.clone());
+            let form = render_guest_form(ctx.clone()).expect("guest surface");
             assert!(SurfaceAssertions::new(&form).contains_type("ImageUpload"));
 
             let refused = submit(

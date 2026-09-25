@@ -14,9 +14,6 @@
   "home.card.openForm": "New report",
   "nav.issue-report": "Report a problem",
   "guest.teaser": "Report a problem to your host",
-  "home.card.unavailable": "Reporting unavailable",
-  "home.card.error.title": "Reporting temporarily unavailable",
-  "home.card.error.description": "The form could not be loaded. Try again in a moment.",
   "form.category.label": "Category",
   "form.category.appliance": "Appliance or equipment",
   "form.category.cleanliness": "Cleanliness",
@@ -28,11 +25,6 @@
   "form.details.label": "Details",
   "form.details.placeholder": "Optional — what happened, when, where",
   "form.submit": "Send report",
-  "module.status.incomplete.title": "Incomplete configuration",
-  "module.status.incomplete.description": "Finish the module in the host dashboard",
-  "module.status.incomplete.hint": "Open Modules → Report an issue",
-  "module.status.inactive.title": "Issue reporting disabled",
-  "module.status.inactive.description": "This module is not active on this property",
   "stats.reports": "Reports",
   "stats.resolved": "Resolved",
   "stats.open": "Open",
@@ -68,5 +60,7 @@
   "host.detail.openStay": "Open the stay",
   "host.detail.message": "Message the guest",
   "host.detail.resolve": "Mark as resolved",
-  "catalog.host.issue-stats": "Issue reports"
+  "catalog.host.issue-stats": "Issue reports",
+  "guest.error.title": "Reporting temporarily unavailable",
+  "guest.error.description": "The form could not be loaded."
 }
