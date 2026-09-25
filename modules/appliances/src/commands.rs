@@ -81,7 +81,17 @@ pub struct ReplaceDeviceSlot {
     pub status: String,
 }
 
-#[portaki_sdk::command(name = "saveAppliance")]
+#[portaki_sdk::command(
+    name = "saveAppliance",
+    example(
+        label = "Ajouter le lave-linge",
+        input = r#"{"name":"Lave-linge","emoji":"🌀","description":"Programme « Coton 40° » pour un lavage courant.","location":"Salle de bain","safetyNote":"Merci de ne pas lancer de machine après 22 h."}"#
+    ),
+    example(
+        label = "Mettre en avant les plaques",
+        input = r#"{"name":"Plaques à induction","emoji":"🍳","featured":true,"location":"Cuisine","manualUrl":"https://example.com/notice-plaques.pdf"}"#
+    )
+)]
 pub fn save_appliance(ctx: Context, args: SaveApplianceArgs) -> Result<Appliance> {
     let lang = crate::content::AppliancesBundle::lang_code(&ctx.locale);
     let name = args.name.trim().to_string();
@@ -190,7 +200,13 @@ pub fn reorder_appliances(ctx: Context, args: ReorderAppliancesArgs) -> Result<(
     Ok(())
 }
 
-#[portaki_sdk::command(name = "saveSafetyNotice")]
+#[portaki_sdk::command(
+    name = "saveSafetyNotice",
+    example(
+        label = "Consigne de sécurité",
+        input = r#"{"safetyNotice":"Coupez le disjoncteur général avant toute intervention."}"#
+    )
+)]
 pub fn save_safety_notice(ctx: Context, args: SaveSafetyNoticeArgs) -> Result<()> {
     let lang = crate::content::AppliancesBundle::lang_code(&ctx.locale);
     let mut payload = store::load_payload_for(&lang, &ctx.property.locale)?;
@@ -200,7 +216,13 @@ pub fn save_safety_notice(ctx: Context, args: SaveSafetyNoticeArgs) -> Result<()
 }
 
 /// Replace the full device list from the host SDUI form (empty name = drop slot).
-#[portaki_sdk::command(name = "replaceDevices")]
+#[portaki_sdk::command(
+    name = "replaceDevices",
+    example(
+        label = "Formulaire complet",
+        input = r#"{"safetyNotice":"Coupez le disjoncteur avant toute intervention.","devices":[{"name":"Plaques à induction","emoji":"🍳","featured":true,"location":"Cuisine"},{"name":"Télévision","emoji":"📺","location":"Salon","status":"active"}]}"#
+    )
+)]
 pub fn replace_devices(ctx: Context, args: ReplaceDevicesArgs) -> Result<()> {
     let lang = crate::content::AppliancesBundle::lang_code(&ctx.locale);
     let mut next_devices: Vec<Appliance> = Vec::new();
