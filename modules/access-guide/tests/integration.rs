@@ -702,32 +702,55 @@ fn no_map_without_coordinates() {
         });
 }
 
-/// `onConfigUpdated`: the payload the platform sends after a save (PR platform#622).
-fn config_updated(payload: serde_json::Value) -> Vec<portaki_sdk::host::email::SendEmailArgs> {
+/// `onConfigUpdated`: the payload the platform sends after a save (PR platform#622), with the
+/// config as saved.
+fn config_updated(
+    saved: &serde_json::Value,
+    payload: serde_json::Value,
+) -> Vec<portaki_sdk::host::email::SendEmailArgs> {
     let args: ConfigUpdatedArgs = serde_json::from_value(payload).expect("payload");
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
+        .with_config(saved)
         .run_with(|ctx, host| {
             on_config_updated(ctx, args).expect("onConfigUpdated");
             host.sent_emails()
         })
 }
 
+fn changed(keys: &[&str]) -> serde_json::Value {
+    json!({ "propertyId": Uuid::nil().to_string(), "changedKeys": keys })
+}
+
+/// Every code set; the method and the layers say which ones the guest uses.
+fn saved(method: &str, building: bool, parking: bool) -> serde_json::Value {
+    json!({
+        "primary_method": method,
+        "keybox_code": "4821",
+        "door_code": "1234",
+        "smart_lock_manual_code": "9999",
+        "building_access_enabled": building,
+        "building_access_gate_code": "A17B",
+        "parking_enabled": parking,
+        "parking_code": "P1"
+    })
+}
+
 #[test]
 #[serial]
-fn a_new_code_emails_the_guests() {
+fn a_new_active_code_emails_the_guests() {
     let property = Uuid::new_v4();
-    for key in [
-        "keybox_code",
-        "door_code",
-        "smart_lock_manual_code",
-        "building_access_gate_code",
-        "parking_code",
+    for (config, key) in [
+        (saved("keybox", false, false), "keybox_code"),
+        (saved("door_code", false, false), "door_code"),
+        (saved("smart_lock", false, false), "smart_lock_manual_code"),
+        (saved("in_person", true, false), "building_access_gate_code"),
+        (saved("other", false, true), "parking_code"),
     ] {
-        let sent = config_updated(json!({
-            "propertyId": property.to_string(),
-            "changedKeys": ["global_note", key]
-        }));
+        let sent = config_updated(
+            &config,
+            json!({ "propertyId": property.to_string(), "changedKeys": ["global_note", key] }),
+        );
         assert_eq!(sent.len(), 1, "{key}");
         assert_eq!(sent[0].email_id, "code-changed");
         assert_eq!(
@@ -741,12 +764,62 @@ fn a_new_code_emails_the_guests() {
 
 #[test]
 #[serial]
+fn the_code_of_an_inactive_method_or_layer_sends_nothing() {
+    for (config, key) in [
+        (saved("door_code", false, false), "keybox_code"),
+        (saved("keybox", false, false), "door_code"),
+        (saved("keybox", false, false), "smart_lock_manual_code"),
+        (saved("keybox", false, false), "building_access_gate_code"),
+        (saved("keybox", false, false), "parking_code"),
+    ] {
+        assert!(config_updated(&config, changed(&[key])).is_empty(), "{key}");
+    }
+}
+
+/// Switching the method or a layer changes the code the guest uses — when one is set.
+#[test]
+#[serial]
+fn a_switch_to_a_set_code_emails_the_guests() {
+    for key in [
+        "primary_method",
+        "building_access_enabled",
+        "parking_enabled",
+    ] {
+        assert_eq!(
+            config_updated(&saved("door_code", false, false), changed(&[key])).len(),
+            1,
+            "{key}"
+        );
+        assert_eq!(
+            config_updated(&saved("in_person", false, true), changed(&[key])).len(),
+            1,
+            "{key}"
+        );
+        // Nothing active is set: nothing for the guest to use.
+        let no_code = json!({ "primary_method": "keybox", "building_access_enabled": true });
+        assert!(
+            config_updated(&no_code, changed(&[key])).is_empty(),
+            "{key}"
+        );
+        assert!(
+            config_updated(&saved("host_greets", false, false), changed(&[key])).is_empty(),
+            "{key}"
+        );
+    }
+}
+
+#[test]
+#[serial]
 fn no_email_without_a_code_change() {
+    let config = saved("keybox", true, true);
     for payload in [
-        json!({ "propertyId": Uuid::new_v4().to_string(), "changedKeys": ["global_note", "steps", "primary_method"] }),
-        json!({ "propertyId": Uuid::new_v4().to_string(), "changedKeys": [] }),
+        changed(&["global_note", "steps", "keybox_location"]),
+        changed(&[]),
         json!({}),
     ] {
-        assert!(config_updated(payload.clone()).is_empty(), "{payload}");
+        assert!(
+            config_updated(&config, payload.clone()).is_empty(),
+            "{payload}"
+        );
     }
 }

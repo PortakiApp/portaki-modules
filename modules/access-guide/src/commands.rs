@@ -5,13 +5,13 @@ use portaki_sdk::host::email::{
 };
 use portaki_sdk::prelude::*;
 
-/// The keys that hold a code a guest types.
-const CODE_KEYS: &[&str] = &[
-    "keybox_code",
-    "door_code",
-    "smart_lock_manual_code",
-    "building_access_gate_code",
-    "parking_code",
+use crate::config::{HostConfig, PrimaryMethod};
+
+/// The keys that switch which codes the guest uses.
+const SWITCH_KEYS: &[&str] = &[
+    "primary_method",
+    "building_access_enabled",
+    "parking_enabled",
 ];
 
 /// What the platform sends after a save that changed keys: their names, never their values.
@@ -26,14 +26,43 @@ pub struct ConfigUpdatedArgs {
 }
 
 impl ConfigUpdatedArgs {
-    fn changes_a_code(&self) -> bool {
-        self.changed_keys
-            .iter()
-            .any(|key| CODE_KEYS.contains(&key.as_str()))
+    /// The code the guest must use changed, in the config as saved: an active code was edited, or
+    /// the method / a layer switched and some active code is set.
+    fn changes_the_guest_code(&self, config: &HostConfig) -> bool {
+        let active = active_codes(config);
+        let changed = |key: &str| self.changed_keys.iter().any(|k| k == key);
+        active.iter().any(|(key, _)| changed(key))
+            || (SWITCH_KEYS.iter().any(|key| changed(key))
+                && active.iter().any(|(_, code)| !code.trim().is_empty()))
     }
 }
 
-/// A code changed: the guests about to arrive or on site (the platform picks them) get an email
+/// The code keys the guest reads with this config — the method's, the layers switched on — and
+/// their values.
+fn active_codes(config: &HostConfig) -> Vec<(&'static str, &str)> {
+    let method = match config.method() {
+        Some(PrimaryMethod::Keybox) => Some(("keybox_code", &config.keybox_code)),
+        Some(PrimaryMethod::DoorCode) => Some(("door_code", &config.door_code)),
+        Some(PrimaryMethod::SmartLock) => {
+            Some(("smart_lock_manual_code", &config.smart_lock_manual_code))
+        }
+        _ => None,
+    };
+    let building = config.building_access_enabled.then_some((
+        "building_access_gate_code",
+        &config.building_access_gate_code,
+    ));
+    let parking = config
+        .parking_enabled
+        .then_some(("parking_code", &config.parking_code));
+    [method, building, parking]
+        .into_iter()
+        .flatten()
+        .map(|(key, code)| (key, code.as_str()))
+        .collect()
+}
+
+/// The guest's code changed: the guests about to arrive or on site (the platform picks them) get an email
 /// pointing to their booklet — never the code itself.
 #[portaki_sdk::email(
     id = "code-changed",
@@ -43,7 +72,7 @@ impl ConfigUpdatedArgs {
 )]
 #[portaki_sdk::command(name = "onConfigUpdated")]
 pub fn on_config_updated(ctx: Context, args: ConfigUpdatedArgs) -> Result<()> {
-    if !args.changes_a_code() {
+    if args.changed_keys.is_empty() || !args.changes_the_guest_code(&HostConfig::load(&ctx)?) {
         return Ok(());
     }
     email::send(&SendEmailArgs {
