@@ -23,7 +23,7 @@ pub struct MapMarkersResponse {
     pub markers: Vec<MapMarker>,
 }
 
-#[portaki_sdk::query(name = "mapMarkers")]
+#[portaki_sdk::query(name = "mapMarkers", example(label = "Points sur la carte"))]
 pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
     let config = ModuleConfig::load(&ctx)?;
     let markers = config
