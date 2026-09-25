@@ -8,7 +8,7 @@ use portaki_sdk::prelude::*;
 
 use crate::config::ModuleConfig;
 use crate::email_i18n;
-use crate::show_when::is_form_available;
+use crate::show_when::{is_editable_until_checkin, is_form_available};
 use crate::storage;
 
 /// Stable delivery id — orchestrator dedups per stay + module + email_id.
@@ -34,7 +34,10 @@ pub fn send_form_available(ctx: &Context) -> Result<()> {
     let config = ModuleConfig::load(ctx)?;
     let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at);
     let now = time::now()?;
-    if !is_form_available(config.show_when, now, checkin_at) {
+    // Once check-in has passed the form is locked: inviting the guest to fill it is pointless.
+    if !is_editable_until_checkin(now, checkin_at)
+        || !is_form_available(config.show_when, now, checkin_at)
+    {
         return Ok(());
     }
 
