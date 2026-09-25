@@ -4,11 +4,11 @@ use serial_test::serial;
 use uuid::Uuid;
 
 use consumables::{
-    list_for_stay, list_items, list_open_count, render_guest_form, render_home_card,
-    render_host_main, render_host_stats, render_host_stay, replace_items, reset_test_store,
-    seed_defaults, stats_summary, submit, update_config, update_status, ConsumableItemInput,
-    ListForStayArgs, ReplaceItemsArgs, SubmitArgs, UpdateConfigArgs, UpdateStatusArgs,
-    GUEST_TEXT_EMAIL_MAX_CHARS, LEVEL_DEFAULT, STATUS_DEFAULT,
+    list_for_stay, list_items, list_open_count, publish_readiness, render_guest_form,
+    render_home_card, render_host_main, render_host_stats, render_host_stay, replace_items,
+    reset_test_store, seed_defaults, stats_summary, submit, update_config, update_status,
+    ConsumableItemInput, ListForStayArgs, ReplaceItemsArgs, SubmitArgs, UpdateConfigArgs,
+    UpdateStatusArgs, GUEST_TEXT_EMAIL_MAX_CHARS, LEVEL_DEFAULT, STATUS_DEFAULT,
 };
 use portaki_sdk::contracts::stats::StatsSummaryArgs;
 use portaki_sdk::limits;
@@ -391,5 +391,21 @@ fn long_note_is_stored_whole_and_quoted_in_the_host_email() {
             assert_eq!(cta.label.en, "See more");
             assert_eq!(email.property_id, Some(ctx.property_id));
             assert!(email.action_url.is_none());
+        });
+}
+
+#[test]
+#[serial]
+fn publish_readiness_requires_a_catalog() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let ok = |ctx: &portaki_sdk::prelude::Context| {
+                publish_readiness(ctx.clone()).expect("readiness").items[0].ok
+            };
+            assert!(!ok(&ctx));
+            seed_defaults(ctx.clone(), EmptyArgs {}).expect("seed");
+            assert!(ok(&ctx));
         });
 }

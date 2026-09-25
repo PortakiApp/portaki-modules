@@ -1,10 +1,12 @@
 //! Module queries — catalog, stay reports, open count.
 
 use chrono::{DateTime, Utc};
+use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
 use crate::entities::{ConsumableItem, ConsumableReport};
+use crate::i18n::text;
 use crate::storage;
 
 /// Public item DTO returned by `listItems`.
@@ -115,4 +117,19 @@ fn resolve_list_stay_id(ctx: &Context, stay_id: Option<Uuid>) -> Result<Uuid> {
         return Ok(guest.session_id);
     }
     stay_id.ok_or_else(|| PortakiError::Host("stay_id_required".to_string()))
+}
+
+/// Blocks publication until the catalog lists something the guest can report.
+#[portaki_sdk::query(name = "publishReadiness")]
+pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
+    let ok = !storage::list_items()?.is_empty();
+    Ok(PublishReadiness {
+        items: vec![PublishCheck {
+            id: "catalog".into(),
+            level: PublishLevel::Required,
+            ok,
+            label: text("publish.catalog.label", &[]),
+            hint: text("publish.catalog.hint", &[]),
+        }],
+    })
 }

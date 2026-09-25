@@ -79,5 +79,7 @@
   "stats.restock.unit": "{count} d",
   "catalog.host.main": "Consumables",
   "catalog.host.stay": "Consumables",
-  "catalog.host.stock": "Consumables"
+  "catalog.host.stock": "Consumables",
+  "publish.catalog.label": "Consumables catalog",
+  "publish.catalog.hint": "Add at least one consumable"
 }

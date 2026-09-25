@@ -15,6 +15,7 @@ define_operation_names! {
     LIST_FOR_STAY = "listForStay",
     LIST_RECENT = "listRecent",
     LIST_OPEN_COUNT = "listOpenCount",
+    PUBLISH_READINESS = "publishReadiness",
     REPLACE_ITEMS = "replaceItems",
     SEED_DEFAULTS = "seedDefaults",
     STATS_SUMMARY = "statsSummary",
