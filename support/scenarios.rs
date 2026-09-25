@@ -82,7 +82,7 @@ pub fn context_for(scenario: &Scenario, guest: bool, setup: Setup) -> MockContex
 }
 
 /// Opérations appelées par la plateforme, jamais par un développeur : pas d'exemple.
-const PLATFORM_HOOKS: &[&str] = &["legacyConfig", "onConfigUpdated"];
+const PLATFORM_HOOKS: &[&str] = &["legacyConfig", "legacyConfigAdopted", "onConfigUpdated"];
 
 /// Joue chaque `example(…)` des queries et commands sur le cas `normal`.
 ///
@@ -96,7 +96,8 @@ pub fn check_examples(emissions: &str, setup: Setup, without: &[&str]) {
         let name = declared["name"].as_str().unwrap_or_default();
         let examples = declared["examples"].as_array().cloned().unwrap_or_default();
         if examples.is_empty() {
-            // `legacyConfig` est la reprise de config que `#[portaki_sdk::config]` génère ;
+            // `legacyConfig` est la reprise de config que `#[portaki_sdk::config]` génère,
+            // `legacyConfigAdopted` l'effacement de l'ancienne clé une fois la reprise stockée ;
             // `onConfigUpdated`, le signal que la plateforme envoie après une sauvegarde.
             if !without.contains(&name) && !PLATFORM_HOOKS.contains(&name) {
                 problems.push(format!("{name}: no example"));

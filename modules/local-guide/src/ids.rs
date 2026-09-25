@@ -1,4 +1,5 @@
 //! Typed surface / operation catalogs for this module.
+#![allow(deprecated)]
 
 use portaki_sdk::prelude::*;
 
