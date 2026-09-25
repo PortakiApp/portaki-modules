@@ -8,7 +8,8 @@ use portaki_sdk::sdui::primitives::{
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{load_config, CalendarFeed, ModuleConfig, CALENDAR_SLOTS};
+use crate::config::{CalendarFeed, ModuleConfig, CALENDAR_SLOTS};
+use crate::sync_state::load_sync_state;
 
 mod stats;
 
@@ -21,17 +22,18 @@ pub use stats::{render_host_stats, stats_summary};
     label_key = "catalog.host.main",
     icon = IconName::Calendar
 )]
-pub fn render_host_main(ctx: HostContext) -> Surface {
-    let config = load_config().unwrap_or_default();
+pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
+    let config = ModuleConfig::read(&ctx)?;
+    let state = load_sync_state()?;
     let calendars_count = draft_calendars_count(&ctx, &config);
 
-    let last_sync = config
-        .last_sync_at
+    let last_sync = state
+        .last_run_at
         .clone()
         .filter(|s| !s.trim().is_empty())
         .unwrap_or_else(|| "i18n:host.status.never".to_string());
-    let summary = config
-        .sync_summary
+    let summary = state
+        .summary
         .clone()
         .filter(|s| !s.trim().is_empty())
         .unwrap_or_else(|| "i18n:host.status.emptySummary".to_string());
@@ -70,13 +72,12 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
             .subtitle("i18n:host.section.status.help")
             .icon(IconName::Refresh)
             .children(vec![
+                // Status, not config: no `name`, or the form would send it.
                 Field::new()
-                    .name("last_sync_at")
                     .label("i18n:host.status.lastSync")
                     .child(Text::new().text(last_sync).variant(TextVariant::Body))
                     .into(),
                 Field::new()
-                    .name("sync_summary")
                     .label("i18n:host.status.summary")
                     .child(Text::new().text(summary).variant(TextVariant::Caption))
                     .into(),
@@ -89,8 +90,10 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     ];
 
     // No Page title / Save — the modules sheet owns chrome + footer Save.
-    Surface::new(Page::new().child(Form::new().children(form_children)))
-        .with_id(crate::ids::HOST_MAIN)
+    Ok(
+        Surface::new(Page::new().child(Form::new().children(form_children)))
+            .with_id(crate::ids::HOST_MAIN),
+    )
 }
 
 fn draft_calendars_count(ctx: &HostContext, config: &ModuleConfig) -> usize {
@@ -175,7 +178,7 @@ fn calendar_row(index: usize, feed: Option<&CalendarFeed>) -> Component {
 /// Platform list comes straight from [`BookingChannel::ALL`] — the SDK owns the
 /// vocabulary so this selector cannot drift from what the gateway parses. The feed
 /// shape (format) is no longer picked by hand: it is deduced from the URL or the
-/// chosen platform at save time (see `commands::resolve_format`).
+/// chosen platform at save time (see `config::resolve_format`).
 fn channel_options() -> Vec<ChoiceOption> {
     BookingChannel::ALL
         .iter()

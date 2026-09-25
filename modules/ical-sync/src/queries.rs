@@ -4,7 +4,7 @@ use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::config::{load_config, save_config, CalendarFormat, ModuleConfig};
+use crate::config::{CalendarFormat, ModuleConfig};
 use crate::email_send;
 use crate::ics::{parse_stay_rows, FeedParseContext, StayImportRow};
 use crate::sync_state::{self, SyncDiff};
@@ -55,18 +55,12 @@ pub struct ApplyFeedsResponse {
     pub items_total: i32,
     pub summary: String,
     pub rows: Vec<StayImportRow>,
-    pub updated_plain_config: ModuleConfig,
-}
-
-#[portaki_sdk::query(name = "getConfig")]
-pub fn get_config(_ctx: Context) -> Result<ModuleConfig> {
-    load_config()
 }
 
 /// Returns HTTPS .ics URLs for the platform to fetch (`hostScheduledSync.sourcesQuery`).
 #[portaki_sdk::query(name = "listSources")]
-pub fn list_sources(_ctx: Context) -> Result<ListSourcesResponse> {
-    let config = load_config().unwrap_or_default();
+pub fn list_sources(ctx: Context) -> Result<ListSourcesResponse> {
+    let config = ModuleConfig::read(&ctx)?;
     let sources = config
         .connected_calendars()
         .into_iter()
@@ -112,12 +106,12 @@ pub fn apply_feeds(ctx: Context, args: ApplyFeedsArgs) -> Result<ApplyFeedsRespo
         args.guest_lang.trim()
     };
 
-    let config = load_config().unwrap_or_default();
+    let config = ModuleConfig::read(&ctx)?;
     let previous_state = sync_state::load_sync_state().unwrap_or_default();
     let previous_last_success = previous_state
         .last_success_at
         .clone()
-        .or_else(|| config.last_sync_at.clone());
+        .or_else(|| previous_state.last_run_at.clone());
 
     let mut rows = Vec::new();
     let mut succeeded = 0i32;
@@ -161,13 +155,6 @@ pub fn apply_feeds(ctx: Context, args: ApplyFeedsArgs) -> Result<ApplyFeedsRespo
         failed
     );
 
-    let mut config = config;
-    if !now.is_empty() {
-        config.last_sync_at = Some(now.clone());
-    }
-    config.sync_summary = Some(summary.clone());
-    let _ = save_config(&config);
-
     let diff = if succeeded > 0 {
         sync_state::diff_rows(&previous_state, &rows)
     } else {
@@ -187,6 +174,10 @@ pub fn apply_feeds(ctx: Context, args: ApplyFeedsArgs) -> Result<ApplyFeedsRespo
     if !args.feeds.is_empty() {
         next.record_run(now.get(..10).unwrap_or(""), failed > 0, diff.new_rows.len());
     }
+    if !now.is_empty() {
+        next.last_run_at = Some(now.clone());
+    }
+    next.summary = Some(summary.clone());
     let _ = sync_state::save_sync_state(&next);
 
     dispatch_sync_emails(
@@ -205,7 +196,6 @@ pub fn apply_feeds(ctx: Context, args: ApplyFeedsArgs) -> Result<ApplyFeedsRespo
         items_total,
         summary,
         rows,
-        updated_plain_config: config,
     })
 }
 

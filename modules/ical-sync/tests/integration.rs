@@ -1,63 +1,29 @@
 //! Integration-style unit tests with `portaki-test-utils`.
 
 use ical_sync::{
-    apply_feeds, get_config, list_sources, parse_stay_rows, update_config, ApplyFeedsArgs,
-    CalendarFormat, CalendarInput, FeedBody, FeedParseContext, UpdateConfigArgs,
+    apply_feeds, list_sources, parse_stay_rows, render_host_main, ApplyFeedsArgs, CalendarFormat,
+    CalendarRow, Config, FeedBody, FeedParseContext, ModuleConfig,
 };
 use portaki_sdk::capability;
 use portaki_sdk::contracts::booking_channel::{BookingChannel, ChannelSignal};
 use portaki_sdk::host::email::SendEmailArgs;
 use portaki_test_utils::MockContext;
+use serde_json::json;
 use serial_test::serial;
+
+#[path = "../../../support/config_form.rs"]
+mod config_form;
 
 #[test]
 #[serial]
-fn update_config_and_list_sources_many_calendars() {
+fn saved_calendars_are_listed_as_sources() {
     MockContext::host()
         .with_capabilities(&[
             capability::core::STORAGE,
             capability::core::MODULES_SCHEDULED_SYNC,
         ])
+        .with_config(&json!({"calendars": [{"id": "airbnb", "url": "https://www.airbnb.com/calendar/ical/1.ics", "label": "Airbnb", "format": "airbnb", "channel": ""}, {"id": "", "url": "  ", "label": "", "format": "", "channel": ""}, {"id": "booking", "url": "https://admin.booking.com/hotel/hoteladmin/ical.html?t=abc", "label": "Booking", "format": "booking", "channel": ""}, {"id": "vrbo", "url": "https://www.vrbo.com/calendar/ical/9.ics", "label": "", "format": "abritel_vrbo", "channel": ""}]}))
         .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    calendars: vec![
-                        CalendarInput {
-                            id: "airbnb".into(),
-                            url: "https://www.airbnb.com/calendar/ical/1.ics".into(),
-                            label: "Airbnb".into(),
-                            format: "airbnb".into(),
-                            channel: String::new(),
-                        },
-                        CalendarInput {
-                            id: "".into(),
-                            url: "  ".into(),
-                            label: "".into(),
-                            format: "".into(),
-                            channel: String::new(),
-                        },
-                        CalendarInput {
-                            id: "booking".into(),
-                            url: "https://admin.booking.com/hotel/hoteladmin/ical.html?t=abc"
-                                .into(),
-                            label: "Booking".into(),
-                            format: "booking".into(),
-                            channel: String::new(),
-                        },
-                        CalendarInput {
-                            id: "vrbo".into(),
-                            url: "https://www.vrbo.com/calendar/ical/9.ics".into(),
-                            label: "".into(),
-                            format: "abritel_vrbo".into(),
-                            channel: String::new(),
-                        },
-                    ],
-                    ..Default::default()
-                },
-            )
-            .expect("update");
-
             let sources = list_sources(ctx.clone()).expect("sources");
             assert_eq!(sources.sources.len(), 3);
             assert_eq!(sources.sources[0].id, "airbnb");
@@ -65,7 +31,7 @@ fn update_config_and_list_sources_many_calendars() {
             assert_eq!(sources.sources[1].provider.as_deref(), Some("booking"));
             assert_eq!(sources.sources[2].provider.as_deref(), Some("abritel_vrbo"));
 
-            let config = get_config(ctx).expect("config");
+            let config = ModuleConfig::read(&ctx).expect("config");
             assert_eq!(config.calendars.len(), 3);
             assert_eq!(config.calendars[0].format, CalendarFormat::Airbnb);
             assert!(config.calendars[0].url.contains("airbnb.com"));
@@ -76,57 +42,34 @@ fn update_config_and_list_sources_many_calendars() {
 
 #[test]
 #[serial]
-fn update_config_detects_format_from_url_when_omitted() {
+fn format_is_detected_from_url_when_omitted() {
     MockContext::host()
         .with_capabilities(&[
             capability::core::STORAGE,
             capability::core::MODULES_SCHEDULED_SYNC,
         ])
+        .with_config(&json!({"calendars": [{"id": "auto", "url": "https://www.airbnb.com/calendar/ical/99.ics", "label": "", "format": "", "channel": ""}]}))
         .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    calendars: vec![CalendarInput {
-                        id: "auto".into(),
-                        url: "https://www.airbnb.com/calendar/ical/99.ics".into(),
-                        label: "".into(),
-                        format: "".into(),
-                        channel: String::new(),
-                    }],
-                    ..Default::default()
-                },
-            )
-            .expect("update");
-
-            let config = get_config(ctx).expect("config");
+            let config = ModuleConfig::read(&ctx).expect("config");
             assert_eq!(config.calendars[0].format, CalendarFormat::Airbnb);
         });
 }
 
 #[test]
 #[serial]
-fn legacy_primary_secondary_still_accepted() {
+fn legacy_primary_secondary_are_still_read() {
     MockContext::host()
         .with_capabilities(&[
             capability::core::STORAGE,
             capability::core::MODULES_SCHEDULED_SYNC,
         ])
+        .with_kv("config", serde_json::to_vec(&json!({"ical_url_primary": "https://example.com/a.ics", "ical_url_secondary": "https://example.com/b.ics"})).unwrap())
         .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    ical_url_primary: "https://example.com/a.ics".into(),
-                    ical_url_secondary: "https://example.com/b.ics".into(),
-                    ..Default::default()
-                },
-            )
-            .expect("update");
-
             let sources = list_sources(ctx.clone()).expect("sources");
             assert_eq!(sources.sources.len(), 2);
             assert_eq!(sources.sources[0].provider.as_deref(), Some("generic"));
 
-            let config = get_config(ctx).expect("config");
+            let config = ModuleConfig::read(&ctx).expect("config");
             assert_eq!(config.calendars.len(), 2);
             let json = serde_json::to_value(&config).expect("serialize");
             assert!(json.get("ical_url_primary").is_none());
@@ -142,22 +85,8 @@ fn apply_feeds_parses_ics_and_updates_summary() {
             capability::core::STORAGE,
             capability::core::MODULES_SCHEDULED_SYNC,
         ])
+        .with_config(&json!({"calendars": [{"id": "primary", "url": "https://example.com/a.ics", "label": "", "format": "airbnb", "channel": ""}]}))
         .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    calendars: vec![CalendarInput {
-                        id: "primary".into(),
-                        url: "https://example.com/a.ics".into(),
-                        label: "".into(),
-                        format: "airbnb".into(),
-                        channel: String::new(),
-                    }],
-                    ..Default::default()
-                },
-            )
-            .expect("update");
-
             let ics = "BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:u1\n\
 DTSTART;VALUE=DATE:20260801\nDTEND;VALUE=DATE:20260805\n\
 SUMMARY:Reserved\nDESCRIPTION:Name: Sofia Rossi\nEND:VEVENT\n\
@@ -189,13 +118,15 @@ SUMMARY:Reserved - Not available\nEND:VEVENT\nEND:VCALENDAR\n";
                 result.rows[0].booking_channel_signal,
                 ChannelSignal::FeedFormatDeclared
             );
-            assert!(result.updated_plain_config.last_sync_at.is_some());
-            assert!(result
-                .updated_plain_config
-                .sync_summary
-                .as_deref()
-                .unwrap_or("")
-                .contains("1 stay"));
+            // The run lands in the sync state, never in the config.
+            let state: serde_json::Value = serde_json::from_slice(
+                &portaki_sdk::host::kv::get("sync_state")
+                    .expect("kv")
+                    .expect("sync_state"),
+            )
+            .expect("sync_state json");
+            assert!(state["lastRunAt"].is_string());
+            assert!(state["summary"].as_str().unwrap_or("").contains("1 stay"));
         });
 }
 
@@ -207,22 +138,8 @@ fn apply_feeds_blocks_only_still_succeeds() {
             capability::core::STORAGE,
             capability::core::MODULES_SCHEDULED_SYNC,
         ])
+        .with_config(&json!({"calendars": [{"id": "primary", "url": "https://www.airbnb.com/calendar/ical/1.ics", "label": "", "format": "airbnb", "channel": ""}]}))
         .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    calendars: vec![CalendarInput {
-                        id: "primary".into(),
-                        url: "https://www.airbnb.com/calendar/ical/1.ics".into(),
-                        label: "".into(),
-                        format: "airbnb".into(),
-                        channel: String::new(),
-                    }],
-                    ..Default::default()
-                },
-            )
-            .expect("update");
-
             let ics = "BEGIN:VEVENT\nUID:b1\nDTSTART;VALUE=DATE:20260801\n\
 DTEND;VALUE=DATE:20260802\nSUMMARY:Not available\nEND:VEVENT\n";
 
@@ -268,22 +185,8 @@ fn apply_feeds_empty_body_counts_as_failed() {
             capability::core::STORAGE,
             capability::core::MODULES_SCHEDULED_SYNC,
         ])
+        .with_config(&json!({"calendars": [{"id": "primary", "url": "https://example.com/a.ics", "label": "Booking", "format": "booking", "channel": ""}]}))
         .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    calendars: vec![CalendarInput {
-                        id: "primary".into(),
-                        url: "https://example.com/a.ics".into(),
-                        label: "Booking".into(),
-                        format: "booking".into(),
-                        channel: String::new(),
-                    }],
-                    ..Default::default()
-                },
-            )
-            .expect("update");
-
             let result = apply_feeds(
                 ctx,
                 ApplyFeedsArgs {
@@ -311,22 +214,8 @@ fn apply_feeds_second_pass_is_idempotent_for_same_uids() {
             capability::core::STORAGE,
             capability::core::MODULES_SCHEDULED_SYNC,
         ])
+        .with_config(&json!({"calendars": [{"id": "primary", "url": "https://example.com/a.ics", "label": "", "format": "generic", "channel": ""}]}))
         .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    calendars: vec![CalendarInput {
-                        id: "primary".into(),
-                        url: "https://example.com/a.ics".into(),
-                        label: "".into(),
-                        format: "generic".into(),
-                        channel: String::new(),
-                    }],
-                    ..Default::default()
-                },
-            )
-            .expect("update");
-
             let ics = "BEGIN:VEVENT\nUID:stable-1\nDTSTART;VALUE=DATE:20260801\n\
 DTEND;VALUE=DATE:20260805\nSUMMARY:Ada Lovelace\nEND:VEVENT\n\
 BEGIN:VEVENT\nUID:stable-2\nDTSTART;VALUE=DATE:20260810\n\
@@ -371,22 +260,8 @@ fn apply_feeds_reports_the_channel_on_every_row() {
             capability::core::STORAGE,
             capability::core::MODULES_SCHEDULED_SYNC,
         ])
+        .with_config(&json!({"calendars": [{"id": "primary", "url": "https://example.com/a.ics", "label": "", "format": "generic", "channel": ""}]}))
         .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    calendars: vec![CalendarInput {
-                        id: "primary".into(),
-                        url: "https://example.com/a.ics".into(),
-                        label: "".into(),
-                        format: "generic".into(),
-                        channel: String::new(),
-                    }],
-                    ..Default::default()
-                },
-            )
-            .expect("update");
-
             let ics = "BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:r1@airbnb.com\n\
 DTSTART;VALUE=DATE:20260801\nDTEND;VALUE=DATE:20260805\nSUMMARY:Ada\nEND:VEVENT\n\
 BEGIN:VEVENT\nUID:r2\nDTSTART;VALUE=DATE:20260810\n\
@@ -431,23 +306,9 @@ fn google_mirrored_feed_reports_unknown_not_google() {
             capability::core::STORAGE,
             capability::core::MODULES_SCHEDULED_SYNC,
         ])
+        .with_config(&json!({"calendars": [{"id": "mirror", "url": "https://calendar.google.com/calendar/ical/x/basic.ics", "label": "", "format": "google", "channel": ""}]}))
         .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    calendars: vec![CalendarInput {
-                        id: "mirror".into(),
-                        url: "https://calendar.google.com/calendar/ical/x/basic.ics".into(),
-                        label: "".into(),
-                        format: "google".into(),
-                        channel: String::new(),
-                    }],
-                    ..Default::default()
-                },
-            )
-            .expect("update");
-
-            let config = get_config(ctx.clone()).expect("config");
+            let config = ModuleConfig::read(&ctx).expect("config");
             assert_eq!(config.calendars[0].format, CalendarFormat::Google);
             assert_eq!(config.calendars[0].channel, BookingChannel::Unknown);
 
@@ -483,23 +344,9 @@ fn host_declared_platform_carries_an_opaque_channel_manager_feed() {
             capability::core::STORAGE,
             capability::core::MODULES_SCHEDULED_SYNC,
         ])
+        .with_config(&json!({"calendars": [{"id": "beds24", "url": "https://api.beds24.com/ical/9931.ics", "label": "Beds24", "format": "generic", "channel": "booking"}]}))
         .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    calendars: vec![CalendarInput {
-                        id: "beds24".into(),
-                        url: "https://api.beds24.com/ical/9931.ics".into(),
-                        label: "Beds24".into(),
-                        format: "generic".into(),
-                        channel: "booking".into(),
-                    }],
-                    ..Default::default()
-                },
-            )
-            .expect("update");
-
-            let config = get_config(ctx.clone()).expect("config");
+            let config = ModuleConfig::read(&ctx).expect("config");
             assert_eq!(config.calendars[0].channel, BookingChannel::Booking);
             assert_eq!(
                 config.calendars[0].channel_signal,
@@ -540,23 +387,9 @@ fn airbnb_url_prefills_the_platform_when_the_host_leaves_it_blank() {
             capability::core::STORAGE,
             capability::core::MODULES_SCHEDULED_SYNC,
         ])
+        .with_config(&json!({"calendars": [{"id": "explicit-generic", "url": "https://www.airbnb.com/calendar/ical/1.ics", "label": "", "format": "generic", "channel": ""}]}))
         .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    calendars: vec![CalendarInput {
-                        id: "explicit-generic".into(),
-                        url: "https://www.airbnb.com/calendar/ical/1.ics".into(),
-                        label: "".into(),
-                        format: "generic".into(),
-                        channel: String::new(),
-                    }],
-                    ..Default::default()
-                },
-            )
-            .expect("update");
-
-            let config = get_config(ctx.clone()).expect("config");
+            let config = ModuleConfig::read(&ctx).expect("config");
             assert_eq!(config.calendars[0].format, CalendarFormat::Generic);
             assert_eq!(config.calendars[0].channel, BookingChannel::Airbnb);
             assert_eq!(
@@ -701,22 +534,8 @@ fn stats_card_reads_history_conflicts_and_channels() {
             capability::core::MODULES_SCHEDULED_SYNC,
         ])
         .with_now(now)
+        .with_config(&json!({"calendars": [{"id": "primary", "url": "https://www.airbnb.com/calendar/ical/1.ics", "label": "", "format": "airbnb", "channel": ""}]}))
         .run(|mut ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    calendars: vec![CalendarInput {
-                        id: "primary".into(),
-                        url: "https://www.airbnb.com/calendar/ical/1.ics".into(),
-                        label: "".into(),
-                        format: "airbnb".into(),
-                        channel: String::new(),
-                    }],
-                    ..Default::default()
-                },
-            )
-            .expect("update");
-
             // Two stays sharing the night of Aug 4 — one date conflict.
             let ics = "BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:u1@airbnb.com\n\
 DTSTART;VALUE=DATE:20260801\nDTEND;VALUE=DATE:20260805\n\
@@ -749,7 +568,7 @@ SUMMARY:Reserved\nDESCRIPTION:Name: Leo Martin\nEND:VEVENT\nEND:VCALENDAR\n";
             assert_eq!(tile.attention.expect("conflict").text.fr, "1 conflit(s)");
 
             ctx.input = serde_json::json!({ "periodDays": 30 });
-            let text = serde_json::to_value(ical_sync::render_host_stats(ctx))
+            let text = serde_json::to_value(ical_sync::render_host_stats(ctx).expect("stats"))
                 .expect("surface json")
                 .to_string();
             assert!(text.contains(r#""delta":"sur 30 jours","label":"i18n:stats.imported","type":"Stat","value":"2""#), "{text}");
@@ -758,5 +577,32 @@ SUMMARY:Reserved\nDESCRIPTION:Name: Leo Martin\nEND:VEVENT\nEND:VCALENDAR\n";
             assert!(text.contains(r#""highlight":13,"kind":"bars""#));
             assert!(text.contains(r#""display":"1 réussie · 1 en échec","label":"25","value":2.0"#));
             assert!(text.contains(r#""display":"2 séjours","label":"Airbnb","value":2.0"#));
+        });
+}
+
+#[test]
+#[serial]
+fn the_host_form_sends_the_declared_keys() {
+    let config = Config {
+        calendars: vec![CalendarRow {
+            id: "airbnb".into(),
+            url: "https://www.airbnb.com/calendar/ical/1.ics".into(),
+            label: Some("Airbnb".into()),
+            channel: "airbnb".into(),
+            ..CalendarRow::default()
+        }],
+    };
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&config)
+        .run(|ctx| {
+            let surface = render_host_main(ctx).expect("host main");
+            config_form::assert_form_matches_config(
+                concat!(env!("OUT_DIR"), "/portaki-emissions"),
+                &surface,
+                &[],
+            );
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("https://www.airbnb.com/calendar/ical/1.ics"));
         });
 }
