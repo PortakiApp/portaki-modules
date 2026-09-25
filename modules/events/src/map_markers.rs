@@ -24,7 +24,7 @@ pub struct MapMarkersResponse {
     pub markers: Vec<MapMarker>,
 }
 
-#[portaki_sdk::query(name = "mapMarkers")]
+#[portaki_sdk::query(name = "mapMarkers", example(label = "Points sur la carte"))]
 pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
     let config = ModuleConfig::load(&ctx)?;
     // `false` : ce n'est pas la carte d'accueil, qui ne garde que les prochains jours. La
