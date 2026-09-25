@@ -48,7 +48,7 @@ impl PreArrivalStatus {
     }
 }
 
-#[portaki_sdk::query(name = "getStatus")]
+#[portaki_sdk::query(name = "getStatus", example(label = "Statut du formulaire"))]
 pub fn get_status(ctx: Context) -> Result<PreArrivalStatus> {
     let stay_id = require_stay_id(&ctx)?;
     let Some(row) = storage::find_by_stay(stay_id)? else {
@@ -69,7 +69,7 @@ pub fn get_status(ctx: Context) -> Result<PreArrivalStatus> {
 
 /// Recommends asking the guest at least one question; never blocks. A rule over six toggles,
 /// which the declared config cannot say.
-#[portaki_sdk::query(name = "publishReadiness")]
+#[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
 pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
     let ok = ModuleConfig::load(&ctx)?.asks_anything();
     Ok(PublishReadiness {
