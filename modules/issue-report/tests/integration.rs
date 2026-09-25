@@ -197,12 +197,13 @@ fn host_stats_reflect_resolution_and_period() {
 
     let text = render(t0 + Duration::hours(9), None);
     assert!(text.contains(
-        r#""delta":"sur 30 jours","label":"i18n:stats.reports","type":"Stat","value":"3""#
+        r#""delta":"sur 30 jours","icon":"danger-triangle","label":"i18n:stats.reports","type":"Stat","value":"3""#
     ));
     assert!(text.contains(
-        r#""delta":"délai moyen 6 h","label":"i18n:stats.resolved","type":"Stat","value":"1""#
+        r#""delta":"délai moyen 6 h","icon":"check-circle","label":"i18n:stats.resolved","type":"Stat","value":"1""#
     ));
-    assert!(text.contains(r#""label":"i18n:stats.open","type":"Stat","value":"2""#));
+    assert!(text
+        .contains(r#""icon":"clock-circle","label":"i18n:stats.open","type":"Stat","value":"2""#));
     assert!(text.contains(
         r#""display":"2 signalements","label":"i18n:stats.category.appliance","value":2.0"#
     ));
@@ -214,12 +215,12 @@ fn host_stats_reflect_resolution_and_period() {
     );
 
     let later = t0 + Duration::days(40);
-    assert!(
-        render(later, None).contains(r#""label":"i18n:stats.reports","type":"Stat","value":"0""#)
-    );
+    assert!(render(later, None).contains(
+        r#""icon":"danger-triangle","label":"i18n:stats.reports","type":"Stat","value":"0""#
+    ));
     let quarter = render(later, Some(90));
     assert!(quarter.contains(
-        r#""delta":"sur 90 jours","label":"i18n:stats.reports","type":"Stat","value":"3""#
+        r#""delta":"sur 90 jours","icon":"danger-triangle","label":"i18n:stats.reports","type":"Stat","value":"3""#
     ));
 }
 

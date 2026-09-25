@@ -571,9 +571,9 @@ SUMMARY:Reserved\nDESCRIPTION:Name: Leo Martin\nEND:VEVENT\nEND:VCALENDAR\n";
             let text = serde_json::to_value(ical_sync::render_host_stats(ctx).expect("stats"))
                 .expect("surface json")
                 .to_string();
-            assert!(text.contains(r#""delta":"sur 30 jours","label":"i18n:stats.imported","type":"Stat","value":"2""#), "{text}");
-            assert!(text.contains(r#""delta":"i18n:stats.conflicts.note","label":"i18n:stats.conflicts","type":"Stat","value":"1""#));
-            assert!(text.contains(r#""delta":"i18n:stats.incomplete.note","label":"i18n:stats.incomplete","type":"Stat","value":"2""#));
+            assert!(text.contains(r#""delta":"sur 30 jours","icon":"calendar","label":"i18n:stats.imported","type":"Stat","value":"2""#), "{text}");
+            assert!(text.contains(r#""delta":"i18n:stats.conflicts.note","icon":"danger-triangle","label":"i18n:stats.conflicts","type":"Stat","value":"1""#));
+            assert!(text.contains(r#""delta":"i18n:stats.incomplete.note","icon":"mail","label":"i18n:stats.incomplete","type":"Stat","value":"2""#));
             assert!(text.contains(r#""highlight":13,"kind":"bars""#));
             assert!(text.contains(r#""display":"1 réussie · 1 en échec","label":"25","value":2.0"#));
             assert!(text.contains(r#""display":"2 séjours","label":"Airbnb","value":2.0"#));
