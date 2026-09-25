@@ -39,7 +39,9 @@ lock without provider) read the nested `ModuleConfig` built from it.
 ### Code changed email
 
 After a save, the platform calls the host command `onConfigUpdated` with the changed key names
-(`{ propertyId, changedKeys }`). When one is a code key, the module sends `code-changed`
+(`{ propertyId, changedKeys }`). When the code the guest uses changed in the saved config — the
+code of the active method or of a layer switched on, or the method / a layer switched while an
+active code is set — the module sends `code-changed`
 (declared, audience `propertyEligibleGuests`: upcoming and active stays) — a pointer to the
 booklet, never the code. Copy in `email_i18n/*.json`.
 
