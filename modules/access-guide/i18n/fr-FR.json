@@ -192,5 +192,6 @@
   "config.methodInstructions": "Instructions d’accès",
   "config.buildingNote": "Note immeuble",
   "config.parkingInfo": "Infos parking",
-  "config.globalNote": "Note globale"
+  "config.globalNote": "Note globale",
+  "email.code-changed.description": "Code d’accès modifié"
 }

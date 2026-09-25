@@ -192,5 +192,6 @@
   "config.methodInstructions": "Access instructions",
   "config.buildingNote": "Building note",
   "config.parkingInfo": "Parking info",
-  "config.globalNote": "General note"
+  "config.globalNote": "General note",
+  "email.code-changed.description": "Access code changed"
 }

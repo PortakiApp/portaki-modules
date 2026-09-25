@@ -1,0 +1,7 @@
+{
+  "email.codeChanged.subject": "アクセスコードが更新されました",
+  "email.codeChanged.eyebrow": "アクセス",
+  "email.codeChanged.title": "新しいアクセスコード",
+  "email.codeChanged.body": "ホストがアクセスコードを更新しました。最新の案内はブックレットでご確認ください。",
+  "email.codeChanged.cta": "アクセスを見る"
+}

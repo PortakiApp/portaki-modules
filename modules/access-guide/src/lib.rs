@@ -1,7 +1,9 @@
 //! Portaki access-guide module — arrival steps, codes, and parking.
 
+mod commands;
 mod config;
 mod email_context;
+mod email_i18n;
 mod guest;
 mod host;
 mod i18n;
@@ -10,6 +12,7 @@ mod queries;
 mod reveal;
 mod texts;
 
+pub use commands::{on_config_updated, ConfigUpdatedArgs};
 pub use config::{
     ArrivalGuide, BuildingAccess, HostConfig, MethodFields, ModuleConfig, ParkingLayer,
     PrimaryMethod, RevealPolicy, StepRow,
