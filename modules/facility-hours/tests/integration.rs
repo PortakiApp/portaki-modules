@@ -10,12 +10,16 @@ use serde_json::{json, Value};
 
 #[path = "../../../support/config_form.rs"]
 mod config_form;
+#[path = "../../../support/config_save.rs"]
+mod config_save;
+
+const EMISSIONS: &str = concat!(env!("OUT_DIR"), "/portaki-emissions");
 
 fn sample_config() -> Value {
     json!({
         "facilities": [
-            { "id": "pool", "title": { "fr": "Piscine", "en": "Pool" }, "hours": "08:00 – 20:00", "lines": [{ "fr": "Maillot obligatoire", "en": "Swimwear required" }] },
-            { "name": "Accueil", "hours": "à partir de 16:00" }
+            { "id": "pool", "title": { "fr": "Piscine", "en": "Pool" }, "hours": "08:00 – 20:00", "lines": { "fr": "Maillot obligatoire", "en": "Swimwear required" } },
+            { "title": "Accueil", "hours": "à partir de 16:00" }
         ],
         "general_note": "Horaires indicatifs"
     })
@@ -98,5 +102,51 @@ fn an_inactive_module_shows_the_sdk_state() {
         .run(|ctx| {
             let surface = portaki_sdk::guest_shell::render(ctx, "home.card", render_home_card);
             assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
+        });
+}
+
+/// A host writing in English: the French title, lines and note stay, and so do the lines, the
+/// note and the id the form does not carry; rows keep their place.
+#[test]
+#[serial]
+fn a_save_in_english_keeps_the_french() {
+    assert_eq!(
+        config_save::localized_paths(EMISSIONS),
+        [
+            "facilities.lines",
+            "facilities.note",
+            "facilities.title",
+            "general_note"
+        ]
+    );
+    let stored = json!({
+        "facilities": [
+            { "id": "pool", "title": { "fr": "Piscine", "en": "Pool" }, "hours": "9 h – 20 h",
+              "lines": { "fr": "Tous les jours\nEnfants accompagnés", "en": "Every day\nChildren with an adult" },
+              "note": { "fr": "Bonnet", "en": "Cap" } },
+            { "title": "", "hours": "" },
+            { "id": "spa", "title": { "fr": "Spa" }, "hours": "10 h – 19 h" }
+        ],
+        "general_note": { "fr": "Horaires indicatifs", "en": "Indicative hours" }
+    });
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&stored)
+        .run(|mut ctx| {
+            ctx.locale = "en-US".into();
+            let surface = render_host_main(ctx).expect("host main");
+            let sent = config_save::form_args(&surface);
+            // Stored order, the blank row where it was; ids on the filled rows only.
+            assert_eq!(sent["facilities"][0]["id"], "pool");
+            assert_eq!(sent["facilities"][0]["title"], "Pool");
+            assert!(sent["facilities"][1].get("id").is_none());
+            assert_eq!(sent["facilities"][2]["id"], "spa");
+            assert_eq!(sent["facilities"].as_array().unwrap().len(), 6);
+            assert_eq!(sent["general_note"], "Indicative hours");
+
+            let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
+            assert_eq!(saved["facilities"][0], stored["facilities"][0]);
+            assert_eq!(saved["facilities"][2]["title"]["fr"], "Spa");
+            assert_eq!(saved["general_note"], stored["general_note"]);
         });
 }
