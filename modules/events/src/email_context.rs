@@ -27,22 +27,21 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
     }
 
     let locale = args.locale_or(ctx.locale.as_str());
-    let property_locale = ctx.property.locale.as_str();
 
-    let config = ModuleConfig::read(&ctx)?;
+    let config = ModuleConfig::load(&ctx)?;
     let events = resolve_events(&ctx, &config, true)?;
     let Some(event) = events.first() else {
         return Ok(EmailContextResponse { local_tip: None });
     };
 
-    let title = event.title.pick_with_fallback(locale, property_locale);
+    let title = event.title.get(locale);
     let title = title.trim();
     if title.is_empty() {
         return Ok(EmailContextResponse { local_tip: None });
     }
 
     let mut tip = title.to_string();
-    let place = event.place.pick_with_fallback(locale, property_locale);
+    let place = event.place.get(locale);
     let place = place.trim();
     if !place.is_empty() {
         tip.push_str(" · ");

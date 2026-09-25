@@ -9,14 +9,13 @@ pub struct GuestData {
     pub events: Vec<EventRow>,
     pub disclaimer: String,
     pub locale: String,
-    pub property_locale: String,
     pub show_map: bool,
 }
 
 /// The events to show, or `None` when there is nothing: no event from the host, and no nearby
 /// search possible (off, no key, or a property without a position).
 pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Option<GuestData>> {
-    let config = ModuleConfig::read(ctx)?;
+    let config = ModuleConfig::load(ctx)?;
     let for_home = surface_id == crate::ids::HOME_CARD;
     let events = resolve_events(ctx, &config, for_home)?;
 
@@ -30,11 +29,8 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Opti
 
     Ok(Some(GuestData {
         events,
-        disclaimer: config
-            .disclaimer
-            .pick_with_fallback(&ctx.locale, &ctx.property.locale),
+        disclaimer: config.disclaimer.get(&ctx.locale).to_string(),
         locale: ctx.locale.clone(),
-        property_locale: ctx.property.locale.clone(),
         show_map,
     }))
 }

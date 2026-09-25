@@ -6,7 +6,9 @@ use portaki_sdk::host::{self, time};
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::config::{EventRow, Localized, ModuleConfig};
+use portaki_sdk::contracts::i18n::I18nText;
+
+use crate::config::{EventRow, ModuleConfig};
 
 const CACHE_KEY: &str = "nearby_cache";
 const CACHE_TTL_SECS: i64 = 60 * 60;
@@ -80,18 +82,22 @@ pub fn invalidate_nearby_cache() -> Result<()> {
 
 fn load_nearby(ctx: &Context, config: &ModuleConfig, lat: f64, lng: f64) -> Result<Vec<EventRow>> {
     let now = time::now()?;
-    let locale = Localized::lang_code(&ctx.locale);
+    let locale = match ctx.locale.trim().split(['-', '_']).next() {
+        Some(code) if !code.is_empty() => code.to_ascii_lowercase(),
+        _ => "fr".to_string(),
+    };
+    let radius_km = config.normalized_radius_km();
     if let Some(cached) = read_cache()? {
-        if cache_valid(&cached, lat, lng, config.radius_km, &locale, now) {
+        if cache_valid(&cached, lat, lng, radius_km, &locale, now) {
             return Ok(cached.events);
         }
     }
 
-    let fetched = fetch_from_api(lat, lng, config.radius_km, &locale)?;
+    let fetched = fetch_from_api(lat, lng, radius_km, &locale)?;
     let _ = write_cache(NearbyCache {
         lat,
         lng,
-        radius_km: config.radius_km,
+        radius_km,
         locale,
         fetched_at: now,
         events: fetched.clone(),
@@ -116,8 +122,8 @@ fn fetch_from_api(lat: f64, lng: f64, radius_km: u32, locale: &str) -> Result<Ve
         .into_iter()
         .map(|event| EventRow {
             id: event.id,
-            title: Localized::singleton(locale, event.title),
-            place: Localized::singleton(locale, event.place),
+            title: I18nText::new(event.title.clone(), event.title),
+            place: I18nText::new(event.place.clone(), event.place),
             starts_at: event.starts_at.unwrap_or_default(),
             ends_at: None,
             url: event.url,
@@ -195,8 +201,8 @@ mod tests {
     fn merge_prefers_manual_on_duplicate_key() {
         let manual = vec![EventRow {
             id: "manual-1".into(),
-            title: Localized::singleton("fr", "Concert"),
-            place: Localized::singleton("fr", "Chez nous"),
+            title: I18nText::new("Concert", ""),
+            place: I18nText::new("Chez nous", ""),
             starts_at: "2099-07-25T18:00:00Z".into(),
             ends_at: None,
             url: None,
@@ -206,8 +212,8 @@ mod tests {
         }];
         let nearby = vec![EventRow {
             id: "oa-1".into(),
-            title: Localized::singleton("fr", "Concert"),
-            place: Localized::singleton("fr", "OpenAgenda"),
+            title: I18nText::new("Concert", ""),
+            place: I18nText::new("OpenAgenda", ""),
             starts_at: "2099-07-25T18:00:00Z".into(),
             ends_at: None,
             url: Some("https://example.com".into()),

@@ -1,10 +1,11 @@
 //! Host dashboard surfaces — config cards embedded in the module sheet.
 
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{Card, Field, Form, Page, Select, Text, TextArea, TextInput};
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{EventRow, Localized, ModuleConfig};
+use crate::config::{EventRow, ModuleConfig};
 use crate::nearby::has_open_agenda;
 
 const EVENT_SLOTS: usize = 6;
@@ -17,16 +18,15 @@ const EVENT_SLOTS: usize = 6;
     icon = IconName::Calendar
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
-    let lang = Localized::lang_code(&ctx.locale);
-    let config = ModuleConfig::read(&ctx)?;
-    let events = config.parse_events();
-    let disclaimer = config.disclaimer.pick(&lang);
+    let config = ModuleConfig::load(&ctx)?;
+    let disclaimer = config.disclaimer.host_value(&ctx);
     let open_agenda = has_open_agenda(&ctx);
 
     let mut form_children: Vec<Component> = Vec::new();
     form_children.push(nearby_card(&config, open_agenda));
-    for index in 0..EVENT_SLOTS {
-        form_children.push(event_slot_card(index, events.get(index), &lang));
+    // The stored rows where they are, blank ones included, then empty slots.
+    for index in 0..EVENT_SLOTS.max(config.events.len()) {
+        form_children.push(event_slot_card(index, config.events.get(index), &ctx));
     }
     form_children.push(
         Card::new()
@@ -116,12 +116,10 @@ fn nearby_card(config: &ModuleConfig, open_agenda: bool) -> Component {
         .into()
 }
 
-fn event_slot_card(index: usize, event: Option<&EventRow>, lang: &str) -> Component {
+fn event_slot_card(index: usize, event: Option<&EventRow>, ctx: &HostContext) -> Component {
     let slot = index + 1;
-    // One text per slot now (the platform stores what the form sends): show whichever
-    // language holds it rather than a blank field the next save would write back.
-    let title = event.map(|e| e.title.pick(lang)).unwrap_or_default();
-    let place = event.map(|e| e.place.pick(lang)).unwrap_or_default();
+    let title = event.map(|e| e.title.host_value(ctx)).unwrap_or_default();
+    let place = event.map(|e| e.place.host_value(ctx)).unwrap_or_default();
     let starts_at = event.map(|e| e.starts_at.as_str()).unwrap_or("");
     let url = event.and_then(|e| e.url.as_deref()).unwrap_or("");
     let lat = event
@@ -133,65 +131,73 @@ fn event_slot_card(index: usize, event: Option<&EventRow>, lang: &str) -> Compon
         .map(|v| v.to_string())
         .unwrap_or_default();
 
+    // A filled row sends its id, so a save merges into it (and keeps its end, its note, its
+    // other languages). A blank slot has nothing to keep — and an id would make it count as filled.
+    let id = event
+        .filter(|e| !e.is_blank())
+        .map(|e| sdui::row_id("events", index, Some(&e.id)));
+
+    let fields: Vec<Component> = vec![
+        Field::new()
+            .name(format!("events.{index}.title"))
+            .label("i18n:host.event.title")
+            .child(
+                TextInput::new()
+                    .name(format!("events.{index}.title"))
+                    .value(title),
+            )
+            .into(),
+        Field::new()
+            .name(format!("events.{index}.place"))
+            .label("i18n:host.event.place")
+            .child(
+                TextInput::new()
+                    .name(format!("events.{index}.place"))
+                    .value(place),
+            )
+            .into(),
+        Field::new()
+            .name(format!("events.{index}.starts_at"))
+            .label("i18n:host.event.startsAt")
+            .child(
+                TextInput::new()
+                    .name(format!("events.{index}.starts_at"))
+                    .value(starts_at)
+                    .placeholder("i18n:host.event.startsAt.placeholder"),
+            )
+            .into(),
+        Field::new()
+            .name(format!("events.{index}.url"))
+            .label("i18n:host.event.url")
+            .child(
+                TextInput::new()
+                    .name(format!("events.{index}.url"))
+                    .value(url),
+            )
+            .into(),
+        Field::new()
+            .name(format!("events.{index}.lat"))
+            .label("i18n:host.event.lat")
+            .child(
+                TextInput::new()
+                    .name(format!("events.{index}.lat"))
+                    .value(lat),
+            )
+            .into(),
+        Field::new()
+            .name(format!("events.{index}.lng"))
+            .label("i18n:host.event.lng")
+            .child(
+                TextInput::new()
+                    .name(format!("events.{index}.lng"))
+                    .value(lng),
+            )
+            .into(),
+    ];
+
     Card::new()
         .title(format!("i18n:host.event.slot{slot}"))
         .icon(IconName::Calendar)
-        .children(vec![
-            Field::new()
-                .name(format!("events.{index}.title"))
-                .label("i18n:host.event.title")
-                .child(
-                    TextInput::new()
-                        .name(format!("events.{index}.title"))
-                        .value(title),
-                )
-                .into(),
-            Field::new()
-                .name(format!("events.{index}.place"))
-                .label("i18n:host.event.place")
-                .child(
-                    TextInput::new()
-                        .name(format!("events.{index}.place"))
-                        .value(place),
-                )
-                .into(),
-            Field::new()
-                .name(format!("events.{index}.starts_at"))
-                .label("i18n:host.event.startsAt")
-                .child(
-                    TextInput::new()
-                        .name(format!("events.{index}.starts_at"))
-                        .value(starts_at)
-                        .placeholder("i18n:host.event.startsAt.placeholder"),
-                )
-                .into(),
-            Field::new()
-                .name(format!("events.{index}.url"))
-                .label("i18n:host.event.url")
-                .child(
-                    TextInput::new()
-                        .name(format!("events.{index}.url"))
-                        .value(url),
-                )
-                .into(),
-            Field::new()
-                .name(format!("events.{index}.lat"))
-                .label("i18n:host.event.lat")
-                .child(
-                    TextInput::new()
-                        .name(format!("events.{index}.lat"))
-                        .value(lat),
-                )
-                .into(),
-            Field::new()
-                .name(format!("events.{index}.lng"))
-                .label("i18n:host.event.lng")
-                .child(
-                    TextInput::new()
-                        .name(format!("events.{index}.lng"))
-                        .value(lng),
-                )
-                .into(),
-        ])
+        .children(id.into_iter().chain(fields).collect())
         .into()
 }

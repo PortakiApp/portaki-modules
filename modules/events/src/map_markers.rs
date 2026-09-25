@@ -26,7 +26,7 @@ pub struct MapMarkersResponse {
 
 #[portaki_sdk::query(name = "mapMarkers")]
 pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
-    let config = ModuleConfig::read(&ctx)?;
+    let config = ModuleConfig::load(&ctx)?;
     // `false` : ce n'est pas la carte d'accueil, qui ne garde que les prochains jours. La
     // carte montre tout l'agenda connu.
     let events = resolve_events(&ctx, &config, false).unwrap_or_default();
@@ -37,9 +37,7 @@ pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
                 return None;
             }
             let (lat, lng) = (event.lat?, event.lng?);
-            let label = event
-                .title
-                .pick_with_fallback(&ctx.locale, &ctx.property.locale);
+            let label = event.title.get(&ctx.locale).to_string();
             let mut marker = MapMarker::new(event.id.clone(), lat, lng).kind(MapMarkerKind::Poi);
             if !label.trim().is_empty() {
                 marker = marker.label(label);
