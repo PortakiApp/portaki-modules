@@ -16,7 +16,8 @@ pub struct GuestData {
 /// search possible (off, no key, or a property without a position).
 pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Option<GuestData>> {
     let config = ModuleConfig::load(ctx)?;
-    let for_home = surface_id == crate::ids::HOME_CARD;
+    // The upcoming card headlines the *next* event: like the home card, past ones are dropped.
+    let for_home = surface_id == crate::ids::HOME_CARD || surface_id == crate::ids::UPCOMING_CARD;
     let events = resolve_events(ctx, &config, for_home)?;
 
     let has_manual = !config.parse_events().is_empty();
