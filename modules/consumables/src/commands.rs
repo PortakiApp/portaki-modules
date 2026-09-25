@@ -87,7 +87,13 @@ pub struct UpdateConfigArgs {
 }
 
 /// Persists catalog items from the host workspace Save chrome.
-#[portaki_sdk::command(name = "updateConfig")]
+#[portaki_sdk::command(
+    name = "updateConfig",
+    example(
+        label = "Papier toilette et café",
+        input = r#"{"items":[{"label":"Papier toilette"},{"label":"Café"}]}"#
+    )
+)]
 pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
     replace_items(
         ctx,
@@ -98,7 +104,13 @@ pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
     )
 }
 
-#[portaki_sdk::command(name = "replaceItems")]
+#[portaki_sdk::command(
+    name = "replaceItems",
+    example(
+        label = "Catalogue bilingue",
+        input = r#"{"items":[{"label_fr":"Papier toilette","label_en":"Toilet paper","low_threshold":2},{"label_fr":"Café","label_en":"Coffee"}]}"#
+    )
+)]
 pub fn replace_items(ctx: Context, args: ReplaceItemsArgs) -> Result<()> {
     let lang = lang_code(&ctx.locale);
     let items = args.resolve_items()?;
@@ -141,7 +153,7 @@ pub fn replace_items(ctx: Context, args: ReplaceItemsArgs) -> Result<()> {
 }
 
 /// Fills an empty catalog with common consumables (FR/EN). No-op if items exist.
-#[portaki_sdk::command(name = "seedDefaults")]
+#[portaki_sdk::command(name = "seedDefaults", example(label = "Catalogue par défaut"))]
 pub fn seed_defaults(ctx: Context, _args: EmptyArgs) -> Result<()> {
     if !storage::list_items()?.is_empty() {
         return Ok(());
@@ -188,7 +200,18 @@ pub struct SubmitArgs {
     pub note: Option<String>,
 }
 
-#[portaki_sdk::command(name = "submit", guest)]
+#[portaki_sdk::command(
+    name = "submit",
+    guest,
+    example(
+        label = "Plus de papier toilette",
+        input = r#"{"itemId":"3f2b8c1e-7a4d-4e9b-9c61-2d5e8f0a1b47","level":"missing","note":"Plus un rouleau dans la salle de bain"}"#
+    ),
+    example(
+        label = "Café presque fini",
+        input = r#"{"itemId":"3f2b8c1e-7a4d-4e9b-9c61-2d5e8f0a1b47","level":"low"}"#
+    )
+)]
 pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     let stay_id = require_guest_stay_id(&ctx)?;
     let level = level::parse_level(&args.level)?;

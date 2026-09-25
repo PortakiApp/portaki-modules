@@ -62,7 +62,7 @@ impl From<ConsumableReport> for ConsumableReportRow {
     }
 }
 
-#[portaki_sdk::query(name = "listItems")]
+#[portaki_sdk::query(name = "listItems", example(label = "Catalogue"))]
 pub fn list_items(_ctx: Context) -> Result<Vec<ConsumableItemDto>> {
     Ok(storage::list_items()?
         .into_iter()
@@ -79,7 +79,13 @@ pub struct ListForStayArgs {
     pub stay_id: Option<Uuid>,
 }
 
-#[portaki_sdk::query(name = "listForStay")]
+#[portaki_sdk::query(
+    name = "listForStay",
+    example(
+        label = "Signalements d'un séjour",
+        input = r#"{"stayId":"5d1a7e3c-2b9f-4c8d-a6e0-7f3b1c9d2e54"}"#
+    )
+)]
 pub fn list_for_stay(ctx: Context, args: ListForStayArgs) -> Result<Vec<ConsumableReportRow>> {
     let stay_id = resolve_list_stay_id(&ctx, args.stay_id)?;
     Ok(storage::list_by_stay(stay_id)?
@@ -88,7 +94,7 @@ pub fn list_for_stay(ctx: Context, args: ListForStayArgs) -> Result<Vec<Consumab
         .collect())
 }
 
-#[portaki_sdk::query(name = "listRecent")]
+#[portaki_sdk::query(name = "listRecent", example(label = "Derniers signalements"))]
 pub fn list_recent(_ctx: Context) -> Result<Vec<ConsumableReportRow>> {
     Ok(storage::list_recent()?
         .into_iter()
@@ -104,7 +110,7 @@ pub struct OpenCountDto {
     pub catalog_count: u32,
 }
 
-#[portaki_sdk::query(name = "listOpenCount")]
+#[portaki_sdk::query(name = "listOpenCount", example(label = "Signalements ouverts"))]
 pub fn list_open_count(_ctx: Context) -> Result<OpenCountDto> {
     Ok(OpenCountDto {
         open_count: storage::count_open()? as u32,
@@ -120,7 +126,7 @@ fn resolve_list_stay_id(ctx: &Context, stay_id: Option<Uuid>) -> Result<Uuid> {
 }
 
 /// Blocks publication until the catalog lists something the guest can report.
-#[portaki_sdk::query(name = "publishReadiness")]
+#[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
 pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
     let ok = !storage::list_items()?.is_empty();
     Ok(PublishReadiness {
