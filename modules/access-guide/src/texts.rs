@@ -1,6 +1,6 @@
-//! Per-language guest copy. The platform now holds it in the config (`*_fr` / `*_en` keys);
-//! before, the module kept it in KV `texts/{lang}`, still read until the host saves.
-//! Language short codes are derived from BCP-47 locales (`fr-FR` → `fr`).
+//! Guest copy in one language: what [`crate::config::HostConfig::texts`] resolves, and the shape
+//! the module kept in KV `texts/{lang}` before the platform held its config (read by the legacy
+//! import). Language short codes are derived from BCP-47 locales (`fr-FR` → `fr`).
 
 use portaki_sdk::host;
 use portaki_sdk::Result;
@@ -39,11 +39,13 @@ impl ModuleTexts {
     }
 }
 
-/// Title/detail for one arrival step (matched to shared config by `id`).
+/// Title/detail for one arrival step (the KV matched it to the config skeleton by `id`).
 #[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct StepText {
     pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind: Option<String>,
     #[serde(default)]
     pub title: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -136,6 +138,7 @@ pub(crate) fn extract_embedded_texts(root: &Value) -> (ModuleTexts, ModuleTexts)
                 id: id.to_string(),
                 title: title_fr,
                 detail: detail_fr,
+                ..StepText::default()
             });
         }
         if !title_en.is_empty() || detail_en.is_some() {
@@ -143,6 +146,7 @@ pub(crate) fn extract_embedded_texts(root: &Value) -> (ModuleTexts, ModuleTexts)
                 id: id.to_string(),
                 title: title_en,
                 detail: detail_en,
+                ..StepText::default()
             });
         }
     }

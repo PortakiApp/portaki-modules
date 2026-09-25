@@ -10,7 +10,7 @@ Official Portaki access module — primary entry method, optional layers (buildi
 
 | Capability | Required | Purpose |
 |------------|----------|---------|
-| `core.storage` | Yes | Legacy KV `config` + `texts/{lang}`, read until the platform holds each key |
+| `core.storage` | Yes | Legacy KV `config` + `texts/{lang}`, imported once by the platform |
 | `access.smart_lock` | No (providers) | Declared by future lock modules (Nuki, Igloohome, Yale…) |
 
 ## Config model
@@ -23,15 +23,16 @@ host form (`updateConfig` never reaches the module) and blocks publication while
 primary_method (required) + the fields of each method (keybox_*, door_code*, smart_lock_*, in_person_*, building_staff_*, host_greets_*)
 building_access_enabled, building_access_gate_code, building_access_intercom
 parking_enabled, parking_map_url, parking_code
-address, arrival_lat, arrival_lng, arrival_video_url, reveal_policy
-steps [{ kind }]                       # shared skeleton, index = step
-method_instructions_{fr,en}, building_note_{fr,en}, parking_info_{fr,en}, global_note_{fr,en}
-steps_{fr,en} [{ title, detail }]      # copy of the step at the same index
+address, arrival_lat, arrival_lng (numbers), arrival_video_url, reveal_policy
+steps [{ id, kind, title, detail }]
+method_instructions, building_note, parking_info, global_note
 ```
 
 Codes (`keybox_code`, `door_code`, `smart_lock_manual_code`, `building_access_gate_code`,
-`parking_code`) are secrets: never sent back to the form, blank keeps them. The host edits the
-copy of its dashboard language; guests read guest locale → property locale → `fr` → `en`.
+`parking_code`) are secrets: never sent back to the form, blank keeps them. Every text a guest
+reads (the notes, the steps, `keybox_location`, `in_person_meeting_place`…) is an `I18nText`: the
+host edits the one of its dashboard language, the platform keeps the others; guests read their
+language, else `fr`, `en`, any. The steps keep their stored order and send their `id`.
 Guest surfaces, emails and `publishReadiness` (code required for keybox / door code / smart
 lock without provider) read the nested `ModuleConfig` built from it.
 
@@ -92,10 +93,10 @@ Future lock modules (`nuki`, `igloohome`, `yale`, …) must:
 ### Legacy migration
 
 Before the platform held it, the module kept a nested `config` blob (or the older flat one:
-`gate_code`, `keybox_code`, `steps_json`…) and its copy in `texts/{lang}`. The platform imports
-only the declared keys it finds there; `HostConfig::read` reads every key the platform does not
-hold yet from the KV (through `migrate_legacy`, `texts/fr` / `texts/en` or the copy the blob
-embeds). A key the platform holds, even empty, wins.
+`gate_code`, `keybox_code`, `steps_json`…) and its copy in `texts/{lang}`.
+`#[portaki_sdk::config(legacy = legacy)]` maps all of it onto the declared keys (through
+`migrate_legacy`, `texts/fr` / `texts/en` or the copy the blob embeds): the platform imports that
+once (`legacyConfig`), and `HostConfig::load` reads it until then.
 
 ## Surfaces
 

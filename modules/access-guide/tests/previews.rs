@@ -20,14 +20,15 @@ fn sample_config() -> serde_json::Value {
         "parking_map_url": "https://maps.example.com/parking",
         "address": "12 rue des Oliviers, 06400 Cannes",
         "reveal_policy": "always",
-        "steps": [{ "kind": "parking" }, { "kind": "door" }],
-        "method_instructions_fr": "Composez le code, tirez le volet vers le bas : les clés sont sur le crochet.",
-        "parking_info_fr": "Place n° 8 au sous-sol, badge sur le trousseau.",
-        "global_note_fr": "Merci de refermer la boîte à clés après usage.",
-        "steps_fr": [
-            { "title": "Garez-vous au sous-sol", "detail": "Rampe à gauche de l'immeuble, place n° 8." },
-            { "title": "Entrez dans l'immeuble", "detail": "Digicode au portail, puis ascenseur jusqu'au 2e étage." }
-        ]
+        "steps": [
+            { "id": "parking", "kind": "parking", "title": { "fr": "Garez-vous au sous-sol" },
+              "detail": { "fr": "Rampe à gauche de l'immeuble, place n° 8." } },
+            { "id": "door", "kind": "door", "title": { "fr": "Entrez dans l'immeuble" },
+              "detail": { "fr": "Digicode au portail, puis ascenseur jusqu'au 2e étage." } }
+        ],
+        "method_instructions": { "fr": "Composez le code, tirez le volet vers le bas : les clés sont sur le crochet." },
+        "parking_info": { "fr": "Place n° 8 au sous-sol, badge sur le trousseau." },
+        "global_note": { "fr": "Merci de refermer la boîte à clés après usage." }
     })
 }
 

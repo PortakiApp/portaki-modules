@@ -256,6 +256,7 @@ mod tests {
     use crate::config::{HostConfig, RevealPolicy};
     use chrono::TimeZone;
     use portaki_sdk::context::StayContext;
+    use portaki_sdk::contracts::i18n::I18nText;
     use portaki_sdk::host::with_host;
     use portaki_test_utils::MockContext;
     use uuid::Uuid;
@@ -263,7 +264,7 @@ mod tests {
     fn keybox_config(policy: RevealPolicy) -> HostConfig {
         HostConfig {
             primary_method: "keybox".into(),
-            keybox_location: "Sous le pot".into(),
+            keybox_location: I18nText::new("Sous le pot", ""),
             keybox_code: "4821".into(),
             building_access_enabled: true,
             building_access_gate_code: "A17B".into(),

@@ -1,15 +1,16 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 //!
 //! [`HostConfig`] is the flat shape the host form sends; the guest surfaces, emails and the
-//! readiness check read the nested [`ModuleConfig`] built from it. Before the platform held it,
-//! the module kept a nested blob in KV `config` and its copy per language in `texts/{lang}`:
-//! [`HostConfig::read`] still reads them for every key the platform does not hold yet.
+//! readiness check read the nested [`ModuleConfig`] built from it, in one language. Before the
+//! platform held it, the module kept a nested blob in KV `config` and its copy per language in
+//! `texts/{lang}`: [`legacy`] maps both onto the declared keys.
 
+use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
-use crate::texts::{extract_embedded_texts, lang_code, load_texts, ModuleTexts, StepText};
+use crate::texts::{extract_embedded_texts, load_texts, ModuleTexts, StepText};
 
 // ── Public schema ────────────────────────────────────────────────────────────
 
@@ -249,16 +250,8 @@ pub struct ArrivalGuide {
 impl ArrivalGuide {
     pub fn is_empty(&self) -> bool {
         self.address.trim().is_empty()
-            && self.parse_steps().is_empty()
+            && self.steps.is_empty()
             && self.arrival_video_url.trim().is_empty()
-    }
-
-    pub fn parse_steps(&self) -> Vec<AccessStep> {
-        self.steps
-            .iter()
-            .filter(|s| !s.id.trim().is_empty())
-            .cloned()
-            .collect()
     }
 }
 
@@ -322,27 +315,6 @@ impl ModuleConfig {
             && self.primary_method == PrimaryMethod::Other
     }
 
-    pub fn parse_steps(&self) -> Vec<AccessStep> {
-        self.arrival.parse_steps()
-    }
-
-    /// Merge shared step skeletons with per-lang titles/details (by `id`).
-    pub fn resolve_steps(&self, texts: &ModuleTexts) -> Vec<ResolvedStep> {
-        self.parse_steps()
-            .into_iter()
-            .map(|step| {
-                let text = texts.step_by_id(&step.id);
-                ResolvedStep {
-                    id: step.id,
-                    kind: step.kind,
-                    title: text.map(|t| t.title.clone()).unwrap_or_default(),
-                    detail: text.and_then(|t| t.detail.clone()),
-                }
-            })
-            .filter(|s| !s.id.trim().is_empty())
-            .collect()
-    }
-
     /// Align `primary_method` with the tagged `method` variant.
     pub fn sync_primary_method(&mut self) {
         self.primary_method = self.method.primary_method();
@@ -392,53 +364,40 @@ impl ModuleConfig {
     }
 }
 
-/// Step with shared skeleton + resolved title/detail for one locale.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ResolvedStep {
-    pub id: String,
-    pub kind: Option<String>,
-    pub title: String,
-    pub detail: Option<String>,
-}
-
 impl ModuleConfig {
-    /// The config of this install — see [`HostConfig::read`].
+    /// The config of this install, its text in the language of `ctx.locale`.
     pub fn read(ctx: &Context) -> Result<Self> {
-        Ok(HostConfig::read(ctx)?.to_model())
+        Ok(HostConfig::load(ctx)?.to_model(&ctx.locale))
     }
 }
 
 // ── Host settings (declared) ─────────────────────────────────────────────────
 
-/// One arrival step as the host form sends it (`steps.N.kind`). The step list blanks a removed
-/// row (`kind: ""`); a step imported from the pre-redesign KV may carry no kind at all.
+/// One arrival step. The form sends `kind`, `title` and `detail` (and `id`); the platform keeps
+/// the languages the host did not write.
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]
 pub struct StepRow {
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub kind: Option<String>,
+    pub title: I18nText,
+    pub detail: I18nText,
 }
 
 impl StepRow {
-    fn is_removed(&self) -> bool {
-        self.kind
-            .as_deref()
-            .is_some_and(|kind| kind.trim().is_empty())
+    /// Nothing for the guest to read: a slot the host left, or removed (the step list blanks it).
+    pub fn is_blank(&self) -> bool {
+        self.title.is_blank() && self.detail.is_blank()
     }
-}
-
-/// The copy of the step at the same index in `steps`, in one language (`steps_fr.N.title`).
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(default)]
-pub struct StepTextRow {
-    pub title: String,
-    pub detail: String,
 }
 
 /// The host form, key for key: the platform takes `updateConfig` itself and refuses any other
 /// key. Only the fields of the chosen method are shown, so the others keep their last value.
-/// Free text is per language (`_fr` / `_en`, the two languages of the dashboard): a save in
-/// English must not overwrite the French copy.
-#[portaki_sdk::config]
+/// What the guest reads is an [`I18nText`]: a save writes the host's language only.
+#[portaki_sdk::config(legacy = legacy)]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct HostConfig {
     #[field(
@@ -457,7 +416,7 @@ pub struct HostConfig {
     )]
     pub primary_method: String,
     #[field(label = "host.keybox.location")]
-    pub keybox_location: String,
+    pub keybox_location: I18nText,
     #[field(secret, label = "host.keybox.code")]
     pub keybox_code: String,
     #[field(
@@ -474,13 +433,13 @@ pub struct HostConfig {
     #[field(secret, label = "host.smartLock.manualCode")]
     pub smart_lock_manual_code: String,
     #[field(label = "host.inPerson.meetingPlace")]
-    pub in_person_meeting_place: String,
+    pub in_person_meeting_place: I18nText,
     #[field(label = "host.inPerson.lat")]
-    pub in_person_meeting_lat: String,
+    pub in_person_meeting_lat: Option<f64>,
     #[field(label = "host.inPerson.lng")]
-    pub in_person_meeting_lng: String,
+    pub in_person_meeting_lng: Option<f64>,
     #[field(label = "host.inPerson.timeHint")]
-    pub in_person_time_hint: String,
+    pub in_person_time_hint: I18nText,
     #[field(label = "host.inPerson.contact")]
     pub in_person_contact: String,
     #[field(
@@ -490,21 +449,21 @@ pub struct HostConfig {
     )]
     pub building_staff_kind: String,
     #[field(label = "host.buildingStaff.deskLocation")]
-    pub building_staff_desk_location: String,
+    pub building_staff_desk_location: I18nText,
     #[field(label = "host.buildingStaff.hours")]
-    pub building_staff_hours: String,
+    pub building_staff_hours: I18nText,
     #[field(label = "host.buildingStaff.contact")]
     pub building_staff_contact: String,
-    #[field(kind = "textarea", label = "host.hostGreets.contactNote")]
-    pub host_greets_contact_note: String,
+    #[field(label = "host.hostGreets.contactNote")]
+    pub host_greets_contact_note: I18nText,
     #[field(label = "host.hostGreets.etaHint")]
-    pub host_greets_eta_hint: String,
+    pub host_greets_eta_hint: I18nText,
     #[field(label = "host.building.enabled")]
     pub building_access_enabled: bool,
     #[field(secret, label = "host.building.gateCode")]
     pub building_access_gate_code: String,
     #[field(label = "host.building.intercom")]
-    pub building_access_intercom: String,
+    pub building_access_intercom: I18nText,
     #[field(label = "host.parking.enabled")]
     pub parking_enabled: bool,
     #[field(label = "host.parking.mapUrl")]
@@ -514,9 +473,9 @@ pub struct HostConfig {
     #[field(label = "host.address.label")]
     pub address: String,
     #[field(label = "host.inPerson.lat")]
-    pub arrival_lat: String,
+    pub arrival_lat: Option<f64>,
     #[field(label = "host.inPerson.lng")]
-    pub arrival_lng: String,
+    pub arrival_lng: Option<f64>,
     #[field(label = "host.video.label")]
     pub arrival_video_url: String,
     #[field(
@@ -525,168 +484,19 @@ pub struct HostConfig {
         label = "config.revealPolicy"
     )]
     pub reveal_policy: String,
-    #[field(structured, label = "host.steps.label")]
+    #[field(label = "host.steps.label")]
     pub steps: Vec<StepRow>,
-    #[field(kind = "textarea", label = "config.methodInstructionsFr")]
-    pub method_instructions_fr: String,
-    #[field(kind = "textarea", label = "config.methodInstructionsEn")]
-    pub method_instructions_en: String,
-    #[field(kind = "textarea", label = "config.buildingNoteFr")]
-    pub building_note_fr: String,
-    #[field(kind = "textarea", label = "config.buildingNoteEn")]
-    pub building_note_en: String,
-    #[field(kind = "textarea", label = "config.parkingInfoFr")]
-    pub parking_info_fr: String,
-    #[field(kind = "textarea", label = "config.parkingInfoEn")]
-    pub parking_info_en: String,
-    #[field(kind = "textarea", label = "config.globalNoteFr")]
-    pub global_note_fr: String,
-    #[field(kind = "textarea", label = "config.globalNoteEn")]
-    pub global_note_en: String,
-    #[field(structured, label = "config.stepsFr")]
-    pub steps_fr: Vec<StepTextRow>,
-    #[field(structured, label = "config.stepsEn")]
-    pub steps_en: Vec<StepTextRow>,
-}
-
-/// The language of the host form: the dashboard speaks French or English.
-pub fn host_lang(locale: &str) -> &'static str {
-    if lang_code(locale) == "en" {
-        "en"
-    } else {
-        "fr"
-    }
+    #[field(label = "config.methodInstructions")]
+    pub method_instructions: I18nText,
+    #[field(label = "config.buildingNote")]
+    pub building_note: I18nText,
+    #[field(label = "config.parkingInfo")]
+    pub parking_info: I18nText,
+    #[field(label = "config.globalNote")]
+    pub global_note: I18nText,
 }
 
 impl HostConfig {
-    /// The config of this install. The platform imports only the keys it knows from the old KV
-    /// blob, which nested most of them (`method`, `arrival`…) and kept the copy apart, in
-    /// `texts/{lang}`. So every key the platform does not hold yet is still read from the KV —
-    /// all of them before the platform holds the config. A key it holds, even empty, wins.
-    pub fn read(ctx: &Context) -> Result<Self> {
-        let held = match &ctx.module_config {
-            None => return Self::from_legacy(),
-            Some(Value::Object(held)) => held.clone(),
-            Some(_) => Map::new(),
-        };
-        let mut merged = match serde_json::to_value(Self::from_legacy()?) {
-            Ok(Value::Object(legacy)) => legacy,
-            _ => Map::new(),
-        };
-        merged.extend(held.into_iter().filter(|(_, value)| !value.is_null()));
-        serde_json::from_value(Value::Object(merged)).map_err(|error| unreadable(error.to_string()))
-    }
-
-    /// The settings as the KV kept them: the `config` blob in any past shape (through
-    /// [`migrate_legacy`]) and `texts/fr` / `texts/en`, or the copy the blob still embeds.
-    fn from_legacy() -> Result<Self> {
-        let raw = portaki_sdk::config::legacy_config()?;
-        let (embedded_fr, embedded_en) = extract_embedded_texts(&raw);
-        let texts = |lang: &str, embedded: ModuleTexts| -> Result<ModuleTexts> {
-            let kept = load_texts(lang)?;
-            Ok(if kept.is_empty() { embedded } else { kept })
-        };
-        let fr = texts("fr", embedded_fr)?;
-        let en = texts("en", embedded_en)?;
-        let model = match raw {
-            Value::Null => None,
-            raw => Some(migrate_legacy(
-                serde_json::from_value(raw).map_err(|error| unreadable(error.to_string()))?,
-            )),
-        };
-        Ok(Self::from_model(model.as_ref(), &fr, &en))
-    }
-
-    fn from_model(model: Option<&ModuleConfig>, fr: &ModuleTexts, en: &ModuleTexts) -> Self {
-        let mut config = Self::default();
-        let steps = model.map(ModuleConfig::parse_steps).unwrap_or_default();
-        if let Some(model) = model {
-            config.primary_method = model.primary_method.as_wire().into();
-            match &model.method {
-                MethodFields::Keybox { location, code } => {
-                    config.keybox_location = location.clone();
-                    config.keybox_code = code.clone().unwrap_or_default();
-                }
-                MethodFields::DoorCode { target, code } => {
-                    config.door_code_target = door_target_wire(*target).into();
-                    config.door_code = code.clone();
-                }
-                MethodFields::SmartLock { manual_code } => {
-                    config.smart_lock_manual_code = manual_code.clone().unwrap_or_default();
-                }
-                MethodFields::InPerson {
-                    meeting_place,
-                    lat,
-                    lng,
-                    time_hint,
-                    contact,
-                } => {
-                    config.in_person_meeting_place = meeting_place.clone();
-                    config.in_person_meeting_lat = lat.map(|v| v.to_string()).unwrap_or_default();
-                    config.in_person_meeting_lng = lng.map(|v| v.to_string()).unwrap_or_default();
-                    config.in_person_time_hint = time_hint.clone().unwrap_or_default();
-                    config.in_person_contact = contact.clone().unwrap_or_default();
-                }
-                MethodFields::BuildingStaff {
-                    staff_kind,
-                    desk_location,
-                    hours,
-                    contact,
-                } => {
-                    config.building_staff_kind = staff_kind_wire(*staff_kind).into();
-                    config.building_staff_desk_location = desk_location.clone();
-                    config.building_staff_hours = hours.clone().unwrap_or_default();
-                    config.building_staff_contact = contact.clone().unwrap_or_default();
-                }
-                MethodFields::HostGreets {
-                    contact_note,
-                    eta_hint,
-                } => {
-                    config.host_greets_contact_note = contact_note.clone().unwrap_or_default();
-                    config.host_greets_eta_hint = eta_hint.clone().unwrap_or_default();
-                }
-                MethodFields::Other {} => {}
-            }
-            config.smart_lock_provider_module_id = model
-                .smart_lock_provider_module_id
-                .clone()
-                .unwrap_or_default();
-            if let Some(building) = &model.building_access {
-                config.building_access_gate_code = building.gate_code.clone().unwrap_or_default();
-                config.building_access_intercom = building.intercom.clone().unwrap_or_default();
-            }
-            if let Some(parking) = &model.parking {
-                config.parking_map_url = parking.map_url.clone();
-                config.parking_code = parking.code.clone().unwrap_or_default();
-            }
-            config.address = model.arrival.address.clone();
-            config.arrival_video_url = model.arrival.arrival_video_url.clone();
-            config.reveal_policy = model.reveal_policy.as_wire().into();
-        }
-        // A layer was on when it held something, its note included.
-        config.building_access_enabled = model.is_some_and(|m| m.building_access.is_some())
-            || [fr, en].iter().any(|t| !opt_empty(&t.building_note));
-        config.parking_enabled = model.is_some_and(|m| m.parking.is_some())
-            || [fr, en].iter().any(|t| !t.parking_info.trim().is_empty());
-        config.steps = steps
-            .iter()
-            .map(|step| StepRow {
-                kind: step.kind.clone(),
-            })
-            .collect();
-        config.steps_fr = step_text_rows(&steps, fr);
-        config.steps_en = step_text_rows(&steps, en);
-        config.method_instructions_fr = fr.method_instructions.clone().unwrap_or_default();
-        config.method_instructions_en = en.method_instructions.clone().unwrap_or_default();
-        config.building_note_fr = fr.building_note.clone().unwrap_or_default();
-        config.building_note_en = en.building_note.clone().unwrap_or_default();
-        config.parking_info_fr = fr.parking_info.clone();
-        config.parking_info_en = en.parking_info.clone();
-        config.global_note_fr = fr.global_note.clone();
-        config.global_note_en = en.global_note.clone();
-        config
-    }
-
     /// The chosen access method, if the host picked one.
     pub fn method(&self) -> Option<PrimaryMethod> {
         PrimaryMethod::ALL
@@ -700,12 +510,14 @@ impl HostConfig {
         serde_json::from_value(Value::String(self.reveal_policy.trim().into())).unwrap_or_default()
     }
 
-    /// The nested model the guest surfaces, emails and readiness check read.
-    pub fn to_model(&self) -> ModuleConfig {
+    /// The nested model the guest surfaces, emails and readiness check read, its text in
+    /// `locale`.
+    pub fn to_model(&self, locale: &str) -> ModuleConfig {
+        let text = |text: &I18nText| nonempty(text.get(locale));
         let primary_method = self.method().unwrap_or_default();
         let method = match primary_method {
             PrimaryMethod::Keybox => MethodFields::Keybox {
-                location: self.keybox_location.trim().to_string(),
+                location: text(&self.keybox_location).unwrap_or_default(),
                 code: nonempty(&self.keybox_code),
             },
             PrimaryMethod::DoorCode => MethodFields::DoorCode {
@@ -720,13 +532,12 @@ impl HostConfig {
                 manual_code: nonempty(&self.smart_lock_manual_code),
             },
             PrimaryMethod::InPerson => {
-                let (lat, lng) =
-                    coord_pair(&self.in_person_meeting_lat, &self.in_person_meeting_lng);
+                let point = coord_pair(self.in_person_meeting_lat, self.in_person_meeting_lng);
                 MethodFields::InPerson {
-                    meeting_place: self.in_person_meeting_place.trim().to_string(),
-                    lat,
-                    lng,
-                    time_hint: nonempty(&self.in_person_time_hint),
+                    meeting_place: text(&self.in_person_meeting_place).unwrap_or_default(),
+                    lat: point.map(|(lat, _)| lat),
+                    lng: point.map(|(_, lng)| lng),
+                    time_hint: text(&self.in_person_time_hint),
                     contact: nonempty(&self.in_person_contact),
                 }
             }
@@ -736,13 +547,13 @@ impl HostConfig {
                 } else {
                     StaffKind::Reception
                 },
-                desk_location: self.building_staff_desk_location.trim().to_string(),
-                hours: nonempty(&self.building_staff_hours),
+                desk_location: text(&self.building_staff_desk_location).unwrap_or_default(),
+                hours: text(&self.building_staff_hours),
                 contact: nonempty(&self.building_staff_contact),
             },
             PrimaryMethod::HostGreets => MethodFields::HostGreets {
-                contact_note: nonempty(&self.host_greets_contact_note),
-                eta_hint: nonempty(&self.host_greets_eta_hint),
+                contact_note: text(&self.host_greets_contact_note),
+                eta_hint: text(&self.host_greets_eta_hint),
             },
             PrimaryMethod::Other => MethodFields::Other {},
         };
@@ -751,7 +562,7 @@ impl HostConfig {
             method,
             building_access: self.building_access_enabled.then(|| BuildingAccess {
                 gate_code: nonempty(&self.building_access_gate_code),
-                intercom: nonempty(&self.building_access_intercom),
+                intercom: text(&self.building_access_intercom),
             }),
             parking: self.parking_enabled.then(|| ParkingLayer {
                 map_url: self.parking_map_url.trim().to_string(),
@@ -761,8 +572,8 @@ impl HostConfig {
                 address: self.address.trim().to_string(),
                 steps: self
                     .live_steps()
-                    .map(|(index, row)| AccessStep {
-                        id: step_id(index),
+                    .map(|row| AccessStep {
+                        id: row.id.clone(),
                         kind: row.kind.as_deref().and_then(nonempty),
                     })
                     .collect(),
@@ -775,11 +586,10 @@ impl HostConfig {
         }
     }
 
-    /// The copy in `lang` (`fr` or `en`), limited to what the method and the layers show.
-    pub fn texts(&self, lang: &str) -> ModuleTexts {
-        let en = lang == "en";
-        let pick = |fr: &str, other: &str| if en { other } else { fr }.trim().to_string();
-        let rows = if en { &self.steps_en } else { &self.steps_fr };
+    /// The copy in `locale` (else French, English, any), limited to what the method and the
+    /// layers show.
+    pub fn texts(&self, locale: &str) -> ModuleTexts {
+        let text = |text: &I18nText| text.get(locale).trim().to_string();
         let has_instructions = matches!(
             self.method().unwrap_or_default(),
             PrimaryMethod::Keybox
@@ -789,75 +599,34 @@ impl HostConfig {
         );
         ModuleTexts {
             method_instructions: has_instructions
-                .then(|| {
-                    nonempty(&pick(
-                        &self.method_instructions_fr,
-                        &self.method_instructions_en,
-                    ))
-                })
+                .then(|| nonempty(self.method_instructions.get(locale)))
                 .flatten(),
             building_note: self
                 .building_access_enabled
-                .then(|| nonempty(&pick(&self.building_note_fr, &self.building_note_en)))
+                .then(|| nonempty(self.building_note.get(locale)))
                 .flatten(),
             parking_info: if self.parking_enabled {
-                pick(&self.parking_info_fr, &self.parking_info_en)
+                text(&self.parking_info)
             } else {
                 String::new()
             },
-            global_note: pick(&self.global_note_fr, &self.global_note_en),
+            global_note: text(&self.global_note),
             steps: self
                 .live_steps()
-                .filter_map(|(index, _)| {
-                    let row = rows.get(index)?;
-                    Some(StepText {
-                        id: step_id(index),
-                        title: row.title.trim().to_string(),
-                        detail: nonempty(&row.detail),
-                    })
+                .map(|row| StepText {
+                    id: row.id.clone(),
+                    kind: row.kind.as_deref().and_then(nonempty),
+                    title: text(&row.title),
+                    detail: nonempty(row.detail.get(locale)),
                 })
-                .filter(|text| !text.is_empty())
                 .collect(),
         }
     }
 
-    /// Guest copy: guest language → property language → `fr` → `en`, the first one written.
-    pub fn guest_texts(&self, guest_locale: &str, property_locale: &str) -> ModuleTexts {
-        [lang_code(guest_locale), lang_code(property_locale)]
-            .into_iter()
-            .chain(["fr".to_string(), "en".to_string()])
-            .filter(|lang| lang == "fr" || lang == "en")
-            .map(|lang| self.texts(&lang))
-            .find(|texts| !texts.is_empty())
-            .unwrap_or_default()
+    /// The steps the guest reads, in the host's order.
+    pub fn live_steps(&self) -> impl Iterator<Item = &StepRow> {
+        self.steps.iter().filter(|row| !row.is_blank())
     }
-
-    /// The steps the host kept, with their index in `steps` (and in `steps_fr` / `steps_en`).
-    pub fn live_steps(&self) -> impl Iterator<Item = (usize, &StepRow)> {
-        self.steps
-            .iter()
-            .enumerate()
-            .filter(|(_, row)| !row.is_removed())
-    }
-}
-
-fn step_id(index: usize) -> String {
-    format!("step-{}", index + 1)
-}
-
-fn step_text_rows(steps: &[AccessStep], texts: &ModuleTexts) -> Vec<StepTextRow> {
-    steps
-        .iter()
-        .map(|step| {
-            texts
-                .step_by_id(&step.id)
-                .map(|text| StepTextRow {
-                    title: text.title.clone(),
-                    detail: text.detail.clone().unwrap_or_default(),
-                })
-                .unwrap_or_default()
-        })
-        .collect()
 }
 
 pub fn door_target_wire(target: DoorCodeTarget) -> &'static str {
@@ -875,19 +644,12 @@ pub fn staff_kind_wire(kind: StaffKind) -> &'static str {
     }
 }
 
-/// WGS-84 lat/lng from the form strings: both, in range, or none. `0, 0` is none too: the map
-/// picker used to send it for a meeting point nobody placed.
-pub(crate) fn coord_pair(lat: &str, lng: &str) -> (Option<f64>, Option<f64>) {
-    match (lat.trim().parse::<f64>(), lng.trim().parse::<f64>()) {
-        (Ok(lat), Ok(lng))
-            if (-90.0..=90.0).contains(&lat)
-                && (-180.0..=180.0).contains(&lng)
-                && (lat, lng) != (0.0, 0.0) =>
-        {
-            (Some(lat), Some(lng))
-        }
-        _ => (None, None),
-    }
+/// A WGS-84 point: both coordinates, in range, or none. `0, 0` is none too: the map picker used
+/// to send it for a meeting point nobody placed.
+pub(crate) fn coord_pair(lat: Option<f64>, lng: Option<f64>) -> Option<(f64, f64)> {
+    let (lat, lng) = (lat?, lng?);
+    ((-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&lng) && (lat, lng) != (0.0, 0.0))
+        .then_some((lat, lng))
 }
 
 fn nonempty(value: &str) -> Option<String> {
@@ -895,8 +657,201 @@ fn nonempty(value: &str) -> Option<String> {
     (!trimmed.is_empty()).then(|| trimmed.to_string())
 }
 
-fn unreadable(reason: String) -> PortakiError {
-    PortakiError::Storage(format!("config_unreadable: {reason}"))
+// ── Legacy KV (before the platform held the config) ──────────────────────────
+
+/// The old KV blob in any past shape ([`migrate_legacy`]) and its copy — kept in `texts/fr` and
+/// `texts/en` (written with the blob, never without it), or still embedded in the blob — mapped
+/// onto the declared keys. Runs in the module: for `legacyConfig`, and in `load` before the
+/// platform holds the config.
+fn legacy(old: Value) -> Value {
+    // ponytail: the mapping cannot return an error — an unreadable blob panics, so the platform
+    // retries the import and `load` fails, rather than importing an empty config over the codes.
+    let (embedded_fr, embedded_en) = extract_embedded_texts(&old);
+    let kept = |lang: &str, embedded: ModuleTexts| {
+        let kept = load_texts(lang).unwrap_or_else(|error| panic!("{error}"));
+        if kept.is_empty() {
+            embedded
+        } else {
+            kept
+        }
+    };
+    let (fr, en) = (kept("fr", embedded_fr), kept("en", embedded_en));
+    let raw: RawConfig =
+        serde_json::from_value(old).unwrap_or_else(|error| panic!("config_unreadable: {error}"));
+    legacy_keys(&migrate_legacy(raw), &fr, &en)
+}
+
+/// [`legacy`] once the KV is read. A text of the method (`keybox_location`…) had no language: it
+/// stays a plain string, which the platform files under the property's language.
+fn legacy_keys(model: &ModuleConfig, fr: &ModuleTexts, en: &ModuleTexts) -> Value {
+    let mut out = Map::new();
+    put(&mut out, "primary_method", model.primary_method.as_wire());
+    match &model.method {
+        MethodFields::Keybox { location, code } => {
+            put(&mut out, "keybox_location", location.as_str());
+            put(&mut out, "keybox_code", code.clone());
+        }
+        MethodFields::DoorCode { target, code } => {
+            put(&mut out, "door_code_target", door_target_wire(*target));
+            put(&mut out, "door_code", code.as_str());
+        }
+        MethodFields::SmartLock { manual_code } => {
+            put(&mut out, "smart_lock_manual_code", manual_code.clone());
+        }
+        MethodFields::InPerson {
+            meeting_place,
+            lat,
+            lng,
+            time_hint,
+            contact,
+        } => {
+            put(&mut out, "in_person_meeting_place", meeting_place.as_str());
+            put(&mut out, "in_person_meeting_lat", *lat);
+            put(&mut out, "in_person_meeting_lng", *lng);
+            put(&mut out, "in_person_time_hint", time_hint.clone());
+            put(&mut out, "in_person_contact", contact.clone());
+        }
+        MethodFields::BuildingStaff {
+            staff_kind,
+            desk_location,
+            hours,
+            contact,
+        } => {
+            put(
+                &mut out,
+                "building_staff_kind",
+                staff_kind_wire(*staff_kind),
+            );
+            put(
+                &mut out,
+                "building_staff_desk_location",
+                desk_location.as_str(),
+            );
+            put(&mut out, "building_staff_hours", hours.clone());
+            put(&mut out, "building_staff_contact", contact.clone());
+        }
+        MethodFields::HostGreets {
+            contact_note,
+            eta_hint,
+        } => {
+            put(&mut out, "host_greets_contact_note", contact_note.clone());
+            put(&mut out, "host_greets_eta_hint", eta_hint.clone());
+        }
+        MethodFields::Other {} => {}
+    }
+    put(
+        &mut out,
+        "smart_lock_provider_module_id",
+        model.smart_lock_provider_module_id.clone(),
+    );
+    if let Some(building) = &model.building_access {
+        put(
+            &mut out,
+            "building_access_gate_code",
+            building.gate_code.clone(),
+        );
+        put(
+            &mut out,
+            "building_access_intercom",
+            building.intercom.clone(),
+        );
+    }
+    if let Some(parking) = &model.parking {
+        put(&mut out, "parking_map_url", parking.map_url.as_str());
+        put(&mut out, "parking_code", parking.code.clone());
+    }
+    put(&mut out, "address", model.arrival.address.as_str());
+    put(
+        &mut out,
+        "arrival_video_url",
+        model.arrival.arrival_video_url.as_str(),
+    );
+    put(&mut out, "reveal_policy", model.reveal_policy.as_wire());
+    // A layer was on when it held something, its note included.
+    put(
+        &mut out,
+        "building_access_enabled",
+        model.building_access.is_some() || [fr, en].iter().any(|t| !opt_empty(&t.building_note)),
+    );
+    put(
+        &mut out,
+        "parking_enabled",
+        model.parking.is_some() || [fr, en].iter().any(|t| !t.parking_info.trim().is_empty()),
+    );
+    let steps: Vec<Value> = model
+        .arrival
+        .steps
+        .iter()
+        .map(|step| {
+            let (fr, en) = (fr.step_by_id(&step.id), en.step_by_id(&step.id));
+            let detail =
+                |text: Option<&StepText>| text.and_then(|t| t.detail.clone()).unwrap_or_default();
+            let mut row = Map::new();
+            put(&mut row, "id", step.id.as_str());
+            put(&mut row, "kind", step.kind.clone());
+            put(
+                &mut row,
+                "title",
+                both(
+                    fr.map_or("", |t| t.title.as_str()),
+                    en.map_or("", |t| t.title.as_str()),
+                ),
+            );
+            put(&mut row, "detail", both(&detail(fr), &detail(en)));
+            Value::Object(row)
+        })
+        .collect();
+    if !steps.is_empty() {
+        out.insert("steps".into(), Value::Array(steps));
+    }
+    let optional = |text: &Option<String>| text.clone().unwrap_or_default();
+    put(
+        &mut out,
+        "method_instructions",
+        both(
+            &optional(&fr.method_instructions),
+            &optional(&en.method_instructions),
+        ),
+    );
+    put(
+        &mut out,
+        "building_note",
+        both(&optional(&fr.building_note), &optional(&en.building_note)),
+    );
+    put(
+        &mut out,
+        "parking_info",
+        both(&fr.parking_info, &en.parking_info),
+    );
+    put(
+        &mut out,
+        "global_note",
+        both(&fr.global_note, &en.global_note),
+    );
+    Value::Object(out)
+}
+
+/// `{fr, en}` without the blank languages; `null` when both are.
+fn both(fr: &str, en: &str) -> Value {
+    let texts: Map<String, Value> = [("fr", fr), ("en", en)]
+        .into_iter()
+        .filter(|(_, text)| !text.trim().is_empty())
+        .map(|(lang, text)| (lang.to_string(), Value::from(text.trim())))
+        .collect();
+    if texts.is_empty() {
+        Value::Null
+    } else {
+        Value::Object(texts)
+    }
+}
+
+/// Sets `key` unless `value` is `null` or a blank string.
+fn put(out: &mut Map<String, Value>, key: &str, value: impl Into<Value>) {
+    let value = value.into();
+    let blank = value.is_null() || value.as_str().is_some_and(|s| s.trim().is_empty());
+    if !blank {
+        out.insert(key.to_string(), value);
+    }
 }
 
 // ── Legacy KV shapes ─────────────────────────────────────────────────────────
@@ -1220,7 +1175,6 @@ pub fn has_content(config: &ModuleConfig, texts: &ModuleTexts) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::texts::StepText;
     use serde_json::json;
 
     #[test]
@@ -1248,9 +1202,9 @@ mod tests {
         );
         assert!(cfg.parking.is_some());
         assert_eq!(cfg.arrival.address, "Ch. des Douaniers");
-        assert_eq!(cfg.parse_steps().len(), 1);
-        assert_eq!(cfg.parse_steps()[0].id, "1");
-        assert_eq!(cfg.parse_steps()[0].kind.as_deref(), Some("parking"));
+        assert_eq!(cfg.arrival.steps.len(), 1);
+        assert_eq!(cfg.arrival.steps[0].id, "1");
+        assert_eq!(cfg.arrival.steps[0].kind.as_deref(), Some("parking"));
         assert_eq!(cfg.reveal_policy, RevealPolicy::DayBefore16h);
     }
 
@@ -1284,7 +1238,7 @@ mod tests {
         };
         let cfg = migrate_legacy(raw);
         assert_eq!(cfg.primary_method, PrimaryMethod::Other);
-        assert_eq!(cfg.parse_steps().len(), 1);
+        assert_eq!(cfg.arrival.steps.len(), 1);
         assert!(cfg.parking.is_some());
     }
 
@@ -1408,84 +1362,305 @@ mod tests {
         assert_eq!(loaded.reveal_policy, RevealPolicy::HoursBefore24);
     }
 
+    /// [`legacy`] as the module runs it: `texts/{lang}` in the KV beside the blob.
+    fn mapped(old: Value, texts: &[(&str, Value)]) -> Value {
+        let mut mock = portaki_test_utils::MockContext::host();
+        for (lang, copy) in texts {
+            mock = mock.with_kv(format!("texts/{lang}"), serde_json::to_vec(copy).unwrap());
+        }
+        mock.run(|_| legacy(old))
+    }
+
+    fn flat_blob() -> Value {
+        json!({
+            "address": "Ch. des Douaniers",
+            "gate_code": "A17B",
+            "keybox_code": "4821",
+            "parking_info": "Résident · rue Aubernon",
+            "parking_map_url": "https://maps.example.com",
+            "arrival_video_url": "https://video.example.com",
+            "global_note": "Sonnette à gauche",
+            "steps_json": r#"[{"id":"1","kind":"parking","title":{"fr":"Se garer","en":"Park"},"detail":{"fr":"Place résident","en":"Resident spot"}}]"#
+        })
+    }
+
+    /// Pre-redesign: flat codes, steps in a JSON string with their copy, plain notes (French).
     #[test]
-    fn resolve_steps_merges_texts_by_id() {
-        let cfg = ModuleConfig {
-            arrival: ArrivalGuide {
-                steps: vec![AccessStep {
-                    id: "1".into(),
-                    kind: Some("parking".into()),
+    #[serial_test::serial]
+    fn legacy_flat_blob_with_steps_json() {
+        let keys = mapped(flat_blob(), &[]);
+        assert_eq!(
+            keys,
+            json!({
+                "primary_method": "keybox",
+                "keybox_code": "4821",
+                "building_access_enabled": true,
+                "building_access_gate_code": "A17B",
+                "parking_enabled": true,
+                "parking_map_url": "https://maps.example.com",
+                "address": "Ch. des Douaniers",
+                "arrival_video_url": "https://video.example.com",
+                "reveal_policy": "day_before_16h",
+                "steps": [{
+                    "id": "1",
+                    "kind": "parking",
+                    "title": { "fr": "Se garer", "en": "Park" },
+                    "detail": { "fr": "Place résident", "en": "Resident spot" }
                 }],
-                ..ArrivalGuide::default()
-            },
-            ..ModuleConfig::default()
+                "parking_info": { "fr": "Résident · rue Aubernon" },
+                "global_note": { "fr": "Sonnette à gauche" }
+            })
+        );
+        let config: HostConfig = serde_json::from_value(keys).unwrap();
+        assert_eq!(config.texts("en").steps[0].title, "Park");
+        assert_eq!(config.texts("fr").parking_info, "Résident · rue Aubernon");
+    }
+
+    /// Pre-redesign too: a `steps` array (a kind, no copy), or a gate code alone.
+    #[test]
+    #[serial_test::serial]
+    fn legacy_flat_steps_array_and_gate_only() {
+        assert_eq!(
+            mapped(
+                json!({ "steps": [{ "id": "1", "kind": "door" }], "parking_info": "Sous-sol" }),
+                &[]
+            ),
+            json!({
+                "primary_method": "other",
+                "reveal_policy": "day_before_16h",
+                "building_access_enabled": false,
+                "parking_enabled": true,
+                "steps": [{ "id": "1", "kind": "door" }],
+                "parking_info": { "fr": "Sous-sol" }
+            })
+        );
+        let gate = mapped(json!({ "gate_code": "9999" }), &[]);
+        assert_eq!(gate["primary_method"], "door_code");
+        assert_eq!(gate["door_code"], "9999");
+        assert_eq!(gate["door_code_target"], "building");
+        assert_eq!(gate["building_access_enabled"], false);
+    }
+
+    /// The redesigned blob: the method nested, the copy in `texts/{lang}` — matched to the steps
+    /// by id — and the pre-rename policy spellings.
+    #[test]
+    #[serial_test::serial]
+    fn legacy_nested_blob_and_its_texts() {
+        let blob = |policy: &str| {
+            json!({
+                "primary_method": "keybox",
+                "method": { "kind": "keybox", "location": "Sous le pot", "code": "4821" },
+                "arrival": { "address": "Rue X", "steps": [
+                    { "id": "a", "kind": "door" }, { "id": "b", "kind": "elevator" }
+                ] },
+                "reveal_policy": policy
+            })
         };
-        let texts = ModuleTexts {
-            steps: vec![StepText {
-                id: "1".into(),
-                title: "Se garer".into(),
-                detail: Some("Place résident".into()),
-            }],
-            ..ModuleTexts::default()
+        let texts = |note: &str| {
+            json!({
+                "global_note": note,
+                "method_instructions": format!("{note} ·"),
+                "steps": [{ "id": "b", "title": format!("{note} b") }, { "id": "a", "title": note }]
+            })
         };
-        let resolved = cfg.resolve_steps(&texts);
-        assert_eq!(resolved[0].title, "Se garer");
-        assert_eq!(resolved[0].detail.as_deref(), Some("Place résident"));
-        assert_eq!(resolved[0].kind.as_deref(), Some("parking"));
+        let keys = mapped(
+            blob("hours_before24"),
+            &[("fr", texts("Note FR")), ("en", texts("Note EN"))],
+        );
+        assert_eq!(keys["keybox_location"], "Sous le pot");
+        assert_eq!(keys["keybox_code"], "4821");
+        assert_eq!(keys["address"], "Rue X");
+        assert_eq!(keys["reveal_policy"], "hours_before_24");
+        assert_eq!(
+            keys["global_note"],
+            json!({ "fr": "Note FR", "en": "Note EN" })
+        );
+        assert_eq!(
+            keys["method_instructions"],
+            json!({ "fr": "Note FR ·", "en": "Note EN ·" })
+        );
+        assert_eq!(
+            keys["steps"],
+            json!([
+                { "id": "a", "kind": "door", "title": { "fr": "Note FR", "en": "Note EN" } },
+                { "id": "b", "kind": "elevator", "title": { "fr": "Note FR b", "en": "Note EN b" } }
+            ])
+        );
+        assert_eq!(
+            mapped(blob("day_before16h"), &[])["reveal_policy"],
+            "day_before_16h"
+        );
+    }
+
+    /// A blob that still embeds its copy (`{fr, en}` or a plain string); `texts/{lang}` wins where
+    /// it has something.
+    #[test]
+    #[serial_test::serial]
+    fn legacy_texts_embedded_in_the_blob() {
+        let blob = json!({
+            "primary_method": "other",
+            "method": { "kind": "other", "instructions": { "fr": "Sonner", "en": "Ring" } },
+            "building_access": { "gate_code": "1234", "note": { "fr": "Portail", "en": "Gate" } },
+            "arrival": {
+                "global_note": { "fr": "Note FR", "en": "Note EN" },
+                "steps": [{ "id": "1", "kind": "parking",
+                            "title": { "fr": "Se garer", "en": "Park" }, "detail": "Place 8" }]
+            }
+        });
+        let keys = mapped(blob.clone(), &[]);
+        assert_eq!(
+            keys["method_instructions"],
+            json!({ "fr": "Sonner", "en": "Ring" })
+        );
+        assert_eq!(
+            keys["building_note"],
+            json!({ "fr": "Portail", "en": "Gate" })
+        );
+        assert_eq!(keys["building_access_gate_code"], "1234");
+        assert_eq!(keys["building_access_enabled"], true);
+        assert_eq!(
+            keys["steps"],
+            json!([{ "id": "1", "kind": "parking",
+                     "title": { "fr": "Se garer", "en": "Park" }, "detail": { "fr": "Place 8" } }])
+        );
+        let kept = mapped(blob, &[("fr", json!({ "global_note": "Gardée" }))]);
+        assert_eq!(
+            kept["global_note"],
+            json!({ "fr": "Gardée", "en": "Note EN" })
+        );
+    }
+
+    /// The methods without a code: their text had no language (a plain string, filed by the
+    /// platform under the property's), numbers stay numbers.
+    #[test]
+    #[serial_test::serial]
+    fn legacy_methods_without_codes() {
+        let in_person = mapped(
+            json!({ "method": { "kind": "in_person", "meeting_place": "Gare", "lat": 43.7,
+                                "lng": 7.26, "time_hint": "10 min", "contact": "+33 6" } }),
+            &[],
+        );
+        assert_eq!(in_person["primary_method"], "in_person");
+        assert_eq!(in_person["in_person_meeting_place"], "Gare");
+        assert_eq!(in_person["in_person_meeting_lat"], 43.7);
+        assert_eq!(in_person["in_person_meeting_lng"], 7.26);
+        assert_eq!(in_person["in_person_time_hint"], "10 min");
+        assert_eq!(in_person["in_person_contact"], "+33 6");
+        let staff = mapped(
+            json!({ "method": { "kind": "building_staff", "staff_kind": "caretaker",
+                                "desk_location": "Loge", "hours": "9-18" } }),
+            &[],
+        );
+        assert_eq!(staff["building_staff_kind"], "caretaker");
+        assert_eq!(staff["building_staff_desk_location"], "Loge");
+        assert_eq!(staff["building_staff_hours"], "9-18");
+        let greets = mapped(
+            json!({ "method": { "kind": "host_greets", "contact_note": "Appelez", "eta_hint": "5 min" } }),
+            &[],
+        );
+        assert_eq!(greets["host_greets_contact_note"], "Appelez");
+        assert_eq!(greets["host_greets_eta_hint"], "5 min");
+        let lock = mapped(
+            json!({ "primary_method": "smart_lock", "method": { "kind": "smart_lock", "manual_code": "77" },
+                    "smart_lock_provider_module_id": "nuki", "parking": { "map_url": "", "code": "P1" },
+                    "building_access": { "intercom": "Apt 3" } }),
+            &[],
+        );
+        assert_eq!(lock["smart_lock_manual_code"], "77");
+        assert_eq!(lock["smart_lock_provider_module_id"], "nuki");
+        assert_eq!(lock["parking_code"], "P1");
+        assert_eq!(lock["building_access_intercom"], "Apt 3");
+        let config: HostConfig = serde_json::from_value(in_person).unwrap();
+        assert_eq!(config.in_person_meeting_place.get("en"), "Gare");
+        assert_eq!(config.in_person_meeting_lat, Some(43.7));
+    }
+
+    /// Nothing to import rather than an empty config over the codes: the import is retried.
+    #[test]
+    #[serial_test::serial]
+    #[should_panic(expected = "config_unreadable")]
+    fn an_unreadable_legacy_blob_is_not_imported_empty() {
+        mapped(json!({ "keybox_code": "1", "reveal_policy": 3 }), &[]);
     }
 
     #[test]
-    fn a_removed_step_drops_with_its_copy_and_the_rest_keeps_theirs() {
+    #[serial_test::serial]
+    fn the_kv_is_read_through_legacy_until_the_platform_holds_the_config() {
+        portaki_test_utils::MockContext::guest()
+            .with_kv("config", serde_json::to_vec(&flat_blob()).unwrap())
+            .run(|ctx| {
+                let config = HostConfig::load(&ctx).unwrap();
+                assert_eq!(config.keybox_code, "4821");
+                assert_eq!(config.texts("en-US").steps[0].title, "Park");
+            });
+        portaki_test_utils::MockContext::guest()
+            .with_kv("config", serde_json::to_vec(&flat_blob()).unwrap())
+            .with_config(&json!({}))
+            .run(|ctx| assert_eq!(HostConfig::load(&ctx).unwrap(), HostConfig::default()));
+    }
+
+    #[test]
+    fn a_blank_step_drops_and_the_rest_keep_their_place_and_id() {
+        let step = |id: &str, title: &str| StepRow {
+            id: id.into(),
+            kind: Some("parking".into()),
+            title: I18nText::new(title, ""),
+            ..StepRow::default()
+        };
         let config = HostConfig {
             steps: vec![
-                StepRow {
-                    kind: Some("parking".into()),
-                },
+                step("a", "Se garer"),
                 StepRow {
                     kind: Some(String::new()),
+                    ..StepRow::default()
                 },
-                StepRow { kind: None },
+                step("", "Monter"),
             ],
-            steps_fr: ["Se garer", "Retirée", "Monter"]
-                .map(|title| StepTextRow {
-                    title: title.into(),
-                    detail: String::new(),
-                })
-                .to_vec(),
             ..HostConfig::default()
         };
-        let model = config.to_model();
-        let texts = config.texts("fr");
-        let resolved = model.resolve_steps(&texts);
-        let titles: Vec<&str> = resolved.iter().map(|s| s.title.as_str()).collect();
+        let steps = config.texts("fr").steps;
+        let titles: Vec<&str> = steps.iter().map(|s| s.title.as_str()).collect();
         assert_eq!(titles, ["Se garer", "Monter"]);
-        assert_eq!(resolved[1].kind, None);
+        assert_eq!(steps[0].id, "a");
+        assert_eq!(steps[0].kind.as_deref(), Some("parking"));
+        assert_eq!(config.to_model("fr").arrival.steps.len(), 2);
     }
 
     #[test]
-    fn copy_follows_the_language_then_falls_back() {
+    fn copy_follows_the_guest_language_then_falls_back() {
         let config = HostConfig {
             primary_method: "keybox".into(),
-            global_note_fr: "Sonnez".into(),
-            global_note_en: "Ring".into(),
-            method_instructions_en: "Turn left".into(),
-            parking_info_fr: "Sous-sol".into(),
+            global_note: I18nText::new("Sonnez", "Ring"),
+            method_instructions: I18nText::new("", "Turn left"),
+            parking_info: I18nText::new("Sous-sol", ""),
             ..HostConfig::default()
         };
-        assert_eq!(config.guest_texts("en-GB", "fr-FR").global_note, "Ring");
-        assert_eq!(config.guest_texts("de-DE", "fr-FR").global_note, "Sonnez");
-        assert_eq!(config.guest_texts("de-DE", "en-US").global_note, "Ring");
+        assert_eq!(config.texts("en-GB").global_note, "Ring");
+        assert_eq!(config.texts("de-DE").global_note, "Sonnez");
         assert_eq!(
-            config.texts("en").method_instructions.as_deref(),
+            config.texts("fr").method_instructions.as_deref(),
             Some("Turn left")
         );
         // A layer switched off hides its copy, as clearing it did before.
         assert_eq!(config.texts("fr").parking_info, "");
         let in_person = HostConfig {
             primary_method: "in_person".into(),
+            in_person_meeting_place: I18nText::new("Gare", "Station"),
+            in_person_meeting_lat: Some(43.7),
+            in_person_meeting_lng: Some(7.26),
             ..config
         };
         assert_eq!(in_person.texts("en").method_instructions, None);
+        assert_eq!(
+            in_person.to_model("en-US").method,
+            MethodFields::InPerson {
+                meeting_place: "Station".into(),
+                lat: Some(43.7),
+                lng: Some(7.26),
+                time_hint: None,
+                contact: None,
+            }
+        );
     }
 
     #[test]
@@ -1495,7 +1670,7 @@ mod tests {
             door_code: " 12 ".into(),
             ..HostConfig::default()
         }
-        .to_model();
+        .to_model("fr");
         assert_eq!(
             model.method,
             MethodFields::DoorCode {
@@ -1506,15 +1681,15 @@ mod tests {
         assert_eq!(model.reveal_policy, RevealPolicy::DayBefore16h);
         assert_eq!(HostConfig::default().method(), None);
         assert_eq!(
-            HostConfig::default().to_model().primary_method,
+            HostConfig::default().to_model("fr").primary_method,
             PrimaryMethod::Other
         );
     }
 
     #[test]
     fn an_unplaced_meeting_point_is_no_point() {
-        assert_eq!(coord_pair("0", "0"), (None, None));
-        assert_eq!(coord_pair("", ""), (None, None));
-        assert_eq!(coord_pair("43.7", "7.26"), (Some(43.7), Some(7.26)));
+        assert_eq!(coord_pair(Some(0.0), Some(0.0)), None);
+        assert_eq!(coord_pair(None, Some(7.26)), None);
+        assert_eq!(coord_pair(Some(43.7), Some(7.26)), Some((43.7, 7.26)));
     }
 }

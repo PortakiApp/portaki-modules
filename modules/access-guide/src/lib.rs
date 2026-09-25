@@ -12,7 +12,7 @@ mod texts;
 
 pub use config::{
     ArrivalGuide, BuildingAccess, HostConfig, MethodFields, ModuleConfig, ParkingLayer,
-    PrimaryMethod, RevealPolicy, StepRow, StepTextRow,
+    PrimaryMethod, RevealPolicy, StepRow,
 };
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use guest::{render_explore_detail, render_home_card, render_upcoming_card};
