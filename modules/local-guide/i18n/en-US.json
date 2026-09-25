@@ -21,7 +21,6 @@
   "host.disclaimer.label": "Disclaimer",
   "host.disclaimer.placeholder": "Non-partner suggestions — hours may vary",
   "host.main.help": "Leave a spot empty to hide it. Texts are saved for the active edit language only.",
-  "host.save": "Save",
   "host.section.activities": "Activities & tickets",
   "host.section.activities.help": "GetYourGuide partner links. Portaki may earn a commission on bookings; you earn nothing. The section stays off until you turn it on below.",
   "host.activities.enabled": "Show the section in the booklet",
@@ -71,7 +70,6 @@
   "host.tiqets.radius.20": "20 km",
   "host.tiqets.radius.40": "40 km",
   "host.tiqets.minRating": "Minimum rating",
-  "host.tiqets.minRating.any": "Any rating",
   "host.tiqets.minRating.3": "3 stars and up",
   "host.tiqets.minRating.4": "4 stars and up",
   "host.tiqets.status.off": "Section off.",
@@ -87,5 +85,7 @@
   "guest.tiqets.disclosure": "Partner links: a commission may be earned on bookings, at no extra cost to you.",
   "module.catalogName": "Local picks",
   "module.catalogDescription": "Useful places and links, grouped by theme.",
-  "catalog.host.main": "Local picks"
+  "catalog.host.main": "Local picks",
+  "host.tiqets.minRating.0": "Any rating",
+  "config.spots": "Places"
 }

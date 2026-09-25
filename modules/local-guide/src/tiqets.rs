@@ -160,13 +160,6 @@ pub fn resolve(ctx: &Context, config: &TiqetsConfig) -> Option<TiqetsView> {
     }
 }
 
-/// Oublie les résultats gardés : un réglage changé par l'hôte doit se voir tout de suite.
-pub fn invalidate_cache() {
-    for lang in TIQETS_LANGS {
-        let _ = host::kv::delete(&cache_key(lang));
-    }
-}
-
 fn view(products: Vec<TiqetsProduct>) -> Option<TiqetsView> {
     if products.is_empty() {
         None

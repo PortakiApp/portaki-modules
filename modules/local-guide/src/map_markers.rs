@@ -8,7 +8,7 @@
 
 use portaki_sdk::prelude::*;
 
-use crate::config::load_config;
+use crate::config::ModuleConfig;
 
 /// Plafond de marqueurs rendus par ce module.
 ///
@@ -25,7 +25,7 @@ pub struct MapMarkersResponse {
 
 #[portaki_sdk::query(name = "mapMarkers")]
 pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
-    let config = load_config().unwrap_or_default();
+    let config = ModuleConfig::read(&ctx)?;
     let markers = config
         .parse_spots()
         .into_iter()
