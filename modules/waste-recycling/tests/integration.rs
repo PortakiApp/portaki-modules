@@ -11,6 +11,10 @@ use waste_recycling::{render_explore_detail, render_home_card, render_host_main}
 
 #[path = "../../../support/config_form.rs"]
 mod config_form;
+#[path = "../../../support/config_save.rs"]
+mod config_save;
+
+const EMISSIONS: &str = concat!(env!("OUT_DIR"), "/portaki-emissions");
 
 fn sample_config() -> Value {
     json!({
@@ -18,13 +22,13 @@ fn sample_config() -> Value {
             {
                 "id": "yellow",
                 "title": {"fr": "Bac jaune", "en": "Yellow bin"},
-                "items": [{"fr": "Emballages, plastique", "en": "Packaging, plastic"}],
+                "items": {"fr": "Emballages, plastique", "en": "Packaging, plastic"},
                 "color": "#f4c020"
             },
             {
                 "id": "green",
                 "title": {"fr": "Bac vert", "en": "Green bin"},
-                "items": [{"fr": "Verre", "en": "Glass"}],
+                "items": {"fr": "Verre", "en": "Glass"},
                 "color": "#3a8a4d"
             }
         ],
@@ -97,7 +101,7 @@ fn the_host_form_sends_the_declared_keys() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&json!({
             "bins": [
-                { "id": "yellow", "title": { "fr": "Bac jaune" }, "items": [{ "fr": "Plastique" }, { "fr": "Carton" }], "color": "#f4c020" },
+                { "id": "yellow", "title": { "fr": "Bac jaune" }, "items": { "fr": "Plastique\nCarton" }, "color": "#f4c020" },
                 { "title": "Bac vert", "items": "Verre", "color": "green" }
             ],
             "collection_schedule": "Mardi"
@@ -110,7 +114,7 @@ fn the_host_form_sends_the_declared_keys() {
                 &[],
             );
             let json = serde_json::to_string(&surface).expect("surface json");
-            assert!(json.contains("Plastique, Carton"), "{json}");
+            assert!(json.contains(r"Plastique\nCarton"), "{json}");
             assert!(json.contains("Bac vert"));
             assert!(json.contains(r#""value":"yellow""#), "{json}");
         });
@@ -132,5 +136,45 @@ fn an_inactive_module_shows_the_sdk_state() {
         .run(|ctx| {
             let surface = portaki_sdk::guest_shell::render(ctx, "home.card", render_home_card);
             assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
+        });
+}
+
+/// A host writing in English: the French title, items and schedule stay, and so do the id and
+/// the color; rows keep their place.
+#[test]
+#[serial]
+fn a_save_in_english_keeps_the_french() {
+    assert_eq!(
+        config_save::localized_paths(EMISSIONS),
+        ["bins.items", "bins.title", "collection_schedule"]
+    );
+    let stored = json!({
+        "bins": [
+            { "id": "yellow", "title": { "fr": "Bac jaune", "en": "Yellow bin" },
+              "items": { "fr": "Plastique\nCarton", "en": "Plastic\nCardboard" }, "color": "yellow" },
+            { "title": "", "items": "" },
+            { "id": "glass", "title": { "fr": "Verre" }, "items": { "fr": "Bouteilles" }, "color": "green" }
+        ],
+        "collection_schedule": { "fr": "Mardi", "en": "Tuesday" }
+    });
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&stored)
+        .run(|mut ctx| {
+            ctx.locale = "en-US".into();
+            let surface = render_host_main(ctx).expect("host main");
+            let sent = config_save::form_args(&surface);
+            // Stored order, the blank row where it was; ids on the filled rows only.
+            assert_eq!(sent["bins"][0]["id"], "yellow");
+            assert_eq!(sent["bins"][0]["items"], "Plastic\nCardboard");
+            assert!(sent["bins"][1].get("id").is_none());
+            assert_eq!(sent["bins"][2]["id"], "glass");
+            assert_eq!(sent["bins"].as_array().unwrap().len(), 6);
+
+            let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
+            assert_eq!(saved["bins"][0], stored["bins"][0]);
+            assert_eq!(saved["bins"][2]["title"]["fr"], "Verre");
+            assert_eq!(saved["bins"][2]["items"]["fr"], "Bouteilles");
+            assert_eq!(saved["collection_schedule"], stored["collection_schedule"]);
         });
 }
