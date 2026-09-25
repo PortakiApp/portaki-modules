@@ -1,9 +1,5 @@
 //! Portaki events module — local happenings near the property.
 
-// `PropertyContext::lat`/`lng` are deprecated since SDK 8.2; reading `coordinates` instead
-// changes what a non-geocoded property shows, which the guest-shell change does.
-#![allow(deprecated)]
-
 mod commands;
 mod config;
 mod connectors;
