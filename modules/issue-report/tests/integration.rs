@@ -323,7 +323,9 @@ fn a_guest_photo_reaches_the_host_screen_and_the_stats() {
             let stats = serde_json::to_value(render_host_stats(ctx))
                 .expect("stats json")
                 .to_string();
-            assert!(stats.contains(r#""label":"i18n:stats.withPhoto","type":"Stat","value":"1""#));
+            assert!(stats.contains(
+                r#""icon":"image","label":"i18n:stats.withPhoto","type":"Stat","value":"1""#
+            ));
         });
 }
 

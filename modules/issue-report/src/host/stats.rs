@@ -110,6 +110,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
         open.into(),
         Stat::new()
             .label("i18n:stats.withPhoto")
+            .icon(IconName::Image)
             .value(
                 reports
                     .iter()
