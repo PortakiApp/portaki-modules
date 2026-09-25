@@ -49,8 +49,11 @@ fn previews_match_the_rendered_surfaces() {
         .with_extra_capability_ids(&[capability::external::OPEN_WEATHER_POOL.as_str()])
         .with_connector_response("open-weather", "current", sample_current())
         .with_connector_response("open-weather", "forecast", sample_forecast());
-    let forecast = context.clone().run(render_explore_forecast);
-    let upcoming = context.run(render_upcoming_card);
+    let forecast = context
+        .clone()
+        .run(render_explore_forecast)
+        .expect("forecast");
+    let upcoming = context.run(render_upcoming_card).expect("upcoming");
     previews::check(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),

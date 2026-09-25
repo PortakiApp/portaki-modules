@@ -48,14 +48,7 @@
   "host.main.help": "Les prévisions invitées utilisent les coordonnées du bien.",
   "host.save": "Enregistrer",
   "home.card.title": "Météo",
-  "home.card.unavailable": "Météo indisponible sur ce bien",
-  "home.card.error.title": "Météo temporairement indisponible",
-  "home.card.error.description": "Les conditions n'ont pas pu être chargées. Réessayez dans un instant.",
-  "module.status.incomplete.title": "Configuration incomplète",
-  "module.status.incomplete.description": "Finalisez la configuration météo dans le tableau de bord hôte",
-  "module.status.incomplete.hint": "Champs requis manquants — ouvrez Modules → Météo",
-  "module.status.inactive.title": "Module météo désactivé",
-  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
+  "home.card.unavailable": "Météo indisponible pour ce logement",
   "explore.forecast.title": "Prévisions",
   "explore.forecast.hint": "Prévisions sur 5 jours",
   "sheet.assistant.tip": "Une question sur ce point ? Demandez à l'assistant ou contactez votre hôte.",
@@ -77,5 +70,9 @@
   "host.units.label.fahrenheit": "°F",
   "host.refresh.label.1h": "Toutes les heures",
   "host.refresh.label.3h": "Toutes les 3 heures",
-  "host.refresh.label.6h": "Toutes les 6 heures"
+  "host.refresh.label.6h": "Toutes les 6 heures",
+  "guest.error.title": "Météo temporairement indisponible",
+  "guest.error.description": "Les conditions n'ont pas pu être chargées. Réessayez dans un instant.",
+  "guest.unavailable.description": "Les prévisions ne sont pas proposées pour ce logement.",
+  "guest.noLocation.description": "La météo s'affichera dès que l'adresse du logement sera précisée."
 }

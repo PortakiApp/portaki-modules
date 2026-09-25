@@ -43,6 +43,12 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
             });
         }
     }
+    // Not geocoded: no sentence rather than someone else's weather.
+    if ctx.property.coordinates.is_none() {
+        return Ok(EmailContextResponse {
+            weather_summary: None,
+        });
+    }
 
     let current = get_current(
         ctx.clone(),
