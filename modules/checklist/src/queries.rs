@@ -43,7 +43,7 @@ pub fn guest_items() -> Result<Vec<ChecklistItem>> {
     Ok(items)
 }
 
-#[portaki_sdk::query(name = "listItems")]
+#[portaki_sdk::query(name = "listItems", example(label = "Tâches du livret"))]
 pub fn list_items(_ctx: Context) -> Result<Vec<ChecklistItemDto>> {
     Ok(guest_items()?
         .into_iter()
@@ -51,7 +51,7 @@ pub fn list_items(_ctx: Context) -> Result<Vec<ChecklistItemDto>> {
         .collect())
 }
 
-#[portaki_sdk::query(name = "listCompletions")]
+#[portaki_sdk::query(name = "listCompletions", example(label = "Tâches cochées du séjour"))]
 pub fn list_completions(ctx: Context) -> Result<Vec<Uuid>> {
     let stay_id = ctx
         .guest
@@ -66,7 +66,7 @@ pub fn list_completions(ctx: Context) -> Result<Vec<Uuid>> {
 
 /// Blocks publication until a list has an item: an empty list shows nothing to the guest and
 /// gives the host no task.
-#[portaki_sdk::query(name = "publishReadiness")]
+#[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
 pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
     let ok = !storage::list_items()?.is_empty();
     Ok(PublishReadiness {

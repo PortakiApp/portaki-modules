@@ -24,7 +24,17 @@ use crate::lists;
 use crate::tasks::{parse_task_id, plan_tasks, task_id};
 use crate::{i18n, storage};
 
-#[portaki_sdk::query(name = "statsSummary")]
+#[portaki_sdk::query(
+    name = "statsSummary",
+    example(
+        label = "Checklists sur 30 jours",
+        input = r#"{"propertyId":"5f0c2b1e-8a4d-4c6f-9e21-3b7d9a6c4e10","period":30,"key":"checklist"}"#
+    ),
+    example(
+        label = "Ménage sur 90 jours",
+        input = r#"{"propertyId":"5f0c2b1e-8a4d-4c6f-9e21-3b7d9a6c4e10","period":90,"key":"cleaning"}"#
+    )
+)]
 pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummary> {
     let since = time::now()? - Duration::days(i64::from(args.period));
     match args.key.as_str() {
