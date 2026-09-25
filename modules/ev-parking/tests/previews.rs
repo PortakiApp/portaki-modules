@@ -23,7 +23,8 @@ fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
     let detail = previews::guest(root)
         .with_config(&sample_config())
-        .run(render_explore_detail);
+        .run(render_explore_detail)
+        .expect("detail");
     previews::check(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
