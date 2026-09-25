@@ -3,7 +3,7 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::load_config;
+use crate::config::ModuleConfig;
 use crate::entities::WeatherUnits;
 use crate::queries::{get_current, get_forecast, GetCurrentArgs, GetForecastArgs};
 use crate::weather::{has_open_weather, resolve_city_label, WeatherCurrent, WeatherForecast};
@@ -33,7 +33,7 @@ pub fn load_guest_weather(ctx: &GuestContext, surface_id: SurfaceId) -> Result<G
         ))));
     }
 
-    let config = load_config()?;
+    let config = ModuleConfig::load(ctx)?;
     let current = get_current(
         ctx.clone(),
         GetCurrentArgs {

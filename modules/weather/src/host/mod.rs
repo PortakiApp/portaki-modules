@@ -4,7 +4,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{Card, Field, Form, Page, Select, Text};
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::load_config;
+use crate::config::ModuleConfig;
 use crate::entities::WeatherUnits;
 
 /// Host configuration surface (units + refresh cadence).
@@ -15,9 +15,8 @@ use crate::entities::WeatherUnits;
     label_key = "catalog.host.main",
     icon = IconName::CloudSun
 )]
-pub fn render_host_main(ctx: HostContext) -> Surface {
-    let _ = ctx;
-    let config = load_config().unwrap_or_default();
+pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
+    let config = ModuleConfig::load(&ctx)?;
 
     let units_value = match config.units {
         WeatherUnits::Celsius => "celsius",
@@ -37,8 +36,8 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                         Select::new()
                             .name("units")
                             .options(vec![
-                                ChoiceOption::new("celsius", "°C"),
-                                ChoiceOption::new("fahrenheit", "°F"),
+                                ChoiceOption::new("celsius", "i18n:host.units.label.celsius"),
+                                ChoiceOption::new("fahrenheit", "i18n:host.units.label.fahrenheit"),
                             ])
                             .value(units_value),
                     )
@@ -50,9 +49,9 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                         Select::new()
                             .name("refresh_interval")
                             .options(vec![
-                                ChoiceOption::new("1h", "i18n:host.hourly"),
-                                ChoiceOption::new("3h", "i18n:host.3hours"),
-                                ChoiceOption::new("6h", "i18n:host.6hours"),
+                                ChoiceOption::new("1h", "i18n:host.refresh.label.1h"),
+                                ChoiceOption::new("3h", "i18n:host.refresh.label.3h"),
+                                ChoiceOption::new("6h", "i18n:host.refresh.label.6h"),
                             ])
                             .value(config.refresh_interval),
                     )
@@ -66,6 +65,8 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     ];
 
     // No Page title / Save — the modules sheet owns chrome + footer Save.
-    Surface::new(Page::new().child(Form::new().children(form_children)))
-        .with_id(crate::ids::HOST_MAIN)
+    Ok(
+        Surface::new(Page::new().child(Form::new().children(form_children)))
+            .with_id(crate::ids::HOST_MAIN),
+    )
 }

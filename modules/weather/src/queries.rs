@@ -6,7 +6,7 @@ use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::cache;
-use crate::config::load_config;
+use crate::config::ModuleConfig;
 use crate::entities::WeatherUnits;
 use crate::weather::{
     fetch_current_from_api, fetch_forecast_from_api, has_open_weather, map_current, map_forecast,
@@ -48,7 +48,7 @@ fn resolve_coords(ctx: &Context, lat: Option<f64>, lng: Option<f64>) -> Result<Q
             "external.open-weather".to_string(),
         ));
     }
-    let config = load_config()?;
+    let config = ModuleConfig::load(ctx)?;
     Ok(QueryCoords {
         lat: lat.unwrap_or(ctx.property.lat),
         lng: lng.unwrap_or(ctx.property.lng),

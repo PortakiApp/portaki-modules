@@ -13,7 +13,8 @@ mod ids;
 mod queries;
 mod weather;
 
-pub use commands::{refresh_forecast, update_config};
+pub use commands::refresh_forecast;
+pub use config::ModuleConfig;
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use entities::{WeatherCache, WeatherUnits};
 pub use events::{on_booking_confirmed, BookingConfirmedEvent};

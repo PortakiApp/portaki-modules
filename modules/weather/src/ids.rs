@@ -14,7 +14,6 @@ define_operation_names! {
     GET_CURRENT = "getCurrent",
     GET_FORECAST = "getForecast",
     REFRESH_FORECAST = "refreshForecast",
-    UPDATE_CONFIG = "updateConfig",
 }
 
 // Must stay aligned with `portaki_sdk::contracts::platform::BOOKING_CONFIRMED`.
