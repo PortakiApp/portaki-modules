@@ -9,7 +9,7 @@ use crate::i18n::text;
 /// A guest needs a keypad code, or remote unlock: the Nuki Web key (a connector the host adds
 /// in Integrations) plus the lock ID. A rule across the config and a grant, which the declared
 /// config cannot say.
-#[portaki_sdk::query(name = "publishReadiness")]
+#[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
 pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
     let config = ModuleConfig::load(&ctx)?;
     let remote = crate::commands::has_nuki_byok(&ctx) && !config.smartlock_id_trimmed().is_empty();
