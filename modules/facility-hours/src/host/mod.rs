@@ -61,8 +61,11 @@ fn facility_card(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext
         .map(|f| f.title.host_value(ctx))
         .unwrap_or_default();
     let hours = facility.and_then(|f| f.hours.as_deref()).unwrap_or("");
-    // A filled row sends its id, so a save merges into it (and keeps its lines, its note, its
-    // other languages). A blank slot has nothing to keep — and an id would make it count as filled.
+    let lines = facility
+        .map(|f| f.lines.host_value(ctx))
+        .unwrap_or_default();
+    let note = facility.map(|f| f.note.host_value(ctx)).unwrap_or_default();
+    // A filled row sends its id, so a save merges into it (and keeps its other languages). A blank slot has nothing to keep — and an id would make it count as filled.
     let id = facility
         .filter(|f| !f.is_blank())
         .map(|f| sdui::row_id("facilities", index, Some(&f.id)));
@@ -90,6 +93,26 @@ fn facility_card(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext
                                 .name(format!("facilities.{index}.hours"))
                                 .value(hours)
                                 .placeholder("i18n:host.facility.hours.placeholder"),
+                        )
+                        .into(),
+                    // One schedule per line.
+                    Field::new()
+                        .name(format!("facilities.{index}.lines"))
+                        .label("i18n:host.facility.lines")
+                        .child(
+                            TextArea::new()
+                                .name(format!("facilities.{index}.lines"))
+                                .value(lines)
+                                .placeholder("i18n:host.facility.lines.placeholder"),
+                        )
+                        .into(),
+                    Field::new()
+                        .name(format!("facilities.{index}.note"))
+                        .label("i18n:host.facility.note")
+                        .child(
+                            TextInput::new()
+                                .name(format!("facilities.{index}.note"))
+                                .value(note),
                         )
                         .into(),
                 ])

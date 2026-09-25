@@ -27,5 +27,8 @@
   "host.section.note": "General note",
   "module.catalogDescription": "Pool, spa, gym: hours per facility.",
   "catalog.host.main": "Hours",
-  "config.facilities": "Facilities"
+  "config.facilities": "Facilities",
+  "host.facility.lines": "Detailed hours (one per line)",
+  "host.facility.lines.placeholder": "Every day, June to September\nClosed on Mondays",
+  "host.facility.note": "Note"
 }
