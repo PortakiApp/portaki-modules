@@ -4,14 +4,15 @@ use portaki_sdk::capability;
 use serial_test::serial;
 
 use portaki_test_utils::{MockContext, SurfaceAssertions};
-use serde_json::json;
+use serde_json::{json, Value};
 
-use waste_recycling::{
-    get_config, render_explore_detail, render_home_card, update_config, BinInput, UpdateConfigArgs,
-};
+use waste_recycling::{render_explore_detail, render_home_card, render_host_main};
 
-fn sample_config_bytes() -> Vec<u8> {
-    serde_json::to_vec(&json!({
+#[path = "../../../support/config_form.rs"]
+mod config_form;
+
+fn sample_config() -> Value {
+    json!({
         "bins": [
             {
                 "id": "yellow",
@@ -27,8 +28,7 @@ fn sample_config_bytes() -> Vec<u8> {
             }
         ],
         "collection_schedule": "Mardi & vendredi matin"
-    }))
-    .expect("config json")
+    })
 }
 
 #[test]
@@ -47,7 +47,7 @@ fn home_card_renders_empty_without_config() {
 fn home_card_renders_bins_with_config() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
+        .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_home_card(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
@@ -66,7 +66,7 @@ fn home_card_renders_bins_with_config() {
 fn bins_render_as_named_swatches() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
+        .with_config(&sample_config())
         .run(|ctx| {
             let json = serde_json::to_string(&render_home_card(ctx)).expect("surface json");
             assert!(json.contains(r#""swatch":"yellow""#), "{json}");
@@ -75,40 +75,12 @@ fn bins_render_as_named_swatches() {
         });
 }
 
-/// A new pick is stored as its name, not a hex.
-#[test]
-#[serial]
-fn update_config_stores_the_swatch_name() {
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    bins: vec![BinInput {
-                        title: "Bac jaune".into(),
-                        title_fr: String::new(),
-                        title_en: String::new(),
-                        items: String::new(),
-                        items_fr: String::new(),
-                        color: "yellow".into(),
-                    }],
-                    bins_json: String::new(),
-                    collection_schedule: String::new(),
-                },
-            )
-            .expect("updateConfig");
-            let config = get_config(ctx).expect("getConfig");
-            assert_eq!(config.bins[0].color.as_deref(), Some("yellow"));
-        });
-}
-
 #[test]
 #[serial]
 fn detail_renders_enriched_bins() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
+        .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("Stack"));
@@ -118,29 +90,26 @@ fn detail_renders_enriched_bins() {
 
 #[test]
 #[serial]
-fn update_config_persists_and_get_config_reads() {
+fn the_host_form_sends_the_declared_keys() {
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({
+            "bins": [
+                { "id": "yellow", "title": { "fr": "Bac jaune" }, "items": [{ "fr": "Plastique" }, { "fr": "Carton" }], "color": "#f4c020" },
+                { "title": "Bac vert", "items": "Verre", "color": "green" }
+            ],
+            "collection_schedule": "Mardi"
+        }))
         .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    bins: vec![BinInput {
-                        title: "A".into(),
-                        title_fr: String::new(),
-                        title_en: String::new(),
-                        items: String::new(),
-                        items_fr: String::new(),
-                        color: String::new(),
-                    }],
-                    bins_json: String::new(),
-                    collection_schedule: "Lundi".into(),
-                },
-            )
-            .expect("updateConfig");
-            let config = get_config(ctx).expect("getConfig");
-            assert_eq!(config.bins.len(), 1);
-            assert_eq!(config.bins[0].title.fr, "A");
-            assert_eq!(config.collection_schedule.get("fr"), "Lundi");
+            let surface = render_host_main(ctx).expect("host main");
+            config_form::assert_form_matches_config(
+                concat!(env!("OUT_DIR"), "/portaki-emissions"),
+                &surface,
+                &[],
+            );
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("Plastique, Carton"), "{json}");
+            assert!(json.contains("Bac vert"));
+            assert!(json.contains(r#""value":"yellow""#), "{json}");
         });
 }

@@ -23,7 +23,6 @@
   "host.schedule.label": "Jours de collecte",
   "host.schedule.placeholder": "Mardi & vendredi matin",
   "host.main.help": "Laissez un bac vide pour ne pas l’afficher. Les jours de collecte sont du texte libre.",
-  "host.save": "Enregistrer",
   "home.card.title": "Tri & déchets",
   "guest.collection.title": "Collecte",
   "guest.empty.title": "Tri non configuré",
@@ -39,5 +38,6 @@
   "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
   "host.section.schedule": "Collecte",
   "module.catalogDescription": "Bac par bac : quoi jeter où, et jours de collecte.",
-  "catalog.host.main": "Tri"
+  "catalog.host.main": "Tri",
+  "config.bins": "Bacs"
 }

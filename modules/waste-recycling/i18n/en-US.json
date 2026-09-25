@@ -23,7 +23,6 @@
   "host.schedule.label": "Collection days",
   "host.schedule.placeholder": "Tuesday & Friday morning",
   "host.main.help": "Leave a bin empty to hide it. Collection days are free-form text.",
-  "host.save": "Save",
   "home.card.title": "Recycling & waste",
   "guest.collection.title": "Collection",
   "guest.empty.title": "Recycling not configured",
@@ -39,5 +38,6 @@
   "module.status.inactive.description": "This module is not active on this property",
   "host.section.schedule": "Collection",
   "module.catalogDescription": "Bin by bin: what goes where, and collection days.",
-  "catalog.host.main": "Recycling"
+  "catalog.host.main": "Recycling",
+  "config.bins": "Bins"
 }
