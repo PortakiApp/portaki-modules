@@ -78,7 +78,10 @@ fn previews_match_the_rendered_surfaces() {
         seed(ctx.clone());
         let mut item_ctx = ctx.clone();
         item_ctx.input = json!({ "deviceId": "plaques" });
-        (render_explore_detail(ctx), render_explore_item(item_ctx))
+        (
+            render_explore_detail(ctx).expect("render"),
+            render_explore_item(item_ctx).expect("render"),
+        )
     });
     previews::check(
         root,
