@@ -56,7 +56,13 @@ fn period_key(days: i64) -> i64 {
 }
 
 /// Tile: items declared over the period, those awaiting the guest as attention.
-#[portaki_sdk::query(name = "statsSummary")]
+#[portaki_sdk::query(
+    name = "statsSummary",
+    example(
+        label = "Objets sur 90 jours",
+        input = r#"{"propertyId":"8c0e6f2a-1d3b-4a7e-b5c9-0f4e2d1a6b38","period":90,"key":"lost-stats"}"#
+    )
+)]
 pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummary> {
     let days = period_key(i64::from(args.period));
     let now = time::now()?;

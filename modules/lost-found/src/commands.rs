@@ -23,7 +23,18 @@ pub struct SubmitArgs {
     pub details: Option<String>,
 }
 
-#[portaki_sdk::command(name = "submit", guest)]
+#[portaki_sdk::command(
+    name = "submit",
+    guest,
+    example(
+        label = "Chargeur oublié",
+        input = r#"{"kind":"lost","itemDescription":"Chargeur de téléphone blanc","details":"Sans doute branché près du lit de la chambre 2."}"#
+    ),
+    example(
+        label = "Objet trouvé sur place",
+        input = r#"{"kind":"found","itemDescription":"Boucle d'oreille dorée","contactHint":"Posée sur la table de l'entrée"}"#
+    )
+)]
 pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     let stay_id = require_guest_stay_id(&ctx)?;
     let kind = kind::parse_kind(&args.kind)?;
@@ -71,7 +82,13 @@ pub struct SubmitFoundArgs {
     pub status: Option<String>,
 }
 
-#[portaki_sdk::command(name = "submitFound")]
+#[portaki_sdk::command(
+    name = "submitFound",
+    example(
+        label = "Lunettes retrouvées",
+        input = r#"{"stayId":"5d1a7e3c-2b9f-4c8d-a6e0-7f3b1c9d2e54","description":"Lunettes de soleil retrouvées sur la terrasse"}"#
+    )
+)]
 pub fn submit_found(ctx: Context, args: SubmitFoundArgs) -> Result<()> {
     if ctx.guest.is_some() {
         return Err(PortakiError::Host("host_only".to_string()));
@@ -117,7 +134,10 @@ pub fn submit_found(ctx: Context, args: SubmitFoundArgs) -> Result<()> {
     skip_when = SkipWhen::GuestEmailMissing,
     skip_when = SkipWhen::StayCancelled
 )]
-#[portaki_sdk::command(name = "sendCheckoutFollowUp")]
+#[portaki_sdk::command(
+    name = "sendCheckoutFollowUp",
+    example(label = "Relance deux jours après le départ")
+)]
 pub fn send_checkout_follow_up(ctx: Context, _args: EmptyArgs) -> Result<()> {
     email_send::send_checkout_follow_up(&ctx)
 }
