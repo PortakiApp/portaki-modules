@@ -53,7 +53,17 @@ impl EmailContextResponse {
 }
 
 /// Reveal-aware snippets for Portaki guest email templates.
-#[portaki_sdk::query(name = "emailContext")]
+#[portaki_sdk::query(
+    name = "emailContext",
+    example(
+        label = "E-mail du jour d'arrivée",
+        input = r#"{"templateKey":"arrival-day","checkinTimeFormatted":"16:00"}"#
+    ),
+    example(
+        label = "E-mail de nouveau code",
+        input = r#"{"templateKey":"new-code"}"#
+    )
+)]
 pub fn email_context(ctx: Context, args: EmailContextArgs) -> Result<EmailContextResponse> {
     build_email_context(&ctx, &args)
 }
