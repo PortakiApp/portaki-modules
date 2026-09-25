@@ -43,8 +43,9 @@ pub fn load_guest_pre_arrival(ctx: &GuestContext) -> Result<GuestLoad> {
         return Ok(GuestLoad::Locked { response });
     }
 
+    // Nothing submitted and check-in passed: `submit` would refuse, so nothing to offer.
     let config = ModuleConfig::load(ctx)?;
-    if !is_form_available(config.show_when, now, checkin_at) {
+    if !editable || !is_form_available(config.show_when, now, checkin_at) {
         return Ok(GuestLoad::NotYet);
     }
 
