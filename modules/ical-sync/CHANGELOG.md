@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.9.0](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v0.8.1...ical-sync-v0.9.0) (2026-09-25)
+
+
+### Features
+
+* **catalog:** mark maturity and marketplace order ([9b9a3d0](https://github.com/PortakiApp/portaki-modules/commit/9b9a3d069d65151d266187094cf888ce0008dfc9))
+* describe operation arguments with #[params] ([86f0fca](https://github.com/PortakiApp/portaki-modules/commit/86f0fcacc7ad3d17f370e819d0d6c045f51b95f4))
+* **ical-sync:** add catalogue listing ([220dc47](https://github.com/PortakiApp/portaki-modules/commit/220dc47feb34916abc0b555b1ad49b0b9a223eb3))
+* **ical-sync:** add host calendar import module ([b2324cd](https://github.com/PortakiApp/portaki-modules/commit/b2324cd5328a90052c3a54a6496bbd8875184467))
+* **ical-sync:** add host sync emails via Wasm ([6fdcb49](https://github.com/PortakiApp/portaki-modules/commit/6fdcb499e0a344d9631daca1f908fe4957194d3e))
+* **ical-sync:** chart sync history and stays ([4984cbd](https://github.com/PortakiApp/portaki-modules/commit/4984cbd0648377a49d353f4d6b9b9bf92a2f94c7))
+* **ical-sync:** count arrivals over stats period ([766ca0e](https://github.com/PortakiApp/portaki-modules/commit/766ca0e872fc25c8cd85df8ce8c3d67095f91af6))
+* **ical-sync:** declare calendars config ([427d536](https://github.com/PortakiApp/portaki-modules/commit/427d536fe8c9de0dac18d5eefd40784bea611ec2))
+* **ical-sync:** declare per-feed ICS format ([a14f67f](https://github.com/PortakiApp/portaki-modules/commit/a14f67fd65ff6bba8c2f4103811a8f44b38981b4))
+* **ical-sync:** detect booking channel per stay row ([7609290](https://github.com/PortakiApp/portaki-modules/commit/76092900b9179dfa35b209827aab7add905d0832))
+* **ical-sync:** dispatch examples, scenario tests ([9577830](https://github.com/PortakiApp/portaki-modules/commit/9577830c512f624de4a7f6e607a4bc960951bae1))
+* **ical-sync:** merge format + platform into one selector ([a678eef](https://github.com/PortakiApp/portaki-modules/commit/a678eef70b06a84f2d811258dd5770096d45c05c))
+* **ical-sync:** multi-calendar sync and stats card ([ec339e1](https://github.com/PortakiApp/portaki-modules/commit/ec339e1ea24018622e32790e7f0f10fec62e211b))
+* **ical-sync:** persist calendars[] only ([67d54b1](https://github.com/PortakiApp/portaki-modules/commit/67d54b11d2462157aae6b48839950c554fa3b479))
+* **ical-sync:** serve stats tile ([6fdb552](https://github.com/PortakiApp/portaki-modules/commit/6fdb552253e3520cb474ccd4fcc3536c445ab2b2))
+* **issue-report:** chart stats panels ([7c8b9da](https://github.com/PortakiApp/portaki-modules/commit/7c8b9daea4bd7409ce903ac646fc459e3c85007f))
+* **issue-report:** show guest photo as a thumbnail ([bd67919](https://github.com/PortakiApp/portaki-modules/commit/bd679193aa4285ac36b16661c07c657c1d4bdcdb))
+* **modules:** déclarer les permissions des vingt et un modules ([b4f9e89](https://github.com/PortakiApp/portaki-modules/commit/b4f9e8902e6ed016f79a71c123f87da4c0b6d697))
+* **modules:** Portaki author and sheet drawer hosts ([7366277](https://github.com/PortakiApp/portaki-modules/commit/7366277942fa71574f9059d40d43cd75536e79aa))
+* **stats:** give Stat tiles their icons ([e4c722a](https://github.com/PortakiApp/portaki-modules/commit/e4c722a4dbb4ad1d5aafa215e6d991b0ecfde7ac))
+* **stats:** image icon on photo tiles ([c8b42c6](https://github.com/PortakiApp/portaki-modules/commit/c8b42c60b78c44266ae9620ada43b61808576b7f))
+
+
+### Bug Fixes
+
+* **copy:** drop tech jargon from module texts ([f988f54](https://github.com/PortakiApp/portaki-modules/commit/f988f549b38f200687eb66f24443e0f21d057af6))
+* **deps:** build modules against portaki-sdk 6.11 ([18cec5f](https://github.com/PortakiApp/portaki-modules/commit/18cec5fd259c0578979ae06566a86955e8b5d83d))
+* **deps:** declare the SDK in every module manifest ([6e1eb6a](https://github.com/PortakiApp/portaki-modules/commit/6e1eb6a9ab35640062106838a3218ba8bb7d551c))
+* **deps:** move every module to SDK 5.0.0 ([b359890](https://github.com/PortakiApp/portaki-modules/commit/b359890b7dcadac933be0067d174fbd27a8ba318))
+* **deps:** move every module to SDK 6.0.0 ([fe9d1b2](https://github.com/PortakiApp/portaki-modules/commit/fe9d1b2392a7a1167c9876e77a939efa2ab7a2d1))
+* **ical-sync:** derive Default for ModuleConfig ([d7b073f](https://github.com/PortakiApp/portaki-modules/commit/d7b073f4bd59f31478f216431e9ddfe7e72f84af))
+* **ical-sync:** require the scheduled sync capability ([9690031](https://github.com/PortakiApp/portaki-modules/commit/9690031c237f80cd5d8e34d54a64216abd082df7))
+* **ical-sync:** send one email for all failed feeds ([e733358](https://github.com/PortakiApp/portaki-modules/commit/e73335859b68d2d0017adf53160addf11b881946))
+
 ## [0.8.0](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v0.7.1...ical-sync-v0.8.0) (2026-09-24)
 
 

@@ -1,5 +1,61 @@
 # Changelog
 
+## [2.0.0](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.0.1...checklist-v2.0.0) (2026-09-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **checklist:** fresh installs only. A database where checklist is already installed keeps its old revisions; do not upgrade it to this version.
+
+### Features
+
+* **catalog:** mark maturity and marketplace order ([9b9a3d0](https://github.com/PortakiApp/portaki-modules/commit/9b9a3d069d65151d266187094cf888ce0008dfc9))
+* **checklist:** add catalogue listing ([4ab1a1e](https://github.com/PortakiApp/portaki-modules/commit/4ab1a1e236457ae4cd3c42eb74335a816167b7e8))
+* **checklist:** add show_when and fix completion save ([3e5049b](https://github.com/PortakiApp/portaki-modules/commit/3e5049b43893cd31a7cfeda96392ebffc9b6848d))
+* **checklist:** align host editor to design grid ([fea471d](https://github.com/PortakiApp/portaki-modules/commit/fea471d2a063256e7b42f0b4b735635e23f1b9c4))
+* **checklist:** block publish until a list has items ([da76ee7](https://github.com/PortakiApp/portaki-modules/commit/da76ee7ae270c3070ffa1e959b95049456a00898))
+* **checklist:** describe host task toggles ([59cb2ac](https://github.com/PortakiApp/portaki-modules/commit/59cb2ac76408d7511bb4aee434f1ef6d80c05142))
+* **checklist:** dispatch examples, scenario tests ([8b60c84](https://github.com/PortakiApp/portaki-modules/commit/8b60c84ab31be318057bdc7d5cc56b60107bb0ee))
+* **checklist:** judge cleanings and flag unfilled lists ([d778df0](https://github.com/PortakiApp/portaki-modules/commit/d778df0701718fe8dc1c59aa2ada798e3c39232b))
+* **checklist:** open guest operations explicitly ([f073484](https://github.com/PortakiApp/portaki-modules/commit/f073484ea730f429c9603e195750638017a94e23))
+* **checklist:** turn into multi-list Checklists ([57745fb](https://github.com/PortakiApp/portaki-modules/commit/57745fb8c72710d8737702a9b5387a9cd2b94da4))
+* describe operation arguments with #[params] ([86f0fca](https://github.com/PortakiApp/portaki-modules/commit/86f0fcacc7ad3d17f370e819d0d6c045f51b95f4))
+* **guest-reviews:** show response rate on stats detail ([25d70f0](https://github.com/PortakiApp/portaki-modules/commit/25d70f09a580d5cdb988fb56f9b755ec0f72c9bc))
+* **guest:** add module teasers and align nav labels ([860fbbd](https://github.com/PortakiApp/portaki-modules/commit/860fbbd188571d22247688849f8a2975fcf84cf0))
+* **guest:** templated nav-row summaries for weather & checklist ([42ba408](https://github.com/PortakiApp/portaki-modules/commit/42ba40879114280f1a81f9c506cfffa6e2e5748c))
+* **issue-report:** chart stats panels ([7c8b9da](https://github.com/PortakiApp/portaki-modules/commit/7c8b9daea4bd7409ce903ac646fc459e3c85007f))
+* **issue-report:** show guest photo as a thumbnail ([bd67919](https://github.com/PortakiApp/portaki-modules/commit/bd679193aa4285ac36b16661c07c657c1d4bdcdb))
+* **modules:** déclarer les permissions des vingt et un modules ([b4f9e89](https://github.com/PortakiApp/portaki-modules/commit/b4f9e8902e6ed016f79a71c123f87da4c0b6d697))
+* **modules:** emailContext for rules and guides ([d625b5b](https://github.com/PortakiApp/portaki-modules/commit/d625b5b4789a44d63b39435e5fb327c810497c00))
+* **modules:** migrate all modules to SDK 2.1 typed APIs ([e5d865b](https://github.com/PortakiApp/portaki-modules/commit/e5d865b74a3295bd7b70cea080b9bf0f6d15b15c))
+* **modules:** per-locale texts, access-guide redesign ([3f0296a](https://github.com/PortakiApp/portaki-modules/commit/3f0296a6bb3128d8a0ca485db344dc9e49ce5aac))
+* **modules:** polish stay host SDUI cards ([3fdfef3](https://github.com/PortakiApp/portaki-modules/commit/3fdfef3785c7df15bdca95e978dc9e61cc4408ea))
+* **modules:** Portaki author and sheet drawer hosts ([7366277](https://github.com/PortakiApp/portaki-modules/commit/7366277942fa71574f9059d40d43cd75536e79aa))
+* **stats:** give Stat tiles their icons ([e4c722a](https://github.com/PortakiApp/portaki-modules/commit/e4c722a4dbb4ad1d5aafa215e6d991b0ecfde7ac))
+* **stats:** image icon on photo tiles ([c8b42c6](https://github.com/PortakiApp/portaki-modules/commit/c8b42c60b78c44266ae9620ada43b61808576b7f))
+* **weather,checklist:** lead the guest now-card with a live title ([d8a3ce0](https://github.com/PortakiApp/portaki-modules/commit/d8a3ce034314d832ab644f69e3074168881c271d))
+
+
+### Bug Fixes
+
+* **checklist:** emit all slots for trailing empty ([c2102f5](https://github.com/PortakiApp/portaki-modules/commit/c2102f57ebcab4cb1764559b9257c6466ee3aa97))
+* **checklist:** header Save and filled+1 slots ([996ab06](https://github.com/PortakiApp/portaki-modules/commit/996ab062fe7378b939c7074f41a40109c5bd1965))
+* **checklist:** refuse guest ticks on host items ([e3953a7](https://github.com/PortakiApp/portaki-modules/commit/e3953a730d2318a20c8a5328bc927a9a2d252882))
+* **ci:** pin SDK deps to git main for CI ([e723553](https://github.com/PortakiApp/portaki-modules/commit/e7235532d59013d9acdb59cb12840a14d89e74d4))
+* **deps:** build modules against portaki-sdk 6.11 ([18cec5f](https://github.com/PortakiApp/portaki-modules/commit/18cec5fd259c0578979ae06566a86955e8b5d83d))
+* **deps:** declare the SDK in every module manifest ([6e1eb6a](https://github.com/PortakiApp/portaki-modules/commit/6e1eb6a9ab35640062106838a3218ba8bb7d551c))
+* **deps:** move every module to SDK 5.0.0 ([b359890](https://github.com/PortakiApp/portaki-modules/commit/b359890b7dcadac933be0067d174fbd27a8ba318))
+* **deps:** move every module to SDK 5.1.0 ([78889c8](https://github.com/PortakiApp/portaki-modules/commit/78889c82a61c209dc87d10771a8e0e58c659d837))
+* **deps:** move every module to SDK 6.0.0 ([fe9d1b2](https://github.com/PortakiApp/portaki-modules/commit/fe9d1b2392a7a1167c9876e77a939efa2ab7a2d1))
+* **modules:** clear clippy dead-code and lifetime lint ([b382ddd](https://github.com/PortakiApp/portaki-modules/commit/b382ddd979d1b3abf1d6f951a19a88417f52dc65))
+* **modules:** rattraper le champ booking_channel du SDK ([c74e36c](https://github.com/PortakiApp/portaki-modules/commit/c74e36c417156ebc742e8bc72dc0ec22c3883219))
+* **modules:** use host clock, ban native clock ([6c660c0](https://github.com/PortakiApp/portaki-modules/commit/6c660c033429260fe8dfaff7be808b80fffe49fa))
+
+
+### Miscellaneous
+
+* **checklist:** squash migrations into v1 ([39a112a](https://github.com/PortakiApp/portaki-modules/commit/39a112a3bbd4204004e07621e7664e49663babb8))
+
 ## [1.0.0](https://github.com/PortakiApp/portaki-modules/compare/checklist-v0.6.1...checklist-v1.0.0) (2026-09-24)
 
 

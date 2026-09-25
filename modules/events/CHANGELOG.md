@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.8.0](https://github.com/PortakiApp/portaki-modules/compare/events-v0.7.1...events-v0.8.0) (2026-09-25)
+
+
+### Features
+
+* **catalog:** mark maturity and marketplace order ([9b9a3d0](https://github.com/PortakiApp/portaki-modules/commit/9b9a3d069d65151d266187094cf888ce0008dfc9))
+* describe operation arguments with #[params] ([86f0fca](https://github.com/PortakiApp/portaki-modules/commit/86f0fcacc7ad3d17f370e819d0d6c045f51b95f4))
+* **events:** add catalogue listing ([a0001f5](https://github.com/PortakiApp/portaki-modules/commit/a0001f50010690a678ac74da37cece0d0195e7f3))
+* **events:** declare config, manual events recommended ([07d7514](https://github.com/PortakiApp/portaki-modules/commit/07d75149a5287b6183de812748740efc7db9dbc9))
+* **events:** dispatch examples, scenario tests ([6431530](https://github.com/PortakiApp/portaki-modules/commit/64315304363f794d2f81c0b55c7e8d8dae3cfd52))
+* **events:** expose located events as map markers ([2cbd231](https://github.com/PortakiApp/portaki-modules/commit/2cbd231469a02fa7596ab8e95e7c833b830ffd6c))
+* **events:** fetch nearby OpenAgenda events ([35cb74a](https://github.com/PortakiApp/portaki-modules/commit/35cb74a6c06c0a53a7958913b00123df6023a91d))
+* **events:** translate events and disclaimer ([924cf2c](https://github.com/PortakiApp/portaki-modules/commit/924cf2c13775fa6d3c469b7ef7ea936265894597))
+* **guest:** add module teasers and align nav labels ([860fbbd](https://github.com/PortakiApp/portaki-modules/commit/860fbbd188571d22247688849f8a2975fcf84cf0))
+* **ical-sync:** add host calendar import module ([b2324cd](https://github.com/PortakiApp/portaki-modules/commit/b2324cd5328a90052c3a54a6496bbd8875184467))
+* **issue-report:** chart stats panels ([7c8b9da](https://github.com/PortakiApp/portaki-modules/commit/7c8b9daea4bd7409ce903ac646fc459e3c85007f))
+* **issue-report:** show guest photo as a thumbnail ([bd67919](https://github.com/PortakiApp/portaki-modules/commit/bd679193aa4285ac36b16661c07c657c1d4bdcdb))
+* **modules:** add events, nuki, and wifi-guest ([192517e](https://github.com/PortakiApp/portaki-modules/commit/192517e9a071c7c2565bce7c2fc3b09e482bc177))
+* **modules:** déclarer les permissions des vingt et un modules ([b4f9e89](https://github.com/PortakiApp/portaki-modules/commit/b4f9e8902e6ed016f79a71c123f87da4c0b6d697))
+* **modules:** Portaki author and sheet drawer hosts ([7366277](https://github.com/PortakiApp/portaki-modules/commit/7366277942fa71574f9059d40d43cd75536e79aa))
+* **previews:** cover every module with guest surfaces ([0caf3cf](https://github.com/PortakiApp/portaki-modules/commit/0caf3cf90e2935b51940d8af5e9c0c3f7449631a))
+
+
+### Bug Fixes
+
+* **consumables,events:** use host clock in render path ([3ce36bf](https://github.com/PortakiApp/portaki-modules/commit/3ce36bfd2e59f186d02400c16502554255ee417e))
+* **copy:** drop tech jargon from module texts ([f988f54](https://github.com/PortakiApp/portaki-modules/commit/f988f549b38f200687eb66f24443e0f21d057af6))
+* **deps:** build modules against portaki-sdk 6.11 ([18cec5f](https://github.com/PortakiApp/portaki-modules/commit/18cec5fd259c0578979ae06566a86955e8b5d83d))
+* **deps:** declare the SDK in every module manifest ([6e1eb6a](https://github.com/PortakiApp/portaki-modules/commit/6e1eb6a9ab35640062106838a3218ba8bb7d551c))
+* **deps:** move every module to SDK 5.0.0 ([b359890](https://github.com/PortakiApp/portaki-modules/commit/b359890b7dcadac933be0067d174fbd27a8ba318))
+* **deps:** move every module to SDK 5.1.0 ([78889c8](https://github.com/PortakiApp/portaki-modules/commit/78889c82a61c209dc87d10771a8e0e58c659d837))
+* **deps:** move every module to SDK 6.0.0 ([fe9d1b2](https://github.com/PortakiApp/portaki-modules/commit/fe9d1b2392a7a1167c9876e77a939efa2ab7a2d1))
+* **events,local-guide:** one label for all slots ([30d2c84](https://github.com/PortakiApp/portaki-modules/commit/30d2c84a1026659267ce113813bb21e02213a995))
+* **events:** guest shell and property coordinates ([c614028](https://github.com/PortakiApp/portaki-modules/commit/c61402878b2da200531e523a32dae0e38db9e26f))
+* **events:** upcoming card skips past events ([481cea6](https://github.com/PortakiApp/portaki-modules/commit/481cea63cf67610df82478d45e0d543b6abc5f72))
+* **modules:** use host clock, ban native clock ([6c660c0](https://github.com/PortakiApp/portaki-modules/commit/6c660c033429260fe8dfaff7be808b80fffe49fa))
+
 ## [0.7.0](https://github.com/PortakiApp/portaki-modules/compare/events-v0.6.1...events-v0.7.0) (2026-09-24)
 
 

@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.8.0](https://github.com/PortakiApp/portaki-modules/compare/weather-v0.7.1...weather-v0.8.0) (2026-09-25)
+
+
+### Features
+
+* **catalog:** mark maturity and marketplace order ([9b9a3d0](https://github.com/PortakiApp/portaki-modules/commit/9b9a3d069d65151d266187094cf888ce0008dfc9))
+* describe operation arguments with #[params] ([86f0fca](https://github.com/PortakiApp/portaki-modules/commit/86f0fcacc7ad3d17f370e819d0d6c045f51b95f4))
+* **guest:** add module teasers and align nav labels ([860fbbd](https://github.com/PortakiApp/portaki-modules/commit/860fbbd188571d22247688849f8a2975fcf84cf0))
+* **guest:** templated nav-row summaries for weather & checklist ([42ba408](https://github.com/PortakiApp/portaki-modules/commit/42ba40879114280f1a81f9c506cfffa6e2e5748c))
+* **ical-sync:** add host calendar import module ([b2324cd](https://github.com/PortakiApp/portaki-modules/commit/b2324cd5328a90052c3a54a6496bbd8875184467))
+* **issue-report:** chart stats panels ([7c8b9da](https://github.com/PortakiApp/portaki-modules/commit/7c8b9daea4bd7409ce903ac646fc459e3c85007f))
+* **issue-report:** show guest photo as a thumbnail ([bd67919](https://github.com/PortakiApp/portaki-modules/commit/bd679193aa4285ac36b16661c07c657c1d4bdcdb))
+* **modules:** add emailContext guest queries ([5d8baeb](https://github.com/PortakiApp/portaki-modules/commit/5d8baeb2f5098bb7eb247620273368827e737d1d))
+* **modules:** déclarer les permissions des vingt et un modules ([b4f9e89](https://github.com/PortakiApp/portaki-modules/commit/b4f9e8902e6ed016f79a71c123f87da4c0b6d697))
+* **modules:** migrate all modules to SDK 2.1 typed APIs ([e5d865b](https://github.com/PortakiApp/portaki-modules/commit/e5d865b74a3295bd7b70cea080b9bf0f6d15b15c))
+* **modules:** Portaki author and sheet drawer hosts ([7366277](https://github.com/PortakiApp/portaki-modules/commit/7366277942fa71574f9059d40d43cd75536e79aa))
+* **previews:** cover every module with guest surfaces ([0caf3cf](https://github.com/PortakiApp/portaki-modules/commit/0caf3cf90e2935b51940d8af5e9c0c3f7449631a))
+* **weather,checklist:** lead the guest now-card with a live title ([d8a3ce0](https://github.com/PortakiApp/portaki-modules/commit/d8a3ce034314d832ab644f69e3074168881c271d))
+* **weather:** add catalogue listing ([46c662e](https://github.com/PortakiApp/portaki-modules/commit/46c662e76ab056e139a8a8d47adebc157491e4a4))
+* **weather:** declare units and refresh config ([37a8734](https://github.com/PortakiApp/portaki-modules/commit/37a8734f41ff47ae9b827d8192ff9c957e3a5b07))
+* **weather:** dispatch examples, scenario tests ([ebf2848](https://github.com/PortakiApp/portaki-modules/commit/ebf2848eafe364d176612563372bc34309a79236))
+* **weather:** drive home-card glance from live conditions ([66e2e52](https://github.com/PortakiApp/portaki-modules/commit/66e2e522078d44bc8e2c1289e1d354c549c2c03b))
+
+
+### Bug Fixes
+
+* **ci:** pin SDK deps to git main for CI ([e723553](https://github.com/PortakiApp/portaki-modules/commit/e7235532d59013d9acdb59cb12840a14d89e74d4))
+* **copy:** drop tech jargon from module texts ([f988f54](https://github.com/PortakiApp/portaki-modules/commit/f988f549b38f200687eb66f24443e0f21d057af6))
+* **deps:** build modules against portaki-sdk 6.11 ([18cec5f](https://github.com/PortakiApp/portaki-modules/commit/18cec5fd259c0578979ae06566a86955e8b5d83d))
+* **deps:** declare the SDK in every module manifest ([6e1eb6a](https://github.com/PortakiApp/portaki-modules/commit/6e1eb6a9ab35640062106838a3218ba8bb7d551c))
+* **deps:** move every module to SDK 5.0.0 ([b359890](https://github.com/PortakiApp/portaki-modules/commit/b359890b7dcadac933be0067d174fbd27a8ba318))
+* **deps:** move every module to SDK 5.1.0 ([78889c8](https://github.com/PortakiApp/portaki-modules/commit/78889c82a61c209dc87d10771a8e0e58c659d837))
+* **deps:** move every module to SDK 6.0.0 ([fe9d1b2](https://github.com/PortakiApp/portaki-modules/commit/fe9d1b2392a7a1167c9876e77a939efa2ab7a2d1))
+* **i18n:** fill weather keys; harden wifi reveal ([d7cce9c](https://github.com/PortakiApp/portaki-modules/commit/d7cce9c846a1c070a68a475005bcf5d1039087ed))
+* **modules:** clear Clippy -D warnings on CI ([9728b67](https://github.com/PortakiApp/portaki-modules/commit/9728b67d829b9b31ffee4534051cd1f64e855b5f))
+* **modules:** sync module.json versions for publish ([647edd7](https://github.com/PortakiApp/portaki-modules/commit/647edd7deda39a896828222571d88fd8ac98ed55))
+* **modules:** use host clock, ban native clock ([6c660c0](https://github.com/PortakiApp/portaki-modules/commit/6c660c033429260fe8dfaff7be808b80fffe49fa))
+* **weather:** hide forecast when not geocoded ([5e68d4c](https://github.com/PortakiApp/portaki-modules/commit/5e68d4cbc5f230bbe43f8dd22eadce5a5636ecca))
+
 ## [0.7.0](https://github.com/PortakiApp/portaki-modules/compare/weather-v0.6.1...weather-v0.7.0) (2026-09-24)
 
 
