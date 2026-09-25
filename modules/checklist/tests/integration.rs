@@ -43,7 +43,7 @@ fn home_card_empty_when_no_list() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            assert!(json_of(&render_home_card(ctx)).contains("home.card.empty"));
+            assert!(json_of(&render_home_card(ctx).expect("render")).contains("home.card.empty"));
         });
 }
 
@@ -60,12 +60,15 @@ fn departure_template_renders_toggles_and_ticks() {
             let items = list_items(ctx.clone()).expect("list");
             assert_eq!(items.len(), 5);
 
-            let surface = render_home_card(ctx.clone());
+            let surface = render_home_card(ctx.clone()).expect("render");
             assert!(SurfaceAssertions::new(&surface).contains_type("ChecklistItem"));
             let json = json_of(&surface);
             assert!(json.contains("Fermer les volets"));
             assert!(json.contains("completeItem"));
-            assert!(json_of(&render_post_stay_card(ctx.clone())).contains("completeItem"));
+            assert!(
+                json_of(&render_post_stay_card(ctx.clone()).expect("render"))
+                    .contains("completeItem")
+            );
 
             let item_id = items[0].id;
             complete_item(ctx.clone(), ItemIdArgs { item_id }).expect("complete");
@@ -110,7 +113,7 @@ fn guest_list_waits_for_its_trigger() {
                 checkout_at: Some(Utc::now() + Duration::days(5)),
                 ..StayContext::default()
             });
-            let json = json_of(&render_home_card(ctx));
+            let json = json_of(&render_home_card(ctx).expect("render"));
             assert!(json.contains("home.card.notYet"));
             assert!(!json.contains("completeItem"));
         });
