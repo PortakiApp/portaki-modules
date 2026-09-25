@@ -189,14 +189,8 @@
   "config.revealPolicy.hours_before_24": "24 h avant l’arrivée",
   "config.revealPolicy.day_before_16h": "Veille à 16 h",
   "config.revealPolicy.at_checkin": "À l’heure du check-in",
-  "config.methodInstructionsFr": "Instructions d’accès (français)",
-  "config.methodInstructionsEn": "Instructions d’accès (anglais)",
-  "config.buildingNoteFr": "Note immeuble (français)",
-  "config.buildingNoteEn": "Note immeuble (anglais)",
-  "config.parkingInfoFr": "Infos parking (français)",
-  "config.parkingInfoEn": "Infos parking (anglais)",
-  "config.globalNoteFr": "Note globale (français)",
-  "config.globalNoteEn": "Note globale (anglais)",
-  "config.stepsFr": "Textes des étapes (français)",
-  "config.stepsEn": "Textes des étapes (anglais)"
+  "config.methodInstructions": "Instructions d’accès",
+  "config.buildingNote": "Note immeuble",
+  "config.parkingInfo": "Infos parking",
+  "config.globalNote": "Note globale"
 }

@@ -27,9 +27,9 @@ pub enum GuestLoad {
 }
 
 pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestLoad> {
-    let host_config = HostConfig::read(ctx)?;
-    let config = host_config.to_model();
-    let texts = host_config.guest_texts(&ctx.locale, &ctx.property.locale);
+    let host_config = HostConfig::load(ctx)?;
+    let config = host_config.to_model(&ctx.locale);
+    let texts = host_config.texts(&ctx.locale);
     if !has_content(&config, &texts) {
         return Ok(GuestLoad::Empty);
     }

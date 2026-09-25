@@ -6,9 +6,7 @@ use portaki_sdk::sdui::primitives::{
     Badge, Button, InfoBanner, KeyValue, Link, ListItem, Map, Text,
 };
 
-use crate::config::{
-    BuildingAccess, DoorCodeTarget, MethodFields, ParkingLayer, ResolvedStep, StaffKind,
-};
+use crate::config::{BuildingAccess, DoorCodeTarget, MethodFields, ParkingLayer, StaffKind};
 use crate::reveal::SECRET_MASK;
 
 use super::load::GuestData;
@@ -408,7 +406,7 @@ fn push_reveal_banner(children: &mut Vec<Component>, data: &GuestData) {
     ));
 }
 
-fn push_arrival_extras(children: &mut Vec<Component>, data: &GuestData, steps: &[ResolvedStep]) {
+fn push_arrival_extras(children: &mut Vec<Component>, data: &GuestData) {
     let video = data.config.arrival.arrival_video_url.trim();
     if !video.is_empty() {
         children.push(Component::Link(
@@ -419,7 +417,7 @@ fn push_arrival_extras(children: &mut Vec<Component>, data: &GuestData, steps: &
         ));
     }
 
-    for step in steps {
+    for step in &data.texts.steps {
         let title = step.title.trim();
         if title.is_empty() {
             continue;
@@ -525,8 +523,7 @@ pub fn build_access_detail(data: &GuestData) -> Vec<Component> {
         ));
     }
 
-    let steps = data.config.resolve_steps(&data.texts);
-    push_arrival_extras(&mut children, data, &steps);
+    push_arrival_extras(&mut children, data);
 
     children
 }

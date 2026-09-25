@@ -6,9 +6,10 @@ use serial_test::serial;
 
 use access_guide::{
     publish_readiness, render_explore_detail, render_home_card, render_host_main,
-    render_upcoming_card, HostConfig, PrimaryMethod, RevealPolicy, StepRow, StepTextRow,
+    render_upcoming_card, HostConfig, PrimaryMethod, StepRow,
 };
 use portaki_sdk::context::StayContext;
+use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::host::with_host;
 use portaki_test_utils::{MockContext, SurfaceAssertions};
 use serde_json::json;
@@ -34,27 +35,30 @@ fn sample_config_bytes() -> Vec<u8> {
 #[allow(dead_code)]
 #[path = "../../../support/config_form.rs"]
 mod config_form;
+#[path = "../../../support/config_save.rs"]
+mod config_save;
+
+const EMISSIONS: &str = concat!(env!("OUT_DIR"), "/portaki-emissions");
 
 fn always_reveal_config() -> HostConfig {
     HostConfig {
         primary_method: "keybox".into(),
-        keybox_location: "À droite de la porte".into(),
+        keybox_location: I18nText::new("À droite de la porte", ""),
         keybox_code: "4821".into(),
         building_access_enabled: true,
         building_access_gate_code: "A17B".into(),
         parking_enabled: true,
         parking_map_url: "https://maps.example.com".into(),
-        parking_info_fr: "Rue A".into(),
+        parking_info: I18nText::new("Rue A", ""),
         address: "Ch. des Douaniers".into(),
         arrival_video_url: "https://video.example.com".into(),
         reveal_policy: "always".into(),
-        global_note_fr: "Sonnette à gauche".into(),
+        global_note: I18nText::new("Sonnette à gauche", ""),
         steps: vec![StepRow {
+            id: "park".into(),
             kind: Some("parking".into()),
-        }],
-        steps_fr: vec![StepTextRow {
-            title: "Se garer".into(),
-            detail: "Place résident".into(),
+            title: I18nText::new("Se garer", ""),
+            detail: I18nText::new("Place résident", ""),
         }],
         ..HostConfig::default()
     }
@@ -67,7 +71,7 @@ fn smart_lock_config(provider: Option<&str>) -> HostConfig {
         smart_lock_provider_module_id: provider.unwrap_or_default().into(),
         address: "1 rue Test".into(),
         reveal_policy: "always".into(),
-        method_instructions_fr: "Appuyer sur unlock".into(),
+        method_instructions: I18nText::new("Appuyer sur unlock", ""),
         ..HostConfig::default()
     }
 }
@@ -394,7 +398,7 @@ fn picker_keys(surface: &portaki_sdk::sdui::surface::Surface) -> Vec<String> {
 #[test]
 #[serial]
 fn the_host_form_sends_the_declared_keys() {
-    let declared = config_form::declared_keys(concat!(env!("OUT_DIR"), "/portaki-emissions"));
+    let declared = config_form::declared_keys(EMISSIONS);
     let mut sent = std::collections::BTreeSet::new();
     for (case, surface) in host_forms() {
         let mut keys = config_form::form_keys(&surface);
@@ -445,7 +449,7 @@ fn codes_are_never_sent_back_to_the_form() {
 #[serial]
 fn the_host_edits_the_copy_of_its_own_language() {
     let config = HostConfig {
-        global_note_en: "Ring twice".into(),
+        global_note: I18nText::new("Sonnette à gauche", "Ring twice"),
         ..always_reveal_config()
     };
     let (mut ctx, host) = MockContext::host()
@@ -456,90 +460,181 @@ fn the_host_edits_the_copy_of_its_own_language() {
     let json = with_host(host, ctx.clone(), || {
         serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json")
     });
-    assert!(json.contains("global_note_en") && json.contains("Ring twice"));
-    assert!(!json.contains("global_note_fr") && !json.contains("Sonnette à gauche"));
+    assert!(json.contains("Ring twice"));
+    assert!(!json.contains("Sonnette à gauche"));
 }
 
-/// Before the platform held it, the KV kept a flat blob; the import takes only the keys the
-/// form still uses (`address`, `keybox_code`…). The gate code, the copy and the steps are still
-/// read from the KV.
+/// A host writing in English: every French text stays — method, layers, steps — and so do the
+/// codes the form never sends back; the steps keep their place and their id, the blank one where
+/// it was.
 #[test]
 #[serial]
-fn a_flat_legacy_blob_survives_the_import() {
-    let imported = json!({
-        "address": "Ch. des Douaniers",
+fn a_save_in_english_keeps_the_french() {
+    assert_eq!(
+        config_save::localized_paths(EMISSIONS),
+        [
+            "building_access_intercom",
+            "building_note",
+            "building_staff_desk_location",
+            "building_staff_hours",
+            "global_note",
+            "host_greets_contact_note",
+            "host_greets_eta_hint",
+            "in_person_meeting_place",
+            "in_person_time_hint",
+            "keybox_location",
+            "method_instructions",
+            "parking_info",
+            "steps.detail",
+            "steps.title",
+        ]
+    );
+    let stored = json!({
+        "primary_method": "keybox",
+        "keybox_location": { "fr": "Sous le pot", "en": "Under the pot" },
         "keybox_code": "4821",
-        "parking_map_url": "https://maps.example.com",
-        "arrival_video_url": "https://video.example.com"
+        "method_instructions": { "fr": "Tourner", "en": "Turn" },
+        "building_access_enabled": true,
+        "building_access_intercom": { "fr": "Apt 3" },
+        "building_note": { "fr": "Portail vert", "en": "Green gate" },
+        "parking_enabled": true,
+        "parking_info": { "fr": "Place 8", "en": "Spot 8" },
+        "global_note": { "fr": "Bienvenue", "en": "Welcome" },
+        "reveal_policy": "always",
+        "steps": [
+            { "id": "a", "kind": "parking", "title": { "fr": "Se garer", "en": "Park" },
+              "detail": { "fr": "Rampe à gauche", "en": "Ramp on the left" } },
+            { "kind": "" },
+            { "id": "b", "kind": "door", "title": { "fr": "Monter" }, "detail": { "fr": "2e étage" } }
+        ]
     });
-    MockContext::guest()
+    MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
-        .with_config(&imported)
-        .run(|ctx| {
-            let config = HostConfig::read(&ctx).expect("config");
-            assert_eq!(config.method(), Some(PrimaryMethod::Keybox));
-            assert_eq!(config.keybox_code, "4821");
-            assert!(config.building_access_enabled);
-            assert_eq!(config.building_access_gate_code, "A17B");
-            assert_eq!(config.global_note_fr, "Sonnette à gauche");
-            assert_eq!(config.parking_info_fr, "Résident · rue Aubernon");
-            assert_eq!(config.steps_fr[0].title, "Se garer");
-            assert_eq!(config.steps_en[0].title, "Park");
-            assert_eq!(config.reveal(), RevealPolicy::DayBefore16h);
-            let texts = config.guest_texts("en-US", "fr-FR");
-            assert_eq!(texts.steps[0].title, "Park");
+        .with_config(&stored)
+        .run(|mut ctx| {
+            ctx.locale = "en-US".into();
+            let surface = render_host_main(ctx).expect("host main");
+            let sent = config_save::form_args(&surface);
+            // Stored order, the blank row where it was; ids on the filled rows only.
+            assert_eq!(sent["steps"].as_array().unwrap().len(), 3);
+            assert_eq!(sent["steps"][0]["id"], "a");
+            assert_eq!(sent["steps"][0]["title"], "Park");
+            assert!(sent["steps"][1].get("id").is_none());
+            assert_eq!(sent["steps"][2]["id"], "b");
+            assert_eq!(sent["global_note"], "Welcome");
+
+            let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
+            for key in [
+                "keybox_location",
+                "keybox_code",
+                "method_instructions",
+                "building_note",
+                "parking_info",
+                "global_note",
+            ] {
+                assert_eq!(saved[key], stored[key], "{key}");
+            }
+            assert_eq!(saved["building_access_intercom"]["fr"], "Apt 3");
+            assert_eq!(saved["steps"][0], stored["steps"][0]);
+            assert_eq!(saved["steps"][2]["id"], "b");
+            assert_eq!(saved["steps"][2]["title"]["fr"], "Monter");
+            assert_eq!(saved["steps"][2]["detail"]["fr"], "2e étage");
         });
 }
 
-/// The redesigned blob nested the method and kept the copy in `texts/{lang}`: both still read,
-/// the pre-rename policy included — until the platform holds the key, even empty.
+/// A step the host removes: the step list blanks all of `steps.N.*`, its id too — the platform
+/// replaces the row rather than merging into it, and the guest no longer shows it.
 #[test]
 #[serial]
-fn a_nested_blob_and_its_texts_survive_the_import() {
-    let blob = json!({
-        "primary_method": "keybox",
-        "method": { "kind": "keybox", "location": "Sous le pot", "code": "4821" },
-        "arrival": { "address": "Rue X", "steps": [{ "id": "a", "kind": "door" }] },
-        "reveal_policy": "hours_before24"
+fn a_removed_step_is_cleared() {
+    let stored = json!({
+        "steps": [
+            { "id": "a", "kind": "parking", "title": { "fr": "Se garer", "en": "Park" } },
+            { "id": "b", "kind": "door", "title": { "fr": "Monter", "en": "Go up" } }
+        ]
     });
-    let texts = |note: &str| {
-        serde_json::to_vec(&json!({
-            "global_note": note,
-            "steps": [{ "id": "a", "title": note }]
-        }))
-        .unwrap()
-    };
-    let run = |held: serde_json::Value, check: &dyn Fn(HostConfig)| {
-        MockContext::guest()
-            .with_capabilities(&[capability::core::STORAGE])
-            .with_kv("config", serde_json::to_vec(&blob).unwrap())
-            .with_kv("texts/fr", texts("Note FR"))
-            .with_kv("texts/en", texts("Note EN"))
-            .with_config(&held)
-            .run(|ctx| check(HostConfig::read(&ctx).expect("config")));
-    };
-    run(json!({ "primary_method": "keybox" }), &|config| {
-        assert_eq!(config.keybox_location, "Sous le pot");
-        assert_eq!(config.keybox_code, "4821");
-        assert_eq!(config.address, "Rue X");
-        assert_eq!(config.reveal(), RevealPolicy::HoursBefore24);
-        assert_eq!(config.texts("fr").global_note, "Note FR");
-        assert_eq!(config.texts("en").global_note, "Note EN");
-        assert_eq!(config.texts("en").steps[0].title, "Note EN");
-        assert_eq!(
-            config.to_model().parse_steps()[0].kind.as_deref(),
-            Some("door")
-        );
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&stored)
+        .run(|ctx| {
+            let mut surface = render_host_main(ctx).expect("host main");
+            // What the dashboard's StepList does on removal.
+            let mut value = serde_json::to_value(&surface).unwrap();
+            blank_names_under(&mut value, "steps.0.");
+            surface = serde_json::from_value(value).unwrap();
+            let saved = config_save::save(EMISSIONS, &surface, &stored, "fr");
+            assert_eq!(
+                saved["steps"][0],
+                json!({ "id": "", "kind": "", "title": "", "detail": "" })
+            );
+            assert_eq!(saved["steps"][1]["id"], "b");
+            assert_eq!(saved["steps"][1]["title"], stored["steps"][1]["title"]);
+            let config: HostConfig = serde_json::from_value(saved).unwrap();
+            let titles: Vec<String> = config
+                .texts("fr")
+                .steps
+                .into_iter()
+                .map(|s| s.title)
+                .collect();
+            assert_eq!(titles, ["Monter"]);
+        });
+}
+
+fn blank_names_under(value: &mut serde_json::Value, prefix: &str) {
+    match value {
+        serde_json::Value::Object(object) => {
+            let named = object
+                .get("name")
+                .and_then(|n| n.as_str())
+                .is_some_and(|n| n.starts_with(prefix));
+            if named && object.contains_key("value") {
+                object.insert("value".into(), json!(""));
+            }
+            object
+                .values_mut()
+                .for_each(|v| blank_names_under(v, prefix));
+        }
+        serde_json::Value::Array(items) => {
+            items.iter_mut().for_each(|v| blank_names_under(v, prefix))
+        }
+        _ => {}
+    }
+}
+
+/// The coordinates are numbers (the platform reads « 43,7 » and a blank for them), and the saved
+/// point goes back on the map so a save does not wipe it.
+#[test]
+#[serial]
+fn coordinates_are_numbers_and_stay_on_the_map() {
+    let fields = config_save::declared_fields(EMISSIONS);
+    for key in [
+        "in_person_meeting_lat",
+        "in_person_meeting_lng",
+        "arrival_lat",
+        "arrival_lng",
+    ] {
+        let field = fields.iter().find(|f| f["key"] == key).expect(key);
+        assert_eq!(field["type"], "number", "{key}");
+    }
+    let stored = json!({
+        "primary_method": "in_person",
+        "in_person_meeting_place": { "fr": "Gare" },
+        "in_person_meeting_lat": 43.7,
+        "in_person_meeting_lng": 7.26,
+        "address": "Rue X",
+        "arrival_lat": 43.5,
+        "arrival_lng": 7.1
     });
-    run(
-        json!({ "primary_method": "keybox", "global_note_fr": "", "reveal_policy": "always" }),
-        &|config| {
-            assert_eq!(config.texts("fr").global_note, "");
-            assert_eq!(config.texts("en").global_note, "Note EN");
-            assert_eq!(config.reveal(), RevealPolicy::Always);
-        },
-    );
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&stored)
+        .run(|ctx| {
+            let json = serde_json::to_value(render_host_main(ctx).expect("host main")).unwrap();
+            let text = json.to_string();
+            for point in ["43.7", "7.26", "43.5", "7.1"] {
+                assert!(text.contains(point), "{point} is not on the map");
+            }
+        });
 }
 
 #[test]
@@ -550,7 +645,7 @@ fn publish_readiness_requires_code_for_code_methods() {
             .with_capabilities(&[capability::core::STORAGE])
             .with_config(&HostConfig {
                 primary_method: "keybox".into(),
-                keybox_location: "Porte".into(),
+                keybox_location: I18nText::new("Porte", ""),
                 keybox_code: code.into(),
                 ..HostConfig::default()
             })
@@ -571,7 +666,7 @@ fn publish_readiness_empty_without_code_method() {
         HostConfig::default(),
         HostConfig {
             primary_method: "in_person".into(),
-            in_person_meeting_place: "Gare".into(),
+            in_person_meeting_place: I18nText::new("Gare", ""),
             ..HostConfig::default()
         },
     ] {
