@@ -1,17 +1,15 @@
-//! Host configuration stored in KV (`config` key).
+//! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 //!
 //! Platforms are multi-select (`platform_airbnb` / `platform_portaki`). Guest CTAs
 //! only appear for platforms that are both selected and feasible (Airbnb needs a URL).
 
-use portaki_sdk::host;
-use portaki_sdk::Result;
+use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value};
 
 use crate::localized::deserialize_localized_field;
 
 pub use crate::localized::Localized;
-
-const CONFIG_KEY: &str = "config";
 
 /// How the guest-facing Airbnb channel is decided.
 ///
@@ -54,28 +52,29 @@ impl LegacyReviewChannel {
     }
 }
 
+/// The keys are the names of the host form fields: the platform takes `updateConfig` itself.
+/// The Airbnb URL is only recommended while Airbnb is selected: `publishReadiness` says so.
+#[portaki_sdk::config]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ModuleConfig {
-    /// How the Airbnb channel availability is decided (`manual` = toggles, `auto` = derive from stay).
-    #[serde(default)]
+    /// How the Airbnb channel availability is decided (`manual` = toggles, `auto` = derive from
+    /// stay). No host form sets it: left out of the declared config.
     pub channel_mode: ChannelMode,
     /// Collect reviews via Airbnb link + optional QR.
-    #[serde(default = "default_true")]
+    #[field(label = "host.channel.airbnb")]
     pub platform_airbnb: bool,
     /// Collect reviews via in-booklet Portaki star form. On by default so the post-stay surface
     /// always has an actionable channel (Airbnb needs a URL and is off until one is set).
-    #[serde(default = "default_true")]
+    #[field(label = "host.channel.portaki")]
     pub platform_portaki: bool,
-    #[serde(default = "default_true")]
+    #[field(label = "host.qr.label")]
     pub show_qr_code: bool,
-    #[serde(default)]
+    #[field(kind = "url", label = "host.airbnb.label")]
     pub airbnb_review_url: String,
-    #[serde(default, deserialize_with = "deserialize_localized_field")]
+    /// One string from the host form; older configs kept one per language, still read.
+    #[field(kind = "textarea", label = "host.thanks.label")]
+    #[serde(deserialize_with = "deserialize_localized_field")]
     pub thank_you_message: Localized,
-}
-
-fn default_true() -> bool {
-    true
 }
 
 impl Default for ModuleConfig {
@@ -91,7 +90,54 @@ impl Default for ModuleConfig {
     }
 }
 
+/// Keys the platform import skips or reads differently: platforms chosen with the pre-toggle
+/// `review_channel`, a URL without its scheme, a message kept per language.
+const LEGACY_KEYS: [&str; 4] = [
+    "platform_airbnb",
+    "platform_portaki",
+    "airbnb_review_url",
+    "thank_you_message",
+];
+
 impl ModuleConfig {
+    /// The config of this install. The platform imports the old KV blob once, but only what
+    /// fits the declared types; while a key of [`LEGACY_KEYS`] is still absent (the host has
+    /// not saved it), its value is read from the KV as the module used to. Present, even
+    /// empty, the platform's value wins.
+    pub fn read(ctx: &Context) -> Result<Self> {
+        let mut config = Self::load(ctx)?;
+        let not_held = Map::new();
+        let held = match &ctx.module_config {
+            Some(Value::Object(held)) => held,
+            Some(_) => return Ok(config),
+            // `load` read the KV blob as is: read it the old way.
+            None => &not_held,
+        };
+        if LEGACY_KEYS.iter().all(|key| held.contains_key(*key)) {
+            return Ok(config);
+        }
+        let legacy = portaki_sdk::config::legacy_config()?;
+        if !legacy.is_object() {
+            return Ok(config);
+        }
+        let raw: RawModuleConfig = serde_json::from_value(legacy)
+            .map_err(|error| PortakiError::Storage(format!("config_unreadable: {error}")))?;
+        let old = ModuleConfig::from(raw);
+        if !held.contains_key("platform_airbnb") {
+            config.platform_airbnb = old.platform_airbnb;
+        }
+        if !held.contains_key("platform_portaki") {
+            config.platform_portaki = old.platform_portaki;
+        }
+        if !held.contains_key("airbnb_review_url") {
+            config.airbnb_review_url = old.airbnb_review_url;
+        }
+        if !held.contains_key("thank_you_message") {
+            config.thank_you_message = old.thank_you_message;
+        }
+        Ok(config)
+    }
+
     /// True when no selected platform can actually run for the guest.
     pub fn is_empty(&self) -> bool {
         !self.has_feasible_platform()
@@ -143,6 +189,10 @@ impl ModuleConfig {
             },
         }
     }
+}
+
+fn default_true() -> bool {
+    true
 }
 
 /// Wire shape that accepts new platform toggles and legacy `review_channel`.
@@ -220,26 +270,49 @@ pub fn normalize_url(raw: &str) -> Option<String> {
     }
 }
 
-pub fn load_config() -> Result<ModuleConfig> {
-    let Some(bytes) = host::kv::get(CONFIG_KEY)? else {
-        return Ok(ModuleConfig::default());
-    };
-    let raw: RawModuleConfig = serde_json::from_slice(&bytes).map_err(|error| {
-        portaki_sdk::PortakiError::Storage(format!("invalid config JSON: {error}"))
-    })?;
-    Ok(ModuleConfig::from(raw))
-}
-
-pub fn save_config(config: &ModuleConfig) -> Result<()> {
-    let bytes = serde_json::to_vec(config).map_err(|error| {
-        portaki_sdk::PortakiError::Storage(format!("config serialize: {error}"))
-    })?;
-    host::kv::set(CONFIG_KEY, &bytes, None)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use portaki_test_utils::MockContext;
+    use serde_json::json;
+
+    /// The import skips `review_channel`, a URL without scheme and a per-language message: until
+    /// the host saves those keys, they are read from the KV; once present, the platform wins.
+    #[test]
+    #[serial_test::serial]
+    fn what_the_import_skips_is_still_read_from_kv() {
+        let legacy = json!({
+            "review_channel": "portaki",
+            "airbnb_review_url": "airbnb.com/users/review/1",
+            "thank_you_message": { "fr": "Merci", "en": "Thanks" },
+            "show_qr_code": false
+        });
+        MockContext::guest()
+            .with_kv("config", serde_json::to_vec(&legacy).unwrap())
+            .with_config(&json!({ "show_qr_code": false }))
+            .run(|ctx| {
+                let config = ModuleConfig::read(&ctx).unwrap();
+                assert!(!config.platform_airbnb);
+                assert!(config.platform_portaki);
+                assert_eq!(config.airbnb_review_url, "airbnb.com/users/review/1");
+                assert_eq!(config.thank_you_message.get("en"), "Thanks");
+            });
+        MockContext::guest()
+            .with_kv("config", serde_json::to_vec(&legacy).unwrap())
+            .with_config(&json!({
+                "platform_airbnb": true,
+                "platform_portaki": false,
+                "airbnb_review_url": "",
+                "thank_you_message": "Bye"
+            }))
+            .run(|ctx| {
+                let config = ModuleConfig::read(&ctx).unwrap();
+                assert!(config.platform_airbnb);
+                assert!(!config.platform_portaki);
+                assert_eq!(config.airbnb_review_url, "");
+                assert_eq!(config.thank_you_message.pick("en"), "Bye");
+            });
+    }
 
     #[test]
     fn migrates_legacy_both_channel() {

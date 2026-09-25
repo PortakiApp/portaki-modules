@@ -1,7 +1,7 @@
 //! Host dashboard surface — design `editorReviews` / `reviews-editor-v1`.
 //!
 //! Multi-select platform toggles; Airbnb link + QR only when Airbnb is selected.
-//! Save chrome is owned by the workspace tab (`updateConfig`).
+//! Save chrome is owned by the workspace tab; the platform stores the declared config.
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{
@@ -9,7 +9,7 @@ use portaki_sdk::sdui::primitives::{
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{load_config, normalize_url, Localized};
+use crate::config::{normalize_url, ModuleConfig};
 
 #[portaki_sdk::surface(
     host,
@@ -19,10 +19,10 @@ use crate::config::{load_config, normalize_url, Localized};
     label_key = "catalog.host.main",
     icon = IconName::Star
 )]
-pub fn render_host_main(ctx: HostContext) -> Surface {
-    let lang = Localized::lang_code(&ctx.locale);
-    let config = load_config().unwrap_or_default();
-    let thank_you_message = config.thank_you_message.get(&lang).to_string();
+pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
+    let config = ModuleConfig::read(&ctx)?;
+    // One message now: an older per-language one shows in the host's language first.
+    let thank_you_message = config.thank_you_message.pick(&ctx.locale);
 
     let platform_airbnb = ctx.input_bool("platform_airbnb", config.platform_airbnb);
     let platform_portaki = ctx.input_bool("platform_portaki", config.platform_portaki);
@@ -120,10 +120,10 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     );
 
     // No Page title / Save — workspace tab owns chrome + footer Save.
-    Surface::new(
+    Ok(Surface::new(
         Page::new().child(Form::new().child(Stack::new().gap(16.0).children(form_children))),
     )
-    .with_id(crate::ids::HOST_MAIN)
+    .with_id(crate::ids::HOST_MAIN))
 }
 
 /// `label` is an i18n key; its `.desc` sibling is the line under it.
