@@ -78,7 +78,10 @@ fn home_card_empty_without_config() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
-            assert!(SurfaceAssertions::new(&render_home_card(ctx)).contains_type("EmptyState"));
+            assert!(
+                SurfaceAssertions::new(&render_home_card(ctx).expect("surface"))
+                    .contains_type("EmptyState")
+            );
         });
 }
 
@@ -89,7 +92,7 @@ fn upcoming_card_renders_compact_method_summary() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_kv("config", sample_config_bytes())
         .run(|ctx| {
-            let surface = render_upcoming_card(ctx);
+            let surface = render_upcoming_card(ctx).expect("surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             // Compact card must not embed the full access glance (map / codes).
             assert!(!SurfaceAssertions::new(&surface).contains_type("Map"));
@@ -111,7 +114,10 @@ fn upcoming_card_empty_without_config() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
-            assert!(SurfaceAssertions::new(&render_upcoming_card(ctx)).contains_type("EmptyState"));
+            assert!(
+                SurfaceAssertions::new(&render_upcoming_card(ctx).expect("surface"))
+                    .contains_type("EmptyState")
+            );
         });
 }
 
@@ -124,7 +130,7 @@ fn home_card_masks_secrets_without_stay() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_kv("config", sample_config_bytes())
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("KeyValue"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Button"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Map"));
@@ -157,7 +163,7 @@ fn home_card_emits_keybox_location_i18n_when_configured() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&always_reveal_config())
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("surface");
             let json = serde_json::to_string(&surface).expect("json");
             assert!(json.contains("i18n:nav.access-guide"));
             assert!(json.contains("i18n:guest.keybox.location"));
@@ -173,7 +179,7 @@ fn home_card_reveals_secrets_when_policy_always() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&always_reveal_config())
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("surface");
             let json = serde_json::to_string(&surface).expect("json");
             assert!(json.contains("4821"));
             assert!(json.contains("A17B"));
@@ -188,7 +194,7 @@ fn detail_has_steps_and_video() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&always_reveal_config())
         .run(|ctx| {
-            let surface = render_explore_detail(ctx);
+            let surface = render_explore_detail(ctx).expect("surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Badge"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Link"));
@@ -204,7 +210,7 @@ fn smart_lock_provider_emits_unlock_commands_when_revealed() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&smart_lock_config(Some("nuki")))
         .run(|ctx| {
-            let surface = render_explore_detail(ctx);
+            let surface = render_explore_detail(ctx).expect("surface");
             let json = serde_json::to_string(&surface).expect("json");
             assert!(
                 json.contains("\"type\":\"command\"") || json.contains("\"type\": \"command\"")
@@ -223,7 +229,7 @@ fn smart_lock_without_provider_shows_manual_fallback_only() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&smart_lock_config(None))
         .run(|ctx| {
-            let surface = render_explore_detail(ctx);
+            let surface = render_explore_detail(ctx).expect("surface");
             let json = serde_json::to_string(&surface).expect("json");
             assert!(json.contains("9999"));
             assert!(json.contains("Appuyer sur unlock"));
@@ -256,7 +262,7 @@ fn smart_lock_provider_hides_cta_when_not_revealed() {
     });
 
     with_host(host, ctx.clone(), || {
-        let surface = render_home_card(ctx);
+        let surface = render_home_card(ctx).expect("surface");
         let json = serde_json::to_string(&surface).expect("json");
         assert!(!json.contains("unlock"));
         assert!(!json.contains("getGuestCredential"));
@@ -579,4 +585,24 @@ fn publish_readiness_empty_without_code_method() {
                     .is_empty());
             });
     }
+}
+
+/// Not geocoded: no property map and no Maps link, never a default position.
+#[test]
+#[serial]
+fn no_map_without_coordinates() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_coordinates(None)
+        .with_config(&HostConfig {
+            parking_map_url: String::new(),
+            ..always_reveal_config()
+        })
+        .run(|ctx| {
+            let surface = render_explore_detail(ctx).expect("surface");
+            assert!(!SurfaceAssertions::new(&surface).contains_type("Map"));
+            let json = serde_json::to_string(&surface).expect("json");
+            assert!(!json.contains("i18n:guest.openMaps"));
+            assert!(json.contains("À droite de la porte"));
+        });
 }

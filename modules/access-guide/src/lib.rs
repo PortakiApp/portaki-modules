@@ -1,9 +1,5 @@
 //! Portaki access-guide module — arrival steps, codes, and parking.
 
-// `PropertyContext::lat`/`lng` are deprecated since SDK 8.2; reading `coordinates` instead
-// changes what a non-geocoded property shows, which the guest-shell change does.
-#![allow(deprecated)]
-
 mod config;
 mod email_context;
 mod guest;
