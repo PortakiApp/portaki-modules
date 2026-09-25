@@ -14,7 +14,7 @@ use portaki_sdk::sdui::primitives::{Card, Chart, Grid, InfoBanner, Page, Stack, 
 use portaki_sdk::sdui::surface::Surface;
 use portaki_sdk::sdui::{ChartKind, ChartPoint};
 
-use crate::config::load_config;
+use crate::config::ModuleConfig;
 use crate::i18n;
 use crate::sync_state::{load_sync_state, SeenStay, SyncState};
 
@@ -27,8 +27,8 @@ pub fn stats_summary(ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummar
     let fr = ctx.locale.to_ascii_lowercase().starts_with("fr");
     let now = time::now()?;
     let state = load_sync_state()?;
-    let value = load_config()?
-        .last_sync_at
+    let value = state
+        .last_run_at
         .as_deref()
         .and_then(parse)
         .map_or_else(|| "—".to_string(), |at| since(at, now, fr));
@@ -68,17 +68,17 @@ fn upcoming(
     label_key = "catalog.host.calendar-sync",
     icon = IconName::Calendar
 )]
-pub fn render_host_stats(ctx: HostContext) -> Surface {
+pub fn render_host_stats(ctx: HostContext) -> Result<Surface> {
     let fr = ctx.locale.to_ascii_lowercase().starts_with("fr");
     let days = period_days(&ctx);
     let now = time::now().unwrap_or(DateTime::<Utc>::UNIX_EPOCH);
-    let config = load_config().unwrap_or_default();
+    let config = ModuleConfig::read(&ctx)?;
     let state = load_sync_state().unwrap_or_default();
     let upcoming = upcoming(&state, now);
 
     let mut last_sync = Stat::new().label("i18n:stats.lastSync").value(
-        config
-            .last_sync_at
+        state
+            .last_run_at
             .as_deref()
             .and_then(parse)
             .map_or_else(|| "—".to_string(), |at| relative(at, now, fr)),
@@ -141,7 +141,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
     ]);
 
     let mut children: Vec<Component> = Vec::new();
-    if summary_mentions_failures(config.sync_summary.as_deref()) {
+    if summary_mentions_failures(state.summary.as_deref()) {
         children.push(
             InfoBanner::new()
                 .message("i18n:stats.errorsHint")
@@ -152,8 +152,10 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
     children.push(tiles.into());
     children.push(panels.into());
 
-    Surface::new(Page::new().child(Stack::new().gap(16.0).children(children)))
-        .with_id(crate::ids::HOST_STATS)
+    Ok(
+        Surface::new(Page::new().child(Stack::new().gap(16.0).children(children)))
+            .with_id(crate::ids::HOST_STATS),
+    )
 }
 
 fn with_note(stat: Stat, show: bool, note: &str) -> Component {

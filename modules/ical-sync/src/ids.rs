@@ -9,8 +9,6 @@ define_surface_ids! {
 }
 
 define_operation_names! {
-    GET_CONFIG = "getConfig",
-    UPDATE_CONFIG = "updateConfig",
     LIST_SOURCES = "listSources",
     APPLY_FEEDS = "applyFeeds",
     STATS_SUMMARY = "statsSummary",

@@ -26,7 +26,7 @@ Manifest `hostScheduledSync` uses the platform-fetch path:
 
 1. Query `listSources` → feed URLs  
 2. Platform HTTPS-fetches each `.ics` body  
-3. Query `applyFeeds` → parses VEVENT rows + updates `last_sync_at` / `sync_summary`  
+3. Query `applyFeeds` → parses VEVENT rows + records the run in the `sync_state` KV  
 4. Platform imports stays (`guestName`, `checkInAt`, `checkOutAt`, `icalUid`, …)
 
 Manual trigger: `POST /api/v1/properties/{id}/modules/ical-sync/sync`.
@@ -47,10 +47,15 @@ Copy lives in `email_i18n/{fr,en}.json`. Dedup is orchestrator-side (module + st
 
 | Capability | Role |
 |------------|------|
-| `core.storage` | **Required** — KV config + sync UID snapshot |
+| `core.storage` | **Required** — sync UID snapshot + run history |
 | `core.modules.scheduled_sync` | **Required** — the host calls the module on a schedule; the plan sets the cadence |
 
-## KV config
+## Config
+
+Held by the platform (`#[portaki_sdk::config]`, one `structured` field `calendars`, recommended);
+the platform takes `updateConfig`. The host form sends each row as strings
+(`calendars.N.id|channel|label|url`); `format` and `channel_signal` are resolved on read.
+Rows saved by earlier versions keep theirs:
 
 ```json
 {
@@ -70,13 +75,13 @@ Copy lives in `email_i18n/{fr,en}.json`. Dedup is orchestrator-side (module + st
       "channel": "direct",
       "channel_signal": "host-override"
     }
-  ],
-  "last_sync_at": "2026-07-23T08:12:00Z",
-  "sync_summary": "3 stay(s) · 1 feed(s) ok · 0 feed(s) failed"
+  ]
 }
 ```
 
-`calendars` is the only source of truth. Each feed **must** declare a `format` (`airbnb` | `booking` | `abritel_vrbo` | `google` | `generic`) — parsing differs (e.g. Airbnb « Reserved » vs « Not available »). Sync fetches every connected URL. Feeds loaded without `format` get a best-effort URL detection, else `generic`. Legacy `ical_url_primary` / `ical_url_secondary` / `feeds_json` are accepted on load (and on `updateConfig`) and converted into `calendars` — they are never persisted or exposed going forward.
+`calendars` is the only source of truth. Each feed has a `format` (`airbnb` | `booking` | `abritel_vrbo` | `google` | `generic`) — parsing differs (e.g. Airbnb « Reserved » vs « Not available »). Sync fetches every connected URL. A row without `format` gets it from its URL, else from its platform, else `generic`. A KV blob from before the list (`ical_url_primary` / `ical_url_secondary` / `feeds_json`), which the platform import skips, is still read from the KV until the host saves the form.
+
+The last run and its summary live in the `sync_state` KV (`lastRunAt`, `summary`), not in the config.
 
 `format` is the feed **shape**; `channel` is **who sold the stay**, from the SDK
 `BookingChannel` catalog (`airbnb` | `booking` | `abritel-vrbo` | `direct` |

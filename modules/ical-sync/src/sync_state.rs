@@ -56,6 +56,12 @@ pub struct SyncState {
     /// `YYYY-MM-DD` → runs that day, oldest dropped past [`HISTORY_DAYS`].
     #[serde(default)]
     pub history: BTreeMap<String, DayRuns>,
+    /// Last `applyFeeds` run, failed or not (RFC 3339).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_run_at: Option<String>,
+    /// One-line outcome of the last run (`N stay(s) · N feed(s) ok · N feed(s) failed`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub summary: Option<String>,
 }
 
 impl SyncState {
@@ -93,13 +99,23 @@ impl SyncDiff {
     }
 }
 
+/// The KV snapshot. The last run and its summary used to sit in the `config` KV
+/// (`last_sync_at` / `sync_summary`): until a run writes them here, they are read there.
 pub fn load_sync_state() -> Result<SyncState> {
-    let Some(bytes) = host::kv::get(SYNC_STATE_KEY)? else {
-        return Ok(SyncState::default());
+    let mut state: SyncState = match host::kv::get(SYNC_STATE_KEY)? {
+        Some(bytes) => serde_json::from_slice(&bytes).map_err(|error| {
+            portaki_sdk::PortakiError::Storage(format!("invalid sync_state JSON: {error}"))
+        })?,
+        None => SyncState::default(),
     };
-    serde_json::from_slice(&bytes).map_err(|error| {
-        portaki_sdk::PortakiError::Storage(format!("invalid sync_state JSON: {error}"))
-    })
+    if state.last_run_at.is_none() {
+        // Best effort: a display value, never worth failing a sync over.
+        let legacy = portaki_sdk::config::legacy_config().unwrap_or_default();
+        let text = |key: &str| legacy.get(key).and_then(|v| v.as_str()).map(str::to_string);
+        state.last_run_at = text("last_sync_at");
+        state.summary = state.summary.or_else(|| text("sync_summary"));
+    }
+    Ok(state)
 }
 
 pub fn save_sync_state(state: &SyncState) -> Result<()> {
@@ -156,7 +172,7 @@ pub fn next_state(
     SyncState {
         uids,
         last_success_at,
-        history: previous.history.clone(),
+        ..previous.clone()
     }
 }
 
@@ -228,5 +244,30 @@ mod tests {
         }
         assert_eq!(state.history.len(), HISTORY_DAYS);
         assert!(!state.history.contains_key("2026-09-01"));
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn the_last_run_is_read_from_the_old_config_until_a_run_writes_it() {
+        use portaki_test_utils::MockContext;
+        let legacy = serde_json::json!({
+            "calendars": [],
+            "last_sync_at": "2026-07-23T08:12:00Z",
+            "sync_summary": "3 stay(s) · 1 feed(s) ok · 0 feed(s) failed",
+        });
+        MockContext::host()
+            .with_kv("config", serde_json::to_vec(&legacy).unwrap())
+            .run(|_| {
+                let state = load_sync_state().unwrap();
+                assert_eq!(state.last_run_at.as_deref(), Some("2026-07-23T08:12:00Z"));
+                assert!(state.summary.unwrap().starts_with("3 stay(s)"));
+
+                let written = SyncState {
+                    last_run_at: Some("2026-09-25T06:00:00Z".into()),
+                    ..SyncState::default()
+                };
+                save_sync_state(&written).unwrap();
+                assert_eq!(load_sync_state().unwrap(), written);
+            });
     }
 }

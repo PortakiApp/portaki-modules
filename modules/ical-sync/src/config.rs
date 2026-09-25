@@ -1,14 +1,11 @@
-//! Host configuration stored in KV (`config` key).
+//! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
 use portaki_sdk::contracts::booking_channel::{BookingChannel, ChannelSignal};
-use portaki_sdk::host;
-use portaki_sdk::Result;
+use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::channel;
-
-const CONFIG_KEY: &str = "config";
 
 /// Soft cap for host SDUI rows (abuse / UI guard). Not a product “max 2”.
 pub const CALENDAR_SLOTS: usize = 20;
@@ -85,19 +82,14 @@ impl CalendarFormat {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CalendarFeed {
     pub id: String,
-    #[serde(default)]
     pub url: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
-    /// Platform ICS dialect. Always persisted after migrate / save.
-    #[serde(default)]
+    /// Platform ICS dialect, deduced when the row does not carry one.
     pub format: CalendarFormat,
     /// Selling platform for this feed. `Unknown` = not declared.
-    #[serde(default)]
     pub channel: BookingChannel,
-    /// Provenance of `channel` — only `HostOverride`, `FeedUrlHost`, or `None`
-    /// are ever written. Import weighs an explicit choice above a URL prefill.
-    #[serde(default)]
+    /// Provenance of `channel` — only `HostOverride`, `FeedUrlHost`, or `None`.
+    /// Import weighs an explicit choice above a URL prefill.
     pub channel_signal: ChannelSignal,
 }
 
@@ -121,18 +113,72 @@ pub fn resolve_channel(raw: &str, url: &str) -> (BookingChannel, ChannelSignal) 
     }
 }
 
+/// Deduces the feed shape — the host picks a platform, not a format. A stored explicit
+/// `format` (rows saved before the platform held the config) is still honoured; otherwise
+/// the feed URL wins (a `google.com` calendar is a Google mirror whoever sold the stay),
+/// then the chosen platform implies its own export shape.
+fn resolve_format(raw: &str, url: &str, channel: BookingChannel) -> CalendarFormat {
+    CalendarFormat::parse(raw)
+        .filter(|_| !raw.trim().is_empty())
+        .or_else(|| CalendarFormat::detect_from_url(url))
+        .or_else(|| crate::channel::format_from_channel(channel))
+        .unwrap_or(CalendarFormat::Generic)
+}
+
+/// One calendar row as stored: what the host form sends (`calendars.N.id|channel|label|url`,
+/// all strings — a removed row comes back with every field blank), or a row the module saved
+/// itself before the platform held the config (plus `format` and `channel_signal`).
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(default)]
+pub struct CalendarRow {
+    pub id: String,
+    pub url: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub format: String,
+    pub channel: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub channel_signal: Option<ChannelSignal>,
+}
+
+/// The host config, held by the platform (`#[portaki_sdk::config]`), which also takes
+/// `updateConfig`. Sync status lives in the `sync_state` KV, not here.
+///
+/// Only recommended: the platform warns while no row was ever saved. A saved list keeps its
+/// blank rows (the form never drops one), so it no longer warns once saved — even empty.
+#[portaki_sdk::config]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub struct Config {
+    #[field(structured, recommended, label = "host.calendars.label")]
+    pub calendars: Vec<CalendarRow>,
+}
+
+/// The calendars of this install, normalized: blank rows dropped, format and channel resolved.
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ModuleConfig {
-    /// Sole source of truth for connected calendar feeds.
-    #[serde(default)]
     pub calendars: Vec<CalendarFeed>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub last_sync_at: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub sync_summary: Option<String>,
 }
 
 impl ModuleConfig {
+    /// The config of this install. The platform imports the old KV blob once, but only its
+    /// `calendars` key: a blob from before the list (`ical_url_primary` / `_secondary`,
+    /// `feeds_json`) brings nothing. Until the host saves the form (the key then exists, even
+    /// empty), such a blob is still read from the KV rather than lost.
+    pub fn read(ctx: &Context) -> Result<Self> {
+        let held = match &ctx.module_config {
+            Some(Value::Object(held)) => held.contains_key("calendars"),
+            Some(_) => true,
+            None => false,
+        };
+        let calendars = if held {
+            feeds(&Config::load(ctx)?.calendars)
+        } else {
+            legacy_feeds(portaki_sdk::config::legacy_config()?)?
+        };
+        Ok(Self { calendars })
+    }
+
     pub fn connected_calendars(&self) -> Vec<&CalendarFeed> {
         self.calendars
             .iter()
@@ -171,313 +217,220 @@ fn trim_url(raw: &str) -> Option<&str> {
     }
 }
 
-/// Wire format that accepts the calendars list plus legacy primary/secondary / feeds_json.
-/// Legacy keys are load-only — never written back.
-#[derive(Debug, Clone, Deserialize, Default)]
-#[serde(default)]
-struct RawConfig {
-    calendars: Vec<RawCalendarFeed>,
-    ical_url_primary: String,
-    ical_url_secondary: String,
-    feeds_json: String,
-    last_sync_at: Option<String>,
-    sync_summary: Option<String>,
-}
-
-/// Load-only feed row — `format` / `channel` absent means migrate from URL when safe.
-#[derive(Debug, Clone, Deserialize, Default)]
-#[serde(default)]
-struct RawCalendarFeed {
-    id: String,
-    url: String,
-    label: Option<String>,
-    format: Option<CalendarFormat>,
-    channel: Option<BookingChannel>,
-    channel_signal: Option<ChannelSignal>,
-}
-
-fn migrate_raw(raw: RawConfig) -> ModuleConfig {
-    let mut calendars = raw
-        .calendars
-        .into_iter()
+fn feeds(rows: &[CalendarRow]) -> Vec<CalendarFeed> {
+    rows.iter()
+        .take(CALENDAR_SLOTS)
         .enumerate()
-        .filter_map(|(index, feed)| migrate_raw_feed(index, feed))
-        .collect::<Vec<_>>();
-
-    if calendars.is_empty() {
-        calendars = calendars_from_legacy_urls(&raw.ical_url_primary, &raw.ical_url_secondary);
-    }
-    if calendars.is_empty() {
-        calendars = calendars_from_feeds_json(&raw.feeds_json);
-    }
-
-    ModuleConfig {
-        calendars,
-        last_sync_at: nonempty_opt(raw.last_sync_at),
-        sync_summary: nonempty_opt(raw.sync_summary),
-    }
-}
-
-fn migrate_raw_feed(index: usize, mut feed: RawCalendarFeed) -> Option<CalendarFeed> {
-    let url = feed.url.trim().to_string();
-    if url.is_empty() {
-        return None;
-    }
-    if feed.id.trim().is_empty() {
-        feed.id = format!("cal-{}", index + 1);
-    }
-    let label = feed.label.take().and_then(|label| {
-        let trimmed = label.trim().to_string();
-        if trimmed.is_empty() {
-            None
-        } else {
-            Some(trimmed)
-        }
-    });
-    let format = feed.format.unwrap_or_else(|| {
-        CalendarFormat::detect_from_url(&url).unwrap_or(CalendarFormat::Generic)
-    });
-    let (channel, channel_signal) = match feed.channel.filter(|c| c.is_identified()) {
-        Some(declared) => (
-            declared,
-            feed.channel_signal.unwrap_or(ChannelSignal::HostOverride),
-        ),
-        None => resolve_channel("", &url),
-    };
-    Some(CalendarFeed {
-        id: feed.id.trim().to_string(),
-        url,
-        label,
-        format,
-        channel,
-        channel_signal,
-    })
-}
-
-fn calendars_from_legacy_urls(primary: &str, secondary: &str) -> Vec<CalendarFeed> {
-    let mut out = Vec::new();
-    if let Some(url) = trim_url(primary) {
-        out.push(legacy_feed("cal-1", url));
-    }
-    if let Some(url) = trim_url(secondary) {
-        out.push(legacy_feed("cal-2", url));
-    }
-    out
-}
-
-fn legacy_feed(id: &str, url: &str) -> CalendarFeed {
-    let (channel, channel_signal) = resolve_channel("", url);
-    CalendarFeed {
-        id: id.into(),
-        url: url.to_string(),
-        label: None,
-        format: CalendarFormat::detect_from_url(url).unwrap_or(CalendarFormat::Generic),
-        channel,
-        channel_signal,
-    }
-}
-
-fn calendars_from_feeds_json(raw: &str) -> Vec<CalendarFeed> {
-    let trimmed = raw.trim();
-    if trimmed.is_empty() {
-        return Vec::new();
-    }
-    let Ok(values) = serde_json::from_str::<Vec<Value>>(trimmed) else {
-        return Vec::new();
-    };
-    values
-        .into_iter()
-        .enumerate()
-        .filter_map(|(index, value)| {
-            let url = value
-                .get("url")
-                .and_then(|v| v.as_str())
-                .map(str::trim)
-                .filter(|s| !s.is_empty())?
-                .to_string();
-            let id = value
-                .get("id")
-                .and_then(|v| v.as_str())
-                .map(str::trim)
-                .filter(|s| !s.is_empty())
-                .map(str::to_string)
-                .unwrap_or_else(|| format!("cal-{}", index + 1));
-            let label = value
-                .get("label")
-                .and_then(|v| v.as_str())
-                .map(str::trim)
-                .filter(|s| !s.is_empty())
-                .map(str::to_string);
-            let format = value
-                .get("format")
-                .and_then(|v| v.as_str())
-                .and_then(CalendarFormat::parse)
-                .or_else(|| CalendarFormat::detect_from_url(&url))
-                .unwrap_or(CalendarFormat::Generic);
-            let raw_channel = value
-                .get("channel")
-                .and_then(|v| v.as_str())
-                .unwrap_or_default();
-            let (channel, channel_signal) = resolve_channel(raw_channel, &url);
-            Some(CalendarFeed {
-                id,
-                url,
-                label,
-                format,
-                channel,
-                channel_signal,
-            })
-        })
+        .filter_map(|(index, row)| feed(index, row))
         .collect()
 }
 
-fn nonempty_opt(value: Option<String>) -> Option<String> {
-    value.and_then(|s| {
-        let trimmed = s.trim();
-        if trimmed.is_empty() {
-            None
-        } else {
-            Some(trimmed.to_string())
-        }
+fn feed(index: usize, row: &CalendarRow) -> Option<CalendarFeed> {
+    let url = trim_url(&row.url)?;
+    let id = match row.id.trim() {
+        "" => format!("cal-{}", index + 1),
+        id => id.to_string(),
+    };
+    let label = row
+        .label
+        .as_deref()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .map(str::to_string);
+    // A stored provenance stands with its declared channel; the form sends none, so a
+    // host's pick reads as an override and a blank one as the URL prefill.
+    let declared = BookingChannel::parse(&row.channel).filter(|c| c.is_identified());
+    let (channel, channel_signal) = match (declared, row.channel_signal) {
+        (Some(declared), Some(signal)) => (declared, signal),
+        _ => resolve_channel(&row.channel, url),
+    };
+    Some(CalendarFeed {
+        id,
+        url: url.to_string(),
+        label,
+        format: resolve_format(&row.format, url, channel),
+        channel,
+        channel_signal,
     })
 }
 
-pub fn load_config() -> Result<ModuleConfig> {
-    let Some(bytes) = host::kv::get(CONFIG_KEY)? else {
-        return Ok(ModuleConfig::default());
-    };
-    let raw: RawConfig = serde_json::from_slice(&bytes).map_err(|error| {
-        portaki_sdk::PortakiError::Storage(format!("invalid config JSON: {error}"))
-    })?;
-    Ok(migrate_raw(raw))
+/// The KV blob the module wrote itself: the calendars list, else the older
+/// primary / secondary URLs, else `feeds_json`.
+#[derive(Debug, Clone, Deserialize, Default)]
+#[serde(default)]
+struct LegacyConfig {
+    calendars: Vec<CalendarRow>,
+    ical_url_primary: String,
+    ical_url_secondary: String,
+    feeds_json: String,
 }
 
-pub fn save_config(config: &ModuleConfig) -> Result<()> {
-    let mut config = config.clone();
-    // Drop empty rows before persist. Never write legacy primary/secondary keys.
-    config.calendars.retain(|c| c.trimmed_url().is_some());
-    let bytes = serde_json::to_vec(&config).map_err(|error| {
-        portaki_sdk::PortakiError::Storage(format!("config serialize: {error}"))
+fn legacy_feeds(raw: Value) -> Result<Vec<CalendarFeed>> {
+    if raw.is_null() {
+        return Ok(Vec::new());
+    }
+    let legacy: LegacyConfig = serde_json::from_value(raw).map_err(|error| {
+        portaki_sdk::PortakiError::Storage(format!("config_unreadable: {error}"))
     })?;
-    host::kv::set(CONFIG_KEY, &bytes, None)
+    let mut calendars = feeds(&legacy.calendars);
+    if calendars.is_empty() {
+        calendars = feeds(&[
+            CalendarRow {
+                url: legacy.ical_url_primary,
+                ..CalendarRow::default()
+            },
+            CalendarRow {
+                url: legacy.ical_url_secondary,
+                ..CalendarRow::default()
+            },
+        ]);
+    }
+    if calendars.is_empty() {
+        let rows: Vec<CalendarRow> = serde_json::from_str::<Vec<Value>>(&legacy.feeds_json)
+            .unwrap_or_default()
+            .into_iter()
+            .map(|row| serde_json::from_value(row).unwrap_or_default())
+            .collect();
+        calendars = feeds(&rows);
+    }
+    Ok(calendars)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use portaki_test_utils::MockContext;
+    use serde_json::json;
+
+    fn legacy(raw: Value) -> Vec<CalendarFeed> {
+        legacy_feeds(raw).expect("legacy")
+    }
 
     #[test]
     fn migrates_primary_secondary_urls() {
-        let cfg = migrate_raw(RawConfig {
-            ical_url_primary: " https://a.ics ".into(),
-            ical_url_secondary: "https://b.ics".into(),
-            ..RawConfig::default()
-        });
-        assert_eq!(cfg.calendars.len(), 2);
-        assert_eq!(cfg.calendars[0].url, "https://a.ics");
-        assert_eq!(cfg.calendars[1].url, "https://b.ics");
-        assert_eq!(cfg.calendars[0].format, CalendarFormat::Generic);
-        let json = serde_json::to_value(&cfg).expect("serialize");
-        assert!(json.get("ical_url_primary").is_none());
-        assert!(json.get("ical_url_secondary").is_none());
+        let calendars = legacy(json!({
+            "ical_url_primary": " https://a.ics ",
+            "ical_url_secondary": "https://b.ics",
+        }));
+        assert_eq!(calendars.len(), 2);
+        assert_eq!(calendars[0].id, "cal-1");
+        assert_eq!(calendars[0].url, "https://a.ics");
+        assert_eq!(calendars[1].id, "cal-2");
+        assert_eq!(calendars[1].url, "https://b.ics");
+        assert_eq!(calendars[0].format, CalendarFormat::Generic);
     }
 
     #[test]
     fn migrates_feeds_json() {
-        let cfg = migrate_raw(RawConfig {
-            feeds_json:
-                r#"[{"url":"https://x.ics"},{"url":"https://y.ics"},{"url":"https://z.ics"}]"#
-                    .into(),
-            ..RawConfig::default()
-        });
-        assert_eq!(cfg.calendars.len(), 3);
-        assert_eq!(cfg.calendars[0].url, "https://x.ics");
-        let json = serde_json::to_value(&cfg).expect("serialize");
-        assert!(json.get("feeds_json").is_none());
+        let calendars = legacy(json!({
+            "feeds_json": r#"[{"url":"https://x.ics"},{"url":"https://y.ics"},{"url":"https://z.ics"}]"#,
+        }));
+        assert_eq!(calendars.len(), 3);
+        assert_eq!(calendars[0].url, "https://x.ics");
     }
 
     #[test]
     fn calendars_list_wins_over_legacy() {
-        let cfg = migrate_raw(RawConfig {
-            calendars: vec![RawCalendarFeed {
-                id: "c1".into(),
-                url: "https://only.ics".into(),
-                label: Some("Airbnb".into()),
-                format: Some(CalendarFormat::Airbnb),
-                ..RawCalendarFeed::default()
-            }],
-            ical_url_primary: "https://legacy.ics".into(),
-            ical_url_secondary: "https://legacy2.ics".into(),
-            ..RawConfig::default()
-        });
-        assert_eq!(cfg.calendars.len(), 1);
-        assert_eq!(cfg.calendars[0].url, "https://only.ics");
-        assert_eq!(cfg.calendars[0].format, CalendarFormat::Airbnb);
+        let calendars = legacy(json!({
+            "calendars": [{ "id": "c1", "url": "https://only.ics", "label": "Airbnb", "format": "airbnb" }],
+            "ical_url_primary": "https://legacy.ics",
+            "ical_url_secondary": "https://legacy2.ics",
+            "last_sync_at": "2026-07-23T08:12:00Z",
+        }));
+        assert_eq!(calendars.len(), 1);
+        assert_eq!(calendars[0].url, "https://only.ics");
+        assert_eq!(calendars[0].format, CalendarFormat::Airbnb);
     }
 
     #[test]
     fn missing_format_detects_from_airbnb_url() {
-        let cfg = migrate_raw(RawConfig {
-            calendars: vec![RawCalendarFeed {
-                id: "c1".into(),
-                url: "https://www.airbnb.com/calendar/ical/1.ics".into(),
-                label: None,
-                format: None,
-                ..RawCalendarFeed::default()
-            }],
-            ..RawConfig::default()
-        });
-        assert_eq!(cfg.calendars[0].format, CalendarFormat::Airbnb);
+        let calendars = feeds(&[CalendarRow {
+            id: "c1".into(),
+            url: "https://www.airbnb.com/calendar/ical/1.ics".into(),
+            ..CalendarRow::default()
+        }]);
+        assert_eq!(calendars[0].format, CalendarFormat::Airbnb);
     }
 
     #[test]
     fn explicit_generic_is_kept_even_on_airbnb_url() {
-        let cfg = migrate_raw(RawConfig {
-            calendars: vec![RawCalendarFeed {
-                id: "c1".into(),
-                url: "https://www.airbnb.com/calendar/ical/1.ics".into(),
-                label: None,
-                format: Some(CalendarFormat::Generic),
-                ..RawCalendarFeed::default()
-            }],
-            ..RawConfig::default()
-        });
-        assert_eq!(cfg.calendars[0].format, CalendarFormat::Generic);
+        let calendars = feeds(&[CalendarRow {
+            id: "c1".into(),
+            url: "https://www.airbnb.com/calendar/ical/1.ics".into(),
+            format: "generic".into(),
+            ..CalendarRow::default()
+        }]);
+        assert_eq!(calendars[0].format, CalendarFormat::Generic);
     }
 
+    /// What the host form sends: strings only, a removed row blank, no format.
     #[test]
-    fn empty_urls_are_ignored() {
+    fn form_rows_are_normalized() {
+        let config: Config = serde_json::from_value(json!({ "calendars": [
+            { "id": "a", "channel": "", "label": "", "url": "  " },
+            { "id": "", "channel": "booking", "label": " Booking ", "url": "https://example.com/a.ics" },
+            { "id": "", "channel": "", "label": "", "url": "" },
+        ]}))
+        .expect("form rows");
         let config = ModuleConfig {
-            calendars: vec![
-                CalendarFeed {
-                    id: "a".into(),
-                    url: "  ".into(),
-                    label: None,
-                    format: CalendarFormat::Generic,
-                    channel: BookingChannel::Unknown,
-                    channel_signal: ChannelSignal::None,
-                },
-                CalendarFeed {
-                    id: "b".into(),
-                    url: "https://example.com/a.ics".into(),
-                    label: None,
-                    format: CalendarFormat::Booking,
-                    channel: BookingChannel::Booking,
-                    channel_signal: ChannelSignal::HostOverride,
-                },
-            ],
-            ..Default::default()
+            calendars: feeds(&config.calendars),
         };
         assert_eq!(config.connected_calendars().len(), 1);
         assert!(config.has_any_feed());
-        assert_eq!(config.format_for_id("b"), CalendarFormat::Booking);
+        let feed = &config.calendars[0];
+        assert_eq!(feed.id, "cal-2");
+        assert_eq!(feed.label.as_deref(), Some("Booking"));
+        assert_eq!(config.format_for_id("cal-2"), CalendarFormat::Booking);
         assert_eq!(
-            config.channel_for_id("b"),
+            config.channel_for_id("cal-2"),
             (BookingChannel::Booking, ChannelSignal::HostOverride)
         );
         assert_eq!(
             config.channel_for_id("missing"),
             (BookingChannel::Unknown, ChannelSignal::None)
+        );
+    }
+
+    #[test]
+    fn format_deduced_from_platform_when_url_is_neutral() {
+        let neutral = "https://example.com/a.ics";
+        assert_eq!(
+            resolve_format("", neutral, BookingChannel::Airbnb),
+            CalendarFormat::Airbnb
+        );
+        assert_eq!(
+            resolve_format("", neutral, BookingChannel::Booking),
+            CalendarFormat::Booking
+        );
+        // Direct / other sellers imply no dialect → generic.
+        assert_eq!(
+            resolve_format("", neutral, BookingChannel::Direct),
+            CalendarFormat::Generic
+        );
+        // A stored explicit format still wins.
+        assert_eq!(
+            resolve_format("google", neutral, BookingChannel::Airbnb),
+            CalendarFormat::Google
+        );
+    }
+
+    #[test]
+    fn feed_url_wins_over_the_platform() {
+        assert_eq!(
+            resolve_format(
+                "",
+                "https://calendar.google.com/calendar/ical/x/basic.ics",
+                BookingChannel::Direct
+            ),
+            CalendarFormat::Google
+        );
+        assert_eq!(
+            resolve_format(
+                "",
+                "https://www.airbnb.com/calendar/ical/1.ics",
+                BookingChannel::Unknown
+            ),
+            CalendarFormat::Airbnb
         );
     }
 
@@ -522,33 +475,27 @@ mod tests {
 
     #[test]
     fn google_format_migrates_to_an_unknown_channel() {
-        let cfg = migrate_raw(RawConfig {
-            calendars: vec![RawCalendarFeed {
-                id: "c1".into(),
-                url: "https://calendar.google.com/calendar/ical/x/basic.ics".into(),
-                ..RawCalendarFeed::default()
-            }],
-            ..RawConfig::default()
-        });
-        assert_eq!(cfg.calendars[0].format, CalendarFormat::Google);
-        assert_eq!(cfg.calendars[0].channel, BookingChannel::Unknown);
-        assert_eq!(cfg.calendars[0].channel_signal, ChannelSignal::None);
+        let calendars = feeds(&[CalendarRow {
+            id: "c1".into(),
+            url: "https://calendar.google.com/calendar/ical/x/basic.ics".into(),
+            ..CalendarRow::default()
+        }]);
+        assert_eq!(calendars[0].format, CalendarFormat::Google);
+        assert_eq!(calendars[0].channel, BookingChannel::Unknown);
+        assert_eq!(calendars[0].channel_signal, ChannelSignal::None);
     }
 
     #[test]
     fn stored_channel_survives_a_reload_with_its_provenance() {
-        let cfg = migrate_raw(RawConfig {
-            calendars: vec![RawCalendarFeed {
-                id: "c1".into(),
-                url: "https://calendar.google.com/calendar/ical/x/basic.ics".into(),
-                channel: Some(BookingChannel::Direct),
-                channel_signal: Some(ChannelSignal::HostOverride),
-                ..RawCalendarFeed::default()
-            }],
-            ..RawConfig::default()
-        });
-        assert_eq!(cfg.calendars[0].channel, BookingChannel::Direct);
-        assert_eq!(cfg.calendars[0].channel_signal, ChannelSignal::HostOverride);
+        let calendars = legacy(json!({ "calendars": [{
+            "id": "c1",
+            "url": "https://www.airbnb.com/calendar/ical/1.ics",
+            "format": "airbnb",
+            "channel": "airbnb",
+            "channel_signal": "feed-url-host",
+        }]}));
+        assert_eq!(calendars[0].channel, BookingChannel::Airbnb);
+        assert_eq!(calendars[0].channel_signal, ChannelSignal::FeedUrlHost);
     }
 
     #[test]
@@ -560,5 +507,26 @@ mod tests {
             CalendarFormat::parse("vrbo"),
             Some(CalendarFormat::AbritelVrbo)
         );
+    }
+
+    /// The import skips a pre-list blob (no `calendars` key): read from the KV until the host
+    /// saves; once the key is held, even empty, the platform wins.
+    #[test]
+    #[serial_test::serial]
+    fn a_pre_list_blob_survives_the_import() {
+        let blob = json!({ "ical_url_primary": "https://example.com/a.ics" });
+        let bytes = serde_json::to_vec(&blob).unwrap();
+        MockContext::host()
+            .with_kv("config", bytes.clone())
+            .with_config(&json!({}))
+            .run(|ctx| {
+                let config = ModuleConfig::read(&ctx).unwrap();
+                assert_eq!(config.calendars.len(), 1);
+                assert_eq!(config.calendars[0].url, "https://example.com/a.ics");
+            });
+        MockContext::host()
+            .with_kv("config", bytes)
+            .with_config(&json!({ "calendars": [] }))
+            .run(|ctx| assert!(ModuleConfig::read(&ctx).unwrap().calendars.is_empty()));
     }
 }
