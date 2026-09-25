@@ -180,8 +180,11 @@ fn a_property_without_position_is_never_searched() {
         .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .build();
-    ctx.property.lat = 0.0;
-    ctx.property.lng = 0.0;
+    #[allow(deprecated)] // lat/lng until the guest-shell change reads `coordinates`
+    {
+        ctx.property.lat = 0.0;
+        ctx.property.lng = 0.0;
+    }
     let backend = host.clone();
     with_host(host, ctx.clone(), || {
         let json = surface_json(&render_explore_detail(ctx.clone()));
