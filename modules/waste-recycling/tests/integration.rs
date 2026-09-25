@@ -3,6 +3,7 @@
 use portaki_sdk::capability;
 use serial_test::serial;
 
+use portaki_sdk::host::module::ModuleStatus;
 use portaki_test_utils::{MockContext, SurfaceAssertions};
 use serde_json::{json, Value};
 
@@ -37,7 +38,7 @@ fn home_card_renders_empty_without_config() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("home card");
             assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
         });
 }
@@ -49,7 +50,7 @@ fn home_card_renders_bins_with_config() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("home card");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("ColorDotItem"));
             assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
@@ -68,7 +69,8 @@ fn bins_render_as_named_swatches() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
-            let json = serde_json::to_string(&render_home_card(ctx)).expect("surface json");
+            let json = serde_json::to_string(&render_home_card(ctx).expect("home card"))
+                .expect("surface json");
             assert!(json.contains(r#""swatch":"yellow""#), "{json}");
             assert!(json.contains(r#""swatch":"green""#), "{json}");
             assert!(!json.contains("#f4c020"), "{json}");
@@ -82,7 +84,7 @@ fn detail_renders_enriched_bins() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
-            let surface = render_explore_detail(ctx);
+            let surface = render_explore_detail(ctx).expect("detail");
             assert!(SurfaceAssertions::new(&surface).contains_type("Stack"));
             assert!(SurfaceAssertions::new(&surface).contains_type("ColorDotItem"));
         });
@@ -111,5 +113,24 @@ fn the_host_form_sends_the_declared_keys() {
             assert!(json.contains("Plastique, Carton"), "{json}");
             assert!(json.contains("Bac vert"));
             assert!(json.contains(r#""value":"yellow""#), "{json}");
+        });
+}
+
+/// The SDK renders the inactive state; the surface itself is not called.
+#[test]
+#[serial]
+fn an_inactive_module_shows_the_sdk_state() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_module_status(ModuleStatus {
+            active: false,
+            workspace_enabled: true,
+            incomplete: false,
+            requires_config: true,
+            missing_required_keys: Vec::new(),
+        })
+        .run(|ctx| {
+            let surface = portaki_sdk::guest_shell::render(ctx, "home.card", render_home_card);
+            assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
         });
 }
