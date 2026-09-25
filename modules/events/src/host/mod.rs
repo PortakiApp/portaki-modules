@@ -196,7 +196,7 @@ fn event_slot_card(index: usize, event: Option<&EventRow>, ctx: &HostContext) ->
     ];
 
     Card::new()
-        .title(format!("i18n:host.event.slot{slot}"))
+        .title(t!("host.event.slot", n = slot).unwrap_or_default())
         .icon(IconName::Calendar)
         .children(id.into_iter().chain(fields).collect())
         .into()
