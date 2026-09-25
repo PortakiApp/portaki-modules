@@ -11,10 +11,8 @@ define_surface_ids! {
 }
 
 define_operation_names! {
-    GET_CONFIG = "getConfig",
     STATS_SUMMARY = "statsSummary",
     SUBMIT_REVIEW = "submitReview",
-    UPDATE_CONFIG = "updateConfig",
 }
 
 /// Catalog module id (`guest-reviews`).
