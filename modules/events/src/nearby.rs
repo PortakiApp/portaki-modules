@@ -34,6 +34,12 @@ pub fn has_open_agenda(ctx: &Context) -> bool {
         || ctx.has_capability(capability::external::OPEN_AGENDA_BYOK)
 }
 
+/// Whether nearby events can be searched: the host wants them, a key is there, and the
+/// property has a position.
+pub fn nearby_ready(ctx: &Context, config: &ModuleConfig) -> bool {
+    config.nearby_enabled && has_open_agenda(ctx) && ctx.property.coordinates.is_some()
+}
+
 /// Merges host-curated events with nearby OpenAgenda results when enabled.
 pub fn resolve_events(
     ctx: &Context,
@@ -50,13 +56,12 @@ pub fn resolve_events(
         return Ok(manual);
     }
 
-    let lat = ctx.property.lat;
-    let lng = ctx.property.lng;
-    if !coords_usable(lat, lng) {
+    // Pas de position (logement non géocodé) : pas d'agenda alentour, et aucun appel.
+    let Some(point) = ctx.property.coordinates.as_ref() else {
         return Ok(manual);
-    }
+    };
 
-    let nearby = load_nearby(ctx, config, lat, lng).unwrap_or_else(|_| Vec::new());
+    let nearby = load_nearby(ctx, config, point.lat, point.lng).unwrap_or_else(|_| Vec::new());
     let mut nearby = crate::time_format::sort_events_by_start(nearby);
     if for_home_card {
         nearby = crate::time_format::events_for_home_card(&nearby, now);
@@ -147,10 +152,6 @@ fn normalize_key(event: &EventRow) -> String {
         title
     };
     format!("{}|{}", event.starts_at.trim(), title)
-}
-
-fn coords_usable(lat: f64, lng: f64) -> bool {
-    lat.abs() > f64::EPSILON || lng.abs() > f64::EPSILON
 }
 
 fn cache_valid(

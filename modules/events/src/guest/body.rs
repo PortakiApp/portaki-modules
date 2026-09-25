@@ -106,8 +106,9 @@ fn events_map(events: &[crate::config::EventRow]) -> Option<Component> {
     let mut count = 0.0;
 
     for event in &located {
-        let lat = event.lat.unwrap_or(0.0);
-        let lng = event.lng.unwrap_or(0.0);
+        let (Some(lat), Some(lng)) = (event.lat, event.lng) else {
+            continue;
+        };
         lat_sum += lat;
         lng_sum += lng;
         count += 1.0;
