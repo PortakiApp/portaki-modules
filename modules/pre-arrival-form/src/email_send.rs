@@ -31,7 +31,7 @@ pub fn send_form_available(ctx: &Context) -> Result<()> {
         return Ok(());
     }
 
-    let config = ModuleConfig::read(ctx)?;
+    let config = ModuleConfig::load(ctx)?;
     let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at);
     let now = time::now()?;
     if !is_form_available(config.show_when, now, checkin_at) {

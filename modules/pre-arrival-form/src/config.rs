@@ -4,9 +4,8 @@
 //! - when to show the guest form (`show_when`)
 //! - which questions are enabled (`ask_*`)
 
-use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value};
+use serde_json::Value;
 
 /// When the guest form becomes available.
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
@@ -43,7 +42,7 @@ impl ShowWhen {
 
 /// The keys are the names of the host form fields: the platform takes `updateConfig` itself.
 /// The questions sit flat, as the form sends them; the KV kept them under `questions`.
-#[portaki_sdk::config]
+#[portaki_sdk::config(legacy = legacy)]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ModuleConfig {
     #[field(
@@ -80,46 +79,20 @@ impl Default for ModuleConfig {
     }
 }
 
-const QUESTION_KEYS: [&str; 6] = [
-    "ask_arrival_time",
-    "ask_occasion",
-    "ask_allergies",
-    "ask_guest_count",
-    "ask_special_needs",
-    "ask_id_document",
-];
-
-impl ModuleConfig {
-    /// The config of this install. The KV kept the questions nested under `questions`, which
-    /// the platform import skips: until the host saves a question, it is still read from there.
-    /// Present, even `false`, the platform's value wins.
-    pub fn read(ctx: &Context) -> Result<Self> {
-        let config = Self::load(ctx)?;
-        let not_held = Map::new();
-        let held = match &ctx.module_config {
-            Some(Value::Object(held)) => held,
-            Some(_) => return Ok(config),
-            // `load` read the KV blob, whose questions are nested: same lookup.
-            None => &not_held,
-        };
-        if QUESTION_KEYS.iter().all(|key| held.contains_key(*key)) {
-            return Ok(config);
-        }
-        let Some(Value::Object(old)) = portaki_sdk::config::legacy_config()?
-            .get_mut("questions")
-            .map(Value::take)
-        else {
-            return Ok(config);
-        };
-        let mut merged = serde_json::to_value(&config).map_err(unreadable)?;
-        for key in QUESTION_KEYS {
-            if let (false, Some(value)) = (held.contains_key(key), old.get(key)) {
-                merged[key] = value.clone();
+/// The old KV blob nested the questions under `questions`: lift them to the declared keys
+/// (a flat key, already there, wins).
+fn legacy(mut old: Value) -> Value {
+    if let Some(blob) = old.as_object_mut() {
+        if let Some(Value::Object(questions)) = blob.remove("questions") {
+            for (key, value) in questions {
+                blob.entry(key).or_insert(value);
             }
         }
-        serde_json::from_value(merged).map_err(unreadable)
     }
+    old
+}
 
+impl ModuleConfig {
     /// At least one question is asked.
     pub fn asks_anything(&self) -> bool {
         self.ask_arrival_time
@@ -131,49 +104,53 @@ impl ModuleConfig {
     }
 }
 
-fn unreadable(error: serde_json::Error) -> PortakiError {
-    PortakiError::Storage(format!("config_unreadable: {error}"))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use portaki_test_utils::MockContext;
     use serde_json::json;
 
-    /// The KV nested the questions under `questions`, which the import skips: they are still
-    /// read from there until the host saves them; a saved one wins, even `false`.
+    #[test]
+    fn legacy_nested_questions_are_lifted() {
+        let mapped = legacy(json!({
+            "show_when": "confirm",
+            "questions": { "ask_occasion": false, "ask_id_document": true }
+        }));
+        assert_eq!(
+            mapped,
+            json!({ "show_when": "confirm", "ask_occasion": false, "ask_id_document": true })
+        );
+        // A flat key already there wins; a non-object `questions` brings nothing.
+        assert_eq!(
+            legacy(json!({ "ask_occasion": true, "questions": { "ask_occasion": false } })),
+            json!({ "ask_occasion": true })
+        );
+        assert_eq!(legacy(json!({ "questions": "oops" })), json!({}));
+    }
+
+    /// The KV is read (through `legacy`) only while the platform sends no config; `{}` is a
+    /// real, empty config.
     #[test]
     #[serial_test::serial]
-    fn nested_questions_survive_the_import() {
-        let legacy = json!({
+    fn the_kv_is_read_through_legacy_until_the_platform_holds_the_config() {
+        let old = json!({
             "show_when": "confirm",
             "questions": { "ask_occasion": false, "ask_id_document": true }
         });
-        let read = |held: Option<Value>| {
-            let mut mock =
-                MockContext::guest().with_kv("config", serde_json::to_vec(&legacy).unwrap());
-            if let Some(held) = held {
-                mock = mock.with_config(&held);
-            }
-            mock.run(|ctx| ModuleConfig::read(&ctx).unwrap())
-        };
-
-        let before_import = read(None);
+        let kv = serde_json::to_vec(&old).unwrap();
+        let before_import = MockContext::guest()
+            .with_kv("config", kv.clone())
+            .run(|ctx| ModuleConfig::load(&ctx).unwrap());
         assert_eq!(before_import.show_when, ShowWhen::Confirm);
         assert!(!before_import.ask_occasion);
         assert!(before_import.ask_id_document);
         assert!(before_import.ask_allergies);
 
-        let imported = read(Some(json!({ "show_when": "confirm" })));
-        assert_eq!(imported, before_import);
-
-        let saved = read(Some(
-            json!({ "ask_occasion": true, "ask_id_document": false }),
-        ));
-        assert!(saved.ask_occasion);
-        assert!(!saved.ask_id_document);
-        assert_eq!(saved.show_when, ShowWhen::Before);
+        let held = MockContext::guest()
+            .with_kv("config", kv)
+            .with_config(&json!({}))
+            .run(|ctx| ModuleConfig::load(&ctx).unwrap());
+        assert_eq!(held, ModuleConfig::default());
     }
 
     #[test]

@@ -71,7 +71,7 @@ pub fn get_status(ctx: Context) -> Result<PreArrivalStatus> {
 /// which the declared config cannot say.
 #[portaki_sdk::query(name = "publishReadiness")]
 pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
-    let ok = ModuleConfig::read(&ctx)?.asks_anything();
+    let ok = ModuleConfig::load(&ctx)?.asks_anything();
     Ok(PublishReadiness {
         items: vec![PublishCheck {
             id: "questions".into(),

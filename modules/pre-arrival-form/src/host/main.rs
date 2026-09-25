@@ -19,7 +19,7 @@ use crate::config::{ModuleConfig, ShowWhen};
     icon = IconName::Clipboard
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
-    let config = ModuleConfig::read(&ctx)?;
+    let config = ModuleConfig::load(&ctx)?;
 
     let form_children: Vec<Component> = vec![
         Card::new()
