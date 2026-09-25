@@ -7,13 +7,15 @@ use portaki_sdk::host::with_host;
 use serial_test::serial;
 
 use local_guide::{
-    get_config, render_explore_detail, render_home_card, render_host_main, render_upcoming_card,
-    update_config, ActivityInput, SpotInput, UpdateConfigArgs, ERR_ACTIVITIES_TOO_MANY,
-    ERR_ACTIVITY_URL_NOT_GYG, MAX_CURATED_LINKS, PARTNER_ID, PARTNER_QUERY_PARAM,
+    render_explore_detail, render_home_card, render_host_main, render_upcoming_card,
+    MAX_CURATED_LINKS, PARTNER_ID, PARTNER_QUERY_PARAM,
 };
 use portaki_sdk::sdui::surface::Surface;
 use portaki_test_utils::{MockContext, SurfaceAssertions};
 use serde_json::json;
+
+#[path = "../../../support/config_form.rs"]
+mod config_form;
 
 const FR_BUNDLE: &str = include_str!("../i18n/fr-FR.json");
 const EN_BUNDLE: &str = include_str!("../i18n/en-US.json");
@@ -21,16 +23,16 @@ const EN_BUNDLE: &str = include_str!("../i18n/en-US.json");
 /// Locales embarquées par le module. Toute assertion « dans chaque langue » part d'ici.
 const BUNDLES: [(&str, &str); 2] = [("fr-FR", FR_BUNDLE), ("en-US", EN_BUNDLE)];
 
-fn sample_config_bytes() -> Vec<u8> {
-    serde_json::to_vec(&json!({
-        "spots_json": r#"[{"id":"bike","title":{"fr":"Holiday Bikes","en":"Holiday Bikes"},"category":"Location vélos","distance":"900 m","tag":"1j offert","url":"https://example.com","detail":{"fr":"Vélos ville et électriques.","en":"City and e-bikes."}}]"#,
+fn sample_config() -> serde_json::Value {
+    json!({
+        "spots": [{
+            "id": "bike", "title": { "fr": "Holiday Bikes", "en": "Holiday Bikes" },
+            "category": "Location vélos", "distance": "900 m", "tag": "1j offert",
+            "url": "https://example.com",
+            "detail": { "fr": "Vélos ville et électriques.", "en": "City and e-bikes." }
+        }],
         "disclaimer": "Suggestions non partenaires"
-    }))
-    .expect("config json")
-}
-
-fn config_bytes(value: serde_json::Value) -> Vec<u8> {
-    serde_json::to_vec(&value).expect("config json")
+    })
 }
 
 fn surface_json(surface: &Surface) -> String {
@@ -79,7 +81,7 @@ fn home_card_empty_without_config_or_address() {
 fn home_card_renders_spots_with_pill() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
+        .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_home_card(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
@@ -94,7 +96,7 @@ fn home_card_renders_spots_with_pill() {
 fn upcoming_card_renders_spot_count() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
+        .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_upcoming_card(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
@@ -125,7 +127,7 @@ fn upcoming_card_empty_without_config_or_address() {
 fn detail_includes_link() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
+        .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("Link"));
@@ -136,8 +138,8 @@ fn detail_includes_link() {
 // --- Carte -------------------------------------------------------------------------------
 
 /// Config avec un spot situé et un spot sans position.
-fn located_config_bytes() -> Vec<u8> {
-    config_bytes(json!({
+fn located_config() -> serde_json::Value {
+    json!({
         "spots": [
             {
                 "id": "plage", "title": { "fr": "Plage du Midi" },
@@ -145,7 +147,7 @@ fn located_config_bytes() -> Vec<u8> {
             },
             { "id": "boulangerie", "title": { "fr": "Boulangerie" } }
         ]
-    }))
+    })
 }
 
 #[test]
@@ -153,7 +155,7 @@ fn located_config_bytes() -> Vec<u8> {
 fn the_detail_surface_maps_the_located_spots_and_the_property() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", located_config_bytes())
+        .with_config(&located_config())
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("Map"));
@@ -172,7 +174,7 @@ fn the_home_card_stays_a_list_without_a_map() {
     // La carte d'accueil est une vignette : la carte appartient à la feuille détaillée.
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", located_config_bytes())
+        .with_config(&located_config())
         .run(|ctx| {
             let surface = render_home_card(ctx);
             assert!(!SurfaceAssertions::new(&surface).contains_type("Map"));
@@ -187,7 +189,7 @@ fn a_config_written_before_the_map_renders_no_map() {
     // sans carte vide ni carte centrée sur l'Atlantique.
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
+        .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
             assert!(!SurfaceAssertions::new(&surface).contains_type("Map"));
@@ -201,12 +203,9 @@ fn null_island_never_reaches_the_map() {
     // Ce que rend un formulaire dont les deux champs de position sont restés vides.
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({
-                "spots": [{ "id": "s1", "title": { "fr": "Plage" }, "lat": 0.0, "lng": 0.0 }]
-            })),
-        )
+        .with_config(&json!({
+            "spots": [{ "id": "s1", "title": { "fr": "Plage" }, "lat": 0.0, "lng": 0.0 }]
+        }))
         .run(|ctx| {
             assert!(!SurfaceAssertions::new(&render_explore_detail(ctx)).contains_type("Map"));
         });
@@ -214,79 +213,33 @@ fn null_island_never_reaches_the_map() {
 
 #[test]
 #[serial]
-fn the_picker_fields_save_the_position() {
+fn the_host_form_sends_the_declared_keys() {
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({
+            "spots": located_config()["spots"],
+            "disclaimer": "Suggestions non partenaires",
+            "activities_enabled": true,
+            "activities_destination": "Antibes",
+            "activities_intro": "Les incontournables",
+            "activities": [{ "url": "https://gyg.me/aBcD12", "label": "Court" }],
+            "tiqets_enabled": true,
+            "tiqets_radius_km": "20",
+            "tiqets_min_rating": "4"
+        }))
         .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    spots: vec![SpotInput {
-                        name: "Plage du Midi".into(),
-                        address: "  Plage du Midi, Cannes  ".into(),
-                        lat: Some(43.548),
-                        lng: Some(7.005),
-                        ..Default::default()
-                    }],
-                    ..Default::default()
-                },
-            )
-            .expect("enregistré");
-
-            let config = get_config(ctx).expect("cfg");
-            assert_eq!(config.spots[0].coords(), Some((43.548, 7.005)));
-            assert_eq!(
-                config.spots[0].address.as_deref(),
-                Some("Plage du Midi, Cannes")
+            let surface = render_host_main(ctx).expect("host main");
+            config_form::assert_form_matches_config(
+                concat!(env!("OUT_DIR"), "/portaki-emissions"),
+                &surface,
+                &[],
             );
-        });
-}
-
-#[test]
-#[serial]
-fn saving_without_the_map_fields_keeps_the_stored_position() {
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", located_config_bytes())
-        .run(|ctx| {
-            // Un appelant plus ancien que la carte soumet le nom et rien d'autre : la
-            // position enregistrée doit lui survivre.
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    spots: vec![SpotInput {
-                        name: "Plage du Midi".into(),
-                        ..Default::default()
-                    }],
-                    ..Default::default()
-                },
-            )
-            .expect("enregistré");
-
-            let config = get_config(ctx).expect("cfg");
-            assert_eq!(config.spots[0].coords(), Some((43.548, 7.005)));
-            assert_eq!(
-                config.spots[0].address.as_deref(),
-                Some("Plage du Midi, Cannes")
-            );
-        });
-}
-
-#[test]
-#[serial]
-fn update_config_roundtrip() {
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    disclaimer: "d".into(),
-                    ..Default::default()
-                },
-            )
-            .expect("ok");
-            assert_eq!(get_config(ctx).expect("cfg").disclaimer.get("fr"), "d");
+            let json = surface_json(&surface);
+            assert!(json.contains("Plage du Midi, Cannes"), "{json}");
+            assert!(json.contains("Les incontournables"), "{json}");
+            // Pas de bouton Enregistrer : le tableau de bord enregistre à la saisie, et la
+            // plateforme refuserait les arguments figés qu'il enverrait.
+            assert!(!SurfaceAssertions::new(&surface).contains_type("Button"));
         });
 }
 
@@ -297,10 +250,7 @@ fn update_config_roundtrip() {
 fn the_destination_comes_from_the_property_city() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({ "activities": { "enabled": true } })),
-        )
+        .with_config(&json!({ "activities_enabled": true }))
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
             let json = surface_json(&surface);
@@ -317,12 +267,9 @@ fn the_destination_comes_from_the_property_city() {
 fn the_host_destination_override_wins() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({
-                "activities": { "enabled": true, "destination": "Antibes" }
-            })),
-        )
+        .with_config(&json!({
+            "activities_enabled": true, "activities_destination": "Antibes"
+        }))
         .run(|ctx| {
             let json = surface_json(&render_explore_detail(ctx));
             assert!(json.contains("q=Antibes"), "{json}");
@@ -352,7 +299,7 @@ fn a_config_without_the_activities_key_renders_no_section() {
     // transformer en vitrine d'affiliation.
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
+        .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
             let json = surface_json(&surface);
@@ -368,10 +315,7 @@ fn a_config_without_the_activities_key_renders_no_section() {
 fn without_a_destination_the_section_is_absent() {
     let (mut ctx, host) = MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({ "activities": { "enabled": true } })),
-        )
+        .with_config(&json!({ "activities_enabled": true }))
         .build();
     ctx.property.address = None;
     with_host(host, ctx.clone(), || {
@@ -387,13 +331,10 @@ fn without_a_destination_the_section_is_absent() {
 fn a_disabled_section_disappears_and_leaves_the_spots() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({
-                "spots": [{ "id": "s1", "title": { "fr": "Plage" } }],
-                "activities": { "enabled": false, "destination": "Antibes" }
-            })),
-        )
+        .with_config(&json!({
+            "spots": [{ "id": "s1", "title": { "fr": "Plage" } }],
+            "activities_enabled": false, "activities_destination": "Antibes"
+        }))
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
             let json = surface_json(&surface);
@@ -411,10 +352,7 @@ fn curated_links_render_normalized_capped_and_in_order() {
         .collect();
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({ "activities": { "enabled": true, "links": links } })),
-        )
+        .with_config(&json!({ "activities_enabled": true, "activities": links }))
         .run(|ctx| {
             let json = surface_json(&render_explore_detail(ctx));
             let first = json.find("tour-00").expect("first link");
@@ -431,23 +369,22 @@ fn curated_links_render_normalized_capped_and_in_order() {
 fn every_link_reaching_the_guest_carries_our_partner_id() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({
-                "activities": {
-                    "enabled": true,
-                    "destination": "Antibes",
-                    "links": [
-                        // Un identifiant collé par l'hôte ne survit pas au rendu.
-                        { "url": "https://www.getyourguide.com/paris-l16/?partner_id=someone" },
-                        { "url": "https://gyg.me/aBcD12" }
-                    ]
-                }
-            })),
-        )
+        .with_config(&json!({
+            "activities_enabled": true,
+            "activities_destination": "Antibes",
+            "activities": [
+                // Un identifiant collé par l'hôte ne survit pas au rendu.
+                { "url": "https://www.getyourguide.com/paris-l16/?partner_id=someone" },
+                // La plateforme garde ce que l'hôte a saisi : un domaine étranger n'est
+                // arrêté qu'au rendu.
+                { "url": "https://viator.com/paris" },
+                { "url": "https://gyg.me/aBcD12" }
+            ]
+        }))
         .run(|ctx| {
             let json = surface_json(&render_explore_detail(ctx));
             assert!(!json.contains("someone"), "{json}");
+            assert!(!json.contains("viator"), "{json}");
             assert!(json.contains(&format!(
                 "https://www.getyourguide.com/s/?q=Antibes&{PARTNER_QUERY_PARAM}={PARTNER_ID}"
             )));
@@ -461,113 +398,14 @@ fn every_link_reaching_the_guest_carries_our_partner_id() {
 
 #[test]
 #[serial]
-fn a_foreign_url_is_refused_at_save() {
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            let error = update_config(
-                ctx,
-                UpdateConfigArgs {
-                    activities: vec![ActivityInput {
-                        url: "https://viator.com/paris".into(),
-                        label: "Pas GetYourGuide".into(),
-                    }],
-                    ..Default::default()
-                },
-            )
-            .expect_err("refusé");
-            assert!(
-                error.to_string().contains(ERR_ACTIVITY_URL_NOT_GYG),
-                "{error}"
-            );
-        });
-}
-
-#[test]
-#[serial]
-fn more_than_ten_links_is_refused_at_save() {
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            let activities = (0..MAX_CURATED_LINKS + 1)
-                .map(|index| ActivityInput {
-                    url: format!("https://www.getyourguide.com/tour-{index:02}"),
-                    label: String::new(),
-                })
-                .collect();
-            let error = update_config(
-                ctx,
-                UpdateConfigArgs {
-                    activities,
-                    ..Default::default()
-                },
-            )
-            .expect_err("refusé");
-            assert!(
-                error.to_string().contains(ERR_ACTIVITIES_TOO_MANY),
-                "{error}"
-            );
-        });
-}
-
-#[test]
-#[serial]
-fn saving_normalizes_the_links_and_keeps_the_order() {
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    activities_enabled: Some(true),
-                    activities_destination: "  Antibes  ".into(),
-                    activities_intro: " Les incontournables ".into(),
-                    activities: vec![
-                        ActivityInput {
-                            url: "www.getyourguide.com/paris-l16/?partner_id=ancien&lc=fr".into(),
-                            label: " Paris ".into(),
-                        },
-                        // Créneau laissé vide : ignoré, ce n'est pas une faute.
-                        ActivityInput::default(),
-                        ActivityInput {
-                            url: "https://gyg.me/aBcD12".into(),
-                            label: "Court".into(),
-                        },
-                    ],
-                    ..Default::default()
-                },
-            )
-            .expect("enregistré");
-
-            let config = get_config(ctx).expect("cfg");
-            let activities = config.activities;
-            assert!(activities.enabled);
-            assert_eq!(activities.destination, "Antibes");
-            assert_eq!(activities.intro.get("fr"), "Les incontournables");
-            assert_eq!(activities.links.len(), 2);
-            // Relevé en https, identifiant périmé retiré, reste de la query intact.
-            assert_eq!(
-                activities.links[0].url,
-                "https://www.getyourguide.com/paris-l16/?lc=fr&partner_id=CLOQ42U"
-            );
-            assert_eq!(activities.links[0].label.get("fr"), "Paris");
-            assert_eq!(activities.links[1].url, "https://gyg.me/aBcD12");
-        });
-}
-
-#[test]
-#[serial]
 fn the_host_sheet_flags_a_url_it_would_refuse() {
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({
-                "activities": { "links": [{ "url": "https://viator.com/paris" }] }
-            })),
-        )
+        .with_config(&json!({
+            "activities": [{ "url": "https://viator.com/paris" }]
+        }))
         .run(|ctx| {
-            let json = surface_json(&render_host_main(ctx));
+            let json = surface_json(&render_host_main(ctx).expect("host main"));
             assert!(json.contains("i18n:host.activities.error.badUrl"), "{json}");
             assert!(json.contains("i18n:host.section.activities"));
         });
@@ -582,12 +420,9 @@ fn the_search_label_names_the_destination() {
             "guest.activities.searchLabel",
             "Voir les activités à {destination}",
         )
-        .with_kv(
-            "config",
-            config_bytes(json!({
-                "activities": { "enabled": true, "destination": "Antibes" }
-            })),
-        )
+        .with_config(&json!({
+            "activities_enabled": true, "activities_destination": "Antibes"
+        }))
         .run(|ctx| {
             let json = surface_json(&render_explore_detail(ctx));
             assert!(json.contains("Voir les activités à Antibes"), "{json}");
@@ -603,17 +438,12 @@ fn a_pasted_destination_url_becomes_the_link_and_names_its_place() {
             "guest.activities.searchLabel",
             "Voir les activités à {destination}",
         )
-        .with_kv(
-            "config",
-            config_bytes(json!({
-                "activities": {
-                    "enabled": true,
-                    // L'hôte a collé la page de destination : elle est juste quel que soit
-                    // le pays depuis lequel le voyageur se connecte, là où `?q=` ne l'est pas.
-                    "destination": "https://www.getyourguide.com/cannes-l15/"
-                }
-            })),
-        )
+        .with_config(&json!({
+            "activities_enabled": true,
+            // L'hôte a collé la page de destination : elle est juste quel que soit
+            // le pays depuis lequel le voyageur se connecte, là où `?q=` ne l'est pas.
+            "activities_destination": "https://www.getyourguide.com/cannes-l15/"
+        }))
         .run(|ctx| {
             let json = surface_json(&render_explore_detail(ctx));
             assert!(
@@ -630,15 +460,10 @@ fn a_pasted_destination_url_becomes_the_link_and_names_its_place() {
 fn a_destination_url_trades_the_hosts_partner_id_for_ours() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({
-                "activities": {
-                    "enabled": true,
-                    "destination": "https://www.getyourguide.com/cannes-l15/?partner_id=someone"
-                }
-            })),
-        )
+        .with_config(&json!({
+            "activities_enabled": true,
+            "activities_destination": "https://www.getyourguide.com/cannes-l15/?partner_id=someone"
+        }))
         .run(|ctx| {
             let json = surface_json(&render_explore_detail(ctx));
             assert!(
@@ -660,12 +485,9 @@ fn a_short_destination_link_is_kept_and_labelled_from_the_address() {
             "guest.activities.searchLabel",
             "Voir les activités à {destination}",
         )
-        .with_kv(
-            "config",
-            config_bytes(json!({
-                "activities": { "enabled": true, "destination": "https://gyg.me/aBcD12" }
-            })),
-        )
+        .with_config(&json!({
+            "activities_enabled": true, "activities_destination": "https://gyg.me/aBcD12"
+        }))
         .run(|ctx| {
             let json = surface_json(&render_explore_detail(ctx));
             // Le lien court repart intact : son identifiant est déjà dans le chemin.
@@ -681,12 +503,9 @@ fn a_short_destination_link_is_kept_and_labelled_from_the_address() {
 fn a_short_destination_link_without_an_address_gets_the_neutral_label() {
     let (mut ctx, host) = MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({
-                "activities": { "enabled": true, "destination": "https://gyg.me/aBcD12" }
-            })),
-        )
+        .with_config(&json!({
+            "activities_enabled": true, "activities_destination": "https://gyg.me/aBcD12"
+        }))
         .build();
     ctx.property.address = None;
     with_host(host, ctx.clone(), || {
@@ -698,76 +517,14 @@ fn a_short_destination_link_without_an_address_gets_the_neutral_label() {
 
 #[test]
 #[serial]
-fn a_foreign_destination_url_is_refused_at_save() {
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            let error = update_config(
-                ctx,
-                UpdateConfigArgs {
-                    activities_destination: "https://viator.com/paris".into(),
-                    ..Default::default()
-                },
-            )
-            .expect_err("refusé");
-            // Même faute que dans la liste, donc même erreur et même message.
-            assert!(
-                error.to_string().contains(ERR_ACTIVITY_URL_NOT_GYG),
-                "{error}"
-            );
-        });
-}
-
-#[test]
-#[serial]
-fn saving_a_destination_url_normalizes_it_and_leaves_a_place_name_alone() {
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    activities_enabled: Some(true),
-                    activities_destination:
-                        "  www.getyourguide.com/cannes-l15/?partner_id=ancien  ".into(),
-                    ..Default::default()
-                },
-            )
-            .expect("enregistré");
-            assert_eq!(
-                get_config(ctx.clone()).expect("cfg").activities.destination,
-                "https://www.getyourguide.com/cannes-l15/?partner_id=CLOQ42U"
-            );
-
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    activities_enabled: Some(true),
-                    activities_destination: "  Antibes  ".into(),
-                    ..Default::default()
-                },
-            )
-            .expect("enregistré");
-            assert_eq!(
-                get_config(ctx).expect("cfg").activities.destination,
-                "Antibes"
-            );
-        });
-}
-
-#[test]
-#[serial]
 fn the_host_sheet_flags_a_destination_url_it_would_refuse() {
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({
-                "activities": { "destination": "https://viator.com/paris" }
-            })),
-        )
+        .with_config(&json!({
+            "activities_destination": "https://viator.com/paris"
+        }))
         .run(|ctx| {
-            let json = surface_json(&render_host_main(ctx));
+            let json = surface_json(&render_host_main(ctx).expect("host main"));
             assert!(json.contains("i18n:host.activities.error.badUrl"), "{json}");
         });
 }
@@ -791,10 +548,7 @@ fn the_affiliate_disclosure_ships_in_every_locale() {
     // Et elle est bien rendue, sous la liste, dès que des liens s'affichent.
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({ "activities": { "enabled": true } })),
-        )
+        .with_config(&json!({ "activities_enabled": true }))
         .run(|ctx| {
             for json in [
                 surface_json(&render_explore_detail(ctx.clone())),
@@ -815,17 +569,12 @@ fn every_i18n_key_a_surface_uses_exists_in_every_locale() {
 
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({
-                "spots": [{ "id": "s1", "title": { "fr": "Plage" }, "url": "https://example.com" }],
-                "disclaimer": "Suggestions non partenaires",
-                "activities": {
-                    "enabled": true,
-                    "links": [{ "url": "https://gyg.me/aBcD12" }]
-                }
-            })),
-        )
+        .with_config(&json!({
+            "spots": [{ "id": "s1", "title": { "fr": "Plage" }, "url": "https://example.com" }],
+            "disclaimer": "Suggestions non partenaires",
+            "activities_enabled": true,
+            "activities": [{ "url": "https://gyg.me/aBcD12" }]
+        }))
         .run(|ctx| {
             refs.extend(i18n_refs(&surface_json(&render_home_card(ctx.clone()))));
             refs.extend(i18n_refs(&surface_json(&render_explore_detail(
@@ -837,7 +586,9 @@ fn every_i18n_key_a_surface_uses_exists_in_every_locale() {
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
-            refs.extend(i18n_refs(&surface_json(&render_host_main(ctx))));
+            refs.extend(i18n_refs(&surface_json(
+                &render_host_main(ctx).expect("host main"),
+            )));
         });
 
     assert!(refs.contains("guest.activities.disclosure"));

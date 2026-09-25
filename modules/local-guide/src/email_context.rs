@@ -2,7 +2,7 @@
 
 use portaki_sdk::prelude::*;
 
-use crate::config::load_config;
+use crate::config::ModuleConfig;
 
 /// Gateway `emailContext` args — shared SDK wire type.
 pub use portaki_sdk::EmailContextArgs;
@@ -29,7 +29,7 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
     let locale = args.locale_or(ctx.locale.as_str());
     let property_locale = ctx.property.locale.as_str();
 
-    let config = load_config().unwrap_or_default();
+    let config = ModuleConfig::read(&ctx)?;
     let Some(spot) = config.parse_spots().into_iter().next() else {
         return Ok(EmailContextResponse { local_tip: None });
     };
@@ -71,18 +71,14 @@ mod tests {
     fn when_arrival_day_then_returns_first_spot() {
         let (ctx, host) = MockContext::guest()
             .with_capabilities(&[capability::core::STORAGE])
-            .with_kv(
-                "config",
-                serde_json::to_vec(&json!({
-                    "spots": [{
-                        "id": "1",
-                        "title": {"fr": "Plage de la Garoupe", "en": "Garoupe beach"},
-                        "distance": "8 min à pied",
-                        "tag": "Coup de cœur"
-                    }]
-                }))
-                .unwrap(),
-            )
+            .with_config(&json!({
+                "spots": [{
+                    "id": "1",
+                    "title": {"fr": "Plage de la Garoupe", "en": "Garoupe beach"},
+                    "distance": "8 min à pied",
+                    "tag": "Coup de cœur"
+                }]
+            }))
             .build();
 
         with_host(host, ctx.clone(), || {

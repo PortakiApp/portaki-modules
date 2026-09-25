@@ -3,13 +3,13 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Button, Card, Field, Form, InfoBanner, Page, Select, Stack, Text, TextArea,
+    AddressMapPicker, Card, Field, Form, InfoBanner, Page, Select, Stack, Text, TextArea,
     TextInput, ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::affiliate::{looks_like_url, normalize_curated_url, CuratedUrlError, MAX_CURATED_LINKS};
-use crate::config::{load_config, ActivityRow, Localized, SpotRow, TIQETS_RADIUS_CHOICES_KM};
+use crate::config::{ActivityRow, Localized, ModuleConfig, SpotRow, TIQETS_RADIUS_CHOICES_KM};
 use crate::tiqets::TiqetsStatus;
 
 const SPOT_SLOTS: usize = 6;
@@ -17,8 +17,8 @@ const SPOT_SLOTS: usize = 6;
 /// Créneaux d'activités affichés : ceux qui sont remplis, plus un libre.
 ///
 /// Deux au minimum pour que la section ait l'air d'une liste, [`MAX_CURATED_LINKS`] au
-/// maximum — la même borne que celle appliquée à l'enregistrement, pour que le formulaire
-/// ne propose jamais un créneau que la commande refuserait.
+/// maximum — la même borne que celle appliquée au rendu voyageur, pour que le formulaire
+/// ne propose jamais un créneau qui ne s'afficherait pas.
 fn activity_slots(filled: usize) -> usize {
     (filled + 1).clamp(2, MAX_CURATED_LINKS)
 }
@@ -31,12 +31,15 @@ fn activity_slots(filled: usize) -> usize {
     label_key = "catalog.host.main",
     icon = IconName::MapPin
 )]
-pub fn render_host_main(ctx: HostContext) -> Surface {
+pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let lang = Localized::lang_code(&ctx.locale);
-    let config = load_config().unwrap_or_default();
+    let config = ModuleConfig::read(&ctx)?;
     let spots = config.parse_spots();
-    let disclaimer = config.disclaimer.get(&lang).to_string();
-    let activities = &config.activities;
+    // Un texte par champ désormais (la plateforme garde ce qu'envoie le formulaire) : on montre
+    // la langue qui l'a, plutôt qu'un champ vide que le prochain enregistrement réécrirait.
+    let disclaimer = config.disclaimer.pick(&lang);
+    let activities = config.activities();
+    let tiqets = config.tiqets();
 
     let activities_enabled = ctx.input_bool("activities_enabled", activities.enabled);
     let activities_destination = ctx
@@ -46,38 +49,24 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     let activities_intro = ctx
         .input_str("activities_intro")
         .map(str::to_string)
-        .unwrap_or_else(|| activities.intro.get(&lang).to_string());
+        .unwrap_or_else(|| activities.intro.pick(&lang));
 
-    let tiqets_enabled = ctx.input_bool("tiqets_enabled", config.tiqets.enabled);
+    let tiqets_enabled = ctx.input_bool("tiqets_enabled", tiqets.enabled);
     let tiqets_radius = ctx
         .input_str("tiqets_radius_km")
         .map(str::to_string)
-        .unwrap_or_else(|| config.tiqets.normalized_radius_km().to_string());
+        .unwrap_or_else(|| tiqets.normalized_radius_km().to_string());
     let tiqets_min_rating = ctx
         .input_str("tiqets_min_rating")
         .map(str::to_string)
-        .unwrap_or_else(|| config.tiqets.min_rating.to_string());
+        .unwrap_or_else(|| tiqets.min_rating.to_string());
     let tiqets_status = crate::tiqets::status(
         &ctx,
         &crate::config::TiqetsConfig {
             enabled: tiqets_enabled,
-            ..config.tiqets.clone()
+            ..tiqets
         },
     );
-
-    let submit_args = crate::commands::UpdateConfigArgs {
-        spots: spots_to_submit(&spots, &lang),
-        spots_json: String::new(),
-        disclaimer: disclaimer.clone(),
-        activities_enabled: Some(activities_enabled),
-        activities_destination: activities_destination.clone(),
-        activities_intro: activities_intro.clone(),
-        activities: activities_to_submit(&activities.links, &lang),
-        tiqets_enabled: Some(tiqets_enabled),
-        tiqets_radius_km: tiqets_radius.clone(),
-        tiqets_min_rating: tiqets_min_rating.clone(),
-    };
-    let save_action = crate::ids::module_id().command(crate::ids::UPDATE_CONFIG, submit_args);
 
     let mut cards: Vec<Component> = Vec::new();
     for index in 0..SPOT_SLOTS {
@@ -113,15 +102,8 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                 .into()])
             .into(),
     );
-    cards.push(
-        Button::new()
-            .label("i18n:host.save")
-            .tone(Tone::Primary)
-            .action(save_action)
-            .into(),
-    );
-
-    Surface::new(
+    // Pas de bouton Enregistrer : le tableau de bord enregistre le formulaire à la saisie.
+    Ok(Surface::new(
         Page::new().child(Form::new().child(Stack::new().gap(16.0).children(vec![
                     Text::new()
                         .text("i18n:surface.host.main.subtitle")
@@ -130,7 +112,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                     Component::Stack(Stack::new().gap(16.0).children(cards)),
                 ]))),
     )
-    .with_id(crate::ids::HOST_MAIN)
+    .with_id(crate::ids::HOST_MAIN))
 }
 
 /// Carte « Activités & billets ».
@@ -164,11 +146,7 @@ fn activities_card(
         let label = ctx
             .input_str(&format!("activities.{index}.label"))
             .map(str::to_string)
-            .unwrap_or_else(|| {
-                stored
-                    .map(|row| row.label.get(lang).to_string())
-                    .unwrap_or_default()
-            });
+            .unwrap_or_else(|| stored.map(|row| row.label.pick(lang)).unwrap_or_default());
 
         if matches!(
             normalize_curated_url(&url),
@@ -305,7 +283,7 @@ fn tiqets_card(enabled: bool, radius: &str, min_rating: &str, status: TiqetsStat
                 Select::new()
                     .name("tiqets_min_rating")
                     .options(vec![
-                        ChoiceOption::new("0", "i18n:host.tiqets.minRating.any"),
+                        ChoiceOption::new("0", "i18n:host.tiqets.minRating.0"),
                         ChoiceOption::new("3", "i18n:host.tiqets.minRating.3"),
                         ChoiceOption::new("4", "i18n:host.tiqets.minRating.4"),
                     ])
@@ -346,46 +324,16 @@ fn tiqets_card(enabled: bool, radius: &str, min_rating: &str, status: TiqetsStat
         .into()
 }
 
-fn activities_to_submit(links: &[ActivityRow], lang: &str) -> Vec<crate::commands::ActivityInput> {
-    links
-        .iter()
-        .map(|row| crate::commands::ActivityInput {
-            url: row.url.clone(),
-            label: row.label.get(lang).to_string(),
-        })
-        .collect()
-}
-
-fn spots_to_submit(spots: &[SpotRow], lang: &str) -> Vec<crate::commands::SpotInput> {
-    spots
-        .iter()
-        .map(|s| crate::commands::SpotInput {
-            name: s.title.get(lang).to_string(),
-            category: s.category.clone().unwrap_or_default(),
-            distance: s.distance.clone().unwrap_or_default(),
-            tag: s.tag.clone().unwrap_or_default(),
-            description: s
-                .detail
-                .as_ref()
-                .map(|d| d.get(lang).to_string())
-                .unwrap_or_default(),
-            address: s.address.clone().unwrap_or_default(),
-            lat: s.lat,
-            lng: s.lng,
-        })
-        .collect()
-}
-
 fn spot_card(index: usize, spot: Option<&SpotRow>, lang: &str) -> Component {
     let slot = index + 1;
-    let name = spot.map(|s| s.title.get(lang)).unwrap_or("");
+    let name = spot.map(|s| s.title.pick(lang)).unwrap_or_default();
     let category = spot.and_then(|s| s.category.as_deref()).unwrap_or("");
     let distance = spot.and_then(|s| s.distance.as_deref()).unwrap_or("");
     let tag = spot.and_then(|s| s.tag.as_deref()).unwrap_or("");
     let description = spot
         .and_then(|s| s.detail.as_ref())
-        .map(|d| d.get(lang))
-        .unwrap_or("");
+        .map(|d| d.pick(lang))
+        .unwrap_or_default();
     let address = spot.and_then(|s| s.address.as_deref()).unwrap_or("");
     // Le sélecteur veut deux nombres, pas deux options : `0, 0` est sa façon de dire
     // « aucune position », et c'est aussi ce que le module refuse de mettre sur la carte.
@@ -464,7 +412,7 @@ mod tests {
         assert_eq!(activity_slots(1), 2);
         assert_eq!(activity_slots(4), 5);
         assert_eq!(activity_slots(MAX_CURATED_LINKS), MAX_CURATED_LINKS);
-        // Le formulaire ne propose jamais un créneau que `updateConfig` refuserait.
+        // Le formulaire ne propose jamais un créneau que le livret n'afficherait pas.
         assert_eq!(activity_slots(MAX_CURATED_LINKS + 5), MAX_CURATED_LINKS);
     }
 }

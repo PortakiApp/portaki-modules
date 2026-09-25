@@ -9,8 +9,8 @@ use serde_json::json;
 
 /// Trois adresses d'exemple autour du logement fictif des fixtures (Cannes). Activités et
 /// billets restent éteints, comme chez un hôte qui vient d'installer le module.
-fn sample_config() -> Vec<u8> {
-    serde_json::to_vec(&json!({
+fn sample_config() -> serde_json::Value {
+    json!({
         "spots": [
             {
                 "id": "boulangerie",
@@ -39,14 +39,13 @@ fn sample_config() -> Vec<u8> {
             }
         ],
         "disclaimer": { "fr": "Suggestions de votre hôte, sans partenariat.", "en": "Your host's picks, no partnership." }
-    }))
-    .expect("config json")
+    })
 }
 
 #[test]
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
-    let context = previews::guest(root).with_kv("config", sample_config());
+    let context = previews::guest(root).with_config(&sample_config());
     let detail = context.clone().run(render_explore_detail);
     let upcoming = context.run(render_upcoming_card);
     previews::check(

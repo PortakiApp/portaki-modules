@@ -4,7 +4,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::activities::{self, ActivitiesView};
-use crate::config::{load_config, valid_coords, ModuleConfig, SpotRow};
+use crate::config::{valid_coords, ModuleConfig, SpotRow};
 use crate::tiqets::{self, TiqetsView};
 
 use super::empty::{empty_content_state, empty_state_if_module_not_ready};
@@ -35,15 +35,15 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Gues
         return Ok(GuestLoad::Empty(Box::new(surface)));
     }
 
-    let config = load_config().unwrap_or_else(|_| ModuleConfig::default());
+    let config = ModuleConfig::read(ctx)?;
     let activities = activities::resolve(
-        &config.activities,
+        &config.activities(),
         ctx.property.address.as_deref(),
         &ctx.locale,
         &ctx.property.locale,
     );
 
-    let tiqets = tiqets::resolve(ctx, &config.tiqets);
+    let tiqets = tiqets::resolve(ctx, &config.tiqets());
 
     // La section activités se suffit à elle-même : elle sort de l'adresse du logement,
     // donc un hôte qui n'a saisi aucune adresse a tout de même quelque chose à montrer.

@@ -21,7 +21,6 @@
   "host.disclaimer.label": "Disclaimer",
   "host.disclaimer.placeholder": "Suggestions non partenaires — horaires variables",
   "host.main.help": "Laissez un lieu vide pour ne pas l’afficher. Les textes sont enregistrés pour la langue d'édition active uniquement.",
-  "host.save": "Enregistrer",
   "host.section.activities": "Activités & billets",
   "host.section.activities.help": "Liens partenaires GetYourGuide. Portaki peut percevoir une commission sur les réservations ; vous ne percevez rien. La section reste éteinte tant que vous ne l’activez pas ci-dessous.",
   "host.activities.enabled": "Afficher la section dans le livret",
@@ -71,7 +70,6 @@
   "host.tiqets.radius.20": "20 km",
   "host.tiqets.radius.40": "40 km",
   "host.tiqets.minRating": "Note minimale",
-  "host.tiqets.minRating.any": "Toutes les notes",
   "host.tiqets.minRating.3": "3 étoiles et plus",
   "host.tiqets.minRating.4": "4 étoiles et plus",
   "host.tiqets.status.off": "Section éteinte.",
@@ -87,5 +85,7 @@
   "guest.tiqets.disclosure": "Liens partenaires : une commission peut être perçue sur les réservations, sans surcoût pour vous.",
   "module.catalogName": "Bons plans du coin",
   "module.catalogDescription": "Adresses et liens utiles rangés par thème.",
-  "catalog.host.main": "Bons plans"
+  "catalog.host.main": "Bons plans",
+  "host.tiqets.minRating.0": "Toutes les notes",
+  "config.spots": "Lieux"
 }

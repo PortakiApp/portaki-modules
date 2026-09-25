@@ -11,8 +11,8 @@ use serde_json::{json, Value};
 use serial_test::serial;
 
 use local_guide::{
-    get_config, render_explore_detail, render_home_card, render_host_main, render_upcoming_card,
-    update_config, UpdateConfigArgs, FRESH_SECS, STALE_MAX_SECS,
+    render_explore_detail, render_home_card, render_host_main, render_upcoming_card, FRESH_SECS,
+    STALE_MAX_SECS,
 };
 
 const RECORDED: &str = include_str!("fixtures/tiqets-products-nearby.json");
@@ -28,12 +28,9 @@ fn now() -> DateTime<Utc> {
         .with_timezone(&Utc)
 }
 
-fn config(tiqets: Value) -> Vec<u8> {
-    serde_json::to_vec(&json!({ "tiqets": tiqets })).expect("config")
-}
-
-fn enabled() -> Vec<u8> {
-    config(json!({ "enabled": true, "radius_km": 20 }))
+/// Ce qu'enregistre le formulaire hôte : le sélecteur envoie son choix en texte.
+fn enabled() -> Value {
+    json!({ "tiqets_enabled": true, "tiqets_radius_km": "20" })
 }
 
 fn surface_json(surface: &Surface) -> String {
@@ -82,7 +79,7 @@ fn cached(age: Duration, title: &str) -> Vec<u8> {
 #[serial]
 fn the_detail_lists_the_recorded_products_with_their_affiliate_links() {
     guest(&pool())
-        .with_kv("config", enabled())
+        .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .run_with(|ctx, host| {
             let json = surface_json(&render_explore_detail(ctx));
@@ -118,7 +115,7 @@ fn price_and_rating_read_in_the_guest_language() {
     guest(&pool())
         .with_translation("guest.tiqets.priceFrom", "Dès {price}")
         .with_translation("guest.tiqets.rating", "★ {rating} ({count} avis)")
-        .with_kv("config", enabled())
+        .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .run(|ctx| {
             let json = surface_json(&render_explore_detail(ctx));
@@ -130,7 +127,7 @@ fn price_and_rating_read_in_the_guest_language() {
 #[serial]
 fn the_home_card_is_a_preview_without_images() {
     guest(&pool())
-        .with_kv("config", enabled())
+        .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .run(|ctx| {
             let json = surface_json(&render_home_card(ctx));
@@ -156,7 +153,7 @@ fn the_section_is_off_until_the_host_turns_it_on() {
 #[serial]
 fn without_pool_or_own_key_nothing_is_called() {
     guest(&[capability::core::STORAGE])
-        .with_kv("config", enabled())
+        .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .run_with(|ctx, host| {
             let json = surface_json(&render_explore_detail(ctx));
@@ -169,7 +166,7 @@ fn without_pool_or_own_key_nothing_is_called() {
 #[serial]
 fn the_hosts_own_key_is_enough() {
     guest(&[capability::core::STORAGE, capability::external::TIQETS_BYOK])
-        .with_kv("config", enabled())
+        .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .run(|ctx| {
             assert!(surface_json(&render_explore_detail(ctx)).contains("Musée Van Gogh"));
@@ -180,7 +177,7 @@ fn the_hosts_own_key_is_enough() {
 #[serial]
 fn a_property_without_position_is_never_searched() {
     let (mut ctx, host) = guest(&pool())
-        .with_kv("config", enabled())
+        .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .build();
     ctx.property.lat = 0.0;
@@ -197,7 +194,7 @@ fn a_property_without_position_is_never_searched() {
 #[serial]
 fn a_fresh_cache_is_served_without_calling_tiqets() {
     guest(&pool())
-        .with_kv("config", enabled())
+        .with_config(&enabled())
         .with_kv(
             "tiqets_cache.fr",
             cached(Duration::seconds(FRESH_SECS - 60), "Depuis le cache"),
@@ -214,7 +211,7 @@ fn a_fresh_cache_is_served_without_calling_tiqets() {
 #[serial]
 fn a_day_old_cache_is_refreshed() {
     guest(&pool())
-        .with_kv("config", enabled())
+        .with_config(&enabled())
         .with_kv(
             "tiqets_cache.fr",
             cached(Duration::seconds(FRESH_SECS + 60), "Depuis le cache"),
@@ -232,7 +229,7 @@ fn a_day_old_cache_is_refreshed() {
 #[serial]
 fn when_tiqets_fails_a_stale_cache_under_fourteen_days_is_still_shown() {
     guest(&pool())
-        .with_kv("config", enabled())
+        .with_config(&enabled())
         .with_kv(
             "tiqets_cache.fr",
             cached(Duration::days(3), "Gardé trois jours"),
@@ -252,7 +249,7 @@ fn when_tiqets_fails_a_stale_cache_under_fourteen_days_is_still_shown() {
 #[serial]
 fn a_cache_older_than_fourteen_days_is_never_shown() {
     guest(&pool())
-        .with_kv("config", enabled())
+        .with_config(&enabled())
         .with_kv(
             "tiqets_cache.fr",
             cached(Duration::seconds(STALE_MAX_SECS + 60), "Périmé"),
@@ -269,14 +266,10 @@ fn a_cache_older_than_fourteen_days_is_never_shown() {
 #[serial]
 fn a_tiqets_failure_without_cache_still_renders_the_rest_of_the_booklet() {
     guest(&pool())
-        .with_kv(
-            "config",
-            serde_json::to_vec(&json!({
-                "spots": [{ "id": "s1", "title": { "fr": "Plage" } }],
-                "tiqets": { "enabled": true }
-            }))
-            .expect("config"),
-        )
+        .with_config(&json!({
+            "spots": [{ "id": "s1", "title": { "fr": "Plage" } }],
+            "tiqets_enabled": true
+        }))
         .with_connector_error("tiqets", "nearby_products", "connector_egress_failed")
         .run(|ctx| {
             let json = surface_json(&render_explore_detail(ctx));
@@ -290,7 +283,7 @@ fn a_tiqets_failure_without_cache_still_renders_the_rest_of_the_booklet() {
 #[serial]
 fn an_unsupported_booklet_language_asks_tiqets_in_english() {
     let (mut ctx, host) = guest(&pool())
-        .with_kv("config", enabled())
+        .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .build();
     ctx.locale = "uk-UA".to_string();
@@ -307,9 +300,9 @@ fn an_unsupported_booklet_language_asks_tiqets_in_english() {
 fn the_host_sheet_says_why_nothing_would_show() {
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", enabled())
+        .with_config(&enabled())
         .run(|ctx| {
-            let json = surface_json(&render_host_main(ctx));
+            let json = surface_json(&render_host_main(ctx).expect("host main"));
             assert!(json.contains("i18n:host.section.tiqets"), "{json}");
             assert!(
                 json.contains("i18n:host.tiqets.status.missingKey"),
@@ -318,71 +311,22 @@ fn the_host_sheet_says_why_nothing_would_show() {
         });
     MockContext::host()
         .with_capabilities(&pool())
-        .with_kv("config", enabled())
+        .with_config(&enabled())
         .run(|ctx| {
-            let json = surface_json(&render_host_main(ctx));
+            let json = surface_json(&render_host_main(ctx).expect("host main"));
             assert!(json.contains("i18n:host.tiqets.status.ready"), "{json}");
         });
     MockContext::host().with_capabilities(&pool()).run(|ctx| {
-        let json = surface_json(&render_host_main(ctx));
+        let json = surface_json(&render_host_main(ctx).expect("host main"));
         assert!(json.contains("i18n:host.tiqets.status.off"), "{json}");
     });
 }
 
 #[test]
 #[serial]
-fn update_config_saves_the_settings_and_drops_the_cache() {
-    MockContext::host()
-        .with_capabilities(&pool())
-        .with_kv(
-            "tiqets_cache.fr",
-            cached(Duration::hours(1), "Ancien rayon"),
-        )
-        .run_with(|ctx, host| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    tiqets_enabled: Some(true),
-                    tiqets_radius_km: "40".into(),
-                    tiqets_min_rating: "4".into(),
-                    ..UpdateConfigArgs::default()
-                },
-            )
-            .expect("update");
-            let saved = get_config(ctx.clone()).expect("config");
-            assert!(saved.tiqets.enabled);
-            assert_eq!(saved.tiqets.radius_km, 40);
-            assert_eq!(saved.tiqets.min_rating, 4);
-            assert!(portaki_sdk::host::kv::get("tiqets_cache.fr")
-                .expect("kv")
-                .is_none());
-            let _ = host;
-        });
-}
-
-#[test]
-#[serial]
-fn an_older_caller_leaves_the_tiqets_settings_alone() {
-    MockContext::host()
-        .with_capabilities(&pool())
-        .with_kv(
-            "config",
-            config(json!({ "enabled": true, "radius_km": 5, "min_rating": 3 })),
-        )
-        .run(|ctx| {
-            update_config(ctx.clone(), UpdateConfigArgs::default()).expect("update");
-            let saved = get_config(ctx).expect("config");
-            assert!(saved.tiqets.enabled);
-            assert_eq!(saved.tiqets.radius_km, 5);
-            assert_eq!(saved.tiqets.min_rating, 3);
-        });
-}
-
-#[test]
-#[serial]
 fn the_upcoming_card_does_not_embed_the_tiqets_list() {
     guest(&pool())
-        .with_kv("config", enabled())
+        .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .run(|ctx| {
             let json = surface_json(&render_upcoming_card(ctx));
@@ -406,7 +350,7 @@ fn every_tiqets_key_exists_in_both_bundles() {
         }
     };
     guest(&pool())
-        .with_kv("config", enabled())
+        .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .run(|ctx| {
             collect(
@@ -418,8 +362,13 @@ fn every_tiqets_key_exists_in_both_bundles() {
     for capabilities in [vec![capability::core::STORAGE], pool().to_vec()] {
         MockContext::host()
             .with_capabilities(&capabilities)
-            .with_kv("config", enabled())
-            .run(|ctx| collect(&surface_json(&render_host_main(ctx)), &mut refs));
+            .with_config(&enabled())
+            .run(|ctx| {
+                collect(
+                    &surface_json(&render_host_main(ctx).expect("host main")),
+                    &mut refs,
+                )
+            });
     }
     assert!(refs.contains("guest.tiqets.disclosure"));
 

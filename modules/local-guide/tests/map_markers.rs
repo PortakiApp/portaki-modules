@@ -7,18 +7,13 @@ use local_guide::{map_markers, MAX_MARKERS};
 use portaki_test_utils::MockContext;
 use serde_json::json;
 
-fn config_bytes(value: serde_json::Value) -> Vec<u8> {
-    serde_json::to_vec(&value).expect("config json")
-}
-
 #[test]
 #[serial]
 fn only_located_spots_become_markers() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({
+        .with_config(
+            &(json!({
                 "spots": [
                     {
                         "id": "plage", "title": { "fr": "Plage du Midi" },
@@ -47,9 +42,8 @@ fn null_island_is_not_a_marker() {
     // Deux champs de position laissés vides par un formulaire : ce n'est pas un lieu.
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({
+        .with_config(
+            &(json!({
                 "spots": [{ "id": "s1", "title": { "fr": "Plage" }, "lat": 0.0, "lng": 0.0 }]
             })),
         )
@@ -74,9 +68,8 @@ fn a_module_without_config_answers_an_empty_list() {
 fn the_label_follows_the_guest_locale() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({
+        .with_config(
+            &(json!({
                 "spots": [{
                     "id": "s1",
                     "title": { "fr": "Marché couvert", "en": "Covered market" },
@@ -109,7 +102,7 @@ fn the_cap_stops_a_long_list() {
         .collect();
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", config_bytes(json!({ "spots": spots })))
+        .with_config(&(json!({ "spots": spots })))
         .run(|ctx| {
             let response = map_markers(ctx).expect("markers");
             assert_eq!(response.markers.len(), MAX_MARKERS);
