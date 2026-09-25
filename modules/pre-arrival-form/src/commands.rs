@@ -46,12 +46,26 @@ pub struct SubmitArgs {
     skip_when = SkipWhen::GuestEmailMissing,
     skip_when = SkipWhen::StayCancelled
 )]
-#[portaki_sdk::command(name = "sendFormAvailable")]
+#[portaki_sdk::command(
+    name = "sendFormAvailable",
+    example(label = "E-mail « formulaire disponible »")
+)]
 pub fn send_form_available(ctx: Context, _args: EmptyArgs) -> Result<()> {
     email_send::send_form_available(&ctx)
 }
 
-#[portaki_sdk::command(name = "submit", guest)]
+#[portaki_sdk::command(
+    name = "submit",
+    guest,
+    example(
+        label = "Arrivée en fin d'après-midi",
+        input = r#"{"arrivalTimeEstimated":"17:30","guestOccasion":"Anniversaire","guestCount":"2","messageToHost":"Nous arriverons en voiture."}"#
+    ),
+    example(
+        label = "Allergie signalée",
+        input = r#"{"arrivalTimeEstimated":"21:00","guestAllergies":"Arachides","guestCount":"4"}"#
+    )
+)]
 pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     let stay_id = require_stay_id(&ctx)?;
     let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at);
