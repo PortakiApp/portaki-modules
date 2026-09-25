@@ -1,13 +1,12 @@
 //! Host dashboard surface — design `waste-editor-v1` (Wasm SDUI).
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
-    Button, Card, Field, Form, Page, Select, Stack, Text, TextArea, TextInput,
+    Card, Field, Form, Page, Select, Stack, Text, TextArea, TextInput,
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{bin_color_name, load_config, BinRow, Localized};
+use crate::config::{bin_color_name, BinRow, Localized, ModuleConfig};
 
 const BIN_SLOTS: usize = 6;
 
@@ -20,18 +19,10 @@ const BIN_SLOTS: usize = 6;
     label_key = "catalog.host.main",
     icon = IconName::Recycle
 )]
-pub fn render_host_main(ctx: HostContext) -> Surface {
+pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let lang = Localized::lang_code(&ctx.locale);
-    let config = load_config().unwrap_or_default();
+    let config = ModuleConfig::read(&ctx)?;
     let bins = config.parse_bins();
-    let collection_schedule = config.collection_schedule.get(&lang).to_string();
-
-    let submit_args = crate::commands::UpdateConfigArgs {
-        bins: bins_to_submit(&bins, &lang),
-        bins_json: String::new(),
-        collection_schedule: collection_schedule.clone(),
-    };
-    let save_action = crate::ids::module_id().command(crate::ids::UPDATE_CONFIG, submit_args);
 
     let mut cards: Vec<Component> = Vec::new();
     for index in 0..BIN_SLOTS {
@@ -47,21 +38,15 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                 .child(
                     TextArea::new()
                         .name("collection_schedule")
-                        .value(collection_schedule)
+                        .value(config.collection_schedule.pick(&lang))
                         .placeholder("i18n:host.schedule.placeholder"),
                 )
                 .into()])
             .into(),
     );
-    cards.push(
-        Button::new()
-            .label("i18n:host.save")
-            .tone(Tone::Primary)
-            .action(save_action)
-            .into(),
-    );
 
-    Surface::new(
+    // No Save button — the modules drawer owns the footer Save.
+    Ok(Surface::new(
         Page::new().child(Form::new().child(Stack::new().gap(16.0).children(vec![
                     Text::new()
                         .text("i18n:surface.host.main.subtitle")
@@ -70,36 +55,23 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                     Component::Stack(Stack::new().gap(16.0).children(cards)),
                 ]))),
     )
-    .with_id(crate::ids::HOST_MAIN)
-}
-
-fn bins_to_submit(bins: &[BinRow], lang: &str) -> Vec<crate::commands::BinInput> {
-    bins.iter()
-        .map(|b| crate::commands::BinInput {
-            title: b.title.get(lang).to_string(),
-            title_fr: String::new(),
-            title_en: String::new(),
-            items: b
-                .items
-                .iter()
-                .map(|i| i.get(lang))
-                .collect::<Vec<_>>()
-                .join("\n"),
-            items_fr: String::new(),
-            color: bin_color_name(b.color.as_deref())
-                .unwrap_or_default()
-                .to_string(),
-        })
-        .collect()
+    .with_id(crate::ids::HOST_MAIN))
 }
 
 fn bin_card(index: usize, bin: Option<&BinRow>, lang: &str) -> Component {
     let slot = index + 1;
-    let title = bin.map(|b| b.title.get(lang)).unwrap_or("");
+    let title = bin.map(|b| b.title.pick(lang)).unwrap_or_default();
+    // One line: an older bin's several items are joined rather than dropped at the next save.
     let items = bin
-        .and_then(|b| b.items.first())
-        .map(|item| item.get(lang))
-        .unwrap_or("");
+        .map(|b| {
+            b.items
+                .iter()
+                .map(|item| item.pick(lang))
+                .filter(|item| !item.trim().is_empty())
+                .collect::<Vec<_>>()
+                .join(", ")
+        })
+        .unwrap_or_default();
     let color = bin_color_name(bin.and_then(|b| b.color.as_deref())).unwrap_or("");
 
     Card::new()

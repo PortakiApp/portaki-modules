@@ -7,8 +7,8 @@ use serde_json::json;
 use waste_recycling::render_explore_detail;
 
 /// Les bacs d'une commune française type et leurs jours de collecte.
-fn sample_config() -> Vec<u8> {
-    serde_json::to_vec(&json!({
+fn sample_config() -> serde_json::Value {
+    json!({
         "bins": [
             {
                 "id": "jaune",
@@ -42,15 +42,14 @@ fn sample_config() -> Vec<u8> {
             "fr": "Bacs à sortir la veille au soir : mardi pour le jaune, vendredi pour les ordures ménagères.",
             "en": "Put the bins out the evening before: Tuesday for yellow, Friday for general waste."
         }
-    }))
-    .expect("config json")
+    })
 }
 
 #[test]
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
     let detail = previews::guest(root)
-        .with_kv("config", sample_config())
+        .with_config(&sample_config())
         .run(render_explore_detail);
     previews::check(
         root,
