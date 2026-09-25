@@ -63,7 +63,7 @@ fn home_card_empty_without_content() {
         .with_property(Property::default())
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("render");
             assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
         });
 }
@@ -77,10 +77,10 @@ fn home_card_and_sheet_with_sections() {
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
             seed_two_sections(ctx.clone());
-            let card = render_home_card(ctx.clone());
+            let card = render_home_card(ctx.clone()).expect("render");
             assert!(SurfaceAssertions::new(&card).contains_type("Card"));
             assert!(SurfaceAssertions::new(&card).contains_type("Markdown"));
-            let sheet = render_explore_sheet(ctx);
+            let sheet = render_explore_sheet(ctx).expect("render");
             assert!(SurfaceAssertions::new(&sheet).contains_type("Markdown"));
             let json = serde_json::to_string(&sheet).expect("json");
             assert!(json.contains("L'appartement"));
