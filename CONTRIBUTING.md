@@ -17,7 +17,9 @@ cargo install --git https://github.com/PortakiApp/portaki-sdk --branch main --lo
    does it. There is no manifest to write: `portaki build` derives it from `portaki_module!`,
    `#[surface]`, `#[email]`, `#[nav]`, the `portaki-sdk` features (the permissions) and `i18n/`.
    `tests/conformance.rs` holds `portaki_test_utils::conformance!();` — the SDK's conformance
-   battery, which `portaki publish` refuses to publish without.
+   battery, which `portaki publish` refuses to publish without. `tests/scenarios.rs` includes
+   `support/scenarios.rs`: every surface on the sandbox's seven pathological stays, and every
+   `example(label = …, input = …)` of the queries and commands — declare one on each.
 2. The version lives in `Cargo.toml` only. Add `listing.json` next to it: the public catalogue listing, published by CI with each release.
 3. Depend on `portaki-sdk` at the workspace's pinned version, written in the module's own
    `Cargo.toml` with the features it uses (`kv`, `repo`, `email`, `events`, `platform`,
