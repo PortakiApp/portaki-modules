@@ -31,7 +31,7 @@ fn saved_calendars_are_listed_as_sources() {
             assert_eq!(sources.sources[1].provider.as_deref(), Some("booking"));
             assert_eq!(sources.sources[2].provider.as_deref(), Some("abritel_vrbo"));
 
-            let config = ModuleConfig::read(&ctx).expect("config");
+            let config = ModuleConfig::load(&ctx).expect("config");
             assert_eq!(config.calendars.len(), 3);
             assert_eq!(config.calendars[0].format, CalendarFormat::Airbnb);
             assert!(config.calendars[0].url.contains("airbnb.com"));
@@ -50,7 +50,7 @@ fn format_is_detected_from_url_when_omitted() {
         ])
         .with_config(&json!({"calendars": [{"id": "auto", "url": "https://www.airbnb.com/calendar/ical/99.ics", "label": "", "format": "", "channel": ""}]}))
         .run(|ctx| {
-            let config = ModuleConfig::read(&ctx).expect("config");
+            let config = ModuleConfig::load(&ctx).expect("config");
             assert_eq!(config.calendars[0].format, CalendarFormat::Airbnb);
         });
 }
@@ -69,7 +69,7 @@ fn legacy_primary_secondary_are_still_read() {
             assert_eq!(sources.sources.len(), 2);
             assert_eq!(sources.sources[0].provider.as_deref(), Some("generic"));
 
-            let config = ModuleConfig::read(&ctx).expect("config");
+            let config = ModuleConfig::load(&ctx).expect("config");
             assert_eq!(config.calendars.len(), 2);
             let json = serde_json::to_value(&config).expect("serialize");
             assert!(json.get("ical_url_primary").is_none());
@@ -308,7 +308,7 @@ fn google_mirrored_feed_reports_unknown_not_google() {
         ])
         .with_config(&json!({"calendars": [{"id": "mirror", "url": "https://calendar.google.com/calendar/ical/x/basic.ics", "label": "", "format": "google", "channel": ""}]}))
         .run(|ctx| {
-            let config = ModuleConfig::read(&ctx).expect("config");
+            let config = ModuleConfig::load(&ctx).expect("config");
             assert_eq!(config.calendars[0].format, CalendarFormat::Google);
             assert_eq!(config.calendars[0].channel, BookingChannel::Unknown);
 
@@ -346,7 +346,7 @@ fn host_declared_platform_carries_an_opaque_channel_manager_feed() {
         ])
         .with_config(&json!({"calendars": [{"id": "beds24", "url": "https://api.beds24.com/ical/9931.ics", "label": "Beds24", "format": "generic", "channel": "booking"}]}))
         .run(|ctx| {
-            let config = ModuleConfig::read(&ctx).expect("config");
+            let config = ModuleConfig::load(&ctx).expect("config");
             assert_eq!(config.calendars[0].channel, BookingChannel::Booking);
             assert_eq!(
                 config.calendars[0].channel_signal,
@@ -389,7 +389,7 @@ fn airbnb_url_prefills_the_platform_when_the_host_leaves_it_blank() {
         ])
         .with_config(&json!({"calendars": [{"id": "explicit-generic", "url": "https://www.airbnb.com/calendar/ical/1.ics", "label": "", "format": "generic", "channel": ""}]}))
         .run(|ctx| {
-            let config = ModuleConfig::read(&ctx).expect("config");
+            let config = ModuleConfig::load(&ctx).expect("config");
             assert_eq!(config.calendars[0].format, CalendarFormat::Generic);
             assert_eq!(config.calendars[0].channel, BookingChannel::Airbnb);
             assert_eq!(

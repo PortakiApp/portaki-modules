@@ -79,7 +79,7 @@ Rows saved by earlier versions keep theirs:
 }
 ```
 
-`calendars` is the only source of truth. Each feed has a `format` (`airbnb` | `booking` | `abritel_vrbo` | `google` | `generic`) — parsing differs (e.g. Airbnb « Reserved » vs « Not available »). Sync fetches every connected URL. A row without `format` gets it from its URL, else from its platform, else `generic`. A KV blob from before the list (`ical_url_primary` / `ical_url_secondary` / `feeds_json`), which the platform import skips, is still read from the KV until the host saves the form.
+`calendars` is the only source of truth. Each feed has a `format` (`airbnb` | `booking` | `abritel_vrbo` | `google` | `generic`) — parsing differs (e.g. Airbnb « Reserved » vs « Not available »). Sync fetches every connected URL. A row without `format` gets it from its URL, else from its platform, else `generic`. A KV blob from before the list (`ical_url_primary` / `ical_url_secondary` / `feeds_json`) is mapped onto `calendars` by `#[config(legacy)]`, both for the platform import and while the platform holds no config.
 
 The last run and its summary live in the `sync_state` KV (`lastRunAt`, `summary`), not in the config.
 

@@ -72,7 +72,7 @@ pub fn render_host_stats(ctx: HostContext) -> Result<Surface> {
     let fr = ctx.locale.to_ascii_lowercase().starts_with("fr");
     let days = period_days(&ctx);
     let now = time::now().unwrap_or(DateTime::<Utc>::UNIX_EPOCH);
-    let config = ModuleConfig::read(&ctx)?;
+    let config = ModuleConfig::load(&ctx)?;
     let state = load_sync_state().unwrap_or_default();
     let upcoming = upcoming(&state, now);
 

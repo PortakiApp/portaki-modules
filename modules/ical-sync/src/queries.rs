@@ -60,7 +60,7 @@ pub struct ApplyFeedsResponse {
 /// Returns HTTPS .ics URLs for the platform to fetch (`hostScheduledSync.sourcesQuery`).
 #[portaki_sdk::query(name = "listSources")]
 pub fn list_sources(ctx: Context) -> Result<ListSourcesResponse> {
-    let config = ModuleConfig::read(&ctx)?;
+    let config = ModuleConfig::load(&ctx)?;
     let sources = config
         .connected_calendars()
         .into_iter()
@@ -106,7 +106,7 @@ pub fn apply_feeds(ctx: Context, args: ApplyFeedsArgs) -> Result<ApplyFeedsRespo
         args.guest_lang.trim()
     };
 
-    let config = ModuleConfig::read(&ctx)?;
+    let config = ModuleConfig::load(&ctx)?;
     let previous_state = sync_state::load_sync_state().unwrap_or_default();
     let previous_last_success = previous_state
         .last_success_at

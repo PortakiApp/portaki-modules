@@ -3,7 +3,7 @@
 use portaki_sdk::contracts::booking_channel::{BookingChannel, ChannelSignal};
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{json, Value};
 
 use crate::channel;
 
@@ -147,7 +147,7 @@ pub struct CalendarRow {
 ///
 /// Only recommended: the platform warns while no row was ever saved. A saved list keeps its
 /// blank rows (the form never drops one), so it no longer warns once saved — even empty.
-#[portaki_sdk::config]
+#[portaki_sdk::config(legacy = legacy)]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Config {
     #[field(structured, recommended, label = "host.calendars.label")]
@@ -161,22 +161,11 @@ pub struct ModuleConfig {
 }
 
 impl ModuleConfig {
-    /// The config of this install. The platform imports the old KV blob once, but only its
-    /// `calendars` key: a blob from before the list (`ical_url_primary` / `_secondary`,
-    /// `feeds_json`) brings nothing. Until the host saves the form (the key then exists, even
-    /// empty), such a blob is still read from the KV rather than lost.
-    pub fn read(ctx: &Context) -> Result<Self> {
-        let held = match &ctx.module_config {
-            Some(Value::Object(held)) => held.contains_key("calendars"),
-            Some(_) => true,
-            None => false,
-        };
-        let calendars = if held {
-            feeds(&Config::load(ctx)?.calendars)
-        } else {
-            legacy_feeds(portaki_sdk::config::legacy_config()?)?
-        };
-        Ok(Self { calendars })
+    /// The calendars of this install, from the platform (or the old KV blob through [`legacy`]).
+    pub fn load(ctx: &Context) -> Result<Self> {
+        Ok(Self {
+            calendars: feeds(&Config::load(ctx)?.calendars),
+        })
     }
 
     pub fn connected_calendars(&self) -> Vec<&CalendarFeed> {
@@ -254,46 +243,49 @@ fn feed(index: usize, row: &CalendarRow) -> Option<CalendarFeed> {
     })
 }
 
-/// The KV blob the module wrote itself: the calendars list, else the older
-/// primary / secondary URLs, else `feeds_json`.
-#[derive(Debug, Clone, Deserialize, Default)]
-#[serde(default)]
-struct LegacyConfig {
-    calendars: Vec<CalendarRow>,
-    ical_url_primary: String,
-    ical_url_secondary: String,
-    feeds_json: String,
-}
-
-fn legacy_feeds(raw: Value) -> Result<Vec<CalendarFeed>> {
-    if raw.is_null() {
-        return Ok(Vec::new());
-    }
-    let legacy: LegacyConfig = serde_json::from_value(raw).map_err(|error| {
-        portaki_sdk::PortakiError::Storage(format!("config_unreadable: {error}"))
-    })?;
-    let mut calendars = feeds(&legacy.calendars);
-    if calendars.is_empty() {
-        calendars = feeds(&[
-            CalendarRow {
-                url: legacy.ical_url_primary,
-                ..CalendarRow::default()
-            },
-            CalendarRow {
-                url: legacy.ical_url_secondary,
-                ..CalendarRow::default()
-            },
-        ]);
-    }
-    if calendars.is_empty() {
-        let rows: Vec<CalendarRow> = serde_json::from_str::<Vec<Value>>(&legacy.feeds_json)
-            .unwrap_or_default()
+/// The KV blob the module wrote itself: the calendars list, else the older primary /
+/// secondary URLs (ids `cal-1` / `cal-2`, as they were synced under), else `feeds_json`.
+fn legacy(mut old: Value) -> Value {
+    let Some(blob) = old.as_object_mut() else {
+        return old;
+    };
+    let primary = blob.remove("ical_url_primary");
+    let secondary = blob.remove("ical_url_secondary");
+    let feeds_json = blob.remove("feeds_json");
+    let rows = |value: Option<&Value>| -> Vec<CalendarRow> {
+        value
+            .and_then(Value::as_array)
             .into_iter()
-            .map(|row| serde_json::from_value(row).unwrap_or_default())
+            .flatten()
+            .map(|row| serde_json::from_value(row.clone()).unwrap_or_default())
+            .collect()
+    };
+    let mut calendars = rows(blob.get("calendars"));
+    if feeds(&calendars).is_empty() {
+        calendars = [primary, secondary]
+            .iter()
+            .enumerate()
+            .filter_map(|(index, url)| {
+                let url = trim_url(url.as_ref()?.as_str()?)?;
+                Some(CalendarRow {
+                    id: format!("cal-{}", index + 1),
+                    url: url.to_string(),
+                    ..CalendarRow::default()
+                })
+            })
             .collect();
-        calendars = feeds(&rows);
     }
-    Ok(calendars)
+    if calendars.is_empty() {
+        let listed = feeds_json
+            .as_ref()
+            .and_then(Value::as_str)
+            .and_then(|raw| serde_json::from_str::<Value>(raw).ok());
+        calendars = rows(listed.as_ref());
+    }
+    if !calendars.is_empty() {
+        blob.insert("calendars".into(), json!(calendars));
+    }
+    old
 }
 
 #[cfg(test)]
@@ -302,13 +294,15 @@ mod tests {
     use portaki_test_utils::MockContext;
     use serde_json::json;
 
-    fn legacy(raw: Value) -> Vec<CalendarFeed> {
-        legacy_feeds(raw).expect("legacy")
+    /// The feeds an old KV blob yields once mapped onto the declared keys.
+    fn legacy_calendars(raw: Value) -> Vec<CalendarFeed> {
+        let config: Config = serde_json::from_value(legacy(raw)).expect("mapped");
+        feeds(&config.calendars)
     }
 
     #[test]
     fn migrates_primary_secondary_urls() {
-        let calendars = legacy(json!({
+        let calendars = legacy_calendars(json!({
             "ical_url_primary": " https://a.ics ",
             "ical_url_secondary": "https://b.ics",
         }));
@@ -322,7 +316,7 @@ mod tests {
 
     #[test]
     fn migrates_feeds_json() {
-        let calendars = legacy(json!({
+        let calendars = legacy_calendars(json!({
             "feeds_json": r#"[{"url":"https://x.ics"},{"url":"https://y.ics"},{"url":"https://z.ics"}]"#,
         }));
         assert_eq!(calendars.len(), 3);
@@ -331,7 +325,7 @@ mod tests {
 
     #[test]
     fn calendars_list_wins_over_legacy() {
-        let calendars = legacy(json!({
+        let calendars = legacy_calendars(json!({
             "calendars": [{ "id": "c1", "url": "https://only.ics", "label": "Airbnb", "format": "airbnb" }],
             "ical_url_primary": "https://legacy.ics",
             "ical_url_secondary": "https://legacy2.ics",
@@ -487,7 +481,7 @@ mod tests {
 
     #[test]
     fn stored_channel_survives_a_reload_with_its_provenance() {
-        let calendars = legacy(json!({ "calendars": [{
+        let calendars = legacy_calendars(json!({ "calendars": [{
             "id": "c1",
             "url": "https://www.airbnb.com/calendar/ical/1.ics",
             "format": "airbnb",
@@ -509,24 +503,54 @@ mod tests {
         );
     }
 
-    /// The import skips a pre-list blob (no `calendars` key): read from the KV until the host
-    /// saves; once the key is held, even empty, the platform wins.
+    #[test]
+    fn only_the_secondary_url_keeps_its_id() {
+        let calendars = legacy_calendars(json!({
+            "ical_url_primary": " ",
+            "ical_url_secondary": "https://b.ics",
+        }));
+        assert_eq!(calendars.len(), 1);
+        assert_eq!(calendars[0].id, "cal-2");
+    }
+
+    #[test]
+    fn blank_calendars_fall_back_to_the_older_keys() {
+        let calendars = legacy_calendars(json!({
+            "calendars": [{ "id": "c1", "url": " " }],
+            "feeds_json": r#"[{"id":"f","url":"https://x.ics","label":"X"}]"#,
+        }));
+        assert_eq!(calendars.len(), 1);
+        assert_eq!(calendars[0].id, "f");
+        assert_eq!(calendars[0].label.as_deref(), Some("X"));
+    }
+
+    #[test]
+    fn nothing_to_import_invents_no_list() {
+        // No `calendars` key: the platform keeps warning until the host saves one.
+        assert_eq!(legacy(json!({ "feeds_json": "[oops" })), json!({}));
+        assert_eq!(
+            legacy(json!({ "last_sync_at": "x" })),
+            json!({ "last_sync_at": "x" })
+        );
+    }
+
+    /// The KV is read (through `legacy`) only while the platform sends no config; `{}` is a
+    /// real, empty config.
     #[test]
     #[serial_test::serial]
-    fn a_pre_list_blob_survives_the_import() {
+    fn the_kv_is_read_through_legacy_until_the_platform_holds_the_config() {
         let blob = json!({ "ical_url_primary": "https://example.com/a.ics" });
         let bytes = serde_json::to_vec(&blob).unwrap();
         MockContext::host()
             .with_kv("config", bytes.clone())
-            .with_config(&json!({}))
             .run(|ctx| {
-                let config = ModuleConfig::read(&ctx).unwrap();
+                let config = ModuleConfig::load(&ctx).unwrap();
                 assert_eq!(config.calendars.len(), 1);
                 assert_eq!(config.calendars[0].url, "https://example.com/a.ics");
             });
         MockContext::host()
             .with_kv("config", bytes)
-            .with_config(&json!({ "calendars": [] }))
-            .run(|ctx| assert!(ModuleConfig::read(&ctx).unwrap().calendars.is_empty()));
+            .with_config(&json!({}))
+            .run(|ctx| assert!(ModuleConfig::load(&ctx).unwrap().calendars.is_empty()));
     }
 }

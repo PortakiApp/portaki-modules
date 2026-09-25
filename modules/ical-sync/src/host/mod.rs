@@ -23,7 +23,7 @@ pub use stats::{render_host_stats, stats_summary};
     icon = IconName::Calendar
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
-    let config = ModuleConfig::read(&ctx)?;
+    let config = ModuleConfig::load(&ctx)?;
     let state = load_sync_state()?;
     let calendars_count = draft_calendars_count(&ctx, &config);
 
