@@ -408,7 +408,7 @@ fn spot_card(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Compone
     ];
 
     Card::new()
-        .title(format!("i18n:host.spot.slot{slot}"))
+        .title(t!("host.spot.slot", n = slot).unwrap_or_default())
         .icon(IconName::MapPin)
         .children(id.into_iter().chain(fields).collect())
         .into()
