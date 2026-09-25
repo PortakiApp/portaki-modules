@@ -40,6 +40,7 @@
   "guest.error.description": "La page d’avis n’a pas pu être chargée",
   "guest.error.hint": "Réessayez dans un instant",
   "guest.prompt": "Comment s'est passé votre séjour à {property} ?",
+  "guest.notYet": "Vous pourrez laisser votre avis dès votre arrivée.",
   "stats.tile.30": "{count} avis · 30 j",
   "stats.tile.90": "{count} avis · 90 j",
   "stats.tile.365": "{count} avis · 12 mois",
