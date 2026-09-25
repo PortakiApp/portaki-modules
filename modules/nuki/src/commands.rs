@@ -34,7 +34,7 @@ struct UnlockConnectorArgs {
     smartlock_id: String,
 }
 
-#[portaki_sdk::command(name = "getGuestCredential", guest)]
+#[portaki_sdk::command(name = "getGuestCredential", guest, example(label = "Code du clavier"))]
 pub fn get_guest_credential(ctx: Context, _args: StayArgs) -> Result<GuestCredentialResponse> {
     require_stay_window(&ctx)?;
     let config = ModuleConfig::load(&ctx)?;
@@ -46,7 +46,7 @@ pub fn get_guest_credential(ctx: Context, _args: StayArgs) -> Result<GuestCreden
     })
 }
 
-#[portaki_sdk::command(name = "unlock", guest)]
+#[portaki_sdk::command(name = "unlock", guest, example(label = "Ouvrir la porte"))]
 pub fn unlock(ctx: Context, _args: StayArgs) -> Result<UnlockResponse> {
     require_stay_window(&ctx)?;
     let config = ModuleConfig::load(&ctx)?;
