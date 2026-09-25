@@ -56,10 +56,7 @@ pub fn build_upcoming_card(data: &GuestData) -> Surface {
 /// date appended when known. `None` when there is nothing to show.
 fn upcoming_headline(data: &GuestData) -> Option<String> {
     let event = data.events.first()?;
-    let title = event
-        .title
-        .pick_with_fallback(&data.locale, &data.property_locale);
-    let title = title.trim();
+    let title = event.title.get(&data.locale).trim();
     if title.is_empty() {
         return None;
     }

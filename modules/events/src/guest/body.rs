@@ -26,12 +26,8 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
     }
 
     for event in &data.events {
-        let title = event
-            .title
-            .pick_with_fallback(&data.locale, &data.property_locale);
-        let place = event
-            .place
-            .pick_with_fallback(&data.locale, &data.property_locale);
+        let title = event.title.get(&data.locale);
+        let place = event.place.get(&data.locale).to_string();
 
         let mut subtitle_parts = Vec::new();
         if !place.trim().is_empty() {
@@ -56,7 +52,7 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
 
         if enriched {
             if let Some(note) = event.note.as_ref() {
-                let text = note.pick_with_fallback(&data.locale, &data.property_locale);
+                let text = note.get(&data.locale);
                 if !text.trim().is_empty() {
                     item = item.child(Text::new().text(text).variant(TextVariant::Caption));
                 }

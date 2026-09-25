@@ -9,6 +9,10 @@ use serde_json::json;
 
 #[path = "../../../support/config_form.rs"]
 mod config_form;
+#[path = "../../../support/config_save.rs"]
+mod config_save;
+
+const EMISSIONS: &str = concat!(env!("OUT_DIR"), "/portaki-emissions");
 
 fn sample_config() -> serde_json::Value {
     json!({
@@ -152,11 +156,7 @@ fn the_host_form_sends_the_declared_keys() {
         .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_host_main(ctx).expect("host main");
-            config_form::assert_form_matches_config(
-                concat!(env!("OUT_DIR"), "/portaki-emissions"),
-                &surface,
-                &[],
-            );
+            config_form::assert_form_matches_config(EMISSIONS, &surface, &[]);
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("Concert jazz"));
             assert!(json.contains("Dates indicatives"));
@@ -184,5 +184,58 @@ fn without_a_position_nothing_is_searched_nearby() {
                 .map(|s| SurfaceAssertions::new(&s).contains_type("EmptyState"))
                 .expect("surface"));
             assert!(host.connector_calls().is_empty());
+        });
+}
+
+/// A host writing in English: the French texts stay, and so do the end, the note and the id the
+/// form does not carry; rows keep their place.
+#[test]
+#[serial]
+fn a_save_in_english_keeps_the_french() {
+    assert_eq!(
+        config_save::localized_paths(EMISSIONS),
+        ["disclaimer", "events.note", "events.place", "events.title"]
+    );
+    let stored = json!({
+        "events": [
+            { "id": "evt-1", "title": { "fr": "Concert jazz", "en": "Jazz concert" },
+              "place": { "fr": "Théâtre de la Mer", "en": "Sea theatre" },
+              "starts_at": "2099-07-25T18:00:00Z", "ends_at": "2099-07-25T20:00:00Z",
+              "url": "https://example.com/tickets", "lat": 43.58, "lng": 7.12,
+              "note": { "fr": "Arrivez tôt.", "en": "Arrive early." } },
+            { "title": "", "place": "", "starts_at": "", "url": "", "lat": "", "lng": "" },
+            { "id": "evt-3", "title": { "fr": "Brocante" }, "place": { "fr": "Port" },
+              "starts_at": "2099-07-26T09:00:00Z", "note": { "fr": "Gratuit" } }
+        ],
+        "disclaimer": { "fr": "Dates indicatives", "en": "Dates are indicative" },
+        "nearby_enabled": false,
+        "radius_km": "40"
+    });
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&stored)
+        .run(|mut ctx| {
+            ctx.locale = "en-US".into();
+            let surface = render_host_main(ctx).expect("host main");
+            let sent = config_save::form_args(&surface);
+            // Stored order, the blank row where it was; ids on the filled rows only.
+            assert_eq!(sent["events"][0]["id"], "evt-1");
+            assert_eq!(sent["events"][0]["title"], "Jazz concert");
+            assert!(sent["events"][1].get("id").is_none());
+            assert_eq!(sent["events"][2]["id"], "evt-3");
+            assert_eq!(sent["events"][2]["title"], "Brocante");
+            assert_eq!(sent["events"].as_array().unwrap().len(), 6);
+            assert_eq!(sent["disclaimer"], "Dates are indicative");
+
+            let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
+            let first = &saved["events"][0];
+            assert_eq!(first["title"], stored["events"][0]["title"]);
+            assert_eq!(first["place"], stored["events"][0]["place"]);
+            assert_eq!(first["ends_at"], stored["events"][0]["ends_at"]);
+            assert_eq!(first["note"], stored["events"][0]["note"]);
+            assert_eq!(saved["events"][2]["title"]["fr"], "Brocante");
+            assert_eq!(saved["events"][2]["place"]["fr"], "Port");
+            assert_eq!(saved["events"][2]["note"], stored["events"][2]["note"]);
+            assert_eq!(saved["disclaimer"], stored["disclaimer"]);
         });
 }
