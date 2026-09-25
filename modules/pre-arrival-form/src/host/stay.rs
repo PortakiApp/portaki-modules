@@ -9,7 +9,7 @@ use portaki_sdk::sdui::primitives::{Card, ListItem, Page, Pill, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 use uuid::Uuid;
 
-use crate::config::load_config;
+use crate::config::ModuleConfig;
 use crate::entities::PreArrivalResponse;
 use crate::storage;
 
@@ -21,7 +21,7 @@ use crate::storage;
     label_key = "catalog.host.stay",
     icon = IconName::Clipboard
 )]
-pub fn render_host_stay(ctx: HostContext) -> Surface {
+pub fn render_host_stay(ctx: HostContext) -> Result<Surface> {
     let stay_id = ctx
         .input_str("stayId")
         .and_then(|raw| Uuid::parse_str(raw).ok());
@@ -29,12 +29,12 @@ pub fn render_host_stay(ctx: HostContext) -> Surface {
     let body = match stay_id {
         None => missing_stay_card(),
         Some(stay_id) => match storage::find_by_stay(stay_id).ok().flatten() {
-            Some(row) => completed_card(&row),
+            Some(row) => completed_card(&row, &ModuleConfig::read(&ctx)?),
             None => pending_card(),
         },
     };
 
-    Surface::new(Page::new().child(body)).with_id(crate::ids::HOST_STAY)
+    Ok(Surface::new(Page::new().child(body)).with_id(crate::ids::HOST_STAY))
 }
 
 fn missing_stay_card() -> Component {
@@ -68,11 +68,10 @@ fn pending_card() -> Component {
     )
 }
 
-fn completed_card(row: &PreArrivalResponse) -> Component {
+fn completed_card(row: &PreArrivalResponse, questions: &ModuleConfig) -> Component {
     let status = Pill::new()
         .label("i18n:host.stay.status.done")
         .tone(Tone::Success);
-    let questions = load_config().unwrap_or_default().questions;
 
     let mut rows: Vec<Component> = Vec::new();
 

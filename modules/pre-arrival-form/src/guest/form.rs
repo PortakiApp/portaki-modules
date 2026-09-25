@@ -6,7 +6,7 @@ use portaki_sdk::sdui::surface::Surface;
 use super::empty::{empty_not_yet_state, empty_runtime_error_state, log_render_failure};
 use super::home::{build_form_surface, build_readonly_surface};
 use super::load::{load_guest_pre_arrival, GuestLoad};
-use crate::config::load_config;
+use crate::config::ModuleConfig;
 
 /// Fullscreen pre-arrival form (design page overlay).
 #[portaki_sdk::surface(
@@ -30,19 +30,15 @@ fn render_form(ctx: &GuestContext) -> Result<Surface> {
         GuestLoad::Empty(surface) => Ok(*surface),
         GuestLoad::NotYet => Ok(empty_not_yet_state(crate::ids::GUEST_FORM)),
         GuestLoad::Locked { response } => {
-            let config = load_config().unwrap_or_default();
-            Ok(build_readonly_surface(&config.questions, &response))
+            let config = ModuleConfig::read(ctx)?;
+            Ok(build_readonly_surface(&config, &response))
         }
         GuestLoad::Form {
             completed,
             existing,
         } => {
-            let config = load_config().unwrap_or_default();
-            Ok(build_form_surface(
-                &config.questions,
-                existing.as_ref(),
-                completed,
-            ))
+            let config = ModuleConfig::read(ctx)?;
+            Ok(build_form_surface(&config, existing.as_ref(), completed))
         }
     }
 }

@@ -1,14 +1,12 @@
-//! Host configuration stored in KV (`config` key).
+//! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 //!
 //! Mirrors design `editorPrearrival` / `prearrival-editor-v1`:
 //! - when to show the guest form (`show_when`)
 //! - which questions are enabled (`ask_*`)
 
-use portaki_sdk::host;
-use portaki_sdk::Result;
+use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
-
-const CONFIG_KEY: &str = "config";
+use serde_json::{Map, Value};
 
 /// When the guest form becomes available.
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
@@ -43,26 +41,35 @@ impl ShowWhen {
     pub const CHOICE_LIST_WIRE_VALUES: &'static [&'static str] = &["confirm", "before", "checkin"];
 }
 
-/// Which guest form questions are active.
+/// The keys are the names of the host form fields: the platform takes `updateConfig` itself.
+/// The questions sit flat, as the form sends them; the KV kept them under `questions`.
+#[portaki_sdk::config]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct FormQuestions {
-    #[serde(default = "default_true")]
+pub struct ModuleConfig {
+    #[field(
+        kind = "select",
+        options = ["confirm", "before", "checkin"],
+        label = "host.when"
+    )]
+    pub show_when: ShowWhen,
+    #[field(label = "host.question.arrival")]
     pub ask_arrival_time: bool,
-    #[serde(default = "default_true")]
+    #[field(label = "host.question.occasion")]
     pub ask_occasion: bool,
-    #[serde(default = "default_true")]
+    #[field(label = "host.question.allergies")]
     pub ask_allergies: bool,
-    #[serde(default = "default_true")]
+    #[field(label = "host.question.guestCount")]
     pub ask_guest_count: bool,
-    #[serde(default)]
+    #[field(label = "host.question.specialNeeds")]
     pub ask_special_needs: bool,
-    #[serde(default)]
+    #[field(label = "host.question.idDocument")]
     pub ask_id_document: bool,
 }
 
-impl Default for FormQuestions {
+impl Default for ModuleConfig {
     fn default() -> Self {
         Self {
+            show_when: ShowWhen::Before,
             ask_arrival_time: true,
             ask_occasion: true,
             ask_allergies: true,
@@ -73,57 +80,112 @@ impl Default for FormQuestions {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct ModuleConfig {
-    #[serde(default)]
-    pub show_when: ShowWhen,
-    #[serde(default)]
-    pub questions: FormQuestions,
-}
+const QUESTION_KEYS: [&str; 6] = [
+    "ask_arrival_time",
+    "ask_occasion",
+    "ask_allergies",
+    "ask_guest_count",
+    "ask_special_needs",
+    "ask_id_document",
+];
 
-impl Default for ModuleConfig {
-    fn default() -> Self {
-        Self {
-            show_when: ShowWhen::Before,
-            questions: FormQuestions::default(),
+impl ModuleConfig {
+    /// The config of this install. The KV kept the questions nested under `questions`, which
+    /// the platform import skips: until the host saves a question, it is still read from there.
+    /// Present, even `false`, the platform's value wins.
+    pub fn read(ctx: &Context) -> Result<Self> {
+        let config = Self::load(ctx)?;
+        let not_held = Map::new();
+        let held = match &ctx.module_config {
+            Some(Value::Object(held)) => held,
+            Some(_) => return Ok(config),
+            // `load` read the KV blob, whose questions are nested: same lookup.
+            None => &not_held,
+        };
+        if QUESTION_KEYS.iter().all(|key| held.contains_key(*key)) {
+            return Ok(config);
         }
+        let Some(Value::Object(old)) = portaki_sdk::config::legacy_config()?
+            .get_mut("questions")
+            .map(Value::take)
+        else {
+            return Ok(config);
+        };
+        let mut merged = serde_json::to_value(&config).map_err(unreadable)?;
+        for key in QUESTION_KEYS {
+            if let (false, Some(value)) = (held.contains_key(key), old.get(key)) {
+                merged[key] = value.clone();
+            }
+        }
+        serde_json::from_value(merged).map_err(unreadable)
+    }
+
+    /// At least one question is asked.
+    pub fn asks_anything(&self) -> bool {
+        self.ask_arrival_time
+            || self.ask_occasion
+            || self.ask_allergies
+            || self.ask_guest_count
+            || self.ask_special_needs
+            || self.ask_id_document
     }
 }
 
-fn default_true() -> bool {
-    true
-}
-
-pub fn load_config() -> Result<ModuleConfig> {
-    let Some(bytes) = host::kv::get(CONFIG_KEY)? else {
-        return Ok(ModuleConfig::default());
-    };
-    serde_json::from_slice(&bytes).map_err(|error| {
-        portaki_sdk::PortakiError::Storage(format!("invalid config JSON: {error}"))
-    })
-}
-
-pub fn save_config(config: &ModuleConfig) -> Result<()> {
-    let bytes = serde_json::to_vec(config).map_err(|error| {
-        portaki_sdk::PortakiError::Storage(format!("config serialize: {error}"))
-    })?;
-    host::kv::set(CONFIG_KEY, &bytes, None)
+fn unreadable(error: serde_json::Error) -> PortakiError {
+    PortakiError::Storage(format!("config_unreadable: {error}"))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use portaki_test_utils::MockContext;
+    use serde_json::json;
+
+    /// The KV nested the questions under `questions`, which the import skips: they are still
+    /// read from there until the host saves them; a saved one wins, even `false`.
+    #[test]
+    #[serial_test::serial]
+    fn nested_questions_survive_the_import() {
+        let legacy = json!({
+            "show_when": "confirm",
+            "questions": { "ask_occasion": false, "ask_id_document": true }
+        });
+        let read = |held: Option<Value>| {
+            let mut mock =
+                MockContext::guest().with_kv("config", serde_json::to_vec(&legacy).unwrap());
+            if let Some(held) = held {
+                mock = mock.with_config(&held);
+            }
+            mock.run(|ctx| ModuleConfig::read(&ctx).unwrap())
+        };
+
+        let before_import = read(None);
+        assert_eq!(before_import.show_when, ShowWhen::Confirm);
+        assert!(!before_import.ask_occasion);
+        assert!(before_import.ask_id_document);
+        assert!(before_import.ask_allergies);
+
+        let imported = read(Some(json!({ "show_when": "confirm" })));
+        assert_eq!(imported, before_import);
+
+        let saved = read(Some(
+            json!({ "ask_occasion": true, "ask_id_document": false }),
+        ));
+        assert!(saved.ask_occasion);
+        assert!(!saved.ask_id_document);
+        assert_eq!(saved.show_when, ShowWhen::Before);
+    }
 
     #[test]
     fn default_matches_design_sample() {
         let cfg = ModuleConfig::default();
         assert_eq!(cfg.show_when, ShowWhen::Before);
-        assert!(cfg.questions.ask_arrival_time);
-        assert!(cfg.questions.ask_occasion);
-        assert!(cfg.questions.ask_allergies);
-        assert!(cfg.questions.ask_guest_count);
-        assert!(!cfg.questions.ask_special_needs);
-        assert!(!cfg.questions.ask_id_document);
+        assert!(cfg.ask_arrival_time);
+        assert!(cfg.ask_occasion);
+        assert!(cfg.ask_allergies);
+        assert!(cfg.ask_guest_count);
+        assert!(!cfg.ask_special_needs);
+        assert!(!cfg.ask_id_document);
     }
 
     #[test]

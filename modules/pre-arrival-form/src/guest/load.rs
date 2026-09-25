@@ -5,7 +5,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 
 use super::empty::empty_state_if_module_not_ready;
-use crate::config::load_config;
+use crate::config::ModuleConfig;
 use crate::entities::PreArrivalResponse;
 use crate::show_when::{is_editable_until_checkin, is_form_available};
 use crate::storage;
@@ -50,7 +50,7 @@ pub fn load_guest_pre_arrival(ctx: &GuestContext) -> Result<GuestLoad> {
         return Ok(GuestLoad::Locked { response });
     }
 
-    let config = load_config().unwrap_or_default();
+    let config = ModuleConfig::read(ctx)?;
     if !is_form_available(config.show_when, now, checkin_at) {
         return Ok(GuestLoad::NotYet);
     }

@@ -5,7 +5,7 @@ use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadine
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
-use crate::config::load_config;
+use crate::config::ModuleConfig;
 use crate::i18n::text;
 use crate::storage;
 
@@ -67,16 +67,11 @@ pub fn get_status(ctx: Context) -> Result<PreArrivalStatus> {
     })
 }
 
-/// Recommends asking the guest at least one question; never blocks.
+/// Recommends asking the guest at least one question; never blocks. A rule over six toggles,
+/// which the declared config cannot say.
 #[portaki_sdk::query(name = "publishReadiness")]
-pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
-    let q = load_config()?.questions;
-    let ok = q.ask_arrival_time
-        || q.ask_occasion
-        || q.ask_allergies
-        || q.ask_guest_count
-        || q.ask_special_needs
-        || q.ask_id_document;
+pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
+    let ok = ModuleConfig::read(&ctx)?.asks_anything();
     Ok(PublishReadiness {
         items: vec![PublishCheck {
             id: "questions".into(),
