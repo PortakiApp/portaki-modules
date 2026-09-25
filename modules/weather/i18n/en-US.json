@@ -49,13 +49,6 @@
   "host.save": "Save",
   "home.card.title": "Weather",
   "home.card.unavailable": "Weather is not available for this property",
-  "home.card.error.title": "Weather temporarily unavailable",
-  "home.card.error.description": "Conditions could not be loaded. Try again in a moment.",
-  "module.status.incomplete.title": "Setup incomplete",
-  "module.status.incomplete.description": "Finish weather configuration in the host dashboard",
-  "module.status.incomplete.hint": "Required fields are missing — open Modules → Weather",
-  "module.status.inactive.title": "Weather module disabled",
-  "module.status.inactive.description": "This module is not active on this property",
   "explore.forecast.title": "Forecast",
   "explore.forecast.hint": "5-day outlook",
   "sheet.assistant.tip": "A question about this? Ask the assistant or contact your host.",
@@ -77,5 +70,9 @@
   "host.units.label.fahrenheit": "°F",
   "host.refresh.label.1h": "Every hour",
   "host.refresh.label.3h": "Every 3 hours",
-  "host.refresh.label.6h": "Every 6 hours"
+  "host.refresh.label.6h": "Every 6 hours",
+  "guest.error.title": "Weather temporarily unavailable",
+  "guest.error.description": "Conditions could not be loaded. Try again in a moment.",
+  "guest.unavailable.description": "Forecasts are not offered for this property.",
+  "guest.noLocation.description": "The weather will appear once the property's address is set."
 }

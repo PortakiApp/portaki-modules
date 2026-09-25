@@ -3,6 +3,7 @@
 use chrono::{DateTime, Utc};
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui::common::GeoPoint;
 use serde::{Deserialize, Serialize};
 
 use crate::cache;
@@ -17,7 +18,7 @@ use crate::weather::{
 #[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetCurrentArgs {
-    /// Optional latitude override (defaults to property coordinates).
+    /// Optional latitude override (with `lng`; defaults to the property coordinates).
     pub lat: Option<f64>,
     /// Optional longitude override.
     pub lng: Option<f64>,
@@ -48,10 +49,18 @@ fn resolve_coords(ctx: &Context, lat: Option<f64>, lng: Option<f64>) -> Result<Q
             "external.open-weather".to_string(),
         ));
     }
+    let point = match (lat, lng) {
+        (Some(lat), Some(lng)) => GeoPoint { lat, lng },
+        // Never a default position: a property that is not geocoded has no weather.
+        _ => ctx
+            .property
+            .coordinates
+            .ok_or_else(|| PortakiError::Host("property_not_geocoded".into()))?,
+    };
     let config = ModuleConfig::load(ctx)?;
     Ok(QueryCoords {
-        lat: lat.unwrap_or(ctx.property.lat),
-        lng: lng.unwrap_or(ctx.property.lng),
+        lat: point.lat,
+        lng: point.lng,
         units: config.units,
         now: time::now()?,
     })
