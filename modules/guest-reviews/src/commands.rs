@@ -41,7 +41,7 @@ pub fn load_reviews() -> Result<Vec<StoredReview>> {
 
 #[portaki_sdk::command(name = "submitReview", guest)]
 pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
-    let config = ModuleConfig::read(&ctx)?;
+    let config = ModuleConfig::load(&ctx)?;
     if !config.portaki_feasible() {
         return Err(PortakiError::Host(
             "portaki_review_platform_not_enabled".into(),

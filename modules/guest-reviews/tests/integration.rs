@@ -6,9 +6,10 @@ use serial_test::serial;
 
 use guest_reviews::{
     publish_readiness, render_home_card, render_host_main, render_host_stats,
-    render_post_stay_card, stats_summary, submit_review, ChannelMode, Localized, ModuleConfig,
+    render_post_stay_card, stats_summary, submit_review, ChannelMode, ModuleConfig,
     SubmitReviewArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
 };
+use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::contracts::publish::PublishLevel;
 use portaki_sdk::contracts::stats::StatsSummaryArgs;
 use portaki_test_utils::{MockContext, SurfaceAssertions};
@@ -16,6 +17,10 @@ use serde_json::json;
 
 #[path = "../../../support/config_form.rs"]
 mod config_form;
+#[path = "../../../support/config_save.rs"]
+mod config_save;
+
+const EMISSIONS: &str = concat!(env!("OUT_DIR"), "/portaki-emissions");
 
 fn sample_config() -> ModuleConfig {
     ModuleConfig {
@@ -24,7 +29,7 @@ fn sample_config() -> ModuleConfig {
         platform_portaki: true,
         show_qr_code: true,
         airbnb_review_url: "https://www.airbnb.com/users/review/test".into(),
-        thank_you_message: Localized::singleton("fr", "Merci !"),
+        thank_you_message: I18nText::new("Merci !", ""),
     }
 }
 
@@ -49,7 +54,7 @@ fn home_card_empty_for_airbnb_without_url() {
 #[test]
 #[serial]
 fn home_card_migrates_legacy_both_channel() {
-    // No `moduleConfig` yet: the KV blob, read the old way.
+    // No `moduleConfig` yet: the KV blob, read through `legacy`.
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .with_kv(
@@ -221,17 +226,48 @@ fn the_host_form_sends_the_declared_keys() {
         });
 }
 
-/// An older per-language message shows in the host's language in the one-message form.
+/// The form shows the message in the host's language; a save in that language keeps the others.
 #[test]
 #[serial]
 fn host_form_shows_the_message_in_the_host_language() {
+    assert_eq!(
+        config_save::localized_paths(EMISSIONS),
+        ["thank_you_message"]
+    );
+    let stored = json!({
+        "thank_you_message": { "fr": "Merci !", "en": "Thanks!" },
+        "airbnb_review_url": "https://www.airbnb.com/users/review/test"
+    });
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&json!({ "thank_you_message": { "fr": "Merci !", "en": "Thanks!" } }))
+        .with_config(&stored)
         .run(|mut ctx| {
-            ctx.locale = "en".into();
-            let json = serde_json::to_string(&render_host_main(ctx).expect("host main")).unwrap();
+            ctx.locale = "en-US".into();
+            let surface = render_host_main(ctx).expect("host main");
+            assert_eq!(
+                config_save::form_args(&surface)["thank_you_message"],
+                "Thanks!"
+            );
+            let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
+            assert_eq!(saved["thank_you_message"], stored["thank_you_message"]);
+        });
+}
+
+/// The guest reads the message in their own language.
+#[test]
+#[serial]
+fn guest_card_shows_the_message_in_the_guest_language() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({
+            "platform_airbnb": false,
+            "thank_you_message": { "fr": "Merci !", "en": "Thanks!" }
+        }))
+        .run(|mut ctx| {
+            ctx.locale = "en-GB".into();
+            let json = serde_json::to_string(&render_home_card(ctx).expect("card")).unwrap();
             assert!(json.contains("Thanks!"));
+            assert!(!json.contains("Merci !"));
         });
 }
 

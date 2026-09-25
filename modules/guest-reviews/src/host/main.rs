@@ -20,9 +20,8 @@ use crate::config::{normalize_url, ModuleConfig};
     icon = IconName::Star
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
-    let config = ModuleConfig::read(&ctx)?;
-    // One message now: an older per-language one shows in the host's language first.
-    let thank_you_message = config.thank_you_message.pick(&ctx.locale);
+    let config = ModuleConfig::load(&ctx)?;
+    let thank_you_message = config.thank_you_message.host_value(&ctx).to_string();
 
     let platform_airbnb = ctx.input_bool("platform_airbnb", config.platform_airbnb);
     let platform_portaki = ctx.input_bool("platform_portaki", config.platform_portaki);
