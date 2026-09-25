@@ -11,8 +11,6 @@ define_surface_ids! {
 
 define_operation_names! {
     EMAIL_CONTEXT = "emailContext",
-    GET_CONFIG = "getConfig",
-    UPDATE_CONFIG = "updateConfig",
 }
 
 /// Catalog module id (`events`).

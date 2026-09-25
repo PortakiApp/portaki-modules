@@ -39,7 +39,7 @@
   "host.section.disclaimer.help": "Short note shown under the event list in the guest booklet.",
   "host.disclaimer.label": "Disclaimer",
   "host.disclaimer.placeholder": "Dates are indicative — check with the organizer",
-  "host.main.help": "Leave a slot empty to hide it. Manual texts are saved for the active edit language only.",
+  "host.main.help": "Leave a slot empty to hide it. Each text is shown in every language.",
   "host.save": "Save",
   "home.card.title": "Events",
   "guest.disclaimer.title": "Info",
@@ -66,5 +66,6 @@
   "module.status.inactive.title": "Events module disabled",
   "module.status.inactive.description": "This module is not active on this property",
   "module.catalogDescription": "Local happenings near the stay — local listings plus your own picks.",
-  "catalog.host.main": "Events"
+  "catalog.host.main": "Events",
+  "config.events": "Manual events"
 }

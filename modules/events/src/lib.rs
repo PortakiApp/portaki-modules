@@ -9,17 +9,15 @@ mod host;
 mod ids;
 mod map_markers;
 mod nearby;
-mod queries;
 mod time_format;
 
-pub use commands::{refresh_nearby, update_config, EventInput, UpdateConfigArgs};
-pub use config::{load_config, ModuleConfig};
+pub use commands::refresh_nearby;
+pub use config::ModuleConfig;
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use guest::{render_explore_detail, render_home_card, render_upcoming_card};
 pub use host::render_host_main;
 pub use map_markers::{map_markers, MapMarkersResponse, MAX_MARKERS};
 pub use nearby::{has_open_agenda, invalidate_nearby_cache, resolve_events};
-pub use queries::get_config;
 
 portaki_sdk::portaki_module!(
     id = "events",

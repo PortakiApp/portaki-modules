@@ -2,7 +2,7 @@
 
 use portaki_sdk::prelude::*;
 
-use crate::config::load_config;
+use crate::config::ModuleConfig;
 use crate::nearby::resolve_events;
 
 /// Gateway `emailContext` args — shared SDK wire type.
@@ -29,7 +29,7 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
     let locale = args.locale_or(ctx.locale.as_str());
     let property_locale = ctx.property.locale.as_str();
 
-    let config = load_config().unwrap_or_default();
+    let config = ModuleConfig::read(&ctx)?;
     let events = resolve_events(&ctx, &config, true)?;
     let Some(event) = events.first() else {
         return Ok(EmailContextResponse { local_tip: None });
@@ -66,18 +66,14 @@ mod tests {
     fn when_arrival_day_then_returns_first_upcoming_event() {
         let (ctx, host) = MockContext::guest()
             .with_capabilities(&[capability::core::STORAGE])
-            .with_kv(
-                "config",
-                serde_json::to_vec(&json!({
-                    "events": [{
-                        "id": "evt-1",
-                        "title": {"fr": "Marché provençal", "en": "Provence market"},
-                        "place": {"fr": "Place du marché", "en": "Market square"},
-                        "starts_at": "2099-07-25T08:00:00Z"
-                    }]
-                }))
-                .unwrap(),
-            )
+            .with_config(&json!({
+                "events": [{
+                    "id": "evt-1",
+                    "title": {"fr": "Marché provençal", "en": "Provence market"},
+                    "place": {"fr": "Place du marché", "en": "Market square"},
+                    "starts_at": "2099-07-25T08:00:00Z"
+                }]
+            }))
             .build();
 
         with_host(host, ctx.clone(), || {
