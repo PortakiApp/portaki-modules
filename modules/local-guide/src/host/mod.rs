@@ -335,9 +335,17 @@ fn spot_card(index: usize, spot: Option<&SpotRow>, lang: &str) -> Component {
         .map(|d| d.pick(lang))
         .unwrap_or_default();
     let address = spot.and_then(|s| s.address.as_deref()).unwrap_or("");
-    // Le sélecteur veut deux nombres, pas deux options : `0, 0` est sa façon de dire
-    // « aucune position », et c'est aussi ce que le module refuse de mettre sur la carte.
-    let (lat, lng) = spot.and_then(SpotRow::coords).unwrap_or((0.0, 0.0));
+    // Sans position, le sélecteur ne reçoit ni latitude ni longitude : il part vide.
+    let mut picker = AddressMapPicker::new()
+        .addressName(format!("spots.{index}.address"))
+        .latName(format!("spots.{index}.lat"))
+        .lngName(format!("spots.{index}.lng"))
+        .address(address)
+        .label("i18n:host.spot.address")
+        .hint("i18n:host.spot.address.hint");
+    if let Some((lat, lng)) = spot.and_then(SpotRow::coords) {
+        picker = picker.lat(lat).lng(lng);
+    }
 
     Card::new()
         .title(format!("i18n:host.spot.slot{slot}"))
@@ -388,16 +396,7 @@ fn spot_card(index: usize, spot: Option<&SpotRow>, lang: &str) -> Component {
                         .value(description),
                 )
                 .into(),
-            AddressMapPicker::new()
-                .addressName(format!("spots.{index}.address"))
-                .latName(format!("spots.{index}.lat"))
-                .lngName(format!("spots.{index}.lng"))
-                .address(address)
-                .lat(lat)
-                .lng(lng)
-                .label("i18n:host.spot.address")
-                .hint("i18n:host.spot.address.hint")
-                .into(),
+            picker.into(),
         ])
         .into()
 }

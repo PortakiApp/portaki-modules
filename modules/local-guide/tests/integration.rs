@@ -72,7 +72,10 @@ fn home_card_empty_without_config_or_address() {
         .build();
     ctx.property.address = None;
     with_host(host, ctx.clone(), || {
-        assert!(SurfaceAssertions::new(&render_home_card(ctx.clone())).contains_type("EmptyState"));
+        assert!(
+            SurfaceAssertions::new(&render_home_card(ctx.clone()).expect("surface"))
+                .contains_type("EmptyState")
+        );
     });
 }
 
@@ -83,7 +86,7 @@ fn home_card_renders_spots_with_pill() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Pill"));
             let json = surface_json(&surface);
@@ -98,7 +101,7 @@ fn upcoming_card_renders_spot_count() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
-            let surface = render_upcoming_card(ctx);
+            let surface = render_upcoming_card(ctx).expect("surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             // Compact card must not embed the full spot list.
             assert!(!SurfaceAssertions::new(&surface).contains_type("ListItem"));
@@ -117,7 +120,8 @@ fn upcoming_card_empty_without_config_or_address() {
     ctx.property.address = None;
     with_host(host, ctx.clone(), || {
         assert!(
-            SurfaceAssertions::new(&render_upcoming_card(ctx.clone())).contains_type("EmptyState")
+            SurfaceAssertions::new(&render_upcoming_card(ctx.clone()).expect("surface"))
+                .contains_type("EmptyState")
         );
     });
 }
@@ -129,7 +133,7 @@ fn detail_includes_link() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
-            let surface = render_explore_detail(ctx);
+            let surface = render_explore_detail(ctx).expect("surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("Link"));
             assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
         });
@@ -157,7 +161,7 @@ fn the_detail_surface_maps_the_located_spots_and_the_property() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&located_config())
         .run(|ctx| {
-            let surface = render_explore_detail(ctx);
+            let surface = render_explore_detail(ctx).expect("surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("Map"));
             let json = surface_json(&surface);
             assert!(json.contains("Plage du Midi"), "{json}");
@@ -165,6 +169,23 @@ fn the_detail_surface_maps_the_located_spots_and_the_property() {
             assert!(json.contains("\"property\""), "{json}");
             // Le spot sans position n'a pas de marqueur, mais reste dans la liste.
             assert!(json.contains("Boulangerie"), "{json}");
+        });
+}
+
+/// Logement non géocodé : les lieux restent sur la carte, sans repère du logement ni repli.
+#[test]
+#[serial]
+fn without_a_property_position_the_map_has_no_property_marker() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_coordinates(None)
+        .with_config(&located_config())
+        .run(|ctx| {
+            let surface = render_explore_detail(ctx).expect("surface");
+            assert!(SurfaceAssertions::new(&surface).contains_type("Map"));
+            let json = surface_json(&surface);
+            assert!(json.contains("Plage du Midi"), "{json}");
+            assert!(!json.contains("\"property\""), "{json}");
         });
 }
 
@@ -176,7 +197,7 @@ fn the_home_card_stays_a_list_without_a_map() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&located_config())
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("surface");
             assert!(!SurfaceAssertions::new(&surface).contains_type("Map"));
             assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
         });
@@ -191,7 +212,7 @@ fn a_config_written_before_the_map_renders_no_map() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
-            let surface = render_explore_detail(ctx);
+            let surface = render_explore_detail(ctx).expect("surface");
             assert!(!SurfaceAssertions::new(&surface).contains_type("Map"));
             assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
         });
@@ -207,7 +228,10 @@ fn null_island_never_reaches_the_map() {
             "spots": [{ "id": "s1", "title": { "fr": "Plage" }, "lat": 0.0, "lng": 0.0 }]
         }))
         .run(|ctx| {
-            assert!(!SurfaceAssertions::new(&render_explore_detail(ctx)).contains_type("Map"));
+            assert!(
+                !SurfaceAssertions::new(&render_explore_detail(ctx).expect("surface"))
+                    .contains_type("Map")
+            );
         });
 }
 
@@ -252,7 +276,7 @@ fn the_destination_comes_from_the_property_city() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&json!({ "activities_enabled": true }))
         .run(|ctx| {
-            let surface = render_explore_detail(ctx);
+            let surface = render_explore_detail(ctx).expect("surface");
             let json = surface_json(&surface);
             assert!(
                 json.contains("https://www.getyourguide.com/s/?q=Cannes"),
@@ -271,7 +295,7 @@ fn the_host_destination_override_wins() {
             "activities_enabled": true, "activities_destination": "Antibes"
         }))
         .run(|ctx| {
-            let json = surface_json(&render_explore_detail(ctx));
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
             assert!(json.contains("q=Antibes"), "{json}");
             assert!(!json.contains("q=Cannes"), "{json}");
         });
@@ -285,7 +309,7 @@ fn a_bare_module_renders_no_activities_section() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
-            let surface = render_explore_detail(ctx);
+            let surface = render_explore_detail(ctx).expect("surface");
             let json = surface_json(&surface);
             assert!(!json.contains("getyourguide"), "{json}");
             assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
@@ -301,7 +325,7 @@ fn a_config_without_the_activities_key_renders_no_section() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
-            let surface = render_explore_detail(ctx);
+            let surface = render_explore_detail(ctx).expect("surface");
             let json = surface_json(&surface);
             assert!(!json.contains("getyourguide"), "{json}");
             assert!(!json.contains("i18n:guest.activities.title"), "{json}");
@@ -319,7 +343,7 @@ fn without_a_destination_the_section_is_absent() {
         .build();
     ctx.property.address = None;
     with_host(host, ctx.clone(), || {
-        let surface = render_explore_detail(ctx.clone());
+        let surface = render_explore_detail(ctx.clone()).expect("surface");
         let json = surface_json(&surface);
         assert!(!json.contains("getyourguide"), "{json}");
         assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
@@ -336,7 +360,7 @@ fn a_disabled_section_disappears_and_leaves_the_spots() {
             "activities_enabled": false, "activities_destination": "Antibes"
         }))
         .run(|ctx| {
-            let surface = render_explore_detail(ctx);
+            let surface = render_explore_detail(ctx).expect("surface");
             let json = surface_json(&surface);
             assert!(!json.contains("getyourguide"), "{json}");
             assert!(!json.contains("i18n:guest.activities.title"));
@@ -354,7 +378,7 @@ fn curated_links_render_normalized_capped_and_in_order() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&json!({ "activities_enabled": true, "activities": links }))
         .run(|ctx| {
-            let json = surface_json(&render_explore_detail(ctx));
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
             let first = json.find("tour-00").expect("first link");
             let last = json.find("tour-09").expect("last kept link");
             assert!(first < last, "l'ordre de l'hôte est conservé");
@@ -382,7 +406,7 @@ fn every_link_reaching_the_guest_carries_our_partner_id() {
             ]
         }))
         .run(|ctx| {
-            let json = surface_json(&render_explore_detail(ctx));
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
             assert!(!json.contains("someone"), "{json}");
             assert!(!json.contains("viator"), "{json}");
             assert!(json.contains(&format!(
@@ -424,7 +448,7 @@ fn the_search_label_names_the_destination() {
             "activities_enabled": true, "activities_destination": "Antibes"
         }))
         .run(|ctx| {
-            let json = surface_json(&render_explore_detail(ctx));
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
             assert!(json.contains("Voir les activités à Antibes"), "{json}");
         });
 }
@@ -445,7 +469,7 @@ fn a_pasted_destination_url_becomes_the_link_and_names_its_place() {
             "activities_destination": "https://www.getyourguide.com/cannes-l15/"
         }))
         .run(|ctx| {
-            let json = surface_json(&render_explore_detail(ctx));
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
             assert!(
                 json.contains("https://www.getyourguide.com/cannes-l15/"),
                 "{json}"
@@ -465,7 +489,7 @@ fn a_destination_url_trades_the_hosts_partner_id_for_ours() {
             "activities_destination": "https://www.getyourguide.com/cannes-l15/?partner_id=someone"
         }))
         .run(|ctx| {
-            let json = surface_json(&render_explore_detail(ctx));
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
             assert!(
                 json.contains(&format!(
                     "https://www.getyourguide.com/cannes-l15/?{PARTNER_QUERY_PARAM}={PARTNER_ID}"
@@ -489,7 +513,7 @@ fn a_short_destination_link_is_kept_and_labelled_from_the_address() {
             "activities_enabled": true, "activities_destination": "https://gyg.me/aBcD12"
         }))
         .run(|ctx| {
-            let json = surface_json(&render_explore_detail(ctx));
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
             // Le lien court repart intact : son identifiant est déjà dans le chemin.
             assert!(json.contains("https://gyg.me/aBcD12"), "{json}");
             assert!(!json.contains(PARTNER_QUERY_PARAM), "{json}");
@@ -509,7 +533,7 @@ fn a_short_destination_link_without_an_address_gets_the_neutral_label() {
         .build();
     ctx.property.address = None;
     with_host(host, ctx.clone(), || {
-        let json = surface_json(&render_explore_detail(ctx.clone()));
+        let json = surface_json(&render_explore_detail(ctx.clone()).expect("surface"));
         assert!(json.contains("https://gyg.me/aBcD12"), "{json}");
         assert!(json.contains("i18n:guest.activities.browseLabel"), "{json}");
     });
@@ -551,8 +575,8 @@ fn the_affiliate_disclosure_ships_in_every_locale() {
         .with_config(&json!({ "activities_enabled": true }))
         .run(|ctx| {
             for json in [
-                surface_json(&render_explore_detail(ctx.clone())),
-                surface_json(&render_home_card(ctx.clone())),
+                surface_json(&render_explore_detail(ctx.clone()).expect("surface")),
+                surface_json(&render_home_card(ctx.clone()).expect("surface")),
             ] {
                 assert!(
                     json.contains("i18n:guest.activities.disclosure"),
@@ -576,11 +600,15 @@ fn every_i18n_key_a_surface_uses_exists_in_every_locale() {
             "activities": [{ "url": "https://gyg.me/aBcD12" }]
         }))
         .run(|ctx| {
-            refs.extend(i18n_refs(&surface_json(&render_home_card(ctx.clone()))));
-            refs.extend(i18n_refs(&surface_json(&render_explore_detail(
-                ctx.clone(),
-            ))));
-            refs.extend(i18n_refs(&surface_json(&render_upcoming_card(ctx))));
+            refs.extend(i18n_refs(&surface_json(
+                &render_home_card(ctx.clone()).expect("surface"),
+            )));
+            refs.extend(i18n_refs(&surface_json(
+                &render_explore_detail(ctx.clone()).expect("surface"),
+            )));
+            refs.extend(i18n_refs(&surface_json(
+                &render_upcoming_card(ctx).expect("surface"),
+            )));
         });
 
     MockContext::host()

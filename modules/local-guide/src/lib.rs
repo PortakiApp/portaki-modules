@@ -1,9 +1,5 @@
 //! Portaki local-guide module — nearby spots and host picks.
 
-// `PropertyContext::lat`/`lng` are deprecated since SDK 8.2; reading `coordinates` instead
-// changes what a non-geocoded property shows, which the guest-shell change does.
-#![allow(deprecated)]
-
 mod activities;
 mod affiliate;
 mod config;
