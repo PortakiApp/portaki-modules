@@ -1,13 +1,10 @@
 //! Load config for guest surfaces.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::surface::Surface;
 
 use crate::activities::{self, ActivitiesView};
 use crate::config::{valid_coords, ModuleConfig, SpotRow};
 use crate::tiqets::{self, TiqetsView};
-
-use super::empty::{empty_content_state, empty_state_if_module_not_ready};
 
 pub struct GuestData {
     pub spots: Vec<SpotRow>,
@@ -23,18 +20,9 @@ pub struct GuestData {
     pub property_name: String,
 }
 
-pub enum GuestLoad {
-    /// Boxée comme l'autre : les données voyageur pèsent trente fois une surface vide, et
-    /// l'enum entier prendrait ce poids partout où il transite.
-    Ready(Box<GuestData>),
-    Empty(Box<Surface>),
-}
-
-pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<GuestLoad> {
-    if let Some(surface) = empty_state_if_module_not_ready(surface_id)? {
-        return Ok(GuestLoad::Empty(Box::new(surface)));
-    }
-
+/// Ce qu'il y a à montrer, ou `None` quand il n'y a rien : ni lieu, ni mention, ni section
+/// activités ou Tiqets à proposer.
+pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<Box<GuestData>>> {
     let config = ModuleConfig::read(ctx)?;
     let activities = activities::resolve(
         &config.activities(),
@@ -49,10 +37,10 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Gues
     // donc un hôte qui n'a saisi aucune adresse a tout de même quelque chose à montrer.
     // Tiqets de même, depuis la position du logement.
     if config.is_empty() && activities.is_none() && tiqets.is_none() {
-        return Ok(GuestLoad::Empty(Box::new(empty_content_state(surface_id))));
+        return Ok(None);
     }
 
-    Ok(GuestLoad::Ready(Box::new(GuestData {
+    Ok(Some(Box::new(GuestData {
         spots: config.parse_spots(),
         disclaimer: config
             .disclaimer
@@ -61,7 +49,11 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Gues
         property_locale: ctx.property.locale.clone(),
         activities,
         tiqets,
-        property_coords: valid_coords(ctx.property.lat, ctx.property.lng),
+        property_coords: ctx
+            .property
+            .coordinates
+            .as_ref()
+            .and_then(|point| valid_coords(point.lat, point.lng)),
         property_name: ctx.property.name.clone(),
     })))
 }

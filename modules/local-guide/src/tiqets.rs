@@ -83,12 +83,18 @@ pub enum TiqetsStatus {
     Ready,
 }
 
+/// Où chercher : la position du logement, `None` tant qu'il n'est pas géocodé — jamais de repli.
+fn property_position(ctx: &Context) -> Option<(f64, f64)> {
+    let point = ctx.property.coordinates.as_ref()?;
+    valid_coords(point.lat, point.lng)
+}
+
 pub fn status(ctx: &Context, config: &TiqetsConfig) -> TiqetsStatus {
     if !config.enabled {
         TiqetsStatus::Off
     } else if !has_tiqets(ctx) {
         TiqetsStatus::MissingKey
-    } else if valid_coords(ctx.property.lat, ctx.property.lng).is_none() {
+    } else if property_position(ctx).is_none() {
         TiqetsStatus::MissingCoordinates
     } else {
         TiqetsStatus::Ready
@@ -114,7 +120,7 @@ pub fn resolve(ctx: &Context, config: &TiqetsConfig) -> Option<TiqetsView> {
     if status(ctx, config) != TiqetsStatus::Ready {
         return None;
     }
-    let (lat, lng) = valid_coords(ctx.property.lat, ctx.property.lng)?;
+    let (lat, lng) = property_position(ctx)?;
     let now = time::now().ok()?.timestamp();
     let lang = tiqets_lang(&ctx.locale);
     let radius_km = config.normalized_radius_km();

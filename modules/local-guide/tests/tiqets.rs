@@ -82,7 +82,7 @@ fn the_detail_lists_the_recorded_products_with_their_affiliate_links() {
         .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .run_with(|ctx, host| {
-            let json = surface_json(&render_explore_detail(ctx));
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
 
             assert!(json.contains("Musée Van Gogh : billet d'entrée"), "{json}");
             // Le lien de Tiqets, tel quel : il porte le code d'affiliation.
@@ -118,7 +118,7 @@ fn price_and_rating_read_in_the_guest_language() {
         .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .run(|ctx| {
-            let json = surface_json(&render_explore_detail(ctx));
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
             assert!(json.contains("Dès 22 € · ★ 4,6 (18234 avis)"), "{json}");
         });
 }
@@ -130,7 +130,7 @@ fn the_home_card_is_a_preview_without_images() {
         .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .run(|ctx| {
-            let json = surface_json(&render_home_card(ctx));
+            let json = surface_json(&render_home_card(ctx).expect("surface"));
             assert!(json.contains("Musée Van Gogh"), "{json}");
             assert!(json.contains(AFFILIATE_URL));
             assert!(!json.contains("fixture-medium.jpg"), "{json}");
@@ -143,7 +143,7 @@ fn the_section_is_off_until_the_host_turns_it_on() {
     guest(&pool())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .run_with(|ctx, host| {
-            let json = surface_json(&render_explore_detail(ctx));
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
             assert!(!json.contains("guest.tiqets.title"), "{json}");
             assert!(host.connector_calls().is_empty());
         });
@@ -156,7 +156,7 @@ fn without_pool_or_own_key_nothing_is_called() {
         .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .run_with(|ctx, host| {
-            let json = surface_json(&render_explore_detail(ctx));
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
             assert!(!json.contains("guest.tiqets.title"), "{json}");
             assert!(host.connector_calls().is_empty());
         });
@@ -169,25 +169,22 @@ fn the_hosts_own_key_is_enough() {
         .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .run(|ctx| {
-            assert!(surface_json(&render_explore_detail(ctx)).contains("Musée Van Gogh"));
+            assert!(surface_json(&render_explore_detail(ctx).expect("surface"))
+                .contains("Musée Van Gogh"));
         });
 }
 
 #[test]
 #[serial]
 fn a_property_without_position_is_never_searched() {
-    let (mut ctx, host) = guest(&pool())
+    let (ctx, host) = guest(&pool())
+        .with_coordinates(None)
         .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .build();
-    #[allow(deprecated)] // lat/lng until the guest-shell change reads `coordinates`
-    {
-        ctx.property.lat = 0.0;
-        ctx.property.lng = 0.0;
-    }
     let backend = host.clone();
     with_host(host, ctx.clone(), || {
-        let json = surface_json(&render_explore_detail(ctx.clone()));
+        let json = surface_json(&render_explore_detail(ctx.clone()).expect("surface"));
         assert!(!json.contains("guest.tiqets.title"), "{json}");
     });
     assert!(backend.connector_calls().is_empty());
@@ -204,7 +201,7 @@ fn a_fresh_cache_is_served_without_calling_tiqets() {
         )
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .run_with(|ctx, host| {
-            let json = surface_json(&render_explore_detail(ctx));
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
             assert!(json.contains("Depuis le cache"), "{json}");
             assert!(host.connector_calls().is_empty());
         });
@@ -221,7 +218,7 @@ fn a_day_old_cache_is_refreshed() {
         )
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .run_with(|ctx, host| {
-            let json = surface_json(&render_explore_detail(ctx));
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
             assert!(json.contains("Musée Van Gogh"), "{json}");
             assert!(!json.contains("Depuis le cache"));
             assert_eq!(host.connector_calls().len(), 1);
@@ -243,7 +240,7 @@ fn when_tiqets_fails_a_stale_cache_under_fourteen_days_is_still_shown() {
             "connector_pool_quota_exhausted",
         )
         .run(|ctx| {
-            let json = surface_json(&render_explore_detail(ctx));
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
             assert!(json.contains("Gardé trois jours"), "{json}");
         });
 }
@@ -259,7 +256,7 @@ fn a_cache_older_than_fourteen_days_is_never_shown() {
         )
         .with_connector_error("tiqets", "nearby_products", "connector_egress_failed")
         .run(|ctx| {
-            let json = surface_json(&render_explore_detail(ctx));
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
             assert!(!json.contains("Périmé"), "{json}");
             assert!(!json.contains("guest.tiqets.title"), "{json}");
         });
@@ -275,7 +272,7 @@ fn a_tiqets_failure_without_cache_still_renders_the_rest_of_the_booklet() {
         }))
         .with_connector_error("tiqets", "nearby_products", "connector_egress_failed")
         .run(|ctx| {
-            let json = surface_json(&render_explore_detail(ctx));
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
             assert!(json.contains("Plage"), "{json}");
             assert!(!json.contains("guest.tiqets.title"), "{json}");
             assert!(!json.contains("guest.error.title"), "{json}");
@@ -292,7 +289,7 @@ fn an_unsupported_booklet_language_asks_tiqets_in_english() {
     ctx.locale = "uk-UA".to_string();
     let backend = host.clone();
     with_host(host, ctx.clone(), || {
-        render_explore_detail(ctx.clone());
+        render_explore_detail(ctx.clone()).expect("surface");
     });
     let args: Value = serde_json::from_str(&backend.connector_calls()[0].args_json).expect("args");
     assert_eq!(args["lang"], "en");
@@ -332,7 +329,7 @@ fn the_upcoming_card_does_not_embed_the_tiqets_list() {
         .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .run(|ctx| {
-            let json = surface_json(&render_upcoming_card(ctx));
+            let json = surface_json(&render_upcoming_card(ctx).expect("surface"));
             assert!(!json.contains("Musée Van Gogh"), "{json}");
         });
 }
@@ -357,10 +354,13 @@ fn every_tiqets_key_exists_in_both_bundles() {
         .with_connector_response("tiqets", "nearby_products", RECORDED)
         .run(|ctx| {
             collect(
-                &surface_json(&render_explore_detail(ctx.clone())),
+                &surface_json(&render_explore_detail(ctx.clone()).expect("surface")),
                 &mut refs,
             );
-            collect(&surface_json(&render_home_card(ctx)), &mut refs);
+            collect(
+                &surface_json(&render_home_card(ctx).expect("surface")),
+                &mut refs,
+            );
         });
     for capabilities in [vec![capability::core::STORAGE], pool().to_vec()] {
         MockContext::host()

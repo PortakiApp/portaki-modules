@@ -46,8 +46,10 @@ fn sample_config() -> serde_json::Value {
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
     let context = previews::guest(root).with_config(&sample_config());
-    let detail = context.clone().run(render_explore_detail);
-    let upcoming = context.run(render_upcoming_card);
+    let detail = context
+        .clone()
+        .run(|ctx| render_explore_detail(ctx).expect("surface"));
+    let upcoming = context.run(|ctx| render_upcoming_card(ctx).expect("surface"));
     previews::check(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
