@@ -38,7 +38,7 @@ fn home_card_renders_form_when_incomplete() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            let surface = render_home_card(ctx.clone());
+            let surface = render_home_card(ctx.clone()).expect("guest surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("HostFragment"));
             assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
@@ -48,7 +48,7 @@ fn home_card_renders_form_when_incomplete() {
             assert!(json.contains("guest.form"));
             assert!(!json.contains("TimePicker"));
 
-            let form = render_guest_form(ctx);
+            let form = render_guest_form(ctx).expect("guest surface");
             assert!(SurfaceAssertions::new(&form).contains_type("Form"));
             assert!(SurfaceAssertions::new(&form).contains_type("TimePicker"));
             assert!(SurfaceAssertions::new(&form).contains_type("TextArea"));
@@ -92,7 +92,7 @@ fn submit_then_status_and_thanks_card() {
             assert_eq!(after.arrival_time_estimated.as_deref(), Some("17:30"));
             assert_eq!(after.guest_occasion.as_deref(), Some("Anniversaire"));
 
-            let surface = render_home_card(ctx.clone());
+            let surface = render_home_card(ctx.clone()).expect("guest surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
             assert!(SurfaceAssertions::new(&surface).contains_type("HostFragment"));
             let json = serde_json::to_string(&surface).expect("surface json");
@@ -102,7 +102,7 @@ fn submit_then_status_and_thanks_card() {
             assert!(json.contains("check-circle"));
             assert!(!json.contains("TimePicker"));
 
-            let form = render_guest_form(ctx);
+            let form = render_guest_form(ctx).expect("guest surface");
             assert!(SurfaceAssertions::new(&form).contains_type("Form"));
             assert!(SurfaceAssertions::new(&form).contains_type("Button"));
             let form_json = serde_json::to_string(&form).expect("form json");
@@ -141,7 +141,7 @@ fn completed_form_locks_after_checkin() {
                 ..StayContext::default()
             });
 
-            let form = render_guest_form(ctx.clone());
+            let form = render_guest_form(ctx.clone()).expect("guest surface");
             assert!(!SurfaceAssertions::new(&form).contains_type("Form"));
             assert!(!SurfaceAssertions::new(&form).contains_type("Button"));
             let form_json = serde_json::to_string(&form).expect("form json");
@@ -197,7 +197,7 @@ fn home_card_gated_omits_form_teaser_keeps_police_fragment() {
                 ..StayContext::default()
             });
 
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("guest surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("HostFragment"));
             // Gated: no form ListItem / soon teaser — police fragment only.
@@ -327,7 +327,7 @@ fn guest_form_respects_question_toggles() {
         .with_property(Property::default())
         .with_config(&config)
         .run(|ctx| {
-            let surface = render_guest_form(ctx);
+            let surface = render_guest_form(ctx).expect("guest surface");
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("form.arrival.label"));
             assert!(!json.contains("form.occasion.label"));
