@@ -36,11 +36,8 @@
   "home.card.safety": "Sécurité",
   "home.card.empty.title": "Aucun appareil pour le moment",
   "home.card.empty.description": "L'hôte n'a pas encore publié de guide appareils.",
-  "home.card.empty.hint": "Ouvrez l'onglet Appareils dans le tableau de bord hôte.",
   "home.card.featured.empty.title": "Rien en avant pour l'instant",
   "home.card.featured.empty.description": "Ouvrez la liste pour voir tous les appareils disponibles.",
-  "home.card.error.title": "Guide temporairement indisponible",
-  "home.card.error.description": "Impossible de charger le guide appareils.",
   "explore.detail.subtitle": "Modes d'emploi des appareils du logement.",
   "explore.detail.empty.title": "Aucun appareil",
   "explore.detail.empty.description": "Aucun guide appareil n'est disponible pour ce séjour.",
@@ -52,11 +49,6 @@
   "explore.item.notFound": "Appareil introuvable",
   "explore.item.notFound.description": "Ce guide n'est plus disponible ou a été retiré.",
   "explore.item.tip": "Astuce",
-  "module.status.incomplete.title": "Configuration incomplète",
-  "module.status.incomplete.description": "Terminez la configuration des appareils dans le tableau de bord hôte",
-  "module.status.incomplete.hint": "Ouvrez Modules → Appareils",
-  "module.status.inactive.title": "Appareils désactivés",
-  "module.status.inactive.description": "Ce module n'est pas actif sur ce logement",
   "module.catalogDescription": "Four, lave-linge, clim : consignes courtes pour vos voyageurs.",
   "catalog.host.main": "Appareils"
 }

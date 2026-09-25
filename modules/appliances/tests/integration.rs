@@ -74,7 +74,7 @@ fn home_card_empty_without_content() {
         .with_property(Property::default())
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("render");
             assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
         });
 }
@@ -88,7 +88,7 @@ fn home_card_featured_only_and_detail_list() {
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
             seed_two_devices(ctx.clone());
-            let card = render_home_card(ctx.clone());
+            let card = render_home_card(ctx.clone()).expect("render");
             assert!(SurfaceAssertions::new(&card).contains_type("Card"));
             assert!(SurfaceAssertions::new(&card).contains_type("ListItem"));
             let card_json = serde_json::to_string(&card).expect("json");
@@ -98,7 +98,7 @@ fn home_card_featured_only_and_detail_list() {
             assert!(card_json.contains("explore.detail"));
             assert!(card_json.contains("appliances/tv"));
 
-            let detail = render_explore_detail(ctx.clone());
+            let detail = render_explore_detail(ctx.clone()).expect("render");
             assert!(SurfaceAssertions::new(&detail).contains_type("Card"));
             assert!(SurfaceAssertions::new(&detail).contains_type("ListItem"));
             let detail_json = serde_json::to_string(&detail).expect("json");
@@ -120,7 +120,7 @@ fn explore_item_uses_device_id_and_howto_steps() {
 
             let mut tv_ctx = ctx.clone();
             tv_ctx.input = json!({ "deviceId": "tv" });
-            let tv = render_explore_item(tv_ctx);
+            let tv = render_explore_item(tv_ctx).expect("render");
             assert!(SurfaceAssertions::new(&tv).contains_type("ListItem"));
             assert!(SurfaceAssertions::new(&tv).contains_type("Eyebrow"));
             assert!(SurfaceAssertions::new(&tv).contains_type("Button"));
@@ -134,7 +134,7 @@ fn explore_item_uses_device_id_and_howto_steps() {
 
             let mut washer_ctx = ctx.clone();
             washer_ctx.input = json!({ "deviceId": "washer" });
-            let washer = render_explore_item(washer_ctx);
+            let washer = render_explore_item(washer_ctx).expect("render");
             assert!(SurfaceAssertions::new(&washer).contains_type("InfoBanner"));
             let washer_json = serde_json::to_string(&washer).expect("json");
             assert!(washer_json.contains("Lave-linge"));
@@ -152,7 +152,7 @@ fn explore_item_missing_device_id_is_not_found() {
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
             seed_two_devices(ctx.clone());
-            let item = render_explore_item(ctx);
+            let item = render_explore_item(ctx).expect("render");
             let json = serde_json::to_string(&item).expect("json");
             assert!(json.contains("explore.item.notFound"));
             assert!(!json.contains("Télévision"));
@@ -216,7 +216,7 @@ fn migrates_legacy_payload_on_read() {
             assert!(!view.devices[0].featured);
             assert!(view.devices[0].description.contains("bulletList"));
             assert!(view.safety_notice.contains("Coupez l'eau"));
-            let card = render_home_card(ctx);
+            let card = render_home_card(ctx).expect("render");
             // featured=false after migration → empty featured card children, still Card
             assert!(SurfaceAssertions::new(&card).contains_type("Card"));
         });
