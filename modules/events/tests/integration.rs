@@ -52,7 +52,10 @@ fn home_card_empty_without_config() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
-            assert!(SurfaceAssertions::new(&render_home_card(ctx)).contains_type("EmptyState"));
+            assert!(
+                SurfaceAssertions::new(&render_home_card(ctx).expect("surface"))
+                    .contains_type("EmptyState")
+            );
         });
 }
 
@@ -63,7 +66,7 @@ fn home_card_renders_events_with_pressable_link() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Pressable"));
@@ -79,7 +82,7 @@ fn upcoming_card_is_compact_with_next_event_headline() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
-            let surface = render_upcoming_card(ctx);
+            let surface = render_upcoming_card(ctx).expect("surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Text"));
             // Compact: no full event list / map on the prep card.
@@ -98,7 +101,10 @@ fn upcoming_card_empty_without_config() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
-            assert!(SurfaceAssertions::new(&render_upcoming_card(ctx)).contains_type("EmptyState"));
+            assert!(
+                SurfaceAssertions::new(&render_upcoming_card(ctx).expect("surface"))
+                    .contains_type("EmptyState")
+            );
         });
 }
 
@@ -109,7 +115,7 @@ fn detail_includes_map_and_link() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
-            let surface = render_explore_detail(ctx);
+            let surface = render_explore_detail(ctx).expect("surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("Map"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Link"));
             assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
@@ -130,7 +136,7 @@ fn home_card_renders_openagenda_nearby() {
             "radius_km": 40
         }))
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
             let json = serde_json::to_string(&surface).expect("json");
@@ -154,5 +160,29 @@ fn the_host_form_sends_the_declared_keys() {
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("Concert jazz"));
             assert!(json.contains("Dates indicatives"));
+        });
+}
+
+/// A property not geocoded yet: no nearby search, no call, and a guest empty state.
+#[test]
+#[serial]
+fn without_a_position_nothing_is_searched_nearby() {
+    MockContext::guest()
+        .with_capabilities(&[
+            capability::core::STORAGE,
+            capability::external::OPEN_AGENDA_POOL,
+        ])
+        .with_coordinates(None)
+        .with_connector_response("open-agenda", "nearby_events", openagenda_payload())
+        .with_config(&json!({ "nearby_enabled": true }))
+        .run_with(|ctx, host| {
+            let detail = render_explore_detail(ctx.clone()).expect("surface");
+            assert!(SurfaceAssertions::new(&detail).contains_type("EmptyState"));
+            let json = serde_json::to_string(&detail).expect("json");
+            assert!(json.contains("i18n:guest.empty.title"), "{json}");
+            assert!(render_home_card(ctx)
+                .map(|s| SurfaceAssertions::new(&s).contains_type("EmptyState"))
+                .expect("surface"));
+            assert!(host.connector_calls().is_empty());
         });
 }

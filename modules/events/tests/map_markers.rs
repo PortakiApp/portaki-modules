@@ -35,7 +35,7 @@ fn local_events() -> serde_json::Value {
 fn only_located_events_become_markers() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&(local_events()))
+        .with_config(&local_events())
         .run(|ctx| {
             let response = map_markers(ctx).expect("markers");
             assert_eq!(response.markers.len(), 1);
@@ -73,5 +73,25 @@ fn null_island_is_not_a_marker() {
         )
         .run(|ctx| {
             assert!(map_markers(ctx).expect("markers").markers.is_empty());
+        });
+}
+
+/// Logement non géocodé : les événements de l'hôte restent, l'agenda alentour n'est pas appelé.
+#[test]
+#[serial]
+fn without_a_property_position_only_the_hosts_events_are_marked() {
+    let mut config = local_events();
+    config["nearby_enabled"] = json!(true);
+    MockContext::guest()
+        .with_capabilities(&[
+            capability::core::STORAGE,
+            capability::external::OPEN_AGENDA_POOL,
+        ])
+        .with_coordinates(None)
+        .with_config(&config)
+        .run_with(|ctx, host| {
+            let response = map_markers(ctx).expect("markers");
+            assert_eq!(response.markers.len(), 1);
+            assert!(host.connector_calls().is_empty());
         });
 }

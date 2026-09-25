@@ -1,12 +1,9 @@
 //! Load config + nearby events for guest surfaces.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{EventRow, ModuleConfig};
-use crate::nearby::{has_open_agenda, resolve_events};
-
-use super::empty::{empty_content_state, empty_state_if_module_not_ready};
+use crate::nearby::{nearby_ready, resolve_events};
 
 pub struct GuestData {
     pub events: Vec<EventRow>,
@@ -16,33 +13,22 @@ pub struct GuestData {
     pub show_map: bool,
 }
 
-pub enum GuestLoad {
-    Ready(GuestData),
-    Empty(Box<Surface>),
-}
-
-pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<GuestLoad> {
-    if let Some(surface) = empty_state_if_module_not_ready(surface_id)? {
-        return Ok(GuestLoad::Empty(Box::new(surface)));
-    }
-
+/// The events to show, or `None` when there is nothing: no event from the host, and no nearby
+/// search possible (off, no key, or a property without a position).
+pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Option<GuestData>> {
     let config = ModuleConfig::read(ctx)?;
     let for_home = surface_id == crate::ids::HOME_CARD;
     let events = resolve_events(ctx, &config, for_home)?;
 
     let has_manual = !config.parse_events().is_empty();
-    let nearby_ready = config.nearby_enabled && has_open_agenda(ctx);
-    if events.is_empty() && !has_manual && !nearby_ready {
-        return Ok(GuestLoad::Empty(Box::new(empty_content_state(surface_id))));
-    }
-    if events.is_empty() && for_home {
-        return Ok(GuestLoad::Empty(Box::new(empty_content_state(surface_id))));
+    if events.is_empty() && (for_home || (!has_manual && !nearby_ready(ctx, &config))) {
+        return Ok(None);
     }
 
     let show_map =
         surface_id == crate::ids::EXPLORE_DETAIL && events.iter().any(|e| e.has_coords());
 
-    Ok(GuestLoad::Ready(GuestData {
+    Ok(Some(GuestData {
         events,
         disclaimer: config
             .disclaimer
