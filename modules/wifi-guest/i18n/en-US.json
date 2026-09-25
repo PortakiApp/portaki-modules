@@ -47,10 +47,11 @@
   "reveal.availableFrom.datetime": "{day}/{month}/{year} {hour}:{minute}",
   "reveal.locked.withWhen": "Available from {when}",
   "reveal.locked.generic": "The password will be available closer to check-in.",
-  "publish.ssid.label": "Wi-Fi network name",
-  "publish.ssid.hint": "The Wi-Fi network name is missing",
-  "publish.password.label": "Wi-Fi password",
-  "publish.password.hint": "The password is missing, unless the network is open",
   "module.catalogDescription": "Guest Wi-Fi SSID and password for the booklet, with timed reveal.",
-  "catalog.host.main": "Wi-Fi"
+  "catalog.host.main": "Wi-Fi",
+  "config.revealPolicy": "When to show the password",
+  "config.revealPolicy.always": "Always visible",
+  "config.revealPolicy.hours_before_24": "24 h before arrival",
+  "config.revealPolicy.day_before_16h": "Day before at 4 pm",
+  "config.revealPolicy.at_checkin": "At check-in time"
 }
