@@ -1,5 +1,9 @@
 //! Portaki weather module — current conditions and 5-day forecast via OpenWeather.
 
+// `PropertyContext::lat`/`lng` are deprecated since SDK 8.2; reading `coordinates` instead
+// changes what a non-geocoded property shows, which the guest-shell change does.
+#![allow(deprecated)]
+
 mod cache;
 mod commands;
 mod config;
