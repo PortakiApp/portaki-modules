@@ -17,7 +17,6 @@
   "host.note.label": "Note générale",
   "host.note.placeholder": "Horaires susceptibles de varier selon la saison",
   "host.main.help": "Laissez un équipement vide pour ne pas l’afficher. La note est du texte libre.",
-  "host.save": "Enregistrer",
   "home.card.title": "Horaires & accès",
   "guest.note.title": "À savoir",
   "guest.empty.title": "Horaires non configurés",
@@ -33,5 +32,6 @@
   "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
   "host.section.note": "Note générale",
   "module.catalogDescription": "Piscine, spa, salle de sport : horaires par lieu.",
-  "catalog.host.main": "Horaires"
+  "catalog.host.main": "Horaires",
+  "config.facilities": "Équipements"
 }

@@ -17,7 +17,6 @@
   "host.note.label": "General note",
   "host.note.placeholder": "Hours may vary by season",
   "host.main.help": "Leave a facility empty to hide it. The note is free-form text.",
-  "host.save": "Save",
   "home.card.title": "Hours & access",
   "guest.note.title": "Good to know",
   "guest.empty.title": "Hours not configured",
@@ -33,5 +32,6 @@
   "module.status.inactive.description": "This module is not active on this property",
   "host.section.note": "General note",
   "module.catalogDescription": "Pool, spa, gym: hours per facility.",
-  "catalog.host.main": "Hours"
+  "catalog.host.main": "Hours",
+  "config.facilities": "Facilities"
 }

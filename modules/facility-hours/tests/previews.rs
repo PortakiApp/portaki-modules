@@ -7,8 +7,8 @@ use facility_hours::render_explore_detail;
 use serde_json::json;
 
 /// Les équipements d'une résidence de vacances et leurs horaires.
-fn sample_config() -> Vec<u8> {
-    serde_json::to_vec(&json!({
+fn sample_config() -> serde_json::Value {
+    json!({
         "facilities": [
             {
                 "id": "piscine",
@@ -34,15 +34,14 @@ fn sample_config() -> Vec<u8> {
             }
         ],
         "general_note": { "fr": "Horaires susceptibles de varier les jours fériés.", "en": "Hours may vary on public holidays." }
-    }))
-    .expect("config json")
+    })
 }
 
 #[test]
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
     let detail = previews::guest(root)
-        .with_kv("config", sample_config())
+        .with_config(&sample_config())
         .run(render_explore_detail);
     previews::check(
         root,

@@ -1,13 +1,10 @@
 //! Host dashboard surface — design `facility-editor-v1` (Wasm SDUI).
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::common::Tone;
-use portaki_sdk::sdui::primitives::{
-    Button, Card, Field, Form, Page, Stack, Text, TextArea, TextInput,
-};
+use portaki_sdk::sdui::primitives::{Card, Field, Form, Page, Stack, Text, TextArea, TextInput};
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{load_config, FacilityRow, Localized};
+use crate::config::{FacilityRow, Localized, ModuleConfig};
 
 const FACILITY_SLOTS: usize = 6;
 
@@ -19,18 +16,10 @@ const FACILITY_SLOTS: usize = 6;
     label_key = "catalog.host.main",
     icon = IconName::ClockCircle
 )]
-pub fn render_host_main(ctx: HostContext) -> Surface {
+pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let lang = Localized::lang_code(&ctx.locale);
-    let config = load_config().unwrap_or_default();
+    let config = ModuleConfig::read(&ctx)?;
     let facilities = config.parse_facilities();
-    let general_note = config.general_note.get(&lang).to_string();
-
-    let submit_args = crate::commands::UpdateConfigArgs {
-        facilities: facilities_to_submit(&facilities, &lang),
-        facilities_json: String::new(),
-        general_note: general_note.clone(),
-    };
-    let save_action = crate::ids::module_id().command(crate::ids::UPDATE_CONFIG, submit_args);
 
     let mut cards: Vec<Component> = Vec::new();
     for index in 0..FACILITY_SLOTS {
@@ -46,21 +35,15 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                 .child(
                     TextArea::new()
                         .name("general_note")
-                        .value(general_note)
+                        .value(config.general_note.pick(&lang))
                         .placeholder("i18n:host.note.placeholder"),
                 )
                 .into()])
             .into(),
     );
-    cards.push(
-        Button::new()
-            .label("i18n:host.save")
-            .tone(Tone::Primary)
-            .action(save_action)
-            .into(),
-    );
 
-    Surface::new(
+    // No Save button — the modules drawer owns the footer Save.
+    Ok(Surface::new(
         Page::new().child(Form::new().child(Stack::new().gap(16.0).children(vec![
                     Text::new()
                         .text("i18n:surface.host.main.subtitle")
@@ -69,27 +52,12 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                     Component::Stack(Stack::new().gap(16.0).children(cards)),
                 ]))),
     )
-    .with_id(crate::ids::HOST_MAIN)
-}
-
-fn facilities_to_submit(
-    facilities: &[FacilityRow],
-    lang: &str,
-) -> Vec<crate::commands::FacilityInput> {
-    facilities
-        .iter()
-        .map(|f| crate::commands::FacilityInput {
-            name: f.title.get(lang).to_string(),
-            name_fr: String::new(),
-            name_en: String::new(),
-            hours: f.hours.clone().unwrap_or_default(),
-        })
-        .collect()
+    .with_id(crate::ids::HOST_MAIN))
 }
 
 fn facility_card(index: usize, facility: Option<&FacilityRow>, lang: &str) -> Component {
     let slot = index + 1;
-    let name = facility.map(|f| f.title.get(lang)).unwrap_or("");
+    let name = facility.map(|f| f.title.pick(lang)).unwrap_or_default();
     let hours = facility.and_then(|f| f.hours.as_deref()).unwrap_or("");
 
     Card::new()
