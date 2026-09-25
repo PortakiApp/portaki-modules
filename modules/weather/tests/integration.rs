@@ -66,7 +66,7 @@ fn home_card_renders_with_capability_pool() {
         .with_connector_response("open-weather", "current", sample_current_json())
         .with_connector_response("open-weather", "forecast", sample_forecast_json())
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("render");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Stack"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Text"));
@@ -89,7 +89,7 @@ fn upcoming_card_renders_compact_headline() {
         .with_connector_response("open-weather", "current", sample_current_json())
         .with_connector_response("open-weather", "forecast", sample_forecast_json())
         .run(|ctx| {
-            let surface = render_upcoming_card(ctx);
+            let surface = render_upcoming_card(ctx).expect("render");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Text"));
             // Compact card must not embed the full forecast strip.
@@ -107,7 +107,7 @@ fn upcoming_card_renders_empty_state_without_capability() {
         .with_property(Property::default())
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
-            let surface = render_upcoming_card(ctx);
+            let surface = render_upcoming_card(ctx).expect("render");
             assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
         });
 }
@@ -156,7 +156,7 @@ fn home_card_renders_empty_state_without_capability() {
         .with_property(Property::default())
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("render");
             assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
         });
 }
@@ -260,7 +260,7 @@ fn forecast_renders_5_days() {
         .with_connector_response("open-weather", "current", sample_current_json())
         .with_connector_response("open-weather", "forecast", sample_forecast_json())
         .run(|ctx| {
-            let surface = render_explore_forecast(ctx);
+            let surface = render_explore_forecast(ctx).expect("render");
             assert!(SurfaceAssertions::new(&surface).contains_type("Grid"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("explore.forecast.hint"));
@@ -352,4 +352,68 @@ fn the_host_form_sends_the_declared_keys() {
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains(r#""value":"fahrenheit""#), "{json}");
         });
+}
+
+/// Not geocoded: every consumer stays quiet — a guest empty state, no email sentence, no
+/// prewarm, no invalidation, a query error — and not one network call. Never a default position.
+#[test]
+#[serial]
+fn without_coordinates_there_is_no_weather_and_no_call() {
+    reset_test_harness();
+    let builder = MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[
+            capability::core::STORAGE,
+            capability::external::OPEN_WEATHER_POOL,
+        ])
+        .with_coordinates(None)
+        .with_connector_response("open-weather", "current", sample_current_json())
+        .with_connector_response("open-weather", "forecast", sample_forecast_json());
+
+    builder.clone().run(|ctx| {
+        for surface in [
+            render_home_card(ctx.clone()),
+            render_upcoming_card(ctx.clone()),
+            render_explore_forecast(ctx.clone()),
+        ] {
+            let json = serde_json::to_string(&surface.expect("render")).expect("json");
+            assert!(json.contains("EmptyState"), "{json}");
+            assert!(json.contains("guest.noLocation.description"), "{json}");
+        }
+        let email = email_context(
+            ctx.clone(),
+            EmailContextArgs {
+                template_key: Some(EmailTemplateKey::ArrivalDay),
+                ..EmailContextArgs::default()
+            },
+        )
+        .expect("emailContext");
+        assert_eq!(email.weather_summary, None);
+        refresh_forecast(ctx.clone()).expect("refreshForecast");
+        let error = get_current(
+            ctx,
+            GetCurrentArgs {
+                lat: None,
+                lng: None,
+            },
+        )
+        .expect_err("getCurrent");
+        assert!(
+            error.to_string().contains("property_not_geocoded"),
+            "{error}"
+        );
+    });
+    builder.run(|ctx| {
+        on_booking_confirmed(
+            ctx,
+            BookingConfirmedEvent {
+                id: uuid::Uuid::new_v4(),
+                property_id: Property::default().id,
+            },
+        )
+        .expect("booking confirmed");
+    });
+
+    assert_eq!(CONNECTOR_CURRENT_CALLS.load(Ordering::SeqCst), 0);
+    assert_eq!(CONNECTOR_FORECAST_CALLS.load(Ordering::SeqCst), 0);
 }

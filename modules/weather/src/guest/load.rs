@@ -8,7 +8,7 @@ use crate::entities::WeatherUnits;
 use crate::queries::{get_current, get_forecast, GetCurrentArgs, GetForecastArgs};
 use crate::weather::{has_open_weather, resolve_city_label, WeatherCurrent, WeatherForecast};
 
-use super::empty::{empty_capability_state, empty_state_if_module_not_ready};
+use super::empty::no_weather;
 
 pub struct GuestWeatherData {
     pub current: WeatherCurrent,
@@ -22,14 +22,19 @@ pub enum GuestLoad {
     Empty(Box<Surface>),
 }
 
-/// Shared gate + fetch for home card and explore sheet.
+/// Shared gate + fetch for the guest surfaces. No capability or no position: a content empty
+/// state, and no network call.
 pub fn load_guest_weather(ctx: &GuestContext, surface_id: SurfaceId) -> Result<GuestLoad> {
-    if let Some(surface) = empty_state_if_module_not_ready(surface_id)? {
-        return Ok(GuestLoad::Empty(Box::new(surface)));
-    }
     if !has_open_weather(ctx) {
-        return Ok(GuestLoad::Empty(Box::new(empty_capability_state(
+        return Ok(GuestLoad::Empty(Box::new(no_weather(
             surface_id,
+            "i18n:guest.unavailable.description",
+        ))));
+    }
+    if ctx.property.coordinates.is_none() {
+        return Ok(GuestLoad::Empty(Box::new(no_weather(
+            surface_id,
+            "i18n:guest.noLocation.description",
         ))));
     }
 

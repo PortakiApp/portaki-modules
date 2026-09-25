@@ -20,24 +20,23 @@ pub struct BookingConfirmedEvent {
 // Macros cannot take `ids::CONST` paths (OUT_DIR emission needs the literal at expand).
 #[portaki_sdk::event_handler(event_type = EventType::new("core.booking.confirmed"))]
 pub fn on_booking_confirmed(ctx: Context, _event: BookingConfirmedEvent) -> Result<()> {
-    if !has_open_weather(&ctx) {
+    // Not geocoded: nowhere to forecast, no call.
+    if !has_open_weather(&ctx) || ctx.property.coordinates.is_none() {
         return Ok(());
     }
 
-    let lat = ctx.property.lat;
-    let lng = ctx.property.lng;
     let _ = get_current(
         ctx.clone(),
         GetCurrentArgs {
-            lat: Some(lat),
-            lng: Some(lng),
+            lat: None,
+            lng: None,
         },
     )?;
     let _ = get_forecast(
         ctx,
         GetForecastArgs {
-            lat: Some(lat),
-            lng: Some(lng),
+            lat: None,
+            lng: None,
             days: Some(5),
         },
     )?;

@@ -18,7 +18,9 @@ OCI image: `ghcr.io/portakiapp/portaki-modules-weather:<semver>`
 | `external.open-weather.pool` | No | Platform OpenWeather pool token |
 | `external.open-weather.byok` | No | Property BYOK OpenWeather key |
 
-Without pool or BYOK access, guest surfaces render an empty state with upgrade / BYOK guidance.
+Without pool or BYOK access, or while the property is not geocoded (`coordinates` is `None`), guest
+surfaces render a guest-facing empty state and no call is made — never a default position. The SDK
+renders the inactive / incomplete / error states.
 
 ## Connector / credentials
 
