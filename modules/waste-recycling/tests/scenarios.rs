@@ -14,28 +14,25 @@ fn setup(builder: MockContextBuilder) -> MockContextBuilder {
             {
                 "id": "jaune",
                 "title": { "fr": "Bac jaune", "en": "Yellow bin" },
-                "items": [
-                    { "fr": "Emballages plastique et métal", "en": "Plastic and metal packaging" },
-                    { "fr": "Cartons et papiers", "en": "Cardboard and paper" }
-                ],
+                "items": { "fr": "Emballages plastique et métal\nCartons et papiers", "en": "Plastic and metal packaging\nCardboard and paper" },
                 "color": "yellow"
             },
             {
                 "id": "verre",
                 "title": { "fr": "Colonne à verre", "en": "Glass bank" },
-                "items": [{ "fr": "Bouteilles et bocaux, sans bouchon", "en": "Bottles and jars, lids off" }],
+                "items": { "fr": "Bouteilles et bocaux, sans bouchon", "en": "Bottles and jars, lids off" },
                 "color": "green"
             },
             {
                 "id": "biodechets",
                 "title": { "fr": "Bac à biodéchets", "en": "Food waste bin" },
-                "items": [{ "fr": "Épluchures, marc de café, restes de repas", "en": "Peelings, coffee grounds, leftovers" }],
+                "items": { "fr": "Épluchures, marc de café, restes de repas", "en": "Peelings, coffee grounds, leftovers" },
                 "color": "brown"
             },
             {
                 "id": "ordures",
                 "title": { "fr": "Ordures ménagères", "en": "General waste" },
-                "items": [{ "fr": "Tout le reste, en sac fermé", "en": "Everything else, in a closed bag" }],
+                "items": { "fr": "Tout le reste, en sac fermé", "en": "Everything else, in a closed bag" },
                 "color": "grey"
             }
         ],
