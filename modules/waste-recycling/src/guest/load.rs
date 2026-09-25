@@ -1,11 +1,8 @@
 //! Load config for guest surfaces.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{BinRow, ModuleConfig};
-
-use super::empty::{empty_content_state, empty_state_if_module_not_ready};
 
 pub struct GuestData {
     pub bins: Vec<BinRow>,
@@ -14,22 +11,14 @@ pub struct GuestData {
     pub property_locale: String,
 }
 
-pub enum GuestLoad {
-    Ready(GuestData),
-    Empty(Box<Surface>),
-}
-
-pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<GuestLoad> {
-    if let Some(surface) = empty_state_if_module_not_ready(surface_id)? {
-        return Ok(GuestLoad::Empty(Box::new(surface)));
-    }
-
+/// The config to show, or `None` when the host has filled in nothing yet.
+pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
     let config = ModuleConfig::read(ctx)?;
     if config.is_empty() {
-        return Ok(GuestLoad::Empty(Box::new(empty_content_state(surface_id))));
+        return Ok(None);
     }
 
-    Ok(GuestLoad::Ready(GuestData {
+    Ok(Some(GuestData {
         bins: config.parse_bins(),
         collection_schedule: config
             .collection_schedule
