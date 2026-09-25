@@ -25,8 +25,11 @@ fn post_stay_card_reuses_home_card_content() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            let home = serde_json::to_string(&render_home_card(ctx.clone())).expect("home json");
-            let post = serde_json::to_string(&render_post_stay_card(ctx)).expect("post-stay json");
+            let home =
+                serde_json::to_string(&render_home_card(ctx.clone()).expect("guest surface"))
+                    .expect("home json");
+            let post = serde_json::to_string(&render_post_stay_card(ctx).expect("guest surface"))
+                .expect("post-stay json");
             assert_eq!(home, post);
         });
 }
@@ -38,7 +41,7 @@ fn home_card_opens_form_overlay_when_no_reports() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            let surface = render_home_card(ctx.clone());
+            let surface = render_home_card(ctx.clone()).expect("guest surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(!SurfaceAssertions::new(&surface).contains_type("Form"));
             let json = serde_json::to_string(&surface).expect("surface json");
@@ -46,7 +49,7 @@ fn home_card_opens_form_overlay_when_no_reports() {
             assert!(json.contains("guest.form"));
             assert!(json.contains("home.card.openForm"));
 
-            let form = render_guest_form(ctx);
+            let form = render_guest_form(ctx).expect("guest surface");
             assert!(SurfaceAssertions::new(&form).contains_type("Form"));
             assert!(SurfaceAssertions::new(&form).contains_type("Button"));
             assert!(!SurfaceAssertions::new(&form).contains_type("Card"));
@@ -94,7 +97,7 @@ fn submit_allows_multiple_reports_and_shows_list() {
                 list_for_stay(ctx.clone(), ListForStayArgs::default()).expect("list after second");
             assert_eq!(rows.len(), 2);
 
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("guest surface");
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("home.card.thanks"));
             assert!(json.contains("home.card.yourReports"));

@@ -1,25 +1,14 @@
 //! Load stay reports for guest surfaces.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::surface::Surface;
 
-use super::empty::empty_state_if_module_not_ready;
 use crate::entities::LostFoundReport;
 use crate::storage;
 
-pub enum GuestLoad {
-    Empty(Box<Surface>),
-    Ready(Vec<LostFoundReport>),
-}
-
-pub fn load_guest_reports(ctx: &GuestContext) -> Result<GuestLoad> {
-    if let Some(surface) = empty_state_if_module_not_ready(crate::ids::HOME_CARD)? {
-        return Ok(GuestLoad::Empty(Box::new(surface)));
-    }
-
+/// The stay's reports, oldest first; none outside a stay.
+pub fn load_guest_reports(ctx: &GuestContext) -> Result<Vec<LostFoundReport>> {
     let Some(guest) = ctx.guest.as_ref() else {
-        return Ok(GuestLoad::Ready(Vec::new()));
+        return Ok(Vec::new());
     };
-
-    Ok(GuestLoad::Ready(storage::list_by_stay(guest.session_id)?))
+    storage::list_by_stay(guest.session_id)
 }
