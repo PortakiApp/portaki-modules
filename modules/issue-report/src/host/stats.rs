@@ -20,7 +20,13 @@ use crate::entities::IssueReport;
 use crate::{i18n, storage};
 
 /// Tile: reports of the period, and the open ones to handle.
-#[portaki_sdk::query(name = "statsSummary")]
+#[portaki_sdk::query(
+    name = "statsSummary",
+    example(
+        label = "Signalements sur 30 jours",
+        input = r#"{"propertyId":"8c0e6f2a-1d3b-4a7e-b5c9-0f4e2d1a6b38","period":30,"key":"issue-stats"}"#
+    )
+)]
 pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummary> {
     let days = i64::from(args.period);
     let reports = storage::list_since(time::now()? - Duration::days(days))?;

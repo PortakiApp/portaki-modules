@@ -25,7 +25,18 @@ pub struct SubmitArgs {
     pub photo: Option<String>,
 }
 
-#[portaki_sdk::command(name = "submit", guest)]
+#[portaki_sdk::command(
+    name = "submit",
+    guest,
+    example(
+        label = "Four en panne",
+        input = r#"{"category":"appliance","summary":"Le four ne chauffe plus","details":"Le voyant s'allume mais la température ne monte pas."}"#
+    ),
+    example(
+        label = "Bruit la nuit",
+        input = r#"{"category":"noise","summary":"Musique forte chez les voisins après minuit"}"#
+    )
+)]
 pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     let stay_id = require_stay_id(&ctx)?;
     let category = args.category.as_str();

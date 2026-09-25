@@ -38,7 +38,7 @@ impl From<crate::entities::IssueReport> for IssueReportRow {
     }
 }
 
-#[portaki_sdk::query(name = "listForStay")]
+#[portaki_sdk::query(name = "listForStay", example(label = "Signalements du séjour"))]
 pub fn list_for_stay(ctx: Context) -> Result<Vec<IssueReportRow>> {
     let stay_id = require_stay_id(&ctx)?;
     Ok(storage::list_by_stay(stay_id)?
@@ -47,7 +47,7 @@ pub fn list_for_stay(ctx: Context) -> Result<Vec<IssueReportRow>> {
         .collect())
 }
 
-#[portaki_sdk::query(name = "listRecent")]
+#[portaki_sdk::query(name = "listRecent", example(label = "Derniers signalements"))]
 pub fn list_recent(_ctx: Context) -> Result<Vec<IssueReportRow>> {
     Ok(storage::list_recent()?
         .into_iter()
