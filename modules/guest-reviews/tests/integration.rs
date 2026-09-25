@@ -39,7 +39,10 @@ fn home_card_empty_for_airbnb_without_url() {
             "airbnb_review_url": ""
         }))
         .run(|ctx| {
-            assert!(SurfaceAssertions::new(&render_home_card(ctx)).contains_type("EmptyState"));
+            assert!(
+                SurfaceAssertions::new(&render_home_card(ctx).expect("guest card"))
+                    .contains_type("EmptyState")
+            );
         });
 }
 
@@ -60,7 +63,7 @@ fn home_card_migrates_legacy_both_channel() {
             .unwrap(),
         )
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("guest card");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("QRCode"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
@@ -79,7 +82,7 @@ fn home_card_airbnb_only_skips_portaki_form() {
             "show_qr_code": false
         }))
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("guest card");
             assert!(SurfaceAssertions::new(&surface).contains_type("Button"));
             assert!(!SurfaceAssertions::new(&surface).contains_type("Form"));
             assert!(!SurfaceAssertions::new(&surface).contains_type("QRCode"));
@@ -98,7 +101,7 @@ fn home_card_portaki_only_when_airbnb_url_missing() {
             "airbnb_review_url": ""
         }))
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("guest card");
             assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
             assert!(!SurfaceAssertions::new(&surface).contains_type("QRCode"));
             let json = serde_json::to_string(&surface).expect("json");
@@ -114,7 +117,7 @@ fn home_card_inline_both_platforms() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("guest card");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("QRCode"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
@@ -130,8 +133,10 @@ fn post_stay_card_reuses_home_card_content() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
-            let home = serde_json::to_string(&render_home_card(ctx.clone())).expect("home json");
-            let post = serde_json::to_string(&render_post_stay_card(ctx)).expect("post-stay json");
+            let home = serde_json::to_string(&render_home_card(ctx.clone()).expect("guest card"))
+                .expect("home json");
+            let post = serde_json::to_string(&render_post_stay_card(ctx).expect("guest card"))
+                .expect("post-stay json");
             assert_eq!(home, post);
         });
 }
