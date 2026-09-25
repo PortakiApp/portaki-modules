@@ -1,13 +1,11 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
-use portaki_sdk::prelude::*;
-use serde::{Deserialize, Deserializer, Serialize};
+use portaki_sdk::contracts::i18n::I18nText;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-pub use crate::localized::Localized;
-
 /// The keys are the names of the host form fields: the platform takes `updateConfig` itself.
-#[portaki_sdk::config]
+#[portaki_sdk::config(legacy = legacy)]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct ModuleConfig {
     #[field(label = "config.contacts")]
@@ -16,60 +14,54 @@ pub struct ModuleConfig {
     pub host_visible_phone: String,
 }
 
-impl ModuleConfig {
-    /// The config of this install. The platform imports only `contacts`, not the older
-    /// `contacts_json` string the form slots replaced: while the host has not saved `contacts`,
-    /// that list is still read from the KV rather than lost.
-    pub fn read(ctx: &Context) -> Result<Self> {
-        let mut config = Self::load(ctx)?;
-        let held = ctx.module_config.as_ref().and_then(|c| c.as_object());
-        if held.is_some_and(|held| !held.contains_key("contacts")) {
-            if let Some(contacts) = portaki_sdk::config::legacy_config()?
-                .get("contacts_json")
-                .and_then(Value::as_str)
-                .and_then(|raw| serde_json::from_str(raw).ok())
-            {
-                config.contacts = contacts;
-            }
+/// The old KV blob kept the contacts as a JSON string, `contacts_json`, before the form slots.
+fn legacy(mut old: Value) -> Value {
+    if let Some(old) = old.as_object_mut() {
+        let listed = old
+            .remove("contacts_json")
+            .and_then(|raw| serde_json::from_str::<Value>(raw.as_str()?).ok());
+        if let (Some(contacts), false) = (listed, old.contains_key("contacts")) {
+            old.insert("contacts".into(), contacts);
         }
-        Ok(config)
     }
+    old
+}
 
+impl ModuleConfig {
     pub fn is_empty(&self) -> bool {
         self.parse_contacts().is_empty() && self.host_visible_phone.trim().is_empty()
     }
 
-    /// The filled rows: the form sends its six slots, blank ones included.
+    /// The filled rows, for the guest: the form sends its slots, blank ones included.
     pub fn parse_contacts(&self) -> Vec<ContactRow> {
         self.contacts
             .iter()
-            .filter(|c| !c.phone.trim().is_empty() && !c.label.is_empty())
+            .filter(|c| !c.phone.trim().is_empty() && !c.label.is_blank())
             .cloned()
             .collect()
     }
 }
 
-/// A row as the host form sends it (`label`, `phone`), or as the KV kept it (`id`, a label per
-/// language, `note`, `category`).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// A contact. The form sends `label` and `phone` (and `id`); the platform keeps the rest —
+/// `note`, `category`, the label's other languages.
+#[portaki_sdk::params]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(default)]
 pub struct ContactRow {
-    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub id: String,
-    #[serde(default, deserialize_with = "localized")]
-    pub label: Localized,
-    #[serde(default)]
+    pub label: I18nText,
     pub phone: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub note: Option<Localized>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub note: I18nText,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub category: Option<String>,
 }
 
-/// A plain string (the form) or a per-language object (the KV).
-fn localized<'de, D: Deserializer<'de>>(
-    deserializer: D,
-) -> std::result::Result<Localized, D::Error> {
-    Ok(Localized::from_value(&Value::deserialize(deserializer)?))
+impl ContactRow {
+    /// Nothing the form shows: a slot the host left (or emptied).
+    pub fn is_blank(&self) -> bool {
+        self.label.is_blank() && self.phone.trim().is_empty()
+    }
 }
 
 #[cfg(test)]
@@ -87,27 +79,46 @@ mod tests {
         .unwrap();
         let contacts = config.parse_contacts();
         assert_eq!(contacts.len(), 1);
-        assert_eq!(contacts[0].label.pick("en"), "Pompiers");
+        assert_eq!(contacts[0].label.get("en"), "Pompiers");
+    }
+
+    #[test]
+    fn legacy_contacts_json_becomes_contacts() {
+        let mapped = legacy(json!({
+            "contacts_json": r#"[{"id":"samu","label":{"fr":"SAMU","en":"Ambulance"},"phone":"15","note":{"fr":"Gratuit"},"category":"medical"}]"#,
+            "host_visible_phone": "+33 6"
+        }));
+        assert_eq!(
+            mapped,
+            json!({
+                "contacts": [{ "id": "samu", "label": { "fr": "SAMU", "en": "Ambulance" }, "phone": "15",
+                               "note": { "fr": "Gratuit" }, "category": "medical" }],
+                "host_visible_phone": "+33 6"
+            })
+        );
+        let config: ModuleConfig = serde_json::from_value(mapped).unwrap();
+        assert_eq!(config.contacts[0].note.get("en"), "Gratuit");
+        assert_eq!(config.contacts[0].category.as_deref(), Some("medical"));
+        // Unreadable: nothing to import, nothing invented.
+        assert_eq!(legacy(json!({ "contacts_json": "[oops" })), json!({}));
     }
 
     #[test]
     #[serial_test::serial]
-    fn contacts_json_survives_the_import() {
-        let legacy = json!({
+    fn the_kv_is_read_through_legacy_until_the_platform_holds_the_config() {
+        let old = json!({
             "contacts_json": r#"[{"id":"samu","label":{"fr":"SAMU","en":"Ambulance"},"phone":"15"}]"#,
             "host_visible_phone": "+33 6"
         });
         MockContext::guest()
-            .with_kv("config", serde_json::to_vec(&legacy).unwrap())
-            .with_config(&json!({ "host_visible_phone": "+33 6" }))
+            .with_kv("config", serde_json::to_vec(&old).unwrap())
             .run(|ctx| {
-                let contacts = ModuleConfig::read(&ctx).unwrap().parse_contacts();
-                assert_eq!(contacts.len(), 1);
-                assert_eq!(contacts[0].label.pick("en"), "Ambulance");
+                let contacts = ModuleConfig::load(&ctx).unwrap().parse_contacts();
+                assert_eq!(contacts[0].label.get("en"), "Ambulance");
             });
         MockContext::guest()
-            .with_kv("config", serde_json::to_vec(&legacy).unwrap())
-            .with_config(&json!({ "contacts": [], "host_visible_phone": "+33 6" }))
-            .run(|ctx| assert!(ModuleConfig::read(&ctx).unwrap().contacts.is_empty()));
+            .with_kv("config", serde_json::to_vec(&old).unwrap())
+            .with_config(&json!({}))
+            .run(|ctx| assert!(ModuleConfig::load(&ctx).unwrap().contacts.is_empty()));
     }
 }

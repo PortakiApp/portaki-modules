@@ -31,7 +31,7 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
         return Ok(EmailContextResponse { host_phone: None });
     }
 
-    let config = ModuleConfig::read(&ctx)?;
+    let config = ModuleConfig::load(&ctx)?;
     let phone = config.host_visible_phone.trim();
     Ok(EmailContextResponse {
         host_phone: if phone.is_empty() {
