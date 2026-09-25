@@ -45,10 +45,8 @@ fn maps_url(data: &GuestData) -> Option<String> {
     if let Some((lat, lng)) = meeting_coords(data) {
         return Some(google_maps_search_url(lat, lng));
     }
-    if data.lat != 0.0 || data.lng != 0.0 {
-        return Some(google_maps_search_url(data.lat, data.lng));
-    }
-    None
+    data.coordinates
+        .map(|point| google_maps_search_url(point.lat, point.lng))
 }
 
 fn meeting_coords(data: &GuestData) -> Option<(f64, f64)> {
@@ -57,7 +55,7 @@ fn meeting_coords(data: &GuestData) -> Option<(f64, f64)> {
             lat: Some(lat),
             lng: Some(lng),
             ..
-        } if *lat != 0.0 || *lng != 0.0 => Some((*lat, *lng)),
+        } => Some((*lat, *lng)),
         _ => None,
     }
 }
@@ -78,10 +76,7 @@ fn property_map(data: &GuestData) -> Option<Component> {
     if let Some((lat, lng)) = meeting_coords(data) {
         return Some(map_at(lat, lng));
     }
-    if data.lat == 0.0 && data.lng == 0.0 {
-        return None;
-    }
-    Some(map_at(data.lat, data.lng))
+    data.coordinates.map(|point| map_at(point.lat, point.lng))
 }
 
 fn kv_row(key_i18n: &str, value: &str, mono: bool) -> Component {
@@ -285,13 +280,11 @@ fn push_primary_method(children: &mut Vec<Component>, data: &GuestData, detailed
             push_text_row(children, "i18n:guest.inPerson.meetingPlace", meeting_place);
             // Map + Open Maps use meeting GPS via property_map / maps_url when set.
             if let (Some(lat), Some(lng)) = (lat, lng) {
-                if *lat != 0.0 || *lng != 0.0 {
-                    children.push(kv_row(
-                        "i18n:guest.inPerson.coords",
-                        &format!("{lat:.5}, {lng:.5}"),
-                        true,
-                    ));
-                }
+                children.push(kv_row(
+                    "i18n:guest.inPerson.coords",
+                    &format!("{lat:.5}, {lng:.5}"),
+                    true,
+                ));
             }
             if let Some(time_hint) = time_hint {
                 push_text_row(children, "i18n:guest.inPerson.timeHint", time_hint);

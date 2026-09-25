@@ -9,7 +9,9 @@ use portaki_sdk::sdui::primitives::{
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{host_lang, HostConfig, PrimaryMethod, RevealPolicy, StepRow, StepTextRow};
+use crate::config::{
+    coord_pair, host_lang, HostConfig, PrimaryMethod, RevealPolicy, StepRow, StepTextRow,
+};
 
 const STEP_SLOTS: usize = 8;
 
@@ -394,19 +396,20 @@ fn push_smart_lock_binding(children: &mut Vec<Component>, config: &HostConfig) {
 }
 
 fn push_in_person_fields(children: &mut Vec<Component>, config: &HostConfig) {
-    let coord = |raw: &str| raw.trim().parse::<f64>().unwrap_or(0.0);
-    children.push(
-        AddressMapPicker::new()
-            .label("i18n:host.inPerson.meetingPlace")
-            .hint("i18n:host.inPerson.meetingPlace.hint")
-            .addressName("in_person_meeting_place")
-            .latName("in_person_meeting_lat")
-            .lngName("in_person_meeting_lng")
-            .address(config.in_person_meeting_place.as_str())
-            .lat(coord(&config.in_person_meeting_lat))
-            .lng(coord(&config.in_person_meeting_lng))
-            .into(),
-    );
+    let mut picker = AddressMapPicker::new()
+        .label("i18n:host.inPerson.meetingPlace")
+        .hint("i18n:host.inPerson.meetingPlace.hint")
+        .addressName("in_person_meeting_place")
+        .latName("in_person_meeting_lat")
+        .lngName("in_person_meeting_lng")
+        .address(config.in_person_meeting_place.as_str());
+    // No point placed: no position at all, never 0, 0.
+    if let (Some(lat), Some(lng)) =
+        coord_pair(&config.in_person_meeting_lat, &config.in_person_meeting_lng)
+    {
+        picker = picker.lat(lat).lng(lng);
+    }
+    children.push(picker.into());
     children.push(text_field(
         "in_person_time_hint",
         "i18n:host.inPerson.timeHint",
