@@ -38,7 +38,17 @@ pub struct ReorderArgs {
     pub ordered_ids: Vec<Uuid>,
 }
 
-#[portaki_sdk::command(name = "saveSection")]
+#[portaki_sdk::command(
+    name = "saveSection",
+    example(
+        label = "Section bilingue",
+        input = r#"{"locales":[{"lang":"fr","title":"Bienvenue","body_markdown":"Bienvenue à **L'Islette** !"},{"lang":"en","title":"Welcome","body_markdown":"Welcome to **L'Islette**!"}]}"#
+    ),
+    example(
+        label = "Section en français",
+        input = r#"{"title":"L'appartement","body_markdown":"2 chambres, terrasse vue mer.","lang":"fr"}"#
+    )
+)]
 pub fn save_section(ctx: Context, args: SaveSectionArgs) -> Result<SectionView> {
     let mut locales = args.locales;
     if !args.title.trim().is_empty() || !args.body_markdown.trim().is_empty() {
