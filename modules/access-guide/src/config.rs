@@ -875,10 +875,15 @@ pub fn staff_kind_wire(kind: StaffKind) -> &'static str {
     }
 }
 
-/// WGS-84 lat/lng from the form strings: both, in range, or none.
-fn coord_pair(lat: &str, lng: &str) -> (Option<f64>, Option<f64>) {
+/// WGS-84 lat/lng from the form strings: both, in range, or none. `0, 0` is none too: the map
+/// picker used to send it for a meeting point nobody placed.
+pub(crate) fn coord_pair(lat: &str, lng: &str) -> (Option<f64>, Option<f64>) {
     match (lat.trim().parse::<f64>(), lng.trim().parse::<f64>()) {
-        (Ok(lat), Ok(lng)) if (-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&lng) => {
+        (Ok(lat), Ok(lng))
+            if (-90.0..=90.0).contains(&lat)
+                && (-180.0..=180.0).contains(&lng)
+                && (lat, lng) != (0.0, 0.0) =>
+        {
             (Some(lat), Some(lng))
         }
         _ => (None, None),
@@ -1504,5 +1509,12 @@ mod tests {
             HostConfig::default().to_model().primary_method,
             PrimaryMethod::Other
         );
+    }
+
+    #[test]
+    fn an_unplaced_meeting_point_is_no_point() {
+        assert_eq!(coord_pair("0", "0"), (None, None));
+        assert_eq!(coord_pair("", ""), (None, None));
+        assert_eq!(coord_pair("43.7", "7.26"), (Some(43.7), Some(7.26)));
     }
 }

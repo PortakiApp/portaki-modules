@@ -2,20 +2,18 @@
 
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::surface::Surface;
+use portaki_sdk::sdui::common::GeoPoint;
 
 use crate::config::{has_content, HostConfig, ModuleConfig};
 use crate::reveal::{evaluate_reveal, format_available_from, locked_message, RevealDecision};
 use crate::texts::ModuleTexts;
 
-use super::empty::{empty_content_state, empty_state_if_module_not_ready};
-
 pub struct GuestData {
     pub config: ModuleConfig,
     pub texts: ModuleTexts,
     pub address: String,
-    pub lat: f64,
-    pub lng: f64,
+    /// The property on a map; `None` while it is not geocoded — no map then.
+    pub coordinates: Option<GeoPoint>,
     pub secrets_revealed: bool,
     /// Preformatted guest message when secrets are locked (dated when possible).
     pub reveal_locked_message: Option<String>,
@@ -24,19 +22,16 @@ pub struct GuestData {
 
 pub enum GuestLoad {
     Ready(Box<GuestData>),
-    Empty(Box<Surface>),
+    /// Nothing written by the host yet.
+    Empty,
 }
 
-pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<GuestLoad> {
-    if let Some(surface) = empty_state_if_module_not_ready(surface_id)? {
-        return Ok(GuestLoad::Empty(Box::new(surface)));
-    }
-
+pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestLoad> {
     let host_config = HostConfig::read(ctx)?;
     let config = host_config.to_model();
     let texts = host_config.guest_texts(&ctx.locale, &ctx.property.locale);
     if !has_content(&config, &texts) {
-        return Ok(GuestLoad::Empty(Box::new(empty_content_state(surface_id))));
+        return Ok(GuestLoad::Empty);
     }
 
     let configured_address = config.address().trim();
@@ -56,8 +51,7 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Gues
         config,
         texts,
         address,
-        lat: ctx.property.lat,
-        lng: ctx.property.lng,
+        coordinates: ctx.property.coordinates,
         secrets_revealed: decision.revealed,
         reveal_locked_message: locked_banner(&decision, &property_timezone),
         stay_id,
