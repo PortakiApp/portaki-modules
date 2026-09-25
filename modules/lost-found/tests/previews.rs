@@ -35,9 +35,9 @@ fn previews_match_the_rendered_surfaces() {
             )
             .expect("submit");
             (
-                render_home_card(ctx.clone()),
-                render_guest_form(ctx.clone()),
-                render_post_stay_card(ctx),
+                render_home_card(ctx.clone()).expect("guest surface"),
+                render_guest_form(ctx.clone()).expect("guest surface"),
+                render_post_stay_card(ctx).expect("guest surface"),
             )
         });
     previews::check(

@@ -4,9 +4,6 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{Button, ChoiceList, Field, Form, TextArea, TextInput};
 use portaki_sdk::sdui::surface::Surface;
 
-use super::empty::{empty_runtime_error_state, log_render_failure};
-use super::load::{load_guest_reports, GuestLoad};
-
 /// Bottom-sheet lost/found form (inputs live here — not on the home card).
 #[portaki_sdk::surface(
     guest,
@@ -14,21 +11,8 @@ use super::load::{load_guest_reports, GuestLoad};
     path = "lost-found/form",
     label_key = "nav.lost-found"
 )]
-pub fn render_guest_form(ctx: GuestContext) -> Surface {
-    match render_form(&ctx) {
-        Ok(surface) => surface,
-        Err(error) => {
-            log_render_failure(crate::ids::GUEST_FORM, &error);
-            empty_runtime_error_state(crate::ids::GUEST_FORM)
-        }
-    }
-}
-
-fn render_form(ctx: &GuestContext) -> Result<Surface> {
-    match load_guest_reports(ctx)? {
-        GuestLoad::Empty(surface) => Ok(*surface),
-        GuestLoad::Ready(_) => Ok(build_form_surface()),
-    }
+pub fn render_guest_form(_ctx: GuestContext) -> Result<Surface> {
+    Ok(build_form_surface())
 }
 
 pub fn build_form_surface() -> Surface {
