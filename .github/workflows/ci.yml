@@ -10,11 +10,6 @@ on:
       - "**.md"
       - "docs/**"
       - ".github/CI.md"
-  pull_request:
-    paths-ignore:
-      - "**.md"
-      - "docs/**"
-      - ".github/CI.md"
   # `module` sert au premier tir d'une liaison : publier UN module précis, sans attendre
   # qu'un commit le modifie. La liaison enregistrée au registre autorise `workflow_dispatch`.
   workflow_dispatch:
