@@ -79,5 +79,7 @@
   "stats.restock.unit": "{count} j",
   "catalog.host.main": "Consommables",
   "catalog.host.stay": "Consommables",
-  "catalog.host.stock": "Consommables"
+  "catalog.host.stock": "Consommables",
+  "publish.catalog.label": "Catalogue des consommables",
+  "publish.catalog.hint": "Ajoutez au moins un consommable"
 }
