@@ -12,5 +12,5 @@ pub fn build_detail_surface(data: &GuestData) -> Surface {
             .gap(12.0)
             .children(build_spots_body(data, true)),
     )
-    .with_id(crate::ids::EXPLORE_DETAIL)
+    .with_id(crate::guest::EXPLORE_DETAIL)
 }

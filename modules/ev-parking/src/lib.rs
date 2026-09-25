@@ -4,7 +4,6 @@ mod config;
 mod email_context;
 mod guest;
 mod host;
-mod ids;
 mod reveal;
 
 pub use config::{ModuleConfig, RevealPolicy};

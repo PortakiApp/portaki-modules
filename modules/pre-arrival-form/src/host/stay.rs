@@ -34,7 +34,7 @@ pub fn render_host_stay(ctx: HostContext) -> Result<Surface> {
         },
     };
 
-    Ok(Surface::new(Page::new().child(body)).with_id(crate::ids::HOST_STAY))
+    Ok(Surface::new(Page::new().child(body)).with_id(STAY))
 }
 
 fn missing_stay_card() -> Component {

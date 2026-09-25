@@ -68,5 +68,5 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     Ok(Surface::new(
         Page::new().child(Form::new().child(Stack::new().gap(16.0).children(form_children))),
     )
-    .with_id(crate::ids::HOST_MAIN))
+    .with_id(MAIN))
 }

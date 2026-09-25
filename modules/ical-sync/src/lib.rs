@@ -7,7 +7,6 @@ mod email_send;
 mod host;
 mod i18n;
 mod ics;
-mod ids;
 mod queries;
 mod sync_state;
 

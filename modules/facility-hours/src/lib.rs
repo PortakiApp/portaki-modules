@@ -3,7 +3,6 @@
 mod config;
 mod guest;
 mod host;
-mod ids;
 
 pub use config::{FacilityRow, ModuleConfig};
 pub use guest::{render_explore_detail, render_home_card};

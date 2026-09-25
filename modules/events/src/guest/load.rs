@@ -17,7 +17,8 @@ pub struct GuestData {
 pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Option<GuestData>> {
     let config = ModuleConfig::load(ctx)?;
     // The upcoming card headlines the *next* event: like the home card, past ones are dropped.
-    let for_home = surface_id == crate::ids::HOME_CARD || surface_id == crate::ids::UPCOMING_CARD;
+    let for_home =
+        surface_id == crate::guest::HOME_CARD || surface_id == crate::guest::UPCOMING_CARD;
     let events = resolve_events(ctx, &config, for_home)?;
 
     let has_manual = !config.parse_events().is_empty();
@@ -26,7 +27,7 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Opti
     }
 
     let show_map =
-        surface_id == crate::ids::EXPLORE_DETAIL && events.iter().any(|e| e.has_coords());
+        surface_id == crate::guest::EXPLORE_DETAIL && events.iter().any(|e| e.has_coords());
 
     Ok(Some(GuestData {
         events,

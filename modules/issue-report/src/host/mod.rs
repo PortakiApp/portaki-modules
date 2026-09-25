@@ -163,7 +163,7 @@ pub(crate) fn report_detail(report: &IssueReport, locale: &str) -> Component {
             Button::new()
                 .label("i18n:host.detail.resolve")
                 .action(crate::ids::module_id().command(
-                    crate::ids::RESOLVE,
+                    crate::commands::RESOLVE,
                     ResolveArgs {
                         report_id: report.id,
                     },

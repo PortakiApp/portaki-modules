@@ -16,14 +16,14 @@ pub fn build_home_card(sections: &[SectionView]) -> Surface {
             .title("i18n:home.card.title")
             .action(Action::open_overlay(
                 OverlayPresentation::BottomSheet,
-                crate::ids::EXPLORE_SHEET,
+                crate::guest::EXPLORE_SHEET,
                 OverlayArgs::new()
                     .icon(IconName::Home)
                     .title("i18n:home.card.title"),
             ))
             .children(section_blocks(sections, CARD_SECTION_LIMIT)),
     )
-    .with_id(crate::ids::HOME_CARD)
+    .with_id(crate::guest::HOME_CARD)
 }
 
 pub fn section_blocks(sections: &[SectionView], limit: usize) -> Vec<Component> {

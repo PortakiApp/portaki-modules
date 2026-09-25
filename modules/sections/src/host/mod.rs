@@ -50,7 +50,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                 .children(vec![list_card, detail_panel]),
         ),
     )
-    .with_id(crate::ids::HOST_MAIN)
+    .with_id(MAIN)
 }
 
 #[portaki_sdk::wire(serialize)]
@@ -149,7 +149,7 @@ fn build_detail_panel(sections: &[SectionView], selected_id: &str, lang: &str) -
         .unwrap_or_else(|| default_new_fields(lang));
     let body_editor = editor_value(&body);
 
-    let save_action = crate::ids::module_id().command_empty(crate::ids::SAVE_SECTION);
+    let save_action = crate::ids::module_id().command_empty(crate::commands::SAVE_SECTION);
     let cancel_target = if is_new {
         sections
             .first()

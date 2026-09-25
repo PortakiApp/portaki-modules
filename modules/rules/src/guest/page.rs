@@ -19,5 +19,5 @@ pub fn build_detail_page(payload: &RulesPayload) -> Surface {
                 .child(rules_stack(&payload.items)),
         )),
     )
-    .with_id(crate::ids::EXPLORE_DETAIL)
+    .with_id(crate::guest::EXPLORE_DETAIL)
 }

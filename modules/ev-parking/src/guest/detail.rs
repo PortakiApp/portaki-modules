@@ -8,5 +8,5 @@ use super::load::GuestData;
 
 pub fn build_detail_surface(data: &GuestData) -> Surface {
     Surface::new(Stack::new().gap(12.0).children(build_ev_parking_body(data)))
-        .with_id(crate::ids::EXPLORE_DETAIL)
+        .with_id(crate::guest::EXPLORE_DETAIL)
 }

@@ -1,29 +1,6 @@
-//! Typed surface / operation catalogs for this module.
-#![allow(deprecated)]
+//! Event types and catalog id for this module.
 
 use portaki_sdk::prelude::*;
-
-define_surface_ids! {
-    HOME_CARD = "home.card",
-    GUEST_FORM = "guest.form",
-    HOST_MAIN = "main",
-    HOST_STAY = "stay",
-    HOST_STATS = "stock",
-}
-
-define_operation_names! {
-    LIST_ITEMS = "listItems",
-    LIST_FOR_STAY = "listForStay",
-    LIST_RECENT = "listRecent",
-    LIST_OPEN_COUNT = "listOpenCount",
-    PUBLISH_READINESS = "publishReadiness",
-    REPLACE_ITEMS = "replaceItems",
-    SEED_DEFAULTS = "seedDefaults",
-    STATS_SUMMARY = "statsSummary",
-    SUBMIT = "submit",
-    UPDATE_CONFIG = "updateConfig",
-    UPDATE_STATUS = "updateStatus",
-}
 
 /// Catalog module id (`consumables`).
 pub fn module_id() -> ModuleId {

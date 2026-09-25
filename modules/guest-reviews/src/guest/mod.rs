@@ -53,7 +53,7 @@ fn no_review_channel(surface_id: SurfaceId) -> Surface {
 
 #[portaki_sdk::surface(guest, id = "home.card")]
 pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
-    render_card(&ctx, crate::ids::HOME_CARD, false)
+    render_card(&ctx, HOME_CARD, false)
 }
 
 /// End-of-stay card — same content as the home card, rendered on the dedicated
@@ -66,5 +66,5 @@ pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
     role = GuestRole::PostStay
 )]
 pub fn render_post_stay_card(ctx: GuestContext) -> Result<Surface> {
-    render_card(&ctx, crate::ids::POST_STAY_CARD, true)
+    render_card(&ctx, POST_STAY_CARD, true)
 }

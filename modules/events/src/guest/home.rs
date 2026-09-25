@@ -16,14 +16,14 @@ pub fn build_home_card(data: &GuestData) -> Surface {
             .title("i18n:home.card.title")
             .action(Action::open_overlay(
                 OverlayPresentation::BottomSheet,
-                crate::ids::EXPLORE_DETAIL,
+                crate::guest::EXPLORE_DETAIL,
                 OverlayArgs::new()
                     .icon(IconName::Calendar)
                     .title("i18n:home.card.title"),
             ))
             .children(build_events_body(data, false)),
     )
-    .with_id(crate::ids::HOME_CARD)
+    .with_id(crate::guest::HOME_CARD)
 }
 
 /// Compact pre-arrival prep card — icon + title + a single next-event headline.
@@ -37,7 +37,7 @@ pub fn build_upcoming_card(data: &GuestData) -> Surface {
         .title("i18n:home.card.title")
         .action(Action::open_overlay(
             OverlayPresentation::BottomSheet,
-            crate::ids::EXPLORE_DETAIL,
+            crate::guest::EXPLORE_DETAIL,
             OverlayArgs::new()
                 .icon(IconName::Calendar)
                 .title("i18n:home.card.title"),
@@ -49,7 +49,7 @@ pub fn build_upcoming_card(data: &GuestData) -> Surface {
         )]);
     }
 
-    Surface::new(card).with_id(crate::ids::UPCOMING_CARD)
+    Surface::new(card).with_id(crate::guest::UPCOMING_CARD)
 }
 
 /// One-line headline for the compact card: the next event's title, with its

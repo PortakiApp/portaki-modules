@@ -23,7 +23,7 @@ pub use form::render_guest_form;
 pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
     Ok(match load_guest_consumables(&ctx)? {
         Some(data) => build_home_card(&data),
-        None => empty_catalog_card(crate::ids::HOME_CARD),
+        None => empty_catalog_card(HOME_CARD),
     })
 }
 

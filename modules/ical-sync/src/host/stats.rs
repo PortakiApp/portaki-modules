@@ -170,7 +170,7 @@ pub fn render_host_stats(ctx: HostContext) -> Result<Surface> {
 
     Ok(
         Surface::new(Page::new().child(Stack::new().gap(16.0).children(children)))
-            .with_id(crate::ids::HOST_STATS),
+            .with_id(CALENDAR_SYNC),
     )
 }
 

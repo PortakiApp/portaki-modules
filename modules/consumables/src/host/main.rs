@@ -79,7 +79,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
             Form::new().child(
                 Button::new()
                     .label("i18n:host.main.seedDefaults")
-                    .action(crate::ids::module_id().command_empty(crate::ids::SEED_DEFAULTS)),
+                    .action(crate::ids::module_id().command_empty(crate::commands::SEED_DEFAULTS)),
             ),
         );
 
@@ -119,6 +119,5 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     }
     children.push(recent_card.into());
 
-    Surface::new(Page::new().child(Stack::new().gap(16.0).children(children)))
-        .with_id(crate::ids::HOST_MAIN)
+    Surface::new(Page::new().child(Stack::new().gap(16.0).children(children))).with_id(MAIN)
 }

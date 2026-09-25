@@ -17,7 +17,7 @@ use crate::queries::load_payload;
 
 #[portaki_sdk::surface(guest, id = "home.card")]
 pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
-    render_with_payload(&ctx, crate::ids::HOME_CARD, build_home_card)
+    render_with_payload(&ctx, HOME_CARD, build_home_card)
 }
 
 #[portaki_sdk::surface(
@@ -27,7 +27,7 @@ pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
     label_key = "nav.appliances"
 )]
 pub fn render_explore_detail(ctx: GuestContext) -> Result<Surface> {
-    render_with_payload(&ctx, crate::ids::EXPLORE_DETAIL, build_detail_page)
+    render_with_payload(&ctx, EXPLORE_DETAIL, build_detail_page)
 }
 
 /// Device detail. `deviceId` arrives via guest route params → render `input` → `ctx.input`.
@@ -61,7 +61,7 @@ fn render_with_payload(
 fn load_for_item(ctx: &GuestContext, device_id: Option<&str>) -> Result<Surface> {
     let payload = load_payload(ctx)?;
     if payload.is_empty_for_guest() {
-        return Ok(no_appliances_state(crate::ids::EXPLORE_ITEM));
+        return Ok(no_appliances_state(EXPLORE_ITEM));
     }
     Ok(build_item_detail(&payload, device_id))
 }

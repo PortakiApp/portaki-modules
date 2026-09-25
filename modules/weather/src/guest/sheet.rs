@@ -24,5 +24,5 @@ pub fn build_sheet_surface(data: &GuestWeatherData) -> Surface {
         build_forecast_table(&data.forecast, &data.units),
     ];
 
-    Surface::new(Stack::new().gap(12.0).children(children)).with_id(crate::ids::EXPLORE_FORECAST)
+    Surface::new(Stack::new().gap(12.0).children(children)).with_id(crate::guest::EXPLORE_FORECAST)
 }

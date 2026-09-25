@@ -1,21 +1,6 @@
-//! Typed surface / operation catalogs for this module.
-#![allow(deprecated)]
+//! Event types and catalog id for this module.
 
 use portaki_sdk::prelude::*;
-
-define_surface_ids! {
-    HOME_CARD = "home.card",
-    UPCOMING_CARD = "upcoming.card",
-    EXPLORE_FORECAST = "explore.forecast",
-    HOST_MAIN = "main",
-}
-
-define_operation_names! {
-    EMAIL_CONTEXT = "emailContext",
-    GET_CURRENT = "getCurrent",
-    GET_FORECAST = "getForecast",
-    REFRESH_FORECAST = "refreshForecast",
-}
 
 // Must stay aligned with `portaki_sdk::contracts::platform::BOOKING_CONFIRMED`.
 define_event_types! {

@@ -6,7 +6,6 @@ mod connectors;
 mod email_context;
 mod guest;
 mod host;
-mod ids;
 mod map_markers;
 mod nearby;
 mod time_format;

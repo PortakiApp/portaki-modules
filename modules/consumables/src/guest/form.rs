@@ -18,16 +18,16 @@ use crate::level;
 pub fn render_guest_form(ctx: GuestContext) -> Result<Surface> {
     Ok(match load_guest_consumables(&ctx)? {
         Some(data) => build_form_surface(&data),
-        None => super::empty_catalog_card(crate::ids::GUEST_FORM),
+        None => super::empty_catalog_card(GUEST_FORM),
     })
 }
 
 pub fn build_form_surface(data: &GuestConsumablesData) -> Surface {
-    Surface::new(build_form(data)).with_id(crate::ids::GUEST_FORM)
+    Surface::new(build_form(data)).with_id(GUEST_FORM)
 }
 
 fn build_form(data: &GuestConsumablesData) -> Form {
-    let submit_action = crate::ids::module_id().command_empty(crate::ids::SUBMIT);
+    let submit_action = crate::ids::module_id().command_empty(crate::commands::SUBMIT);
     let first_id = data
         .items
         .first()

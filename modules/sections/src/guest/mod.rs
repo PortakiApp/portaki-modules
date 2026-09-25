@@ -15,12 +15,12 @@ use crate::queries::{list_sections, ListSectionsArgs};
 
 #[portaki_sdk::surface(guest, id = "home.card")]
 pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
-    render_with_sections(&ctx, crate::ids::HOME_CARD, build_home_card)
+    render_with_sections(&ctx, HOME_CARD, build_home_card)
 }
 
 #[portaki_sdk::surface(guest, id = "explore.sheet")]
 pub fn render_explore_sheet(ctx: GuestContext) -> Result<Surface> {
-    render_with_sections(&ctx, crate::ids::EXPLORE_SHEET, build_sheet_surface)
+    render_with_sections(&ctx, EXPLORE_SHEET, build_sheet_surface)
 }
 
 fn render_with_sections(

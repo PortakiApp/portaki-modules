@@ -1,21 +1,6 @@
-//! Typed surface / operation catalogs for this module.
-#![allow(deprecated)]
+//! Event types and catalog id for this module.
 
 use portaki_sdk::prelude::*;
-
-define_surface_ids! {
-    HOME_CARD = "home.card",
-    GUEST_FORM = "guest.form",
-    HOST_MAIN = "main",
-    HOST_STAY = "stay",
-}
-
-define_operation_names! {
-    GET_STATUS = "getStatus",
-    PUBLISH_READINESS = "publishReadiness",
-    SUBMIT = "submit",
-    SEND_FORM_AVAILABLE = "sendFormAvailable",
-}
 
 define_event_types! {
     COMPLETED = "pre-arrival.completed",

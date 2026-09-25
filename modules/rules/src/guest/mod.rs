@@ -16,13 +16,13 @@ use crate::queries::load_payload;
 /// Guest home booklet card — glance of first rules.
 #[portaki_sdk::surface(guest, id = "home.card")]
 pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
-    render_with_payload(&ctx, crate::ids::HOME_CARD, build_home_card)
+    render_with_payload(&ctx, HOME_CARD, build_home_card)
 }
 
 /// Full rules page (body-only — shell supplies header).
 #[portaki_sdk::surface(guest, id = "explore.detail", path = "rules", label_key = "nav.rules")]
 pub fn render_explore_detail(ctx: GuestContext) -> Result<Surface> {
-    render_with_payload(&ctx, crate::ids::EXPLORE_DETAIL, build_detail_page)
+    render_with_payload(&ctx, EXPLORE_DETAIL, build_detail_page)
 }
 
 fn render_with_payload(

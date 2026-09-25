@@ -41,7 +41,7 @@ pub fn build_item_detail(payload: &AppliancesPayload, device_id: Option<&str>) -
                     .icon(IconName::Plug),
             ),
         )
-        .with_id(crate::ids::EXPLORE_ITEM);
+        .with_id(crate::guest::EXPLORE_ITEM);
     };
 
     Surface::new(
@@ -49,7 +49,7 @@ pub fn build_item_detail(payload: &AppliancesPayload, device_id: Option<&str>) -
             .gap(14.0)
             .children(device_detail_children(device)),
     )
-    .with_id(crate::ids::EXPLORE_ITEM)
+    .with_id(crate::guest::EXPLORE_ITEM)
 }
 
 fn device_detail_children(device: &Appliance) -> Vec<Component> {

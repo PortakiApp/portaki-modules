@@ -15,12 +15,12 @@ pub fn build_home_card(data: &GuestData) -> Surface {
             .title("i18n:home.card.title")
             .action(Action::open_overlay(
                 OverlayPresentation::BottomSheet,
-                crate::ids::EXPLORE_DETAIL,
+                crate::guest::EXPLORE_DETAIL,
                 OverlayArgs::new()
                     .icon(IconName::Recycle)
                     .title("i18n:home.card.title"),
             ))
             .children(build_bins_body(data, false)),
     )
-    .with_id(crate::ids::HOME_CARD)
+    .with_id(crate::guest::HOME_CARD)
 }

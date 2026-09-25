@@ -152,7 +152,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
                     .icon(IconName::Package),
             ),
         )
-        .with_id(crate::ids::HOST_STATS);
+        .with_id(STOCK);
     }
 
     let to_buy = items
@@ -213,7 +213,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
             .child(Stack::new().gap(0.0).children(rows))
             .into(),
     ])))
-    .with_id(crate::ids::HOST_STATS)
+    .with_id(STOCK)
 }
 
 fn panel(key: &str, body: Component) -> Component {

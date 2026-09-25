@@ -60,7 +60,7 @@ pub fn build_home_card(data: &GuestData) -> Surface {
         }
 
         let submit_action = crate::ids::module_id().command(
-            crate::ids::SUBMIT_REVIEW,
+            crate::commands::SUBMIT_REVIEW,
             crate::commands::SubmitReviewArgs {
                 rating: 5,
                 comment: String::new(),
@@ -110,5 +110,5 @@ pub fn build_home_card(data: &GuestData) -> Surface {
             .title("i18n:home.card.title")
             .child(Stack::new().gap(12.0).children(children)),
     )
-    .with_id(crate::ids::HOME_CARD)
+    .with_id(crate::guest::HOME_CARD)
 }
