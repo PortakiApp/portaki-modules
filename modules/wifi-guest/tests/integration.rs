@@ -35,7 +35,7 @@ fn home_card_renders_empty_without_config() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("guest surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
         });
 }
@@ -47,7 +47,7 @@ fn home_card_renders_with_config_and_masks_password() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("guest surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("KeyValue"));
             let json = serde_json::to_string(&surface).expect("surface json");
@@ -65,7 +65,7 @@ fn detail_shows_security_banner_and_copy_when_revealed() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&always_reveal_config())
         .run(|ctx| {
-            let surface = render_explore_detail(ctx);
+            let surface = render_explore_detail(ctx).expect("guest surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Button"));
             let json = serde_json::to_string(&surface).expect("json");
