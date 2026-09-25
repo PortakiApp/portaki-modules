@@ -1,45 +1,28 @@
-//! Host configuration stored in KV (`config` key).
+//! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
-use portaki_sdk::host;
-use portaki_sdk::Result;
 use serde::{Deserialize, Serialize};
 
-const CONFIG_KEY: &str = "config";
-
+/// The keys are the names of the host form fields: the platform takes `updateConfig`.
+/// Nothing is required on its own: « keypad code, or remote unlock (Nuki Web key + lock ID) »
+/// spans the connector, so `publishReadiness` carries it. The platform does not trim: read
+/// through the `*_trimmed` accessors.
+#[portaki_sdk::config]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct ModuleConfig {
-    #[serde(default)]
+    #[field(label = "host.smartlockId.label")]
     pub smartlock_id: String,
-    #[serde(default)]
+    #[field(secret, label = "host.keypadCode.label")]
     pub keypad_code: String,
-    #[serde(default)]
+    #[field(label = "host.deviceName.label")]
     pub device_name: String,
 }
 
 impl ModuleConfig {
-    pub fn is_empty(&self) -> bool {
-        self.smartlock_id.trim().is_empty()
-            && self.keypad_code.trim().is_empty()
-            && self.device_name.trim().is_empty()
-    }
-
     pub fn keypad_code_trimmed(&self) -> &str {
         self.keypad_code.trim()
     }
-}
 
-pub fn load_config() -> Result<ModuleConfig> {
-    let Some(bytes) = host::kv::get(CONFIG_KEY)? else {
-        return Ok(ModuleConfig::default());
-    };
-    serde_json::from_slice(&bytes).map_err(|error| {
-        portaki_sdk::PortakiError::Storage(format!("invalid config JSON: {error}"))
-    })
-}
-
-pub fn save_config(config: &ModuleConfig) -> Result<()> {
-    let bytes = serde_json::to_vec(config).map_err(|error| {
-        portaki_sdk::PortakiError::Storage(format!("config serialize: {error}"))
-    })?;
-    host::kv::set(CONFIG_KEY, &bytes, None)
+    pub fn smartlock_id_trimmed(&self) -> &str {
+        self.smartlock_id.trim()
+    }
 }

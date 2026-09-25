@@ -12,7 +12,7 @@
   "host.section.keypad": "Code voyageur",
   "host.section.keypad.help": "Code clavier remis aux voyageurs pendant le séjour.",
   "host.keypadCode.label": "Code clavier",
-  "host.keypadCode.placeholder": "Code à 6 chiffres",
+  "host.keypadCode.placeholder": "Laisser vide pour conserver le code actuel",
   "host.main.help": "Liez ce module dans Accès → Serrure connectée (fournisseur : Nuki). Ajoutez un code clavier pour les voyageurs et, pour déverrouiller à distance, la clé de votre compte Nuki Web dans Intégrations.",
   "host.save": "Enregistrer",
   "connector.nuki.name": "Compte Nuki Web",
@@ -25,5 +25,7 @@
   "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
   "module.catalogDescription": "Serrure Nuki — codes clavier pour le module Accès.",
   "feeds.access-guide": "le code clavier",
-  "catalog.host.main": "Nuki"
+  "catalog.host.main": "Nuki",
+  "publish.access.label": "Code clavier ou déverrouillage à distance",
+  "publish.access.hint": "Ajoutez un code clavier, ou l’identifiant de la serrure avec la clé de votre compte Nuki Web dans Intégrations."
 }

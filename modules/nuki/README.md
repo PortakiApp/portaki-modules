@@ -23,10 +23,14 @@ When codes are revealed, access-guide sends guest commands `unlock` and `getGues
 | Capability | Role |
 |------------|------|
 | `access.smart_lock` | **Provided** — peer discovery for access-guide |
-| `core.storage` | **Required** — KV config |
+| `core.storage` | **Required** — the pre-platform KV config, read once by the platform import (`legacyConfig`) |
 | `external.nuki.byok` | **Optional** — Nuki Web API token for `POST …/action/unlock` |
 
-## KV config
+## Config
+
+Held by the platform (`#[portaki_sdk::config]`), which takes `updateConfig`; `keypad_code` is a
+`secret`, never sent back to the host form. `publishReadiness` blocks publication until there is a
+keypad code, or remote unlock (`external.nuki.byok` granted + `smartlock_id`).
 
 ```json
 {

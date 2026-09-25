@@ -9,8 +9,6 @@ define_surface_ids! {
 // UNLOCK / GET_GUEST_CREDENTIAL must stay aligned with
 // `portaki_sdk::contracts::smart_lock` (peer protocol).
 define_operation_names! {
-    GET_CONFIG = "getConfig",
-    UPDATE_CONFIG = "updateConfig",
     UNLOCK = "unlock",
     GET_GUEST_CREDENTIAL = "getGuestCredential",
 }

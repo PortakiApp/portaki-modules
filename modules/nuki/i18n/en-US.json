@@ -12,7 +12,7 @@
   "host.section.keypad": "Guest code",
   "host.section.keypad.help": "Keypad code shared with guests during the stay.",
   "host.keypadCode.label": "Keypad code",
-  "host.keypadCode.placeholder": "6-digit code",
+  "host.keypadCode.placeholder": "Leave blank to keep the current code",
   "host.main.help": "Link this module in Access → Smart lock (provider: Nuki). Add a keypad code for guests and, for remote unlock, the key from your Nuki Web account in Integrations.",
   "host.save": "Save",
   "connector.nuki.name": "Nuki Web account",
@@ -25,5 +25,7 @@
   "module.status.inactive.description": "This module is not active on this property",
   "module.catalogDescription": "Nuki smart lock — keypad codes for the Access module.",
   "feeds.access-guide": "the keypad code",
-  "catalog.host.main": "Nuki"
+  "catalog.host.main": "Nuki",
+  "publish.access.label": "Keypad code or remote unlock",
+  "publish.access.hint": "Add a keypad code, or the lock ID together with your Nuki Web account key in Integrations."
 }

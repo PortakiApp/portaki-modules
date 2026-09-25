@@ -6,16 +6,16 @@ mod commands;
 mod config;
 mod connectors;
 mod host;
+mod i18n;
 mod ids;
 mod queries;
 
 pub use commands::{
-    get_guest_credential, unlock, update_config, GuestCredentialResponse, StayArgs, UnlockResponse,
-    UpdateConfigArgs,
+    get_guest_credential, unlock, GuestCredentialResponse, StayArgs, UnlockResponse,
 };
-pub use config::{load_config, ModuleConfig};
+pub use config::ModuleConfig;
 pub use host::render_host_main;
-pub use queries::get_config;
+pub use queries::publish_readiness;
 
 portaki_sdk::portaki_module!(
     id = "nuki",
