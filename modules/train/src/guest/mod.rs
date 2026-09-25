@@ -1,28 +1,20 @@
-//! Guest booklet surfaces.
+//! Guest booklet surfaces. The SDK renders the inactive / incomplete / error states.
 
 mod detail;
-mod empty;
 mod home;
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 
 use detail::build_detail_page;
-use empty::{empty_runtime_error_state, empty_state_if_module_not_ready, log_render_failure};
 use home::{build_home_card, build_upcoming_card};
 
 use crate::content::normalize_destination;
 
 /// Home card glance — mixed-destination departure board.
 #[portaki_sdk::surface(guest, id = "home.card")]
-pub fn render_home_card(ctx: GuestContext) -> Surface {
-    match render_home(&ctx) {
-        Ok(surface) => surface,
-        Err(error) => {
-            log_render_failure(crate::ids::HOME_CARD, &error);
-            empty_runtime_error_state(crate::ids::HOME_CARD)
-        }
-    }
+pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
+    Ok(build_home_card(&ctx))
 }
 
 /// Compact pre-arrival prep card rendered on the guest timeline (`role: upcoming`).
@@ -33,48 +25,14 @@ pub fn render_home_card(ctx: GuestContext) -> Surface {
     label_key = "nav.train",
     role = GuestRole::Upcoming
 )]
-pub fn render_upcoming_card(ctx: GuestContext) -> Surface {
-    match render_upcoming(&ctx) {
-        Ok(surface) => surface,
-        Err(error) => {
-            log_render_failure(crate::ids::UPCOMING_CARD, &error);
-            empty_runtime_error_state(crate::ids::UPCOMING_CARD)
-        }
-    }
+pub fn render_upcoming_card(ctx: GuestContext) -> Result<Surface> {
+    Ok(build_upcoming_card(&ctx))
 }
 
 /// Full train page (body-only — shell supplies header). `dest` arrives via route
 /// params or the destination filter chips → `ctx.input.dest`.
 #[portaki_sdk::surface(guest, id = "explore.detail", path = "train", label_key = "nav.train")]
-pub fn render_explore_detail(ctx: GuestContext) -> Surface {
+pub fn render_explore_detail(ctx: GuestContext) -> Result<Surface> {
     let dest = ctx.input.get("dest").and_then(|value| value.as_str());
-    let selected = normalize_destination(dest);
-    match render_detail(&ctx, selected) {
-        Ok(surface) => surface,
-        Err(error) => {
-            log_render_failure(crate::ids::EXPLORE_DETAIL, &error);
-            empty_runtime_error_state(crate::ids::EXPLORE_DETAIL)
-        }
-    }
-}
-
-fn render_home(ctx: &GuestContext) -> Result<Surface> {
-    if let Some(surface) = empty_state_if_module_not_ready(crate::ids::HOME_CARD)? {
-        return Ok(surface);
-    }
-    Ok(build_home_card(ctx))
-}
-
-fn render_upcoming(ctx: &GuestContext) -> Result<Surface> {
-    if let Some(surface) = empty_state_if_module_not_ready(crate::ids::UPCOMING_CARD)? {
-        return Ok(surface);
-    }
-    Ok(build_upcoming_card(ctx))
-}
-
-fn render_detail(ctx: &GuestContext, selected: &str) -> Result<Surface> {
-    if let Some(surface) = empty_state_if_module_not_ready(crate::ids::EXPLORE_DETAIL)? {
-        return Ok(surface);
-    }
-    Ok(build_detail_page(ctx, selected))
+    Ok(build_detail_page(&ctx, normalize_destination(dest)))
 }

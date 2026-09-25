@@ -10,8 +10,10 @@ use train::{render_explore_detail, render_upcoming_card};
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
     let context = previews::guest(root);
-    let detail = context.clone().run(render_explore_detail);
-    let upcoming = context.run(render_upcoming_card);
+    let detail = context
+        .clone()
+        .run(|ctx| render_explore_detail(ctx).expect("render"));
+    let upcoming = context.run(|ctx| render_upcoming_card(ctx).expect("render"));
     previews::check(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
