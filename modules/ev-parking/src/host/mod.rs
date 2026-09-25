@@ -17,7 +17,7 @@ use crate::config::{ModuleConfig, RevealPolicy};
     icon = IconName::Zap
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
-    let config = ModuleConfig::read(&ctx)?;
+    let config = ModuleConfig::load(&ctx)?;
 
     let form_children: Vec<Component> = vec![
         Card::new()
@@ -32,7 +32,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
                     .child(
                         TextInput::new()
                             .name("spot_label")
-                            .value(config.spot_label.clone())
+                            .value(config.spot_label.host_value(&ctx))
                             .placeholder("i18n:host.spotLabel.placeholder"),
                     )
                     .into(),
@@ -79,7 +79,13 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
                     // TipTap preferred in design; TextArea until guest renders rich HTML.
                     TextArea::new()
                         .name("instructions")
-                        .value(config.instructions.clone().unwrap_or_default())
+                        .value(
+                            config
+                                .instructions
+                                .as_ref()
+                                .map(|text| text.host_value(&ctx))
+                                .unwrap_or_default(),
+                        )
                         .placeholder("i18n:host.instructions.placeholder"),
                 )
                 .into()])

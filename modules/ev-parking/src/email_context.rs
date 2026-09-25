@@ -27,14 +27,11 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
         });
     }
 
-    let config = ModuleConfig::read(&ctx)?;
-    let spot = config.spot_label.trim();
+    let config = ModuleConfig::load(&ctx)?;
     Ok(EmailContextResponse {
-        ev_parking_spot: if spot.is_empty() {
-            None
-        } else {
-            Some(spot.to_string())
-        },
+        ev_parking_spot: config
+            .spot_text(args.locale_or(&ctx.locale))
+            .map(str::to_string),
     })
 }
 

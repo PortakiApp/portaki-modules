@@ -10,13 +10,15 @@ use crate::reveal::{
 
 pub struct GuestData {
     pub config: ModuleConfig,
+    /// The guest's locale, for the translated texts.
+    pub locale: String,
     pub secrets_revealed: bool,
     pub reveal_locked_message: Option<String>,
 }
 
 /// The config to show, or `None` when the host has filled in nothing yet.
 pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
-    let config = ModuleConfig::read(ctx)?;
+    let config = ModuleConfig::load(ctx)?;
     if config.is_empty() {
         return Ok(None);
     }
@@ -28,6 +30,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
 
     Ok(Some(GuestData {
         config,
+        locale: ctx.locale.clone(),
         secrets_revealed: decision.revealed,
         reveal_locked_message: locked_banner(&decision, &property_timezone),
     }))
