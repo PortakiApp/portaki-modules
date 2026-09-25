@@ -7,7 +7,7 @@ use crate::config::{MethodFields, ModuleConfig};
 use crate::i18n::text;
 
 /// A code-bearing access method needs its code — the platform already blocks on the method.
-#[portaki_sdk::query(name = "publishReadiness")]
+#[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
 pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
     let config = ModuleConfig::read(&ctx)?;
     let ok = match &config.method {
