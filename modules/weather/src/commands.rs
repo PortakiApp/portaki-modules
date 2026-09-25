@@ -4,7 +4,7 @@ use portaki_sdk::prelude::*;
 
 use crate::cache;
 
-#[portaki_sdk::command(name = "refreshForecast")]
+#[portaki_sdk::command(name = "refreshForecast", example(label = "Vider le cache météo"))]
 pub fn refresh_forecast(ctx: Context) -> Result<()> {
     match ctx.property.coordinates {
         Some(point) => cache::invalidate(point.lat, point.lng),
