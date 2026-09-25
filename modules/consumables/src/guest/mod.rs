@@ -1,16 +1,15 @@
-//! Guest booklet surfaces.
+//! Guest booklet surfaces. The SDK renders the inactive / incomplete / error states.
 
-mod empty;
 mod form;
 mod home;
 mod load;
 
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui::primitives::{Card, Text};
 use portaki_sdk::sdui::surface::Surface;
 
-use empty::{empty_runtime_error_state, log_render_failure};
 use home::build_home_card;
-use load::{load_guest_consumables, GuestLoad};
+use load::load_guest_consumables;
 
 pub use form::render_guest_form;
 
@@ -21,19 +20,24 @@ pub use form::render_guest_form;
     path = "consumables",
     label_key = "nav.consumables"
 )]
-pub fn render_home_card(ctx: GuestContext) -> Surface {
-    match render_with_data(&ctx) {
-        Ok(surface) => surface,
-        Err(error) => {
-            log_render_failure(crate::ids::HOME_CARD, &error);
-            empty_runtime_error_state(crate::ids::HOME_CARD)
-        }
-    }
+pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
+    Ok(match load_guest_consumables(&ctx)? {
+        Some(data) => build_home_card(&data),
+        None => empty_catalog_card(crate::ids::HOME_CARD),
+    })
 }
 
-fn render_with_data(ctx: &GuestContext) -> Result<Surface> {
-    match load_guest_consumables(ctx)? {
-        GuestLoad::Empty(surface) => Ok(*surface),
-        GuestLoad::Ready(data) => Ok(build_home_card(&data)),
-    }
+/// Nothing in the catalog: nothing the guest can report.
+fn empty_catalog_card(surface_id: SurfaceId) -> Surface {
+    Surface::new(
+        Card::new()
+            .icon(IconName::Package)
+            .title("i18n:home.card.title")
+            .child(
+                Text::new()
+                    .text("i18n:home.card.empty")
+                    .variant(TextVariant::Body),
+            ),
+    )
+    .with_id(surface_id)
 }
