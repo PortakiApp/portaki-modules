@@ -8,8 +8,6 @@
   "explore.detail.to": "Destination",
   "explore.detail.upcoming": "Next departures",
   "explore.detail.disclaimer": "Indicative times · TER SUD PACA",
-  "module.status.inactive.title": "Train times disabled",
-  "module.status.inactive.description": "This module is not active on this property",
   "station.distance": "1.4 mi",
   "module.catalogDescription": "Upcoming departures from the property's nearest station."
 }

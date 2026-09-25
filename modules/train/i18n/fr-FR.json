@@ -8,8 +8,6 @@
   "explore.detail.to": "Destination",
   "explore.detail.upcoming": "Prochains départs",
   "explore.detail.disclaimer": "Horaires indicatifs · TER SUD PACA",
-  "module.status.inactive.title": "Horaires trains désactivés",
-  "module.status.inactive.description": "Ce module n'est pas actif sur ce logement",
   "station.distance": "2,3 km",
   "module.catalogDescription": "Prochains départs depuis la gare la plus proche du logement."
 }
