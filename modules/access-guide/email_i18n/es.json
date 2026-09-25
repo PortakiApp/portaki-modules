@@ -1,0 +1,7 @@
+{
+  "email.codeChanged.subject": "Su código de acceso se actualizó",
+  "email.codeChanged.eyebrow": "Acceso",
+  "email.codeChanged.title": "Nuevo código de acceso",
+  "email.codeChanged.body": "El anfitrión actualizó los códigos de acceso. Abra su guía para ver las nuevas instrucciones.",
+  "email.codeChanged.cta": "Ver mi acceso"
+}

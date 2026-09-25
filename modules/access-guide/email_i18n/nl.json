@@ -1,0 +1,7 @@
+{
+  "email.codeChanged.subject": "Uw toegangscode is bijgewerkt",
+  "email.codeChanged.eyebrow": "Toegang",
+  "email.codeChanged.title": "Nieuwe toegangscode",
+  "email.codeChanged.body": "De host heeft de toegangscodes bijgewerkt. Open uw boekje voor de nieuwe instructies.",
+  "email.codeChanged.cta": "Toegang bekijken"
+}

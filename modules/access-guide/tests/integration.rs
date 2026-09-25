@@ -5,8 +5,8 @@ use portaki_sdk::capability;
 use serial_test::serial;
 
 use access_guide::{
-    publish_readiness, render_explore_detail, render_home_card, render_host_main,
-    render_upcoming_card, HostConfig, PrimaryMethod, StepRow,
+    on_config_updated, publish_readiness, render_explore_detail, render_home_card,
+    render_host_main, render_upcoming_card, ConfigUpdatedArgs, HostConfig, PrimaryMethod, StepRow,
 };
 use portaki_sdk::context::StayContext;
 use portaki_sdk::contracts::i18n::I18nText;
@@ -700,4 +700,53 @@ fn no_map_without_coordinates() {
             assert!(!json.contains("i18n:guest.openMaps"));
             assert!(json.contains("À droite de la porte"));
         });
+}
+
+/// `onConfigUpdated`: the payload the platform sends after a save (PR platform#622).
+fn config_updated(payload: serde_json::Value) -> Vec<portaki_sdk::host::email::SendEmailArgs> {
+    let args: ConfigUpdatedArgs = serde_json::from_value(payload).expect("payload");
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .run_with(|ctx, host| {
+            on_config_updated(ctx, args).expect("onConfigUpdated");
+            host.sent_emails()
+        })
+}
+
+#[test]
+#[serial]
+fn a_new_code_emails_the_guests() {
+    let property = Uuid::new_v4();
+    for key in [
+        "keybox_code",
+        "door_code",
+        "smart_lock_manual_code",
+        "building_access_gate_code",
+        "parking_code",
+    ] {
+        let sent = config_updated(json!({
+            "propertyId": property.to_string(),
+            "changedKeys": ["global_note", key]
+        }));
+        assert_eq!(sent.len(), 1, "{key}");
+        assert_eq!(sent[0].email_id, "code-changed");
+        assert_eq!(
+            sent[0].audience,
+            portaki_sdk::host::email::EmailAudience::PropertyEligibleGuests
+        );
+        assert_eq!(sent[0].property_id, Some(property));
+        assert!(!sent[0].content.subject.fr.is_empty());
+    }
+}
+
+#[test]
+#[serial]
+fn no_email_without_a_code_change() {
+    for payload in [
+        json!({ "propertyId": Uuid::new_v4().to_string(), "changedKeys": ["global_note", "steps", "primary_method"] }),
+        json!({ "propertyId": Uuid::new_v4().to_string(), "changedKeys": [] }),
+        json!({}),
+    ] {
+        assert!(config_updated(payload.clone()).is_empty(), "{payload}");
+    }
 }

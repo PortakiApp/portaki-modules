@@ -36,6 +36,13 @@ language, else `fr`, `en`, any. The steps keep their stored order and send their
 Guest surfaces, emails and `publishReadiness` (code required for keybox / door code / smart
 lock without provider) read the nested `ModuleConfig` built from it.
 
+### Code changed email
+
+After a save, the platform calls the host command `onConfigUpdated` with the changed key names
+(`{ propertyId, changedKeys }`). When one is a code key, the module sends `code-changed`
+(declared, audience `propertyEligibleGuests`: upcoming and active stays) — a pointer to the
+booklet, never the code. Copy in `email_i18n/*.json`.
+
 ### `primary_method`
 
 `keybox` · `door_code` · `smart_lock` · `in_person` · `building_staff` · `host_greets` · `other`
