@@ -13,7 +13,10 @@ fn previews_match_the_rendered_surfaces() {
     reset_test_store();
     let (card, form) = previews::guest(root).run(|ctx| {
         seed_defaults(ctx.clone(), EmptyArgs::default()).expect("seed defaults");
-        (render_home_card(ctx.clone()), render_guest_form(ctx))
+        (
+            render_home_card(ctx.clone()).expect("render"),
+            render_guest_form(ctx).expect("render"),
+        )
     });
     previews::check(
         root,

@@ -4,8 +4,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{Button, ChoiceList, Field, Form, TextArea};
 use portaki_sdk::sdui::surface::Surface;
 
-use super::empty::{empty_runtime_error_state, log_render_failure};
-use super::load::{load_guest_consumables, GuestConsumablesData, GuestLoad};
+use super::load::{load_guest_consumables, GuestConsumablesData};
 use crate::labels;
 use crate::level;
 
@@ -16,21 +15,11 @@ use crate::level;
     path = "consumables/form",
     label_key = "nav.consumables"
 )]
-pub fn render_guest_form(ctx: GuestContext) -> Surface {
-    match render_form(&ctx) {
-        Ok(surface) => surface,
-        Err(error) => {
-            log_render_failure(crate::ids::GUEST_FORM, &error);
-            empty_runtime_error_state(crate::ids::GUEST_FORM)
-        }
-    }
-}
-
-fn render_form(ctx: &GuestContext) -> Result<Surface> {
-    match load_guest_consumables(ctx)? {
-        GuestLoad::Empty(surface) => Ok(*surface),
-        GuestLoad::Ready(data) => Ok(build_form_surface(&data)),
-    }
+pub fn render_guest_form(ctx: GuestContext) -> Result<Surface> {
+    Ok(match load_guest_consumables(&ctx)? {
+        Some(data) => build_form_surface(&data),
+        None => super::empty_catalog_card(crate::ids::GUEST_FORM),
+    })
 }
 
 pub fn build_form_surface(data: &GuestConsumablesData) -> Surface {
