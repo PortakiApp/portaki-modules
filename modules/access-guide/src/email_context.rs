@@ -7,7 +7,7 @@ use chrono::{DateTime, Utc};
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 
-use crate::config::{load_config, DoorCodeTarget, MethodFields, ModuleConfig, PrimaryMethod};
+use crate::config::{DoorCodeTarget, MethodFields, ModuleConfig, PrimaryMethod};
 use crate::reveal::{evaluate_reveal, format_available_from, locked_message, RevealDecision};
 
 /// Arguments for `emailContext`.
@@ -60,7 +60,7 @@ pub fn email_context(ctx: Context, args: EmailContextArgs) -> Result<EmailContex
 
 /// Build reveal-aware email snippets from config + stay context.
 pub fn build_email_context(ctx: &Context, args: &EmailContextArgs) -> Result<EmailContextResponse> {
-    let config = load_config().unwrap_or_else(|_| ModuleConfig::default());
+    let config = ModuleConfig::read(ctx)?;
     let property_timezone = property_timezone(ctx);
     let checkin_at = ctx.stay.as_ref().and_then(|s| s.checkin_at);
     let now = time::now()?;
@@ -253,26 +253,22 @@ fn method_callout(config: &ModuleConfig, time: &str, has_code: bool) -> Result<S
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::{BuildingAccess, RevealPolicy};
+    use crate::config::{HostConfig, RevealPolicy};
     use chrono::TimeZone;
     use portaki_sdk::context::StayContext;
     use portaki_sdk::host::with_host;
     use portaki_test_utils::MockContext;
     use uuid::Uuid;
 
-    fn keybox_config(policy: RevealPolicy) -> ModuleConfig {
-        ModuleConfig {
-            primary_method: PrimaryMethod::Keybox,
-            method: MethodFields::Keybox {
-                location: "Sous le pot".into(),
-                code: Some("4821".into()),
-            },
-            building_access: Some(BuildingAccess {
-                gate_code: Some("A17B".into()),
-                intercom: None,
-            }),
-            reveal_policy: policy,
-            ..ModuleConfig::default()
+    fn keybox_config(policy: RevealPolicy) -> HostConfig {
+        HostConfig {
+            primary_method: "keybox".into(),
+            keybox_location: "Sous le pot".into(),
+            keybox_code: "4821".into(),
+            building_access_enabled: true,
+            building_access_gate_code: "A17B".into(),
+            reveal_policy: policy.as_wire().into(),
+            ..HostConfig::default()
         }
     }
 
@@ -299,10 +295,7 @@ mod tests {
     #[serial_test::serial]
     fn revealed_keybox_returns_code_and_callout() {
         let (ctx, host) = fr_email_host()
-            .with_kv(
-                "config",
-                serde_json::to_vec(&keybox_config(RevealPolicy::Always)).expect("json"),
-            )
+            .with_config(&keybox_config(RevealPolicy::Always))
             .build();
 
         with_host(host, ctx.clone(), || {
@@ -338,10 +331,7 @@ mod tests {
     #[serial_test::serial]
     fn locked_policy_omits_plaintext_code() {
         let (mut ctx, host) = fr_email_host()
-            .with_kv(
-                "config",
-                serde_json::to_vec(&keybox_config(RevealPolicy::AtCheckin)).expect("json"),
-            )
+            .with_config(&keybox_config(RevealPolicy::AtCheckin))
             .build();
         ctx.timezone = "Europe/Paris".into();
         ctx.property.timezone = "Europe/Paris".into();
@@ -386,10 +376,7 @@ mod tests {
     #[serial_test::serial]
     fn arrival_day_returns_code_without_callout() {
         let (ctx, host) = fr_email_host()
-            .with_kv(
-                "config",
-                serde_json::to_vec(&keybox_config(RevealPolicy::Always)).expect("json"),
-            )
+            .with_config(&keybox_config(RevealPolicy::Always))
             .build();
 
         with_host(host, ctx.clone(), || {
@@ -411,10 +398,7 @@ mod tests {
     #[serial_test::serial]
     fn stay_link_returns_empty_access_fields() {
         let (ctx, host) = fr_email_host()
-            .with_kv(
-                "config",
-                serde_json::to_vec(&keybox_config(RevealPolicy::Always)).expect("json"),
-            )
+            .with_config(&keybox_config(RevealPolicy::Always))
             .build();
 
         with_host(host, ctx.clone(), || {

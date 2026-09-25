@@ -1,6 +1,5 @@
-//! Per-language guest/host copy stored in KV (`texts/{lang}`).
-//!
-//! Structural config stays language-invariant under the `config` key.
+//! Per-language guest copy. The platform now holds it in the config (`*_fr` / `*_en` keys);
+//! before, the module kept it in KV `texts/{lang}`, still read until the host saves.
 //! Language short codes are derived from BCP-47 locales (`fr-FR` → `fr`).
 
 use portaki_sdk::host;
@@ -76,6 +75,7 @@ fn texts_key(lang: &str) -> String {
     format!("{TEXTS_PREFIX}{}", lang_code(lang))
 }
 
+/// The copy the module kept in KV for `lang`, before the platform held it.
 pub fn load_texts(lang: &str) -> Result<ModuleTexts> {
     let key = texts_key(lang);
     let Some(bytes) = host::kv::get(&key)? else {
@@ -84,57 +84,6 @@ pub fn load_texts(lang: &str) -> Result<ModuleTexts> {
     serde_json::from_slice(&bytes).map_err(|error| {
         portaki_sdk::PortakiError::Storage(format!("invalid texts JSON ({key}): {error}"))
     })
-}
-
-pub fn save_texts(lang: &str, texts: &ModuleTexts) -> Result<()> {
-    let key = texts_key(lang);
-    let bytes = serde_json::to_vec(texts).map_err(|error| {
-        portaki_sdk::PortakiError::Storage(format!("texts serialize ({key}): {error}"))
-    })?;
-    host::kv::set(&key, &bytes, None)
-}
-
-/// Host surfaces: texts for the active request locale only.
-pub fn load_texts_for_host(locale: &str) -> Result<ModuleTexts> {
-    load_texts(&lang_code(locale))
-}
-
-/// Guest surfaces: guest locale → property default → `fr` → first available.
-pub fn load_texts_for_guest(guest_locale: &str, property_locale: &str) -> Result<ModuleTexts> {
-    let candidates = [
-        lang_code(guest_locale),
-        lang_code(property_locale),
-        "fr".to_string(),
-    ];
-    let mut tried = std::collections::BTreeSet::new();
-    for lang in &candidates {
-        if !tried.insert(lang.clone()) {
-            continue;
-        }
-        let texts = load_texts(lang)?;
-        if !texts.is_empty() {
-            return Ok(texts);
-        }
-    }
-
-    let keys = host::kv::list(TEXTS_PREFIX).unwrap_or_default();
-    let mut langs: Vec<String> = keys
-        .into_iter()
-        .filter_map(|k| k.strip_prefix(TEXTS_PREFIX).map(str::to_string))
-        .filter(|l| !l.is_empty())
-        .collect();
-    langs.sort();
-    for lang in langs {
-        if !tried.insert(lang.clone()) {
-            continue;
-        }
-        let texts = load_texts(&lang)?;
-        if !texts.is_empty() {
-            return Ok(texts);
-        }
-    }
-
-    Ok(ModuleTexts::default())
 }
 
 /// Pull language strings still embedded in a legacy / pre-split `config` JSON document.
@@ -282,18 +231,6 @@ fn nonempty_owned(value: &str) -> Option<String> {
     } else {
         Some(trimmed.to_string())
     }
-}
-
-/// Persist extracted texts when the KV slot is still empty (never overwrite).
-pub(crate) fn seed_texts_if_absent(lang: &str, texts: &ModuleTexts) -> Result<()> {
-    if texts.is_empty() {
-        return Ok(());
-    }
-    let existing = load_texts(lang)?;
-    if !existing.is_empty() {
-        return Ok(());
-    }
-    save_texts(lang, texts)
 }
 
 #[cfg(test)]

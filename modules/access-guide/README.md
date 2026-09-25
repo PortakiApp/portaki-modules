@@ -10,40 +10,30 @@ Official Portaki access module — primary entry method, optional layers (buildi
 
 | Capability | Required | Purpose |
 |------------|----------|---------|
-| `core.storage` | Yes | KV `config` + `texts/{lang}` (method, layers, reveal, provider binding) |
+| `core.storage` | Yes | Legacy KV `config` + `texts/{lang}`, read until the platform holds each key |
 | `access.smart_lock` | No (providers) | Declared by future lock modules (Nuki, Igloohome, Yale…) |
 
 ## Config model
 
-Two KV documents — structural vs per-language copy:
+Declared with `#[portaki_sdk::config]` (`HostConfig`): the platform stores it, validates the
+host form (`updateConfig` never reaches the module) and blocks publication while
+`primary_method` is empty. The keys are the host form names, flat:
 
 ```text
-config                  # language-invariant structure
-texts/{lang}            # fr | en | … from ctx.locale (fr-FR → fr)
+primary_method (required) + the fields of each method (keybox_*, door_code*, smart_lock_*, in_person_*, building_staff_*, host_greets_*)
+building_access_enabled, building_access_gate_code, building_access_intercom
+parking_enabled, parking_map_url, parking_code
+address, arrival_lat, arrival_lng, arrival_video_url, reveal_policy
+steps [{ kind }]                       # shared skeleton, index = step
+method_instructions_{fr,en}, building_note_{fr,en}, parking_info_{fr,en}, global_note_{fr,en}
+steps_{fr,en} [{ title, detail }]      # copy of the step at the same index
 ```
 
-### Shared `config`
-
-```text
-primary_method + method fields (codes, locations, GPS — no free-text instructions)
-optional: building_access { gate_code?, intercom? } | parking { map_url, code? }
-arrival { address, steps[{ id, kind }], arrival_video_url }
-reveal_policy (default: day_before_16h)
-smart_lock_provider_module_id?   # when primary_method = smart_lock
-```
-
-### Per-lang `texts/{lang}`
-
-```text
-method_instructions?
-building_note?
-parking_info
-global_note
-steps: [{ id, title, detail? }]   # titles/details only; kinds stay on shared steps
-```
-
-Host `render_host` / `updateConfig` load and save texts for the **active** `ctx.locale` only.
-Guest resolves texts: guest locale → property default → `fr` → first available KV key.
+Codes (`keybox_code`, `door_code`, `smart_lock_manual_code`, `building_access_gate_code`,
+`parking_code`) are secrets: never sent back to the form, blank keeps them. The host edits the
+copy of its dashboard language; guests read guest locale → property locale → `fr` → `en`.
+Guest surfaces, emails and `publishReadiness` (code required for keybox / door code / smart
+lock without provider) read the nested `ModuleConfig` built from it.
 
 ### `primary_method`
 
@@ -64,12 +54,6 @@ Reveal logic lives **in this module**. Stay timing comes from generic SDK host f
 
 Stay-scoped query for Portaki guest emails (`arrival`, `arrival-day`, `new-code`).
 `stay-link` uses the stay page token only — this module returns empty fields for that template.
-
-### Code change event
-
-`updateConfig` emits `access-guide.code-changed` when entry codes change (keybox / door /
-smart-lock / parking). Platform sends guest `new-code` only for stays in phase UPCOMING
-(within 24h before check-in) or ACTIVE.
 
 Args (camelCase):
 
@@ -107,13 +91,11 @@ Future lock modules (`nuki`, `igloohome`, `yale`, …) must:
 
 ### Legacy migration
 
-On KV load, flat `gate_code` / `keybox_code` (+ parking / steps / address) are migrated via `migrate_legacy`:
-
-- non-empty `keybox_code` → `primary_method = keybox`
-- else non-empty `gate_code` → `primary_method = door_code`
-- parking / steps / video / address → optional layers under `arrival` / `parking` / `building_access`
-- default reveal → `day_before_16h`
-- embedded free-text (`method.instructions`, `building_access.note`, `parking.info`, `global_note`, step title/detail, including legacy `{ fr, en }` objects) → seeded into `texts/fr` (and `texts/en` when bilingual), then stripped from `config` so they cannot overwrite texts on later loads
+Before the platform held it, the module kept a nested `config` blob (or the older flat one:
+`gate_code`, `keybox_code`, `steps_json`…) and its copy in `texts/{lang}`. The platform imports
+only the declared keys it finds there; `HostConfig::read` reads every key the platform does not
+hold yet from the KV (through `migrate_legacy`, `texts/fr` / `texts/en` or the copy the blob
+embeds). A key the platform holds, even empty, wins.
 
 ## Surfaces
 

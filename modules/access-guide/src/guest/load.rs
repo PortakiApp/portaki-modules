@@ -4,9 +4,9 @@ use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{has_content, load_config, ModuleConfig};
+use crate::config::{has_content, HostConfig, ModuleConfig};
 use crate::reveal::{evaluate_reveal, format_available_from, locked_message, RevealDecision};
-use crate::texts::{load_texts_for_guest, ModuleTexts};
+use crate::texts::ModuleTexts;
 
 use super::empty::{empty_content_state, empty_state_if_module_not_ready};
 
@@ -32,8 +32,9 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Gues
         return Ok(GuestLoad::Empty(Box::new(surface)));
     }
 
-    let config = load_config().unwrap_or_else(|_| ModuleConfig::default());
-    let texts = load_texts_for_guest(&ctx.locale, &ctx.property.locale).unwrap_or_default();
+    let host_config = HostConfig::read(ctx)?;
+    let config = host_config.to_model();
+    let texts = host_config.guest_texts(&ctx.locale, &ctx.property.locale);
     if !has_content(&config, &texts) {
         return Ok(GuestLoad::Empty(Box::new(empty_content_state(surface_id))));
     }

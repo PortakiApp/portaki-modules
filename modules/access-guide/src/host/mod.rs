@@ -4,16 +4,12 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Button, Card, ChoiceList, Field, FieldHint, Form, Grid, InlineNotice, Page,
+    AddressMapPicker, Card, ChoiceList, Field, FieldHint, Form, Grid, InlineNotice, Page,
     RichTextEditor, SecretInput, Select, Stack, StepList, Text, TextInput, ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{
-    load_config, AccessStep, DoorCodeTarget, MethodFields, ModuleConfig, PrimaryMethod,
-    RevealPolicy, StaffKind,
-};
-use crate::texts::{load_texts_for_host, ModuleTexts};
+use crate::config::{host_lang, HostConfig, PrimaryMethod, RevealPolicy, StepRow, StepTextRow};
 
 const STEP_SLOTS: usize = 8;
 
@@ -25,32 +21,23 @@ const STEP_SLOTS: usize = 8;
     label_key = "catalog.host.main",
     icon = IconName::Key
 )]
-pub fn render_host_main(ctx: HostContext) -> Surface {
-    let config = load_config().unwrap_or_default();
-    let texts = load_texts_for_host(&ctx.locale).unwrap_or_default();
-    let draft_method = draft_primary_method(&ctx, &config);
-    let building_enabled = ctx.input_bool(
-        "building_access_enabled",
-        config.building_access.is_some() || texts.building_note.is_some(),
-    );
-    let parking_enabled = ctx.input_bool(
-        "parking_enabled",
-        config.parking.is_some() || !texts.parking_info.trim().is_empty(),
-    );
+pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
+    let config = HostConfig::read(&ctx)?;
+    let texts = Texts::of(&config, host_lang(&ctx.locale));
+    let saved_method = config.method();
+    let draft_method = ctx
+        .input_str("primary_method")
+        .and_then(parse_primary_method)
+        .or(saved_method);
+    let method = draft_method.unwrap_or_default();
+    let building_enabled =
+        ctx.input_bool("building_access_enabled", config.building_access_enabled);
+    let parking_enabled = ctx.input_bool("parking_enabled", config.parking_enabled);
     let steps_count = draft_steps_count(&ctx, &config);
-
-    let submit_args = crate::commands::UpdateConfigArgs {
-        primary_method: Some(draft_method),
-        building_access_enabled: Some(building_enabled),
-        parking_enabled: Some(parking_enabled),
-        reveal_policy: Some(config.reveal_policy),
-        ..Default::default()
-    };
-    let save_action = crate::ids::module_id().command(crate::ids::UPDATE_CONFIG, submit_args);
 
     // Reveal timing only applies when there is (or can be) a code: primary
     // method with credential, and/or optional building / parking layers.
-    let show_reveal = draft_method.involves_access_code() || building_enabled || parking_enabled;
+    let show_reveal = method.involves_access_code() || building_enabled || parking_enabled;
 
     let mut form_children: Vec<Component> = vec![
         Card::new()
@@ -63,7 +50,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
             .title("i18n:host.section.methodDetails")
             .subtitle("i18n:host.section.methodDetails.help")
             .icon(IconName::Lock)
-            .children(method_detail_children(draft_method, &config, &texts))
+            .children(method_detail_children(method, &config, &texts))
             .into(),
         Grid::new()
             .columns(2)
@@ -87,7 +74,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                 .title("i18n:host.section.reveal")
                 .subtitle("i18n:host.section.reveal.help")
                 .icon(IconName::ClockCircle)
-                .children(vec![reveal_choice_list(config.reveal_policy).into()])
+                .children(vec![reveal_choice_list(config.reveal()).into()])
                 .into(),
         );
     }
@@ -98,32 +85,59 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
             .variant(TextVariant::Caption)
             .into(),
     );
-    form_children.push(
-        Button::new()
-            .label("i18n:host.save")
-            .action(save_action)
-            .tone(Tone::Primary)
-            .into(),
-    );
 
-    Surface::new(Page::new().child(Form::new().children(form_children)))
-        .with_id(crate::ids::HOST_MAIN)
+    // No Save button — the modules drawer saves the form (`updateConfig`, taken by the platform).
+    Ok(
+        Surface::new(Page::new().child(Form::new().children(form_children)))
+            .with_id(crate::ids::HOST_MAIN),
+    )
+}
+
+/// The copy the form edits, in the host's language: its fields are named `<key>_<lang>`.
+struct Texts<'a> {
+    lang: &'static str,
+    method_instructions: &'a str,
+    building_note: &'a str,
+    parking_info: &'a str,
+    global_note: &'a str,
+    steps: &'a [StepTextRow],
+}
+
+impl<'a> Texts<'a> {
+    fn of(config: &'a HostConfig, lang: &'static str) -> Self {
+        if lang == "en" {
+            Self {
+                lang,
+                method_instructions: &config.method_instructions_en,
+                building_note: &config.building_note_en,
+                parking_info: &config.parking_info_en,
+                global_note: &config.global_note_en,
+                steps: &config.steps_en,
+            }
+        } else {
+            Self {
+                lang,
+                method_instructions: &config.method_instructions_fr,
+                building_note: &config.building_note_fr,
+                parking_info: &config.parking_info_fr,
+                global_note: &config.global_note_fr,
+                steps: &config.steps_fr,
+            }
+        }
+    }
+
+    fn name(&self, key: &str) -> String {
+        format!("{key}_{}", self.lang)
+    }
 }
 
 // ── Draft helpers ────────────────────────────────────────────────────────────
 
-fn draft_primary_method(ctx: &HostContext, config: &ModuleConfig) -> PrimaryMethod {
-    ctx.input_str("primary_method")
-        .and_then(parse_primary_method)
-        .unwrap_or(config.primary_method)
-}
-
-fn draft_steps_count(ctx: &HostContext, config: &ModuleConfig) -> usize {
+fn draft_steps_count(ctx: &HostContext, config: &HostConfig) -> usize {
     if let Some(n) = ctx.input_u64("steps_count") {
         return (n as usize).min(STEP_SLOTS);
     }
-    let existing = config.parse_steps().len();
-    existing.min(STEP_SLOTS)
+    config.live_steps().count().min(STEP_SLOTS)
 }
 
 #[derive(Serialize)]
@@ -143,27 +157,16 @@ fn parse_primary_method(raw: &str) -> Option<PrimaryMethod> {
         .find(|m| m.as_wire() == raw.trim())
 }
 
-fn door_target_str(target: DoorCodeTarget) -> &'static str {
-    match target {
-        DoorCodeTarget::Gate => "gate",
-        DoorCodeTarget::Building => "building",
-        DoorCodeTarget::Apartment => "apartment",
-    }
-}
-
-fn staff_kind_str(kind: StaffKind) -> &'static str {
-    match kind {
-        StaffKind::Reception => "reception",
-        StaffKind::Caretaker => "caretaker",
-    }
-}
-
 // ── Choice lists ─────────────────────────────────────────────────────────────
 
-fn method_choice_list(selected: PrimaryMethod) -> ChoiceList {
-    ChoiceList::new()
-        .name("primary_method")
-        .value(selected.as_wire())
+/// No method preselected until the host picks one: the platform blocks publication meanwhile.
+fn method_choice_list(selected: Option<PrimaryMethod>) -> ChoiceList {
+    let list = ChoiceList::new();
+    let list = match selected {
+        Some(method) => list.value(method.as_wire()),
+        None => list,
+    };
+    list.name("primary_method")
         .emitOnChange(true)
         .layout(ChoiceListLayout::Cards)
         .choices(vec![
@@ -240,8 +243,8 @@ fn reveal_choice_list(policy: RevealPolicy) -> ChoiceList {
 
 fn method_detail_children(
     method: PrimaryMethod,
-    config: &ModuleConfig,
-    texts: &ModuleTexts,
+    config: &HostConfig,
+    texts: &Texts,
 ) -> Vec<Component> {
     let mut children = Vec::new();
     match method {
@@ -259,44 +262,39 @@ fn method_detail_children(
     children
 }
 
-fn method_instructions(texts: &ModuleTexts) -> &str {
-    texts.method_instructions.as_deref().unwrap_or("")
+/// One field per language for the instructions of whichever method is chosen.
+fn instructions_field(texts: &Texts, label_key: &str) -> Component {
+    rich_text_field(
+        &texts.name("method_instructions"),
+        label_key,
+        texts.method_instructions,
+    )
 }
 
-fn push_keybox_fields(children: &mut Vec<Component>, config: &ModuleConfig, texts: &ModuleTexts) {
-    let (location, code) = match &config.method {
-        MethodFields::Keybox { location, code } => {
-            (location.as_str(), code.as_deref().unwrap_or(""))
-        }
-        _ => ("", ""),
-    };
+fn push_keybox_fields(children: &mut Vec<Component>, config: &HostConfig, texts: &Texts) {
     children.push(text_field(
         "keybox_location",
         "i18n:host.keybox.location",
-        location,
+        &config.keybox_location,
     ));
     children.push(
         FieldHint::new()
             .text("i18n:host.keybox.location.hint")
             .into(),
     );
-    children.push(secret_field("keybox_code", "i18n:host.keybox.code", code));
-    children.push(FieldHint::new().text("i18n:host.keybox.code.hint").into());
-    children.push(rich_text_field(
-        "keybox_instructions",
-        "i18n:host.keybox.instructions",
-        method_instructions(texts),
+    children.push(secret_field(
+        "keybox_code",
+        "i18n:host.keybox.code",
+        &config.keybox_code,
     ));
+    children.push(FieldHint::new().text("i18n:host.keybox.code.hint").into());
+    children.push(instructions_field(texts, "i18n:host.keybox.instructions"));
 }
 
-fn push_door_code_fields(
-    children: &mut Vec<Component>,
-    config: &ModuleConfig,
-    texts: &ModuleTexts,
-) {
-    let (target, code) = match &config.method {
-        MethodFields::DoorCode { target, code } => (*target, code.as_str()),
-        _ => (DoorCodeTarget::Building, ""),
+fn push_door_code_fields(children: &mut Vec<Component>, config: &HostConfig, texts: &Texts) {
+    let target = match config.door_code_target.trim() {
+        "" => "building",
+        target => target,
     };
     children.push(
         Field::new()
@@ -310,7 +308,7 @@ fn push_door_code_fields(
                         ChoiceOption::new("building", "i18n:host.doorCode.target.building"),
                         ChoiceOption::new("apartment", "i18n:host.doorCode.target.apartment"),
                     ])
-                    .value(door_target_str(target)),
+                    .value(target),
             )
             .into(),
     );
@@ -319,46 +317,34 @@ fn push_door_code_fields(
             .text("i18n:host.doorCode.target.hint")
             .into(),
     );
-    children.push(secret_field("door_code", "i18n:host.doorCode.code", code));
-    children.push(FieldHint::new().text("i18n:host.doorCode.code.hint").into());
-    children.push(rich_text_field(
-        "door_code_instructions",
-        "i18n:host.doorCode.instructions",
-        method_instructions(texts),
+    children.push(secret_field(
+        "door_code",
+        "i18n:host.doorCode.code",
+        &config.door_code,
     ));
+    children.push(FieldHint::new().text("i18n:host.doorCode.code.hint").into());
+    children.push(instructions_field(texts, "i18n:host.doorCode.instructions"));
 }
 
-fn push_smart_lock_fields(
-    children: &mut Vec<Component>,
-    config: &ModuleConfig,
-    texts: &ModuleTexts,
-) {
-    let manual_code = match &config.method {
-        MethodFields::SmartLock { manual_code } => manual_code.as_deref().unwrap_or(""),
-        _ => "",
-    };
+fn push_smart_lock_fields(children: &mut Vec<Component>, config: &HostConfig, texts: &Texts) {
     children.push(secret_field(
         "smart_lock_manual_code",
         "i18n:host.smartLock.manualCode",
-        manual_code,
+        &config.smart_lock_manual_code,
     ));
     children.push(
         FieldHint::new()
             .text("i18n:host.smartLock.manualCode.hint")
             .into(),
     );
-    children.push(rich_text_field(
-        "smart_lock_instructions",
+    children.push(instructions_field(
+        texts,
         "i18n:host.smartLock.instructions",
-        method_instructions(texts),
     ));
 }
 
-fn push_smart_lock_binding(children: &mut Vec<Component>, config: &ModuleConfig) {
-    let provider = config
-        .smart_lock_provider_module_id
-        .as_deref()
-        .unwrap_or("");
+fn push_smart_lock_binding(children: &mut Vec<Component>, config: &HostConfig) {
+    let provider = config.smart_lock_provider_module_id.trim();
     let peers = host::module::list_by_capability(portaki_sdk::capability::access::SMART_LOCK)
         .unwrap_or_default();
     children.push(
@@ -407,23 +393,8 @@ fn push_smart_lock_binding(children: &mut Vec<Component>, config: &ModuleConfig)
     children.push(banner.into());
 }
 
-fn push_in_person_fields(children: &mut Vec<Component>, config: &ModuleConfig) {
-    let (place, lat, lng, time_hint, contact) = match &config.method {
-        MethodFields::InPerson {
-            meeting_place,
-            lat,
-            lng,
-            time_hint,
-            contact,
-        } => (
-            meeting_place.as_str(),
-            *lat,
-            *lng,
-            time_hint.as_deref().unwrap_or(""),
-            contact.as_deref().unwrap_or(""),
-        ),
-        _ => ("", None, None, "", ""),
-    };
+fn push_in_person_fields(children: &mut Vec<Component>, config: &HostConfig) {
+    let coord = |raw: &str| raw.trim().parse::<f64>().unwrap_or(0.0);
     children.push(
         AddressMapPicker::new()
             .label("i18n:host.inPerson.meetingPlace")
@@ -431,37 +402,27 @@ fn push_in_person_fields(children: &mut Vec<Component>, config: &ModuleConfig) {
             .addressName("in_person_meeting_place")
             .latName("in_person_meeting_lat")
             .lngName("in_person_meeting_lng")
-            .address(place)
-            .lat(lat.unwrap_or(0.0))
-            .lng(lng.unwrap_or(0.0))
+            .address(config.in_person_meeting_place.as_str())
+            .lat(coord(&config.in_person_meeting_lat))
+            .lng(coord(&config.in_person_meeting_lng))
             .into(),
     );
     children.push(text_field(
         "in_person_time_hint",
         "i18n:host.inPerson.timeHint",
-        time_hint,
+        &config.in_person_time_hint,
     ));
     children.push(text_field(
         "in_person_contact",
         "i18n:host.inPerson.contact",
-        contact,
+        &config.in_person_contact,
     ));
 }
 
-fn push_building_staff_fields(children: &mut Vec<Component>, config: &ModuleConfig) {
-    let (kind, desk, hours, contact) = match &config.method {
-        MethodFields::BuildingStaff {
-            staff_kind,
-            desk_location,
-            hours,
-            contact,
-        } => (
-            *staff_kind,
-            desk_location.as_str(),
-            hours.as_deref().unwrap_or(""),
-            contact.as_deref().unwrap_or(""),
-        ),
-        _ => (StaffKind::Reception, "", "", ""),
+fn push_building_staff_fields(children: &mut Vec<Component>, config: &HostConfig) {
+    let kind = match config.building_staff_kind.trim() {
+        "" => "reception",
+        kind => kind,
     };
     children.push(
         Field::new()
@@ -474,92 +435,67 @@ fn push_building_staff_fields(children: &mut Vec<Component>, config: &ModuleConf
                         ChoiceOption::new("reception", "i18n:host.buildingStaff.kind.reception"),
                         ChoiceOption::new("caretaker", "i18n:host.buildingStaff.kind.caretaker"),
                     ])
-                    .value(staff_kind_str(kind)),
+                    .value(kind),
             )
             .into(),
     );
     children.push(text_field(
         "building_staff_desk_location",
         "i18n:host.buildingStaff.deskLocation",
-        desk,
+        &config.building_staff_desk_location,
     ));
     children.push(text_field(
         "building_staff_hours",
         "i18n:host.buildingStaff.hours",
-        hours,
+        &config.building_staff_hours,
     ));
     children.push(text_field(
         "building_staff_contact",
         "i18n:host.buildingStaff.contact",
-        contact,
+        &config.building_staff_contact,
     ));
 }
 
-fn push_host_greets_fields(children: &mut Vec<Component>, config: &ModuleConfig) {
-    let (note, eta) = match &config.method {
-        MethodFields::HostGreets {
-            contact_note,
-            eta_hint,
-        } => (
-            contact_note.as_deref().unwrap_or(""),
-            eta_hint.as_deref().unwrap_or(""),
-        ),
-        _ => ("", ""),
-    };
+fn push_host_greets_fields(children: &mut Vec<Component>, config: &HostConfig) {
     children.push(rich_text_field(
         "host_greets_contact_note",
         "i18n:host.hostGreets.contactNote",
-        note,
+        &config.host_greets_contact_note,
     ));
     children.push(text_field(
         "host_greets_eta_hint",
         "i18n:host.hostGreets.etaHint",
-        eta,
+        &config.host_greets_eta_hint,
     ));
 }
 
-fn push_other_fields(children: &mut Vec<Component>, texts: &ModuleTexts) {
-    children.push(rich_text_field(
-        "other_instructions",
-        "i18n:host.other.instructions",
-        method_instructions(texts),
-    ));
+fn push_other_fields(children: &mut Vec<Component>, texts: &Texts) {
+    children.push(instructions_field(texts, "i18n:host.other.instructions"));
 }
 
 // ── Layers ───────────────────────────────────────────────────────────────────
 
-fn layer_card_building(enabled: bool, config: &ModuleConfig, texts: &ModuleTexts) -> Component {
+fn layer_card_building(enabled: bool, config: &HostConfig, texts: &Texts) -> Component {
     let mut children: Vec<Component> = vec![ToggleRow::new()
         .name("building_access_enabled")
         .label("i18n:host.building.enabled")
         .checked(enabled)
         .into()];
     if enabled {
-        let gate = config
-            .building_access
-            .as_ref()
-            .and_then(|b| b.gate_code.as_deref())
-            .unwrap_or("");
-        let intercom = config
-            .building_access
-            .as_ref()
-            .and_then(|b| b.intercom.as_deref())
-            .unwrap_or("");
-        let note = texts.building_note.as_deref().unwrap_or("");
         children.push(secret_field(
             "building_access_gate_code",
             "i18n:host.building.gateCode",
-            gate,
+            &config.building_access_gate_code,
         ));
         children.push(text_field(
             "building_access_intercom",
             "i18n:host.building.intercom",
-            intercom,
+            &config.building_access_intercom,
         ));
         children.push(rich_text_field(
-            "building_access_note",
+            &texts.name("building_note"),
             "i18n:host.building.note",
-            note,
+            texts.building_note,
         ));
     } else {
         children.push(
@@ -577,35 +513,28 @@ fn layer_card_building(enabled: bool, config: &ModuleConfig, texts: &ModuleTexts
         .into()
 }
 
-fn layer_card_parking(enabled: bool, config: &ModuleConfig, texts: &ModuleTexts) -> Component {
+fn layer_card_parking(enabled: bool, config: &HostConfig, texts: &Texts) -> Component {
     let mut children: Vec<Component> = vec![ToggleRow::new()
         .name("parking_enabled")
         .label("i18n:host.parking.enabled")
         .checked(enabled)
         .into()];
     if enabled {
-        let info = texts.parking_info.as_str();
-        let map_url = config
-            .parking
-            .as_ref()
-            .map(|p| p.map_url.as_str())
-            .unwrap_or("");
-        let code = config
-            .parking
-            .as_ref()
-            .and_then(|p| p.code.as_deref())
-            .unwrap_or("");
         children.push(rich_text_field(
-            "parking_info",
+            &texts.name("parking_info"),
             "i18n:host.parking.info",
-            info,
+            texts.parking_info,
         ));
         children.push(text_field(
             "parking_map_url",
             "i18n:host.parking.mapUrl",
-            map_url,
+            &config.parking_map_url,
         ));
-        children.push(secret_field("parking_code", "i18n:host.parking.code", code));
+        children.push(secret_field(
+            "parking_code",
+            "i18n:host.parking.code",
+            &config.parking_code,
+        ));
     } else {
         children.push(
             Text::new()
@@ -624,11 +553,7 @@ fn layer_card_parking(enabled: bool, config: &ModuleConfig, texts: &ModuleTexts)
 
 // ── Arrival ──────────────────────────────────────────────────────────────────
 
-fn arrival_children(
-    config: &ModuleConfig,
-    texts: &ModuleTexts,
-    steps_count: usize,
-) -> Vec<Component> {
+fn arrival_children(config: &HostConfig, texts: &Texts, steps_count: usize) -> Vec<Component> {
     let mut children: Vec<Component> = Vec::new();
     children.push(
         AddressMapPicker::new()
@@ -637,17 +562,21 @@ fn arrival_children(
             .addressName("address")
             .latName("arrival_lat")
             .lngName("arrival_lng")
-            .address(config.arrival.address.as_str())
+            .address(config.address.as_str())
             .into(),
     );
 
-    let steps = config.parse_steps();
-    let mut step_rows: Vec<Component> = Vec::new();
-    for index in 0..steps_count {
-        let skeleton = steps.get(index);
-        let text = skeleton.and_then(|s| texts.step_by_id(&s.id));
-        step_rows.push(step_row(index, skeleton, text));
-    }
+    // Rows are renumbered on each render: the copy follows its step by index.
+    let steps: Vec<(&StepRow, Option<&StepTextRow>)> = config
+        .live_steps()
+        .map(|(index, row)| (row, texts.steps.get(index)))
+        .collect();
+    let step_rows: Vec<Component> = (0..steps_count)
+        .map(|index| {
+            let (row, text) = steps.get(index).copied().unzip();
+            step_row(index, texts, row, text.flatten())
+        })
+        .collect();
 
     children.push(
         StepList::new()
@@ -668,24 +597,31 @@ fn arrival_children(
     children.push(text_field(
         "arrival_video_url",
         "i18n:host.video.label",
-        &config.arrival.arrival_video_url,
+        &config.arrival_video_url,
     ));
     children.push(rich_text_field(
-        "global_note",
+        &texts.name("global_note"),
         "i18n:host.note.label",
-        &texts.global_note,
+        texts.global_note,
     ));
     children
 }
 
+/// `steps.N.kind` is the shared skeleton; `steps_<lang>.N.title` / `.detail` its copy. The step
+/// list only blanks `steps.N.*` on removal: a blank kind is what marks the row removed.
 fn step_row(
     index: usize,
-    step: Option<&AccessStep>,
-    text: Option<&crate::texts::StepText>,
+    texts: &Texts,
+    step: Option<&StepRow>,
+    text: Option<&StepTextRow>,
 ) -> Component {
-    let kind = step.and_then(|s| s.kind.as_deref()).unwrap_or("other");
+    let kind = step
+        .and_then(|s| s.kind.as_deref())
+        .filter(|k| !k.trim().is_empty())
+        .unwrap_or("other");
     let title = text.map(|t| t.title.as_str()).unwrap_or("");
-    let detail = text.and_then(|t| t.detail.as_deref()).unwrap_or("");
+    let detail = text.map(|t| t.detail.as_str()).unwrap_or("");
+    let copy = texts.name("steps");
 
     Stack::new()
         .id(format!("step-{index}"))
@@ -707,12 +643,12 @@ fn step_row(
                 )
                 .into(),
             text_field(
-                &format!("steps.{index}.title"),
+                &format!("{copy}.{index}.title"),
                 "i18n:host.step.title",
                 title,
             ),
             text_field(
-                &format!("steps.{index}.detail"),
+                &format!("{copy}.{index}.detail"),
                 "i18n:host.step.detail",
                 detail,
             ),
@@ -730,12 +666,13 @@ fn text_field(name: &str, label_key: &str, value: &str) -> Component {
         .into()
 }
 
-fn secret_field(name: &str, label_key: &str, value: &str) -> Component {
-    Field::new()
-        .name(name)
-        .label(label_key)
-        .child(SecretInput::new().name(name).value(value))
-        .into()
+/// A code is never sent back to the form: blank keeps it (the platform ignores `""`).
+fn secret_field(name: &str, label_key: &str, saved: &str) -> Component {
+    let mut input = SecretInput::new().name(name).value(String::new());
+    if !saved.trim().is_empty() {
+        input = input.placeholder("i18n:host.secret.keep");
+    }
+    Field::new().name(name).label(label_key).child(input).into()
 }
 
 fn rich_text_field(name: &str, label_key: &str, value: &str) -> Component {
