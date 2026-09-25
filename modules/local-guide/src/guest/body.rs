@@ -29,9 +29,7 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
     }
 
     for spot in &data.spots {
-        let title = spot
-            .title
-            .pick_with_fallback(&data.locale, &data.property_locale);
+        let title = spot.title.get(&data.locale);
         let mut subtitle_parts = Vec::new();
         if let Some(cat) = spot.category.as_deref().filter(|c| !c.trim().is_empty()) {
             subtitle_parts.push(cat.to_string());
@@ -50,16 +48,14 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         }
         if enriched {
             if let Some(note) = spot.note.as_ref() {
-                let text = note.pick_with_fallback(&data.locale, &data.property_locale);
+                let text = note.get(&data.locale);
                 if !text.trim().is_empty() {
                     item = item.child(Text::new().text(text).variant(TextVariant::Caption));
                 }
             }
-            if let Some(detail) = spot.detail.as_ref() {
-                let text = detail.pick_with_fallback(&data.locale, &data.property_locale);
-                if !text.trim().is_empty() {
-                    item = item.child(Text::new().text(text).variant(TextVariant::Body));
-                }
+            let detail = spot.detail.get(&data.locale);
+            if !detail.trim().is_empty() {
+                item = item.child(Text::new().text(detail).variant(TextVariant::Body));
             }
             if let Some(url) = spot.url.as_deref().map(str::trim).filter(|u| !u.is_empty()) {
                 let action = Action::External {
@@ -219,10 +215,7 @@ fn spots_map(data: &GuestData) -> Option<Component> {
         lng_sum += lng;
         markers.push(
             MapMarker::new(spot.id.clone(), lat, lng)
-                .label(
-                    spot.title
-                        .pick_with_fallback(&data.locale, &data.property_locale),
-                )
+                .label(spot.title.get(&data.locale))
                 .kind(MapMarkerKind::Poi),
         );
     }

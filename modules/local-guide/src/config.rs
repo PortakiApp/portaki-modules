@@ -1,36 +1,30 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 //!
 //! The keys are the names of the host form fields: the platform takes `updateConfig` itself and
-//! stores what the form sends, flat (`activities_enabled`, `tiqets_radius_km`…) and every text a
-//! string (`spots.0.lat: "43.5"`, `spots.0.name`). The old KV blob nested two sections
-//! (`activities: {enabled, destination, intro, links}`, `tiqets: {…}`): [`ModuleConfig::read`]
-//! still finds them there until the host saves the form.
+//! stores them flat (`activities_enabled`, `tiqets_radius_km`…). The form sends the selects and
+//! the map picker's coordinates as text (`"20"`, `spots.0.lat: "43.5"`); the readers below accept
+//! that and numbers alike. The old KV blob went through [`legacy`].
 
-use std::collections::BTreeMap;
-
-use portaki_sdk::prelude::*;
+use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 
-#[portaki_sdk::config]
+#[portaki_sdk::config(legacy = legacy)]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ModuleConfig {
-    /// The six slots of the host form, empty ones included (see [`Self::parse_spots`]).
+    /// The rows of the host form, blank ones included (see [`Self::parse_spots`]).
     #[field(structured, required, label = "config.spots")]
     pub spots: Vec<SpotRow>,
-    #[field(kind = "textarea", label = "host.disclaimer.label")]
-    #[serde(deserialize_with = "deserialize_localized_field")]
-    pub disclaimer: Localized,
+    #[field(label = "host.disclaimer.label")]
+    pub disclaimer: I18nText,
     #[field(label = "host.activities.enabled")]
     pub activities_enabled: bool,
     #[field(label = "host.activities.destination")]
     pub activities_destination: String,
-    #[field(kind = "textarea", label = "host.activities.intro")]
-    #[serde(deserialize_with = "deserialize_localized_field")]
-    pub activities_intro: Localized,
+    #[field(label = "host.activities.intro")]
+    pub activities_intro: I18nText,
     /// The links of the « Activités & billets » section, as the form rows `{ url, label }`.
     #[field(structured, label = "host.section.activities")]
-    #[serde(deserialize_with = "deserialize_activity_links")]
     pub activities: Vec<ActivityRow>,
     #[field(label = "host.tiqets.enabled")]
     pub tiqets_enabled: bool,
@@ -50,10 +44,10 @@ impl Default for ModuleConfig {
     fn default() -> Self {
         Self {
             spots: Vec::new(),
-            disclaimer: Localized::default(),
+            disclaimer: I18nText::default(),
             activities_enabled: false,
             activities_destination: String::new(),
-            activities_intro: Localized::default(),
+            activities_intro: I18nText::default(),
             activities: Vec::new(),
             tiqets_enabled: false,
             tiqets_radius_km: TIQETS_DEFAULT_RADIUS_KM,
@@ -68,6 +62,71 @@ pub const TIQETS_DEFAULT_RADIUS_KM: u32 = 10;
 /// Rayons proposés à l'hôte. Tiqets accepte 1 à 100 km ; au-delà de 40, la liste se remplit
 /// d'attractions qu'aucun voyageur ne ferait dans la journée.
 pub const TIQETS_RADIUS_CHOICES_KM: [u32; 4] = [5, 10, 20, 40];
+
+/// Notes minimales proposées à l'hôte ; 0 = aucun filtre.
+const TIQETS_MIN_RATING_CHOICES: [u32; 3] = [0, 3, 4];
+
+/// The old KV blob onto the declared keys: the nested `activities: {enabled, destination, intro,
+/// links}` and `tiqets: {enabled, radius_km, min_rating}` sections go flat (numbers to their
+/// select option), `spots_json` (a JSON string, before the list) becomes `spots` when there is no
+/// list, and a spot's `null` texts go (a translated text is an object or nothing).
+fn legacy(old: Value) -> Value {
+    let Value::Object(mut old) = old else {
+        return old;
+    };
+    if let Some(Value::Object(mut section)) = old.remove("activities") {
+        for (from, to) in [
+            ("enabled", "activities_enabled"),
+            ("destination", "activities_destination"),
+            ("intro", "activities_intro"),
+            ("links", "activities"),
+        ] {
+            if let Some(value) = section.remove(from) {
+                old.insert(to.into(), value);
+            }
+        }
+    }
+    if let Some(Value::Object(section)) = old.remove("tiqets") {
+        if let Some(enabled) = section.get("enabled") {
+            old.insert("tiqets_enabled".into(), enabled.clone());
+        }
+        for (from, to, choices) in [
+            (
+                "radius_km",
+                "tiqets_radius_km",
+                &TIQETS_RADIUS_CHOICES_KM[..],
+            ),
+            (
+                "min_rating",
+                "tiqets_min_rating",
+                &TIQETS_MIN_RATING_CHOICES[..],
+            ),
+        ] {
+            if let Some(n) = section.get(from).and_then(Value::as_u64) {
+                let nearest = choices
+                    .iter()
+                    .min_by_key(|choice| u64::from(**choice).abs_diff(n))
+                    .expect("choices");
+                old.insert(to.into(), Value::from(nearest.to_string()));
+            }
+        }
+    }
+    let listed = old
+        .remove("spots_json")
+        .and_then(|raw| serde_json::from_str::<Value>(raw.as_str()?).ok());
+    let no_spots = old
+        .get("spots")
+        .is_none_or(|spots| spots.as_array().is_some_and(Vec::is_empty));
+    if let (Some(spots), true) = (listed, no_spots) {
+        old.insert("spots".into(), spots);
+    }
+    if let Some(Value::Array(spots)) = old.get_mut("spots") {
+        for spot in spots.iter_mut().filter_map(Value::as_object_mut) {
+            spot.retain(|_, value| !value.is_null());
+        }
+    }
+    Value::Object(old)
+}
 
 /// Configuration de la section Tiqets.
 ///
@@ -122,107 +181,49 @@ impl TiqetsConfig {
 ///
 /// Une fois allumée, tout le reste est optionnel : elle se débrouille avec la ville de
 /// l'adresse du logement, sans que l'hôte ait rien d'autre à saisir.
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ActivitiesConfig {
     /// Affiche la section dans le livret. Éteinte tant que l'hôte ne l'allume pas.
-    #[serde(default)]
     pub enabled: bool,
     /// Ville visée, quand celle de l'adresse ne convient pas (« Antibes »).
-    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub destination: String,
     /// Phrase d'introduction affichée au-dessus des liens.
-    #[serde(default, deserialize_with = "deserialize_localized_field")]
-    pub intro: Localized,
+    pub intro: I18nText,
     /// Liens choisis par l'hôte, dans son ordre.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub links: Vec<ActivityRow>,
 }
 
-/// Un lien choisi par l'hôte : `{ url, label? }`.
-///
-/// `label` accepte une chaîne simple autant qu'une carte par langue — c'est le même
-/// `Localized` que partout ailleurs dans le module.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+/// Un lien choisi par l'hôte. Le formulaire envoie `url` et `label` (et `id`) ; la plateforme
+/// garde les autres langues du libellé.
+#[portaki_sdk::params]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(default)]
 pub struct ActivityRow {
-    #[serde(default)]
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub id: String,
     pub url: String,
-    #[serde(default, deserialize_with = "deserialize_localized_field")]
-    pub label: Localized,
+    pub label: I18nText,
+}
+
+impl ActivityRow {
+    /// Rien de saisi : un créneau laissé (ou vidé) par l'hôte.
+    pub fn is_blank(&self) -> bool {
+        self.url.trim().is_empty() && self.label.is_blank()
+    }
 }
 
 impl ModuleConfig {
-    /// The config of this install.
-    ///
-    /// The platform imports the old KV blob once, but only its declared keys at their declared
-    /// types: the nested `activities` / `tiqets` sections, a `{fr, en}` disclaimer and the
-    /// pre-`spots` `spots_json` do not come across. Each such key still absent from what the
-    /// platform holds (the host has not saved the form since) is read from the KV. A key present,
-    /// even empty, is the host's: the platform wins.
-    pub fn read(ctx: &Context) -> Result<Self> {
-        let mut config = Self::load(ctx)?;
-        let held = ctx.module_config.as_ref().and_then(Value::as_object);
-        let absent = |key: &str| held.is_none_or(|held| held.get(key).is_none_or(Value::is_null));
-        if LEGACY_KEYS.iter().any(|key| absent(key)) {
-            config.fill_from_legacy(&portaki_sdk::config::legacy_config()?, absent);
-        }
-        Ok(config)
-    }
-
-    fn fill_from_legacy(&mut self, legacy: &Value, absent: impl Fn(&str) -> bool) {
-        let activities = &legacy["activities"];
-        let tiqets = &legacy["tiqets"];
-        if absent("disclaimer") && !legacy["disclaimer"].is_null() {
-            self.disclaimer = Localized::from_value(&legacy["disclaimer"]);
-        }
-        if absent("activities_enabled") {
-            if let Some(enabled) = activities["enabled"].as_bool() {
-                self.activities_enabled = enabled;
-            }
-        }
-        if absent("activities_destination") {
-            if let Some(destination) = activities["destination"].as_str() {
-                self.activities_destination = destination.to_string();
-            }
-        }
-        if absent("activities_intro") && !activities["intro"].is_null() {
-            self.activities_intro = Localized::from_value(&activities["intro"]);
-        }
-        if absent("tiqets_enabled") {
-            if let Some(enabled) = tiqets["enabled"].as_bool() {
-                self.tiqets_enabled = enabled;
-            }
-        }
-        if absent("tiqets_radius_km") {
-            if let Some(radius) = tiqets["radius_km"].as_u64() {
-                self.tiqets_radius_km = u32::try_from(radius).unwrap_or(u32::MAX);
-            }
-        }
-        if absent("tiqets_min_rating") {
-            if let Some(rating) = tiqets["min_rating"].as_u64() {
-                self.tiqets_min_rating = u8::try_from(rating).unwrap_or(u8::MAX);
-            }
-        }
-        if absent("spots") && self.spots.is_empty() {
-            if let Some(Ok(spots)) = legacy["spots_json"]
-                .as_str()
-                .map(serde_json::from_str::<Vec<SpotRow>>)
-            {
-                self.spots = spots;
-            }
-        }
-    }
-
     pub fn is_empty(&self) -> bool {
-        self.parse_spots().is_empty() && self.disclaimer.is_empty()
+        self.parse_spots().is_empty() && self.disclaimer.is_blank()
     }
 
-    /// The named slots, in form order. A row saved by the host form has no id: it takes its
-    /// slot's (`spot-1`…), as the module's own `updateConfig` used to give it.
+    /// The named rows, for the guest, in form order. A row without an id takes its slot's
+    /// (`spot-1`…), as the module's own `updateConfig` used to give it.
     pub fn parse_spots(&self) -> Vec<SpotRow> {
         self.spots
             .iter()
             .enumerate()
-            .filter(|(_, s)| !s.title.is_empty())
+            .filter(|(_, s)| !s.title.is_blank())
             .map(|(index, s)| {
                 let mut s = s.clone();
                 if s.id.trim().is_empty() {
@@ -258,57 +259,36 @@ impl ModuleConfig {
     }
 }
 
-/// The keys the platform's import can miss (see [`ModuleConfig::read`]).
-const LEGACY_KEYS: [&str; 8] = [
-    "disclaimer",
-    "activities_enabled",
-    "activities_destination",
-    "activities_intro",
-    "tiqets_enabled",
-    "tiqets_radius_km",
-    "tiqets_min_rating",
-    "spots",
-];
-
-/// `Eq` en moins des autres structures du module : `lat` et `lng` sont des `f64`, qui
-/// n'ont pas d'égalité totale. `PartialEq` suffit partout où on compare des spots.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// A place. The form sends `title`, `category`, `distance`, `tag`, `detail` and the map picker's
+/// `address`, `lat`, `lng` (and `id`); the platform keeps the rest — `url`, `note`, the texts'
+/// other languages.
+///
+/// `PartialEq` sans `Eq` : `lat` et `lng` sont des `f64`, qui n'ont pas d'égalité totale.
+#[portaki_sdk::params]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[serde(default)]
 pub struct SpotRow {
-    #[serde(default)]
     pub id: String,
-    /// `name` in the host form.
-    #[serde(
-        default,
-        alias = "name",
-        deserialize_with = "deserialize_localized_field"
-    )]
-    pub title: Localized,
-    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub title: I18nText,
+    #[serde(deserialize_with = "deserialize_nonempty")]
     pub url: Option<String>,
-    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    #[serde(deserialize_with = "deserialize_nonempty")]
     pub category: Option<String>,
-    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    #[serde(deserialize_with = "deserialize_nonempty")]
     pub distance: Option<String>,
-    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    #[serde(deserialize_with = "deserialize_nonempty")]
     pub tag: Option<String>,
-    #[serde(default)]
-    pub note: Option<Localized>,
-    /// `description` in the host form.
-    #[serde(
-        default,
-        alias = "description",
-        deserialize_with = "deserialize_localized_opt"
-    )]
-    pub detail: Option<Localized>,
+    pub note: Option<I18nText>,
+    pub detail: I18nText,
     /// Adresse postale telle que le sélecteur de carte l'a géocodée.
-    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    #[serde(deserialize_with = "deserialize_nonempty")]
     pub address: Option<String>,
     /// Latitude WGS-84, absente tant que l'hôte n'a pas posé le lieu sur la carte. Le
     /// sélecteur de carte l'envoie en texte (`"43.5"`, `""`).
-    #[serde(default, deserialize_with = "deserialize_coord")]
+    #[serde(deserialize_with = "deserialize_coord")]
     pub lat: Option<f64>,
     /// Longitude WGS-84.
-    #[serde(default, deserialize_with = "deserialize_coord")]
+    #[serde(deserialize_with = "deserialize_coord")]
     pub lng: Option<f64>,
 }
 
@@ -316,6 +296,23 @@ impl SpotRow {
     /// Position affichable du spot, ou `None`.
     pub fn coords(&self) -> Option<(f64, f64)> {
         valid_coords(self.lat?, self.lng?)
+    }
+
+    /// Nothing stored but the id: a slot the host left (or emptied).
+    pub fn is_blank(&self) -> bool {
+        self.title.is_blank()
+            && self.detail.is_blank()
+            && self.note.as_ref().is_none_or(I18nText::is_blank)
+            && [
+                &self.url,
+                &self.category,
+                &self.distance,
+                &self.tag,
+                &self.address,
+            ]
+            .iter()
+            .all(|text| text.is_none())
+            && self.coords().is_none()
     }
 }
 
@@ -334,138 +331,6 @@ pub fn valid_coords(lat: f64, lng: f64) -> Option<(f64, f64)> {
         return None;
     }
     Some((lat, lng))
-}
-
-/// N-language string map. Legacy `{fr,en}` deserializes as-is; extra langs via flatten.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
-pub struct Localized {
-    #[serde(default)]
-    pub fr: String,
-    #[serde(default)]
-    pub en: String,
-    #[serde(flatten)]
-    pub other: BTreeMap<String, String>,
-}
-
-impl Localized {
-    pub fn lang_code(locale: &str) -> String {
-        let trimmed = locale.trim();
-        if trimmed.is_empty() {
-            return "fr".to_string();
-        }
-        let lower = trimmed.to_ascii_lowercase();
-        let base = lower.split(['-', '_']).next().unwrap_or("fr").trim();
-        if base.is_empty() {
-            "fr".to_string()
-        } else {
-            base.to_string()
-        }
-    }
-
-    pub fn singleton(lang: &str, value: impl Into<String>) -> Self {
-        let mut loc = Self::default();
-        loc.set(lang, value.into());
-        loc
-    }
-
-    pub fn get(&self, lang: &str) -> &str {
-        let code = Self::lang_code(lang);
-        match code.as_str() {
-            "fr" => self.fr.as_str(),
-            "en" => self.en.as_str(),
-            other => self.other.get(other).map(String::as_str).unwrap_or(""),
-        }
-    }
-
-    pub fn set(&mut self, lang: &str, value: String) {
-        let code = Self::lang_code(lang);
-        match code.as_str() {
-            "fr" => self.fr = value,
-            "en" => self.en = value,
-            other => {
-                if value.trim().is_empty() {
-                    self.other.remove(other);
-                } else {
-                    self.other.insert(other.to_string(), value);
-                }
-            }
-        }
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.fr.trim().is_empty()
-            && self.en.trim().is_empty()
-            && self.other.values().all(|v| v.trim().is_empty())
-    }
-
-    /// Guest resolve: request locale → property default → `fr` → first non-empty.
-    pub fn pick(&self, locale: &str) -> String {
-        self.pick_with_fallback(locale, "fr")
-    }
-
-    pub fn pick_with_fallback(&self, guest_locale: &str, property_locale: &str) -> String {
-        let candidates = [
-            Self::lang_code(guest_locale),
-            Self::lang_code(property_locale),
-            "fr".to_string(),
-        ];
-        let mut tried = std::collections::BTreeSet::new();
-        for lang in &candidates {
-            if !tried.insert(lang.clone()) {
-                continue;
-            }
-            let value = self.get(lang);
-            if !value.trim().is_empty() {
-                return value.to_string();
-            }
-        }
-        for (lang, value) in [("fr", self.fr.as_str()), ("en", self.en.as_str())] {
-            let _ = lang;
-            if !value.trim().is_empty() {
-                return value.to_string();
-            }
-        }
-        for value in self.other.values() {
-            if !value.trim().is_empty() {
-                return value.clone();
-            }
-        }
-        String::new()
-    }
-
-    pub fn from_value(value: &Value) -> Self {
-        match value {
-            Value::String(s) => Self::singleton("fr", s.trim()),
-            Value::Object(map) => {
-                let mut loc = Self::default();
-                for (key, val) in map {
-                    if let Some(s) = val.as_str() {
-                        loc.set(key, s.trim().to_string());
-                    }
-                }
-                loc
-            }
-            _ => Self::default(),
-        }
-    }
-}
-
-fn deserialize_localized_field<'de, D>(deserializer: D) -> std::result::Result<Localized, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let value = Value::deserialize(deserializer)?;
-    Ok(Localized::from_value(&value))
-}
-
-fn deserialize_localized_opt<'de, D>(
-    deserializer: D,
-) -> std::result::Result<Option<Localized>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let value = Localized::from_value(&Value::deserialize(deserializer)?);
-    Ok((!value.is_empty()).then_some(value))
 }
 
 /// A blank text input is no value.
@@ -489,24 +354,6 @@ where
         Value::String(s) => s.trim().parse().ok(),
         _ => None,
     })
-}
-
-/// The form rows `[{ url, label }]`, or the old `{ links: […] }` section the import carried
-/// over whole (it is a JSON object, which `structured` accepts).
-fn deserialize_activity_links<'de, D>(
-    deserializer: D,
-) -> std::result::Result<Vec<ActivityRow>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let value = match Value::deserialize(deserializer)? {
-        Value::Object(mut section) => section.remove("links").unwrap_or(Value::Null),
-        other => other,
-    };
-    if value.is_null() {
-        return Ok(Vec::new());
-    }
-    serde_json::from_value(value).map_err(serde::de::Error::custom)
 }
 
 /// A number, or the select's value as text (`"10"`); `""` is the default.
@@ -547,17 +394,6 @@ mod tests {
     use super::*;
     use portaki_test_utils::MockContext;
     use serde_json::json;
-
-    #[test]
-    fn localized_n_lang_roundtrip() {
-        let mut loc = Localized::singleton("de", "Hallo");
-        loc.set("fr", "Bonjour".into());
-        assert_eq!(loc.get("de"), "Hallo");
-        assert_eq!(loc.pick_with_fallback("it-IT", "de-DE"), "Hallo");
-        let value = serde_json::to_value(&loc).unwrap();
-        assert_eq!(value["de"], "Hallo");
-        assert_eq!(value["fr"], "Bonjour");
-    }
 
     #[test]
     fn disclaimer_plain_string_migrates() {
@@ -654,11 +490,11 @@ mod tests {
     /// What the host form sends: every text a string, empty slots included.
     #[test]
     fn the_host_form_shape_reads() {
-        let empty = json!({ "name": "", "category": "", "distance": "", "tag": "",
-            "description": "", "address": "", "lat": "0", "lng": "0" });
+        let empty = json!({ "title": "", "category": "", "distance": "", "tag": "",
+            "detail": "", "address": "", "lat": "0", "lng": "0" });
         let mut spots = vec![empty; 6];
-        spots[2] = json!({ "name": "Plage du Midi", "category": "Plage", "distance": " ",
-            "tag": "", "description": "Sable fin", "address": "Bd du Midi, Cannes",
+        spots[2] = json!({ "title": "Plage du Midi", "category": "Plage", "distance": " ",
+            "tag": "", "detail": "Sable fin", "address": "Bd du Midi, Cannes",
             "lat": "43.548", "lng": "7.005" });
         let config: ModuleConfig = serde_json::from_value(json!({
             "spots": spots,
@@ -672,14 +508,13 @@ mod tests {
             "tiqets_min_rating": "4"
         }))
         .unwrap();
+        assert!(config.spots[0].is_blank());
+        assert!(!config.spots[2].is_blank());
         let parsed = config.parse_spots();
         assert_eq!(parsed.len(), 1);
         assert_eq!(parsed[0].id, "spot-3");
-        assert_eq!(parsed[0].title.pick("en"), "Plage du Midi");
-        assert_eq!(
-            parsed[0].detail.as_ref().map(|d| d.pick("fr")).as_deref(),
-            Some("Sable fin")
-        );
+        assert_eq!(parsed[0].title.get("en"), "Plage du Midi");
+        assert_eq!(parsed[0].detail.get("fr"), "Sable fin");
         assert_eq!(parsed[0].distance, None);
         assert_eq!(parsed[0].coords(), Some((43.548, 7.005)));
         let activities = config.activities();
@@ -698,7 +533,7 @@ mod tests {
 
     fn legacy_blob() -> Value {
         json!({
-            "spots_json": r#"[{"id":"s1","title":{"fr":"Plage"}}]"#,
+            "spots_json": r#"[{"id":"s1","title":{"fr":"Plage"},"detail":null,"note":null,"url":null}]"#,
             "disclaimer": { "fr": "Suggestions", "en": "Suggestions (en)" },
             "activities": {
                 "enabled": true, "destination": "Antibes", "intro": { "fr": "Bonjour" },
@@ -708,61 +543,92 @@ mod tests {
         })
     }
 
-    /// The import only brings `activities` (an object, which `structured` takes): the nested
-    /// settings, the tiqets section, the `{fr, en}` disclaimer and `spots_json` come from the KV
-    /// until the host saves.
+    /// Every shape the old KV blob had: nested `activities` / `tiqets` sections (numbers for the
+    /// selects), a `{fr, en}` disclaimer, the spots as a `spots_json` string, `null` texts.
     #[test]
-    #[serial_test::serial]
-    fn what_the_import_skips_is_read_from_the_kv() {
-        let blob = legacy_blob();
-        MockContext::host()
-            .with_kv("config", serde_json::to_vec(&blob).unwrap())
-            .with_config(&json!({ "activities": blob["activities"] }))
-            .run(|ctx| {
-                let config = ModuleConfig::read(&ctx).unwrap();
-                assert_eq!(config.parse_spots()[0].id, "s1");
-                assert_eq!(config.disclaimer.get("en"), "Suggestions (en)");
-                let activities = config.activities();
-                assert!(activities.enabled);
-                assert_eq!(activities.destination, "Antibes");
-                assert_eq!(activities.intro.get("fr"), "Bonjour");
-                assert_eq!(activities.links[0].label.get("fr"), "Suquet");
-                assert_eq!(
-                    config.tiqets(),
-                    TiqetsConfig {
-                        enabled: true,
-                        radius_km: 40,
-                        min_rating: 3
-                    }
-                );
-            });
-        // Before the platform holds the config (no `moduleConfig`), the same.
-        MockContext::host()
-            .with_kv("config", serde_json::to_vec(&blob).unwrap())
-            .run(|ctx| {
-                let config = ModuleConfig::read(&ctx).unwrap();
-                assert!(config.activities().enabled);
-                assert_eq!(config.tiqets().radius_km, 40);
-                assert_eq!(config.parse_spots().len(), 1);
-            });
+    fn legacy_maps_the_kv_blob() {
+        let mapped = legacy(legacy_blob());
+        assert_eq!(
+            mapped,
+            json!({
+                "spots": [{ "id": "s1", "title": { "fr": "Plage" } }],
+                "disclaimer": { "fr": "Suggestions", "en": "Suggestions (en)" },
+                "activities_enabled": true,
+                "activities_destination": "Antibes",
+                "activities_intro": { "fr": "Bonjour" },
+                "activities": [{ "url": "https://gyg.me/aBcD12", "label": { "fr": "Suquet" } }],
+                "tiqets_enabled": true,
+                "tiqets_radius_km": "40",
+                "tiqets_min_rating": "3"
+            })
+        );
+        let config: ModuleConfig = serde_json::from_value(mapped).unwrap();
+        assert_eq!(config.parse_spots()[0].id, "s1");
+        assert_eq!(config.disclaimer.get("en"), "Suggestions (en)");
+        let activities = config.activities();
+        assert!(activities.enabled);
+        assert_eq!(activities.destination, "Antibes");
+        assert_eq!(activities.intro.get("fr"), "Bonjour");
+        assert_eq!(activities.links[0].label.get("fr"), "Suquet");
+        assert_eq!(
+            config.tiqets(),
+            TiqetsConfig {
+                enabled: true,
+                radius_km: 40,
+                min_rating: 3
+            }
+        );
+    }
+
+    #[test]
+    fn legacy_spots_rows_win_over_spots_json_and_lose_their_nulls() {
+        let mapped = legacy(json!({
+            "spots": [{ "id": "s2", "title": { "fr": "Port", "en": "Harbour" }, "detail": null,
+                        "note": { "fr": "Gratuit" }, "lat": 43.5, "lng": 7.0, "url": null }],
+            "spots_json": r#"[{"id":"s1","title":{"fr":"Plage"}}]"#
+        }));
+        assert_eq!(
+            mapped,
+            json!({ "spots": [{ "id": "s2", "title": { "fr": "Port", "en": "Harbour" },
+                                "note": { "fr": "Gratuit" }, "lat": 43.5, "lng": 7.0 }] })
+        );
+        let spot = &serde_json::from_value::<ModuleConfig>(mapped)
+            .unwrap()
+            .spots[0];
+        assert_eq!(spot.note.as_ref().unwrap().get("en"), "Gratuit");
+        assert_eq!(spot.coords(), Some((43.5, 7.0)));
+        // An empty list is no list: `spots_json` fills it.
+        assert_eq!(
+            legacy(json!({ "spots": [], "spots_json": r#"[{"id":"s1"}]"# })),
+            json!({ "spots": [{ "id": "s1" }] })
+        );
+        // Unreadable: nothing to import, nothing invented.
+        assert_eq!(legacy(json!({ "spots_json": "[oops" })), json!({}));
+    }
+
+    #[test]
+    fn legacy_snaps_a_number_off_the_select_to_the_nearest_choice() {
+        let mapped = legacy(json!({ "tiqets": { "radius_km": 100, "min_rating": 5 } }));
+        assert_eq!(mapped["tiqets_radius_km"], "40");
+        assert_eq!(mapped["tiqets_min_rating"], "4");
+        assert!(mapped.get("tiqets_enabled").is_none());
     }
 
     #[test]
     #[serial_test::serial]
-    fn once_saved_the_platform_wins_over_the_kv() {
+    fn the_kv_is_read_through_legacy_until_the_platform_holds_the_config() {
         MockContext::host()
             .with_kv("config", serde_json::to_vec(&legacy_blob()).unwrap())
-            .with_config(&json!({
-                "spots": [], "disclaimer": "", "activities_enabled": false,
-                "activities_destination": "", "activities_intro": "", "activities": [],
-                "tiqets_enabled": false, "tiqets_radius_km": "10", "tiqets_min_rating": "0"
-            }))
             .run(|ctx| {
-                let config = ModuleConfig::read(&ctx).unwrap();
-                assert!(config.parse_spots().is_empty());
-                assert!(config.disclaimer.is_empty());
-                assert_eq!(config.activities(), ActivitiesConfig::default());
-                assert_eq!(config.tiqets(), TiqetsConfig::default());
+                let config = ModuleConfig::load(&ctx).unwrap();
+                assert!(config.activities().enabled);
+                assert_eq!(config.tiqets().radius_km, 40);
+                assert_eq!(config.parse_spots().len(), 1);
+                assert_eq!(config.disclaimer.get("en"), "Suggestions (en)");
             });
+        MockContext::host()
+            .with_kv("config", serde_json::to_vec(&legacy_blob()).unwrap())
+            .with_config(&json!({}))
+            .run(|ctx| assert_eq!(ModuleConfig::load(&ctx).unwrap(), ModuleConfig::default()));
     }
 }

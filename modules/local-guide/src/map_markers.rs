@@ -25,7 +25,7 @@ pub struct MapMarkersResponse {
 
 #[portaki_sdk::query(name = "mapMarkers")]
 pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
-    let config = ModuleConfig::read(&ctx)?;
+    let config = ModuleConfig::load(&ctx)?;
     let markers = config
         .parse_spots()
         .into_iter()
@@ -33,9 +33,7 @@ pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
             // Les spots sans position ne sont pas une anomalie : la carte est arrivée après
             // eux, et l'hôte n'est pas obligé de la remplir.
             let (lat, lng) = spot.coords()?;
-            let label = spot
-                .title
-                .pick_with_fallback(&ctx.locale, &ctx.property.locale);
+            let label = spot.title.get(&ctx.locale).to_string();
             let mut marker = MapMarker::new(spot.id.clone(), lat, lng).kind(MapMarkerKind::Poi);
             if !label.trim().is_empty() {
                 marker = marker.label(label);

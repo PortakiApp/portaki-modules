@@ -34,8 +34,7 @@ pub struct ActivityLink {
 pub fn resolve(
     config: &ActivitiesConfig,
     address: Option<&str>,
-    guest_locale: &str,
-    property_locale: &str,
+    locale: &str,
 ) -> Option<ActivitiesView> {
     if !config.enabled {
         return None;
@@ -52,11 +51,7 @@ pub fn resolve(
             // identifiant partenaire doit repartir avec l'actuel.
             let url = affiliate::normalize_curated_url(&row.url).ok()?;
             Some(ActivityLink {
-                label: row
-                    .label
-                    .pick_with_fallback(guest_locale, property_locale)
-                    .trim()
-                    .to_string(),
+                label: row.label.get(locale).trim().to_string(),
                 url,
             })
         })
@@ -66,11 +61,7 @@ pub fn resolve(
     Some(ActivitiesView {
         destination: destination.label,
         destination_url: destination.url,
-        intro: config
-            .intro
-            .pick_with_fallback(guest_locale, property_locale)
-            .trim()
-            .to_string(),
+        intro: config.intro.get(locale).trim().to_string(),
         links,
     })
 }
@@ -191,7 +182,8 @@ fn city_from_part(part: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::{ActivityRow, Localized};
+    use crate::config::ActivityRow;
+    use portaki_sdk::contracts::i18n::I18nText;
 
     #[test]
     fn city_is_read_from_the_common_address_shapes() {
@@ -285,13 +277,13 @@ mod tests {
         // la section ne s'affiche pas plutôt que de sortir le lien.
         let config = activities("https://viator.com/paris");
         assert!(destination(&config, Some("Cannes, France")).is_none());
-        assert!(resolve(&config, Some("Cannes, France"), "fr-FR", "fr-FR").is_none());
+        assert!(resolve(&config, Some("Cannes, France"), "fr-FR").is_none());
     }
 
     #[test]
     fn free_text_still_produces_the_search_url() {
         let config = activities("Nîmes");
-        let view = resolve(&config, Some("Cannes, France"), "fr-FR", "fr-FR").expect("view");
+        let view = resolve(&config, Some("Cannes, France"), "fr-FR").expect("view");
         assert_eq!(view.destination, "Nîmes");
         assert_eq!(
             view.destination_url,
@@ -305,8 +297,8 @@ mod tests {
             enabled: true,
             ..ActivitiesConfig::default()
         };
-        assert!(resolve(&config, None, "fr-FR", "fr-FR").is_none());
-        assert!(resolve(&config, Some("   "), "fr-FR", "fr-FR").is_none());
+        assert!(resolve(&config, None, "fr-FR").is_none());
+        assert!(resolve(&config, Some("   "), "fr-FR").is_none());
     }
 
     #[test]
@@ -315,7 +307,7 @@ mod tests {
         // l'hôte n'a rien décidé, aucun lien d'affiliation ne part vers le livret.
         let config = ActivitiesConfig::default();
         assert!(!config.enabled);
-        assert!(resolve(&config, Some("Cannes, France"), "fr-FR", "fr-FR").is_none());
+        assert!(resolve(&config, Some("Cannes, France"), "fr-FR").is_none());
     }
 
     #[test]
@@ -325,7 +317,7 @@ mod tests {
             destination: "Antibes".into(),
             ..ActivitiesConfig::default()
         };
-        assert!(resolve(&config, Some("Cannes, France"), "fr-FR", "fr-FR").is_none());
+        assert!(resolve(&config, Some("Cannes, France"), "fr-FR").is_none());
     }
 
     #[test]
@@ -333,7 +325,8 @@ mod tests {
         let links = (0..MAX_CURATED_LINKS + 4)
             .map(|index| ActivityRow {
                 url: format!("https://www.getyourguide.com/tour-{index}"),
-                label: Localized::singleton("fr", format!("Sortie {index}")),
+                label: I18nText::new(format!("Sortie {index}"), ""),
+                ..ActivityRow::default()
             })
             .collect();
         let config = ActivitiesConfig {
@@ -341,7 +334,7 @@ mod tests {
             links,
             ..ActivitiesConfig::default()
         };
-        let view = resolve(&config, Some("Cannes, France"), "fr-FR", "fr-FR").expect("view");
+        let view = resolve(&config, Some("Cannes, France"), "fr-FR").expect("view");
         assert_eq!(view.links.len(), MAX_CURATED_LINKS);
         // L'URL complète, plutôt qu'un suffixe : l'identifiant partenaire est en queue,
         // et « finit par tour-1 » se confondrait de toute façon avec `tour-10`.
@@ -366,16 +359,16 @@ mod tests {
             links: vec![
                 ActivityRow {
                     url: "https://viator.com/paris".into(),
-                    label: Localized::default(),
+                    ..ActivityRow::default()
                 },
                 ActivityRow {
                     url: "https://gyg.me/aBcD12".into(),
-                    label: Localized::default(),
+                    ..ActivityRow::default()
                 },
             ],
             ..ActivitiesConfig::default()
         };
-        let view = resolve(&config, Some("Cannes, France"), "fr-FR", "fr-FR").expect("view");
+        let view = resolve(&config, Some("Cannes, France"), "fr-FR").expect("view");
         assert_eq!(view.links.len(), 1);
         assert_eq!(view.links[0].url, "https://gyg.me/aBcD12");
     }

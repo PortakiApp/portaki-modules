@@ -10,7 +10,6 @@ pub struct GuestData {
     pub spots: Vec<SpotRow>,
     pub disclaimer: String,
     pub locale: String,
-    pub property_locale: String,
     /// Section « Activités & billets », quand elle a une destination à proposer.
     pub activities: Option<ActivitiesView>,
     /// Section Tiqets, quand elle a des produits à montrer.
@@ -23,12 +22,11 @@ pub struct GuestData {
 /// Ce qu'il y a à montrer, ou `None` quand il n'y a rien : ni lieu, ni mention, ni section
 /// activités ou Tiqets à proposer.
 pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<Box<GuestData>>> {
-    let config = ModuleConfig::read(ctx)?;
+    let config = ModuleConfig::load(ctx)?;
     let activities = activities::resolve(
         &config.activities(),
         ctx.property.address.as_deref(),
         &ctx.locale,
-        &ctx.property.locale,
     );
 
     let tiqets = tiqets::resolve(ctx, &config.tiqets());
@@ -42,11 +40,8 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<Box<GuestData>>> {
 
     Ok(Some(Box::new(GuestData {
         spots: config.parse_spots(),
-        disclaimer: config
-            .disclaimer
-            .pick_with_fallback(&ctx.locale, &ctx.property.locale),
+        disclaimer: config.disclaimer.get(&ctx.locale).to_string(),
         locale: ctx.locale.clone(),
-        property_locale: ctx.property.locale.clone(),
         activities,
         tiqets,
         property_coords: ctx
