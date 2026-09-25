@@ -4,7 +4,7 @@ use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{load_config, ModuleConfig};
+use crate::config::ModuleConfig;
 use crate::reveal::{
     evaluate_reveal, format_available_from, locked_message, RevealDecision, SECRET_MASK,
 };
@@ -27,7 +27,7 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Gues
         return Ok(GuestLoad::Empty(Box::new(surface)));
     }
 
-    let config = load_config().unwrap_or_else(|_| ModuleConfig::default());
+    let config = ModuleConfig::read(ctx)?;
     if config.is_empty() {
         return Ok(GuestLoad::Empty(Box::new(empty_content_state(surface_id))));
     }
