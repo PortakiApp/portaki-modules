@@ -30,9 +30,6 @@
   "guest.teaser": "Left something behind? Tell us",
   "home.card.thanks": "Thanks — your host has been notified.",
   "home.card.yourReports": "Your reports this stay",
-  "home.card.unavailable": "Reporting unavailable",
-  "home.card.error.title": "Reporting temporarily unavailable",
-  "home.card.error.description": "The form could not be loaded. Try again in a moment.",
   "form.kind.label": "Type",
   "form.kind.lost": "I lost something",
   "form.kind.found": "I found something",
@@ -43,11 +40,6 @@
   "form.details.label": "Details",
   "form.details.placeholder": "Optional — where, when, color, brand…",
   "form.submit": "Send report",
-  "module.status.incomplete.title": "Incomplete configuration",
-  "module.status.incomplete.description": "Finish the module in the host dashboard",
-  "module.status.incomplete.hint": "Open Modules → Lost & found",
-  "module.status.inactive.title": "Lost & found disabled",
-  "module.status.inactive.description": "This module is not active on this property",
   "stats.tile.30": "items declared · 30 d",
   "stats.tile.90": "items declared · 90 d",
   "stats.tile.365": "items declared · 12 months",
@@ -79,5 +71,7 @@
   "catalog.host.create": "Declare a found item",
   "catalog.host.lost-stats": "Lost & found",
   "catalog.host.stay": "Declared items",
-  "email.checkout-j2.description": "Lost & found follow-up J+2 after checkout"
+  "email.checkout-j2.description": "Lost & found follow-up J+2 after checkout",
+  "guest.error.title": "Reporting temporarily unavailable",
+  "guest.error.description": "The form could not be loaded."
 }

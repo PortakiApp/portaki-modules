@@ -30,9 +30,6 @@
   "guest.teaser": "Un oubli ? Signalez-le",
   "home.card.thanks": "Merci — votre hôte a été prévenu.",
   "home.card.yourReports": "Vos signalements ce séjour",
-  "home.card.unavailable": "Signalement indisponible",
-  "home.card.error.title": "Signalement temporairement indisponible",
-  "home.card.error.description": "Le formulaire n'a pas pu être chargé. Réessayez dans un instant.",
   "form.kind.label": "Type",
   "form.kind.lost": "J'ai perdu quelque chose",
   "form.kind.found": "J'ai trouvé quelque chose",
@@ -43,11 +40,6 @@
   "form.details.label": "Détails",
   "form.details.placeholder": "Optionnel — où, quand, couleur, marque…",
   "form.submit": "Envoyer",
-  "module.status.incomplete.title": "Configuration incomplète",
-  "module.status.incomplete.description": "Finalisez le module dans le tableau de bord hôte",
-  "module.status.incomplete.hint": "Ouvrez Modules → Objets perdus ou trouvés",
-  "module.status.inactive.title": "Objets perdus désactivé",
-  "module.status.inactive.description": "Ce module n'est pas actif sur ce logement",
   "stats.tile.30": "objets déclarés · 30 j",
   "stats.tile.90": "objets déclarés · 90 j",
   "stats.tile.365": "objets déclarés · 12 mois",
@@ -79,5 +71,7 @@
   "catalog.host.create": "Déclarer un objet trouvé",
   "catalog.host.lost-stats": "Objets trouvés",
   "catalog.host.stay": "Objets déclarés",
-  "email.checkout-j2.description": "Relance objets perdus J+2 après départ"
+  "email.checkout-j2.description": "Relance objets perdus J+2 après départ",
+  "guest.error.title": "Signalement temporairement indisponible",
+  "guest.error.description": "Le formulaire n'a pas pu être chargé."
 }
