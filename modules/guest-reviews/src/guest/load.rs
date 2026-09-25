@@ -15,7 +15,7 @@ pub struct GuestData {
 
 /// What the card shows, or `None` when no platform is usable for this stay.
 pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
-    let config = ModuleConfig::read(ctx)?;
+    let config = ModuleConfig::load(ctx)?;
     // Platform the stay was booked on (lowercased, e.g. "airbnb"); `None` on older backends.
     let booking_channel = ctx
         .stay
@@ -31,9 +31,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         show_portaki,
         show_qr: config.show_qr_code && show_airbnb,
         airbnb_url: config.airbnb_url(),
-        thank_you: config
-            .thank_you_message
-            .pick_with_fallback(&ctx.locale, &ctx.property.locale),
+        thank_you: config.thank_you_message.get(&ctx.locale).to_string(),
         property_name: ctx.property.name.clone(),
     }))
 }

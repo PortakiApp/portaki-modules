@@ -8,11 +8,10 @@ mod guest;
 mod host;
 mod i18n;
 mod ids;
-mod localized;
 mod queries;
 
 pub use commands::{submit_review, StoredReview, SubmitReviewArgs};
-pub use config::{ChannelMode, Localized, ModuleConfig};
+pub use config::{ChannelMode, ModuleConfig};
 pub use email_text::GUEST_TEXT_EMAIL_MAX_CHARS;
 pub use guest::{render_home_card, render_post_stay_card};
 pub use host::{render_host_main, render_host_stats, stats_summary};

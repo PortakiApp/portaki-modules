@@ -10,7 +10,7 @@ use crate::i18n::text;
 /// (the module does nothing without one), and the Airbnb review URL while Airbnb is.
 #[portaki_sdk::query(name = "publishReadiness")]
 pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
-    let config = ModuleConfig::read(&ctx)?;
+    let config = ModuleConfig::load(&ctx)?;
     let mut items = vec![PublishCheck {
         id: "platform".into(),
         level: PublishLevel::Required,
