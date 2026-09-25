@@ -1,10 +1,11 @@
 //! Host dashboard surface — design `emergency-editor-v1` (Wasm SDUI).
 
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{Card, Field, Form, Page, Stack, Text, TextInput};
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{ContactRow, Localized, ModuleConfig};
+use crate::config::{ContactRow, ModuleConfig};
 
 const CONTACT_SLOTS: usize = 6;
 
@@ -17,9 +18,7 @@ const CONTACT_SLOTS: usize = 6;
     icon = IconName::Phone
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
-    let lang = Localized::lang_code(&ctx.locale);
-    let config = ModuleConfig::read(&ctx)?;
-    let contacts = config.parse_contacts();
+    let config = ModuleConfig::load(&ctx)?;
 
     let mut cards: Vec<Component> = vec![Card::new()
         .title("i18n:host.section.hostPhone")
@@ -38,8 +37,9 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
             .into()])
         .into()];
 
-    for index in 0..CONTACT_SLOTS {
-        cards.push(contact_card(index, contacts.get(index), &lang));
+    // The stored rows where they are, blank ones included, then empty slots.
+    for index in 0..CONTACT_SLOTS.max(config.contacts.len()) {
+        cards.push(contact_card(index, config.contacts.get(index), &ctx));
     }
 
     // No Save button — the modules drawer owns the footer Save.
@@ -55,33 +55,42 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     .with_id(crate::ids::HOST_MAIN))
 }
 
-fn contact_card(index: usize, contact: Option<&ContactRow>, lang: &str) -> Component {
+fn contact_card(index: usize, contact: Option<&ContactRow>, ctx: &HostContext) -> Component {
     let slot = index + 1;
-    let label = contact.map(|c| c.label.pick(lang)).unwrap_or_default();
+    let label = contact.map(|c| c.label.host_value(ctx)).unwrap_or_default();
     let phone = contact.map(|c| c.phone.as_str()).unwrap_or("");
+    // A filled row sends its id, so a save merges into it (and keeps its note, its category, its
+    // other languages). A blank slot has nothing to keep — and an id would make it count as filled.
+    let id = contact
+        .filter(|c| !c.is_blank())
+        .map(|c| sdui::row_id("contacts", index, Some(&c.id)));
 
     Card::new()
         .title(format!("i18n:host.contact.slot{slot}"))
         .icon(IconName::Users)
-        .children(vec![
-            Field::new()
-                .name(format!("contacts.{index}.label"))
-                .label("i18n:host.contact.label")
-                .child(
-                    TextInput::new()
+        .children(
+            id.into_iter()
+                .chain([
+                    Field::new()
                         .name(format!("contacts.{index}.label"))
-                        .value(label),
-                )
-                .into(),
-            Field::new()
-                .name(format!("contacts.{index}.phone"))
-                .label("i18n:host.contact.phone")
-                .child(
-                    TextInput::new()
+                        .label("i18n:host.contact.label")
+                        .child(
+                            TextInput::new()
+                                .name(format!("contacts.{index}.label"))
+                                .value(label),
+                        )
+                        .into(),
+                    Field::new()
                         .name(format!("contacts.{index}.phone"))
-                        .value(phone),
-                )
-                .into(),
-        ])
+                        .label("i18n:host.contact.phone")
+                        .child(
+                            TextInput::new()
+                                .name(format!("contacts.{index}.phone"))
+                                .value(phone),
+                        )
+                        .into(),
+                ])
+                .collect(),
+        )
         .into()
 }

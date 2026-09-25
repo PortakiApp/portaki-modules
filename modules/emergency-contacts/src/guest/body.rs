@@ -35,9 +35,7 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
     }
 
     for contact in &data.contacts {
-        let label = contact
-            .label
-            .pick_with_fallback(&data.locale, &data.property_locale);
+        let label = contact.label.get(&data.locale);
         let mut item = ListItem::new()
             .title(label)
             .subtitle(contact.phone.clone())
@@ -45,11 +43,9 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
         if let Some(cat) = contact.category.as_deref().filter(|c| !c.trim().is_empty()) {
             item = item.leading(cat);
         }
-        if let Some(note) = contact.note.as_ref() {
-            let note_text = note.pick_with_fallback(&data.locale, &data.property_locale);
-            if !note_text.trim().is_empty() {
-                item = item.child(Text::new().text(note_text).variant(TextVariant::Caption));
-            }
+        let note = contact.note.get(&data.locale);
+        if !note.trim().is_empty() {
+            item = item.child(Text::new().text(note).variant(TextVariant::Caption));
         }
         children.push(Component::Pressable(
             Pressable::new()
