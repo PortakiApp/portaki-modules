@@ -22,7 +22,7 @@ fn home_card_empty_when_no_items() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("render");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("home.card.empty"));
@@ -51,7 +51,7 @@ fn home_card_opens_form_overlay_with_catalog() {
             )
             .expect("replace");
 
-            let surface = render_home_card(ctx.clone());
+            let surface = render_home_card(ctx.clone()).expect("render");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(!SurfaceAssertions::new(&surface).contains_type("Form"));
             let json = serde_json::to_string(&surface).expect("surface json");
@@ -60,7 +60,7 @@ fn home_card_opens_form_overlay_with_catalog() {
             assert!(json.contains("package"));
             assert!(json.contains("home.card.openForm"));
 
-            let form = render_guest_form(ctx);
+            let form = render_guest_form(ctx).expect("render");
             assert!(SurfaceAssertions::new(&form).contains_type("Form"));
             assert!(SurfaceAssertions::new(&form).contains_type("ChoiceList"));
             assert!(SurfaceAssertions::new(&form).contains_type("Button"));
@@ -112,7 +112,7 @@ fn submit_creates_open_report_and_lists_on_card() {
             assert_eq!(rows[0].level, LEVEL_DEFAULT);
             assert!(rows[0].item_label.contains("Papier") || rows[0].item_label.contains("Toilet"));
 
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("render");
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("home.card.thanks"));
             assert!(json.contains("home.card.yourReports"));
