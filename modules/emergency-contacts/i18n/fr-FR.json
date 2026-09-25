@@ -16,7 +16,6 @@
   "host.contact.label": "Libellé",
   "host.contact.phone": "Téléphone",
   "host.main.help": "Laissez un contact vide pour ne pas l’afficher. Le téléphone hôte est optionnel.",
-  "host.save": "Enregistrer",
   "home.card.title": "Urgences & utiles",
   "guest.host.label": "Votre hôte",
   "guest.call": "Appeler",
@@ -35,9 +34,8 @@
   "module.status.inactive.title": "Module contacts désactivé",
   "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
   "host.section.hostPhone": "Téléphone hôte",
-  "host.section.hostPhone.help": "Affiché dans le livret si renseigné.",
-  "publish.host-phone.label": "Numéro de l'hôte",
-  "publish.host-phone.hint": "Il manque votre numéro joignable pendant le séjour",
+  "host.section.hostPhone.help": "Affiché dans le livret, joignable pendant le séjour.",
   "module.catalogDescription": "Numéros d'urgence, pharmacie, médecin, ligne directe.",
-  "catalog.host.main": "Urgences"
+  "catalog.host.main": "Urgences",
+  "config.contacts": "Numéros utiles"
 }

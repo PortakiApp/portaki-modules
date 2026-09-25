@@ -1,11 +1,10 @@
 //! Host dashboard surface — design `emergency-editor-v1` (Wasm SDUI).
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::common::Tone;
-use portaki_sdk::sdui::primitives::{Button, Card, Field, Form, Page, Stack, Text, TextInput};
+use portaki_sdk::sdui::primitives::{Card, Field, Form, Page, Stack, Text, TextInput};
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{load_config, ContactRow, Localized};
+use crate::config::{ContactRow, Localized, ModuleConfig};
 
 const CONTACT_SLOTS: usize = 6;
 
@@ -17,17 +16,10 @@ const CONTACT_SLOTS: usize = 6;
     label_key = "catalog.host.main",
     icon = IconName::Phone
 )]
-pub fn render_host_main(ctx: HostContext) -> Surface {
+pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let lang = Localized::lang_code(&ctx.locale);
-    let config = load_config().unwrap_or_default();
+    let config = ModuleConfig::read(&ctx)?;
     let contacts = config.parse_contacts();
-
-    let submit_args = crate::commands::UpdateConfigArgs {
-        contacts: contacts_to_submit(&contacts, &lang),
-        contacts_json: String::new(),
-        host_visible_phone: config.host_visible_phone.clone(),
-    };
-    let save_action = crate::ids::module_id().command(crate::ids::UPDATE_CONFIG, submit_args);
 
     let mut cards: Vec<Component> = vec![Card::new()
         .title("i18n:host.section.hostPhone")
@@ -36,6 +28,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         .children(vec![Field::new()
             .name("host_visible_phone")
             .label("i18n:host.phone.label")
+            .required(true)
             .child(
                 TextInput::new()
                     .name("host_visible_phone")
@@ -48,15 +41,9 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     for index in 0..CONTACT_SLOTS {
         cards.push(contact_card(index, contacts.get(index), &lang));
     }
-    cards.push(
-        Button::new()
-            .label("i18n:host.save")
-            .tone(Tone::Primary)
-            .action(save_action)
-            .into(),
-    );
 
-    Surface::new(
+    // No Save button — the modules drawer owns the footer Save.
+    Ok(Surface::new(
         Page::new().child(Form::new().child(Stack::new().gap(16.0).children(vec![
                     Text::new()
                         .text("i18n:surface.host.main.subtitle")
@@ -65,24 +52,12 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                     Component::Stack(Stack::new().gap(16.0).children(cards)),
                 ]))),
     )
-    .with_id(crate::ids::HOST_MAIN)
-}
-
-fn contacts_to_submit(contacts: &[ContactRow], lang: &str) -> Vec<crate::commands::ContactInput> {
-    contacts
-        .iter()
-        .map(|c| crate::commands::ContactInput {
-            label: c.label.get(lang).to_string(),
-            label_fr: String::new(),
-            label_en: String::new(),
-            phone: c.phone.clone(),
-        })
-        .collect()
+    .with_id(crate::ids::HOST_MAIN))
 }
 
 fn contact_card(index: usize, contact: Option<&ContactRow>, lang: &str) -> Component {
     let slot = index + 1;
-    let label = contact.map(|c| c.label.get(lang)).unwrap_or("");
+    let label = contact.map(|c| c.label.pick(lang)).unwrap_or_default();
     let phone = contact.map(|c| c.phone.as_str()).unwrap_or("");
 
     Card::new()
