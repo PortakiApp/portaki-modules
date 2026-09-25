@@ -4,6 +4,7 @@ use portaki_sdk::capability;
 use serial_test::serial;
 
 use facility_hours::{render_explore_detail, render_home_card, render_host_main};
+use portaki_sdk::host::module::ModuleStatus;
 use portaki_test_utils::{MockContext, SurfaceAssertions};
 use serde_json::{json, Value};
 
@@ -26,7 +27,10 @@ fn home_card_empty_without_config() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
-            assert!(SurfaceAssertions::new(&render_home_card(ctx)).contains_type("EmptyState"));
+            assert!(
+                SurfaceAssertions::new(&render_home_card(ctx).expect("home card"))
+                    .contains_type("EmptyState")
+            );
         });
 }
 
@@ -37,7 +41,7 @@ fn home_card_uses_key_value_and_page_overlay() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("home card");
             assert!(SurfaceAssertions::new(&surface).contains_type("KeyValue"));
             let json = serde_json::to_string(&surface).expect("json");
             assert!(json.contains("explore.detail"));
@@ -52,7 +56,7 @@ fn detail_enriched_list() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
-            let surface = render_explore_detail(ctx);
+            let surface = render_explore_detail(ctx).expect("detail");
             assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
             assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
         });
@@ -75,5 +79,24 @@ fn the_host_form_sends_the_declared_keys() {
             assert!(json.contains("Piscine"));
             assert!(json.contains("Accueil"));
             assert!(json.contains("Horaires indicatifs"));
+        });
+}
+
+/// The SDK renders the inactive state; the surface itself is not called.
+#[test]
+#[serial]
+fn an_inactive_module_shows_the_sdk_state() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_module_status(ModuleStatus {
+            active: false,
+            workspace_enabled: true,
+            incomplete: false,
+            requires_config: true,
+            missing_required_keys: Vec::new(),
+        })
+        .run(|ctx| {
+            let surface = portaki_sdk::guest_shell::render(ctx, "home.card", render_home_card);
+            assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
         });
 }
