@@ -36,7 +36,7 @@ fn home_card_renders_empty_without_content() {
         .with_property(Property::default())
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("render");
             assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
         });
 }
@@ -58,7 +58,7 @@ fn home_card_renders_list_items_with_content() {
                 },
             )
             .expect("save");
-            let surface = render_home_card(ctx);
+            let surface = render_home_card(ctx).expect("render");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
         });
@@ -81,7 +81,7 @@ fn explore_detail_renders_full_list() {
                 },
             )
             .expect("save");
-            let surface = render_explore_detail(ctx);
+            let surface = render_explore_detail(ctx).expect("render");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Stack"));
             assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
