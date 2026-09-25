@@ -8,7 +8,7 @@ use crate::i18n::text;
 
 /// Rules across fields, which the declared config cannot say: at least one platform ticked
 /// (the module does nothing without one), and the Airbnb review URL while Airbnb is.
-#[portaki_sdk::query(name = "publishReadiness")]
+#[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
 pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
     let config = ModuleConfig::load(&ctx)?;
     let mut items = vec![PublishCheck {

@@ -77,7 +77,13 @@ fn average(reviews: &[StoredReview], fr: bool) -> Option<String> {
     Some(if fr { text.replace('.', ",") } else { text })
 }
 
-#[portaki_sdk::query(name = "statsSummary")]
+#[portaki_sdk::query(
+    name = "statsSummary",
+    example(
+        label = "Avis sur l'année",
+        input = r#"{"propertyId":"8c0e6f2a-1d3b-4a7e-b5c9-0f4e2d1a6b38","period":365,"key":"reviews"}"#
+    )
+)]
 pub fn stats_summary(ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummary> {
     let days = period_key(i64::from(args.period));
     let reviews = reviews_since(days)?;

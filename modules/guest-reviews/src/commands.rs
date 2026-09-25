@@ -48,7 +48,15 @@ pub(crate) fn has_arrived(ctx: &Context) -> Result<bool> {
     }
 }
 
-#[portaki_sdk::command(name = "submitReview", guest)]
+#[portaki_sdk::command(
+    name = "submitReview",
+    guest,
+    example(
+        label = "Cinq étoiles",
+        input = r#"{"rating":5,"comment":"Appartement lumineux et très bien situé, on reviendra !"}"#
+    ),
+    example(label = "Note sans commentaire", input = r#"{"rating":3}"#)
+)]
 pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
     let config = ModuleConfig::load(&ctx)?;
     if !config.portaki_feasible() {
