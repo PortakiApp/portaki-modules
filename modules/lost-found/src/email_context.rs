@@ -22,7 +22,13 @@ pub struct EmailContextResponse {
     pub has_declaration: bool,
 }
 
-#[portaki_sdk::query(name = "emailContext")]
+#[portaki_sdk::query(
+    name = "emailContext",
+    example(
+        label = "E-mail objets perdus",
+        input = r#"{"templateKey":"lost-found"}"#
+    )
+)]
 pub fn email_context(ctx: Context, args: EmailContextArgs) -> Result<EmailContextResponse> {
     build_email_context(ctx, args)
 }

@@ -46,7 +46,13 @@ pub struct ListForStayArgs {
     pub stay_id: Option<Uuid>,
 }
 
-#[portaki_sdk::query(name = "listForStay")]
+#[portaki_sdk::query(
+    name = "listForStay",
+    example(
+        label = "Signalements d'un séjour",
+        input = r#"{"stayId":"5d1a7e3c-2b9f-4c8d-a6e0-7f3b1c9d2e54"}"#
+    )
+)]
 pub fn list_for_stay(ctx: Context, args: ListForStayArgs) -> Result<Vec<LostFoundReportRow>> {
     let stay_id = resolve_list_stay_id(&ctx, args.stay_id)?;
     Ok(storage::list_by_stay(stay_id)?
@@ -55,7 +61,7 @@ pub fn list_for_stay(ctx: Context, args: ListForStayArgs) -> Result<Vec<LostFoun
         .collect())
 }
 
-#[portaki_sdk::query(name = "listRecent")]
+#[portaki_sdk::query(name = "listRecent", example(label = "Derniers signalements"))]
 pub fn list_recent(_ctx: Context) -> Result<Vec<LostFoundReportRow>> {
     Ok(storage::list_recent()?
         .into_iter()
