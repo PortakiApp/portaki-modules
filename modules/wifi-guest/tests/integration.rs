@@ -1,6 +1,7 @@
 //! Integration-style unit tests with `portaki-test-utils`.
 
 use portaki_sdk::capability;
+use portaki_sdk::contracts::i18n::I18nText;
 use serial_test::serial;
 
 use portaki_test_utils::{MockContext, SurfaceAssertions};
@@ -10,12 +11,16 @@ use wifi_guest::{
 
 #[path = "../../../support/config_form.rs"]
 mod config_form;
+#[path = "../../../support/config_save.rs"]
+mod config_save;
+
+const EMISSIONS: &str = concat!(env!("OUT_DIR"), "/portaki-emissions");
 
 fn sample_config() -> ModuleConfig {
     ModuleConfig {
         ssid: "Islette_Guest".into(),
         password: "soleil2026".into(),
-        hint: Some("Prefer 5 GHz".into()),
+        hint: Some(I18nText::new("5 GHz conseillé", "Prefer 5 GHz")),
         connection_steps: None,
         reveal_policy: RevealPolicy::DayBefore16h,
     }
@@ -111,5 +116,44 @@ fn host_main_is_flat_drawer_form_without_cards() {
             assert!(
                 json.contains("\"tone\":\"warning\"") || json.contains("\"tone\": \"warning\"")
             );
+        });
+}
+
+/// A host writing in English: the French hint and steps stay; the guest reads their language.
+#[test]
+#[serial]
+fn a_save_in_english_keeps_the_french() {
+    assert_eq!(
+        config_save::localized_paths(EMISSIONS),
+        ["connection_steps", "hint"]
+    );
+    let stored = serde_json::json!({
+        "ssid": "Villa",
+        "hint": { "fr": "5 GHz conseillé", "en": "Prefer 5 GHz" },
+        "connection_steps": { "fr": "Choisir Villa" },
+        "reveal_policy": "always"
+    });
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&stored)
+        .run(|mut ctx| {
+            ctx.locale = "en-US".into();
+            let surface = render_host_main(ctx).expect("host main");
+            let sent = config_save::form_args(&surface);
+            assert_eq!(sent["hint"], "Prefer 5 GHz");
+            assert_eq!(sent["connection_steps"], "Choisir Villa");
+
+            let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
+            assert_eq!(saved["hint"], stored["hint"]);
+            assert_eq!(saved["connection_steps"]["fr"], "Choisir Villa");
+        });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&stored)
+        .run(|mut ctx| {
+            ctx.locale = "en-GB".into();
+            let json = serde_json::to_string(&render_explore_detail(ctx).expect("detail")).unwrap();
+            assert!(json.contains("Prefer 5 GHz"));
+            assert!(!json.contains("5 GHz conseillé"));
         });
 }
