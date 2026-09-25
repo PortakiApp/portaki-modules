@@ -27,7 +27,11 @@ pub struct AppliancesContentView {
     pub content_en: String,
 }
 
-#[portaki_sdk::query(name = "getContent")]
+#[portaki_sdk::query(
+    name = "getContent",
+    example(label = "Contenu en français", input = r#"{"locale":"fr-FR"}"#),
+    example(label = "Contenu en anglais", input = r#"{"locale":"en-US"}"#)
+)]
 pub fn get_content(ctx: Context, args: GetContentArgs) -> Result<AppliancesContentView> {
     let locale = args.locale.unwrap_or_else(|| ctx.locale.clone());
     let row = store::load_content()?;
