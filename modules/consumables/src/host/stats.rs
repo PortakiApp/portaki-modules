@@ -85,7 +85,13 @@ fn label(item: &ConsumableItem, locale: &str) -> String {
 }
 
 /// Tile: items to buy again; a stock-out as attention.
-#[portaki_sdk::query(name = "statsSummary")]
+#[portaki_sdk::query(
+    name = "statsSummary",
+    example(
+        label = "Stock sur 30 jours",
+        input = r#"{"propertyId":"8c0e6f2a-1d3b-4a7e-b5c9-0f4e2d1a6b38","period":30,"key":"stock"}"#
+    )
+)]
 pub fn stats_summary(_ctx: Context, _args: StatsSummaryArgs) -> Result<StatsSummary> {
     let items = storage::list_items()?;
     let reports = storage::list_all()?;
