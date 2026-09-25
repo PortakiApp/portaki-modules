@@ -36,11 +36,8 @@
   "home.card.safety": "Safety",
   "home.card.empty.title": "No appliances yet",
   "home.card.empty.description": "The host has not published an appliance guide.",
-  "home.card.empty.hint": "Open the Appliances tab in the host dashboard.",
   "home.card.featured.empty.title": "Nothing featured yet",
   "home.card.featured.empty.description": "Open the full list to see every available appliance.",
-  "home.card.error.title": "Guide temporarily unavailable",
-  "home.card.error.description": "Could not load the appliance guide.",
   "explore.detail.subtitle": "How-tos for the appliances in this home.",
   "explore.detail.empty.title": "No appliances",
   "explore.detail.empty.description": "No appliance guide is available for this stay.",
@@ -52,11 +49,6 @@
   "explore.item.notFound": "Appliance not found",
   "explore.item.notFound.description": "This guide is no longer available or was removed.",
   "explore.item.tip": "Tip",
-  "module.status.incomplete.title": "Setup incomplete",
-  "module.status.incomplete.description": "Finish appliance configuration in the host dashboard",
-  "module.status.incomplete.hint": "Open Modules → Appliances",
-  "module.status.inactive.title": "Appliances disabled",
-  "module.status.inactive.description": "This module is not active on this property",
   "module.catalogDescription": "Oven, washer, AC: short tips for your guests.",
   "catalog.host.main": "Appliances"
 }
