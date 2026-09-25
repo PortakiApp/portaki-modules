@@ -870,9 +870,9 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
 name = "portaki-connectors"
-version = "8.0.1"
+version = "8.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b19adbd18073d9cdcb8c1ccb7a72db5801568d44aba32d2df27d1f6a24d2207"
+checksum = "c451ba2cd68bab3aaa070373c1bc9a366675dc5589c5410eec598471c877669a"
 dependencies = [
  "portaki-sdk",
  "serde",
@@ -882,9 +882,9 @@ dependencies = [
 
 [[package]]
 name = "portaki-sdk"
-version = "8.0.1"
+version = "8.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25b202bfd2f2466587139d93810c9e201ceeaf51ff4af121ace02fc3e3ce8b0b"
+checksum = "aa0233d4fc6cacf4f2cb5cc407ab50cfe7a66abbf232fd10de29de37b6b399cc"
 dependencies = [
  "base64 0.23.1",
  "chrono",
@@ -900,9 +900,9 @@ dependencies = [
 
 [[package]]
 name = "portaki-sdk-macros"
-version = "8.0.1"
+version = "8.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1efddf98cd810ea5c766f019ae9a869545fc4d413dfe2cba646c7b7527309173"
+checksum = "8576c0e4c70c3bb9e2f5f453638ec06cbb316266b6094166289d4a59044b3067"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -912,9 +912,9 @@ dependencies = [
 
 [[package]]
 name = "portaki-test-utils"
-version = "8.0.1"
+version = "8.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "856d2d4c29ce8b0db21f166eff587adf1b52877ad822870188a73b975d5d5894"
+checksum = "74c50dfd16470aa3a83bb915f1f885be9049bbe3007bdaa03519bbdc1e2f4603"
 dependencies = [
  "chrono",
  "jsonschema",
