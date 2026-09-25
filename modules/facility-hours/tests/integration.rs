@@ -105,8 +105,8 @@ fn an_inactive_module_shows_the_sdk_state() {
         });
 }
 
-/// A host writing in English: the French title, lines and note stay, and so do the lines, the
-/// note and the id the form does not carry; rows keep their place.
+/// A host writing in English: the French title, lines and note stay, and so does the id; rows
+/// keep their place.
 #[test]
 #[serial]
 fn a_save_in_english_keeps_the_french() {
@@ -139,6 +139,11 @@ fn a_save_in_english_keeps_the_french() {
             // Stored order, the blank row where it was; ids on the filled rows only.
             assert_eq!(sent["facilities"][0]["id"], "pool");
             assert_eq!(sent["facilities"][0]["title"], "Pool");
+            assert_eq!(
+                sent["facilities"][0]["lines"],
+                "Every day\nChildren with an adult"
+            );
+            assert_eq!(sent["facilities"][0]["note"], "Cap");
             assert!(sent["facilities"][1].get("id").is_none());
             assert_eq!(sent["facilities"][2]["id"], "spa");
             assert_eq!(sent["facilities"].as_array().unwrap().len(), 6);

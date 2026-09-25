@@ -98,8 +98,7 @@ impl ModuleConfig {
     }
 }
 
-/// A facility. The form sends `title` and `hours` (and `id`); the platform keeps the rest —
-/// `lines`, `note`, the other languages.
+/// A facility, as the form sends it (and its `id`); the platform keeps the other languages.
 #[portaki_sdk::params]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]
@@ -117,7 +116,10 @@ pub struct FacilityRow {
 impl FacilityRow {
     /// Nothing the form shows: a slot the host left (or emptied).
     pub fn is_blank(&self) -> bool {
-        self.title.is_blank() && self.hours.as_deref().is_none_or(|h| h.trim().is_empty())
+        self.title.is_blank()
+            && self.hours.as_deref().is_none_or(|h| h.trim().is_empty())
+            && self.lines.is_blank()
+            && self.note.is_blank()
     }
 
     /// The non-blank lines in `locale`.

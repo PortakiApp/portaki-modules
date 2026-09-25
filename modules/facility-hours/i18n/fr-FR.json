@@ -27,5 +27,8 @@
   "host.section.note": "Note générale",
   "module.catalogDescription": "Piscine, spa, salle de sport : horaires par lieu.",
   "catalog.host.main": "Horaires",
-  "config.facilities": "Équipements"
+  "config.facilities": "Équipements",
+  "host.facility.lines": "Horaires détaillés (un par ligne)",
+  "host.facility.lines.placeholder": "Tous les jours, de juin à septembre\nFermé le lundi",
+  "host.facility.note": "Note"
 }

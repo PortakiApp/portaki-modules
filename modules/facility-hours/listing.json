@@ -19,8 +19,8 @@
   },
   "configItems": [
     {
-      "fr": "Jusqu’à six équipements : nom et horaires",
-      "en": "Up to six facilities: name and hours"
+      "fr": "Jusqu’à six équipements : nom, horaires, détails et note",
+      "en": "Up to six facilities: name, hours, details and note"
     },
     {
       "fr": "Note générale (facultatif)",
