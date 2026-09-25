@@ -1,11 +1,8 @@
 //! Load config for guest surfaces — only feasible selected platforms.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::ModuleConfig;
-
-use super::empty::{empty_content_state, empty_state_if_module_not_ready};
 
 pub struct GuestData {
     pub show_airbnb: bool,
@@ -16,16 +13,8 @@ pub struct GuestData {
     pub property_name: String,
 }
 
-pub enum GuestLoad {
-    Ready(GuestData),
-    Empty(Box<Surface>),
-}
-
-pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<GuestLoad> {
-    if let Some(surface) = empty_state_if_module_not_ready(surface_id)? {
-        return Ok(GuestLoad::Empty(Box::new(surface)));
-    }
-
+/// What the card shows, or `None` when no platform is usable for this stay.
+pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
     let config = ModuleConfig::read(ctx)?;
     // Platform the stay was booked on (lowercased, e.g. "airbnb"); `None` on older backends.
     let booking_channel = ctx
@@ -34,10 +23,10 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Gues
         .and_then(|stay| stay.booking_channel.as_deref());
     let (show_airbnb, show_portaki) = config.resolve_guest_platforms(booking_channel);
     if !show_airbnb && !show_portaki {
-        return Ok(GuestLoad::Empty(Box::new(empty_content_state(surface_id))));
+        return Ok(None);
     }
 
-    Ok(GuestLoad::Ready(GuestData {
+    Ok(Some(GuestData {
         show_airbnb,
         show_portaki,
         show_qr: config.show_qr_code && show_airbnb,

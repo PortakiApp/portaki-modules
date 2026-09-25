@@ -24,7 +24,8 @@ fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
     let card = previews::guest(root)
         .with_config(&sample_config())
-        .run(render_post_stay_card);
+        .run(render_post_stay_card)
+        .expect("post-stay card");
     previews::check(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
