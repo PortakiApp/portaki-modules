@@ -1,36 +1,36 @@
 //! Integration-style unit tests with `portaki-test-utils`.
 
 use ev_parking::{
-    email_context, get_config, render_explore_detail, render_home_card, update_config,
-    EmailContextArgs, UpdateConfigArgs,
+    email_context, render_explore_detail, render_home_card, render_host_main, EmailContextArgs,
 };
 use portaki_sdk::capability;
 use portaki_sdk::prelude::EmailTemplateKey;
 use serial_test::serial;
 
 use portaki_test_utils::{MockContext, SurfaceAssertions};
-use serde_json::json;
+use serde_json::{json, Value};
 
-fn sample_config_bytes() -> Vec<u8> {
-    serde_json::to_vec(&json!({
+#[path = "../../../support/config_form.rs"]
+mod config_form;
+
+fn sample_config() -> Value {
+    json!({
         "spot_label": "P2 / Place 14",
         "charger_pin": "4821",
         "parking_code": "1234",
         "map_url": "https://maps.example/parking",
         "instructions": "Left entrance after the barrier",
         "reveal_policy": "day_before_16h"
-    }))
-    .expect("config json")
+    })
 }
 
-fn always_reveal_config_bytes() -> Vec<u8> {
-    serde_json::to_vec(&json!({
+fn always_reveal_config() -> Value {
+    json!({
         "spot_label": "P2 / Place 14",
         "charger_pin": "4821",
         "parking_code": "1234",
         "reveal_policy": "always"
-    }))
-    .expect("config json")
+    })
 }
 
 #[test]
@@ -49,7 +49,7 @@ fn home_card_renders_empty_without_config() {
 fn home_card_renders_with_config_and_masks_secrets() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
+        .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_home_card(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
@@ -70,7 +70,7 @@ fn home_card_renders_with_config_and_masks_secrets() {
 fn detail_shows_copy_buttons_when_revealed() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", always_reveal_config_bytes())
+        .with_config(&always_reveal_config())
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("Button"));
@@ -83,55 +83,22 @@ fn detail_shows_copy_buttons_when_revealed() {
 
 #[test]
 #[serial]
-fn update_config_roundtrip() {
+fn the_host_form_sends_the_declared_keys() {
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&sample_config())
         .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    spot_label: "B1 / 3".into(),
-                    charger_pin: "9999".into(),
-                    parking_code: "4321".into(),
-                    map_url: "https://maps.test".into(),
-                    instructions: "Ring the bell".into(),
-                    reveal_policy: ev_parking::RevealPolicy::Always,
-                },
-            )
-            .expect("updateConfig");
-            let config = get_config(ctx).expect("getConfig");
-            assert_eq!(config.spot_label, "B1 / 3");
-            assert_eq!(config.charger_pin, "9999");
-            assert_eq!(config.parking_code, "4321");
-            assert_eq!(config.map_url.as_deref(), Some("https://maps.test"));
-            assert_eq!(config.instructions.as_deref(), Some("Ring the bell"));
-            assert_eq!(config.reveal_policy, ev_parking::RevealPolicy::Always);
-        });
-}
-
-#[test]
-#[serial]
-fn update_config_keeps_secrets_when_blank() {
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
-        .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    spot_label: "Renamed".into(),
-                    charger_pin: String::new(),
-                    parking_code: String::new(),
-                    map_url: String::new(),
-                    instructions: String::new(),
-                    reveal_policy: ev_parking::RevealPolicy::DayBefore16h,
-                },
-            )
-            .expect("updateConfig");
-            let config = get_config(ctx).expect("getConfig");
-            assert_eq!(config.spot_label, "Renamed");
-            assert_eq!(config.charger_pin, "4821");
-            assert_eq!(config.parking_code, "1234");
+            let surface = render_host_main(ctx).expect("host main");
+            config_form::assert_form_matches_config(
+                concat!(env!("OUT_DIR"), "/portaki-emissions"),
+                &surface,
+                &[],
+            );
+            // The codes are never sent back to the form: blank keeps them.
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("P2 / Place 14"));
+            assert!(!json.contains("4821"));
+            assert!(!json.contains("1234"));
         });
 }
 
@@ -140,7 +107,7 @@ fn update_config_keeps_secrets_when_blank() {
 fn email_context_returns_ev_parking_spot_for_arrival() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
+        .with_config(&sample_config())
         .run(|ctx| {
             let response = email_context(
                 ctx,

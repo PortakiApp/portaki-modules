@@ -55,5 +55,10 @@
   "reveal.locked.withWhen": "Disponible à partir du {when}",
   "reveal.locked.generic": "Le code barrière et le PIN borne seront disponibles à l’approche du check-in.",
   "module.catalogDescription": "Place réservée, code barrière et PIN borne pour les voyageurs en véhicule électrique.",
-  "catalog.host.main": "Parking VE"
+  "catalog.host.main": "Parking VE",
+  "config.revealPolicy": "Quand afficher codes et PIN",
+  "config.revealPolicy.always": "Toujours visible",
+  "config.revealPolicy.hours_before_24": "24 h avant l’arrivée",
+  "config.revealPolicy.day_before_16h": "Veille à 16 h",
+  "config.revealPolicy.at_checkin": "À l’heure du check-in"
 }

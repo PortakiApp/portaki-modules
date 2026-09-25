@@ -2,7 +2,7 @@
 
 use portaki_sdk::prelude::*;
 
-use crate::config::load_config;
+use crate::config::ModuleConfig;
 
 /// Gateway `emailContext` args — shared SDK wire type.
 pub use portaki_sdk::EmailContextArgs;
@@ -20,14 +20,14 @@ pub fn email_context(ctx: Context, args: EmailContextArgs) -> Result<EmailContex
     build_email_context(ctx, args)
 }
 
-pub fn build_email_context(_ctx: Context, args: EmailContextArgs) -> Result<EmailContextResponse> {
+pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<EmailContextResponse> {
     if !args.allows_template(&[EmailTemplateKey::Arrival, EmailTemplateKey::ArrivalDay]) {
         return Ok(EmailContextResponse {
             ev_parking_spot: None,
         });
     }
 
-    let config = load_config().unwrap_or_default();
+    let config = ModuleConfig::read(&ctx)?;
     let spot = config.spot_label.trim();
     Ok(EmailContextResponse {
         ev_parking_spot: if spot.is_empty() {
@@ -50,14 +50,10 @@ mod tests {
     fn when_arrival_then_returns_ev_parking_spot() {
         let (ctx, host) = MockContext::guest()
             .with_capabilities(&[capability::core::STORAGE])
-            .with_kv(
-                "config",
-                serde_json::to_vec(&json!({
-                    "spot_label": "P2 / Place 14",
-                    "charger_pin": "4821"
-                }))
-                .unwrap(),
-            )
+            .with_config(&json!({
+                "spot_label": "P2 / Place 14",
+                "charger_pin": "4821"
+            }))
             .build();
 
         with_host(host, ctx.clone(), || {
@@ -79,10 +75,7 @@ mod tests {
     fn when_wrong_template_then_empty() {
         let (ctx, host) = MockContext::guest()
             .with_capabilities(&[capability::core::STORAGE])
-            .with_kv(
-                "config",
-                serde_json::to_vec(&json!({ "spot_label": "P2 / Place 14" })).unwrap(),
-            )
+            .with_config(&json!({ "spot_label": "P2 / Place 14" }))
             .build();
 
         with_host(host, ctx.clone(), || {

@@ -55,5 +55,10 @@
   "reveal.locked.withWhen": "Available from {when}",
   "reveal.locked.generic": "Gate code and charger PIN will be available closer to check-in.",
   "module.catalogDescription": "Reserved spot, gate code, and charger PIN for guests with an electric vehicle.",
-  "catalog.host.main": "EV parking"
+  "catalog.host.main": "EV parking",
+  "config.revealPolicy": "When to show codes and PIN",
+  "config.revealPolicy.always": "Always visible",
+  "config.revealPolicy.hours_before_24": "24 h before arrival",
+  "config.revealPolicy.day_before_16h": "Day before at 4 pm",
+  "config.revealPolicy.at_checkin": "At check-in time"
 }
