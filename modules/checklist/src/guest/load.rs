@@ -2,17 +2,15 @@
 
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::surface::Surface;
 use uuid::Uuid;
 
-use super::empty::{empty_no_items_card, empty_state_if_module_not_ready};
 use crate::entities::{Checklist, ChecklistItem};
 use crate::lists;
 use crate::show_when::is_checklist_available;
 use crate::storage;
 
 pub enum GuestLoad {
-    Empty(Box<Surface>),
+    NoItems,
     NotYet,
     Ready(GuestChecklistData),
 }
@@ -32,15 +30,7 @@ pub struct GuestChecklistData {
 }
 
 /// `departure_only` keeps the `atDeparture` lists (post-stay card).
-pub fn load_guest_checklist(
-    ctx: &GuestContext,
-    surface_id: SurfaceId,
-    departure_only: bool,
-) -> Result<GuestLoad> {
-    if let Some(surface) = empty_state_if_module_not_ready(surface_id)? {
-        return Ok(GuestLoad::Empty(Box::new(surface)));
-    }
-
+pub fn load_guest_checklist(ctx: &GuestContext, departure_only: bool) -> Result<GuestLoad> {
     let mut guest_lists = Vec::new();
     for list in storage::list_checklists()? {
         let wanted = list.audience == lists::GUEST
@@ -54,7 +44,7 @@ pub fn load_guest_checklist(
         }
     }
     if guest_lists.is_empty() {
-        return Ok(GuestLoad::Empty(Box::new(empty_no_items_card(surface_id))));
+        return Ok(GuestLoad::NoItems);
     }
 
     let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at);
