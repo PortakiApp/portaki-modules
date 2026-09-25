@@ -10,11 +10,14 @@ use chrono::{Duration, Utc};
 use portaki_sdk::prelude::StayContext;
 use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use pre_arrival_form::{
-    get_status, load_config, publish_readiness, render_guest_form, render_home_card,
-    render_host_main, render_host_stay, reset_test_store, send_form_available, submit,
-    update_config, ShowWhen, SubmitArgs, UpdateConfigArgs,
+    get_status, publish_readiness, render_guest_form, render_home_card, render_host_main,
+    render_host_stay, reset_test_store, send_form_available, submit, ModuleConfig, ShowWhen,
+    SubmitArgs,
 };
 use serde_json::json;
+
+#[path = "../../../support/config_form.rs"]
+mod config_form;
 
 fn sample_submit() -> SubmitArgs {
     SubmitArgs {
@@ -167,22 +170,19 @@ fn completed_form_locks_after_checkin() {
 #[serial]
 fn home_card_gated_omits_form_teaser_keeps_police_fragment() {
     reset_test_store();
-    let config_bytes = serde_json::to_vec(&json!({
+    let config = json!({
         "show_when": "before",
-        "questions": {
-            "ask_arrival_time": true,
-            "ask_occasion": true,
-            "ask_allergies": true,
-            "ask_guest_count": true,
-            "ask_special_needs": false,
-            "ask_id_document": false
-        }
-    }))
-    .expect("config json");
+        "ask_arrival_time": true,
+        "ask_occasion": true,
+        "ask_allergies": true,
+        "ask_guest_count": true,
+        "ask_special_needs": false,
+        "ask_id_document": false
+    });
 
     MockContext::guest()
         .with_property(Property::default())
-        .with_kv("config", config_bytes)
+        .with_config(&config)
         .run(|mut ctx| {
             let stay_id = ctx
                 .guest
@@ -217,15 +217,13 @@ fn home_card_gated_omits_form_teaser_keeps_police_fragment() {
 #[serial]
 fn send_form_available_noops_when_gated() {
     reset_test_store();
-    let config_bytes = serde_json::to_vec(&json!({
-        "show_when": "checkin",
-        "questions": {}
-    }))
-    .expect("config json");
+    let config = json!({
+        "show_when": "checkin"
+    });
 
     MockContext::guest()
         .with_property(Property::default())
-        .with_kv("config", config_bytes)
+        .with_config(&config)
         .run(|mut ctx| {
             let stay_id = ctx
                 .guest
@@ -248,15 +246,13 @@ fn send_form_available_noops_when_gated() {
 #[serial]
 fn send_form_available_ok_when_confirm() {
     reset_test_store();
-    let config_bytes = serde_json::to_vec(&json!({
-        "show_when": "confirm",
-        "questions": {}
-    }))
-    .expect("config json");
+    let config = json!({
+        "show_when": "confirm"
+    });
 
     MockContext::guest()
         .with_property(Property::default())
-        .with_kv("config", config_bytes)
+        .with_config(&config)
         .run(|mut ctx| {
             let stay_id = ctx
                 .guest
@@ -281,8 +277,20 @@ fn host_main_renders_config_editor() {
     reset_test_store();
     MockContext::host()
         .with_property(Property::default())
+        .with_config(&ModuleConfig {
+            show_when: ShowWhen::Checkin,
+            ask_special_needs: true,
+            ask_id_document: true,
+            ..ModuleConfig::default()
+        })
         .run(|ctx| {
-            let surface = render_host_main(ctx);
+            let surface = render_host_main(ctx).expect("host main");
+            // Six flat toggles and `show_when`: exactly the declared keys.
+            config_form::assert_form_matches_config(
+                concat!(env!("OUT_DIR"), "/portaki-emissions"),
+                &surface,
+                &[],
+            );
             assert!(SurfaceAssertions::new(&surface).contains_type("Page"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
             assert!(SurfaceAssertions::new(&surface).contains_type("ChoiceList"));
@@ -303,106 +311,21 @@ fn host_main_renders_config_editor() {
 
 #[test]
 #[serial]
-fn update_config_persists_show_when_and_questions() {
-    reset_test_store();
-    MockContext::host().run(|ctx| {
-        update_config(
-            ctx,
-            UpdateConfigArgs {
-                show_when: "checkin".into(),
-                ask_arrival_time: Some(true),
-                ask_occasion: Some(false),
-                ask_allergies: Some(true),
-                ask_guest_count: Some(false),
-                ask_special_needs: Some(true),
-                ask_id_document: Some(true),
-            },
-        )
-        .expect("updateConfig");
-
-        let cfg = load_config().expect("config");
-        assert_eq!(cfg.show_when, ShowWhen::Checkin);
-        assert!(cfg.questions.ask_arrival_time);
-        assert!(!cfg.questions.ask_occasion);
-        assert!(cfg.questions.ask_allergies);
-        assert!(!cfg.questions.ask_guest_count);
-        assert!(cfg.questions.ask_special_needs);
-        assert!(cfg.questions.ask_id_document);
-    });
-}
-
-#[test]
-#[serial]
-fn update_config_false_toggles_stick_and_empty_keeps_kv() {
-    reset_test_store();
-    MockContext::host().run(|ctx| {
-        update_config(
-            ctx.clone(),
-            UpdateConfigArgs {
-                show_when: "confirm".into(),
-                ask_arrival_time: Some(false),
-                ask_occasion: Some(false),
-                ask_allergies: Some(true),
-                ask_guest_count: Some(false),
-                ask_special_needs: Some(false),
-                ask_id_document: Some(false),
-            },
-        )
-        .expect("seed");
-
-        // Host Save with empty `{}` (formApiRef miss) must not reset toggles ON.
-        let empty: UpdateConfigArgs = serde_json::from_value(json!({})).expect("empty args");
-        update_config(ctx.clone(), empty).expect("empty updateConfig");
-
-        let cfg = load_config().expect("config");
-        assert_eq!(cfg.show_when, ShowWhen::Confirm);
-        assert!(!cfg.questions.ask_arrival_time);
-        assert!(!cfg.questions.ask_occasion);
-        assert!(cfg.questions.ask_allergies);
-        assert!(!cfg.questions.ask_guest_count);
-
-        // Wire JSON with explicit false (dashboard nestFlatFormValues).
-        let from_json: UpdateConfigArgs = serde_json::from_value(json!({
-            "show_when": "before",
-            "ask_arrival_time": false,
-            "ask_occasion": true,
-            "ask_allergies": false,
-            "ask_guest_count": true,
-            "ask_special_needs": false,
-            "ask_id_document": false
-        }))
-        .expect("json args");
-        update_config(ctx, from_json).expect("json updateConfig");
-
-        let cfg = load_config().expect("config");
-        assert_eq!(cfg.show_when, ShowWhen::Before);
-        assert!(!cfg.questions.ask_arrival_time);
-        assert!(cfg.questions.ask_occasion);
-        assert!(!cfg.questions.ask_allergies);
-        assert!(cfg.questions.ask_guest_count);
-    });
-}
-
-#[test]
-#[serial]
 fn guest_form_respects_question_toggles() {
     reset_test_store();
-    let config_bytes = serde_json::to_vec(&json!({
+    let config = json!({
         "show_when": "confirm",
-        "questions": {
-            "ask_arrival_time": true,
-            "ask_occasion": false,
-            "ask_allergies": true,
-            "ask_guest_count": false,
-            "ask_special_needs": true,
-            "ask_id_document": true
-        }
-    }))
-    .expect("config json");
+        "ask_arrival_time": true,
+        "ask_occasion": false,
+        "ask_allergies": true,
+        "ask_guest_count": false,
+        "ask_special_needs": true,
+        "ask_id_document": true
+    });
 
     MockContext::guest()
         .with_property(Property::default())
-        .with_kv("config", config_bytes)
+        .with_config(&config)
         .run(|ctx| {
             let surface = render_guest_form(ctx);
             let json = serde_json::to_string(&surface).expect("surface json");
@@ -428,7 +351,7 @@ fn host_stay_surface_pending_without_response() {
                 "guestName": "Liam O'Brien",
                 "stayDates": "21 – 26 août",
             });
-            let surface = render_host_stay(ctx);
+            let surface = render_host_stay(ctx).expect("host stay");
             assert!(SurfaceAssertions::new(&surface).contains_type("Page"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Pill"));
@@ -471,7 +394,7 @@ fn host_stay_surface_shows_completed_response() {
         .with_property(Property::default())
         .run(|mut ctx| {
             ctx.input = serde_json::json!({ "stayId": stay_id.to_string() });
-            let surface = render_host_stay(ctx);
+            let surface = render_host_stay(ctx).expect("host stay");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Pill"));
             assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
@@ -498,7 +421,7 @@ fn host_stay_surface_missing_stay_id() {
     MockContext::host()
         .with_property(Property::default())
         .run(|ctx| {
-            let surface = render_host_stay(ctx);
+            let surface = render_host_stay(ctx).expect("host stay");
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("host.stay.missingStay"));
         });
@@ -507,18 +430,15 @@ fn host_stay_surface_missing_stay_id() {
 #[test]
 #[serial]
 fn publish_readiness_recommends_one_question() {
-    let none_asked = serde_json::to_vec(&json!({
-        "questions": {
-            "ask_arrival_time": false,
-            "ask_occasion": false,
-            "ask_allergies": false,
-            "ask_guest_count": false
-        }
-    }))
-    .expect("config json");
+    let config = json!({
+        "ask_arrival_time": false,
+        "ask_occasion": false,
+        "ask_allergies": false,
+        "ask_guest_count": false
+    });
     MockContext::host()
         .with_property(Property::default())
-        .with_kv("config", none_asked)
+        .with_config(&config)
         .run(|ctx| {
             let item = &publish_readiness(ctx).expect("publishReadiness").items[0];
             assert_eq!(item.id, "questions");

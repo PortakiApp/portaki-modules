@@ -13,7 +13,6 @@ define_operation_names! {
     GET_STATUS = "getStatus",
     PUBLISH_READINESS = "publishReadiness",
     SUBMIT = "submit",
-    UPDATE_CONFIG = "updateConfig",
     SEND_FORM_AVAILABLE = "sendFormAvailable",
 }
 

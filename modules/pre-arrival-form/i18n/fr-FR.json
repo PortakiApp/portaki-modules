@@ -75,5 +75,6 @@
   "module.catalogName": "Formulaire de pré-arrivée",
   "catalog.host.main": "Formulaire de pré-arrivée",
   "catalog.host.stay": "Formulaire de pré-arrivée",
-  "email.form-available.description": "Formulaire de pré-arrivée disponible"
+  "email.form-available.description": "Formulaire de pré-arrivée disponible",
+  "host.when": "Quand afficher le formulaire"
 }

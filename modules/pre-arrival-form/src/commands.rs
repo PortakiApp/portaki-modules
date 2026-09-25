@@ -1,12 +1,11 @@
-//! Module commands — config + submit pre-arrival form.
+//! Module commands — submit pre-arrival form.
 
 use portaki_sdk::host::events;
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::config::{load_config, save_config, ShowWhen};
+use crate::config::ModuleConfig;
 use crate::email_send;
 use crate::show_when::is_editable_until_checkin;
 use crate::storage;
@@ -20,60 +19,6 @@ struct CompletedPayload {
     special_needs: Option<String>,
     id_document: Option<String>,
     message_to_host: Option<String>,
-}
-
-/// Arguments for `updateConfig` (flat form fields from host SDUI Save).
-///
-/// Question flags are `Option<bool>` so a missing key keeps the KV value.
-/// A present `false` must stick — never use `default = true` (empty `{}`
-/// payloads used to reset every toggle ON and look like a fake Save).
-#[portaki_sdk::params]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UpdateConfigArgs {
-    #[serde(default)]
-    pub show_when: String,
-    #[serde(default)]
-    pub ask_arrival_time: Option<bool>,
-    #[serde(default)]
-    pub ask_occasion: Option<bool>,
-    #[serde(default)]
-    pub ask_allergies: Option<bool>,
-    #[serde(default)]
-    pub ask_guest_count: Option<bool>,
-    #[serde(default)]
-    pub ask_special_needs: Option<bool>,
-    #[serde(default)]
-    pub ask_id_document: Option<bool>,
-}
-
-#[portaki_sdk::command(name = "updateConfig")]
-pub fn update_config(_ctx: Context, args: UpdateConfigArgs) -> Result<()> {
-    let mut config = load_config().unwrap_or_default();
-
-    if !args.show_when.trim().is_empty() {
-        config.show_when = ShowWhen::parse(&args.show_when);
-    }
-
-    apply_flag(
-        &mut config.questions.ask_arrival_time,
-        args.ask_arrival_time,
-    );
-    apply_flag(&mut config.questions.ask_occasion, args.ask_occasion);
-    apply_flag(&mut config.questions.ask_allergies, args.ask_allergies);
-    apply_flag(&mut config.questions.ask_guest_count, args.ask_guest_count);
-    apply_flag(
-        &mut config.questions.ask_special_needs,
-        args.ask_special_needs,
-    );
-    apply_flag(&mut config.questions.ask_id_document, args.ask_id_document);
-
-    save_config(&config)
-}
-
-fn apply_flag(target: &mut bool, value: Option<bool>) {
-    if let Some(next) = value {
-        *target = next;
-    }
 }
 
 /// Arguments for `submit`.
@@ -115,8 +60,7 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
         return Err(PortakiError::Host("form_locked_after_checkin".to_string()));
     }
 
-    let config = load_config().unwrap_or_default();
-    let q = &config.questions;
+    let q = ModuleConfig::read(&ctx)?;
 
     let arrival_time = if q.ask_arrival_time {
         normalize(args.arrival_time_estimated)

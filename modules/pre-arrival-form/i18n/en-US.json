@@ -75,5 +75,6 @@
   "module.catalogName": "Pre-arrival form",
   "catalog.host.main": "Pre-arrival form",
   "catalog.host.stay": "Pre-arrival form",
-  "email.form-available.description": "Pre-arrival form available"
+  "email.form-available.description": "Pre-arrival form available",
+  "host.when": "When to show the form"
 }

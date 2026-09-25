@@ -6,7 +6,7 @@ use portaki_sdk::host::email::{
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 
-use crate::config::load_config;
+use crate::config::ModuleConfig;
 use crate::email_i18n;
 use crate::show_when::is_form_available;
 use crate::storage;
@@ -31,7 +31,7 @@ pub fn send_form_available(ctx: &Context) -> Result<()> {
         return Ok(());
     }
 
-    let config = load_config().unwrap_or_default();
+    let config = ModuleConfig::read(ctx)?;
     let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at);
     let now = time::now()?;
     if !is_form_available(config.show_when, now, checkin_at) {

@@ -8,7 +8,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{Card, HostFragment, ListItem, Stack};
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::FormQuestions;
+use crate::config::ModuleConfig;
 use crate::entities::PreArrivalResponse;
 
 pub enum FormTaskState {
@@ -99,7 +99,7 @@ pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
 /// When `existing` is set, fields are prefilled so the guest can edit / resubmit
 /// until check-in.
 pub fn build_form_surface(
-    questions: &FormQuestions,
+    questions: &ModuleConfig,
     existing: Option<&PreArrivalResponse>,
     completed: bool,
 ) -> Surface {
@@ -227,7 +227,7 @@ pub fn build_form_surface(
 }
 
 /// Read-only summary after check-in (answers no longer editable).
-pub fn build_readonly_surface(questions: &FormQuestions, response: &PreArrivalResponse) -> Surface {
+pub fn build_readonly_surface(questions: &ModuleConfig, response: &PreArrivalResponse) -> Surface {
     use portaki_sdk::sdui::primitives::Text;
 
     let mut children: Vec<Component> = Vec::new();
