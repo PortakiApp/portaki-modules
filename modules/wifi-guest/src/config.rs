@@ -1,10 +1,7 @@
-//! Host configuration stored in KV (`config` key).
+//! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
-use portaki_sdk::host;
-use portaki_sdk::Result;
+use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
-
-const CONFIG_KEY: &str = "config";
 
 #[portaki_sdk::params]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
@@ -40,33 +37,47 @@ impl RevealPolicy {
     ];
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// The keys are the names of the host form fields: the platform takes `updateConfig` itself.
+/// No password is only recommended: an open network (captive portal) has none.
+#[portaki_sdk::config]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ModuleConfig {
-    #[serde(default)]
+    #[field(required, label = "host.ssid.label")]
     pub ssid: String,
-    #[serde(default)]
+    #[field(secret, recommended, label = "host.password.label")]
     pub password: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[field(label = "host.hint.label")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub hint: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[field(kind = "textarea", label = "host.connectionSteps.label")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub connection_steps: Option<String>,
-    #[serde(default)]
+    #[field(
+        kind = "select",
+        options = ["always", "hours_before_24", "day_before_16h", "at_checkin"],
+        label = "config.revealPolicy"
+    )]
     pub reveal_policy: RevealPolicy,
 }
 
-impl Default for ModuleConfig {
-    fn default() -> Self {
-        Self {
-            ssid: String::new(),
-            password: String::new(),
-            hint: None,
-            connection_steps: None,
-            reveal_policy: RevealPolicy::DayBefore16h,
-        }
-    }
-}
-
 impl ModuleConfig {
+    /// The config of this install. The platform imports the old KV blob once, but skips a policy
+    /// spelled the pre-rename way (`hours_before24`), which is not one of the options: until the
+    /// host saves the form, that policy is still read from the KV rather than reset.
+    pub fn read(ctx: &Context) -> Result<Self> {
+        let mut config = Self::load(ctx)?;
+        let held = ctx.module_config.as_ref().and_then(|c| c.as_object());
+        if held.is_some_and(|held| !held.contains_key("reveal_policy")) {
+            if let Some(policy) = portaki_sdk::config::legacy_config()?
+                .get("reveal_policy")
+                .and_then(|raw| serde_json::from_value(raw.clone()).ok())
+            {
+                config.reveal_policy = policy;
+            }
+        }
+        Ok(config)
+    }
+
     pub fn is_empty(&self) -> bool {
         self.ssid.trim().is_empty() && self.password.trim().is_empty()
     }
@@ -86,25 +97,10 @@ impl ModuleConfig {
     }
 }
 
-pub fn load_config() -> Result<ModuleConfig> {
-    let Some(bytes) = host::kv::get(CONFIG_KEY)? else {
-        return Ok(ModuleConfig::default());
-    };
-    serde_json::from_slice(&bytes).map_err(|error| {
-        portaki_sdk::PortakiError::Storage(format!("invalid config JSON: {error}"))
-    })
-}
-
-pub fn save_config(config: &ModuleConfig) -> Result<()> {
-    let bytes = serde_json::to_vec(config).map_err(|error| {
-        portaki_sdk::PortakiError::Storage(format!("config serialize: {error}"))
-    })?;
-    host::kv::set(CONFIG_KEY, &bytes, None)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use portaki_test_utils::MockContext;
     use serde_json::json;
 
     #[test]
@@ -123,5 +119,27 @@ mod tests {
             });
             assert_eq!(parsed.as_wire(), *wire);
         }
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn a_pre_rename_policy_survives_the_import() {
+        let legacy = json!({ "ssid": "Villa", "reveal_policy": "hours_before24" });
+        MockContext::guest()
+            .with_kv("config", serde_json::to_vec(&legacy).unwrap())
+            .with_config(&json!({ "ssid": "Villa" }))
+            .run(|ctx| {
+                let config = ModuleConfig::read(&ctx).unwrap();
+                assert_eq!(config.reveal_policy, RevealPolicy::HoursBefore24);
+            });
+        MockContext::guest()
+            .with_kv("config", serde_json::to_vec(&legacy).unwrap())
+            .with_config(&json!({ "ssid": "Villa", "reveal_policy": "always" }))
+            .run(|ctx| {
+                assert_eq!(
+                    ModuleConfig::read(&ctx).unwrap().reveal_policy,
+                    RevealPolicy::Always
+                );
+            });
     }
 }

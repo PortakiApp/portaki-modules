@@ -11,7 +11,7 @@ use portaki_sdk::sdui::primitives::{
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{load_config, RevealPolicy};
+use crate::config::{ModuleConfig, RevealPolicy};
 
 #[portaki_sdk::surface(
     host,
@@ -20,8 +20,8 @@ use crate::config::{load_config, RevealPolicy};
     label_key = "catalog.host.main",
     icon = IconName::Wifi
 )]
-pub fn render_host_main(_ctx: HostContext) -> Surface {
-    let config = load_config().unwrap_or_default();
+pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
+    let config = ModuleConfig::read(&ctx)?;
 
     let form_children: Vec<Component> = vec![
         InfoBanner::new()
@@ -44,7 +44,6 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
         Field::new()
             .name("password")
             .label("i18n:host.password.label")
-            .required(true)
             .children(vec![
                 FieldHint::new().text("i18n:host.password.desc").into(),
                 SecretInput::new()
@@ -93,10 +92,10 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
     ];
 
     // No Page title / Save — the modules drawer owns chrome + footer Save.
-    Surface::new(
+    Ok(Surface::new(
         Page::new().child(Form::new().child(Stack::new().gap(20.0).children(form_children))),
     )
-    .with_id(crate::ids::HOST_MAIN)
+    .with_id(crate::ids::HOST_MAIN))
 }
 
 fn reveal_choice_list(policy: RevealPolicy) -> ChoiceList {

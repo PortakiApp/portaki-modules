@@ -2,7 +2,7 @@
 
 use portaki_sdk::prelude::*;
 
-use crate::config::load_config;
+use crate::config::ModuleConfig;
 
 /// Gateway `emailContext` args — shared SDK wire type.
 pub use portaki_sdk::EmailContextArgs;
@@ -20,12 +20,12 @@ pub fn email_context(ctx: Context, args: EmailContextArgs) -> Result<EmailContex
     build_email_context(ctx, args)
 }
 
-pub fn build_email_context(_ctx: Context, args: EmailContextArgs) -> Result<EmailContextResponse> {
+pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<EmailContextResponse> {
     if !args.allows_template(&[EmailTemplateKey::Arrival, EmailTemplateKey::ArrivalDay]) {
         return Ok(EmailContextResponse { wifi_name: None });
     }
 
-    let config = load_config().unwrap_or_default();
+    let config = ModuleConfig::read(&ctx)?;
     let ssid = config.ssid.trim();
     Ok(EmailContextResponse {
         wifi_name: if ssid.is_empty() {
@@ -48,14 +48,10 @@ mod tests {
     fn when_arrival_then_returns_wifi_name() {
         let (ctx, host) = MockContext::guest()
             .with_capabilities(&[capability::core::STORAGE])
-            .with_kv(
-                "config",
-                serde_json::to_vec(&json!({
-                    "ssid": "Belledonne_Guest",
-                    "password": "secret"
-                }))
-                .unwrap(),
-            )
+            .with_config(&json!({
+                "ssid": "Belledonne_Guest",
+                "password": "secret"
+            }))
             .build();
 
         with_host(host, ctx.clone(), || {
@@ -77,10 +73,7 @@ mod tests {
     fn when_wrong_template_then_empty() {
         let (ctx, host) = MockContext::guest()
             .with_capabilities(&[capability::core::STORAGE])
-            .with_kv(
-                "config",
-                serde_json::to_vec(&json!({ "ssid": "Belledonne_Guest" })).unwrap(),
-            )
+            .with_config(&json!({ "ssid": "Belledonne_Guest" }))
             .build();
 
         with_host(host, ctx.clone(), || {
