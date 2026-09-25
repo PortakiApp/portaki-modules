@@ -16,6 +16,10 @@ use serde_json::json;
 
 #[path = "../../../support/config_form.rs"]
 mod config_form;
+#[path = "../../../support/config_save.rs"]
+mod config_save;
+
+const EMISSIONS: &str = concat!(env!("OUT_DIR"), "/portaki-emissions");
 
 const FR_BUNDLE: &str = include_str!("../i18n/fr-FR.json");
 const EN_BUNDLE: &str = include_str!("../i18n/en-US.json");
@@ -253,17 +257,81 @@ fn the_host_form_sends_the_declared_keys() {
         }))
         .run(|ctx| {
             let surface = render_host_main(ctx).expect("host main");
-            config_form::assert_form_matches_config(
-                concat!(env!("OUT_DIR"), "/portaki-emissions"),
-                &surface,
-                &[],
-            );
+            config_form::assert_form_matches_config(EMISSIONS, &surface, &[]);
             let json = surface_json(&surface);
             assert!(json.contains("Plage du Midi, Cannes"), "{json}");
             assert!(json.contains("Les incontournables"), "{json}");
             // Pas de bouton Enregistrer : le tableau de bord enregistre à la saisie, et la
             // plateforme refuserait les arguments figés qu'il enverrait.
             assert!(!SurfaceAssertions::new(&surface).contains_type("Button"));
+        });
+}
+
+/// A host writing in English: the French texts stay, and so do the url, the note and the ids the
+/// form does not carry; rows keep their place.
+#[test]
+#[serial]
+fn a_save_in_english_keeps_the_french() {
+    assert_eq!(
+        config_save::localized_paths(EMISSIONS),
+        [
+            "activities.label",
+            "activities_intro",
+            "disclaimer",
+            "spots.detail",
+            "spots.note",
+            "spots.title"
+        ]
+    );
+    let stored = json!({
+        "spots": [
+            { "id": "bike", "title": { "fr": "Vélos", "en": "Bikes" }, "category": "Location",
+              "url": "https://example.com", "note": { "fr": "Réservez", "en": "Book ahead" },
+              "detail": { "fr": "Vélos électriques", "en": "E-bikes" } },
+            { "title": "", "category": "", "distance": "", "tag": "", "detail": "", "address": "" },
+            { "id": "beach", "title": { "fr": "Plage" }, "detail": { "fr": "Sable fin" },
+              "address": "Bd du Midi, Cannes", "lat": 43.548, "lng": 7.005 }
+        ],
+        "disclaimer": { "fr": "Suggestions", "en": "Suggestions (en)" },
+        "activities_enabled": true,
+        "activities_intro": { "fr": "Les incontournables", "en": "Must-dos" },
+        "activities": [
+            { "id": "suquet", "url": "https://gyg.me/aBcD12", "label": { "fr": "Suquet", "en": "Old town" } }
+        ],
+        "tiqets_radius_km": "20"
+    });
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&stored)
+        .run(|mut ctx| {
+            ctx.locale = "en-US".into();
+            let surface = render_host_main(ctx).expect("host main");
+            let sent = config_save::form_args(&surface);
+            // Stored order, the blank row where it was; ids on the filled rows only.
+            assert_eq!(sent["spots"][0]["id"], "bike");
+            assert_eq!(sent["spots"][0]["title"], "Bikes");
+            assert!(sent["spots"][1].get("id").is_none());
+            assert_eq!(sent["spots"][2]["id"], "beach");
+            assert_eq!(sent["spots"][2]["title"], "Plage");
+            assert_eq!(sent["spots"].as_array().unwrap().len(), 6);
+            assert_eq!(sent["activities"][0]["id"], "suquet");
+            assert_eq!(sent["activities"][0]["label"], "Old town");
+            assert!(sent["activities"][1].get("id").is_none());
+            assert_eq!(sent["activities_intro"], "Must-dos");
+
+            let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
+            let bike = &saved["spots"][0];
+            for key in ["title", "note", "detail", "url", "category"] {
+                assert_eq!(bike[key], stored["spots"][0][key], "{key}");
+            }
+            assert_eq!(saved["spots"][2]["title"]["fr"], "Plage");
+            assert_eq!(saved["spots"][2]["detail"]["fr"], "Sable fin");
+            assert_eq!(
+                saved["activities"][0]["label"],
+                stored["activities"][0]["label"]
+            );
+            assert_eq!(saved["activities_intro"], stored["activities_intro"]);
+            assert_eq!(saved["disclaimer"], stored["disclaimer"]);
         });
 }
 

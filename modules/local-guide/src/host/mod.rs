@@ -1,6 +1,7 @@
 //! Host dashboard surface — design `guide-editor-v1` (Wasm SDUI).
 
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
     AddressMapPicker, Card, Field, Form, InfoBanner, Page, Select, Stack, Text, TextArea,
@@ -9,18 +10,19 @@ use portaki_sdk::sdui::primitives::{
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::affiliate::{looks_like_url, normalize_curated_url, CuratedUrlError, MAX_CURATED_LINKS};
-use crate::config::{ActivityRow, Localized, ModuleConfig, SpotRow, TIQETS_RADIUS_CHOICES_KM};
+use crate::config::{ActivityRow, ModuleConfig, SpotRow, TIQETS_RADIUS_CHOICES_KM};
 use crate::tiqets::TiqetsStatus;
 
 const SPOT_SLOTS: usize = 6;
 
-/// Créneaux d'activités affichés : ceux qui sont remplis, plus un libre.
+/// Créneaux d'activités affichés : les lignes stockées, plus un libre.
 ///
 /// Deux au minimum pour que la section ait l'air d'une liste, [`MAX_CURATED_LINKS`] au
 /// maximum — la même borne que celle appliquée au rendu voyageur, pour que le formulaire
-/// ne propose jamais un créneau qui ne s'afficherait pas.
-fn activity_slots(filled: usize) -> usize {
-    (filled + 1).clamp(2, MAX_CURATED_LINKS)
+/// ne propose jamais un créneau qui ne s'afficherait pas. Une ligne stockée au-delà reste
+/// affichée : le formulaire ne la retire pas en silence.
+fn activity_slots(stored: usize) -> usize {
+    (stored + 1).clamp(2, MAX_CURATED_LINKS).max(stored)
 }
 
 #[portaki_sdk::surface(
@@ -32,12 +34,8 @@ fn activity_slots(filled: usize) -> usize {
     icon = IconName::MapPin
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
-    let lang = Localized::lang_code(&ctx.locale);
-    let config = ModuleConfig::read(&ctx)?;
-    let spots = config.parse_spots();
-    // Un texte par champ désormais (la plateforme garde ce qu'envoie le formulaire) : on montre
-    // la langue qui l'a, plutôt qu'un champ vide que le prochain enregistrement réécrirait.
-    let disclaimer = config.disclaimer.pick(&lang);
+    let config = ModuleConfig::load(&ctx)?;
+    let disclaimer = config.disclaimer.host_value(&ctx);
     let activities = config.activities();
     let tiqets = config.tiqets();
 
@@ -49,7 +47,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let activities_intro = ctx
         .input_str("activities_intro")
         .map(str::to_string)
-        .unwrap_or_else(|| activities.intro.pick(&lang));
+        .unwrap_or_else(|| activities.intro.host_value(&ctx).to_string());
 
     let tiqets_enabled = ctx.input_bool("tiqets_enabled", tiqets.enabled);
     let tiqets_radius = ctx
@@ -69,16 +67,16 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     );
 
     let mut cards: Vec<Component> = Vec::new();
-    for index in 0..SPOT_SLOTS {
-        cards.push(spot_card(index, spots.get(index), &lang));
+    // The stored rows where they are, blank ones included, then empty slots.
+    for index in 0..SPOT_SLOTS.max(config.spots.len()) {
+        cards.push(spot_card(index, config.spots.get(index), &ctx));
     }
     cards.push(activities_card(
         &ctx,
         activities_enabled,
         &activities_destination,
         &activities_intro,
-        &activities.links,
-        &lang,
+        &config.activities,
     ));
     cards.push(tiqets_card(
         tiqets_enabled,
@@ -125,7 +123,6 @@ fn activities_card(
     destination: &str,
     intro: &str,
     links: &[ActivityRow],
-    lang: &str,
 ) -> Component {
     let slots = activity_slots(links.len());
     let mut children: Vec<Component> = vec![ToggleRow::new()
@@ -146,7 +143,11 @@ fn activities_card(
         let label = ctx
             .input_str(&format!("activities.{index}.label"))
             .map(str::to_string)
-            .unwrap_or_else(|| stored.map(|row| row.label.pick(lang)).unwrap_or_default());
+            .unwrap_or_else(|| {
+                stored
+                    .map(|row| row.label.host_value(ctx).to_string())
+                    .unwrap_or_default()
+            });
 
         if matches!(
             normalize_curated_url(&url),
@@ -155,6 +156,13 @@ fn activities_card(
             has_rejected_url = true;
         }
 
+        // A filled row sends its id, so a save merges into it (and keeps its label's other
+        // languages). A blank slot has nothing to keep — and an id would make it count as filled.
+        rows.extend(
+            stored
+                .filter(|row| !row.is_blank())
+                .map(|row| sdui::row_id("activities", index, Some(&row.id))),
+        );
         rows.push(
             Field::new()
                 .name(format!("activities.{index}.url"))
@@ -324,16 +332,13 @@ fn tiqets_card(enabled: bool, radius: &str, min_rating: &str, status: TiqetsStat
         .into()
 }
 
-fn spot_card(index: usize, spot: Option<&SpotRow>, lang: &str) -> Component {
+fn spot_card(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Component {
     let slot = index + 1;
-    let name = spot.map(|s| s.title.pick(lang)).unwrap_or_default();
+    let title = spot.map(|s| s.title.host_value(ctx)).unwrap_or_default();
     let category = spot.and_then(|s| s.category.as_deref()).unwrap_or("");
     let distance = spot.and_then(|s| s.distance.as_deref()).unwrap_or("");
     let tag = spot.and_then(|s| s.tag.as_deref()).unwrap_or("");
-    let description = spot
-        .and_then(|s| s.detail.as_ref())
-        .map(|d| d.pick(lang))
-        .unwrap_or_default();
+    let detail = spot.map(|s| s.detail.host_value(ctx)).unwrap_or_default();
     let address = spot.and_then(|s| s.address.as_deref()).unwrap_or("");
     // Sans position, le sélecteur ne reçoit ni latitude ni longitude : il part vide.
     let mut picker = AddressMapPicker::new()
@@ -347,57 +352,65 @@ fn spot_card(index: usize, spot: Option<&SpotRow>, lang: &str) -> Component {
         picker = picker.lat(lat).lng(lng);
     }
 
+    // A filled row sends its id, so a save merges into it (and keeps its url, its note, its
+    // other languages). A blank slot has nothing to keep — and an id would make it count as filled.
+    let id = spot
+        .filter(|s| !s.is_blank())
+        .map(|s| sdui::row_id("spots", index, Some(&s.id)));
+
+    let fields: Vec<Component> = vec![
+        Field::new()
+            .name(format!("spots.{index}.title"))
+            .label("i18n:host.spot.name")
+            .child(
+                TextInput::new()
+                    .name(format!("spots.{index}.title"))
+                    .value(title),
+            )
+            .into(),
+        Field::new()
+            .name(format!("spots.{index}.category"))
+            .label("i18n:host.spot.category")
+            .child(
+                TextInput::new()
+                    .name(format!("spots.{index}.category"))
+                    .value(category),
+            )
+            .into(),
+        Field::new()
+            .name(format!("spots.{index}.distance"))
+            .label("i18n:host.spot.distance")
+            .child(
+                TextInput::new()
+                    .name(format!("spots.{index}.distance"))
+                    .value(distance),
+            )
+            .into(),
+        Field::new()
+            .name(format!("spots.{index}.tag"))
+            .label("i18n:host.spot.tag")
+            .child(
+                TextInput::new()
+                    .name(format!("spots.{index}.tag"))
+                    .value(tag),
+            )
+            .into(),
+        Field::new()
+            .name(format!("spots.{index}.detail"))
+            .label("i18n:host.spot.description")
+            .child(
+                TextArea::new()
+                    .name(format!("spots.{index}.detail"))
+                    .value(detail),
+            )
+            .into(),
+        picker.into(),
+    ];
+
     Card::new()
         .title(format!("i18n:host.spot.slot{slot}"))
         .icon(IconName::MapPin)
-        .children(vec![
-            Field::new()
-                .name(format!("spots.{index}.name"))
-                .label("i18n:host.spot.name")
-                .child(
-                    TextInput::new()
-                        .name(format!("spots.{index}.name"))
-                        .value(name),
-                )
-                .into(),
-            Field::new()
-                .name(format!("spots.{index}.category"))
-                .label("i18n:host.spot.category")
-                .child(
-                    TextInput::new()
-                        .name(format!("spots.{index}.category"))
-                        .value(category),
-                )
-                .into(),
-            Field::new()
-                .name(format!("spots.{index}.distance"))
-                .label("i18n:host.spot.distance")
-                .child(
-                    TextInput::new()
-                        .name(format!("spots.{index}.distance"))
-                        .value(distance),
-                )
-                .into(),
-            Field::new()
-                .name(format!("spots.{index}.tag"))
-                .label("i18n:host.spot.tag")
-                .child(
-                    TextInput::new()
-                        .name(format!("spots.{index}.tag"))
-                        .value(tag),
-                )
-                .into(),
-            Field::new()
-                .name(format!("spots.{index}.description"))
-                .label("i18n:host.spot.description")
-                .child(
-                    TextArea::new()
-                        .name(format!("spots.{index}.description"))
-                        .value(description),
-                )
-                .into(),
-            picker.into(),
-        ])
+        .children(id.into_iter().chain(fields).collect())
         .into()
 }
 
@@ -412,6 +425,7 @@ mod tests {
         assert_eq!(activity_slots(4), 5);
         assert_eq!(activity_slots(MAX_CURATED_LINKS), MAX_CURATED_LINKS);
         // Le formulaire ne propose jamais un créneau que le livret n'afficherait pas.
-        assert_eq!(activity_slots(MAX_CURATED_LINKS + 5), MAX_CURATED_LINKS);
+        // Sauf une ligne déjà stockée au-delà : elle reste là où elle est.
+        assert_eq!(activity_slots(MAX_CURATED_LINKS + 5), MAX_CURATED_LINKS + 5);
     }
 }

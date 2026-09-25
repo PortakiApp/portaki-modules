@@ -22,7 +22,7 @@ use portaki_sdk::host::{self, log, time};
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::config::{valid_coords, Localized, TiqetsConfig};
+use crate::config::{valid_coords, TiqetsConfig};
 
 /// Fraîcheur d'une entrée du cache.
 pub const FRESH_SECS: i64 = 24 * 60 * 60;
@@ -174,9 +174,17 @@ fn view(products: Vec<TiqetsProduct>) -> Option<TiqetsView> {
     }
 }
 
+/// `fr` pour `fr-FR` ; `fr` quand la locale est vide.
+fn lang_code(locale: &str) -> String {
+    match locale.trim().split(['-', '_']).next() {
+        Some(code) if !code.is_empty() => code.to_ascii_lowercase(),
+        _ => "fr".to_string(),
+    }
+}
+
 /// La langue du livret si Tiqets la sert, l'anglais sinon.
 pub fn tiqets_lang(locale: &str) -> String {
-    let code = Localized::lang_code(locale);
+    let code = lang_code(locale);
     if TIQETS_LANGS.contains(&code.as_str()) {
         code
     } else {
@@ -227,7 +235,7 @@ pub fn format_price(amount: f64, currency: &str, lang: &str) -> String {
         "GBP" => "£",
         other => other,
     };
-    if Localized::lang_code(lang) == "fr" {
+    if lang_code(lang) == "fr" {
         format!("{} {symbol}", number.replace('.', ","))
     } else if symbol.len() == 3 && symbol.chars().all(|c| c.is_ascii_uppercase()) {
         format!("{number} {symbol}")
@@ -239,7 +247,7 @@ pub fn format_price(amount: f64, currency: &str, lang: &str) -> String {
 /// « 4,6 » en français, « 4.6 » ailleurs.
 pub fn format_rating(average: f64, lang: &str) -> String {
     let text = format!("{:.1}", (average * 10.0).round() / 10.0);
-    if Localized::lang_code(lang) == "fr" {
+    if lang_code(lang) == "fr" {
         text.replace('.', ",")
     } else {
         text
