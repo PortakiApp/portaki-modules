@@ -14,9 +14,6 @@
   "home.card.openForm": "Nouveau signalement",
   "nav.issue-report": "Signaler un problème",
   "guest.teaser": "Signaler un problème à votre hôte",
-  "home.card.unavailable": "Signalement indisponible",
-  "home.card.error.title": "Signalement temporairement indisponible",
-  "home.card.error.description": "Le formulaire n’a pas pu être chargé. Réessayez dans un instant.",
   "form.category.label": "Catégorie",
   "form.category.appliance": "Appareil ou équipement",
   "form.category.cleanliness": "Propreté",
@@ -28,11 +25,6 @@
   "form.details.label": "Détails",
   "form.details.placeholder": "Optionnel — quoi, quand, où",
   "form.submit": "Envoyer",
-  "module.status.incomplete.title": "Configuration incomplète",
-  "module.status.incomplete.description": "Finalisez le module dans le tableau de bord hôte",
-  "module.status.incomplete.hint": "Ouvrez Modules → Signaler un problème",
-  "module.status.inactive.title": "Signalement désactivé",
-  "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
   "stats.reports": "Signalements",
   "stats.resolved": "Résolus",
   "stats.open": "En cours",
@@ -68,5 +60,7 @@
   "host.detail.openStay": "Ouvrir le séjour",
   "host.detail.message": "Écrire au voyageur",
   "host.detail.resolve": "Marquer comme résolu",
-  "catalog.host.issue-stats": "Signalements"
+  "catalog.host.issue-stats": "Signalements",
+  "guest.error.title": "Signalement temporairement indisponible",
+  "guest.error.description": "Le formulaire n’a pas pu être chargé."
 }
