@@ -16,7 +16,17 @@ pub struct EmailContextResponse {
 }
 
 /// One host pick for Portaki guest templates.
-#[portaki_sdk::query(name = "emailContext")]
+#[portaki_sdk::query(
+    name = "emailContext",
+    example(
+        label = "E-mail du jour d'arrivée",
+        input = r#"{"templateKey":"arrival-day"}"#
+    ),
+    example(
+        label = "E-mail du lendemain, en anglais",
+        input = r#"{"templateKey":"post-arrival","locale":"en"}"#
+    )
+)]
 pub fn email_context(ctx: Context, args: EmailContextArgs) -> Result<EmailContextResponse> {
     build_email_context(ctx, args)
 }
