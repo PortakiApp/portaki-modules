@@ -40,6 +40,7 @@
   "guest.error.description": "The review page could not be loaded",
   "guest.error.hint": "Try again in a moment",
   "guest.prompt": "How was your stay at {property}?",
+  "guest.notYet": "You can leave your review once you have arrived.",
   "stats.tile.30": "{count} reviews · 30 d",
   "stats.tile.90": "{count} reviews · 90 d",
   "stats.tile.365": "{count} reviews · 12 months",

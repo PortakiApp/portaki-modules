@@ -39,6 +39,15 @@ pub fn load_reviews() -> Result<Vec<StoredReview>> {
         .unwrap_or_default())
 }
 
+/// The guest has checked in — or the stay has no check-in date to say otherwise. Before
+/// arrival there is no stay to review.
+pub(crate) fn has_arrived(ctx: &Context) -> Result<bool> {
+    match ctx.stay.as_ref().and_then(|stay| stay.checkin_at) {
+        Some(checkin_at) => Ok(host::time::now()? >= checkin_at),
+        None => Ok(true),
+    }
+}
+
 #[portaki_sdk::command(name = "submitReview", guest)]
 pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
     let config = ModuleConfig::load(&ctx)?;
@@ -46,6 +55,9 @@ pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
         return Err(PortakiError::Host(
             "portaki_review_platform_not_enabled".into(),
         ));
+    }
+    if !has_arrived(&ctx)? {
+        return Err(PortakiError::Host("review_before_arrival".into()));
     }
 
     if !(1..=5).contains(&args.rating) {
