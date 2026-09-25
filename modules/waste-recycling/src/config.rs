@@ -1,98 +1,132 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
+use std::collections::BTreeSet;
+
+use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::prelude::*;
-use serde::{Deserialize, Deserializer, Serialize};
-use serde_json::Value;
-
-use crate::localized::deserialize_localized_field;
-
-pub use crate::localized::Localized;
+use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value};
 
 /// The keys are the names of the host form fields: the platform takes `updateConfig` itself.
-#[portaki_sdk::config]
+#[portaki_sdk::config(legacy = legacy)]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct ModuleConfig {
     #[field(required, label = "config.bins")]
     pub bins: Vec<BinRow>,
-    /// A plain string from the form; a text per language in the old KV.
-    #[field(kind = "textarea", label = "host.schedule.label")]
-    #[serde(deserialize_with = "deserialize_localized_field")]
-    pub collection_schedule: Localized,
+    #[field(label = "host.schedule.label")]
+    pub collection_schedule: I18nText,
+}
+
+/// The old KV blob: the bins as a JSON string, `bins_json`, before the form slots; each bin's
+/// `items` as a list of per-language texts.
+fn legacy(mut old: Value) -> Value {
+    if let Some(object) = old.as_object_mut() {
+        map_legacy(object);
+    }
+    old
+}
+
+fn map_legacy(old: &mut Map<String, Value>) {
+    let listed = old
+        .remove("bins_json")
+        .and_then(|raw| serde_json::from_str::<Value>(raw.as_str()?).ok());
+    let held = old
+        .get("bins")
+        .and_then(Value::as_array)
+        .is_some_and(|rows| !rows.is_empty());
+    if let (Some(bins), false) = (listed, held) {
+        old.insert("bins".into(), bins);
+    }
+    for row in old
+        .get_mut("bins")
+        .and_then(Value::as_array_mut)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_object_mut)
+    {
+        if let Some(Value::Array(items)) = row.get("items") {
+            let items = joined_lines(items);
+            row.insert("items".into(), items);
+        }
+    }
+}
+
+/// A list of per-language texts as one text per language, one line each — an item missing in a
+/// language falls back as it did when shown alone.
+fn joined_lines(lines: &[Value]) -> Value {
+    let lines: Vec<I18nText> = lines
+        .iter()
+        .filter_map(|line| serde_json::from_value(line.clone()).ok())
+        .collect();
+    let languages: BTreeSet<&str> = lines
+        .iter()
+        .flat_map(|line| {
+            ["fr", "en"]
+                .into_iter()
+                .chain(line.others.keys().map(String::as_str))
+        })
+        .collect();
+    let by_language: Map<String, Value> = languages
+        .into_iter()
+        .map(|language| {
+            let text = lines
+                .iter()
+                .map(|line| line.get(language).trim())
+                .filter(|line| !line.is_empty())
+                .collect::<Vec<_>>()
+                .join("\n");
+            (language.to_string(), Value::String(text))
+        })
+        .collect();
+    Value::Object(by_language)
 }
 
 impl ModuleConfig {
-    /// The config of this install. The import skips what the old KV kept in another shape: the
-    /// schedule as a text per language, and the `bins_json` string the form slots replaced.
-    /// While the host has not saved that key, it is still read from the KV.
-    pub fn read(ctx: &Context) -> Result<Self> {
-        let mut config = Self::load(ctx)?;
-        let Some(held) = ctx.module_config.as_ref().and_then(|c| c.as_object()) else {
-            return Ok(config);
-        };
-        let (schedule_held, bins_held) = (
-            held.contains_key("collection_schedule"),
-            held.contains_key("bins"),
-        );
-        if schedule_held && bins_held {
-            return Ok(config);
-        }
-        let legacy = portaki_sdk::config::legacy_config()?;
-        if !schedule_held {
-            if let Some(schedule) = legacy.get("collection_schedule") {
-                config.collection_schedule = Localized::from_value(schedule);
-            }
-        }
-        if !bins_held {
-            if let Some(bins) = legacy
-                .get("bins_json")
-                .and_then(Value::as_str)
-                .and_then(|raw| serde_json::from_str(raw).ok())
-            {
-                config.bins = bins;
-            }
-        }
-        Ok(config)
-    }
-
     pub fn is_empty(&self) -> bool {
-        self.parse_bins().is_empty() && self.collection_schedule.is_empty()
+        self.parse_bins().is_empty() && self.collection_schedule.is_blank()
     }
 
-    /// The named rows: the form sends its six slots, blank ones included.
+    /// The named rows, for the guest: the form sends its slots, blank ones included.
     pub fn parse_bins(&self) -> Vec<BinRow> {
         self.bins
             .iter()
-            .filter(|b| !b.title.is_empty())
+            .filter(|b| !b.title.is_blank())
             .cloned()
             .collect()
     }
 }
 
-/// A bin as the host form sends it (`title`, `items` and `color` as strings), or as the KV kept
-/// it (`id`, a title per language, a list of items per language).
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// A bin. The form sends `title`, `items` and `color` (and `id`); the platform keeps the other
+/// languages.
+#[portaki_sdk::params]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(default)]
 pub struct BinRow {
-    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub id: String,
-    #[serde(default, deserialize_with = "deserialize_localized_field")]
-    pub title: Localized,
-    #[serde(default, deserialize_with = "deserialize_items")]
-    pub items: Vec<Localized>,
-    #[serde(default)]
+    pub title: I18nText,
+    /// One item per line.
+    pub items: I18nText,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub color: Option<String>,
 }
 
-/// One line of text (the form), or a list per language (the KV).
-fn deserialize_items<'de, D: Deserializer<'de>>(
-    deserializer: D,
-) -> std::result::Result<Vec<Localized>, D::Error> {
-    Ok(match Value::deserialize(deserializer)? {
-        Value::Array(items) => items.iter().map(Localized::from_value).collect(),
-        line => Some(Localized::from_value(&line))
-            .filter(|line| !line.is_empty())
-            .into_iter()
-            .collect(),
-    })
+impl BinRow {
+    /// Nothing the form shows but a color: a slot the host left (or emptied).
+    pub fn is_blank(&self) -> bool {
+        self.title.is_blank() && self.items.is_blank()
+    }
+
+    /// The non-blank items in `locale`.
+    pub fn items(&self, locale: &str) -> Vec<String> {
+        self.items
+            .get(locale)
+            .lines()
+            .map(str::trim)
+            .filter(|item| !item.is_empty())
+            .map(String::from)
+            .collect()
+    }
 }
 
 /// The bin tints the host can pick — each one a [`Swatch`] the booklet resolves in its theme.
@@ -183,7 +217,7 @@ mod tests {
     fn a_form_row_reads_with_plain_strings() {
         let config: ModuleConfig = serde_json::from_value(json!({
             "bins": [
-                { "title": "Bac jaune", "items": "Emballages", "color": "yellow" },
+                { "title": "Bac jaune", "items": "Emballages\nCartons", "color": "yellow" },
                 { "title": "", "items": "", "color": "" }
             ],
             "collection_schedule": "Mardi matin"
@@ -191,34 +225,86 @@ mod tests {
         .unwrap();
         let bins = config.parse_bins();
         assert_eq!(bins.len(), 1);
-        assert_eq!(bins[0].title.pick("en"), "Bac jaune");
-        assert_eq!(bins[0].items.len(), 1);
-        assert_eq!(bins[0].items[0].pick("en"), "Emballages");
-        assert_eq!(config.collection_schedule.pick("en"), "Mardi matin");
+        assert_eq!(bins[0].title.get("en"), "Bac jaune");
+        assert_eq!(bins[0].items("en"), ["Emballages", "Cartons"]);
+        assert_eq!(config.collection_schedule.get("en"), "Mardi matin");
+    }
+
+    #[test]
+    fn legacy_bins_json_becomes_bins() {
+        let mapped = legacy(json!({
+            "bins_json": r##"[{"id":"glass","title":{"fr":"Verre","en":"Glass"},"items":[],"color":"#3a8a4d"}]"##,
+            "collection_schedule": { "fr": "Mardi", "en": "Tuesday" }
+        }));
+        assert_eq!(
+            mapped,
+            json!({
+                "bins": [{ "id": "glass", "title": { "fr": "Verre", "en": "Glass" }, "items": {},
+                           "color": "#3a8a4d" }],
+                "collection_schedule": { "fr": "Mardi", "en": "Tuesday" }
+            })
+        );
+        let config: ModuleConfig = serde_json::from_value(mapped).unwrap();
+        assert_eq!(config.parse_bins()[0].title.get("en"), "Glass");
+        assert_eq!(
+            bin_swatch(config.bins[0].color.as_deref()),
+            Some(Swatch::Green)
+        );
+        assert_eq!(config.collection_schedule.get("en"), "Tuesday");
+        // A list already there wins over the old string; an unreadable string imports nothing.
+        let kept = legacy(json!({ "bins": [{ "title": "Verre" }], "bins_json": "[]" }));
+        assert_eq!(kept, json!({ "bins": [{ "title": "Verre" }] }));
+        assert_eq!(legacy(json!({ "bins_json": "[oops" })), json!({}));
+        // An empty list (the old reader's « nothing saved yet ») still takes the string.
+        let empty = legacy(json!({ "bins": [], "bins_json": r#"[{"title":"Verre"}]"# }));
+        assert_eq!(empty, json!({ "bins": [{ "title": "Verre" }] }));
+    }
+
+    #[test]
+    fn legacy_items_become_one_text_per_language() {
+        let mapped = legacy(json!({
+            "bins": [{
+                "id": "yellow",
+                "title": { "fr": "Bac jaune", "en": "Yellow bin" },
+                "items": [
+                    { "fr": "Plastique", "en": "Plastic" },
+                    { "fr": "", "en": " " },
+                    { "fr": "Carton" }
+                ],
+                "color": "yellow"
+            }],
+            "collection_schedule": "Mardi"
+        }));
+        assert_eq!(
+            mapped["bins"][0]["items"],
+            json!({ "fr": "Plastique\nCarton", "en": "Plastic\nCarton" })
+        );
+        assert_eq!(mapped["collection_schedule"], "Mardi");
+        let config: ModuleConfig = serde_json::from_value(mapped).unwrap();
+        assert_eq!(config.bins[0].items("en-US"), ["Plastic", "Carton"]);
+        assert_eq!(config.bins[0].color.as_deref(), Some("yellow"));
+        assert_eq!(config.collection_schedule.get("en"), "Mardi");
     }
 
     #[test]
     #[serial_test::serial]
-    fn what_the_import_skips_survives() {
-        let legacy = json!({
-            "bins_json": r#"[{"id":"glass","title":{"fr":"Verre","en":"Glass"},"items":[]}]"#,
+    fn the_kv_is_read_through_legacy_until_the_platform_holds_the_config() {
+        let old = json!({
+            "bins_json": r#"[{"id":"glass","title":{"fr":"Verre","en":"Glass"},"items":[{"fr":"Bouteilles","en":"Bottles"}]}]"#,
             "collection_schedule": { "fr": "Mardi", "en": "Tuesday" }
         });
         MockContext::guest()
-            .with_kv("config", serde_json::to_vec(&legacy).unwrap())
-            .with_config(&json!({}))
+            .with_kv("config", serde_json::to_vec(&old).unwrap())
             .run(|ctx| {
-                let config = ModuleConfig::read(&ctx).unwrap();
-                assert_eq!(config.parse_bins()[0].title.pick("en"), "Glass");
-                assert_eq!(config.collection_schedule.pick("en"), "Tuesday");
+                let config = ModuleConfig::load(&ctx).unwrap();
+                let bins = config.parse_bins();
+                assert_eq!(bins[0].title.get("en"), "Glass");
+                assert_eq!(bins[0].items("en"), ["Bottles"]);
+                assert_eq!(config.collection_schedule.get("en"), "Tuesday");
             });
         MockContext::guest()
-            .with_kv("config", serde_json::to_vec(&legacy).unwrap())
-            .with_config(&json!({ "bins": [], "collection_schedule": "" }))
-            .run(|ctx| {
-                let config = ModuleConfig::read(&ctx).unwrap();
-                assert!(config.bins.is_empty());
-                assert!(config.collection_schedule.is_empty());
-            });
+            .with_kv("config", serde_json::to_vec(&old).unwrap())
+            .with_config(&json!({}))
+            .run(|ctx| assert_eq!(ModuleConfig::load(&ctx).unwrap(), ModuleConfig::default()));
     }
 }

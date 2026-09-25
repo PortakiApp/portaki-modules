@@ -12,16 +12,9 @@ pub fn build_bins_body(data: &GuestData, enriched: bool) -> Vec<Component> {
     let mut children = Vec::new();
 
     for bin in &data.bins {
-        let title = bin
-            .title
-            .pick_with_fallback(&data.locale, &data.property_locale);
-        let subtitle = bin
-            .items
-            .iter()
-            .map(|item| item.pick_with_fallback(&data.locale, &data.property_locale))
-            .filter(|s| !s.trim().is_empty())
-            .collect::<Vec<_>>()
-            .join(", ");
+        let title = bin.title.get(&data.locale);
+        let items = bin.items(&data.locale);
+        let subtitle = items.join(", ");
 
         if let Some(swatch) = bin_swatch(bin.color.as_deref()) {
             children.push(Component::ColorDotItem(
@@ -35,12 +28,8 @@ pub fn build_bins_body(data: &GuestData, enriched: bool) -> Vec<Component> {
                 item = item.subtitle(subtitle);
             }
             if enriched {
-                for line in &bin.items {
-                    let text = line.pick_with_fallback(&data.locale, &data.property_locale);
-                    if text.trim().is_empty() {
-                        continue;
-                    }
-                    item = item.child(Text::new().text(text).variant(TextVariant::Caption));
+                for line in items {
+                    item = item.child(Text::new().text(line).variant(TextVariant::Caption));
                 }
             }
             children.push(Component::ListItem(item));

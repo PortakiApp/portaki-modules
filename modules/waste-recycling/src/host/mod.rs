@@ -1,12 +1,13 @@
 //! Host dashboard surface — design `waste-editor-v1` (Wasm SDUI).
 
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
     Card, Field, Form, Page, Select, Stack, Text, TextArea, TextInput,
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{bin_color_name, BinRow, Localized, ModuleConfig};
+use crate::config::{bin_color_name, BinRow, ModuleConfig};
 
 const BIN_SLOTS: usize = 6;
 
@@ -20,13 +21,12 @@ const BIN_SLOTS: usize = 6;
     icon = IconName::Recycle
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
-    let lang = Localized::lang_code(&ctx.locale);
-    let config = ModuleConfig::read(&ctx)?;
-    let bins = config.parse_bins();
+    let config = ModuleConfig::load(&ctx)?;
 
+    // The stored rows where they are, blank ones included, then empty slots.
     let mut cards: Vec<Component> = Vec::new();
-    for index in 0..BIN_SLOTS {
-        cards.push(bin_card(index, bins.get(index), &lang));
+    for index in 0..BIN_SLOTS.max(config.bins.len()) {
+        cards.push(bin_card(index, config.bins.get(index), &ctx));
     }
     cards.push(
         Card::new()
@@ -38,7 +38,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
                 .child(
                     TextArea::new()
                         .name("collection_schedule")
-                        .value(config.collection_schedule.pick(&lang))
+                        .value(config.collection_schedule.host_value(&ctx))
                         .placeholder("i18n:host.schedule.placeholder"),
                 )
                 .into()])
@@ -58,61 +58,61 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     .with_id(crate::ids::HOST_MAIN))
 }
 
-fn bin_card(index: usize, bin: Option<&BinRow>, lang: &str) -> Component {
+fn bin_card(index: usize, bin: Option<&BinRow>, ctx: &HostContext) -> Component {
     let slot = index + 1;
-    let title = bin.map(|b| b.title.pick(lang)).unwrap_or_default();
-    // One line: an older bin's several items are joined rather than dropped at the next save.
-    let items = bin
-        .map(|b| {
-            b.items
-                .iter()
-                .map(|item| item.pick(lang))
-                .filter(|item| !item.trim().is_empty())
-                .collect::<Vec<_>>()
-                .join(", ")
-        })
-        .unwrap_or_default();
+    let title = bin.map(|b| b.title.host_value(ctx)).unwrap_or_default();
+    let items = bin.map(|b| b.items.host_value(ctx)).unwrap_or_default();
     let color = bin_color_name(bin.and_then(|b| b.color.as_deref())).unwrap_or("");
+    // A filled row sends its id, so a save merges into it (and keeps its other languages). A
+    // blank slot has nothing to keep — and an id would make it count as filled.
+    let id = bin
+        .filter(|b| !b.is_blank())
+        .map(|b| sdui::row_id("bins", index, Some(&b.id)));
 
     Card::new()
         .title(format!("i18n:host.bin.slot{slot}"))
         .icon(IconName::Refresh)
-        .children(vec![
-            Field::new()
-                .name(format!("bins.{index}.title"))
-                .label("i18n:host.bin.title")
-                .child(
-                    TextInput::new()
+        .children(
+            id.into_iter()
+                .chain([
+                    Field::new()
                         .name(format!("bins.{index}.title"))
-                        .value(title),
-                )
-                .into(),
-            Field::new()
-                .name(format!("bins.{index}.items"))
-                .label("i18n:host.bin.items")
-                .child(
-                    TextInput::new()
+                        .label("i18n:host.bin.title")
+                        .child(
+                            TextInput::new()
+                                .name(format!("bins.{index}.title"))
+                                .value(title),
+                        )
+                        .into(),
+                    // One item per line.
+                    Field::new()
                         .name(format!("bins.{index}.items"))
-                        .value(items)
-                        .placeholder("i18n:host.bin.items.placeholder"),
-                )
-                .into(),
-            Field::new()
-                .name(format!("bins.{index}.color"))
-                .label("i18n:host.bin.color")
-                .child(
-                    Select::new()
+                        .label("i18n:host.bin.items")
+                        .child(
+                            TextArea::new()
+                                .name(format!("bins.{index}.items"))
+                                .value(items)
+                                .placeholder("i18n:host.bin.items.placeholder"),
+                        )
+                        .into(),
+                    Field::new()
                         .name(format!("bins.{index}.color"))
-                        .options(vec![
-                            ChoiceOption::new("", "i18n:host.bin.color.none"),
-                            ChoiceOption::new("yellow", "i18n:host.bin.color.yellow"),
-                            ChoiceOption::new("green", "i18n:host.bin.color.green"),
-                            ChoiceOption::new("brown", "i18n:host.bin.color.brown"),
-                            ChoiceOption::new("grey", "i18n:host.bin.color.grey"),
-                        ])
-                        .value(color),
-                )
-                .into(),
-        ])
+                        .label("i18n:host.bin.color")
+                        .child(
+                            Select::new()
+                                .name(format!("bins.{index}.color"))
+                                .options(vec![
+                                    ChoiceOption::new("", "i18n:host.bin.color.none"),
+                                    ChoiceOption::new("yellow", "i18n:host.bin.color.yellow"),
+                                    ChoiceOption::new("green", "i18n:host.bin.color.green"),
+                                    ChoiceOption::new("brown", "i18n:host.bin.color.brown"),
+                                    ChoiceOption::new("grey", "i18n:host.bin.color.grey"),
+                                ])
+                                .value(color),
+                        )
+                        .into(),
+                ])
+                .collect(),
+        )
         .into()
 }
