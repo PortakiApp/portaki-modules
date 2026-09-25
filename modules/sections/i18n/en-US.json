@@ -24,15 +24,7 @@
   "host.cancel": "Cancel",
   "host.save": "Save",
   "home.card.title": "Welcome",
-  "home.card.empty.title": "No sections yet",
-  "home.card.empty.description": "The host has not published editorial sections.",
-  "home.card.empty.hint": "Open the Sections tab in the host dashboard.",
-  "home.card.error.title": "Sections temporarily unavailable",
-  "home.card.error.description": "Could not load sections.",
-  "module.status.incomplete.title": "Setup incomplete",
-  "module.status.incomplete.description": "Finish sections configuration in the host dashboard",
-  "module.status.incomplete.hint": "Open Modules → Sections",
-  "module.status.inactive.title": "Sections disabled",
-  "module.status.inactive.description": "This module is not active on this property",
+  "home.card.empty.title": "Nothing here yet",
+  "home.card.empty.description": "Your host hasn’t added anything here yet.",
   "catalog.host.main": "Sections"
 }

@@ -24,15 +24,7 @@
   "host.cancel": "Annuler",
   "host.save": "Enregistrer",
   "home.card.title": "Bienvenue",
-  "home.card.empty.title": "Aucune section pour le moment",
-  "home.card.empty.description": "L'hôte n'a pas encore publié de sections éditoriales.",
-  "home.card.empty.hint": "Ouvrez l'onglet Sections dans le tableau de bord hôte.",
-  "home.card.error.title": "Sections temporairement indisponibles",
-  "home.card.error.description": "Impossible de charger les sections.",
-  "module.status.incomplete.title": "Configuration incomplète",
-  "module.status.incomplete.description": "Terminez la configuration des sections dans le tableau de bord hôte",
-  "module.status.incomplete.hint": "Ouvrez Modules → Sections",
-  "module.status.inactive.title": "Sections désactivées",
-  "module.status.inactive.description": "Ce module n'est pas actif sur ce logement",
+  "home.card.empty.title": "Rien pour le moment",
+  "home.card.empty.description": "Votre hôte n’a encore rien ajouté ici.",
   "catalog.host.main": "Sections"
 }
