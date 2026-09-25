@@ -5,7 +5,10 @@ use portaki_sdk::prelude::*;
 
 use crate::nearby::invalidate_nearby_cache;
 
-#[portaki_sdk::command(name = "refreshNearby")]
+#[portaki_sdk::command(
+    name = "refreshNearby",
+    example(label = "Rafraîchir l'agenda alentour")
+)]
 pub fn refresh_nearby(_ctx: Context) -> Result<()> {
     invalidate_nearby_cache()
 }
