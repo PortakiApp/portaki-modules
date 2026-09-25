@@ -565,6 +565,7 @@ pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
         tiles.push(
             Stat::new()
                 .label("i18n:stats.cleaning.photos")
+                .icon(IconName::Image)
                 .value(format!("{with_photo} / {}", finished.len()))
                 .delta("i18n:stats.cleaning.photos.note")
                 .into(),
