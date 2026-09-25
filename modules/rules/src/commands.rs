@@ -46,12 +46,24 @@ pub struct SaveContentArgs {
 ///
 /// Same payload as [`save_content`] — host `HostSurfacePanel` always dispatches
 /// `updateConfig` for property-workspace-tab modules.
-#[portaki_sdk::command(name = "updateConfig")]
+#[portaki_sdk::command(
+    name = "updateConfig",
+    example(
+        label = "Enregistrer le règlement",
+        input = r#"{"items":[{"icon":"clock-circle","title":"Calme après 22 h","subtitle":"Merci de penser au voisinage"},{"icon":"x","title":"Logement non-fumeur"}]}"#
+    )
+)]
 pub fn update_config(ctx: Context, args: SaveContentArgs) -> Result<()> {
     save_content(ctx, args)
 }
 
-#[portaki_sdk::command(name = "saveContent")]
+#[portaki_sdk::command(
+    name = "saveContent",
+    example(
+        label = "Trois règles",
+        input = r#"{"items":[{"icon":"clock-circle","title":"Calme après 22 h","subtitle":"Merci de penser au voisinage"},{"icon":"users","title":"Pas de fête ni d'événement"},{"icon":"check-circle","title":"Animaux bienvenus","subtitle":"Prévenez-nous avant votre arrivée"}]}"#
+    )
+)]
 pub fn save_content(ctx: Context, args: SaveContentArgs) -> Result<()> {
     let lang = RulesBundle::lang_code(&ctx.locale);
     let existing = store::load_content()?;

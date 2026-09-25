@@ -23,7 +23,11 @@ pub struct RulesContentView {
     pub content_en: String,
 }
 
-#[portaki_sdk::query(name = "getContent")]
+#[portaki_sdk::query(
+    name = "getContent",
+    example(label = "Règlement en français", input = r#"{"locale":"fr-FR"}"#),
+    example(label = "Règlement en anglais", input = r#"{"locale":"en-US"}"#)
+)]
 pub fn get_content(ctx: Context, args: GetContentArgs) -> Result<RulesContentView> {
     let locale = args.locale.unwrap_or_else(|| ctx.locale.clone());
     let row = store::load_content()?;
@@ -41,7 +45,7 @@ pub fn get_content(ctx: Context, args: GetContentArgs) -> Result<RulesContentVie
 }
 
 /// Blocks publication until at least one rule exists, in any language.
-#[portaki_sdk::query(name = "publishReadiness")]
+#[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
 pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
     let ok = store::load_content()?.is_some_and(|row| {
         RulesBundle::from_row(&row.content_fr, &row.content_en)
