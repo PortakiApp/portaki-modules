@@ -1,7 +1,8 @@
 //! Integration-style unit tests with `portaki-test-utils`.
 
 use nuki::{
-    get_config, get_guest_credential, unlock, update_config, StayArgs, UpdateConfigArgs, SMART_LOCK,
+    get_guest_credential, publish_readiness, render_host_main, unlock, ModuleConfig, StayArgs,
+    SMART_LOCK,
 };
 use portaki_sdk::capability;
 use portaki_sdk::contracts::smart_lock;
@@ -9,13 +10,15 @@ use portaki_sdk::prelude::{DateTime, Utc};
 use portaki_test_utils::{Booking, MockContext, MockContextBuilder};
 use serial_test::serial;
 
-fn sample_config_bytes() -> Vec<u8> {
-    serde_json::to_vec(&serde_json::json!({
-        "smartlock_id": "lock-abc",
-        "keypad_code": "482910",
-        "device_name": "Front door"
-    }))
-    .expect("config json")
+#[path = "../../../support/config_form.rs"]
+mod config_form;
+
+fn sample_config() -> ModuleConfig {
+    ModuleConfig {
+        smartlock_id: "lock-abc".into(),
+        keypad_code: "482910".into(),
+        device_name: "Front door".into(),
+    }
 }
 
 fn at(instant: &str) -> DateTime<Utc> {
@@ -28,7 +31,7 @@ fn at(instant: &str) -> DateTime<Utc> {
 fn guest_at(now: &str) -> MockContextBuilder {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
+        .with_config(&sample_config())
         .with_stay(Booking::default())
         .with_now(at(now))
 }
@@ -60,15 +63,10 @@ fn get_guest_credential_returns_keypad_code() {
 fn get_guest_credential_errors_without_keypad() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            serde_json::to_vec(&serde_json::json!({
-                "smartlock_id": "lock-abc",
-                "keypad_code": "",
-                "device_name": ""
-            }))
-            .unwrap(),
-        )
+        .with_config(&ModuleConfig {
+            smartlock_id: "lock-abc".into(),
+            ..ModuleConfig::default()
+        })
         .with_stay(Booking::default())
         .with_now(at("2026-06-02T12:00:00Z"))
         .run(|ctx| {
@@ -145,7 +143,7 @@ fn the_lock_refuses_outside_the_stay_window() {
 fn the_lock_refuses_without_a_stay_or_its_dates() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
+        .with_config(&sample_config())
         .run(|ctx| {
             let err = unlock(ctx, StayArgs::default()).expect_err("no stay");
             assert!(err.to_string().contains("outside_stay_window"), "{err}");
@@ -162,22 +160,54 @@ fn the_lock_refuses_without_a_stay_or_its_dates() {
 
 #[test]
 #[serial]
-fn update_config_roundtrip() {
+fn the_host_form_sends_the_declared_keys_but_never_the_code() {
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&sample_config())
         .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    smartlock_id: "nuki-99".into(),
-                    keypad_code: "123456".into(),
-                    device_name: "Entry".into(),
-                },
-            )
-            .expect("updateConfig");
-            let config = get_config(ctx).expect("getConfig");
-            assert_eq!(config.smartlock_id, "nuki-99");
-            assert_eq!(config.keypad_code, "123456");
-            assert_eq!(config.device_name, "Entry");
+            let surface = render_host_main(ctx).expect("host main");
+            config_form::assert_form_matches_config(
+                concat!(env!("OUT_DIR"), "/portaki-emissions"),
+                &surface,
+                &[],
+            );
+            // The keypad code is a secret: blank in the form keeps it.
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("lock-abc"));
+            assert!(!json.contains("482910"));
         });
+}
+
+/// A keypad code, or remote unlock (Nuki Web key granted + lock ID): nothing else will do.
+#[test]
+#[serial]
+fn publication_needs_a_keypad_code_or_remote_unlock() {
+    use portaki_sdk::context::CapabilityGrant;
+    use portaki_sdk::host::with_host;
+
+    let ready = |config: ModuleConfig, byok: bool| {
+        let (mut ctx, host) = MockContext::host()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&config)
+            .build();
+        if byok {
+            ctx.capabilities.push(CapabilityGrant {
+                id: "external.nuki.byok".into(),
+            });
+        }
+        with_host(host, ctx.clone(), || {
+            let items = publish_readiness(ctx).expect("publishReadiness").items;
+            assert_eq!(items.len(), 1);
+            items[0].ok
+        })
+    };
+    let lock_only = ModuleConfig {
+        smartlock_id: "lock-abc".into(),
+        keypad_code: " ".into(),
+        ..ModuleConfig::default()
+    };
+    assert!(ready(sample_config(), false));
+    assert!(ready(lock_only.clone(), true));
+    assert!(!ready(lock_only, false));
+    assert!(!ready(ModuleConfig::default(), true));
 }

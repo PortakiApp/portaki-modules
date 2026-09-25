@@ -1,27 +1,16 @@
-//! Module commands — host config and `access.smart_lock` guest protocol.
+//! Module commands — `access.smart_lock` guest protocol.
 
 use portaki_sdk::host;
 use portaki_sdk::prelude::*;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
-use crate::config::{load_config, save_config, ModuleConfig};
+use crate::config::ModuleConfig;
 
 #[portaki_sdk::wire]
 #[portaki_sdk::params]
 #[derive(Default)]
 pub struct StayArgs {
     pub stay_id: Option<String>,
-}
-
-#[portaki_sdk::params]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UpdateConfigArgs {
-    #[serde(default)]
-    pub smartlock_id: String,
-    #[serde(default)]
-    pub keypad_code: String,
-    #[serde(default)]
-    pub device_name: String,
 }
 
 #[portaki_sdk::wire(serialize)]
@@ -45,33 +34,24 @@ struct UnlockConnectorArgs {
     smartlock_id: String,
 }
 
-#[portaki_sdk::command(name = "updateConfig")]
-pub fn update_config(_ctx: Context, args: UpdateConfigArgs) -> Result<()> {
-    save_config(&ModuleConfig {
-        smartlock_id: args.smartlock_id.trim().to_string(),
-        keypad_code: args.keypad_code.trim().to_string(),
-        device_name: args.device_name.trim().to_string(),
-    })
-}
-
 #[portaki_sdk::command(name = "getGuestCredential", guest)]
 pub fn get_guest_credential(ctx: Context, _args: StayArgs) -> Result<GuestCredentialResponse> {
     require_stay_window(&ctx)?;
-    let config = load_config()?;
+    let config = ModuleConfig::load(&ctx)?;
     let code = require_keypad_code(&config)?;
     Ok(GuestCredentialResponse {
         credential_type: "keypad",
         code,
-        smartlock_id: config.smartlock_id.trim().to_string(),
+        smartlock_id: config.smartlock_id_trimmed().to_string(),
     })
 }
 
 #[portaki_sdk::command(name = "unlock", guest)]
 pub fn unlock(ctx: Context, _args: StayArgs) -> Result<UnlockResponse> {
     require_stay_window(&ctx)?;
-    let config = load_config()?;
+    let config = ModuleConfig::load(&ctx)?;
     let keypad = config.keypad_code_trimmed().to_string();
-    let smartlock_id = config.smartlock_id.trim().to_string();
+    let smartlock_id = config.smartlock_id_trimmed().to_string();
 
     if has_nuki_byok(&ctx) && !smartlock_id.is_empty() {
         match try_remote_unlock(&smartlock_id) {
@@ -126,7 +106,7 @@ fn require_stay_window(ctx: &Context) -> Result<()> {
     }
 }
 
-fn has_nuki_byok(ctx: &Context) -> bool {
+pub(crate) fn has_nuki_byok(ctx: &Context) -> bool {
     ctx.capabilities
         .iter()
         .any(|grant| grant.id == crate::NUKI_BYOK || grant.id == "external.nuki.byok")

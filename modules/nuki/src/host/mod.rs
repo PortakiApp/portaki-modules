@@ -6,7 +6,7 @@ use portaki_sdk::sdui::primitives::{
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::load_config;
+use crate::config::ModuleConfig;
 
 #[portaki_sdk::surface(
     host,
@@ -16,8 +16,8 @@ use crate::config::load_config;
     label_key = "catalog.host.main",
     icon = IconName::Lock
 )]
-pub fn render_host_main(_ctx: HostContext) -> Surface {
-    let config = load_config().unwrap_or_default();
+pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
+    let config = ModuleConfig::load(&ctx)?;
 
     let form_children: Vec<Component> = vec![
         InfoBanner::new()
@@ -55,7 +55,8 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
                     .child(
                         SecretInput::new()
                             .name("keypad_code")
-                            .value(config.keypad_code)
+                            // Never sent back: blank keeps the saved code.
+                            .value(String::new())
                             .placeholder("i18n:host.keypadCode.placeholder"),
                     )
                     .into(),
@@ -64,8 +65,8 @@ pub fn render_host_main(_ctx: HostContext) -> Surface {
     ];
 
     // No Page title / Save — the modules sheet owns chrome + footer Save.
-    Surface::new(
+    Ok(Surface::new(
         Page::new().child(Form::new().child(Stack::new().gap(16.0).children(form_children))),
     )
-    .with_id(crate::ids::HOST_MAIN)
+    .with_id(crate::ids::HOST_MAIN))
 }
