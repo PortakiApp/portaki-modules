@@ -29,7 +29,7 @@ pub fn render_host_stay(ctx: HostContext) -> Result<Surface> {
     let body = match stay_id {
         None => missing_stay_card(),
         Some(stay_id) => match storage::find_by_stay(stay_id).ok().flatten() {
-            Some(row) => completed_card(&row, &ModuleConfig::read(&ctx)?),
+            Some(row) => completed_card(&row, &ModuleConfig::load(&ctx)?),
             None => pending_card(),
         },
     };

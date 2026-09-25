@@ -60,7 +60,7 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
         return Err(PortakiError::Host("form_locked_after_checkin".to_string()));
     }
 
-    let q = ModuleConfig::read(&ctx)?;
+    let q = ModuleConfig::load(&ctx)?;
 
     let arrival_time = if q.ask_arrival_time {
         normalize(args.arrival_time_estimated)

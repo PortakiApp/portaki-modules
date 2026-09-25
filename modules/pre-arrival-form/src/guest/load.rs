@@ -43,7 +43,7 @@ pub fn load_guest_pre_arrival(ctx: &GuestContext) -> Result<GuestLoad> {
         return Ok(GuestLoad::Locked { response });
     }
 
-    let config = ModuleConfig::read(ctx)?;
+    let config = ModuleConfig::load(ctx)?;
     if !is_form_available(config.show_when, now, checkin_at) {
         return Ok(GuestLoad::NotYet);
     }

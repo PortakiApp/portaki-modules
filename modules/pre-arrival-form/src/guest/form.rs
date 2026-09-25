@@ -19,14 +19,14 @@ pub fn render_guest_form(ctx: GuestContext) -> Result<Surface> {
     match load_guest_pre_arrival(&ctx)? {
         GuestLoad::NotYet => Ok(not_yet(crate::ids::GUEST_FORM)),
         GuestLoad::Locked { response } => {
-            let config = ModuleConfig::read(&ctx)?;
+            let config = ModuleConfig::load(&ctx)?;
             Ok(build_readonly_surface(&config, &response))
         }
         GuestLoad::Form {
             completed,
             existing,
         } => {
-            let config = ModuleConfig::read(&ctx)?;
+            let config = ModuleConfig::load(&ctx)?;
             Ok(build_form_surface(&config, existing.as_ref(), completed))
         }
     }
