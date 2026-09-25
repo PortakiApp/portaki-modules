@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v0.5.0...wifi-guest-v0.5.1) (2026-09-25)
+
+
+### Bug Fixes
+
+* **deps:** build every module on portaki-sdk 8.0.1 ([734516f](https://github.com/PortakiApp/portaki-modules/commit/734516fb419ac0060f1c54a415c221316f85332b))
+
 ## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v0.4.1...wifi-guest-v0.5.0) (2026-09-24)
 
 

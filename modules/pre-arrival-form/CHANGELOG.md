@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.0.0...pre-arrival-form-v1.0.1) (2026-09-25)
+
+
+### Bug Fixes
+
+* **deps:** build every module on portaki-sdk 8.0.1 ([734516f](https://github.com/PortakiApp/portaki-modules/commit/734516fb419ac0060f1c54a415c221316f85332b))
+
 ## [1.0.0](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v0.9.1...pre-arrival-form-v1.0.0) (2026-09-24)
 
 

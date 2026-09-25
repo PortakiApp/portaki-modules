@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/PortakiApp/portaki-modules/compare/sections-v0.5.1...sections-v0.5.2) (2026-09-25)
+
+
+### Bug Fixes
+
+* **deps:** build every module on portaki-sdk 8.0.1 ([734516f](https://github.com/PortakiApp/portaki-modules/commit/734516fb419ac0060f1c54a415c221316f85332b))
+
 ## [0.5.1](https://github.com/PortakiApp/portaki-modules/compare/sections-v0.5.0...sections-v0.5.1) (2026-09-24)
 
 
