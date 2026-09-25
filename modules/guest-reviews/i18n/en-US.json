@@ -82,5 +82,6 @@
   "stats.responseRate.note": "out of {count} check-outs",
   "module.catalogDescription": "Airbnb review link / QR or in-booklet Portaki rating.",
   "catalog.host.main": "Thanks & reviews",
-  "catalog.host.reviews": "Reviews"
+  "catalog.host.reviews": "Reviews",
+  "publish.platform.label": "Review platform"
 }
