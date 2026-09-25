@@ -85,7 +85,11 @@ fn fetch_pair(coords: &QueryCoords, days: u8) -> Result<(WeatherCurrent, Weather
     Ok((current, forecast))
 }
 
-#[portaki_sdk::query(name = "getCurrent")]
+#[portaki_sdk::query(
+    name = "getCurrent",
+    example(label = "Au logement"),
+    example(label = "Cannes", input = r#"{"lat":43.5528,"lng":7.0174}"#)
+)]
 pub fn get_current(ctx: Context, args: GetCurrentArgs) -> Result<WeatherCurrent> {
     let coords = resolve_coords(&ctx, args.lat, args.lng)?;
 
@@ -101,7 +105,14 @@ pub fn get_current(ctx: Context, args: GetCurrentArgs) -> Result<WeatherCurrent>
     Ok(current)
 }
 
-#[portaki_sdk::query(name = "getForecast")]
+#[portaki_sdk::query(
+    name = "getForecast",
+    example(label = "Au logement, 5 jours", input = r#"{"days":5}"#),
+    example(
+        label = "Paris, 3 jours",
+        input = r#"{"lat":48.8566,"lng":2.3522,"days":3}"#
+    )
+)]
 pub fn get_forecast(ctx: Context, args: GetForecastArgs) -> Result<WeatherForecast> {
     let coords = resolve_coords(&ctx, args.lat, args.lng)?;
     let days = args.days.unwrap_or(5);

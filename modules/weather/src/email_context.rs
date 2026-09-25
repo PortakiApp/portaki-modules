@@ -29,7 +29,17 @@ pub struct EmailContextResponse {
 }
 
 /// Email-ready weather sentence for Portaki guest templates.
-#[portaki_sdk::query(name = "emailContext")]
+#[portaki_sdk::query(
+    name = "emailContext",
+    example(
+        label = "E-mail du jour d'arrivée",
+        input = r#"{"templateKey":"arrival-day"}"#
+    ),
+    example(
+        label = "Ville indiquée par l'hôte",
+        input = r#"{"templateKey":"arrival-day","addressHint":"Cannes"}"#
+    )
+)]
 pub fn email_context(ctx: Context, args: EmailContextArgs) -> Result<EmailContextResponse> {
     build_email_context(ctx, args)
 }
