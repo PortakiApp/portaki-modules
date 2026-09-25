@@ -8,8 +8,8 @@ use serde_json::json;
 
 /// Trois rendez-vous saisis par l'hôte pendant le séjour d'exemple. L'agenda OpenAgenda reste
 /// éteint : il demande un appel réseau, et l'aperçu montre ce que l'hôte maîtrise.
-fn sample_config() -> Vec<u8> {
-    serde_json::to_vec(&json!({
+fn sample_config() -> serde_json::Value {
+    json!({
         "events": [
             {
                 "id": "marche-nocturne",
@@ -36,14 +36,13 @@ fn sample_config() -> Vec<u8> {
         ],
         "disclaimer": { "fr": "Programme indicatif, à vérifier auprès des organisateurs.", "en": "Schedule for guidance, check with the organisers." },
         "nearby_enabled": false
-    }))
-    .expect("config json")
+    })
 }
 
 #[test]
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
-    let context = previews::guest(root).with_kv("config", sample_config());
+    let context = previews::guest(root).with_config(&sample_config());
     let detail = context.clone().run(render_explore_detail);
     let upcoming = context.run(render_upcoming_card);
     previews::check(

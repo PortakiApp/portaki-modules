@@ -3,7 +3,7 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{load_config, EventRow, ModuleConfig};
+use crate::config::{EventRow, ModuleConfig};
 use crate::nearby::{has_open_agenda, resolve_events};
 
 use super::empty::{empty_content_state, empty_state_if_module_not_ready};
@@ -26,7 +26,7 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Gues
         return Ok(GuestLoad::Empty(Box::new(surface)));
     }
 
-    let config = load_config().unwrap_or_else(|_| ModuleConfig::default());
+    let config = ModuleConfig::read(ctx)?;
     let for_home = surface_id == crate::ids::HOME_CARD;
     let events = resolve_events(ctx, &config, for_home)?;
 

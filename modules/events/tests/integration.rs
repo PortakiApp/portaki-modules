@@ -3,15 +3,15 @@
 use portaki_sdk::capability;
 use serial_test::serial;
 
-use events::{
-    get_config, render_explore_detail, render_home_card, render_upcoming_card, update_config,
-    EventInput, UpdateConfigArgs,
-};
+use events::{render_explore_detail, render_home_card, render_host_main, render_upcoming_card};
 use portaki_test_utils::{MockContext, SurfaceAssertions};
 use serde_json::json;
 
-fn sample_config_bytes() -> Vec<u8> {
-    serde_json::to_vec(&json!({
+#[path = "../../../support/config_form.rs"]
+mod config_form;
+
+fn sample_config() -> serde_json::Value {
+    json!({
         "events": [{
             "id": "evt-1",
             "title": {"fr": "Concert jazz", "en": "Jazz concert"},
@@ -24,8 +24,7 @@ fn sample_config_bytes() -> Vec<u8> {
         }],
         "disclaimer": "Dates indicatives",
         "nearby_enabled": false
-    }))
-    .expect("config json")
+    })
 }
 
 fn openagenda_payload() -> String {
@@ -62,7 +61,7 @@ fn home_card_empty_without_config() {
 fn home_card_renders_events_with_pressable_link() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
+        .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_home_card(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
@@ -78,7 +77,7 @@ fn home_card_renders_events_with_pressable_link() {
 fn upcoming_card_is_compact_with_next_event_headline() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
+        .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_upcoming_card(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
@@ -108,7 +107,7 @@ fn upcoming_card_empty_without_config() {
 fn detail_includes_map_and_link() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", sample_config_bytes())
+        .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_explore_detail(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("Map"));
@@ -126,14 +125,10 @@ fn home_card_renders_openagenda_nearby() {
             capability::external::OPEN_AGENDA_POOL,
         ])
         .with_connector_response("open-agenda", "nearby_events", openagenda_payload())
-        .with_kv(
-            "config",
-            serde_json::to_vec(&json!({
-                "nearby_enabled": true,
-                "radius_km": 40
-            }))
-            .unwrap(),
-        )
+        .with_config(&json!({
+            "nearby_enabled": true,
+            "radius_km": 40
+        }))
         .run(|ctx| {
             let surface = render_home_card(ctx);
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
@@ -145,32 +140,19 @@ fn home_card_renders_openagenda_nearby() {
 
 #[test]
 #[serial]
-fn update_config_roundtrip() {
+fn the_host_form_sends_the_declared_keys() {
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&sample_config())
         .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    events: vec![EventInput {
-                        title: "Fête du village".into(),
-                        place: "Place centrale".into(),
-                        starts_at: "2099-08-01T20:00:00Z".into(),
-                        url: String::new(),
-                        lat: String::new(),
-                        lng: String::new(),
-                    }],
-                    disclaimer: "d".into(),
-                    nearby_enabled: "true".into(),
-                    radius_km: "20".into(),
-                },
-            )
-            .expect("ok");
-            let cfg = get_config(ctx).expect("cfg");
-            assert_eq!(cfg.disclaimer.get("fr"), "d");
-            assert_eq!(cfg.parse_events().len(), 1);
-            assert_eq!(cfg.parse_events()[0].title.get("fr"), "Fête du village");
-            assert!(cfg.nearby_enabled);
-            assert_eq!(cfg.radius_km, 20);
+            let surface = render_host_main(ctx).expect("host main");
+            config_form::assert_form_matches_config(
+                concat!(env!("OUT_DIR"), "/portaki-emissions"),
+                &surface,
+                &[],
+            );
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("Concert jazz"));
+            assert!(json.contains("Dates indicatives"));
         });
 }

@@ -7,10 +7,6 @@ use events::map_markers;
 use portaki_test_utils::MockContext;
 use serde_json::json;
 
-fn config_bytes(value: serde_json::Value) -> Vec<u8> {
-    serde_json::to_vec(&value).expect("config json")
-}
-
 /// `nearby_enabled: false` : ces tests décrivent les événements de l'hôte, sans aller
 /// chercher l'agenda alentour — OpenAgenda a ses propres tests.
 fn local_events() -> serde_json::Value {
@@ -39,7 +35,7 @@ fn local_events() -> serde_json::Value {
 fn only_located_events_become_markers() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv("config", config_bytes(local_events()))
+        .with_config(&(local_events()))
         .run(|ctx| {
             let response = map_markers(ctx).expect("markers");
             assert_eq!(response.markers.len(), 1);
@@ -55,10 +51,7 @@ fn only_located_events_become_markers() {
 fn an_empty_agenda_answers_an_empty_list() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({ "nearby_enabled": false, "events": [] })),
-        )
+        .with_config(&(json!({ "nearby_enabled": false, "events": [] })))
         .run(|ctx| {
             assert!(map_markers(ctx).expect("markers").markers.is_empty());
         });
@@ -69,9 +62,8 @@ fn an_empty_agenda_answers_an_empty_list() {
 fn null_island_is_not_a_marker() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_kv(
-            "config",
-            config_bytes(json!({
+        .with_config(
+            &(json!({
                 "nearby_enabled": false,
                 "events": [{
                     "id": "evt-1", "title": { "fr": "Concert" },

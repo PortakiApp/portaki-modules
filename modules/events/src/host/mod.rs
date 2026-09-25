@@ -4,7 +4,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{Card, Field, Form, Page, Select, Text, TextArea, TextInput};
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{load_config, EventRow, Localized};
+use crate::config::{EventRow, Localized, ModuleConfig};
 use crate::nearby::has_open_agenda;
 
 const EVENT_SLOTS: usize = 6;
@@ -16,11 +16,11 @@ const EVENT_SLOTS: usize = 6;
     label_key = "catalog.host.main",
     icon = IconName::Calendar
 )]
-pub fn render_host_main(ctx: HostContext) -> Surface {
+pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let lang = Localized::lang_code(&ctx.locale);
-    let config = load_config().unwrap_or_default();
+    let config = ModuleConfig::read(&ctx)?;
     let events = config.parse_events();
-    let disclaimer = config.disclaimer.get(&lang).to_string();
+    let disclaimer = config.disclaimer.pick(&lang);
     let open_agenda = has_open_agenda(&ctx);
 
     let mut form_children: Vec<Component> = Vec::new();
@@ -53,11 +53,13 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     );
 
     // No Page title / Save — the modules sheet owns chrome + footer Save.
-    Surface::new(Page::new().child(Form::new().children(form_children)))
-        .with_id(crate::ids::HOST_MAIN)
+    Ok(
+        Surface::new(Page::new().child(Form::new().children(form_children)))
+            .with_id(crate::ids::HOST_MAIN),
+    )
 }
 
-fn nearby_card(config: &crate::config::ModuleConfig, open_agenda: bool) -> Component {
+fn nearby_card(config: &ModuleConfig, open_agenda: bool) -> Component {
     let status_key = if !config.nearby_enabled {
         "i18n:host.nearby.status.off"
     } else if open_agenda {
@@ -116,8 +118,10 @@ fn nearby_card(config: &crate::config::ModuleConfig, open_agenda: bool) -> Compo
 
 fn event_slot_card(index: usize, event: Option<&EventRow>, lang: &str) -> Component {
     let slot = index + 1;
-    let title = event.map(|e| e.title.get(lang)).unwrap_or("");
-    let place = event.map(|e| e.place.get(lang)).unwrap_or("");
+    // One text per slot now (the platform stores what the form sends): show whichever
+    // language holds it rather than a blank field the next save would write back.
+    let title = event.map(|e| e.title.pick(lang)).unwrap_or_default();
+    let place = event.map(|e| e.place.pick(lang)).unwrap_or_default();
     let starts_at = event.map(|e| e.starts_at.as_str()).unwrap_or("");
     let url = event.and_then(|e| e.url.as_deref()).unwrap_or("");
     let lat = event

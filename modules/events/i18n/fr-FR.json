@@ -39,7 +39,7 @@
   "host.section.disclaimer.help": "Texte court affiché sous la liste d’événements dans le livret.",
   "host.disclaimer.label": "Texte de la mention",
   "host.disclaimer.placeholder": "Dates indicatives — vérifiez auprès de l’organisateur",
-  "host.main.help": "Laissez un créneau vide pour ne pas l’afficher. Les textes manuels sont enregistrés pour la langue d’édition active uniquement.",
+  "host.main.help": "Laissez un créneau vide pour ne pas l’afficher. Chaque texte vaut pour toutes les langues.",
   "host.save": "Enregistrer",
   "home.card.title": "Événements",
   "guest.disclaimer.title": "Info",
@@ -66,5 +66,6 @@
   "module.status.inactive.title": "Module événements désactivé",
   "module.status.inactive.description": "Ce module n’est pas actif sur ce logement",
   "module.catalogDescription": "Sorties, concerts et animations à proximité — agenda local et sélection de l’hôte.",
-  "catalog.host.main": "Événements"
+  "catalog.host.main": "Événements",
+  "config.events": "Événements manuels"
 }

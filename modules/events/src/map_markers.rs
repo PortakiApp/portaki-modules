@@ -12,7 +12,7 @@
 
 use portaki_sdk::prelude::*;
 
-use crate::config::load_config;
+use crate::config::ModuleConfig;
 use crate::nearby::resolve_events;
 
 /// Plafond de marqueurs rendus par ce module.
@@ -26,7 +26,7 @@ pub struct MapMarkersResponse {
 
 #[portaki_sdk::query(name = "mapMarkers")]
 pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
-    let config = load_config().unwrap_or_default();
+    let config = ModuleConfig::read(&ctx)?;
     // `false` : ce n'est pas la carte d'accueil, qui ne garde que les prochains jours. La
     // carte montre tout l'agenda connu.
     let events = resolve_events(&ctx, &config, false).unwrap_or_default();
