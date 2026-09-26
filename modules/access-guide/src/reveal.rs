@@ -5,6 +5,7 @@
 //! - [`RevealPolicy::Always`] → secrets are revealable even without check-in.
 //! - Any other policy → **not revealable** until `checkin_at` is present and
 //!   `now >= reveal_at(policy, checkin, timezone)`.
+//! - Whatever the policy → **not revealable** once `now > checkout_at`.
 //!
 //! ## Timezone for `day_before_16h`
 //!
@@ -30,6 +31,8 @@ pub struct RevealDecision {
     pub revealed: bool,
     /// UTC instant when secrets become available (`None` if unknown / always).
     pub available_from: Option<DateTime<Utc>>,
+    /// The stay is over: nothing is revealed any more, whatever the policy.
+    pub ended: bool,
 }
 
 /// Decide whether secrets may be shown in guest SDUI.
@@ -37,12 +40,22 @@ pub fn evaluate_reveal(
     policy: RevealPolicy,
     now: DateTime<Utc>,
     checkin_at: Option<DateTime<Utc>>,
+    checkout_at: Option<DateTime<Utc>>,
     property_timezone: &str,
 ) -> RevealDecision {
+    // Never after departure: a past guest must not read the next guest's code.
+    if checkout_at.is_some_and(|checkout| now > checkout) {
+        return RevealDecision {
+            revealed: false,
+            available_from: None,
+            ended: true,
+        };
+    }
     if matches!(policy, RevealPolicy::Always) {
         return RevealDecision {
             revealed: true,
             available_from: None,
+            ended: false,
         };
     }
 
@@ -50,6 +63,7 @@ pub fn evaluate_reveal(
         return RevealDecision {
             revealed: false,
             available_from: None,
+            ended: false,
         };
     };
 
@@ -57,12 +71,14 @@ pub fn evaluate_reveal(
         return RevealDecision {
             revealed: false,
             available_from: None,
+            ended: false,
         };
     };
 
     RevealDecision {
         revealed: now >= available_from,
         available_from: Some(available_from),
+        ended: false,
     }
 }
 
@@ -235,7 +251,7 @@ mod tests {
 
     #[test]
     fn always_reveals_without_checkin() {
-        let d = evaluate_reveal(RevealPolicy::Always, Utc::now(), None, "Europe/Paris");
+        let d = evaluate_reveal(RevealPolicy::Always, Utc::now(), None, None, "Europe/Paris");
         assert!(d.revealed);
         assert!(d.available_from.is_none());
     }
@@ -247,7 +263,7 @@ mod tests {
             RevealPolicy::DayBefore16h,
             RevealPolicy::AtCheckin,
         ] {
-            let d = evaluate_reveal(policy, Utc::now(), None, "Europe/Paris");
+            let d = evaluate_reveal(policy, Utc::now(), None, None, "Europe/Paris");
             assert!(!d.revealed, "{policy:?}");
             assert!(d.available_from.is_none());
         }
@@ -263,6 +279,7 @@ mod tests {
                 RevealPolicy::HoursBefore24,
                 utc("2026-07-19T14:00:00Z"),
                 Some(checkin),
+                None,
                 "Europe/Paris",
             )
             .revealed
@@ -272,6 +289,7 @@ mod tests {
                 RevealPolicy::HoursBefore24,
                 utc("2026-07-19T13:59:59Z"),
                 Some(checkin),
+                None,
                 "Europe/Paris",
             )
             .revealed
@@ -301,5 +319,22 @@ mod tests {
             reveal_at(RevealPolicy::AtCheckin, checkin, "Europe/Paris"),
             Some(checkin)
         );
+    }
+
+    #[test]
+    fn nothing_is_revealed_after_checkout() {
+        let checkin = utc("2026-07-20T14:00:00Z");
+        let checkout = utc("2026-07-25T10:00:00Z");
+        for policy in [
+            RevealPolicy::Always,
+            RevealPolicy::HoursBefore24,
+            RevealPolicy::DayBefore16h,
+            RevealPolicy::AtCheckin,
+        ] {
+            let at = |now| evaluate_reveal(policy, utc(now), Some(checkin), Some(checkout), "UTC");
+            assert!(at("2026-07-25T10:00:00Z").revealed, "{policy:?}");
+            let after = at("2026-07-25T10:00:01Z");
+            assert!(!after.revealed && after.ended, "{policy:?}");
+        }
     }
 }
