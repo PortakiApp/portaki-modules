@@ -10,6 +10,14 @@ on:
       - "**.md"
       - "docs/**"
       - ".github/CI.md"
+  # `pull_request` et jamais `pull_request_target` : le code d'une PR, fork compris, tourne sans
+  # secrets et avec un GITHUB_TOKEN en lecture seule. `bumped` et `publish` ne tournent que sur
+  # `main`.
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".github/CI.md"
   # `module` sert au premier tir d'une liaison : publier UN module précis, sans attendre
   # qu'un commit le modifie. La liaison enregistrée au registre autorise `workflow_dispatch`.
   workflow_dispatch:
@@ -57,7 +65,7 @@ jobs:
             echo "ref=${{ github.event.before }}" >>"$GITHUB_OUTPUT"
           fi
 
-      - uses: PortakiApp/portaki-release-action/install@v1
+      - uses: PortakiApp/portaki-release-action/install@6d40f3b5fc0055822d505ceea10cf4a57c74c8ca # v1
 
       # `portaki ci modules` lit la disposition dans les crates et rend `modules`,
       # `any` et `reason` dans GITHUB_OUTPUT. Il remplace `changed-modules.sh` —
@@ -82,11 +90,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
         with:
           components: rustfmt, clippy
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
 
       # Vingt-deux endroits portent la version du SDK : le pin du workspace, et le `Cargo.toml` de
       # chaque module, qui l'ecrit pour que release-please attribue une montee a son chemin. Sans
@@ -127,11 +135,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
         with:
           targets: wasm32-unknown-unknown
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           # `~/.cargo/bin` appartient au cache dédié ci-dessous, pas à celui-ci. Les deux le
           # revendiquaient : rust-cache restaurait un vieux `portaki`, puis le cache dédié
@@ -144,9 +152,13 @@ jobs:
       # L'action résout le CLI depuis `Cargo.lock` et met en cache sur cette version. Le
       # bloc précédent interrogeait le tip de `main` du SDK à chaque run, ce qui invalidait
       # le cache à chaque commit poussé là-bas.
-      - uses: PortakiApp/portaki-release-action/install@v1
+      # `cache: false` : ce job exécute le code du module (`build.rs`), et l'action v1 sauve le
+      # cache en fin de job — un module piégé y remplaçait le `portaki` que les jobs des autres
+      # modules restauraient ensuite.
+      - uses: PortakiApp/portaki-release-action/install@6d40f3b5fc0055822d505ceea10cf4a57c74c8ca # v1
         with:
           working-directory: modules/${{ matrix.module }}
+          cache: "false"
 
       - name: Build and lint (wasm)
         run: |
@@ -156,6 +168,13 @@ jobs:
           (cd "modules/${module}" && portaki build --release)
           echo "=== portaki lint: modules/${module} ==="
           (cd "modules/${module}" && portaki lint)
+
+      # Ce que `portaki publish` exigeait avant de pousser — les tests du module, batterie de
+      # conformité comprise, et l'emballage OCI — joué ici, dans un job sans secrets. Le job de
+      # publication pousse l'artefact avec `--prebuilt` et n'exécute plus rien du module.
+      - name: Tests and packaging, as publish checks them
+        working-directory: modules/${{ matrix.module }}
+        run: portaki publish --dry-run --skip-build --registry "$REGISTRY"
 
       - name: Upload wasm artifact
         uses: actions/upload-artifact@v7
@@ -177,7 +196,8 @@ jobs:
     needs: changes
     if: >-
       needs.changes.outputs.any == 'true' &&
-      ((github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' ||
        (github.event_name == 'workflow_dispatch' && inputs.module != ''))
     runs-on: ubuntu-latest
     outputs:
@@ -220,12 +240,13 @@ jobs:
           echo "modules=${picked}" >>"$GITHUB_OUTPUT"
           echo "any=$(jq 'length > 0' <<<"$picked")" >>"$GITHUB_OUTPUT"
 
+  # Ne fait que pousser l'artefact vérifié : ni build, ni tests, ni `build.rs`. Ce job détient
+  # `id-token` et `packages: write` ; le code du module a tourné dans `rust` et `wasm`, sans eux.
+  # L'identité OIDC ne change pas : ce workflow, l'environment `release`.
   publish:
     name: publish (${{ matrix.module }})
-    # `rust` porte clippy et les tests : sans lui, un module aux tests rouges était publié quand
-    # même, puisque `wasm` ne fait que compiler. La porte `quality` arrivait après la publication.
     needs: [changes, rust, wasm, bumped]
-    if: needs.bumped.outputs.any == 'true'
+    if: needs.bumped.outputs.any == 'true' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     # La liaison enregistrée au registre exige un environment sur le canal stable : c'est lui
     # qui porte les relecteurs obligatoires, et le meilleur rapport sécurité/effort du
@@ -250,23 +271,24 @@ jobs:
       matrix:
         module: ${{ fromJson(needs.bumped.outputs.modules) }}
     steps:
+      # Les sources sont lues (manifeste, i18n, CHANGELOG), jamais compilées.
       - uses: actions/checkout@v7
 
-      # La cible de l'hôte vient toujours avec la toolchain : `portaki publish` y compile et
-      # lance les tests du module (batterie de conformité comprise) avant de pousser quoi que
-      # ce soit, `--skip-build` ou non.
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
+      # Pour `cargo install portaki-cli` depuis crates.io, et rien d'autre.
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
 
-      # Ces tests compilent dans `modules/<mod>/target/debug`, que l'artefact wasm ne contient
-      # pas. Clé propre au job : celle du job `wasm` porte un build release wasm32.
-      # Avant le téléchargement, pour que l'artefact vérifié recouvre ce que le cache restaure.
-      - uses: Swatinem/rust-cache@v2
+      # Sans cache : un binaire restauré vaut ce que vaut chaque job qui peut écrire le cache.
+      - uses: PortakiApp/portaki-release-action/install@6d40f3b5fc0055822d505ceea10cf4a57c74c8ca # v1
         with:
-          cache-bin: "false"
-          workspaces: modules/${{ matrix.module }} -> target
-          shared-key: publish-${{ matrix.module }}
+          working-directory: modules/${{ matrix.module }}
+          cache: "false"
+
+      - name: Require a CLI that publishes without running the module
+        run: |
+          if ! portaki publish --help | grep -q -- '--prebuilt'; then
+            echo "::error::this CLI has no \`publish --prebuilt\` and would run the module's tests here, with the publishing rights. Raise portaki-sdk to the release that has it."
+            exit 1
+          fi
 
       # upload-artifact roots at modules/<mod>/target (LCA of wasm + portaki/).
       - name: Download wasm artifact
@@ -276,20 +298,25 @@ jobs:
           path: modules/${{ matrix.module }}/target
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v4
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # `build: false` : le job `wasm` a déjà compilé et linté, et l'artefact vient d'être
-      # récupéré. Recompiler ici pousserait un binaire que personne n'a vérifié.
-      - uses: PortakiApp/portaki-release-action@v1
-        with:
-          working-directory: modules/${{ matrix.module }}
-          build: false
-          registry: ${{ env.REGISTRY }}
-          api-url: ${{ env.PORTAKI_API_URL }}
+      # `--prebuilt` : pousse l'artefact de `wasm` tel quel, après avoir vérifié qu'il porte l'id
+      # et la version des sources de ce module — un module piégé ne publie pas sous un autre nom.
+      - name: Publish
+        working-directory: modules/${{ matrix.module }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: portaki publish --prebuilt --registry "$REGISTRY" --channel stable
+
+      # `always()` : un rapport conditionné à l'échec ne pourrait jamais éteindre une alerte.
+      - name: Report the run to Portaki
+        if: always()
+        working-directory: modules/${{ matrix.module }}
+        run: portaki ci report --outcome "${{ job.status }}"
 
       # Propre à cette organisation, donc hors de l'action : un paquet fraîchement créé
       # naît privé, et un catalogue public ne peut pas le lire.

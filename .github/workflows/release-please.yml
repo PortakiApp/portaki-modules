@@ -31,7 +31,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - id: app-token
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ secrets.CI_APP_CLIENT_ID }}
           private-key: ${{ secrets.CI_APP_PRIVATE_KEY }}
@@ -71,7 +71,7 @@ jobs:
       # les `.github/workflows/**` diffèrent de `main` demande `Workflows: write` à une App, que
       # `Portaki CI` n'a pas. Sur le commit de tête, la même release passe — d'où l'échec qui ne
       # se déclenche que sur un arriéré. Si l'arriéré se reforme, accorder `Workflows: write`.
-      - uses: googleapis/release-please-action@v5
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
           token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
