@@ -20,9 +20,14 @@ pub struct SubmitReviewArgs {
 
 /// Where every review used to go, one blob for the property: still read, never written.
 const LEGACY_REVIEWS_KEY: &str = "reviews";
-/// One key per stay (`review:<stay_id>`): one review per stay, and a stay's review can be
-/// dropped with it.
-const REVIEW_KEY_PREFIX: &str = "review:";
+/// First per-stay key (`review:<stay_id>`), outside the platform's stay prefix: still read.
+const LEGACY_REVIEW_KEY_PREFIX: &str = "review:";
+
+/// One review per stay, under `stay:<stay_id>:` — the prefix the platform deletes with the stay.
+/// Same format as `portaki_sdk::host::kv::stay_key`; switch to it once the SDK pin moves.
+fn review_key(stay_id: Uuid) -> String {
+    format!("stay:{stay_id}:review")
+}
 
 /// One review as stored in KV. Reviews stored before the date was kept have no `at`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -39,7 +44,10 @@ pub struct StoredReview {
 /// Every review of the property, oldest first.
 pub fn load_reviews() -> Result<Vec<StoredReview>> {
     let mut reviews: Vec<StoredReview> = read_json(LEGACY_REVIEWS_KEY)?.unwrap_or_default();
-    for key in host::kv::list(REVIEW_KEY_PREFIX)? {
+    let per_stay = host::kv::list("stay:")?
+        .into_iter()
+        .filter(|key| key.ends_with(":review"));
+    for key in per_stay.chain(host::kv::list(LEGACY_REVIEW_KEY_PREFIX)?) {
         reviews.extend(read_json::<StoredReview>(&key)?);
     }
     reviews.sort_by_key(|review| review.at);
@@ -81,10 +89,12 @@ pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
     let Some(stay_id) = ctx.stay.as_ref().map(|stay| stay.stay_id) else {
         return Err(PortakiError::Host("review_needs_stay".into()));
     };
-    let key = format!("{REVIEW_KEY_PREFIX}{stay_id}");
+    let key = review_key(stay_id);
     // ponytail: read-then-write, no compare-and-set in KV — two submits racing within the same
     // instant could both pass; a table with a unique stay_id closes it.
-    if host::kv::get(&key)?.is_some() {
+    if host::kv::get(&key)?.is_some()
+        || host::kv::get(&format!("{LEGACY_REVIEW_KEY_PREFIX}{stay_id}"))?.is_some()
+    {
         return Err(PortakiError::Host("review_already_submitted".into()));
     }
 
