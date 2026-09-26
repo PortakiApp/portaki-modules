@@ -5,7 +5,8 @@
 1. **`changes`** — `portaki ci modules` → JSON module list (or empty).
 2. **`rust`** — fmt + clippy + tests on one runner (setup cost shared).
 3. **`wasm` matrix** (only if modules changed) → upload `wasm-{module}` artifact.
-4. **`publish` matrix** on `main` push — download artifact, `portaki-release-action` with `build: false`.
+4. **`publish` matrix** on `main` only — download the artifact, `portaki publish --prebuilt`. No build,
+   no tests, no `build.rs`: module code runs in `rust` and `wasm`, which hold no secrets.
 5. **`quality`** gate aggregates results.
 
 ## Changed-modules rules
