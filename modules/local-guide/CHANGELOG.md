@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.2](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.11.1...local-guide-v0.11.2) (2026-09-26)
+
+
+### Bug Fixes
+
+* **modules:** republish signed artifacts ([26d3c6e](https://github.com/PortakiApp/portaki-modules/commit/26d3c6eb7ed41c0be9988f783fa68146e11e45fe))
+
 ## [0.11.1](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.11.0...local-guide-v0.11.1) (2026-09-26)
 
 

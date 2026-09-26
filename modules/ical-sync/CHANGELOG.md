@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.2](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v0.9.1...ical-sync-v0.9.2) (2026-09-26)
+
+
+### Bug Fixes
+
+* **modules:** republish signed artifacts ([26d3c6e](https://github.com/PortakiApp/portaki-modules/commit/26d3c6eb7ed41c0be9988f783fa68146e11e45fe))
+
 ## [0.9.1](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v0.9.0...ical-sync-v0.9.1) (2026-09-26)
 
 
