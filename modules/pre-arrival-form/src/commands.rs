@@ -10,14 +10,13 @@ use crate::email_send;
 use crate::show_when::is_editable_until_checkin;
 use crate::storage;
 
+/// What the platform copies onto the stay — and nothing more: the ID document, special needs and
+/// party size stay in the module's own table, out of the outbox.
 #[portaki_sdk::wire(serialize)]
 struct CompletedPayload {
     arrival_time_estimated: Option<String>,
     guest_occasion: Option<String>,
     guest_allergies: Option<String>,
-    guest_count: Option<String>,
-    special_needs: Option<String>,
-    id_document: Option<String>,
     message_to_host: Option<String>,
 }
 
@@ -113,9 +112,9 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
         arrival_time.clone(),
         occasion.clone(),
         allergies.clone(),
-        guest_count.clone(),
-        special_needs.clone(),
-        id_document.clone(),
+        guest_count,
+        special_needs,
+        id_document,
         message.clone(),
     )?;
 
@@ -125,9 +124,6 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
             arrival_time_estimated: arrival_time,
             guest_occasion: occasion,
             guest_allergies: allergies,
-            guest_count,
-            special_needs,
-            id_document,
             message_to_host: message,
         },
     )?;
@@ -150,4 +146,38 @@ fn require_stay_id(ctx: &Context) -> Result<Uuid> {
         .as_ref()
         .map(|guest| guest.session_id)
         .ok_or_else(|| PortakiError::Host("stay_id_required".to_string()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The keys `pre-arrival.completed` carries are the ones the platform reads.
+    #[test]
+    fn completed_event_carries_only_what_the_platform_reads() {
+        let some = || Some("x".to_string());
+        let payload = serde_json::to_value(CompletedPayload {
+            arrival_time_estimated: some(),
+            guest_occasion: some(),
+            guest_allergies: some(),
+            message_to_host: some(),
+        })
+        .expect("json");
+        let mut keys: Vec<&str> = payload
+            .as_object()
+            .expect("object")
+            .keys()
+            .map(String::as_str)
+            .collect();
+        keys.sort_unstable();
+        assert_eq!(
+            keys,
+            [
+                "arrivalTimeEstimated",
+                "guestAllergies",
+                "guestOccasion",
+                "messageToHost"
+            ]
+        );
+    }
 }
