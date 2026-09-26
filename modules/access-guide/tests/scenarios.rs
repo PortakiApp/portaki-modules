@@ -43,7 +43,8 @@ fn the_code_follows_the_arrival_date() {
             .run(render_explore_detail)
             .map_err(|e| e.to_string())?;
         let shown = serde_json::to_string(&surface).unwrap().contains(CODE);
-        let due = scenario.stay.check_in_offset <= 0;
+        // Up to departure, never after.
+        let due = scenario.stay.check_in_offset <= 0 && scenario.stay.check_out_offset >= 0;
         if shown == due {
             Ok(())
         } else {

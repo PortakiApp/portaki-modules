@@ -43,9 +43,16 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestLoad> {
 
     let property_timezone = property_timezone(ctx);
     let checkin_at = ctx.stay.as_ref().and_then(|s| s.checkin_at);
+    let checkout_at = ctx.stay.as_ref().and_then(|s| s.checkout_at);
     let stay_id = ctx.stay.as_ref().map(|s| s.stay_id);
     let now = time::now()?;
-    let decision = evaluate_reveal(config.reveal_policy, now, checkin_at, &property_timezone);
+    let decision = evaluate_reveal(
+        config.reveal_policy,
+        now,
+        checkin_at,
+        checkout_at,
+        &property_timezone,
+    );
 
     Ok(GuestLoad::Ready(Box::new(GuestData {
         config,
@@ -71,7 +78,7 @@ fn property_timezone(ctx: &GuestContext) -> String {
 }
 
 fn locked_banner(decision: &RevealDecision, property_timezone: &str) -> Option<String> {
-    if decision.revealed {
+    if decision.revealed || decision.ended {
         return None;
     }
     let when = decision
