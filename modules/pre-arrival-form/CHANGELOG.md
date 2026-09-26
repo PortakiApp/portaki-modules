@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v2.0.0...pre-arrival-form-v2.0.1) (2026-09-26)
+
+
+### Bug Fixes
+
+* **pre-arrival-form:** keep id document out of event ([f9428a1](https://github.com/PortakiApp/portaki-modules/commit/f9428a15f2d4ddde5e76dfd0cbecbe642a652f57))
+
 ## [2.0.0](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.0.1...pre-arrival-form-v2.0.0) (2026-09-25)
 
 

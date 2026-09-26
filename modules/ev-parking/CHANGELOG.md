@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v0.7.0...ev-parking-v0.7.1) (2026-09-26)
+
+
+### Bug Fixes
+
+* **ev-parking:** hide codes after checkout ([e8af8ed](https://github.com/PortakiApp/portaki-modules/commit/e8af8ed12a4a4bf942892df6a29e93ee4b006a2c))
+
 ## [0.7.0](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v0.6.1...ev-parking-v0.7.0) (2026-09-25)
 
 

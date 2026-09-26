@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/PortakiApp/portaki-modules/compare/checklist-v2.0.0...checklist-v2.0.1) (2026-09-26)
+
+
+### Bug Fixes
+
+* **checklist:** emit restock in own namespace ([5723fbf](https://github.com/PortakiApp/portaki-modules/commit/5723fbfd28b21d8f1de8a77f59e4acfb7dc0664c))
+
 ## [2.0.0](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.0.1...checklist-v2.0.0) (2026-09-25)
 
 
