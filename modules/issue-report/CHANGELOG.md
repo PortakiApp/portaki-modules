@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v2.0.0...issue-report-v2.0.1) (2026-09-26)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 8.8.1 ([474417d](https://github.com/PortakiApp/portaki-modules/commit/474417d9ac43536f465f10afbc25e46723aface5))
+
 ## [2.0.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.0.1...issue-report-v2.0.0) (2026-09-25)
 
 
