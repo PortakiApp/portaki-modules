@@ -203,14 +203,45 @@ fn submit_review_stores_one_review_per_stay() {
             };
             submit_review(ctx.clone(), review()).expect("submit");
             let stay_id = ctx.stay.as_ref().expect("stay").stay_id;
-            assert!(portaki_sdk::host::kv::get(&format!("review:{stay_id}"))
-                .expect("kv")
-                .is_some());
+            assert!(
+                portaki_sdk::host::kv::get(&format!("stay:{stay_id}:review"))
+                    .expect("kv")
+                    .is_some()
+            );
             assert!(portaki_sdk::host::kv::get("reviews").expect("kv").is_none());
 
             let again = submit_review(ctx, review()).expect_err("second review");
             assert!(again.to_string().contains("review_already_submitted"));
             assert_eq!(host.sent_emails().len(), 1);
+        });
+}
+
+#[test]
+#[serial]
+fn a_review_under_the_first_per_stay_key_still_counts() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({ "platform_airbnb": false, "platform_portaki": true }))
+        .with_stay(Booking::default())
+        .run_with(|ctx, host| {
+            let stay_id = ctx.stay.as_ref().expect("stay").stay_id;
+            portaki_sdk::host::kv::set(
+                &format!("review:{stay_id}"),
+                br#"{"rating":4,"comment":"Bien"}"#,
+                None,
+            )
+            .expect("kv");
+
+            let again = submit_review(
+                ctx,
+                SubmitReviewArgs {
+                    rating: 5,
+                    comment: "Great".into(),
+                },
+            )
+            .expect_err("already reviewed");
+            assert!(again.to_string().contains("review_already_submitted"));
+            assert!(host.sent_emails().is_empty());
         });
 }
 
@@ -367,7 +398,7 @@ fn long_comment_is_stored_whole_and_quoted_in_the_host_email() {
 
             let stay_id = ctx.stay.as_ref().expect("stay").stay_id;
             let stored: SubmitReviewArgs = serde_json::from_slice(
-                &portaki_sdk::host::kv::get(&format!("review:{stay_id}"))
+                &portaki_sdk::host::kv::get(&format!("stay:{stay_id}:review"))
                     .expect("kv")
                     .expect("review"),
             )
