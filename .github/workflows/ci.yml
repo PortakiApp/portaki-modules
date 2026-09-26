@@ -155,7 +155,7 @@ jobs:
       # `cargo audit` sur le `Cargo.lock` du dépôt, avant que le build n'exécute quoi que ce soit
       # du module. Une vulnérabilité critique arrête ici ; le rapport part avec l'artefact
       # (`target/portaki/`) et le job de publication l'atteste.
-      - uses: PortakiApp/portaki-release-action/audit@c85597f78af82c5d3886644847e96977d7864298 # v1
+      - uses: PortakiApp/portaki-release-action/audit@bda94d3269e7edd3de362a5e6aeda89afc6755a9 # v1
         with:
           working-directory: modules/${{ matrix.module }}
 
@@ -324,7 +324,7 @@ jobs:
       # `cargo audit` attachés au digest. Une production Portaki n'exécute pas un digest non signé.
       - name: Sign
         if: steps.push.outputs.pushed == 'true'
-        uses: PortakiApp/portaki-release-action/sign@c85597f78af82c5d3886644847e96977d7864298 # v1
+        uses: PortakiApp/portaki-release-action/sign@bda94d3269e7edd3de362a5e6aeda89afc6755a9 # v1
         with:
           working-directory: modules/${{ matrix.module }}
           registry: ${{ env.REGISTRY }}
