@@ -757,7 +757,8 @@ fn a_new_active_code_emails_the_guests() {
             sent[0].audience,
             portaki_sdk::host::email::EmailAudience::PropertyEligibleGuests
         );
-        assert_eq!(sent[0].property_id, Some(property));
+        // The invocation's property (nil in the mock), never the one the payload names.
+        assert_eq!(sent[0].property_id, Some(Uuid::nil()));
         assert!(!sent[0].content.subject.fr.is_empty());
     }
 }
