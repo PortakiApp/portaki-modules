@@ -72,6 +72,7 @@
   "catalog.host.lost-stats": "Objets trouvés",
   "catalog.host.stay": "Objets déclarés",
   "email.checkout-j2.description": "Relance objets perdus J+2 après départ",
+  "email.host-found.description": "Objet retrouvé par l’hôte, signalé au voyageur",
   "guest.error.title": "Signalement temporairement indisponible",
   "guest.error.description": "Le formulaire n'a pas pu être chargé."
 }

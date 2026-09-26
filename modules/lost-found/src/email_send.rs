@@ -81,6 +81,7 @@ pub fn notify_host_submitted(
 
 /// Host-declared found item → notify guest (multi-locale).
 pub fn notify_guest_host_found(
+    property_id: Uuid,
     stay_id: Uuid,
     report_id: Uuid,
     plain_description: &str,
@@ -105,7 +106,8 @@ pub fn notify_guest_host_found(
             }),
         },
         stay_id: Some(stay_id),
-        property_id: None,
+        // The invocation's property: the platform can refuse a stay that is not on it.
+        property_id: Some(property_id),
         action_url: None,
     })
 }

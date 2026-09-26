@@ -641,3 +641,33 @@ fn a_feed_row_opens_the_item_detail() {
             assert!(!detail.contains("stats.detail.markReturned"));
         });
 }
+
+/// `host-found-<id>` is declared for a guest audience — the platform drops an undeclared guest
+/// email — and names the invocation's property.
+#[test]
+#[serial]
+fn host_found_email_is_declared_and_names_the_property() {
+    reset_test_store();
+    let emissions = concat!(env!("OUT_DIR"), "/portaki-emissions/email-host-found.json");
+    let declared: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(emissions).expect("host-found declared"))
+            .expect("json");
+    assert_eq!(declared["id"], "host-found");
+
+    MockContext::host().run_with(|ctx, host| {
+        let stay_id = Uuid::new_v4();
+        submit_found(
+            ctx.clone(),
+            SubmitFoundArgs {
+                stay_ids: vec![stay_id],
+                stay_id: None,
+                description: "Lunettes".into(),
+                status: None,
+            },
+        )
+        .expect("submitFound");
+        let email = host.sent_emails().into_iter().last().expect("guest email");
+        assert!(email.email_id.starts_with("host-found-"));
+        assert_eq!(email.property_id, Some(ctx.property_id));
+    });
+}

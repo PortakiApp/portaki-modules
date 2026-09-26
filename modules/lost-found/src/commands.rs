@@ -82,6 +82,13 @@ pub struct SubmitFoundArgs {
     pub status: Option<String>,
 }
 
+/// Each stay's guest hears of the found item (`host-found-<report id>`).
+#[portaki_sdk::email(
+    id = "host-found",
+    audience = EmailAudience::Guest,
+    requires_guest_email,
+    description_key = "email.host-found.description"
+)]
 #[portaki_sdk::command(
     name = "submitFound",
     example(
@@ -115,7 +122,9 @@ pub fn submit_found(ctx: Context, args: SubmitFoundArgs) -> Result<()> {
         )?;
 
         // The report is saved: a refused email is logged, the other stays still get theirs.
-        if let Err(error) = email_send::notify_guest_host_found(stay_id, report.id, &plain) {
+        if let Err(error) =
+            email_send::notify_guest_host_found(ctx.property_id, stay_id, report.id, &plain)
+        {
             email_text::log_send_failure("lost_found_guest_email_failed", &error);
         }
     }

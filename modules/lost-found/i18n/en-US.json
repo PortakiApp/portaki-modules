@@ -72,6 +72,7 @@
   "catalog.host.lost-stats": "Lost & found",
   "catalog.host.stay": "Declared items",
   "email.checkout-j2.description": "Lost & found follow-up J+2 after checkout",
+  "email.host-found.description": "Item found by the host, sent to the guest",
   "guest.error.title": "Reporting temporarily unavailable",
   "guest.error.description": "The form could not be loaded."
 }
