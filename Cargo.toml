@@ -37,10 +37,10 @@ rust-version = "1.75"
 #
 # Le prix est vingt-deux endroits à tenir ensemble. `scripts/check-sdk-pin.sh` les compare à
 # chaque CI.
-portaki-sdk = "8.7.0"
-portaki-sdk-macros = "8.7.0"
-portaki-connectors = "8.7.0"
-portaki-test-utils = "8.7.0"
+portaki-sdk = "8.8.1"
+portaki-sdk-macros = "8.8.1"
+portaki-connectors = "8.8.1"
+portaki-test-utils = "8.8.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 uuid = { version = "1", features = ["serde", "v4", "rng-getrandom"] }
