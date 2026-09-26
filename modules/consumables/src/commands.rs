@@ -91,7 +91,7 @@ pub struct UpdateConfigArgs {
     name = "updateConfig",
     example(
         label = "Papier toilette et café",
-        input = r#"{"items":[{"label":"Papier toilette"},{"label":"Café"}]}"#
+        input = r#"{"items":[{"label_fr":"Papier toilette"},{"label_fr":"Café"}]}"#
     )
 )]
 pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
