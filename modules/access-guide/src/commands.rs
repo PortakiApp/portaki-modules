@@ -19,6 +19,7 @@ const SWITCH_KEYS: &[&str] = &[
 #[portaki_sdk::params]
 #[derive(Default)]
 pub struct ConfigUpdatedArgs {
+    /// Ignored: the email always goes to the invocation's property, never to one the payload names.
     #[serde(default)]
     pub property_id: Option<Uuid>,
     #[serde(default)]
@@ -90,7 +91,7 @@ pub fn on_config_updated(ctx: Context, args: ConfigUpdatedArgs) -> Result<()> {
             }),
         },
         stay_id: None,
-        property_id: Some(args.property_id.unwrap_or(ctx.property_id)),
+        property_id: Some(ctx.property_id),
         action_url: None,
     })
 }
