@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.1](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.0.0...consumables-v2.0.1) (2026-09-26)
+
+
+### Bug Fixes
+
+* **consumables:** no label key in example input ([fd1daa7](https://github.com/PortakiApp/portaki-modules/commit/fd1daa77903898abe252b7700cf1d0a39979b916))
+* **deps:** bump portaki-sdk to 8.8.1 ([474417d](https://github.com/PortakiApp/portaki-modules/commit/474417d9ac43536f465f10afbc25e46723aface5))
+
 ## [2.0.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v1.0.1...consumables-v2.0.0) (2026-09-25)
 
 

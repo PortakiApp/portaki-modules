@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v0.7.0...waste-recycling-v0.7.1) (2026-09-26)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 8.8.1 ([474417d](https://github.com/PortakiApp/portaki-modules/commit/474417d9ac43536f465f10afbc25e46723aface5))
+
 ## [0.7.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v0.6.1...waste-recycling-v0.7.0) (2026-09-25)
 
 
