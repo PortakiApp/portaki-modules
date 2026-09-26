@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.3](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v0.7.2...guest-reviews-v0.7.3) (2026-09-26)
+
+
+### Bug Fixes
+
+* **guest-reviews:** key reviews under stay prefix ([91a1021](https://github.com/PortakiApp/portaki-modules/commit/91a1021fba46886c18e0166045f84656c1a22bdc))
+
 ## [0.7.2](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v0.7.1...guest-reviews-v0.7.2) (2026-09-26)
 
 
