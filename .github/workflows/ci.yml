@@ -57,7 +57,7 @@ jobs:
             echo "ref=${{ github.event.before }}" >>"$GITHUB_OUTPUT"
           fi
 
-      - uses: PortakiApp/portaki-release-action/install@6d40f3b5fc0055822d505ceea10cf4a57c74c8ca # v1
+      - uses: PortakiApp/portaki-release-action/install@7619a50f3c34e2e1e8a17617c75d84eb70e907f2 # v1
 
       # `portaki ci modules` lit la disposition dans les crates et rend `modules`,
       # `any` et `reason` dans GITHUB_OUTPUT. Il remplace `changed-modules.sh` —
@@ -147,7 +147,7 @@ jobs:
       # `cache: false` : ce job exécute le code du module (`build.rs`), et l'action v1 sauve le
       # cache en fin de job — un module piégé y remplaçait le `portaki` que les jobs des autres
       # modules restauraient ensuite.
-      - uses: PortakiApp/portaki-release-action/install@6d40f3b5fc0055822d505ceea10cf4a57c74c8ca # v1
+      - uses: PortakiApp/portaki-release-action/install@7619a50f3c34e2e1e8a17617c75d84eb70e907f2 # v1
         with:
           working-directory: modules/${{ matrix.module }}
           cache: "false"
@@ -270,7 +270,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
 
       # Sans cache : un binaire restauré vaut ce que vaut chaque job qui peut écrire le cache.
-      - uses: PortakiApp/portaki-release-action/install@6d40f3b5fc0055822d505ceea10cf4a57c74c8ca # v1
+      - uses: PortakiApp/portaki-release-action/install@7619a50f3c34e2e1e8a17617c75d84eb70e907f2 # v1
         with:
           working-directory: modules/${{ matrix.module }}
           cache: "false"
