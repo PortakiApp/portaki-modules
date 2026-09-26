@@ -18,7 +18,11 @@ pub struct SubmitReviewArgs {
     pub comment: String,
 }
 
-const REVIEWS_KEY: &str = "reviews";
+/// Where every review used to go, one blob for the property: still read, never written.
+const LEGACY_REVIEWS_KEY: &str = "reviews";
+/// One key per stay (`review:<stay_id>`): one review per stay, and a stay's review can be
+/// dropped with it.
+const REVIEW_KEY_PREFIX: &str = "review:";
 
 /// One review as stored in KV. Reviews stored before the date was kept have no `at`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -34,9 +38,16 @@ pub struct StoredReview {
 
 /// Every review of the property, oldest first.
 pub fn load_reviews() -> Result<Vec<StoredReview>> {
-    Ok(host::kv::get(REVIEWS_KEY)?
-        .and_then(|bytes| serde_json::from_slice(&bytes).ok())
-        .unwrap_or_default())
+    let mut reviews: Vec<StoredReview> = read_json(LEGACY_REVIEWS_KEY)?.unwrap_or_default();
+    for key in host::kv::list(REVIEW_KEY_PREFIX)? {
+        reviews.extend(read_json::<StoredReview>(&key)?);
+    }
+    reviews.sort_by_key(|review| review.at);
+    Ok(reviews)
+}
+
+fn read_json<T: serde::de::DeserializeOwned>(key: &str) -> Result<Option<T>> {
+    Ok(host::kv::get(key)?.and_then(|bytes| serde_json::from_slice(&bytes).ok()))
 }
 
 /// The guest has checked in — or the stay has no check-in date to say otherwise. Before
@@ -67,6 +78,15 @@ pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
     if !has_arrived(&ctx)? {
         return Err(PortakiError::Host("review_before_arrival".into()));
     }
+    let Some(stay_id) = ctx.stay.as_ref().map(|stay| stay.stay_id) else {
+        return Err(PortakiError::Host("review_needs_stay".into()));
+    };
+    let key = format!("{REVIEW_KEY_PREFIX}{stay_id}");
+    // ponytail: read-then-write, no compare-and-set in KV — two submits racing within the same
+    // instant could both pass; a table with a unique stay_id closes it.
+    if host::kv::get(&key)?.is_some() {
+        return Err(PortakiError::Host("review_already_submitted".into()));
+    }
 
     if !(1..=5).contains(&args.rating) {
         return Err(PortakiError::Host(format!(
@@ -82,17 +102,15 @@ pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
         .and_then(|g| g.display_name.clone())
         .map(|name| name.trim().to_string())
         .filter(|name| !name.is_empty());
-    let mut entries = load_reviews()?;
-    entries.push(StoredReview {
+    let review = StoredReview {
         rating: args.rating,
         comment: comment.clone(),
         at: Some(host::time::now()?),
         guest_name: guest_name.clone(),
-    });
-
-    let bytes = serde_json::to_vec(&entries)
-        .map_err(|error| PortakiError::Storage(format!("reviews serialize: {error}")))?;
-    host::kv::set(REVIEWS_KEY, &bytes, None)?;
+    };
+    let bytes = serde_json::to_vec(&review)
+        .map_err(|error| PortakiError::Storage(format!("review serialize: {error}")))?;
+    host::kv::set(&key, &bytes, None)?;
 
     let guest_name = guest_name.unwrap_or_else(|| "Voyageur".to_string());
 
@@ -107,8 +125,6 @@ pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
         body.push_str("\n\n");
         body.push_str(&quoted_comment.text);
     }
-
-    let stay_id = ctx.guest.as_ref().map(|g| g.session_id);
 
     // The review is saved: a refused email is logged, it does not fail the guest's submit.
     let sent = email::send(&SendEmailArgs {
@@ -135,7 +151,7 @@ pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
                 portaki_action: None,
             }),
         },
-        stay_id,
+        stay_id: Some(stay_id),
         property_id: Some(ctx.property_id),
         action_url: None,
     });

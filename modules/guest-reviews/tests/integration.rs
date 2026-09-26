@@ -12,7 +12,7 @@ use guest_reviews::{
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::contracts::publish::PublishLevel;
 use portaki_sdk::contracts::stats::StatsSummaryArgs;
-use portaki_test_utils::{MockContext, SurfaceAssertions};
+use portaki_test_utils::{Booking, MockContext, SurfaceAssertions};
 use serde_json::json;
 
 #[path = "../../../support/config_form.rs"]
@@ -191,20 +191,45 @@ fn submit_review_rejects_when_portaki_disabled() {
 
 #[test]
 #[serial]
-fn submit_review_stores_the_review() {
+fn submit_review_stores_one_review_per_stay() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({ "platform_airbnb": false, "platform_portaki": true }))
+        .with_stay(Booking::default())
+        .run_with(|ctx, host| {
+            let review = || SubmitReviewArgs {
+                rating: 5,
+                comment: "Great".into(),
+            };
+            submit_review(ctx.clone(), review()).expect("submit");
+            let stay_id = ctx.stay.as_ref().expect("stay").stay_id;
+            assert!(portaki_sdk::host::kv::get(&format!("review:{stay_id}"))
+                .expect("kv")
+                .is_some());
+            assert!(portaki_sdk::host::kv::get("reviews").expect("kv").is_none());
+
+            let again = submit_review(ctx, review()).expect_err("second review");
+            assert!(again.to_string().contains("review_already_submitted"));
+            assert_eq!(host.sent_emails().len(), 1);
+        });
+}
+
+#[test]
+#[serial]
+fn submit_review_needs_a_stay() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&json!({ "platform_airbnb": false, "platform_portaki": true }))
         .run(|ctx| {
-            submit_review(
+            let err = submit_review(
                 ctx,
                 SubmitReviewArgs {
                     rating: 5,
                     comment: "Great".into(),
                 },
             )
-            .expect("submit");
-            assert!(portaki_sdk::host::kv::get("reviews").expect("kv").is_some());
+            .expect_err("no stay");
+            assert!(err.to_string().contains("review_needs_stay"));
         });
 }
 
@@ -329,6 +354,7 @@ fn long_comment_is_stored_whole_and_quoted_in_the_host_email() {
             "platform_airbnb": false,
             "platform_portaki": true
         }))
+        .with_stay(Booking::default())
         .run_with(|ctx, host| {
             submit_review(
                 ctx.clone(),
@@ -339,13 +365,14 @@ fn long_comment_is_stored_whole_and_quoted_in_the_host_email() {
             )
             .expect("submit");
 
-            let stored: Vec<SubmitReviewArgs> = serde_json::from_slice(
-                &portaki_sdk::host::kv::get("reviews")
+            let stay_id = ctx.stay.as_ref().expect("stay").stay_id;
+            let stored: SubmitReviewArgs = serde_json::from_slice(
+                &portaki_sdk::host::kv::get(&format!("review:{stay_id}"))
                     .expect("kv")
-                    .expect("reviews"),
+                    .expect("review"),
             )
-            .expect("reviews json");
-            assert_eq!(stored.last().expect("review").comment, comment);
+            .expect("review json");
+            assert_eq!(stored.comment, comment);
 
             let email = host.sent_emails().into_iter().last().expect("host email");
             let body = &email.content.body.fr;
@@ -377,8 +404,10 @@ fn stored_reviews_feed_the_stats() {
         }))
         .run(|ctx| {
             for (rating, comment) in [(5, "Très propre, super emplacement"), (4, "")] {
+                let mut on_stay = ctx.clone();
+                on_stay.stay = Some(Booking::default().into());
                 submit_review(
-                    ctx.clone(),
+                    on_stay,
                     SubmitReviewArgs {
                         rating,
                         comment: comment.into(),
