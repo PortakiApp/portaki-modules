@@ -152,6 +152,13 @@ jobs:
           working-directory: modules/${{ matrix.module }}
           cache: "false"
 
+      # `cargo audit` sur le `Cargo.lock` du dépôt, avant que le build n'exécute quoi que ce soit
+      # du module. Une vulnérabilité critique arrête ici ; le rapport part avec l'artefact
+      # (`target/portaki/`) et le job de publication l'atteste.
+      - uses: PortakiApp/portaki-release-action/audit@c85597f78af82c5d3886644847e96977d7864298 # v1
+        with:
+          working-directory: modules/${{ matrix.module }}
+
       - name: Build and lint (wasm)
         run: |
           set -euo pipefail
@@ -298,11 +305,34 @@ jobs:
 
       # `--prebuilt` : pousse l'artefact de `wasm` tel quel, après avoir vérifié qu'il porte l'id
       # et la version des sources de ce module — un module piégé ne publie pas sous un autre nom.
-      - name: Publish
+      # `--no-announce` : le registre vérifie la signature à l'annonce, elle doit exister avant.
+      - name: Push
+        id: push
         working-directory: modules/${{ matrix.module }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: portaki publish --prebuilt --registry "$REGISTRY" --channel stable
+        run: |
+          set -euo pipefail
+          portaki publish --prebuilt --no-announce --registry "$REGISTRY" --channel stable | tee /tmp/portaki-push
+          if grep -q "already in the registry" /tmp/portaki-push; then
+            echo "pushed=false" >>"$GITHUB_OUTPUT"
+          else
+            echo "pushed=true" >>"$GITHUB_OUTPUT"
+          fi
+
+      # Signature sans clé (identité : ce workflow, sur `main`), provenance SLSA et rapport
+      # `cargo audit` attachés au digest. Une production Portaki n'exécute pas un digest non signé.
+      - name: Sign
+        if: steps.push.outputs.pushed == 'true'
+        uses: PortakiApp/portaki-release-action/sign@c85597f78af82c5d3886644847e96977d7864298 # v1
+        with:
+          working-directory: modules/${{ matrix.module }}
+          registry: ${{ env.REGISTRY }}
+
+      - name: Announce
+        if: steps.push.outputs.pushed == 'true'
+        working-directory: modules/${{ matrix.module }}
+        run: portaki publish --announce-only --registry "$REGISTRY" --channel stable
 
       # `always()` : un rapport conditionné à l'échec ne pourrait jamais éteindre une alerte.
       - name: Report the run to Portaki
