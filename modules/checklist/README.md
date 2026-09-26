@@ -37,7 +37,7 @@ Manifest also declares the `checklist` / `cleaning` stats tiles and `workspace-t
 - `updateConfig` — saves the selected list; `createChecklist { template }`, `deleteChecklist { id }`
 - `timelineTasks` — host lists as dated tasks for the stays the platform passes (`<checklistId>:<stayId>`)
 - `taskToggle` / `taskComplete` — refused with `photo_required` when a photo item has no photo;
-  emit `checklist.task-updated`, `workspace-activity.record`, and `consumables.restocked` when
+  emit `checklist.task-updated`, `workspace-activity.record`, and `checklist.consumables-restocked` when
   « Consommables réassortis » gets ticked
 - `statsSummary` — tiles `checklist` and `cleaning`
 
