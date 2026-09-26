@@ -14,12 +14,6 @@ on:
     # 06:28 UTC — décalé de l'heure pile, et des autres dépôts, pour ne pas empiler la file.
     - cron: "28 6 * * *"
   workflow_dispatch:
-  pull_request:
-    paths:
-      - "Cargo.lock"
-      - "Cargo.toml"
-      - "modules/*/Cargo.toml"
-      - ".github/workflows/security-audit.yml"
 
 concurrency:
   group: security-audit-${{ github.event.pull_request.number || github.ref }}
