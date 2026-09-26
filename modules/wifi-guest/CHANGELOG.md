@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v0.6.0...wifi-guest-v0.6.1) (2026-09-26)
+
+
+### Bug Fixes
+
+* **wifi-guest:** hide password after checkout ([1b048ac](https://github.com/PortakiApp/portaki-modules/commit/1b048ac41286bcae3e4f3c41cde1bfbc745b9a42))
+
 ## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v0.5.1...wifi-guest-v0.6.0) (2026-09-25)
 
 

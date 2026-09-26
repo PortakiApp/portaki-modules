@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.1](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v0.8.0...access-guide-v0.8.1) (2026-09-26)
+
+
+### Bug Fixes
+
+* **access-guide:** code-changed to invocation property ([4b1459f](https://github.com/PortakiApp/portaki-modules/commit/4b1459f13b1c62737e5fa8bf25d51ff5f6ab6e17))
+* **access-guide:** hide codes after checkout ([3d60972](https://github.com/PortakiApp/portaki-modules/commit/3d609726e5dd06dc8d800463fc09266304167370))
+
 ## [0.8.0](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v0.7.1...access-guide-v0.8.0) (2026-09-25)
 
 

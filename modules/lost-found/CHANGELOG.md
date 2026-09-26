@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v2.0.0...lost-found-v2.0.1) (2026-09-26)
+
+
+### Bug Fixes
+
+* **lost-found:** declare host-found guest email ([a143bdb](https://github.com/PortakiApp/portaki-modules/commit/a143bdb2be2a2c6793f4de553f66281f37427cb5))
+
 ## [2.0.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.0.1...lost-found-v2.0.0) (2026-09-25)
 
 

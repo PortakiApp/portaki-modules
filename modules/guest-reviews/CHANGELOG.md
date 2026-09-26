@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v0.7.0...guest-reviews-v0.7.1) (2026-09-26)
+
+
+### Bug Fixes
+
+* **guest-reviews:** one review per stay ([85900c4](https://github.com/PortakiApp/portaki-modules/commit/85900c4cded967295162d751e2a4323ff05bd9bd))
+
 ## [0.7.0](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v0.6.1...guest-reviews-v0.7.0) (2026-09-25)
 
 
