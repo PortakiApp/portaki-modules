@@ -43,7 +43,8 @@ fn the_codes_follow_the_arrival_date() {
             .run(render_explore_detail)
             .map_err(|e| e.to_string())?;
         let text = serde_json::to_string(&surface).unwrap();
-        let due = scenario.stay.check_in_offset <= 0;
+        // Up to departure, never after.
+        let due = scenario.stay.check_in_offset <= 0 && scenario.stay.check_out_offset >= 0;
         let pin = text.contains(CHARGER_PIN);
         let code = text.contains(PARKING_CODE);
         if pin == due && code == due {
