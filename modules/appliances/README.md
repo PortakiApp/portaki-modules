@@ -63,6 +63,18 @@ Host edits fields; storage still keeps `content_fr` / `content_en` as structured
 cargo test -p appliances
 ```
 
+## Verify the artifact
+
+Every published version is signed by this repository's `ci` workflow on `main` (keyless cosign,
+Rekor transparency log), with SLSA provenance and the `cargo audit` report attached. A Portaki
+production runtime only runs a signed digest. To check one yourself:
+
+```bash
+cosign verify ghcr.io/portakiapp/portaki-modules-appliances@<digest> \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-identity https://github.com/PortakiApp/portaki-modules/.github/workflows/ci.yml@refs/heads/main
+```
+
 ## License
 
 Apache-2.0 — see [LICENSE](../../LICENSE).
