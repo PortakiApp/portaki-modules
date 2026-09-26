@@ -123,6 +123,18 @@ cargo test -p access-guide
 
 i18n: `i18n/fr-FR.json`, `i18n/en-US.json` — mirror into the dashboard with `pnpm generate:module-host-i18n`.
 
+## Verify the artifact
+
+Every published version is signed by this repository's `ci` workflow on `main` (keyless cosign,
+Rekor transparency log), with SLSA provenance and the `cargo audit` report attached. A Portaki
+production runtime only runs a signed digest. To check one yourself:
+
+```bash
+cosign verify ghcr.io/portakiapp/portaki-modules-access-guide@<digest> \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-identity https://github.com/PortakiApp/portaki-modules/.github/workflows/ci.yml@refs/heads/main
+```
+
 ## License
 
 Apache-2.0 — see [LICENSE](../../LICENSE).
