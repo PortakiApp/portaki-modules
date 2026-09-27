@@ -8,13 +8,13 @@ Part of the [`portaki-modules`](https://github.com/PortakiApp/portaki-modules) m
 
 `consumables`
 
-OCI image: `ghcr.io/portakiapp/portaki-modules-consumables:<semver>`
+OCI image: `oci.portaki.app/modules/consumables:<semver>`
 
 ## Install / pin
 
 Install from the Portaki module catalogue (or pin the OCI digest for the property). Semver tag:
 
-`ghcr.io/portakiapp/portaki-modules-consumables:0.1.0`
+`oci.portaki.app/modules/consumables:0.1.0`
 
 Properties pin a digest — bump semver on every runtime change before republish.
 
@@ -65,12 +65,12 @@ portaki build --release
 
 ## Verify the artifact
 
-Every published version is signed by this repository's `ci` workflow on `main` (keyless cosign,
+Every published version is attested by this repository's `ci` workflow on `main` (keyless cosign,
 Rekor transparency log), with SLSA provenance and the `cargo audit` report attached. A Portaki
 production runtime only runs a signed digest. To check one yourself:
 
 ```bash
-cosign verify ghcr.io/portakiapp/portaki-modules-consumables@<digest> \
+cosign verify-attestation --type slsaprovenance1 oci.portaki.app/modules/consumables@<digest> \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   --certificate-identity https://github.com/PortakiApp/portaki-modules/.github/workflows/ci.yml@refs/heads/main
 ```

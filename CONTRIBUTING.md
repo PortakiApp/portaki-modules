@@ -72,8 +72,8 @@ Versions are managed by **release-please** (multi-package, one entry per `module
    - `modules/<id>/Cargo.toml` `package.version`
    - `modules/<id>/CHANGELOG.md`
    - `.release-please-manifest.json`
-3. Merge the release PR. That push to `main` runs existing `ci` publish (GHCR) from the bumped Cargo.toml version.
-4. release-please also creates GitHub Releases / tags (`<module-id>-vX.Y.Z`) — nice-to-have; GHCR is the publish path that matters.
+3. Merge the release PR. That push to `main` runs the `ci` publish (Portaki OCI registry) from the bumped Cargo.toml version.
+4. release-please also creates GitHub Releases / tags (`<module-id>-vX.Y.Z`) — nice-to-have; the `ci` publish is the path that matters.
 
 Do **not** hand-bump versions for routine releases. Do **not** hand-edit package paths in `release-please-config.json` — run `./scripts/generate-release-please-config.sh` instead.
 

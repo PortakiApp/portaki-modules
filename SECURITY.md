@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Security fixes target the default branch (`main`) and the latest published module versions on GHCR when applicable.
+Security fixes target the default branch (`main`) and the latest published module versions when applicable.
 
 ## Reporting a vulnerability
 

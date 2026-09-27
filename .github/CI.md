@@ -59,7 +59,7 @@ Plain `GITHUB_TOKEN` limitations if you ever fall back:
 
 ### After merge
 
-Release PR merge bumps module versions on `main` → existing `ci` `publish` matrix builds/publishes GHCR from Cargo.toml. Tags / GitHub Releases are optional extras from release-please.
+Release PR merge bumps module versions on `main` → existing `ci` `publish` matrix builds/publishes to Portaki's OCI registry from Cargo.toml. Tags / GitHub Releases are optional extras from release-please.
 
 ## Dépendances — un seul gestionnaire
 

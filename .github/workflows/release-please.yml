@@ -1,7 +1,7 @@
 name: Release please
 
 # Opens / updates the draft release PR (CHANGELOG + per-module version bumps).
-# Manual merge → GitHub Release/tags + push to main → existing `ci` publish to GHCR.
+# Manual merge → GitHub Release/tags + push to main → `ci` publish to Portaki's OCI registry.
 #
 # release-please-action@v5 loads config via the GitHub API (not the local checkout).
 # This workflow regenerates checked-in config from modules/*/ and commits drift
