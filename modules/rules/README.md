@@ -8,7 +8,7 @@ Part of the [`portaki-modules`](https://github.com/PortakiApp/portaki-modules) m
 
 `rules`
 
-OCI image: `ghcr.io/portakiapp/portaki-modules-rules:<semver>`
+OCI image: `oci.portaki.app/modules/rules:<semver>`
 
 ## Capabilities
 
@@ -56,12 +56,12 @@ portaki build --release
 
 ## Verify the artifact
 
-Every published version is signed by this repository's `ci` workflow on `main` (keyless cosign,
+Every published version is attested by this repository's `ci` workflow on `main` (keyless cosign,
 Rekor transparency log), with SLSA provenance and the `cargo audit` report attached. A Portaki
 production runtime only runs a signed digest. To check one yourself:
 
 ```bash
-cosign verify ghcr.io/portakiapp/portaki-modules-rules@<digest> \
+cosign verify-attestation --type slsaprovenance1 oci.portaki.app/modules/rules@<digest> \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   --certificate-identity https://github.com/PortakiApp/portaki-modules/.github/workflows/ci.yml@refs/heads/main
 ```
