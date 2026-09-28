@@ -72,6 +72,7 @@ pub fn notify_host_submitted(
                 url: None,
                 portaki_action: None,
             }),
+            ..Default::default()
         },
         stay_id: Some(stay_id),
         property_id: Some(property_id),
@@ -104,6 +105,7 @@ pub fn notify_guest_host_found(
                 url: None,
                 portaki_action: Some("open-module:lost-found:default".into()),
             }),
+            ..Default::default()
         },
         stay_id: Some(stay_id),
         // The invocation's property: the platform can refuse a stay that is not on it.
@@ -146,6 +148,7 @@ pub fn send_checkout_follow_up(ctx: &Context) -> Result<()> {
                 url: None,
                 portaki_action: Some("open-module:lost-found:default".into()),
             }),
+            ..Default::default()
         },
         stay_id: Some(stay_id),
         property_id: None,
