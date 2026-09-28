@@ -33,7 +33,7 @@ env:
   PORTAKI_API_URL: ${{ vars.PORTAKI_API_URL || 'https://api.portaki.app' }}
   # Le CLI qui a `ci build` et `ci release` (publication dans le dépôt OCI de Portaki). Le lock
   # résout encore un SDK plus ancien : à retirer quand il l'aura rattrapé.
-  PORTAKI_CLI: 8.10.0
+  PORTAKI_CLI: 8.12.0
 
 jobs:
   changes:
