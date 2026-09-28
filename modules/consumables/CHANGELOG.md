@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.5](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.0.4...consumables-v2.0.5) (2026-09-28)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 8.11.1 ([bdce7fc](https://github.com/PortakiApp/portaki-modules/commit/bdce7fcf958ed3f1935e5f12662fe71ddc58ca9e))
+
 ## [2.0.4](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.0.3...consumables-v2.0.4) (2026-09-28)
 
 
