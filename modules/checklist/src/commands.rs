@@ -41,7 +41,13 @@ pub struct UpdateConfigArgs {
 
 /// Saves the selected list. Without a known `id` there is nothing to save (the « new » panel
 /// creates lists with `createChecklist`).
-#[portaki_sdk::command(name = "updateConfig")]
+#[portaki_sdk::command(
+    name = "updateConfig",
+    example(
+        label = "Renommer la liste de départ",
+        input = r#"{"id":"3f2b8c1e-7a4d-4e9b-9c61-2d5e8f0a1b47","name":"Avant de partir","items":[{"label":"Fermer les fenêtres"},{"label":"Sortir les poubelles"}]}"#
+    )
+)]
 pub fn update_config(_ctx: Context, args: UpdateConfigArgs) -> Result<()> {
     let Some(mut list) = Uuid::parse_str(args.id.trim()).ok().and_then(|id| {
         storage::list_checklists()
@@ -147,7 +153,13 @@ pub struct DeleteChecklistArgs {
     pub id: Uuid,
 }
 
-#[portaki_sdk::command(name = "deleteChecklist")]
+#[portaki_sdk::command(
+    name = "deleteChecklist",
+    example(
+        label = "Supprimer une liste",
+        input = r#"{"id":"3f2b8c1e-7a4d-4e9b-9c61-2d5e8f0a1b47"}"#
+    )
+)]
 pub fn delete_checklist(_ctx: Context, args: DeleteChecklistArgs) -> Result<()> {
     storage::delete_checklist(args.id)
 }
@@ -159,7 +171,14 @@ pub struct ItemIdArgs {
     pub item_id: Uuid,
 }
 
-#[portaki_sdk::command(name = "completeItem", guest)]
+#[portaki_sdk::command(
+    name = "completeItem",
+    guest,
+    example(
+        label = "Cocher une tâche",
+        input = r#"{"itemId":"8c0e5a4b-1d2f-4e6a-9b7c-3f1d2e4a5b6c"}"#
+    )
+)]
 pub fn complete_item(ctx: Context, args: ItemIdArgs) -> Result<()> {
     let stay_id = require_stay_id(&ctx)?;
     require_guest_item(args.item_id)?;
@@ -167,7 +186,14 @@ pub fn complete_item(ctx: Context, args: ItemIdArgs) -> Result<()> {
     emit_progress(ctx.property_id, stay_id)
 }
 
-#[portaki_sdk::command(name = "uncompleteItem", guest)]
+#[portaki_sdk::command(
+    name = "uncompleteItem",
+    guest,
+    example(
+        label = "Décocher une tâche",
+        input = r#"{"itemId":"8c0e5a4b-1d2f-4e6a-9b7c-3f1d2e4a5b6c"}"#
+    )
+)]
 pub fn uncomplete_item(ctx: Context, args: ItemIdArgs) -> Result<()> {
     let stay_id = require_stay_id(&ctx)?;
     require_guest_item(args.item_id)?;
