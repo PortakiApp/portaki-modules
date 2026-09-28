@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.5](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v0.8.4...access-guide-v0.8.5) (2026-09-28)
+
+
+### Bug Fixes
+
+* **access-guide:** declare revealed secrets ([8e58c00](https://github.com/PortakiApp/portaki-modules/commit/8e58c00f724c080cdd8325d56d58f0d9d4e37bc1))
+* **deps:** bump portaki-sdk to 8.11.0 ([f7fded1](https://github.com/PortakiApp/portaki-modules/commit/f7fded1fa42013f963eecdeaa8280c89c1803172))
+
 ## [0.8.4](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v0.8.3...access-guide-v0.8.4) (2026-09-28)
 
 
