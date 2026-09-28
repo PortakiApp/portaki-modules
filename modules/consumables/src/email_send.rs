@@ -4,12 +4,16 @@
 //! [`crate::email_text`].
 
 use portaki_sdk::host::email::{
-    self, EmailAudience, LocalizedEmailText, ModuleEmailCta, ModuleEmailSdui, SendEmailArgs,
+    self, EmailAudience, EmailBlock, EmailPair, LocalizedEmailText, ModuleEmailCta,
+    ModuleEmailSdui, SendEmailArgs,
 };
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
 use crate::email_text;
+
+/// Longest item label in the report lines, in chars.
+const ITEM_ROW_MAX_CHARS: usize = 120;
 
 /// Guest shortage report → notify workspace owner.
 pub fn notify_host_submitted(
@@ -29,24 +33,29 @@ pub fn notify_host_submitted(
         _ => "missing",
     };
 
-    let label = email_text::quote_guest_text(item_label);
+    // A block line holds 200 chars: the item is cut shorter than a body quote.
+    let item = email_text::clip_chars(item_label, ITEM_ROW_MAX_CHARS);
     let note = note.map(email_text::quote_guest_text);
-    let truncated = label.truncated || note.as_ref().is_some_and(|quoted| quoted.truncated);
+    let truncated = item.truncated || note.as_ref().is_some_and(|quoted| quoted.truncated);
 
-    let mut body_fr = format!(
-        "Un voyageur signale un consommable ({level_fr}) :\n\n{}",
-        label.text
-    );
-    let mut body_en = format!(
-        "A guest reported a consumable ({level_en}):\n\n{}",
-        label.text
-    );
+    let mut body_fr = format!("Un voyageur signale un consommable ({level_fr}).");
+    let mut body_en = format!("A guest reported a consumable ({level_en}).");
     if let Some(extra) = &note {
         body_fr.push_str("\n\nPrécision : ");
         body_fr.push_str(&extra.text);
         body_en.push_str("\n\nNote: ");
         body_en.push_str(&extra.text);
     }
+    let blocks = vec![EmailBlock::rows([
+        EmailPair::new(
+            LocalizedEmailText::new("Article", "Item"),
+            LocalizedEmailText::both(item.text),
+        ),
+        EmailPair::new(
+            LocalizedEmailText::new("Niveau", "Level"),
+            LocalizedEmailText::new(level_fr, level_en),
+        ),
+    ])];
 
     email::send(&SendEmailArgs {
         email_id: format!("submitted-{report_id}"),
@@ -71,6 +80,8 @@ pub fn notify_host_submitted(
                 url: None,
                 portaki_action: None,
             }),
+            blocks,
+            ..Default::default()
         },
         stay_id: Some(stay_id),
         property_id: Some(property_id),
