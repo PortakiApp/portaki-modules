@@ -99,6 +99,7 @@ pub fn on_config_updated(ctx: Context, args: ConfigUpdatedArgs) -> Result<()> {
                 url: None,
                 portaki_action: Some("open-module:access-guide:default".into()),
             }),
+            ..Default::default()
         },
         stay_id: None,
         property_id: Some(ctx.property_id),
