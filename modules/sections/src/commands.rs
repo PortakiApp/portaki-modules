@@ -72,12 +72,24 @@ fn parse_optional_uuid(raw: Option<&str>) -> Result<Option<Uuid>> {
         .map_err(|error| PortakiError::Host(format!("invalid section id: {error}")))
 }
 
-#[portaki_sdk::command(name = "deleteSection")]
+#[portaki_sdk::command(
+    name = "deleteSection",
+    example(
+        label = "Supprimer une section",
+        input = r#"{"id":"2e4f6a8c-0b1d-4e3f-9a5b-7c9d1e3f5a7b"}"#
+    )
+)]
 pub fn delete_section(_ctx: Context, args: DeleteSectionArgs) -> Result<()> {
     store::delete_section(args.id)
 }
 
-#[portaki_sdk::command(name = "reorder")]
+#[portaki_sdk::command(
+    name = "reorder",
+    example(
+        label = "Remonter une section",
+        input = r#"{"ordered_ids":["2e4f6a8c-0b1d-4e3f-9a5b-7c9d1e3f5a7b","6b8d0f2a-4c6e-4a8b-9d1f-3e5a7c9e1b3d"]}"#
+    )
+)]
 pub fn reorder(_ctx: Context, args: ReorderArgs) -> Result<()> {
     store::reorder(args.ordered_ids)
 }
