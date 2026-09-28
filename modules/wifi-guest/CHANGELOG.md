@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.4](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v0.6.3...wifi-guest-v0.6.4) (2026-09-28)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 8.11.0 ([f7fded1](https://github.com/PortakiApp/portaki-modules/commit/f7fded1fa42013f963eecdeaa8280c89c1803172))
+* **wifi-guest:** declare revealed secrets ([5a89c0a](https://github.com/PortakiApp/portaki-modules/commit/5a89c0a6122970e563c94631ec6f6dd4c0273a1d))
+
 ## [0.6.3](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v0.6.2...wifi-guest-v0.6.3) (2026-09-26)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.5](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v0.7.4...guest-reviews-v0.7.5) (2026-09-28)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 8.11.0 ([f7fded1](https://github.com/PortakiApp/portaki-modules/commit/f7fded1fa42013f963eecdeaa8280c89c1803172))
+
 ## [0.7.4](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v0.7.3...guest-reviews-v0.7.4) (2026-09-26)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.4](https://github.com/PortakiApp/portaki-modules/compare/sections-v0.6.3...sections-v0.6.4) (2026-09-28)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 8.11.0 ([f7fded1](https://github.com/PortakiApp/portaki-modules/commit/f7fded1fa42013f963eecdeaa8280c89c1803172))
+
 ## [0.6.3](https://github.com/PortakiApp/portaki-modules/compare/sections-v0.6.2...sections-v0.6.3) (2026-09-28)
 
 

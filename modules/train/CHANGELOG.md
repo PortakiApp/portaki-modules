@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.3](https://github.com/PortakiApp/portaki-modules/compare/train-v0.5.2...train-v0.5.3) (2026-09-28)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 8.11.0 ([f7fded1](https://github.com/PortakiApp/portaki-modules/commit/f7fded1fa42013f963eecdeaa8280c89c1803172))
+
 ## [0.5.2](https://github.com/PortakiApp/portaki-modules/compare/train-v0.5.1...train-v0.5.2) (2026-09-26)
 
 

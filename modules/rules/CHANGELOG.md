@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.3](https://github.com/PortakiApp/portaki-modules/compare/rules-v0.8.2...rules-v0.8.3) (2026-09-28)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 8.11.0 ([f7fded1](https://github.com/PortakiApp/portaki-modules/commit/f7fded1fa42013f963eecdeaa8280c89c1803172))
+
 ## [0.8.2](https://github.com/PortakiApp/portaki-modules/compare/rules-v0.8.1...rules-v0.8.2) (2026-09-26)
 
 

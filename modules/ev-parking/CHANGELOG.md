@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.5](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v0.7.4...ev-parking-v0.7.5) (2026-09-28)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 8.11.0 ([f7fded1](https://github.com/PortakiApp/portaki-modules/commit/f7fded1fa42013f963eecdeaa8280c89c1803172))
+* **ev-parking:** declare revealed secrets ([24073a6](https://github.com/PortakiApp/portaki-modules/commit/24073a63a3acb365aba782d0e89d459eb72084ee))
+
 ## [0.7.4](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v0.7.3...ev-parking-v0.7.4) (2026-09-28)
 
 
