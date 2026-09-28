@@ -6,7 +6,7 @@ use ical_sync::{
 };
 use portaki_sdk::capability;
 use portaki_sdk::contracts::booking_channel::{BookingChannel, ChannelSignal};
-use portaki_sdk::host::email::SendEmailArgs;
+use portaki_sdk::host::email::{EmailBlock, EmailHero, EmailTone, SendEmailArgs};
 use portaki_test_utils::MockContext;
 use serde_json::json;
 use serial_test::serial;
@@ -491,6 +491,25 @@ SUMMARY:Reserved\nDESCRIPTION:Name: Sofia Rossi\nEND:VEVENT\nEND:VCALENDAR\n";
     assert_eq!(listed_feeds(&failure.content.body.fr), 8);
     assert_eq!(listed_feeds(&failure.content.body.en), 8);
     assert!(!failure.content.body.en.contains("… and"));
+    assert!(matches!(
+        failure.content.hero,
+        EmailHero::Alert {
+            tone: EmailTone::Warning
+        }
+    ));
+    assert!(matches!(
+        failure.content.blocks.as_slice(),
+        [EmailBlock::Rows { items, .. }, EmailBlock::Note { .. }] if items.len() == 3
+    ));
+
+    let imported = sent
+        .iter()
+        .find(|email| email.email_id.starts_with("stay-imported-"))
+        .expect("stay-imported");
+    assert!(matches!(
+        imported.content.blocks.as_slice(),
+        [EmailBlock::Receipt { items, .. }, EmailBlock::Note { .. }] if items.len() == 4
+    ));
 }
 
 /// The multi-feed email id is keyed on the day and the set of failed feeds, not their order; a

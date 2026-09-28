@@ -2,8 +2,10 @@
 
 use chrono::{DateTime, Datelike, NaiveDate, Timelike, Utc};
 use portaki_sdk::host::email::{
-    self, EmailAudience, LocalizedEmailText, ModuleEmailCta, ModuleEmailSdui, SendEmailArgs,
+    self, EmailAudience, EmailBlock, EmailHero, EmailPair, EmailTone, LocalizedEmailText,
+    ModuleEmailCta, ModuleEmailSdui, SendEmailArgs,
 };
+use portaki_sdk::limits::EMAIL_BLOCK_TEXT_MAX_CHARS;
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
@@ -29,21 +31,9 @@ pub fn notify_sync_failed(
     last_success_at: Option<&str>,
     day_key: &str,
 ) -> Result<()> {
-    let (last_success_fr, last_success_en) = last_success_labels(last_success_at);
-    let error = email_i18n::text("email.syncFailed.error.empty");
-
-    let vars_fr = [
-        ("property", property_name),
-        ("source", source_label),
-        ("lastSuccess", last_success_fr.as_str()),
-        ("error", error.fr.as_str()),
-    ];
-    let vars_en = [
-        ("property", property_name),
-        ("source", source_label),
-        ("lastSuccess", last_success_en.as_str()),
-        ("error", error.en.as_str()),
-    ];
+    let source = LocalizedEmailText::both(clip(&format!("{source_label} · iCal")));
+    let mut rows = failure_rows(property_name, last_success_at);
+    rows.insert(1, row("email.row.source", source));
 
     email::send(&SendEmailArgs {
         email_id: format!("sync-failed-{feed_id}-{day_key}"),
@@ -52,12 +42,22 @@ pub fn notify_sync_failed(
             subject: email_i18n::text("email.syncFailed.subject"),
             eyebrow: Some(email_i18n::text("email.syncFailed.eyebrow")),
             title: Some(email_i18n::text("email.syncFailed.title")),
-            body: localized_with_pairs("email.syncFailed.body", &vars_fr, &vars_en),
+            body: email_i18n::text("email.syncFailed.body"),
             cta: Some(ModuleEmailCta {
                 label: email_i18n::text("email.syncFailed.cta"),
                 url: None,
                 portaki_action: None,
             }),
+            hero: EmailHero::Alert {
+                tone: EmailTone::Warning,
+            },
+            blocks: vec![
+                EmailBlock::rows(rows),
+                EmailBlock::note(
+                    EmailTone::Neutral,
+                    email_i18n::text("email.syncFailed.advice"),
+                ),
+            ],
         },
         stay_id: None,
         property_id: Some(property_id),
@@ -88,28 +88,14 @@ pub fn notify_sync_failed_many(
     last_success_at: Option<&str>,
     day_key: &str,
 ) -> Result<()> {
-    let (last_success_fr, last_success_en) = last_success_labels(last_success_at);
-    let error = email_i18n::text("email.syncFailed.error.empty");
     let more = email_i18n::text("email.syncFailedMany.more");
     let labels: Vec<&str> = failed.iter().map(|(_, label)| label.as_str()).collect();
     let feeds_fr = failed_feeds_list(&labels, &more.fr);
     let feeds_en = failed_feeds_list(&labels, &more.en);
     let count = failed.len().to_string();
 
-    let vars_fr = [
-        ("count", count.as_str()),
-        ("property", property_name),
-        ("lastSuccess", last_success_fr.as_str()),
-        ("error", error.fr.as_str()),
-        ("feeds", feeds_fr.as_str()),
-    ];
-    let vars_en = [
-        ("count", count.as_str()),
-        ("property", property_name),
-        ("lastSuccess", last_success_en.as_str()),
-        ("error", error.en.as_str()),
-        ("feeds", feeds_en.as_str()),
-    ];
+    let vars_fr = [("count", count.as_str()), ("feeds", feeds_fr.as_str())];
+    let vars_en = [("count", count.as_str()), ("feeds", feeds_en.as_str())];
     let feed_ids: Vec<&str> = failed.iter().map(|(feed_id, _)| feed_id.as_str()).collect();
 
     email::send(&SendEmailArgs {
@@ -129,11 +115,57 @@ pub fn notify_sync_failed_many(
                 url: None,
                 portaki_action: None,
             }),
+            hero: EmailHero::Alert {
+                tone: EmailTone::Warning,
+            },
+            blocks: vec![
+                EmailBlock::rows(failure_rows(property_name, last_success_at)),
+                EmailBlock::note(
+                    EmailTone::Neutral,
+                    email_i18n::text("email.syncFailedMany.advice"),
+                ),
+            ],
         },
         stay_id: None,
         property_id: Some(property_id),
         action_url: None,
     })
+}
+
+/// Property, last success and error lines of a sync-failed email.
+fn failure_rows(property_name: &str, last_success_at: Option<&str>) -> Vec<EmailPair> {
+    let (last_success_fr, last_success_en) = last_success_labels(last_success_at);
+    vec![
+        row(
+            "email.row.property",
+            LocalizedEmailText::both(clip(property_name)),
+        ),
+        row(
+            "email.row.lastSuccess",
+            LocalizedEmailText::new(last_success_fr, last_success_en),
+        ),
+        row(
+            "email.row.error",
+            email_i18n::text("email.syncFailed.error.empty"),
+        ),
+    ]
+}
+
+/// A label / value line, its label from the bundles.
+fn row(label_key: &str, value: LocalizedEmailText) -> EmailPair {
+    EmailPair::new(email_i18n::text(label_key), value)
+}
+
+/// Host- or feed-entered text cut to what a block line accepts: the platform refuses the whole
+/// email over [`EMAIL_BLOCK_TEXT_MAX_CHARS`], never truncates.
+fn clip(text: &str) -> String {
+    const ROOM: usize = EMAIL_BLOCK_TEXT_MAX_CHARS - 1;
+    if text.chars().count() <= EMAIL_BLOCK_TEXT_MAX_CHARS {
+        return text.to_string();
+    }
+    let mut cut: String = text.chars().take(ROOM).collect();
+    cut.push('…');
+    cut
 }
 
 fn last_success_labels(last_success_at: Option<&str>) -> (String, String) {
@@ -194,30 +226,45 @@ pub fn notify_stay_imported(
 ) -> Result<()> {
     let dates_fr = format_stay_dates_fr(&row.check_in_at, &row.check_out_at);
     let dates_en = format_stay_dates_en(&row.check_in_at, &row.check_out_at);
-    let vars_fr = [
-        ("property", property_name),
-        ("dates", dates_fr.as_str()),
-        ("source", source_label),
-    ];
-    let vars_en = [
-        ("property", property_name),
-        ("dates", dates_en.as_str()),
-        ("source", source_label),
+    let vars = [("source", source_label)];
+    let lines = vec![
+        self::row(
+            "email.row.property",
+            LocalizedEmailText::both(clip(property_name)),
+        ),
+        self::row(
+            "email.row.dates",
+            LocalizedEmailText::new(dates_fr, dates_en),
+        ),
+        self::row(
+            "email.row.source",
+            LocalizedEmailText::both(clip(&format!("{source_label} · iCal"))),
+        ),
+        self::row(
+            "email.row.guestEmail",
+            email_i18n::text("email.row.toComplete"),
+        ),
     ];
 
     email::send(&SendEmailArgs {
         email_id: format!("stay-imported-{}", row.ical_uid),
         audience: EmailAudience::Host,
         content: ModuleEmailSdui {
-            subject: localized_with_pairs("email.stayImported.subject", &vars_fr, &vars_en),
+            subject: localized_with_pairs("email.stayImported.subject", &vars, &vars),
             eyebrow: Some(email_i18n::text("email.stayImported.eyebrow")),
             title: Some(email_i18n::text("email.stayImported.title")),
-            body: localized_with_pairs("email.stayImported.body", &vars_fr, &vars_en),
+            body: email_i18n::text("email.stayImported.body"),
             cta: Some(ModuleEmailCta {
                 label: email_i18n::text("email.stayImported.cta"),
                 url: None,
                 portaki_action: None,
             }),
+            blocks: vec![
+                EmailBlock::receipt(email_i18n::text("email.stayImported.eyebrow"), lines),
+                EmailBlock::note(EmailTone::Info, email_i18n::text("email.stayImported.note"))
+                    .labeled(email_i18n::text("email.stayImported.noteLabel")),
+            ],
+            ..Default::default()
         },
         stay_id: None,
         property_id: Some(property_id),
@@ -243,81 +290,64 @@ pub fn notify_sync_summary(
         .collect();
     let incomplete_count = incomplete_rows.len();
     let incomplete_str = incomplete_count.to_string();
+    let vars = [
+        ("imported", imported.as_str()),
+        ("incomplete", incomplete_str.as_str()),
+        ("incompleteCount", incomplete_str.as_str()),
+    ];
 
-    let synced_fr = format_instant_fr(synced_at);
-    let synced_en = format_instant_en(synced_at);
+    let stats = EmailBlock::stats([
+        row(
+            "email.syncSummary.stat.new",
+            LocalizedEmailText::both(new_count.as_str()),
+        ),
+        row(
+            "email.syncSummary.stat.updated",
+            LocalizedEmailText::both(updated_count.as_str()),
+        ),
+        row(
+            "email.syncSummary.stat.incomplete",
+            LocalizedEmailText::both(incomplete_str.as_str()),
+        ),
+        row(
+            "email.syncSummary.stat.syncedAt",
+            LocalizedEmailText::new(format_instant_fr(synced_at), format_instant_en(synced_at)),
+        ),
+    ])
+    .ink();
 
-    let (subject, title, body, cta) = if incomplete_count == 0 {
-        let vars = [
-            ("imported", imported.as_str()),
-            ("incomplete", "0"),
-            ("newCount", new_count.as_str()),
-            ("updatedCount", updated_count.as_str()),
-            ("incompleteCount", "0"),
-            ("syncedAt", synced_fr.as_str()),
-        ];
-        let vars_en = [
-            ("imported", imported.as_str()),
-            ("incomplete", "0"),
-            ("newCount", new_count.as_str()),
-            ("updatedCount", updated_count.as_str()),
-            ("incompleteCount", "0"),
-            ("syncedAt", synced_en.as_str()),
-        ];
+    let (subject, body, cta, blocks) = if incomplete_count == 0 {
         (
-            localized_with_pairs("email.syncSummary.subject.noneIncomplete", &vars, &vars_en),
-            localized_with_pairs("email.syncSummary.title", &vars, &vars_en),
-            localized_with_pairs("email.syncSummary.body.noneIncomplete", &vars, &vars_en),
+            localized_with_pairs("email.syncSummary.subject.noneIncomplete", &vars, &vars),
+            email_i18n::text("email.syncSummary.body.noneIncomplete"),
             email_i18n::text("email.syncSummary.cta.ready"),
+            vec![
+                stats,
+                EmailBlock::note(
+                    EmailTone::Success,
+                    email_i18n::text("email.syncSummary.ready"),
+                ),
+            ],
         )
     } else {
-        let callout_fr = interpolate(
-            &email_i18n::text("email.syncSummary.incompleteCallout").fr,
-            &[("incompleteCount", incomplete_str.as_str())],
-        );
-        let callout_en = interpolate(
-            &email_i18n::text("email.syncSummary.incompleteCallout").en,
-            &[("incompleteCount", incomplete_str.as_str())],
-        );
-        let missing_fr = email_i18n::text("email.syncSummary.incomplete.email").fr;
-        let missing_en = email_i18n::text("email.syncSummary.incomplete.email").en;
-        let list_fr = incomplete_list(&incomplete_rows, &missing_fr, true);
-        let list_en = incomplete_list(&incomplete_rows, &missing_en, false);
-
-        let vars_fr = [
-            ("imported", imported.as_str()),
-            ("incomplete", incomplete_str.as_str()),
-            ("newCount", new_count.as_str()),
-            ("updatedCount", updated_count.as_str()),
-            ("incompleteCount", incomplete_str.as_str()),
-            ("syncedAt", synced_fr.as_str()),
-            ("incompleteCallout", callout_fr.as_str()),
-            ("incompleteList", list_fr.as_str()),
-        ];
-        let vars_en = [
-            ("imported", imported.as_str()),
-            ("incomplete", incomplete_str.as_str()),
-            ("newCount", new_count.as_str()),
-            ("updatedCount", updated_count.as_str()),
-            ("incompleteCount", incomplete_str.as_str()),
-            ("syncedAt", synced_en.as_str()),
-            ("incompleteCallout", callout_en.as_str()),
-            ("incompleteList", list_en.as_str()),
-        ];
         let cta = if incomplete_count == 1 {
             email_i18n::text("email.syncSummary.cta.singular")
         } else {
-            localized_with_pairs(
-                "email.syncSummary.cta",
-                &[("incompleteCount", incomplete_str.as_str())],
-                &[("incompleteCount", incomplete_str.as_str())],
-            )
+            localized_with_pairs("email.syncSummary.cta", &vars, &vars)
         };
         (
-            localized_with_pairs("email.syncSummary.subject", &vars_fr, &vars_en),
-            localized_with_pairs("email.syncSummary.title", &vars_fr, &vars_en),
-            localized_with_pairs("email.syncSummary.body", &vars_fr, &vars_en),
+            localized_with_pairs("email.syncSummary.subject", &vars, &vars),
+            email_i18n::text("email.syncSummary.body"),
             cta,
+            vec![
+                stats,
+                EmailBlock::rows(incomplete_list(&incomplete_rows)),
+                EmailBlock::note(
+                    EmailTone::Warning,
+                    localized_with_pairs("email.syncSummary.incompleteCallout", &vars, &vars),
+                )
+                .labeled(email_i18n::text("email.syncSummary.noteLabel")),
+            ],
         )
     };
 
@@ -327,13 +357,19 @@ pub fn notify_sync_summary(
         content: ModuleEmailSdui {
             subject,
             eyebrow: Some(email_i18n::text("email.syncSummary.eyebrow")),
-            title: Some(title),
+            title: Some(localized_with_pairs(
+                "email.syncSummary.title",
+                &vars,
+                &vars,
+            )),
             body,
             cta: Some(ModuleEmailCta {
                 label: cta,
                 url: None,
                 portaki_action: None,
             }),
+            blocks,
+            ..Default::default()
         },
         stay_id: None,
         property_id: Some(property_id),
@@ -355,20 +391,24 @@ pub fn source_label(format: CalendarFormat, feed_label: Option<&str>) -> String 
     }
 }
 
-fn incomplete_list(rows: &[&StayImportRow], missing_label: &str, french: bool) -> String {
+/// Stays missing the guest email, at most eight: `guest · dates` → « Email manquant ».
+fn incomplete_list(rows: &[&StayImportRow]) -> Vec<EmailPair> {
     rows.iter()
         .take(8)
         .map(|row| {
-            let dates = if french {
-                format_stay_dates_fr(&row.check_in_at, &row.check_out_at)
-            } else {
-                format_stay_dates_en(&row.check_in_at, &row.check_out_at)
-            };
-            format!("{} · {} — {missing_label}", row.guest_name, dates)
+            let guest: String = row.guest_name.chars().take(GUEST_NAME_MAX_CHARS).collect();
+            let fr = format_stay_dates_fr(&row.check_in_at, &row.check_out_at);
+            let en = format_stay_dates_en(&row.check_in_at, &row.check_out_at);
+            EmailPair::new(
+                LocalizedEmailText::new(format!("{guest} · {fr}"), format!("{guest} · {en}")),
+                email_i18n::text("email.syncSummary.incomplete.email"),
+            )
         })
-        .collect::<Vec<_>>()
-        .join("\n")
+        .collect()
 }
+
+/// Longest guest name quoted in a line, in chars — names come from the feed.
+const GUEST_NAME_MAX_CHARS: usize = 80;
 
 fn localized_with_pairs(
     key: &str,
