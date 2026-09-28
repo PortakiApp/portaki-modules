@@ -3,5 +3,12 @@
   "email.formAvailable.eyebrow": "قبل وصولك",
   "email.formAvailable.title": "ساعدنا في التحضير لإقامتك",
   "email.formAvailable.body": "أعد مضيفك نموذجاً قصيراً (وقت الوصول، الحساسية…).\n\nأجب خلال دقيقة من كتيب الإقامة.",
-  "email.formAvailable.cta": "فتح النموذج"
+  "email.formAvailable.cta": "فتح النموذج",
+  "email.formAvailable.field.arrival": "وقت الوصول المتوقع",
+  "email.formAvailable.field.occasion": "مناسبة خاصة؟",
+  "email.formAvailable.field.allergies": "الحساسية / النظام الغذائي",
+  "email.formAvailable.field.guestCount": "عدد الضيوف",
+  "email.formAvailable.field.specialNeeds": "احتياجات خاصة (سرير أطفال، إمكانية الوصول…)",
+  "email.formAvailable.field.idDocument": "وثيقة الهوية",
+  "email.formAvailable.fieldHint": "للتعبئة"
 }

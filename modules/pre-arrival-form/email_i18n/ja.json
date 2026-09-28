@@ -3,5 +3,12 @@
   "email.formAvailable.eyebrow": "到着前",
   "email.formAvailable.title": "滞在の準備にご協力ください",
   "email.formAvailable.body": "ホストが短いフォーム（到着時刻、アレルギーなど）を用意しました。\n\n滞在ブックレットから1分で回答できます。",
-  "email.formAvailable.cta": "フォームを開く"
+  "email.formAvailable.cta": "フォームを開く",
+  "email.formAvailable.field.arrival": "到着予定時刻",
+  "email.formAvailable.field.occasion": "特別な機会はありますか？",
+  "email.formAvailable.field.allergies": "アレルギー / 食事制限",
+  "email.formAvailable.field.guestCount": "宿泊人数",
+  "email.formAvailable.field.specialNeeds": "特別なご要望（ベビーベッド、バリアフリー…）",
+  "email.formAvailable.field.idDocument": "身分証明書",
+  "email.formAvailable.fieldHint": "未記入"
 }

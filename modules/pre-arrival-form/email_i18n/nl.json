@@ -3,5 +3,12 @@
   "email.formAvailable.eyebrow": "Voor aankomst",
   "email.formAvailable.title": "Help ons uw verblijf voor te bereiden",
   "email.formAvailable.body": "Uw host heeft een kort formulier klaargezet (aankomsttijd, allergieën…).\n\nBeantwoord het in één minuut via uw verblijfsboekje.",
-  "email.formAvailable.cta": "Formulier openen"
+  "email.formAvailable.cta": "Formulier openen",
+  "email.formAvailable.field.arrival": "Verwachte aankomsttijd",
+  "email.formAvailable.field.occasion": "Speciale gelegenheid?",
+  "email.formAvailable.field.allergies": "Allergieën / dieet",
+  "email.formAvailable.field.guestCount": "Aantal gasten",
+  "email.formAvailable.field.specialNeeds": "Speciale wensen (babybedje, toegankelijkheid…)",
+  "email.formAvailable.field.idDocument": "Identiteitsbewijs",
+  "email.formAvailable.fieldHint": "In te vullen"
 }

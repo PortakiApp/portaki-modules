@@ -3,5 +3,12 @@
   "email.formAvailable.eyebrow": "Before your arrival",
   "email.formAvailable.title": "Help us prepare for your stay",
   "email.formAvailable.body": "Your host prepared a short form (arrival time, allergies…).\n\nAnswer in one minute from your stay booklet.",
-  "email.formAvailable.cta": "Open the form"
+  "email.formAvailable.cta": "Open the form",
+  "email.formAvailable.field.arrival": "Estimated arrival time",
+  "email.formAvailable.field.occasion": "Special occasion?",
+  "email.formAvailable.field.allergies": "Allergies / diet",
+  "email.formAvailable.field.guestCount": "Number of guests",
+  "email.formAvailable.field.specialNeeds": "Special needs (cot, accessibility…)",
+  "email.formAvailable.field.idDocument": "ID document",
+  "email.formAvailable.fieldHint": "To fill in"
 }
