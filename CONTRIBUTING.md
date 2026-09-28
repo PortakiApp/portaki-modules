@@ -17,7 +17,7 @@ cargo install --git https://github.com/PortakiApp/portaki-sdk --branch main --lo
    does it. There is no manifest to write: `portaki build` derives it from `portaki_module!`,
    `#[surface]`, `#[email]`, `#[nav]`, the `portaki-sdk` features (the permissions) and `i18n/`.
    `tests/conformance.rs` holds `portaki_test_utils::conformance!();` — the SDK's conformance
-   battery, which `portaki publish` refuses to publish without. `tests/scenarios.rs` includes
+   battery, which `portaki release` refuses to publish without. `tests/scenarios.rs` includes
    `support/scenarios.rs`: every surface on the sandbox's seven pathological stays, and every
    `example(label = …, input = …)` of the queries and commands — declare one on each.
 2. The version lives in `Cargo.toml` only. Add `listing.json` next to it: the public catalogue listing, published by CI with each release.
@@ -36,7 +36,7 @@ cargo install --git https://github.com/PortakiApp/portaki-sdk --branch main --lo
    `#[surface]` / `#[command]` / `#[query]` / `#[event_handler]`) may use literals once —
    macros cannot take `ids::CONST` paths (emission needs the wire string at expand).
 5. Annotate the crate with `#[portaki_module(id = "…")]` in `lib.rs`.
-6. Add per-module `.cargo/config.toml` with `target-dir = "target"` so `portaki build` / `portaki lint` find macro emissions (workspace builds otherwise use the repo-root `target/`).
+6. Add per-module `.cargo/config.toml` with `target-dir = "target"` so `portaki build` / `portaki check` find macro emissions (workspace builds otherwise use the repo-root `target/`).
 7. Regenerate release-please package discovery (required — do not hand-edit package paths):
 
    ```bash
@@ -50,7 +50,7 @@ cargo install --git https://github.com/PortakiApp/portaki-sdk --branch main --lo
    cargo fmt --all -- --check
    cargo clippy --workspace --all-targets -- -D warnings
    cargo test --workspace
-   cd modules/<module-id> && portaki build --release && portaki lint
+   cd modules/<module-id> && portaki check
    ```
 
 9. Open a PR to **`main`**. Do not push directly to `main`.

@@ -58,7 +58,9 @@ jobs:
             echo "ref=${{ github.event.before }}" >>"$GITHUB_OUTPUT"
           fi
 
-      - uses: PortakiApp/portaki-release-action/install@bda94d3269e7edd3de362a5e6aeda89afc6755a9 # v1
+      - uses: PortakiApp/portaki-release-action/install@v2
+        with:
+          version: ${{ env.PORTAKI_CLI }}
 
       # `portaki ci modules` lit la disposition dans les crates et rend `modules`,
       # `any` et `reason` dans GITHUB_OUTPUT. Il remplace `changed-modules.sh` —
@@ -140,7 +142,7 @@ jobs:
           workspaces: modules/${{ matrix.module }} -> target
           shared-key: module-${{ matrix.module }}
 
-      # Tests (batterie de conformité comprise), build --release, lint, emballage — le code du
+      # Tests (batterie de conformité comprise), build --release, contrôle du manifeste, emballage — le code du
       # module ne tourne qu'ici, sans aucun droit. L'artefact part au job `publish`.
       - uses: PortakiApp/portaki-release-action/build@v2
         with:

@@ -9,5 +9,5 @@
 - [ ] `cargo fmt --all -- --check`
 - [ ] `cargo clippy --workspace --all-targets -- -D warnings`
 - [ ] `cargo test --workspace`
-- [ ] For touched modules: `portaki build --release && portaki lint`
-- [ ] Version bump in `modules/<id>/Cargo.toml` if publishing a new image
+- [ ] For touched modules: `portaki check`
+- [ ] Version bump in `modules/<id>/Cargo.toml` if publishing a new version

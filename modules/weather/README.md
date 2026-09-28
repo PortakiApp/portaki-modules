@@ -57,8 +57,7 @@ From the monorepo root:
 ```bash
 cargo test -p weather
 cd modules/weather
-portaki build --release
-portaki lint
+portaki check
 ```
 
 ## Publishing
