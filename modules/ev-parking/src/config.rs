@@ -48,7 +48,7 @@ pub struct ModuleConfig {
     pub charger_pin: String,
     #[field(secret, label = "host.parkingCode.label")]
     pub parking_code: String,
-    #[field(label = "host.mapUrl.label")]
+    #[field(kind = "url", label = "host.mapUrl.label")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub map_url: Option<String>,
     #[field(label = "host.instructions.label")]
@@ -80,11 +80,12 @@ impl ModuleConfig {
             && self.parking_code.trim().is_empty()
     }
 
+    /// The map link, `https` only: a guest never gets a link in clear, nor a `javascript:` one.
     pub fn map_url_text(&self) -> Option<&str> {
         self.map_url
             .as_deref()
             .map(str::trim)
-            .filter(|s| !s.is_empty())
+            .filter(|s| s.starts_with("https://"))
     }
 
     /// The spot in `locale`, `None` when blank.
@@ -122,6 +123,26 @@ mod tests {
                 panic!("ChoiceList reveal_policy value {wire:?} must deserialize: {e}")
             });
             assert_eq!(parsed.as_wire(), *wire);
+        }
+    }
+
+    #[test]
+    fn only_an_https_map_url_is_a_link() {
+        let with = |url: &str| ModuleConfig {
+            map_url: Some(url.into()),
+            ..ModuleConfig::default()
+        };
+        assert_eq!(
+            with(" https://maps.example/p ").map_url_text(),
+            Some("https://maps.example/p")
+        );
+        for refused in [
+            "",
+            "Texte de test",
+            "http://maps.example",
+            "javascript:alert(1)",
+        ] {
+            assert_eq!(with(refused).map_url_text(), None, "{refused}");
         }
     }
 
