@@ -166,7 +166,10 @@ pub fn save_appliance(ctx: Context, args: SaveApplianceArgs) -> Result<Appliance
     Ok(next)
 }
 
-#[portaki_sdk::command(name = "deleteAppliance")]
+#[portaki_sdk::command(
+    name = "deleteAppliance",
+    example(label = "Retirer le lave-linge", input = r#"{"id":"lave-linge"}"#)
+)]
 pub fn delete_appliance(ctx: Context, args: DeleteApplianceArgs) -> Result<()> {
     let lang = crate::content::AppliancesBundle::lang_code(&ctx.locale);
     let id = args.id.trim();
@@ -183,7 +186,13 @@ pub fn delete_appliance(ctx: Context, args: DeleteApplianceArgs) -> Result<()> {
     Ok(())
 }
 
-#[portaki_sdk::command(name = "reorderAppliances")]
+#[portaki_sdk::command(
+    name = "reorderAppliances",
+    example(
+        label = "Plaques en premier",
+        input = r#"{"orderedIds":["plaques-a-induction","lave-linge"]}"#
+    )
+)]
 pub fn reorder_appliances(ctx: Context, args: ReorderAppliancesArgs) -> Result<()> {
     let lang = crate::content::AppliancesBundle::lang_code(&ctx.locale);
     if args.ordered_ids.is_empty() {
