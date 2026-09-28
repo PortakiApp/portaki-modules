@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.4](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v0.8.3...access-guide-v0.8.4) (2026-09-28)
+
+
+### Bug Fixes
+
+* **access-guide:** example for onConfigUpdated ([a895085](https://github.com/PortakiApp/portaki-modules/commit/a89508585dd6dd1d61d80dd92ad896c873dc97b8))
+* **access-guide:** no legacy panic, https-only links ([6daf6eb](https://github.com/PortakiApp/portaki-modules/commit/6daf6ebf76c5ce1fa2c1e2ff233fa143de7f63f0))
+
 ## [0.8.3](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v0.8.2...access-guide-v0.8.3) (2026-09-26)
 
 

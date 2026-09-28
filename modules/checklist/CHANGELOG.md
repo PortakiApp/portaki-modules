@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.4](https://github.com/PortakiApp/portaki-modules/compare/checklist-v2.0.3...checklist-v2.0.4) (2026-09-28)
+
+
+### Bug Fixes
+
+* **checklist:** examples for list, task commands ([41b0c1f](https://github.com/PortakiApp/portaki-modules/commit/41b0c1f1960ca12347efb907971232649373f96e))
+
 ## [2.0.3](https://github.com/PortakiApp/portaki-modules/compare/checklist-v2.0.2...checklist-v2.0.3) (2026-09-26)
 
 
