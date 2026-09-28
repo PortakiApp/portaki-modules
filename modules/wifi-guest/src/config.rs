@@ -45,7 +45,12 @@ impl RevealPolicy {
 pub struct ModuleConfig {
     #[field(required, label = "host.ssid.label")]
     pub ssid: String,
-    #[field(secret, recommended, label = "host.password.label")]
+    #[field(
+        secret,
+        recommended,
+        reveal(guest_pre_arrival, guest_stay),
+        label = "host.password.label"
+    )]
     pub password: String,
     #[field(label = "host.hint.label")]
     #[serde(skip_serializing_if = "Option::is_none")]
