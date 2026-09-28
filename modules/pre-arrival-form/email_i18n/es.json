@@ -3,5 +3,12 @@
   "email.formAvailable.eyebrow": "Antes de su llegada",
   "email.formAvailable.title": "Ayúdenos a preparar su estancia",
   "email.formAvailable.body": "Su anfitrión preparó un formulario breve (hora de llegada, alergias…).\n\nResponda en un minuto desde su guía de estancia.",
-  "email.formAvailable.cta": "Abrir el formulario"
+  "email.formAvailable.cta": "Abrir el formulario",
+  "email.formAvailable.field.arrival": "Hora estimada de llegada",
+  "email.formAvailable.field.occasion": "¿Ocasión especial?",
+  "email.formAvailable.field.allergies": "Alergias / dieta",
+  "email.formAvailable.field.guestCount": "Número de huéspedes",
+  "email.formAvailable.field.specialNeeds": "Necesidades especiales (cuna, accesibilidad…)",
+  "email.formAvailable.field.idDocument": "Documento de identidad",
+  "email.formAvailable.fieldHint": "Por completar"
 }

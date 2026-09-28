@@ -3,5 +3,12 @@
   "email.formAvailable.eyebrow": "Avant votre arrivée",
   "email.formAvailable.title": "Aidez-nous à préparer votre venue",
   "email.formAvailable.body": "Votre hôte a préparé un court formulaire (horaire d’arrivée, allergies…).\n\nRépondez en 1 minute depuis votre livret séjour.",
-  "email.formAvailable.cta": "Ouvrir le formulaire"
+  "email.formAvailable.cta": "Ouvrir le formulaire",
+  "email.formAvailable.field.arrival": "Heure d’arrivée estimée",
+  "email.formAvailable.field.occasion": "Occasion spéciale ?",
+  "email.formAvailable.field.allergies": "Allergies / régime alimentaire",
+  "email.formAvailable.field.guestCount": "Nombre de voyageurs",
+  "email.formAvailable.field.specialNeeds": "Besoins particuliers (lit bébé, PMR…)",
+  "email.formAvailable.field.idDocument": "Pièce d’identité",
+  "email.formAvailable.fieldHint": "À renseigner"
 }

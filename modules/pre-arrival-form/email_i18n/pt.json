@@ -3,5 +3,12 @@
   "email.formAvailable.eyebrow": "Antes da chegada",
   "email.formAvailable.title": "Ajude-nos a preparar a estadia",
   "email.formAvailable.body": "O anfitrião preparou um formulário curto (hora de chegada, alergias…).\n\nResponda em um minuto no livreto da estadia.",
-  "email.formAvailable.cta": "Abrir o formulário"
+  "email.formAvailable.cta": "Abrir o formulário",
+  "email.formAvailable.field.arrival": "Hora prevista de chegada",
+  "email.formAvailable.field.occasion": "Ocasião especial?",
+  "email.formAvailable.field.allergies": "Alergias / dieta",
+  "email.formAvailable.field.guestCount": "Número de hóspedes",
+  "email.formAvailable.field.specialNeeds": "Necessidades especiais (berço, acessibilidade…)",
+  "email.formAvailable.field.idDocument": "Documento de identidade",
+  "email.formAvailable.fieldHint": "A preencher"
 }

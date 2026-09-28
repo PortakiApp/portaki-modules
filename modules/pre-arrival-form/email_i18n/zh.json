@@ -3,5 +3,12 @@
   "email.formAvailable.eyebrow": "抵达之前",
   "email.formAvailable.title": "请协助我们做好入住准备",
   "email.formAvailable.body": "房东准备了一份简短表格（到达时间、过敏信息等）。\n\n请在住宿手册中一分钟内完成。",
-  "email.formAvailable.cta": "打开表格"
+  "email.formAvailable.cta": "打开表格",
+  "email.formAvailable.field.arrival": "预计到达时间",
+  "email.formAvailable.field.occasion": "特别场合？",
+  "email.formAvailable.field.allergies": "过敏 / 饮食",
+  "email.formAvailable.field.guestCount": "入住人数",
+  "email.formAvailable.field.specialNeeds": "特殊需求（婴儿床、无障碍…）",
+  "email.formAvailable.field.idDocument": "身份证件",
+  "email.formAvailable.fieldHint": "待填写"
 }
