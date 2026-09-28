@@ -111,7 +111,13 @@ pub struct ResolveArgs {
     pub report_id: Uuid,
 }
 
-#[portaki_sdk::command(name = "resolve")]
+#[portaki_sdk::command(
+    name = "resolve",
+    example(
+        label = "Signalement traité",
+        input = r#"{"reportId":"9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a"}"#
+    )
+)]
 pub fn resolve(ctx: Context, args: ResolveArgs) -> Result<()> {
     if ctx.guest.is_some() {
         return Err(PortakiError::Host("host_only".to_string()));
