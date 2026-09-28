@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.4](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.11.3...local-guide-v0.11.4) (2026-09-28)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 8.11.1 ([bdce7fc](https://github.com/PortakiApp/portaki-modules/commit/bdce7fcf958ed3f1935e5f12662fe71ddc58ca9e))
+
 ## [0.11.3](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v0.11.2...local-guide-v0.11.3) (2026-09-28)
 
 
