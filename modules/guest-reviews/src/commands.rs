@@ -2,13 +2,17 @@
 
 use portaki_sdk::host;
 use portaki_sdk::host::email::{
-    self, EmailAudience, LocalizedEmailText, ModuleEmailCta, ModuleEmailSdui, SendEmailArgs,
+    self, EmailAudience, EmailBlock, EmailPair, LocalizedEmailText, ModuleEmailCta,
+    ModuleEmailSdui, SendEmailArgs,
 };
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::config::ModuleConfig;
 use crate::email_text;
+
+/// Longest guest name in the rating lines, in chars.
+const GUEST_NAME_ROW_MAX_CHARS: usize = 80;
 
 #[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -130,11 +134,24 @@ pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
     let truncated = quoted_name.truncated || quoted_comment.truncated;
 
     let stars = "★".repeat(args.rating as usize) + &"☆".repeat(5 - args.rating as usize);
-    let mut body = format!("{} — {stars} ({}/5)", quoted_name.text, args.rating);
-    if !comment.is_empty() {
-        body.push_str("\n\n");
-        body.push_str(&quoted_comment.text);
-    }
+    let rating = format!("{stars} ({}/5)", args.rating);
+    let body = if comment.is_empty() {
+        format!("{} — {rating}", quoted_name.text)
+    } else {
+        quoted_comment.text.clone()
+    };
+    // A block line holds 200 chars: the name is cut shorter than the body quote.
+    let short_name = email_text::clip_chars(&guest_name, GUEST_NAME_ROW_MAX_CHARS);
+    let blocks = vec![EmailBlock::rows([
+        EmailPair::new(
+            LocalizedEmailText::new("Voyageur", "Guest"),
+            LocalizedEmailText::both(short_name.text),
+        ),
+        EmailPair::new(
+            LocalizedEmailText::new("Note", "Rating"),
+            LocalizedEmailText::both(rating),
+        ),
+    ])];
 
     // The review is saved: a refused email is logged, it does not fail the guest's submit.
     let sent = email::send(&SendEmailArgs {
@@ -160,6 +177,8 @@ pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
                 url: None,
                 portaki_action: None,
             }),
+            blocks,
+            ..Default::default()
         },
         stay_id: Some(stay_id),
         property_id: Some(ctx.property_id),
