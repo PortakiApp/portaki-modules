@@ -2,7 +2,8 @@
 
 use portaki_sdk::files::FileRef;
 use portaki_sdk::host::email::{
-    self, EmailAudience, LocalizedEmailText, ModuleEmailCta, ModuleEmailSdui, SendEmailArgs,
+    self, EmailAudience, EmailBlock, EmailPair, EmailTone, LocalizedEmailText, ModuleEmailCta,
+    ModuleEmailSdui, SendEmailArgs,
 };
 use portaki_sdk::host::events;
 use portaki_sdk::prelude::*;
@@ -60,13 +61,23 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
             .as_ref()
             .is_some_and(|quoted| quoted.truncated);
 
-    let mut body = format!("Catégorie : {category}\n\n{}", quoted_summary.text);
+    let mut body = quoted_summary.text.clone();
     if let Some(extra) = &quoted_details {
         body.push_str("\n\n");
         body.push_str(&extra.text);
     }
+    let mut blocks = vec![EmailBlock::rows([EmailPair::new(
+        LocalizedEmailText::new("Catégorie", "Category"),
+        LocalizedEmailText::both(category),
+    )])];
     if photo.is_some() {
-        body.push_str("\n\nUne photo est jointe — visible dans le tableau de bord.");
+        blocks.push(EmailBlock::note(
+            EmailTone::Info,
+            LocalizedEmailText::new(
+                "Une photo est jointe — visible dans le tableau de bord.",
+                "A photo is attached — see it in the dashboard.",
+            ),
+        ));
     }
 
     // The report is saved: a refused email is logged, it does not fail the guest's submit.
@@ -93,6 +104,8 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
                 url: None,
                 portaki_action: None,
             }),
+            blocks,
+            ..Default::default()
         },
         stay_id: Some(stay_id),
         property_id: Some(ctx.property_id),
