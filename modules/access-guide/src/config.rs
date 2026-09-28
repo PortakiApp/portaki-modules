@@ -466,7 +466,7 @@ pub struct HostConfig {
     pub building_access_intercom: I18nText,
     #[field(label = "host.parking.enabled")]
     pub parking_enabled: bool,
-    #[field(label = "host.parking.mapUrl")]
+    #[field(kind = "url", label = "host.parking.mapUrl")]
     pub parking_map_url: String,
     #[field(secret, label = "host.parking.code")]
     pub parking_code: String,
@@ -476,7 +476,7 @@ pub struct HostConfig {
     pub arrival_lat: Option<f64>,
     #[field(label = "host.inPerson.lng")]
     pub arrival_lng: Option<f64>,
-    #[field(label = "host.video.label")]
+    #[field(kind = "url", label = "host.video.label")]
     pub arrival_video_url: String,
     #[field(
         kind = "select",
@@ -663,22 +663,19 @@ fn nonempty(value: &str) -> Option<String> {
 /// `texts/en` (written with the blob, never without it), or still embedded in the blob — mapped
 /// onto the declared keys. Runs in the module: for `legacyConfig`, and in `load` before the
 /// platform holds the config.
-fn legacy(old: Value) -> Value {
-    // ponytail: the mapping cannot return an error — an unreadable blob panics, so the platform
-    // retries the import and `load` fails, rather than importing an empty config over the codes.
+///
+/// An unreadable blob is an error, never a panic: `legacyConfig` fails and the platform retries
+/// the import, `load` fails — no empty config is imported over the codes, and nothing traps.
+fn legacy(old: Value) -> std::result::Result<Value, String> {
     let (embedded_fr, embedded_en) = extract_embedded_texts(&old);
     let kept = |lang: &str, embedded: ModuleTexts| {
-        let kept = load_texts(lang).unwrap_or_else(|error| panic!("{error}"));
-        if kept.is_empty() {
-            embedded
-        } else {
-            kept
-        }
+        let kept = load_texts(lang).map_err(|error| error.to_string())?;
+        Ok::<_, String>(if kept.is_empty() { embedded } else { kept })
     };
-    let (fr, en) = (kept("fr", embedded_fr), kept("en", embedded_en));
+    let (fr, en) = (kept("fr", embedded_fr)?, kept("en", embedded_en)?);
     let raw: RawConfig =
-        serde_json::from_value(old).unwrap_or_else(|error| panic!("config_unreadable: {error}"));
-    legacy_keys(&migrate_legacy(raw), &fr, &en)
+        serde_json::from_value(old).map_err(|error| format!("config_unreadable: {error}"))?;
+    Ok(legacy_keys(&migrate_legacy(raw), &fr, &en))
 }
 
 /// [`legacy`] once the KV is read. A text of the method (`keybox_location`…) had no language: it
@@ -1368,7 +1365,7 @@ mod tests {
         for (lang, copy) in texts {
             mock = mock.with_kv(format!("texts/{lang}"), serde_json::to_vec(copy).unwrap());
         }
-        mock.run(|_| legacy(old))
+        mock.run(|_| legacy(old)).expect("a readable legacy blob")
     }
 
     fn flat_blob() -> Value {
@@ -1575,12 +1572,24 @@ mod tests {
         assert_eq!(config.in_person_meeting_lat, Some(43.7));
     }
 
-    /// Nothing to import rather than an empty config over the codes: the import is retried.
+    /// Nothing to import rather than an empty config over the codes: the import is retried. An
+    /// error, not a panic — a panic traps the module (`legacyConfig`, every render that loads).
     #[test]
     #[serial_test::serial]
-    #[should_panic(expected = "config_unreadable")]
-    fn an_unreadable_legacy_blob_is_not_imported_empty() {
-        mapped(json!({ "keybox_code": "1", "reveal_policy": 3 }), &[]);
+    fn an_unreadable_legacy_blob_is_an_error_not_a_trap() {
+        let error = portaki_test_utils::MockContext::host()
+            .run(|_| legacy(json!({ "keybox_code": "1", "reveal_policy": 3 })))
+            .unwrap_err();
+        assert!(error.contains("config_unreadable"), "{error}");
+        // Already in the declared shape (texts per language): not an old blob either.
+        let declared =
+            json!({ "primary_method": "keybox", "global_note": { "fr": "A", "en": "B" } });
+        portaki_test_utils::MockContext::guest()
+            .with_kv("config", serde_json::to_vec(&declared).unwrap())
+            .run(|ctx| {
+                let error = HostConfig::load(&ctx).unwrap_err().to_string();
+                assert!(error.contains("config_unreadable"), "{error}");
+            });
     }
 
     #[test]

@@ -207,6 +207,26 @@ fn detail_has_steps_and_video() {
         });
 }
 
+/// Only an `https` link reaches the guest: a plain text (what an untyped field held) is none.
+#[test]
+#[serial]
+fn a_link_that_is_not_https_is_not_rendered() {
+    let config = HostConfig {
+        arrival_video_url: "Texte de test".into(),
+        parking_map_url: "http://maps.example.com".into(),
+        ..always_reveal_config()
+    };
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&config)
+        .run(|ctx| {
+            let json =
+                serde_json::to_string(&render_explore_detail(ctx).expect("surface")).expect("json");
+            assert!(!json.contains("Texte de test"), "{json}");
+            assert!(!json.contains("http://maps.example.com"), "{json}");
+        });
+}
+
 #[test]
 #[serial]
 fn smart_lock_provider_emits_unlock_commands_when_revealed() {
