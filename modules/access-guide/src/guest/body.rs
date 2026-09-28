@@ -28,6 +28,11 @@ fn command_action(module_id: &ModuleId, name: OperationName, args: impl Serializ
     Action::command(module_id, name, args)
 }
 
+/// A link the guest may open: `https` only — never in clear, never `javascript:`.
+fn is_https(url: &str) -> bool {
+    url.starts_with("https://")
+}
+
 fn google_maps_search_url(lat: f64, lng: f64) -> String {
     format!("https://www.google.com/maps/search/?api=1&query={lat},{lng}")
 }
@@ -36,7 +41,7 @@ fn google_maps_search_url(lat: f64, lng: f64) -> String {
 fn maps_url(data: &GuestData) -> Option<String> {
     if let Some(parking) = data.config.parking.as_ref() {
         let configured = parking.map_url.trim();
-        if !configured.is_empty() {
+        if is_https(configured) {
             return Some(configured.to_string());
         }
     }
@@ -408,7 +413,7 @@ fn push_reveal_banner(children: &mut Vec<Component>, data: &GuestData) {
 
 fn push_arrival_extras(children: &mut Vec<Component>, data: &GuestData) {
     let video = data.config.arrival.arrival_video_url.trim();
-    if !video.is_empty() {
+    if is_https(video) {
         children.push(Component::Link(
             Link::new()
                 .label("i18n:guest.watchVideo")
