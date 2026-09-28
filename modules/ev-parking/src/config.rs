@@ -44,9 +44,17 @@ impl RevealPolicy {
 pub struct ModuleConfig {
     #[field(required, label = "host.spotLabel.label")]
     pub spot_label: I18nText,
-    #[field(secret, label = "host.chargerPin.label")]
+    #[field(
+        secret,
+        reveal(guest_pre_arrival, guest_stay),
+        label = "host.chargerPin.label"
+    )]
     pub charger_pin: String,
-    #[field(secret, label = "host.parkingCode.label")]
+    #[field(
+        secret,
+        reveal(guest_pre_arrival, guest_stay),
+        label = "host.parkingCode.label"
+    )]
     pub parking_code: String,
     #[field(kind = "url", label = "host.mapUrl.label")]
     #[serde(skip_serializing_if = "Option::is_none")]
