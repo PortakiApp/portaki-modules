@@ -417,7 +417,11 @@ pub struct HostConfig {
     pub primary_method: String,
     #[field(label = "host.keybox.location")]
     pub keybox_location: I18nText,
-    #[field(secret, label = "host.keybox.code")]
+    #[field(
+        secret,
+        reveal(guest_pre_arrival, guest_stay, arrival_email),
+        label = "host.keybox.code"
+    )]
     pub keybox_code: String,
     #[field(
         kind = "select",
@@ -425,12 +429,20 @@ pub struct HostConfig {
         label = "host.doorCode.target"
     )]
     pub door_code_target: String,
-    #[field(secret, label = "host.doorCode.code")]
+    #[field(
+        secret,
+        reveal(guest_pre_arrival, guest_stay, arrival_email),
+        label = "host.doorCode.code"
+    )]
     pub door_code: String,
     /// A select whose options are the installed smart-lock modules: free text for the platform.
     #[field(label = "host.smartLock.provider")]
     pub smart_lock_provider_module_id: String,
-    #[field(secret, label = "host.smartLock.manualCode")]
+    #[field(
+        secret,
+        reveal(guest_pre_arrival, guest_stay, arrival_email),
+        label = "host.smartLock.manualCode"
+    )]
     pub smart_lock_manual_code: String,
     #[field(label = "host.inPerson.meetingPlace")]
     pub in_person_meeting_place: I18nText,
@@ -460,7 +472,11 @@ pub struct HostConfig {
     pub host_greets_eta_hint: I18nText,
     #[field(label = "host.building.enabled")]
     pub building_access_enabled: bool,
-    #[field(secret, label = "host.building.gateCode")]
+    #[field(
+        secret,
+        reveal(guest_pre_arrival, guest_stay, arrival_email),
+        label = "host.building.gateCode"
+    )]
     pub building_access_gate_code: String,
     #[field(label = "host.building.intercom")]
     pub building_access_intercom: I18nText,
@@ -468,7 +484,11 @@ pub struct HostConfig {
     pub parking_enabled: bool,
     #[field(kind = "url", label = "host.parking.mapUrl")]
     pub parking_map_url: String,
-    #[field(secret, label = "host.parking.code")]
+    #[field(
+        secret,
+        reveal(guest_pre_arrival, guest_stay),
+        label = "host.parking.code"
+    )]
     pub parking_code: String,
     #[field(label = "host.address.label")]
     pub address: String,
