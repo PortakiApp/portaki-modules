@@ -71,7 +71,17 @@ fn active_codes(config: &HostConfig) -> Vec<(&'static str, &str)> {
     requires_guest_email,
     description_key = "email.code-changed.description"
 )]
-#[portaki_sdk::command(name = "onConfigUpdated")]
+#[portaki_sdk::command(
+    name = "onConfigUpdated",
+    example(
+        label = "Code de la boîte à clés modifié",
+        input = r#"{"changedKeys":["keybox_code"]}"#
+    ),
+    example(
+        label = "Autre réglage modifié",
+        input = r#"{"changedKeys":["arrival_video_url"]}"#
+    )
+)]
 pub fn on_config_updated(ctx: Context, args: ConfigUpdatedArgs) -> Result<()> {
     if args.changed_keys.is_empty() || !args.changes_the_guest_code(&HostConfig::load(&ctx)?) {
         return Ok(());
