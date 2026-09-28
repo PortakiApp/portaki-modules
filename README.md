@@ -121,8 +121,7 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 
 cd modules/weather
-portaki build --release
-portaki lint
+portaki check
 ```
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for adding a new module.
