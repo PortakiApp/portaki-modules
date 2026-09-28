@@ -20,17 +20,12 @@ mod tests {
         let subject = text("email.syncFailed.subject");
         assert!(!subject.fr.is_empty());
         assert!(!subject.en.is_empty());
-        let body = LocalizedEmailText::from_i18n_key_with_vars(
+        let subject = LocalizedEmailText::from_i18n_key_with_vars(
             BUNDLES.iter().copied(),
-            "email.syncFailed.body",
-            &[
-                ("property", "Chalet"),
-                ("source", "Booking"),
-                ("lastSuccess", "11 juil. 2026"),
-                ("error", "404"),
-            ],
+            "email.stayImported.subject",
+            &[("source", "Booking")],
         );
-        assert!(body.fr.contains("Chalet"));
-        assert!(body.en.contains("Chalet"));
+        assert!(subject.fr.contains("Booking"));
+        assert!(subject.en.contains("Booking"));
     }
 }
