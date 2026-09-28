@@ -258,7 +258,13 @@ pub struct UpdateStatusArgs {
     pub status: String,
 }
 
-#[portaki_sdk::command(name = "updateStatus")]
+#[portaki_sdk::command(
+    name = "updateStatus",
+    example(
+        label = "Réassort fait",
+        input = r#"{"reportId":"9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a","status":"restocked"}"#
+    )
+)]
 pub fn update_status(ctx: Context, args: UpdateStatusArgs) -> Result<()> {
     if ctx.guest.is_some() {
         return Err(PortakiError::Host("host_only".to_string()));
