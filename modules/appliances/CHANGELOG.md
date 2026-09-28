@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.3](https://github.com/PortakiApp/portaki-modules/compare/appliances-v0.8.2...appliances-v0.8.3) (2026-09-28)
+
+
+### Bug Fixes
+
+* **appliances:** examples for delete and reorder ([34962ed](https://github.com/PortakiApp/portaki-modules/commit/34962ede51f42eb7406273142d4fc1256e5847b6))
+
 ## [0.8.2](https://github.com/PortakiApp/portaki-modules/compare/appliances-v0.8.1...appliances-v0.8.2) (2026-09-26)
 
 

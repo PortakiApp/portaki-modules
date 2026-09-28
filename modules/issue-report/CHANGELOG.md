@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.3](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v2.0.2...issue-report-v2.0.3) (2026-09-28)
+
+
+### Bug Fixes
+
+* **issue-report:** example for resolve ([0eda02e](https://github.com/PortakiApp/portaki-modules/commit/0eda02ea6ddc2aa9854d57a9aecc7bfaa9864c11))
+
 ## [2.0.2](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v2.0.1...issue-report-v2.0.2) (2026-09-26)
 
 

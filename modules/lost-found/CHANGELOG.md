@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.4](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v2.0.3...lost-found-v2.0.4) (2026-09-28)
+
+
+### Bug Fixes
+
+* **lost-found:** example for updateStatus ([3bb8f9a](https://github.com/PortakiApp/portaki-modules/commit/3bb8f9af804310ee43870c048e71d4fbbfbf9bf6))
+
 ## [2.0.3](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v2.0.2...lost-found-v2.0.3) (2026-09-26)
 
 

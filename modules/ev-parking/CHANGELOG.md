@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.4](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v0.7.3...ev-parking-v0.7.4) (2026-09-28)
+
+
+### Bug Fixes
+
+* **ev-parking:** declare map_url as url, https only ([5aecb67](https://github.com/PortakiApp/portaki-modules/commit/5aecb671047651e9fd7b84ed4a61780d86821658))
+
 ## [0.7.3](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v0.7.2...ev-parking-v0.7.3) (2026-09-26)
 
 

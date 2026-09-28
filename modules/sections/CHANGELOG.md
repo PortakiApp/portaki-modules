@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.3](https://github.com/PortakiApp/portaki-modules/compare/sections-v0.6.2...sections-v0.6.3) (2026-09-28)
+
+
+### Bug Fixes
+
+* **sections:** examples for delete and reorder ([52e05b7](https://github.com/PortakiApp/portaki-modules/commit/52e05b747d612f46d807e53765560210a25954c2))
+
 ## [0.6.2](https://github.com/PortakiApp/portaki-modules/compare/sections-v0.6.1...sections-v0.6.2) (2026-09-26)
 
 

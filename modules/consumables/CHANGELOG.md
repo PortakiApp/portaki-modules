@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.3](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.0.2...consumables-v2.0.3) (2026-09-28)
+
+
+### Bug Fixes
+
+* **consumables:** example for updateStatus ([51939d6](https://github.com/PortakiApp/portaki-modules/commit/51939d633a43f522966e94f7dde8eb1bbe31c72f))
+
 ## [2.0.2](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.0.1...consumables-v2.0.2) (2026-09-26)
 
 
