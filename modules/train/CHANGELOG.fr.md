@@ -1,0 +1,10 @@
+# Changelog
+
+## 1.0.0 (2026-09-29)
+
+Première version stable. Un tableau des départs de la gare la plus proche, d'un coup d'œil dans le livret.
+
+* Une carte d'accueil montre les prochains départs de la gare la plus proche, toutes destinations confondues.
+* Un écran de détail ajoute un en-tête départ/arrivée, des filtres par destination et les prochains départs.
+* Rien à régler pour l'hôte : la gare et ses destinations sont livrées avec le module.
+* La gare et les horaires sont statiques pour l'instant ; les lire depuis la configuration ou un connecteur viendra ensuite.
