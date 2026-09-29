@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.8.0](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v0.7.6...guest-reviews-v0.8.0) (2026-09-29)
+
+
+### Features
+
+* **guest-reviews:** show guest and rating as rows ([2a488f9](https://github.com/PortakiApp/portaki-modules/commit/2a488f9182376a2d95ce5c6791528d8a389a6360))
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 8.12.0 ([b6ef90f](https://github.com/PortakiApp/portaki-modules/commit/b6ef90f6cb2324b9ee4363939a52213e81ba8424))
+* **deps:** bump portaki-sdk to 9.0.0 ([e5f9c7f](https://github.com/PortakiApp/portaki-modules/commit/e5f9c7f53100ce123c34af4aae4f6aee91b1569c))
+
 ## [0.7.6](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v0.7.5...guest-reviews-v0.7.6) (2026-09-28)
 
 

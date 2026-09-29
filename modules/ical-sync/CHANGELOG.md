@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.10.0](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v0.9.4...ical-sync-v0.10.0) (2026-09-29)
+
+
+### Features
+
+* **ical-sync:** render sync emails with blocks ([dc0c96a](https://github.com/PortakiApp/portaki-modules/commit/dc0c96a40246e762dfac4ea3ef2aef01ef1f9087))
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 8.12.0 ([b6ef90f](https://github.com/PortakiApp/portaki-modules/commit/b6ef90f6cb2324b9ee4363939a52213e81ba8424))
+* **deps:** bump portaki-sdk to 9.0.0 ([e5f9c7f](https://github.com/PortakiApp/portaki-modules/commit/e5f9c7f53100ce123c34af4aae4f6aee91b1569c))
+
 ## [0.9.4](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v0.9.3...ical-sync-v0.9.4) (2026-09-28)
 
 

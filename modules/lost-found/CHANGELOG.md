@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.7](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v2.0.6...lost-found-v2.0.7) (2026-09-29)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 8.12.0 ([b6ef90f](https://github.com/PortakiApp/portaki-modules/commit/b6ef90f6cb2324b9ee4363939a52213e81ba8424))
+* **deps:** bump portaki-sdk to 9.0.0 ([e5f9c7f](https://github.com/PortakiApp/portaki-modules/commit/e5f9c7f53100ce123c34af4aae4f6aee91b1569c))
+
 ## [2.0.6](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v2.0.5...lost-found-v2.0.6) (2026-09-28)
 
 

@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.1.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v2.0.5...issue-report-v2.1.0) (2026-09-29)
+
+
+### Features
+
+* **issue-report:** show category and photo as blocks ([6716217](https://github.com/PortakiApp/portaki-modules/commit/6716217d19e1878bc7d7e6284443a9eaf57a62a3))
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 8.12.0 ([b6ef90f](https://github.com/PortakiApp/portaki-modules/commit/b6ef90f6cb2324b9ee4363939a52213e81ba8424))
+* **deps:** bump portaki-sdk to 9.0.0 ([e5f9c7f](https://github.com/PortakiApp/portaki-modules/commit/e5f9c7f53100ce123c34af4aae4f6aee91b1569c))
+
 ## [2.0.5](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v2.0.4...issue-report-v2.0.5) (2026-09-28)
 
 
