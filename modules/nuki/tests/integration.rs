@@ -96,22 +96,44 @@ fn unlock_returns_credential_fallback() {
 #[test]
 #[serial]
 fn unlock_prefers_remote_when_byok_granted() {
-    use portaki_sdk::context::CapabilityGrant;
-    use portaki_sdk::host::with_host;
-
-    let (mut ctx, host) = guest_at("2026-06-02T12:00:00Z")
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE, capability::external::NUKI_BYOK])
+        .with_config(&sample_config())
+        .with_stay(Booking::default())
+        .with_now(at("2026-06-02T12:00:00Z"))
         .with_connector_response("nuki", "remote_unlock", "{}")
-        .build();
-    ctx.capabilities.push(CapabilityGrant {
-        id: "external.nuki.byok".into(),
+        .run(|ctx| {
+            let result = unlock(ctx, StayArgs { stay_id: None }).expect("unlock");
+            assert!(result.ok);
+            assert_eq!(result.mode, "remote");
+            assert!(result.code.is_empty());
+        });
+}
+
+/// No Nuki key: the keypad code still answers. A door with neither key nor code stays an error
+/// — that is a real dead end, not a foreseen absence.
+#[test]
+#[serial]
+fn without_the_nuki_key_the_keypad_answers_and_a_dead_door_errors() {
+    guest_at("2026-06-02T12:00:00Z").run(|ctx| {
+        let result = unlock(ctx, StayArgs::default()).expect("unlock");
+        assert!(result.ok);
+        assert_eq!(result.mode, "credential_fallback");
+        assert_eq!(result.code, "482910");
     });
 
-    with_host(host, ctx.clone(), || {
-        let result = unlock(ctx, StayArgs { stay_id: None }).expect("unlock");
-        assert!(result.ok);
-        assert_eq!(result.mode, "remote");
-        assert!(result.code.is_empty());
-    });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&ModuleConfig {
+            smartlock_id: "lock-abc".into(),
+            ..ModuleConfig::default()
+        })
+        .with_stay(Booking::default())
+        .with_now(at("2026-06-02T12:00:00Z"))
+        .run(|ctx| {
+            let err = unlock(ctx, StayArgs::default()).expect_err("no way in");
+            assert!(err.to_string().contains("unlock unavailable"), "{err}");
+        });
 }
 
 #[test]
@@ -182,24 +204,20 @@ fn the_host_form_sends_the_declared_keys_but_never_the_code() {
 #[test]
 #[serial]
 fn publication_needs_a_keypad_code_or_remote_unlock() {
-    use portaki_sdk::context::CapabilityGrant;
-    use portaki_sdk::host::with_host;
-
     let ready = |config: ModuleConfig, byok: bool| {
-        let (mut ctx, host) = MockContext::host()
-            .with_capabilities(&[capability::core::STORAGE])
+        let capabilities: &[capability::CapabilityId] = if byok {
+            &[capability::core::STORAGE, capability::external::NUKI_BYOK]
+        } else {
+            &[capability::core::STORAGE]
+        };
+        MockContext::host()
+            .with_capabilities(capabilities)
             .with_config(&config)
-            .build();
-        if byok {
-            ctx.capabilities.push(CapabilityGrant {
-                id: "external.nuki.byok".into(),
-            });
-        }
-        with_host(host, ctx.clone(), || {
-            let items = publish_readiness(ctx).expect("publishReadiness").items;
-            assert_eq!(items.len(), 1);
-            items[0].ok
-        })
+            .run(|ctx| {
+                let items = publish_readiness(ctx).expect("publishReadiness").items;
+                assert_eq!(items.len(), 1);
+                items[0].ok
+            })
     };
     let lock_only = ModuleConfig {
         smartlock_id: "lock-abc".into(),

@@ -106,10 +106,10 @@ fn require_stay_window(ctx: &Context) -> Result<()> {
     }
 }
 
+/// Whether the host stored a Nuki Web key. Named through the SDK id, so a capability rename
+/// stops the build here instead of silently answering `false` forever.
 pub(crate) fn has_nuki_byok(ctx: &Context) -> bool {
-    ctx.capabilities
-        .iter()
-        .any(|grant| grant.id == crate::NUKI_BYOK || grant.id == "external.nuki.byok")
+    ctx.has_capability(capability::external::NUKI_BYOK)
 }
 
 fn try_remote_unlock(smartlock_id: &str) -> Result<()> {
