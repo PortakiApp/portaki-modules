@@ -43,11 +43,18 @@ struct QueryCoords {
     now: DateTime<Utc>,
 }
 
-fn resolve_coords(ctx: &Context, lat: Option<f64>, lng: Option<f64>) -> Result<QueryCoords> {
+/// Where to fetch, or `None` when the module has no weather to give.
+///
+/// Neither `external.open-weather.pool` nor `external.open-weather.byok` is a foreseen case —
+/// the Free plan grants neither — so the queries degrade instead of failing. A granted
+/// capability whose provider call then fails stays an error.
+fn resolve_coords(
+    ctx: &Context,
+    lat: Option<f64>,
+    lng: Option<f64>,
+) -> Result<Option<QueryCoords>> {
     if !has_open_weather(ctx) {
-        return Err(PortakiError::CapabilityNotAvailable(
-            "external.open-weather".to_string(),
-        ));
+        return Ok(None);
     }
     let point = match (lat, lng) {
         (Some(lat), Some(lng)) => GeoPoint { lat, lng },
@@ -58,12 +65,12 @@ fn resolve_coords(ctx: &Context, lat: Option<f64>, lng: Option<f64>) -> Result<Q
             .ok_or_else(|| PortakiError::Host("property_not_geocoded".into()))?,
     };
     let config = ModuleConfig::load(ctx)?;
-    Ok(QueryCoords {
+    Ok(Some(QueryCoords {
         lat: point.lat,
         lng: point.lng,
         units: config.units,
         now: time::now()?,
-    })
+    }))
 }
 
 fn fetch_pair(coords: &QueryCoords, days: u8) -> Result<(WeatherCurrent, WeatherForecast)> {
@@ -90,11 +97,14 @@ fn fetch_pair(coords: &QueryCoords, days: u8) -> Result<(WeatherCurrent, Weather
     example(label = "Au logement"),
     example(label = "Cannes", input = r#"{"lat":43.5528,"lng":7.0174}"#)
 )]
-pub fn get_current(ctx: Context, args: GetCurrentArgs) -> Result<WeatherCurrent> {
-    let coords = resolve_coords(&ctx, args.lat, args.lng)?;
+pub fn get_current(ctx: Context, args: GetCurrentArgs) -> Result<Option<WeatherCurrent>> {
+    // `null`: no weather here, not a failure.
+    let Some(coords) = resolve_coords(&ctx, args.lat, args.lng)? else {
+        return Ok(None);
+    };
 
     match cache::read_current(coords.lat, coords.lng, coords.units, coords.now) {
-        Ok(Some(cached)) => return Ok(cached),
+        Ok(Some(cached)) => return Ok(Some(cached)),
         Ok(None) => {}
         Err(error) => {
             log_cache_failure("weather_cache_read_failed", coords.lat, coords.lng, &error)
@@ -102,7 +112,7 @@ pub fn get_current(ctx: Context, args: GetCurrentArgs) -> Result<WeatherCurrent>
     }
 
     let (current, _) = fetch_pair(&coords, 5)?;
-    Ok(current)
+    Ok(Some(current))
 }
 
 #[portaki_sdk::query(
@@ -113,12 +123,15 @@ pub fn get_current(ctx: Context, args: GetCurrentArgs) -> Result<WeatherCurrent>
         input = r#"{"lat":48.8566,"lng":2.3522,"days":3}"#
     )
 )]
-pub fn get_forecast(ctx: Context, args: GetForecastArgs) -> Result<WeatherForecast> {
-    let coords = resolve_coords(&ctx, args.lat, args.lng)?;
+pub fn get_forecast(ctx: Context, args: GetForecastArgs) -> Result<Option<WeatherForecast>> {
+    // `null`: no weather here, not a failure.
+    let Some(coords) = resolve_coords(&ctx, args.lat, args.lng)? else {
+        return Ok(None);
+    };
     let days = args.days.unwrap_or(5);
 
     match cache::read_forecast(coords.lat, coords.lng, coords.units, coords.now) {
-        Ok(Some(cached)) => return Ok(cached),
+        Ok(Some(cached)) => return Ok(Some(cached)),
         Ok(None) => {}
         Err(error) => {
             log_cache_failure("weather_cache_read_failed", coords.lat, coords.lng, &error)
@@ -126,7 +139,7 @@ pub fn get_forecast(ctx: Context, args: GetForecastArgs) -> Result<WeatherForeca
     }
 
     let (_, forecast) = fetch_pair(&coords, days)?;
-    Ok(forecast)
+    Ok(Some(forecast))
 }
 
 fn log_cache_failure(event: &str, lat: f64, lng: f64, error: &PortakiError) {

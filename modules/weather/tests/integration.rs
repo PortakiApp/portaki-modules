@@ -321,9 +321,104 @@ fn get_forecast_returns_five_days() {
                     days: Some(5),
                 },
             )
-            .expect("forecast");
+            .expect("forecast")
+            .expect("weather");
             assert_eq!(forecast.days.len(), 5);
         });
+}
+
+/// Neither pool nor BYOK: the queries answer "no weather" instead of failing, the arrival-day
+/// email drops its sentence, the guest sees an empty state — and nothing reaches OpenWeather,
+/// even though a response is mocked.
+#[test]
+#[serial]
+fn without_capability_there_is_no_weather_and_no_error() {
+    reset_test_harness();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_connector_response("open-weather", "current", sample_current_json())
+        .with_connector_response("open-weather", "forecast", sample_forecast_json())
+        .run(|ctx| {
+            let current = get_current(
+                ctx.clone(),
+                GetCurrentArgs {
+                    lat: None,
+                    lng: None,
+                },
+            )
+            .expect("getCurrent must not fail without the capability");
+            assert_eq!(current, None);
+
+            let forecast = get_forecast(
+                ctx.clone(),
+                GetForecastArgs {
+                    lat: None,
+                    lng: None,
+                    days: Some(5),
+                },
+            )
+            .expect("getForecast must not fail without the capability");
+            assert_eq!(forecast, None);
+
+            let email = email_context(
+                ctx.clone(),
+                EmailContextArgs {
+                    template_key: Some(EmailTemplateKey::ArrivalDay),
+                    ..EmailContextArgs::default()
+                },
+            )
+            .expect("emailContext must not fail without the capability");
+            assert_eq!(email.weather_summary, None);
+
+            let json =
+                serde_json::to_string(&render_home_card(ctx).expect("render")).expect("json");
+            assert!(json.contains("guest.unavailable.description"), "{json}");
+        });
+
+    assert_eq!(CONNECTOR_CURRENT_CALLS.load(Ordering::SeqCst), 0);
+    assert_eq!(CONNECTOR_FORECAST_CALLS.load(Ordering::SeqCst), 0);
+}
+
+/// The capability *is* granted and OpenWeather refuses: a real failure, and it still surfaces
+/// as one — for the query and for the arrival-day email alike.
+#[test]
+#[serial]
+fn with_capability_a_provider_failure_stays_an_error() {
+    reset_test_harness();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[
+            capability::core::STORAGE,
+            capability::external::OPEN_WEATHER_POOL,
+        ])
+        .with_connector_error("open-weather", "current", "connector_egress_failed")
+        .with_connector_response("open-weather", "forecast", sample_forecast_json())
+        .run(|ctx| {
+            let error = get_current(
+                ctx.clone(),
+                GetCurrentArgs {
+                    lat: None,
+                    lng: None,
+                },
+            )
+            .expect_err("getCurrent");
+            assert!(
+                error.to_string().contains("connector_egress_failed"),
+                "{error}"
+            );
+
+            email_context(
+                ctx,
+                EmailContextArgs {
+                    template_key: Some(EmailTemplateKey::ArrivalDay),
+                    ..EmailContextArgs::default()
+                },
+            )
+            .expect_err("emailContext");
+        });
+
+    assert!(CONNECTOR_CURRENT_CALLS.load(Ordering::SeqCst) >= 1);
 }
 
 #[test]
