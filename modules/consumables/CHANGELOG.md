@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.1.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.0.5...consumables-v2.1.0) (2026-09-29)
+
+
+### Features
+
+* **consumables:** show item and level as rows ([1ea2703](https://github.com/PortakiApp/portaki-modules/commit/1ea270399794efd993317fede1cd5a14b6d35497))
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 8.12.0 ([b6ef90f](https://github.com/PortakiApp/portaki-modules/commit/b6ef90f6cb2324b9ee4363939a52213e81ba8424))
+* **deps:** bump portaki-sdk to 9.0.0 ([e5f9c7f](https://github.com/PortakiApp/portaki-modules/commit/e5f9c7f53100ce123c34af4aae4f6aee91b1569c))
+
 ## [2.0.5](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.0.4...consumables-v2.0.5) (2026-09-28)
 
 
