@@ -39,21 +39,29 @@ pub fn load_guest_weather(ctx: &GuestContext, surface_id: SurfaceId) -> Result<G
     }
 
     let config = ModuleConfig::load(ctx)?;
-    let current = get_current(
-        ctx.clone(),
-        GetCurrentArgs {
-            lat: None,
-            lng: None,
-        },
-    )?;
-    let forecast = get_forecast(
-        ctx.clone(),
-        GetForecastArgs {
-            lat: None,
-            lng: None,
-            days: Some(5),
-        },
-    )?;
+    // The queries answer `None` when they have no weather to give — the same empty state.
+    let (Some(current), Some(forecast)) = (
+        get_current(
+            ctx.clone(),
+            GetCurrentArgs {
+                lat: None,
+                lng: None,
+            },
+        )?,
+        get_forecast(
+            ctx.clone(),
+            GetForecastArgs {
+                lat: None,
+                lng: None,
+                days: Some(5),
+            },
+        )?,
+    ) else {
+        return Ok(GuestLoad::Empty(Box::new(no_weather(
+            surface_id,
+            "i18n:guest.unavailable.description",
+        ))));
+    };
     let city = resolve_city_label(
         current
             .city_name

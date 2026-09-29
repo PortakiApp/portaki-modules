@@ -60,13 +60,20 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
         });
     }
 
-    let current = get_current(
+    // No weather to give (no OpenWeather capability): no sentence, exactly as for a property
+    // that is not geocoded. The rest of the arrival-day email goes out unchanged.
+    let Some(current) = get_current(
         ctx.clone(),
         GetCurrentArgs {
             lat: None,
             lng: None,
         },
-    )?;
+    )?
+    else {
+        return Ok(EmailContextResponse {
+            weather_summary: None,
+        });
+    };
 
     let address = args
         .address_hint

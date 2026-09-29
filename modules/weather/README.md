@@ -43,9 +43,9 @@ Author guide: [portaki-sdk — connectors and credentials](https://github.com/Po
 
 ## Queries and commands
 
-- `getCurrent` — cache TTL 1h
-- `getForecast` — cache TTL 6h (5 days)
-- `emailContext` — email-ready `weatherSummary` for Portaki guest templates (`arrival-day`)
+- `getCurrent` — cache TTL 1h; `null` when neither OpenWeather capability is granted
+- `getForecast` — cache TTL 6h (5 days); `null` when neither OpenWeather capability is granted
+- `emailContext` — email-ready `weatherSummary` for Portaki guest templates (`arrival-day`); absent when there is no weather
 - `refreshForecast` — invalidates cache for property coordinates
 - config (`units`, `refresh_interval`) is held by the platform (`#[portaki_sdk::config]`), which takes `updateConfig`
 - Event `core.booking.confirmed` — pre-warms the cache
