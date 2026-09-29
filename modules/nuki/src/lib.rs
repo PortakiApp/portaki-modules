@@ -45,10 +45,17 @@ pub const NUKI_BYOK: &str = "external.nuki.byok";
 
 #[cfg(test)]
 mod capability_tests {
+    use portaki_sdk::capability;
     use portaki_sdk::contracts::smart_lock;
 
     #[test]
     fn declares_smart_lock_capability_id() {
         assert_eq!(super::SMART_LOCK, smart_lock::CAPABILITY.as_str());
+    }
+
+    /// The declared id and the one `has_nuki_byok` asks for are the same capability.
+    #[test]
+    fn declares_the_nuki_byok_capability_id() {
+        assert_eq!(super::NUKI_BYOK, capability::external::NUKI_BYOK.as_str());
     }
 }
