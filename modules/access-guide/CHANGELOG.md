@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.1.0...access-guide-v1.2.0) (2026-09-30)
+
+
+### Features
+
+* **access-guide:** fill the status strip's access cell ([7ef3452](https://github.com/PortakiApp/portaki-modules/commit/7ef3452695a8e85cdd660a5ffa028744b4a74bcf))
+
 ## [1.1.0](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.0.0...access-guide-v1.1.0) (2026-09-29)
 
 
