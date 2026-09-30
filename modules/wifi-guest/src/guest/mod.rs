@@ -5,6 +5,7 @@ mod body;
 mod detail;
 mod home;
 mod load;
+mod qr;
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::EmptyState;

@@ -12,7 +12,7 @@ use portaki_sdk::sdui::primitives::{
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{ModuleConfig, RevealPolicy};
+use crate::config::{ModuleConfig, RevealPolicy, WifiSecurity};
 
 #[portaki_sdk::surface(
     host,
@@ -81,6 +81,14 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
             ])
             .into(),
         Field::new()
+            .name("security")
+            .label("i18n:config.security")
+            .children(vec![
+                FieldHint::new().text("i18n:config.security.desc").into(),
+                security_choice_list(config.security).into(),
+            ])
+            .into(),
+        Field::new()
             .name("reveal_policy")
             .label("i18n:host.section.reveal")
             .children(vec![
@@ -97,6 +105,28 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
         Page::new().child(Form::new().child(Stack::new().gap(20.0).children(form_children))),
     )
     .with_id(MAIN))
+}
+
+/// Le chiffrement du réseau, tel que le code QR doit l'annoncer.
+///
+/// Trois choix et non quatre : WPA couvre WPA2 et WPA3, que les téléphones lisent de la même façon.
+/// « Réseau ouvert » n'est pas un défaut mais un cas réel — un portail captif n'a pas de mot de
+/// passe, et un code QR qui en annonce un ferait demander au téléphone une clé qui n'existe pas.
+fn security_choice_list(security: WifiSecurity) -> ChoiceList {
+    ChoiceList::new()
+        .name("security")
+        .value(security.as_wire())
+        .choices(vec![
+            ChoiceOption::new(WifiSecurity::Wpa.as_wire(), "i18n:config.security.wpa")
+                .icon(IconName::Lock),
+            ChoiceOption::new(WifiSecurity::Wep.as_wire(), "i18n:config.security.wep")
+                .icon(IconName::Lock),
+            ChoiceOption::new(
+                WifiSecurity::Nopass.as_wire(),
+                "i18n:config.security.nopass",
+            )
+            .icon(IconName::Wifi),
+        ])
 }
 
 fn reveal_choice_list(policy: RevealPolicy) -> ChoiceList {

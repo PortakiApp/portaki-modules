@@ -6,7 +6,7 @@ mod guest;
 mod host;
 mod reveal;
 
-pub use config::{ModuleConfig, RevealPolicy};
+pub use config::{ModuleConfig, RevealPolicy, WifiSecurity};
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use guest::{render_explore_detail, render_home_card};
 pub use host::render_host_main;
