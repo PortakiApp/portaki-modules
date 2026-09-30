@@ -64,6 +64,72 @@ fn home_card_renders_list_items_with_content() {
         });
 }
 
+/// Six règles : la carte en montre quatre et propose le reste (§2.8).
+#[test]
+#[serial]
+fn the_card_offers_the_rules_it_does_not_show() {
+    reset_test_store();
+    let six = json!({
+        "items": [
+            {"icon": "clock-circle", "title": "Calme après 22 h"},
+            {"icon": "x", "title": "Logement non-fumeur"},
+            {"icon": "users", "title": "Pas de fête"},
+            {"icon": "check-circle", "title": "Animaux bienvenus"},
+            {"icon": "key", "title": "Rendre les clés avant 11 h"},
+            {"icon": "trash", "title": "Sortir les poubelles le mardi"}
+        ]
+    })
+    .to_string();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            save_content(
+                ctx.clone(),
+                SaveContentArgs {
+                    items: Vec::new(),
+                    content_fr: six.clone(),
+                    content_en: six.clone(),
+                },
+            )
+            .expect("save");
+            let surface = render_home_card(ctx).expect("render");
+            let json = serde_json::to_string(&surface).expect("json");
+
+            assert!(json.contains("Calme après 22 h"));
+            // La cinquième et la sixième attendent dans la page.
+            assert!(!json.contains("Rendre les clés"), "{json}");
+            assert!(
+                SurfaceAssertions::new(&surface).contains_type("Button"),
+                "{json}"
+            );
+        });
+}
+
+/// Quatre règles ou moins : pas de bouton. Il ouvrirait une page identique à la carte (§2.8).
+#[test]
+#[serial]
+fn no_button_when_the_card_already_shows_every_rule() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            save_content(
+                ctx.clone(),
+                SaveContentArgs {
+                    items: Vec::new(),
+                    content_fr: sample_payload(),
+                    content_en: sample_payload(),
+                },
+            )
+            .expect("save");
+            let surface = render_home_card(ctx).expect("render");
+
+            assert!(!SurfaceAssertions::new(&surface).contains_type("Button"));
+        });
+}
+
 #[test]
 #[serial]
 fn explore_detail_renders_full_list() {
