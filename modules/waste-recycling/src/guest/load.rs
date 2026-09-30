@@ -1,5 +1,6 @@
 //! Load config for guest surfaces.
 
+use chrono::{DateTime, Utc};
 use portaki_sdk::prelude::*;
 
 use crate::config::{BinRow, ModuleConfig};
@@ -7,7 +8,14 @@ use crate::config::{BinRow, ModuleConfig};
 pub struct GuestData {
     pub bins: Vec<BinRow>,
     pub collection_schedule: String,
+    /// Les jours cochés, `mon` … `sun` — vide tant que l'hôte n'en a coché aucun.
+    pub collection_days: Vec<String>,
+    pub takeout_note: String,
     pub locale: String,
+    /// Le fuseau du logement : « demain » se compte à l'heure du lieu, pas à celle du serveur.
+    pub timezone: String,
+    /// Le départ du séjour, quand la plateforme en connaît un (§2.7).
+    pub checkout_at: Option<DateTime<Utc>>,
 }
 
 /// The config to show, or `None` when the host has filled in nothing yet.
@@ -20,6 +28,10 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
     Ok(Some(GuestData {
         bins: config.parse_bins(),
         collection_schedule: config.collection_schedule.get(&ctx.locale).to_string(),
+        collection_days: config.collection_days(),
+        takeout_note: config.takeout_note.get(&ctx.locale).to_string(),
         locale: ctx.locale.clone(),
+        timezone: ctx.timezone.clone(),
+        checkout_at: ctx.stay.as_ref().and_then(|stay| stay.checkout_at),
     }))
 }

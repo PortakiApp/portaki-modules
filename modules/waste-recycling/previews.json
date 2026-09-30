@@ -3,13 +3,17 @@
   "surfaces": [
     {
       "i18n": {
-        "guest.collection.title": "Collecte",
         "nav.waste-recycling": "Tri & déchets"
       },
       "surfaceId": "explore.detail",
       "title": "Tri & déchets",
       "tree": {
         "children": [
+          {
+            "message": "Mardi pour le bac jaune, vendredi pour les ordures ménagères.",
+            "title": "Prochaine collecte mardi",
+            "type": "InfoBanner"
+          },
           {
             "label": "Bac jaune — Emballages plastique et métal, Cartons et papiers",
             "swatch": "yellow",
@@ -31,9 +35,9 @@
             "type": "ColorDotItem"
           },
           {
-            "message": "Bacs à sortir la veille au soir : mardi pour le jaune, vendredi pour les ordures ménagères.",
-            "title": "i18n:guest.collection.title",
-            "type": "InfoBanner"
+            "text": "Sortez les bacs devant le portail la veille au soir, après 19 h.",
+            "type": "Text",
+            "variant": "caption"
           }
         ],
         "gap": 12.0,

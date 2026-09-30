@@ -38,9 +38,17 @@ fn sample_config() -> serde_json::Value {
                 "color": "grey"
             }
         ],
+        // Les jours cochés disent quand, la phrase dit quoi : les deux se lisent ensemble, et c'est
+        // exactement ce que l'aperçu doit montrer (§2.7).
+        "collects_tue": true,
+        "collects_fri": true,
         "collection_schedule": {
-            "fr": "Bacs à sortir la veille au soir : mardi pour le jaune, vendredi pour les ordures ménagères.",
-            "en": "Put the bins out the evening before: Tuesday for yellow, Friday for general waste."
+            "fr": "Mardi pour le bac jaune, vendredi pour les ordures ménagères.",
+            "en": "Tuesday for the yellow bin, Friday for general waste."
+        },
+        "takeout_note": {
+            "fr": "Sortez les bacs devant le portail la veille au soir, après 19 h.",
+            "en": "Put the bins out by the gate the evening before, after 7pm."
         }
     })
 }

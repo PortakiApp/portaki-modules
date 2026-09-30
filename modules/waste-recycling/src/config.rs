@@ -13,8 +13,39 @@ use serde_json::{Map, Value};
 pub struct ModuleConfig {
     #[field(required, label = "config.bins")]
     pub bins: Vec<BinRow>,
+    /// La phrase que l'hôte a écrite. Conservée : elle s'affiche tant qu'aucun jour n'est coché, et
+    /// reste en second sous le jour calculé — elle dit souvent ce que des cases ne disent pas
+    /// (« avant 7 h », « bac vert la semaine paire »).
     #[field(label = "host.schedule.label")]
     pub collection_schedule: I18nText,
+    /// Les jours de collecte, un champ par jour (§2.7). Sept booléens plutôt qu'une liste : le
+    /// formulaire hôte envoie des champs plats, et une liste de chaînes n'a pas de ligne à
+    /// fusionner — elle ne reviendrait jamais de l'enregistrement.
+    #[field(label = "host.collection.day.mon")]
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub collects_mon: bool,
+    #[field(label = "host.collection.day.tue")]
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub collects_tue: bool,
+    #[field(label = "host.collection.day.wed")]
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub collects_wed: bool,
+    #[field(label = "host.collection.day.thu")]
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub collects_thu: bool,
+    #[field(label = "host.collection.day.fri")]
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub collects_fri: bool,
+    #[field(label = "host.collection.day.sat")]
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub collects_sat: bool,
+    #[field(label = "host.collection.day.sun")]
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub collects_sun: bool,
+    /// La consigne de sortie : où et quand poser le bac dehors. Mise en avant quand le voyageur
+    /// part la veille d'une collecte, puisque c'est le seul moment où il doit agir avant de partir.
+    #[field(label = "host.takeout.label")]
+    pub takeout_note: I18nText,
 }
 
 /// The old KV blob: the bins as a JSON string, `bins_json`, before the form slots; each bin's
@@ -83,7 +114,27 @@ fn joined_lines(lines: &[Value]) -> Value {
 
 impl ModuleConfig {
     pub fn is_empty(&self) -> bool {
-        self.parse_bins().is_empty() && self.collection_schedule.is_blank()
+        self.parse_bins().is_empty()
+            && self.collection_schedule.is_blank()
+            && self.collection_days().is_empty()
+            && self.takeout_note.is_blank()
+    }
+
+    /// Les jours cochés, `mon` … `sun`, dans l'ordre de la semaine.
+    pub fn collection_days(&self) -> Vec<String> {
+        [
+            ("mon", self.collects_mon),
+            ("tue", self.collects_tue),
+            ("wed", self.collects_wed),
+            ("thu", self.collects_thu),
+            ("fri", self.collects_fri),
+            ("sat", self.collects_sat),
+            ("sun", self.collects_sun),
+        ]
+        .into_iter()
+        .filter(|(_, ticked)| *ticked)
+        .map(|(day, _)| day.to_string())
+        .collect()
     }
 
     /// The named rows, for the guest: the form sends its slots, blank ones included.
