@@ -4,8 +4,6 @@
     {
       "i18n": {
         "guest.chargerPin": "PIN borne",
-        "guest.copy.chargerPin.toast": "PIN borne copié",
-        "guest.copy.parkingCode.toast": "Code barrière copié",
         "guest.copyChargerPin": "Copier le PIN borne",
         "guest.copyParkingCode": "Copier le code barrière",
         "guest.openMap": "Ouvrir la carte",
@@ -32,36 +30,24 @@
             "type": "Link"
           },
           {
+            "copy": true,
+            "copyLabel": "i18n:guest.copyParkingCode",
+            "icon": "lock",
             "key": "i18n:guest.parkingCode",
+            "layout": "tile",
             "mono": true,
             "type": "KeyValue",
             "value": "1357"
           },
           {
-            "action": {
-              "toast_key": "i18n:guest.copy.parkingCode.toast",
-              "type": "copy",
-              "value": "1357"
-            },
-            "label": "i18n:guest.copyParkingCode",
-            "type": "Button",
-            "variant": "outline"
-          },
-          {
+            "copy": true,
+            "copyLabel": "i18n:guest.copyChargerPin",
+            "icon": "zap",
             "key": "i18n:guest.chargerPin",
+            "layout": "tile",
             "mono": true,
             "type": "KeyValue",
             "value": "2468"
-          },
-          {
-            "action": {
-              "toast_key": "i18n:guest.copy.chargerPin.toast",
-              "type": "copy",
-              "value": "2468"
-            },
-            "label": "i18n:guest.copyChargerPin",
-            "type": "Button",
-            "variant": "outline"
           },
           {
             "text": "Branchez le câble Type 2 fourni, puis saisissez le PIN sur la borne.",

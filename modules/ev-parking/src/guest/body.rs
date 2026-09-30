@@ -2,7 +2,8 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::primitives::{Button, InfoBanner, KeyValue, Link, Text};
+use portaki_sdk::sdui::common::KeyValueLayout;
+use portaki_sdk::sdui::primitives::{InfoBanner, KeyValue, Link, Text};
 
 use super::load::{has_any_secret, secret_display, GuestData};
 
@@ -32,27 +33,42 @@ fn push_reveal_banner(children: &mut Vec<Component>, data: &GuestData) {
     ));
 }
 
-fn push_secret_row(
+/// Une tuile de code (§2.3), ou rien quand l'hôte n'a pas rempli ce code-là.
+///
+/// La tuile porte sa copie au lieu d'un bouton en dessous : « valeur + Copier » est une seule
+/// chose pour le voyageur, et un bouton séparé s'éloignait de la valeur dès qu'il y en avait deux.
+///
+/// Le nombre de tuiles n'est pas notre affaire : une seule occupe la largeur parce que la grille du
+/// livret le décide (§0.2), pas parce que le module l'aurait demandé.
+fn push_secret_tile(
     children: &mut Vec<Component>,
     data: &GuestData,
     key_i18n: &str,
     copy_label: &str,
-    copy_toast: &str,
+    icon: IconName,
     code: &str,
 ) {
     let trimmed = code.trim();
     if trimmed.is_empty() {
         return;
     }
-    children.push(kv_row(key_i18n, &secret_display(data, trimmed), true));
+    let mut tile = KeyValue::new()
+        .key(key_i18n)
+        .value(secret_display(data, trimmed))
+        .layout(KeyValueLayout::Tile)
+        .icon(icon)
+        .mono(true);
+    // Pas de copie sur une valeur masquée : il n'y aurait que des points à mettre dans le presse-
+    // papiers, et le voyageur croirait tenir son code.
     if data.secrets_revealed {
-        children.push(Component::Button(
-            Button::new()
-                .label(copy_label)
-                .variant(ButtonVariant::Outline)
-                .action(Action::copy(trimmed.to_string(), Some(copy_toast.into()))),
-        ));
+        // `copyLabel` et non `copy_label` : le SDK nomme ses accesseurs d'après le champ du
+        // contrat, qui est en camelCase.
+        #[allow(non_snake_case)]
+        {
+            tile = tile.copy(true).copyLabel(copy_label);
+        }
     }
+    children.push(Component::KeyValue(tile));
 }
 
 pub fn build_ev_parking_body(data: &GuestData) -> Vec<Component> {
@@ -73,21 +89,21 @@ pub fn build_ev_parking_body(data: &GuestData) -> Vec<Component> {
         ));
     }
 
-    push_secret_row(
+    push_secret_tile(
         &mut children,
         data,
         "i18n:guest.parkingCode",
         "i18n:guest.copyParkingCode",
-        "i18n:guest.copy.parkingCode.toast",
+        IconName::Lock,
         &data.config.parking_code,
     );
 
-    push_secret_row(
+    push_secret_tile(
         &mut children,
         data,
         "i18n:guest.chargerPin",
         "i18n:guest.copyChargerPin",
-        "i18n:guest.copy.chargerPin.toast",
+        IconName::Zap,
         &data.config.charger_pin,
     );
 

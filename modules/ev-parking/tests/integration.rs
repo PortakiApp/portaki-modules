@@ -72,17 +72,39 @@ fn home_card_renders_with_config_and_masks_secrets() {
 
 #[test]
 #[serial]
-fn detail_shows_copy_buttons_when_revealed() {
+fn the_tiles_carry_their_own_copy_when_revealed() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&always_reveal_config())
         .run(|ctx| {
             let surface = render_explore_detail(ctx).expect("detail");
-            assert!(SurfaceAssertions::new(&surface).contains_type("Button"));
             let json = serde_json::to_string(&surface).expect("json");
+
+            // La copie vit dans la tuile et non dans un bouton en dessous : « valeur + Copier » est
+            // une seule chose pour le voyageur, et le livret rend l'affordance lui-même.
+            assert!(json.contains("\"layout\":\"tile\""));
+            assert!(json.contains("\"copy\":true"));
+            assert!(json.contains("guest.copyParkingCode"));
+            assert!(json.contains("guest.copyChargerPin"));
             assert!(json.contains("4821"));
             assert!(json.contains("1234"));
-            assert!(json.contains("\"type\":\"copy\"") || json.contains("\"type\": \"copy\""));
+        });
+}
+
+/// Une valeur masquée ne se copie pas : il n'y aurait que des points dans le presse-papiers, et le
+/// voyageur croirait tenir son code.
+#[test]
+#[serial]
+fn a_masked_tile_offers_no_copy() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&sample_config())
+        .run(|ctx| {
+            let surface = render_explore_detail(ctx).expect("detail");
+            let json = serde_json::to_string(&surface).expect("json");
+
+            assert!(json.contains("\"layout\":\"tile\""));
+            assert!(!json.contains("\"copy\":true"));
         });
 }
 
