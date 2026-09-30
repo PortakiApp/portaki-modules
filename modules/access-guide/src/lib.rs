@@ -17,7 +17,9 @@ pub use config::{
     PrimaryMethod, RevealPolicy, StepRow,
 };
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
-pub use guest::{render_explore_detail, render_home_card, render_upcoming_card};
+pub use guest::{
+    render_explore_detail, render_home_card, render_status_cell, render_upcoming_card,
+};
 pub use host::render_host_main;
 pub use queries::publish_readiness;
 pub use texts::{lang_code, ModuleTexts, StepText};

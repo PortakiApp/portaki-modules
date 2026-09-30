@@ -3,7 +3,7 @@
 #[path = "../../../support/previews.rs"]
 mod previews;
 
-use access_guide::{render_explore_detail, render_upcoming_card};
+use access_guide::{render_explore_detail, render_status_cell, render_upcoming_card};
 use serde_json::json;
 
 /// Une boîte à clés, un digicode d'immeuble et deux étapes d'arrivée, codes visibles tout de
@@ -39,10 +39,17 @@ fn previews_match_the_rendered_surfaces() {
     let detail = context
         .clone()
         .run(|ctx| render_explore_detail(ctx).expect("detail"));
-    let upcoming = context.run(|ctx| render_upcoming_card(ctx).expect("upcoming"));
+    let upcoming = context
+        .clone()
+        .run(|ctx| render_upcoming_card(ctx).expect("upcoming"));
+    let status = context.run(|ctx| render_status_cell(ctx).expect("status cell"));
     previews::check(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
-        vec![("explore.detail", detail), ("upcoming.card", upcoming)],
+        vec![
+            ("explore.detail", detail),
+            ("status.cell", status),
+            ("upcoming.card", upcoming),
+        ],
     );
 }

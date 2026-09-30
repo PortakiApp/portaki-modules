@@ -17,6 +17,12 @@ pub struct GuestData {
     pub secrets_revealed: bool,
     /// Preformatted guest message when secrets are locked (dated when possible).
     pub reveal_locked_message: Option<String>,
+    /// The stay is over: codes are gone for good, and the status cell says so rather than
+    /// falling back to the same wording as a code not yet due.
+    pub reveal_ended: bool,
+    /// When secrets open, written for the guest. `None` once revealed, once ended, or with no
+    /// check-in to count from. The status cell puts it under the masked value.
+    pub reveal_at_label: Option<String>,
     pub stay_id: Option<Uuid>,
 }
 
@@ -61,6 +67,8 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestLoad> {
         coordinates: ctx.property.coordinates,
         secrets_revealed: decision.revealed,
         reveal_locked_message: locked_banner(&decision, &property_timezone),
+        reveal_ended: decision.ended,
+        reveal_at_label: reveal_at_label(&decision, &property_timezone),
         stay_id,
     })))
 }
@@ -85,4 +93,17 @@ fn locked_banner(decision: &RevealDecision, property_timezone: &str) -> Option<S
         .available_from
         .map(|at| format_available_from(at, property_timezone));
     Some(locked_message(when.as_deref()))
+}
+
+/// The reveal instant alone, without the sentence around it.
+///
+/// The banner reads « Disponible à partir du 23/08/2026 à 16:00 », which is too long for a cell
+/// of the status strip: the cell shows the date on its own line under the masked value.
+fn reveal_at_label(decision: &RevealDecision, property_timezone: &str) -> Option<String> {
+    if decision.revealed || decision.ended {
+        return None;
+    }
+    decision
+        .available_from
+        .map(|at| format_available_from(at, property_timezone))
 }

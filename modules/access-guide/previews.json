@@ -136,6 +136,23 @@
     },
     {
       "i18n": {
+        "guest.status.keybox": "Code boîte à clés",
+        "nav.access-guide": "Accès & parking"
+      },
+      "surfaceId": "status.cell",
+      "title": "Accès & parking",
+      "tree": {
+        "copy": true,
+        "icon": "key",
+        "key": "i18n:guest.status.keybox",
+        "layout": "tile",
+        "mono": true,
+        "type": "KeyValue",
+        "value": "4821"
+      }
+    },
+    {
+      "i18n": {
         "guest.method.keybox": "Boîte à clés",
         "nav.access-guide": "Accès & parking"
       },
