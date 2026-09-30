@@ -2,6 +2,7 @@
 
 use chrono::{DateTime, Datelike, Utc};
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui::common::Leading;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{Button, Field, Form, ListItem, Pill, Select, Text};
 
@@ -171,7 +172,7 @@ pub(crate) fn build_report_list_item(
         ListItem::new()
             .title(title)
             .subtitle(subtitle)
-            .leading("search")
+            .leading(Leading::Icon("search".into()))
             .chevron(false)
             .child(pill)
             .child(Text::new().text(when).variant(TextVariant::Caption)),

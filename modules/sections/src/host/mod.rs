@@ -2,7 +2,7 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::common::{ButtonVariant, Tone};
+use portaki_sdk::sdui::common::{ButtonVariant, Leading, Tone};
 use portaki_sdk::sdui::primitives::{
     Button, Card, EmptyState, Field, FieldHint, Form, List, ListItem, Page, RichTextEditor, Stack,
     Text, TextInput,
@@ -85,7 +85,7 @@ fn build_list_card(sections: &[SectionView], selected_id: &str, lang: &str) -> C
                 let mut item = ListItem::new()
                     .title(title)
                     .subtitle(subtitle)
-                    .leading(LIST_ICONS[index % LIST_ICONS.len()])
+                    .leading(Leading::Icon(LIST_ICONS[index % LIST_ICONS.len()].into()))
                     .chevron(true)
                     .action(emit_select(&id));
                 if selected_id == id {
