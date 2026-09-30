@@ -2,7 +2,9 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
-use portaki_sdk::sdui::primitives::{Card, Field, Form, Page, Stack, Text, TextArea, TextInput};
+use portaki_sdk::sdui::primitives::{
+    Card, Field, FieldHint, Form, Page, Stack, Text, TextArea, TextInput, Toggle,
+};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{FacilityRow, ModuleConfig};
@@ -61,6 +63,9 @@ fn facility_card(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext
         .map(|f| f.title.host_value(ctx))
         .unwrap_or_default();
     let hours = facility.and_then(|f| f.hours.as_deref()).unwrap_or("");
+    let opens_at = facility.map(|f| f.opens_at.as_str()).unwrap_or("");
+    let closes_at = facility.map(|f| f.closes_at.as_str()).unwrap_or("");
+    let all_day = facility.is_some_and(|f| f.all_day);
     let lines = facility
         .map(|f| f.lines.host_value(ctx))
         .unwrap_or_default();
@@ -93,6 +98,42 @@ fn facility_card(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext
                                 .name(format!("facilities.{index}.hours"))
                                 .value(hours)
                                 .placeholder("i18n:host.facility.hours.placeholder"),
+                        )
+                        .into(),
+                    // Les heures structurées, à côté de la phrase et non à sa place : un hôte qui
+                    // les remplit gagne l'état en direct, un hôte qui ne les remplit pas garde
+                    // exactement ce qu'il avait écrit.
+                    Field::new()
+                        .name(format!("facilities.{index}.opens_at"))
+                        .label("i18n:host.facility.opensAt")
+                        .children(vec![
+                            FieldHint::new()
+                                .text("i18n:host.facility.opensAt.desc")
+                                .into(),
+                            TextInput::new()
+                                .name(format!("facilities.{index}.opens_at"))
+                                .value(opens_at)
+                                .placeholder("08:00")
+                                .into(),
+                        ])
+                        .into(),
+                    Field::new()
+                        .name(format!("facilities.{index}.closes_at"))
+                        .label("i18n:host.facility.closesAt")
+                        .child(
+                            TextInput::new()
+                                .name(format!("facilities.{index}.closes_at"))
+                                .value(closes_at)
+                                .placeholder("20:00"),
+                        )
+                        .into(),
+                    Field::new()
+                        .name(format!("facilities.{index}.all_day"))
+                        .label("i18n:host.facility.allDay")
+                        .child(
+                            Toggle::new()
+                                .name(format!("facilities.{index}.all_day"))
+                                .checked(all_day),
                         )
                         .into(),
                     // One schedule per line.
