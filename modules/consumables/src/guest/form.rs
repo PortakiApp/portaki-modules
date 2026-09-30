@@ -28,19 +28,13 @@ pub fn build_form_surface(data: &GuestConsumablesData) -> Surface {
 
 fn build_form(data: &GuestConsumablesData) -> Form {
     let submit_action = crate::ids::module_id().command_empty(crate::commands::SUBMIT);
-    let first_id = data
-        .items
-        .first()
-        .map(|item| item.id.to_string())
-        .unwrap_or_default();
-
     Form::new()
         .child(
             Field::new()
-                .name("itemId")
+                .name("itemIds")
                 .label("i18n:form.item.label")
                 .required(true)
-                .child(item_choice_list(data, &first_id)),
+                .child(item_choice_list(data)),
         )
         .child(
             Field::new()
@@ -66,7 +60,9 @@ fn build_form(data: &GuestConsumablesData) -> Form {
         )
 }
 
-fn item_choice_list(data: &GuestConsumablesData, selected: &str) -> ChoiceList {
+/// Rien n'est présélectionné : en choix multiple, une case déjà cochée part au signalement sans
+/// que le voyageur l'ait voulu, et c'est l'hôte qui se déplace pour rien.
+fn item_choice_list(data: &GuestConsumablesData) -> ChoiceList {
     let choices: Vec<ChoiceOption> = data
         .items
         .iter()
@@ -80,20 +76,20 @@ fn item_choice_list(data: &GuestConsumablesData, selected: &str) -> ChoiceList {
         })
         .collect();
 
-    let mut list = ChoiceList::new()
-        .name("itemId")
-        .layout(ChoiceListLayout::Compact)
-        .choices(choices);
-    if !selected.is_empty() {
-        list = list.value(selected);
-    }
-    list
+    // Grille et choix multiple (§2.5). Un voyageur qui constate qu'il manque le papier *et* le café
+    // le disait en deux envois ; la liste compacte à choix unique l'y obligeait.
+    ChoiceList::new()
+        .name("itemIds")
+        .layout(ChoiceListLayout::Grid)
+        .multi(true)
+        .choices(choices)
 }
 
 fn level_choice_list() -> ChoiceList {
+    // Deux choix courts côte à côte : c'est ce que le §2.5 appelle des segments.
     ChoiceList::new()
         .name("level")
-        .layout(ChoiceListLayout::Compact)
+        .layout(ChoiceListLayout::Segmented)
         .value(level::DEFAULT)
         .choices(vec![
             ChoiceOption::new("missing", "i18n:form.level.missing").icon(IconName::CircleX),
