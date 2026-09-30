@@ -31,9 +31,6 @@ env:
   # l'annonce et fait entrer la version au catalogue. Variable de dépôt pour viser un staging
   # sans toucher au workflow.
   PORTAKI_API_URL: ${{ vars.PORTAKI_API_URL || 'https://api.portaki.app' }}
-  # Le CLI qui a `ci build` et `ci release` (publication dans le dépôt OCI de Portaki). Le lock
-  # résout encore un SDK plus ancien : à retirer quand il l'aura rattrapé.
-  PORTAKI_CLI: 9.0.0
 
 jobs:
   changes:
@@ -59,8 +56,6 @@ jobs:
           fi
 
       - uses: PortakiApp/portaki-release-action/install@v2
-        with:
-          version: ${{ env.PORTAKI_CLI }}
 
       # `portaki ci modules` lit la disposition dans les crates et rend `modules`,
       # `any` et `reason` dans GITHUB_OUTPUT. Il remplace `changed-modules.sh` —
@@ -149,7 +144,6 @@ jobs:
       - uses: PortakiApp/portaki-release-action/build@v2
         with:
           working-directory: modules/${{ matrix.module }}
-          cli-version: ${{ env.PORTAKI_CLI }}
           artifact: wasm-${{ matrix.module }}
 
   # Ce qui se publie : les modules dont la VERSION a changé, pas tous ceux qu'un commit touche.
@@ -244,7 +238,6 @@ jobs:
         with:
           working-directory: modules/${{ matrix.module }}
           artifact: wasm-${{ matrix.module }}
-          cli-version: ${{ env.PORTAKI_CLI }}
           api-url: ${{ env.PORTAKI_API_URL }}
 
   quality:
