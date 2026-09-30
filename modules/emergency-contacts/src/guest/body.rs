@@ -2,6 +2,7 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
+use portaki_sdk::sdui::common::{Leading, Trailing};
 use portaki_sdk::sdui::primitives::{InfoBanner, Link, ListItem, Pressable, Text};
 
 use super::load::GuestData;
@@ -29,7 +30,7 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
                 ListItem::new()
                     .title("i18n:guest.host.label")
                     .subtitle(data.host_phone.clone())
-                    .trailing("i18n:guest.call"),
+                    .trailing(Trailing::Text("i18n:guest.call".into())),
             ),
         ));
     }
@@ -39,9 +40,9 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
         let mut item = ListItem::new()
             .title(label)
             .subtitle(contact.phone.clone())
-            .trailing("i18n:guest.call");
+            .trailing(Trailing::Text("i18n:guest.call".into()));
         if let Some(cat) = contact.category.as_deref().filter(|c| !c.trim().is_empty()) {
-            item = item.leading(cat);
+            item = item.leading(Leading::Icon(cat.into()));
         }
         let note = contact.note.get(&data.locale);
         if !note.trim().is_empty() {

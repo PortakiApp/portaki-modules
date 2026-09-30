@@ -5,6 +5,7 @@
 
 use portaki_sdk::contracts::host_fragments;
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui::common::Leading;
 use portaki_sdk::sdui::primitives::{Card, HostFragment, ListItem, Stack};
 use portaki_sdk::sdui::surface::Surface;
 
@@ -58,7 +59,7 @@ pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
                 ListItem::new()
                     .title("i18n:home.task.preArrival.label")
                     .subtitle("i18n:home.task.completed")
-                    .leading("clipboard")
+                    .leading(Leading::Icon("clipboard".into()))
                     .chevron(true)
                     // Reopen overlay to edit until check-in, or review after.
                     .action(open_form)
@@ -72,7 +73,7 @@ pub fn build_formalities_card(form_state: FormTaskState) -> Surface {
                 ListItem::new()
                     .title("i18n:home.task.preArrival.label")
                     .subtitle("i18n:home.task.preArrival.sub")
-                    .leading("clipboard")
+                    .leading(Leading::Icon("clipboard".into()))
                     .chevron(true)
                     .action(open_form)
                     .into(),
@@ -320,7 +321,7 @@ fn readonly_row(leading: &str, label_i18n: &str, value: String) -> Component {
     ListItem::new()
         .title(label_i18n)
         .subtitle(value)
-        .leading(leading)
+        .leading(Leading::Icon(leading.into()))
         .chevron(false)
         .into()
 }

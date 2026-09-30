@@ -4,6 +4,7 @@
 //! pending copy or detail rows for enabled / answered questions.
 
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui::common::Leading;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{Card, ListItem, Page, Pill, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
@@ -160,7 +161,7 @@ fn detail_row(leading: &str, label_i18n: &str, value: String, tone: Option<Tone>
     let mut item = ListItem::new()
         .title(label_i18n)
         .subtitle(value)
-        .leading(leading)
+        .leading(Leading::Icon(leading.into()))
         .chevron(false);
     if let Some(tone) = tone {
         item = item.tone(tone);

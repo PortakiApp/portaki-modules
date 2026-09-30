@@ -2,6 +2,7 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
+use portaki_sdk::sdui::common::Leading;
 use portaki_sdk::sdui::primitives::{InfoBanner, Link, ListItem, Map, Pill, Pressable, Text};
 
 use crate::time_format::{day_badge_label, format_starts_at_display, parse_starts_at};
@@ -45,7 +46,7 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         }
 
         if let Some(at) = parse_starts_at(&event.starts_at) {
-            item = item.leading(day_badge_label(at));
+            item = item.leading(Leading::Icon(day_badge_label(at)));
         } else if !enriched {
             item = item.child(Pill::new().label("i18n:guest.event.dateTbd"));
         }

@@ -2,6 +2,7 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
+use portaki_sdk::sdui::common::Leading;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
     Accordion, Button, Card, EmptyState, Field, Form, List, ListItem, Page, RichTextEditor, Select,
@@ -73,7 +74,7 @@ fn build_list_card(devices: &[Appliance], selected_id: &str) -> Component {
                     .chevron(true)
                     .action(emit_select(&device.id));
                 if !device.emoji.trim().is_empty() {
-                    item = item.leading(device.emoji.clone());
+                    item = item.leading(Leading::Icon(device.emoji.clone()));
                 }
                 if !device.location.trim().is_empty() {
                     item = item.subtitle(device.location.clone());

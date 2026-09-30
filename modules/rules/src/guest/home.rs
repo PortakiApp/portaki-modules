@@ -4,6 +4,7 @@
 //! Body: icon rows (title + optional subtitle), glance of first rules.
 
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui::common::Leading;
 use portaki_sdk::sdui::primitives::{Card, ListItem, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
@@ -53,7 +54,9 @@ pub fn rule_list_item(item: &RuleItem) -> Component {
     } else {
         normalize_guest_icon(&item.icon)
     };
-    let mut list = ListItem::new().title(item.title.clone()).leading(icon_name);
+    let mut list = ListItem::new()
+        .title(item.title.clone())
+        .leading(Leading::Icon(icon_name));
     if !item.subtitle.trim().is_empty() {
         list = list.subtitle(item.subtitle.clone());
     }

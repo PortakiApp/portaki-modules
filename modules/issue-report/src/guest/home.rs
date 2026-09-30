@@ -2,6 +2,7 @@
 
 use portaki_sdk::prelude::*;
 
+use portaki_sdk::sdui::common::Leading;
 use portaki_sdk::sdui::primitives::{Card, ListItem, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
@@ -47,7 +48,7 @@ pub fn build_home_card(reports: &[IssueReport]) -> Surface {
     children.push(
         ListItem::new()
             .title("i18n:home.card.openForm")
-            .leading("danger-triangle")
+            .leading(Leading::Icon("danger-triangle".into()))
             .chevron(true)
             .action(open_form.clone())
             .into(),
