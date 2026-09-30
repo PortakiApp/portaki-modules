@@ -6,7 +6,7 @@
   "modules/emergency-contacts": "1.1.0",
   "modules/ev-parking": "1.1.0",
   "modules/events": "1.1.0",
-  "modules/facility-hours": "1.1.0",
+  "modules/facility-hours": "1.2.0",
   "modules/guest-reviews": "1.1.0",
   "modules/ical-sync": "1.1.0",
   "modules/issue-report": "1.1.0",
