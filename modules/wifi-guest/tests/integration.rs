@@ -7,6 +7,7 @@ use serial_test::serial;
 use portaki_test_utils::{MockContext, SurfaceAssertions};
 use wifi_guest::{
     render_explore_detail, render_home_card, render_host_main, ModuleConfig, RevealPolicy,
+    WifiSecurity,
 };
 
 #[path = "../../../support/config_form.rs"]
@@ -22,6 +23,7 @@ fn sample_config() -> ModuleConfig {
         password: "soleil2026".into(),
         hint: Some(I18nText::new("5 GHz conseillé", "Prefer 5 GHz")),
         connection_steps: None,
+        security: WifiSecurity::Wpa,
         reveal_policy: RevealPolicy::DayBefore16h,
     }
 }
@@ -76,6 +78,60 @@ fn detail_shows_security_banner_and_copy_when_revealed() {
             let json = serde_json::to_string(&surface).expect("json");
             assert!(json.contains("soleil2026"));
             assert!(json.contains("\"type\":\"copy\"") || json.contains("\"type\": \"copy\""));
+        });
+}
+
+/// Le code porte la clé en clair dans ses pixels : l'afficher avant la date de révélation rendrait
+/// exactement ce que la ligne masquée juste au-dessus refuse — et un téléphone aurait rejoint le
+/// réseau, ce qu'aucun masque ne pourrait défaire ensuite.
+#[test]
+#[serial]
+fn no_qr_code_while_the_password_is_still_held_back() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&sample_config())
+        .run(|ctx| {
+            let surface = render_home_card(ctx).expect("guest surface");
+            assert!(!SurfaceAssertions::new(&surface).contains_type("QRCode"));
+            let json = serde_json::to_string(&surface).expect("json");
+            assert!(!json.contains("WIFI:T:"));
+        });
+}
+
+#[test]
+#[serial]
+fn the_qr_code_carries_the_network_once_revealed() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&always_reveal_config())
+        .run(|ctx| {
+            let surface = render_explore_detail(ctx).expect("guest surface");
+            assert!(SurfaceAssertions::new(&surface).contains_type("QRCode"));
+            let json = serde_json::to_string(&surface).expect("json");
+            assert!(json.contains("WIFI:T:WPA;S:Islette_Guest;P:soleil2026;;"));
+        });
+}
+
+/// Un portail captif n'a pas de clé. Le code doit dire `nopass`, sinon le téléphone réclame un mot
+/// de passe que personne ne possède — et il le fait après avoir scanné, donc l'erreur a l'air de
+/// venir du livret.
+#[test]
+#[serial]
+fn an_open_network_is_announced_as_open() {
+    let open = ModuleConfig {
+        password: String::new(),
+        security: WifiSecurity::Nopass,
+        reveal_policy: RevealPolicy::Always,
+        ..sample_config()
+    };
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&open)
+        .run(|ctx| {
+            let surface = render_explore_detail(ctx).expect("guest surface");
+            let json = serde_json::to_string(&surface).expect("json");
+            assert!(json.contains("WIFI:T:nopass;S:Islette_Guest;;"));
+            assert!(!json.contains(";P:"));
         });
 }
 

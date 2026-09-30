@@ -22,6 +22,7 @@
           },
           {
             "key": "i18n:guest.ssid",
+            "mono": true,
             "type": "KeyValue",
             "value": "Maison-Invites"
           },
@@ -40,6 +41,10 @@
             "label": "i18n:guest.copyPassword",
             "type": "Button",
             "variant": "outline"
+          },
+          {
+            "type": "QRCode",
+            "value": "WIFI:T:WPA;S:Maison-Invites;P:soleil-2026;;"
           },
           {
             "text": "Le réseau 5 GHz est plus rapide dans le salon.",

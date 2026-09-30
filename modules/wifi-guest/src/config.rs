@@ -38,6 +38,43 @@ impl RevealPolicy {
     ];
 }
 
+/// How the network is secured — what the Wi-Fi QR code has to announce.
+///
+/// The guest's phone reads the scheme from the code and configures itself: a `WPA` code offered for
+/// an open network makes the phone ask for a password nobody has. WPA covers WPA2 and WPA3, which
+/// is why the three options are not four.
+#[portaki_sdk::params]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum WifiSecurity {
+    #[default]
+    Wpa,
+    Wep,
+    /// Open network — a captive portal, typically.
+    Nopass,
+}
+
+impl WifiSecurity {
+    /// The value the host form sends back, which is what serde reads — lowercase, unlike the
+    /// scheme's own `T:` spelling. Confusing the two silently rejects the saved choice.
+    pub const fn as_wire(self) -> &'static str {
+        match self {
+            Self::Wpa => "wpa",
+            Self::Wep => "wep",
+            Self::Nopass => "nopass",
+        }
+    }
+
+    /// The `T:` value of the `WIFI:` scheme.
+    pub const fn as_qr_type(self) -> &'static str {
+        match self {
+            Self::Wpa => "WPA",
+            Self::Wep => "WEP",
+            Self::Nopass => "nopass",
+        }
+    }
+}
+
 /// The keys are the names of the host form fields: the platform takes `updateConfig` itself.
 /// No password is only recommended: an open network (captive portal) has none.
 #[portaki_sdk::config(legacy = legacy)]
@@ -52,6 +89,12 @@ pub struct ModuleConfig {
         label = "host.password.label"
     )]
     pub password: String,
+    #[field(
+        kind = "select",
+        options = ["wpa", "wep", "nopass"],
+        label = "config.security"
+    )]
+    pub security: WifiSecurity,
     #[field(label = "host.hint.label")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hint: Option<I18nText>,
