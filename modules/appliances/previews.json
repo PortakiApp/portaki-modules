@@ -12,6 +12,10 @@
           {
             "children": [
               {
+                "text": "Cuisine",
+                "type": "Eyebrow"
+              },
+              {
                 "action": {
                   "to": "appliances/plaques",
                   "type": "navigate"
@@ -23,6 +27,10 @@
                 "type": "ListItem"
               },
               {
+                "text": "Salle de bain",
+                "type": "Eyebrow"
+              },
+              {
                 "action": {
                   "to": "appliances/lave-linge",
                   "type": "navigate"
@@ -32,6 +40,10 @@
                 "subtitle": "Salle de bain",
                 "title": "Lave-linge",
                 "type": "ListItem"
+              },
+              {
+                "text": "Salon",
+                "type": "Eyebrow"
               },
               {
                 "action": {

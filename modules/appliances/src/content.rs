@@ -5,7 +5,12 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 pub const MAX_APPLIANCES: usize = 10;
-pub const MAX_FEATURED: usize = 5;
+/// Quatre tuiles en avant sur la carte d'accueil (§2.4), pas cinq.
+///
+/// La carte d'accueil n'est pas la liste : elle donne un aperçu et renvoie au reste. Une cinquième
+/// ligne allongeait la carte sans rien apprendre, puisque « Voir les N appareils » est juste en
+/// dessous.
+pub const MAX_FEATURED: usize = 4;
 
 /// Guest-visible vs host-only hidden.
 #[portaki_sdk::params]
@@ -102,6 +107,40 @@ impl AppliancesPayload {
             .filter(|d| d.featured)
             .take(MAX_FEATURED)
             .collect()
+    }
+
+    /// Les appareils groupés par pièce, pour la liste complète (§2.4).
+    ///
+    /// Les pièces arrivent dans l'ordre où l'hôte a rangé ses appareils, et non par ordre
+    /// alphabétique : un hôte qui ordonne salon, cuisine, chambre décrit un logement, et trier
+    /// remplacerait sa logique par celle de l'alphabet.
+    ///
+    /// Un appareil sans pièce tombe dans un groupe sans nom, que la surface intitule « Autres » et
+    /// place en dernier — un appareil que l'hôte n'a pas rangé reste visible, il n'ouvre pas la
+    /// liste.
+    pub fn guest_devices_by_room(&self) -> Vec<(Option<String>, Vec<&Appliance>)> {
+        let mut rooms: Vec<(Option<String>, Vec<&Appliance>)> = Vec::new();
+        let mut unplaced: Vec<&Appliance> = Vec::new();
+
+        for device in self.guest_devices() {
+            let room = device.location.trim();
+            if room.is_empty() {
+                unplaced.push(device);
+                continue;
+            }
+            match rooms
+                .iter_mut()
+                .find(|(name, _)| name.as_deref().is_some_and(|existing| existing == room))
+            {
+                Some((_, devices)) => devices.push(device),
+                None => rooms.push((Some(room.to_string()), vec![device])),
+            }
+        }
+
+        if !unplaced.is_empty() {
+            rooms.push((None, unplaced));
+        }
+        rooms
     }
 
     pub fn featured_count(&self) -> usize {
