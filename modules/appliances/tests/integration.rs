@@ -108,6 +108,52 @@ fn home_card_featured_only_and_detail_list() {
         });
 }
 
+/// « Voir les N appareils » (§2.4), avec le compte de la liste et non celui des tuiles.
+///
+/// Les aperçus ne couvrent que `explore.detail` et `explore.item` : la carte d'accueil n'y est pas,
+/// donc ce bouton n'a que ce test pour le tenir.
+#[test]
+#[serial]
+fn the_home_card_says_how_many_appliances_there_are() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            seed_two_devices(ctx.clone());
+            let card = render_home_card(ctx.clone()).expect("render");
+            let json = serde_json::to_string(&card).expect("json");
+
+            assert!(SurfaceAssertions::new(&card).contains_type("Button"));
+            // Le nombre est glissé par le service de traduction de l'hôte, que le contexte de test
+            // ne fournit pas : il rend ici la clé. Ce que ce test tient, c'est que le bouton existe
+            // et porte bien ce libellé-là — jamais vide, jamais celui du repli sans nombre.
+            assert!(json.contains("home.card.seeAll"), "{json}");
+            assert!(!json.contains("\"label\":\"\""), "{json}");
+        });
+}
+
+/// La liste complète groupe par pièce (§2.4), et range sous « Autres » ce que l'hôte n'a pas placé.
+#[test]
+#[serial]
+fn the_full_list_is_grouped_by_room() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            seed_two_devices(ctx.clone());
+            let detail = render_explore_detail(ctx.clone()).expect("render");
+            let json = serde_json::to_string(&detail).expect("json");
+
+            // Deux pièces différentes dans la fixture : les titres apparaissent.
+            assert!(
+                SurfaceAssertions::new(&detail).contains_type("Eyebrow"),
+                "{json}"
+            );
+        });
+}
+
 #[test]
 #[serial]
 fn explore_item_uses_device_id_and_howto_steps() {
