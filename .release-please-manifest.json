@@ -17,7 +17,7 @@
   "modules/rules": "1.2.0",
   "modules/sections": "1.1.0",
   "modules/train": "1.1.0",
-  "modules/waste-recycling": "1.1.0",
+  "modules/waste-recycling": "1.2.0",
   "modules/weather": "1.1.0",
   "modules/wifi-guest": "1.2.0"
 }
