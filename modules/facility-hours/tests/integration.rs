@@ -53,6 +53,76 @@ fn home_card_uses_key_value_and_page_overlay() {
         });
 }
 
+/// Cinq lignes : la carte en montre trois et propose le reste (§2.6).
+#[test]
+#[serial]
+fn the_home_card_stops_at_three_rows_and_offers_the_rest() {
+    let five = json!({
+        "facilities": [
+            { "title": "Piscine", "hours": "08:00 – 20:00" },
+            { "title": "Salle de sport", "hours": "06:00 – 22:00" },
+            { "title": "Accueil", "hours": "à partir de 16:00" },
+            { "title": "Spa", "hours": "10:00 – 19:00" },
+            { "title": "Parking", "hours": "24 h/24" }
+        ]
+    });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&five)
+        .run(|ctx| {
+            let surface = render_home_card(ctx).expect("home card");
+            let json = serde_json::to_string(&surface).expect("json");
+
+            assert!(json.contains("Piscine"));
+            assert!(json.contains("Accueil"));
+            // La quatrième et la cinquième attendent dans la feuille.
+            assert!(!json.contains("Spa"), "{json}");
+            assert!(!json.contains("Parking"), "{json}");
+            assert!(SurfaceAssertions::new(&surface).contains_type("Button"));
+        });
+}
+
+/// Trois lignes ou moins : pas de bouton. Il promettrait une liste identique à celle qu'on lit déjà.
+#[test]
+#[serial]
+fn no_button_when_the_card_already_shows_everything() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&sample_config())
+        .run(|ctx| {
+            let surface = render_home_card(ctx).expect("home card");
+
+            assert!(!SurfaceAssertions::new(&surface).contains_type("Button"));
+        });
+}
+
+/// La feuille montre tout, bouton compris — c'est elle, « tous les horaires ».
+#[test]
+#[serial]
+fn the_sheet_shows_every_row() {
+    let five = json!({
+        "facilities": [
+            { "title": "Piscine", "hours": "08:00 – 20:00" },
+            { "title": "Salle de sport", "hours": "06:00 – 22:00" },
+            { "title": "Accueil", "hours": "à partir de 16:00" },
+            { "title": "Spa", "hours": "10:00 – 19:00" }
+        ]
+    });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&five)
+        .run(|ctx| {
+            let surface = render_explore_detail(ctx).expect("detail");
+            let json = serde_json::to_string(&surface).expect("json");
+
+            assert!(json.contains("Spa"), "{json}");
+            assert!(
+                !SurfaceAssertions::new(&surface).contains_type("Button"),
+                "{json}"
+            );
+        });
+}
+
 #[test]
 #[serial]
 fn detail_enriched_list() {
