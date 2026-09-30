@@ -1,9 +1,11 @@
 //! Portaki waste-recycling module — bins and collection schedule.
 
+mod collection;
 mod config;
 mod guest;
 mod host;
 
+pub use collection::{next_collection, Departure, NextCollection};
 pub use config::{BinRow, ModuleConfig};
 pub use guest::{render_explore_detail, render_home_card};
 pub use host::render_host_main;
