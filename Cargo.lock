@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "access-guide"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -63,7 +63,7 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
 name = "appliances"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -190,7 +190,7 @@ dependencies = [
 
 [[package]]
 name = "consumables"
-version = "1.2.0"
+version = "2.0.0"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -251,7 +251,7 @@ checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
 name = "ev-parking"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -347,7 +347,7 @@ dependencies = [
 
 [[package]]
 name = "facility-hours"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -1110,7 +1110,7 @@ dependencies = [
 
 [[package]]
 name = "rules"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -1453,7 +1453,7 @@ dependencies = [
 
 [[package]]
 name = "waste-recycling"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -1483,7 +1483,7 @@ dependencies = [
 
 [[package]]
 name = "wifi-guest"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "chrono",
  "extism-pdk",

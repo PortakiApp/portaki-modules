@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v1.1.0...ev-parking-v1.2.0) (2026-09-30)
+
+
+### Features
+
+* **ev-parking:** tiles for the gate code and the charger PIN ([46197d1](https://github.com/PortakiApp/portaki-modules/commit/46197d161b35f69fdf700ba62d5e1bcc3f5561b3))
+
 ## [1.1.0](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v1.0.0...ev-parking-v1.1.0) (2026-09-29)
 
 
