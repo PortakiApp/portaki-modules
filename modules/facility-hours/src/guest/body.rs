@@ -1,15 +1,91 @@
 //! Shared guest SDUI body for facility hours.
 
+use portaki_sdk::host::time::{self, PropertyTz};
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui::common::{BadgeSpec, DetailRow, Tone, Trailing, TrailingVisual};
 use portaki_sdk::sdui::primitives::{Button, InfoBanner, KeyValue, ListItem, Text};
+
+use chrono::Datelike;
+
+use crate::schedule::{State, WEEK};
 
 use super::load::GuestData;
 
 /// Le nombre de lignes que la carte d'accueil montre avant de renvoyer à la liste (§2.6).
 const HOME_ROWS: usize = 3;
 
+/// L'état d'une ligne, dit comme le §2.6 le demande : « Ouvert », « Ouvre à HH:MM », « Fermé ».
+///
+/// Rien n'est rendu sans horaires structurés : une ligne qui n'a qu'une phrase garde sa phrase, et
+/// n'affiche pas un état qu'on aurait deviné.
+fn state_badge(state: &State) -> Trailing {
+    let (label, tone) = match state {
+        State::AlwaysOpen | State::Open => ("i18n:guest.state.open".to_string(), Tone::Success),
+        State::OpensAt(minutes) => (
+            t!("guest.state.opensAt", time = format_minutes(*minutes))
+                .unwrap_or_else(|_| "i18n:guest.state.opensAtPlain".to_string()),
+            Tone::Neutral,
+        ),
+        State::Closed => ("i18n:guest.state.closed".to_string(), Tone::Neutral),
+    };
+    Trailing::Visual(Box::new(TrailingVisual {
+        badge: Some(BadgeSpec {
+            label,
+            tone,
+            dot: false,
+        }),
+        ..TrailingVisual::default()
+    }))
+}
+
+/// `HH:MM` depuis des minutes après minuit.
+fn format_minutes(minutes: u32) -> String {
+    format!("{:02}:{:02}", minutes / 60, minutes % 60)
+}
+
+/// Les sept jours d'une ligne, lundi en tête, le jour courant marqué (§2.6).
+fn week_rows(
+    row: &crate::config::FacilityRow,
+    locale: &str,
+    today: Option<chrono::Weekday>,
+) -> Vec<DetailRow> {
+    let schedule = row.schedule();
+    WEEK.iter()
+        .map(|day| {
+            let value = if schedule.all_day {
+                "i18n:guest.state.open".to_string()
+            } else {
+                match schedule.span_on(*day) {
+                    Some(span) => format!(
+                        "{} – {}",
+                        format_minutes(span.opens),
+                        format_minutes(span.closes)
+                    ),
+                    None => "i18n:guest.state.closed".to_string(),
+                }
+            };
+            DetailRow {
+                label: time::weekday_name(*day, locale).to_string(),
+                value,
+                current: today == Some(*day),
+            }
+        })
+        .collect()
+}
+
 pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
     let mut children = Vec::new();
+
+    // L'heure du rendu, lue une fois : deux lignes de la même carte ne doivent pas répondre à deux
+    // instants différents. Sans horloge, aucune ligne n'affiche d'état — mieux vaut rien qu'un
+    // « Ouvert » tiré d'une heure inventée.
+    let now = time::now().ok();
+    let tz = PropertyTz::parse(&data.timezone);
+    let today = now.and_then(|now| {
+        tz.as_ref()
+            .map(|tz| tz.to_local(now).naive_local().weekday())
+            .or_else(|| Some(now.naive_utc().weekday()))
+    });
 
     if !data.general_note.is_empty() {
         children.push(Component::InfoBanner(
@@ -44,6 +120,12 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
             if !hours.is_empty() {
                 item = item.subtitle(hours.clone());
             }
+            // L'état en direct et la semaine dépliable, pour les lignes qui portent des heures.
+            let schedule = facility.schedule();
+            if let Some(state) = now.and_then(|now| schedule.state_at(now, tz.as_ref())) {
+                item = item.trailing(state_badge(&state));
+                item = item.details(week_rows(facility, &data.locale, today));
+            }
             for line in lines {
                 item = item.child(Text::new().text(line).variant(TextVariant::Caption));
             }
@@ -53,7 +135,14 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
             }
             children.push(Component::ListItem(item));
         } else {
-            children.push(Component::KeyValue(KeyValue::new().key(title).value(hours)));
+            let schedule = facility.schedule();
+            match now.and_then(|now| schedule.state_at(now, tz.as_ref())) {
+                // Sur la carte, l'état remplace l'horaire : c'est ce qu'on lit d'un coup d'œil.
+                Some(state) => children.push(Component::ListItem(
+                    ListItem::new().title(title).trailing(state_badge(&state)),
+                )),
+                None => children.push(Component::KeyValue(KeyValue::new().key(title).value(hours))),
+            }
         }
     }
 

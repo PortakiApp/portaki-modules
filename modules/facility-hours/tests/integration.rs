@@ -123,6 +123,79 @@ fn the_sheet_shows_every_row() {
         });
 }
 
+/// Une ligne avec des heures structurées affiche son état et sa semaine (§2.6).
+#[test]
+#[serial]
+fn structured_hours_carry_a_state_and_the_week() {
+    let structured = json!({
+        "facilities": [
+            { "title": "Piscine", "opens_at": "08:00", "closes_at": "20:00" }
+        ]
+    });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&structured)
+        .run(|ctx| {
+            let surface = render_explore_detail(ctx).expect("detail");
+            let json = serde_json::to_string(&surface).expect("json");
+
+            // Le badge dit l'un des trois états du §2.6, selon l'heure qu'il est vraiment.
+            assert!(
+                json.contains("guest.state.open")
+                    || json.contains("guest.state.closed")
+                    || json.contains("Ouvre à")
+                    || json.contains("guest.state.opensAt"),
+                "{json}"
+            );
+            // Les sept jours, avec le jour courant marqué.
+            assert!(json.contains("\"details\""), "{json}");
+            assert!(json.contains("\"current\":true"), "{json}");
+        });
+}
+
+/// La prose d'un hôte n'est pas touchée : pas d'état deviné, pas de semaine inventée.
+#[test]
+#[serial]
+fn a_prose_row_keeps_its_sentence_and_gains_no_state() {
+    let prose = json!({
+        "facilities": [
+            { "title": "Accueil", "hours": "à partir de 16:00" }
+        ]
+    });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&prose)
+        .run(|ctx| {
+            let surface = render_home_card(ctx).expect("card");
+            let json = serde_json::to_string(&surface).expect("json");
+
+            assert!(json.contains("à partir de 16:00"), "{json}");
+            assert!(!json.contains("guest.state."), "{json}");
+            assert!(!json.contains("\"details\""), "{json}");
+        });
+}
+
+/// Ouvert en continu : toujours « Ouvert », sans heures à comparer (§6).
+#[test]
+#[serial]
+fn around_the_clock_always_reads_open() {
+    let always = json!({
+        "facilities": [
+            { "title": "Parking", "all_day": true }
+        ]
+    });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&always)
+        .run(|ctx| {
+            let surface = render_home_card(ctx).expect("card");
+            let json = serde_json::to_string(&surface).expect("json");
+
+            assert!(json.contains("guest.state.open"), "{json}");
+            assert!(!json.contains("guest.state.closed"), "{json}");
+        });
+}
+
 #[test]
 #[serial]
 fn detail_enriched_list() {
@@ -220,7 +293,13 @@ fn a_save_in_english_keeps_the_french() {
             assert_eq!(sent["general_note"], "Indicative hours");
 
             let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
-            assert_eq!(saved["facilities"][0], stored["facilities"][0]);
+            // Ce que ce test protège : une sauvegarde en anglais ne perd rien de ce qui était
+            // écrit. Chaque clé déjà stockée est comparée une à une, plutôt que l'objet entier —
+            // le formulaire renvoie aussi les champs d'horaires structurés, vides ici, et une
+            // égalité stricte se serait cassée pour tout module ajoutant un champ de ligne.
+            for (key, value) in stored["facilities"][0].as_object().expect("stored row") {
+                assert_eq!(&saved["facilities"][0][key], value, "clé {key}");
+            }
             assert_eq!(saved["facilities"][2]["title"]["fr"], "Spa");
             assert_eq!(saved["general_note"], stored["general_note"]);
         });

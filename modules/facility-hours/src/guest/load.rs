@@ -8,6 +8,8 @@ pub struct GuestData {
     pub facilities: Vec<FacilityRow>,
     pub general_note: String,
     pub locale: String,
+    /// Le fuseau du logement : un horaire se lit à l'heure du lieu, pas à celle du serveur.
+    pub timezone: String,
 }
 
 /// The config to show, or `None` when the host has filled in nothing yet.
@@ -21,5 +23,6 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         facilities: config.parse_facilities(),
         general_note: config.general_note.get(&ctx.locale).to_string(),
         locale: ctx.locale.clone(),
+        timezone: ctx.timezone.clone(),
     }))
 }

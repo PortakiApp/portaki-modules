@@ -2,6 +2,7 @@
 
 use std::collections::BTreeSet;
 
+use crate::schedule::{parse_hm, DayHours, Schedule};
 use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
@@ -108,9 +109,38 @@ pub struct FacilityRow {
     pub title: I18nText,
     /// One line of text per line.
     pub lines: I18nText,
+    /// La phrase que l'hôte a écrite. Conservée : elle s'affiche telle quelle tant qu'aucune heure
+    /// structurée n'est saisie, et rien ici ne la réécrit.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hours: Option<String>,
+    /// Ouverture et fermeture en `HH:MM`, quand l'hôte les a données (§2.6). Facultatives : sans
+    /// elles, la ligne garde sa phrase et n'affiche pas d'état — ce qui est honnête plutôt que
+    /// deviné.
+    /// Vides quand l'hôte n'a rien mis : le formulaire renvoie `""` et non l'absence, et une config
+    /// pleine de chaînes vides serait un changement enregistré chez chaque hôte qui ouvre l'écran.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub opens_at: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub closes_at: String,
+    /// Ouvert en continu : il n'y a alors pas d'heures à comparer.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub all_day: bool,
+    /// Les jours qui dérogent aux horaires habituels, ou qui sont fermés.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub exceptions: Vec<DayHours>,
     pub note: I18nText,
+}
+
+impl FacilityRow {
+    /// Les horaires de cette ligne, tels que le calcul les lit.
+    pub fn schedule(&self) -> Schedule {
+        Schedule {
+            all_day: self.all_day,
+            opens_at: parse_hm(&self.opens_at),
+            closes_at: parse_hm(&self.closes_at),
+            exceptions: self.exceptions.clone(),
+        }
+    }
 }
 
 impl FacilityRow {
