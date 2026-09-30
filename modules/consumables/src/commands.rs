@@ -194,10 +194,29 @@ fn default_catalog() -> Vec<ConsumableItemInput> {
 #[portaki_sdk::wire]
 #[portaki_sdk::params]
 pub struct SubmitArgs {
-    pub item_id: Uuid,
+    /// Les produits signalés d'un coup (§2.5 : grille de tuiles, choix multiple).
+    #[serde(default)]
+    pub item_ids: Vec<Uuid>,
+    /// L'ancien champ à un seul produit, encore accepté : un formulaire déjà ouvert dans le
+    /// téléphone d'un voyageur au moment du déploiement l'envoie toujours.
+    #[serde(default)]
+    pub item_id: Option<Uuid>,
     pub level: String,
     #[serde(default)]
     pub note: Option<String>,
+}
+
+impl SubmitArgs {
+    /// Les produits à signaler, quelle que soit la forme reçue, sans doublon et dans l'ordre choisi.
+    fn selected_items(&self) -> Vec<Uuid> {
+        let mut ids: Vec<Uuid> = Vec::new();
+        for id in self.item_ids.iter().chain(self.item_id.iter()) {
+            if !ids.contains(id) {
+                ids.push(*id);
+            }
+        }
+        ids
+    }
 }
 
 #[portaki_sdk::command(
@@ -205,7 +224,7 @@ pub struct SubmitArgs {
     guest,
     example(
         label = "Plus de papier toilette",
-        input = r#"{"itemId":"3f2b8c1e-7a4d-4e9b-9c61-2d5e8f0a1b47","level":"missing","note":"Plus un rouleau dans la salle de bain"}"#
+        input = r#"{"itemIds":["3f2b8c1e-7a4d-4e9b-9c61-2d5e8f0a1b47"],"level":"missing","note":"Plus un rouleau dans la salle de bain"}"#
     ),
     example(
         label = "Café presque fini",
@@ -215,37 +234,47 @@ pub struct SubmitArgs {
 pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     let stay_id = require_guest_stay_id(&ctx)?;
     let level = level::parse_level(&args.level)?;
+    // Les produits d'abord : `note` consomme `args`, et la liste se lit encore par référence.
+    let selected = args.selected_items();
     let note = normalize_optional(args.note);
 
-    let item = storage::find_item(args.item_id)?
-        .ok_or_else(|| PortakiError::Host("item_not_found".to_string()))?;
-    let item_label = labels::pick_label(
-        &labels::labels_from_item(&item),
-        &ctx.locale,
-        &ctx.property.locale,
-    );
-    if item_label.trim().is_empty() {
-        return Err(PortakiError::Host("item_label_empty".to_string()));
+    if selected.is_empty() {
+        return Err(PortakiError::Host("item_not_found".to_string()));
     }
 
-    let report = storage::create_report(
-        stay_id,
-        item.id,
-        item_label.clone(),
-        level.clone(),
-        note.clone(),
-    )?;
+    // Un signalement par produit, et non un pour le lot : l'hôte coche « Papier toilette » sans
+    // clore « Café », et chaque e-mail garde le lien vers son propre signalement.
+    for item_id in selected {
+        let item = storage::find_item(item_id)?
+            .ok_or_else(|| PortakiError::Host("item_not_found".to_string()))?;
+        let item_label = labels::pick_label(
+            &labels::labels_from_item(&item),
+            &ctx.locale,
+            &ctx.property.locale,
+        );
+        if item_label.trim().is_empty() {
+            return Err(PortakiError::Host("item_label_empty".to_string()));
+        }
 
-    // The report is saved: a refused email is logged, it does not fail the guest's submit.
-    if let Err(error) = email_send::notify_host_submitted(
-        ctx.property_id,
-        stay_id,
-        report.id,
-        &item_label,
-        &level,
-        note.as_deref(),
-    ) {
-        email_text::log_send_failure("consumables_host_email_failed", &error);
+        let report = storage::create_report(
+            stay_id,
+            item.id,
+            item_label.clone(),
+            level.clone(),
+            note.clone(),
+        )?;
+
+        // The report is saved: a refused email is logged, it does not fail the guest's submit.
+        if let Err(error) = email_send::notify_host_submitted(
+            ctx.property_id,
+            stay_id,
+            report.id,
+            &item_label,
+            &level,
+            note.as_deref(),
+        ) {
+            email_text::log_send_failure("consumables_host_email_failed", &error);
+        }
     }
     Ok(())
 }

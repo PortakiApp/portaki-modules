@@ -70,6 +70,140 @@ fn home_card_opens_form_overlay_with_catalog() {
         });
 }
 
+/// Le §2.5 veut une grille à choix multiple : deux produits manquants font un seul envoi.
+#[test]
+#[serial]
+fn one_submit_reports_every_product_the_guest_picked() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            replace_items(
+                ctx.clone(),
+                ReplaceItemsArgs {
+                    items: vec![
+                        ConsumableItemInput {
+                            label: String::new(),
+                            label_fr: "Papier toilette".into(),
+                            label_en: "Toilet paper".into(),
+                            sort_order: 0,
+                            low_threshold: 0,
+                        },
+                        ConsumableItemInput {
+                            label: String::new(),
+                            label_fr: "Café".into(),
+                            label_en: "Coffee".into(),
+                            sort_order: 1,
+                            low_threshold: 0,
+                        },
+                    ],
+                    items_json: None,
+                },
+            )
+            .expect("replace");
+
+            let items = list_items(ctx.clone()).expect("list items");
+            assert_eq!(items.len(), 2);
+
+            submit(
+                ctx.clone(),
+                SubmitArgs {
+                    item_ids: vec![items[0].id, items[1].id],
+                    item_id: None,
+                    level: LEVEL_DEFAULT.into(),
+                    note: None,
+                },
+            )
+            .expect("submit");
+
+            // Un signalement par produit, et non un pour le lot : l'hôte clôt l'un sans clore
+            // l'autre, et chaque e-mail garde le lien vers le sien.
+            let rows = list_for_stay(ctx.clone(), ListForStayArgs::default()).expect("list");
+            assert_eq!(rows.len(), 2);
+        });
+}
+
+/// Un formulaire déjà ouvert dans un téléphone envoie encore l'ancien champ au moment du déploiement.
+#[test]
+#[serial]
+fn the_single_product_field_is_still_accepted() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            replace_items(
+                ctx.clone(),
+                ReplaceItemsArgs {
+                    items: vec![ConsumableItemInput {
+                        label: String::new(),
+                        label_fr: "Papier toilette".into(),
+                        label_en: "Toilet paper".into(),
+                        sort_order: 0,
+                        low_threshold: 0,
+                    }],
+                    items_json: None,
+                },
+            )
+            .expect("replace");
+            let item_id = list_items(ctx.clone()).expect("items")[0].id;
+
+            submit(
+                ctx.clone(),
+                SubmitArgs {
+                    item_ids: Vec::new(),
+                    item_id: Some(item_id),
+                    level: LEVEL_DEFAULT.into(),
+                    note: None,
+                },
+            )
+            .expect("submit");
+
+            assert_eq!(
+                list_for_stay(ctx, ListForStayArgs::default())
+                    .expect("list")
+                    .len(),
+                1
+            );
+        });
+}
+
+/// Rien n'est coché d'avance : une case présélectionnée partirait au signalement sans qu'on le veuille.
+#[test]
+#[serial]
+fn the_product_grid_starts_with_nothing_picked() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            replace_items(
+                ctx.clone(),
+                ReplaceItemsArgs {
+                    items: vec![ConsumableItemInput {
+                        label: String::new(),
+                        label_fr: "Papier toilette".into(),
+                        label_en: "Toilet paper".into(),
+                        sort_order: 0,
+                        low_threshold: 0,
+                    }],
+                    items_json: None,
+                },
+            )
+            .expect("replace");
+
+            let form = render_guest_form(ctx).expect("render");
+            let json = serde_json::to_string(&form).expect("json");
+
+            assert!(json.contains("\"layout\":\"grid\""), "{json}");
+            assert!(json.contains("\"multi\":true"), "{json}");
+            assert!(json.contains("\"layout\":\"segmented\""), "{json}");
+            // La liste des produits ne porte pas de `value` : aucune tuile n'est cochée.
+            assert!(
+                !json.contains("\"name\":\"itemIds\",\"type\":\"ChoiceList\",\"value\""),
+                "{json}"
+            );
+        });
+}
+
 #[test]
 #[serial]
 fn submit_creates_open_report_and_lists_on_card() {
@@ -99,7 +233,8 @@ fn submit_creates_open_report_and_lists_on_card() {
             submit(
                 ctx.clone(),
                 SubmitArgs {
-                    item_id,
+                    item_ids: Vec::new(),
+                    item_id: Some(item_id),
                     level: LEVEL_DEFAULT.into(),
                     note: Some("Salle de bain".into()),
                 },
@@ -156,7 +291,8 @@ fn host_mark_restocked_clears_open_list() {
             submit(
                 ctx.clone(),
                 SubmitArgs {
-                    item_id,
+                    item_ids: Vec::new(),
+                    item_id: Some(item_id),
                     level: "low".into(),
                     note: None,
                 },
@@ -318,7 +454,8 @@ fn submit_rejects_unknown_item() {
             let err = submit(
                 ctx,
                 SubmitArgs {
-                    item_id: Uuid::new_v4(),
+                    item_ids: Vec::new(),
+                    item_id: Some(Uuid::new_v4()),
                     level: "missing".into(),
                     note: None,
                 },
@@ -358,7 +495,8 @@ fn long_note_is_stored_whole_and_quoted_in_the_host_email() {
             submit(
                 ctx.clone(),
                 SubmitArgs {
-                    item_id,
+                    item_ids: Vec::new(),
+                    item_id: Some(item_id),
                     level: LEVEL_DEFAULT.into(),
                     note: Some(note.clone()),
                 },

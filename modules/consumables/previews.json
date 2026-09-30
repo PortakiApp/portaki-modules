@@ -113,14 +113,14 @@
                     "value": "00000000-0000-0000-0000-000000000008"
                   }
                 ],
-                "layout": "compact",
-                "name": "itemId",
-                "type": "ChoiceList",
-                "value": "00000000-0000-0000-0000-000000000001"
+                "layout": "grid",
+                "multi": true,
+                "name": "itemIds",
+                "type": "ChoiceList"
               }
             ],
             "label": "i18n:form.item.label",
-            "name": "itemId",
+            "name": "itemIds",
             "required": true,
             "type": "Field"
           },
@@ -139,7 +139,7 @@
                     "value": "low"
                   }
                 ],
-                "layout": "compact",
+                "layout": "segmented",
                 "name": "level",
                 "type": "ChoiceList",
                 "value": "missing"
