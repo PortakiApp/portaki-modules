@@ -1,8 +1,4 @@
 {
-  "capability.tiqets.byok.fallback": "Acrescente uma chave de parceiro Tiqets nas integrações",
-  "capability.tiqets.byok.purpose": "Usa a sua própria chave de parceiro Tiqets: as comissões são suas",
-  "capability.tiqets.fallback": "Passe para um plano que inclua Tiqets, ou acrescente a sua própria chave de parceiro Tiqets",
-  "capability.tiqets.purpose": "Carrega os bilhetes Tiqets por perto com a chave de parceiro da Portaki",
   "catalog.host.main": "Boas dicas",
   "config.spots": "Locais",
   "connector.tiqets.name": "Tiqets",

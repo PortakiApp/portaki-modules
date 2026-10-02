@@ -1,8 +1,4 @@
 {
-  "capability.tiqets.byok.fallback": "Hinterlegen Sie einen Tiqets-Partnerschlüssel in den Integrationen",
-  "capability.tiqets.byok.purpose": "Nutzt Ihren eigenen Tiqets-Partnerschlüssel: die Provisionen gehen an Sie",
-  "capability.tiqets.fallback": "Wechseln Sie zu einem Tarif mit Tiqets, oder hinterlegen Sie Ihren eigenen Tiqets-Partnerschlüssel",
-  "capability.tiqets.purpose": "Lädt Tiqets-Tickets in der Nähe mit dem Partnerschlüssel von Portaki",
   "catalog.host.main": "Empfehlungen",
   "config.spots": "Orte",
   "connector.tiqets.name": "Tiqets",

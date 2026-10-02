@@ -1,8 +1,4 @@
 {
-  "capability.tiqets.byok.fallback": "Aggiungi una chiave partner Tiqets nelle integrazioni",
-  "capability.tiqets.byok.purpose": "Usa la tua chiave partner Tiqets: le commissioni vanno a te",
-  "capability.tiqets.fallback": "Passa a un piano che include Tiqets, o aggiungi la tua chiave partner Tiqets",
-  "capability.tiqets.purpose": "Carica i biglietti Tiqets nelle vicinanze con la chiave partner di Portaki",
   "catalog.host.main": "Consigli",
   "config.spots": "Luoghi",
   "connector.tiqets.name": "Tiqets",

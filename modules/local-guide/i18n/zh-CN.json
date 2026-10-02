@@ -1,8 +1,4 @@
 {
-  "capability.tiqets.byok.fallback": "请在集成设置中添加 Tiqets 合作密钥",
-  "capability.tiqets.byok.purpose": "使用您自己的 Tiqets 合作密钥：佣金归您",
-  "capability.tiqets.fallback": "改用包含 Tiqets 的套餐，或添加您自己的 Tiqets 合作密钥",
-  "capability.tiqets.purpose": "用 Portaki 的合作密钥加载附近的 Tiqets 门票",
   "catalog.host.main": "好去处",
   "config.spots": "地点",
   "connector.tiqets.name": "Tiqets",

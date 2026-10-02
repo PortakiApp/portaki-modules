@@ -1,8 +1,4 @@
 {
-  "capability.tiqets.byok.fallback": "Añada una clave de socio de Tiqets en las integraciones",
-  "capability.tiqets.byok.purpose": "Usa su propia clave de socio de Tiqets: las comisiones son para usted",
-  "capability.tiqets.fallback": "Cambie a un plan que incluya Tiqets, o añada su propia clave de socio de Tiqets",
-  "capability.tiqets.purpose": "Carga las entradas de Tiqets cercanas con la clave de socio de Portaki",
   "catalog.host.main": "Recomendaciones",
   "config.spots": "Lugares",
   "connector.tiqets.name": "Tiqets",
