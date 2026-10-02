@@ -547,3 +547,20 @@ fn publish_readiness_requires_a_catalog() {
             assert!(ok(&ctx));
         });
 }
+
+/// La grille s'ouvre d'une case quand les huit sont prises, et un neuvième produit déjà stocké
+/// s'affiche au lieu de disparaître.
+///
+/// La grille de huit est le dessin et elle reste ; elle n'est plus un plafond.
+#[test]
+#[serial]
+fn the_catalog_grid_grows_past_its_eight_tiles() {
+    reset_test_store();
+    MockContext::host().run(|ctx| {
+        let json = serde_json::to_string(&render_host_main(ctx)).expect("json");
+        assert!(json.contains("items.7.label"), "{json}");
+        assert!(!json.contains("items.8.label"), "{json}");
+        // « Ajouter » demande la neuvième case.
+        assert!(json.contains(r#""items_count":9"#), "{json}");
+    });
+}
