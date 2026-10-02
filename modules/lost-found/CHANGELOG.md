@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.2.0...lost-found-v1.2.1) (2026-10-02)
+
+
+### Bug Fixes
+
+* **lost-found:** read a window the host form actually sends ([a78a433](https://github.com/PortakiApp/portaki-modules/commit/a78a4337e2517d7cc813c768c1789f537b53833e)), closes [#214](https://github.com/PortakiApp/portaki-modules/issues/214)
+
 ## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.1.0...lost-found-v1.2.0) (2026-10-02)
 
 
