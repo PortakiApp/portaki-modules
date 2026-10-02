@@ -25,7 +25,7 @@
   "host.phone.label": "ホストの電話番号（表示されます）",
   "host.phone.placeholder": "+33 6 12 34 56 78",
   "host.section.hostPhone": "ホストの電話番号",
-  "host.section.hostPhone.help": "ゲストガイドに表示され、滞在中つながります。",
+  "host.section.hostPhone.help": "既定ではアカウントの番号です。別の番号をゲストに見せたい場合に入力してください。",
   "module.catalogDescription": "緊急通報番号、薬局、医師、そしてあなたへの直通番号。",
   "module.description": "お役立ち番号とホストの連絡先",
   "module.displayName": "緊急・お役立ち",

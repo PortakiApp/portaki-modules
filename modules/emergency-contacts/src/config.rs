@@ -10,7 +10,13 @@ use serde_json::Value;
 pub struct ModuleConfig {
     #[field(label = "config.contacts")]
     pub contacts: Vec<ContactRow>,
-    #[field(required, label = "host.phone.label")]
+    /// Le numéro que l'hôte veut montrer, quand ce n'est pas celui de son compte.
+    ///
+    /// Plus obligatoire : la plateforme porte désormais le téléphone du profil hôte
+    /// (`ctx.host`), et le §2.16 ne demande à l'hôte que ses contacts, sa pharmacie et son
+    /// hôpital — pas son propre numéro, qu'il a déjà donné une fois. Rempli, il gagne : c'est un
+    /// choix délibéré, par exemple une ligne dédiée aux voyageurs.
+    #[field(label = "host.phone.label")]
     pub host_visible_phone: String,
 }
 

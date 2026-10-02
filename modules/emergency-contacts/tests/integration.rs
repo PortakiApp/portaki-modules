@@ -141,3 +141,82 @@ fn a_save_in_english_keeps_the_french() {
             assert_eq!(saved["contacts"][2]["label"]["fr"], "Pompiers");
         });
 }
+
+/// Le numéro de l'hôte vient de son profil quand il ne l'a pas saisi ici.
+///
+/// Le champ du module existait parce que la plateforme ne portait pas le téléphone de l'hôte ;
+/// elle le porte depuis `ctx.host`. Un hôte qui a rempli son compte n'a plus à le retaper, et le
+/// §2.16 ne lui demande que ses contacts, sa pharmacie et son hôpital.
+#[test]
+#[serial]
+fn the_host_row_falls_back_to_the_platform_profile() {
+    let config = json!({ "contacts": [{ "label": "Pompiers", "phone": "18" }] });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&config)
+        .run(|mut ctx| {
+            ctx.host = Some(portaki_sdk::context::HostProfile {
+                name: "Claire".into(),
+                phone: Some("+33612345678".into()),
+                ..portaki_sdk::context::HostProfile::default()
+            });
+            let json = serde_json::to_string(&render_explore_detail(ctx).expect("detail"))
+                .expect("surface json");
+            assert!(json.contains("tel:+33612345678"), "{json}");
+        });
+}
+
+/// Le numéro saisi ici gagne : c'est un choix délibéré, par exemple une ligne dédiée.
+#[test]
+#[serial]
+fn a_number_the_host_typed_here_wins_over_the_profile() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&sample_config())
+        .run(|mut ctx| {
+            ctx.host = Some(portaki_sdk::context::HostProfile {
+                name: "Claire".into(),
+                phone: Some("+33600000000".into()),
+                ..portaki_sdk::context::HostProfile::default()
+            });
+            let json = serde_json::to_string(&render_explore_detail(ctx).expect("detail"))
+                .expect("surface json");
+            assert!(json.contains("+33 6 12 34 56 78"), "{json}");
+            assert!(!json.contains("+33600000000"), "{json}");
+        });
+}
+
+/// Sans contact ni numéro — ni ici, ni au profil — il n'y a rien à montrer.
+#[test]
+#[serial]
+fn nothing_anywhere_still_shows_the_empty_state() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({}))
+        .run(|ctx| {
+            let surface = render_explore_detail(ctx).expect("detail");
+            assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
+        });
+}
+
+/// Le profil seul suffit à ouvrir la carte : un logement sans contact saisi montre quand même
+/// qui appeler.
+#[test]
+#[serial]
+fn the_profile_alone_is_enough_to_show_the_card() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({}))
+        .run(|mut ctx| {
+            ctx.host = Some(portaki_sdk::context::HostProfile {
+                name: "Claire".into(),
+                phone: Some("+33612345678".into()),
+                ..portaki_sdk::context::HostProfile::default()
+            });
+            let surface = render_explore_detail(ctx).expect("detail");
+            assert!(!SurfaceAssertions::new(&surface).contains_type("EmptyState"));
+            assert!(serde_json::to_string(&surface)
+                .expect("json")
+                .contains("tel:+33612345678"));
+        });
+}

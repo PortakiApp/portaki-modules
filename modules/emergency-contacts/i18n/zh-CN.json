@@ -25,7 +25,7 @@
   "host.phone.label": "房东电话（会显示）",
   "host.phone.placeholder": "+33 6 12 34 56 78",
   "host.section.hostPhone": "房东电话",
-  "host.section.hostPhone.help": "显示在指南中，入住期间可拨通。",
+  "host.section.hostPhone.help": "默认使用账户上的号码。想给房客显示其他号码时在此填写。",
   "module.catalogDescription": "紧急电话、药房、医生，以及您的直线。",
   "module.description": "实用号码与房东专线",
   "module.displayName": "紧急与实用",
