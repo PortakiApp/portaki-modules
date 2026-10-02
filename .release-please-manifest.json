@@ -17,6 +17,7 @@
   "modules/rules": "1.3.0",
   "modules/safety-shutoffs": "0.1.0",
   "modules/sections": "1.1.0",
+  "modules/trails": "0.1.0",
   "modules/train": "1.1.0",
   "modules/waste-recycling": "1.3.0",
   "modules/weather": "1.1.0",

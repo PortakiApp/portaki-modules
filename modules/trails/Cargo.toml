@@ -1,0 +1,25 @@
+[package]
+name = "trails"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "Portaki trails module — the walks around the property, by level"
+repository.workspace = true
+homepage.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+portaki-sdk = { version = "9.5.1", features = ["platform"] }
+portaki-sdk-macros = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+extism-pdk = { workspace = true }
+
+[dev-dependencies]
+portaki-test-utils = { workspace = true }
+serial_test = { workspace = true }
