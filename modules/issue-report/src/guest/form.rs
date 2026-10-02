@@ -13,15 +13,16 @@ use portaki_sdk::sdui::surface::Surface;
     path = "issue-report/form",
     label_key = "nav.issue-report"
 )]
-pub fn render_guest_form(_ctx: GuestContext) -> Result<Surface> {
-    Ok(build_form_surface())
+pub fn render_guest_form(ctx: GuestContext) -> Result<Surface> {
+    let config = crate::config::ModuleConfig::load(&ctx)?;
+    Ok(build_form_surface(&config.categories()))
 }
 
-pub fn build_form_surface() -> Surface {
-    Surface::new(build_form()).with_id(GUEST_FORM)
+pub fn build_form_surface(categories: &[&str]) -> Surface {
+    Surface::new(build_form(categories)).with_id(GUEST_FORM)
 }
 
-fn build_form() -> Form {
+fn build_form(categories: &[&str]) -> Form {
     let submit_action = crate::ids::module_id().command_empty(crate::commands::SUBMIT);
 
     Form::new()
@@ -30,7 +31,7 @@ fn build_form() -> Form {
                 .name("category")
                 .label("i18n:form.category.label")
                 .required(true)
-                .child(category_choice_list()),
+                .child(category_choice_list(categories)),
         )
         .child(
             Field::new()
@@ -66,16 +67,24 @@ fn build_form() -> Form {
         )
 }
 
-fn category_choice_list() -> ChoiceList {
+fn category_choice_list(categories: &[&str]) -> ChoiceList {
     ChoiceList::new()
         .name("category")
         .layout(ChoiceListLayout::Compact)
-        .choices(vec![
-            ChoiceOption::new("appliance", "i18n:form.category.appliance").icon(IconName::Plug),
-            ChoiceOption::new("cleanliness", "i18n:form.category.cleanliness")
-                .icon(IconName::Sparkles),
-            ChoiceOption::new("noise", "i18n:form.category.noise").icon(IconName::Volume2),
-            ChoiceOption::new("access", "i18n:form.category.access").icon(IconName::Key),
-            ChoiceOption::new("other", "i18n:form.category.other").icon(IconName::MessageCircle),
-        ])
+        .choices(categories.iter().copied().map(category_option).collect())
+}
+
+/// La pastille d'une catégorie — son libellé et son icône.
+fn category_option(wire: &str) -> ChoiceOption {
+    let option = ChoiceOption::new(
+        wire,
+        format!("i18n:{}", crate::category::category_label_key(wire)),
+    );
+    match wire {
+        "appliance" => option.icon(IconName::Plug),
+        "cleanliness" => option.icon(IconName::Sparkles),
+        "noise" => option.icon(IconName::Volume2),
+        "access" => option.icon(IconName::Key),
+        _ => option.icon(IconName::MessageCircle),
+    }
 }

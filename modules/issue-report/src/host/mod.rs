@@ -20,8 +20,10 @@ use crate::commands::ResolveArgs;
 use crate::entities::IssueReport;
 use crate::storage;
 
+mod main;
 mod stats;
 
+pub use main::render_host_main;
 pub use stats::{render_host_stats, stats_summary};
 
 /// Host-provided wall clock (the Wasm sandbox has none — never call `Utc::now()`).

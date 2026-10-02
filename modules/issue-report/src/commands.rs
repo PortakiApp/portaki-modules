@@ -41,6 +41,11 @@ pub struct SubmitArgs {
 pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     let stay_id = require_stay_id(&ctx)?;
     let category = args.category.as_str();
+    // Une pastille retirée par l'hôte ne passe pas : un formulaire ouvert dans un téléphone avant
+    // qu'il la retire les proposait encore, et le refus tient à la configuration, pas à l'écran.
+    if !crate::config::ModuleConfig::load(&ctx)?.offers(category) {
+        return Err(PortakiError::Host("category_not_offered".to_string()));
+    }
     let summary = require_summary(&args.summary)?;
     let details = normalize_optional(args.details);
     let photo = parse_photo(args.photo)?;
