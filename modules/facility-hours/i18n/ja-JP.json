@@ -39,5 +39,10 @@
   "module.displayName": "利用時間とアクセス",
   "nav.facility-hours": "利用時間とアクセス",
   "surface.host.main.subtitle": "宿泊施設の設備の利用時間を設定します",
-  "surface.host.main.title": "利用時間とアクセス"
+  "surface.host.main.title": "利用時間とアクセス",
+  "email.block.label": "営業時間",
+  "email.block.title": "本日",
+  "email.block.link": "営業時間をすべて見る",
+  "email.state.open": "24時間",
+  "email.state.closed": "休み"
 }

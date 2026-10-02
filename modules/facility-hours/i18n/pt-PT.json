@@ -39,5 +39,10 @@
   "module.displayName": "Horários e acessos",
   "nav.facility-hours": "Horários e acessos",
   "surface.host.main.subtitle": "Configure os horários das instalações do alojamento",
-  "surface.host.main.title": "Horários e acessos"
+  "surface.host.main.title": "Horários e acessos",
+  "email.block.label": "Horários",
+  "email.block.title": "Hoje",
+  "email.block.link": "Todos os horários",
+  "email.state.open": "24 h",
+  "email.state.closed": "Fechado"
 }

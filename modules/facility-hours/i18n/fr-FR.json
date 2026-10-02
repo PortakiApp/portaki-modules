@@ -39,5 +39,10 @@
   "module.displayName": "Horaires & accès",
   "nav.facility-hours": "Horaires & accès",
   "surface.host.main.subtitle": "Configurez les horaires des équipements du logement",
-  "surface.host.main.title": "Horaires & accès"
+  "surface.host.main.title": "Horaires & accès",
+  "email.block.label": "Horaires",
+  "email.block.title": "Aujourd’hui",
+  "email.block.link": "Tous les horaires",
+  "email.state.open": "24 h/24",
+  "email.state.closed": "Fermé"
 }

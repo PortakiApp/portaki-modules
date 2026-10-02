@@ -39,5 +39,10 @@
   "module.displayName": "Tijden & toegang",
   "nav.facility-hours": "Tijden & toegang",
   "surface.host.main.subtitle": "Stel de openingstijden van de voorzieningen in",
-  "surface.host.main.title": "Tijden & toegang"
+  "surface.host.main.title": "Tijden & toegang",
+  "email.block.label": "Openingstijden",
+  "email.block.title": "Vandaag",
+  "email.block.link": "Alle openingstijden",
+  "email.state.open": "24/7",
+  "email.state.closed": "Gesloten"
 }

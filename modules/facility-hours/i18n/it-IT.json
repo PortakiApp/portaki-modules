@@ -39,5 +39,10 @@
   "module.displayName": "Orari e accessi",
   "nav.facility-hours": "Orari e accessi",
   "surface.host.main.subtitle": "Configura gli orari delle strutture dell'alloggio",
-  "surface.host.main.title": "Orari e accessi"
+  "surface.host.main.title": "Orari e accessi",
+  "email.block.label": "Orari",
+  "email.block.title": "Oggi",
+  "email.block.link": "Tutti gli orari",
+  "email.state.open": "24 h",
+  "email.state.closed": "Chiuso"
 }
