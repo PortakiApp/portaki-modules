@@ -4,6 +4,9 @@
     {
       "i18n": {
         "form.kind.lost": "J'ai perdu quelque chose",
+        "guest.return.pickup": "Récupération sur place",
+        "guest.return.ship": "Renvoi postal",
+        "guest.return.ship.paidByGuest": "À vos frais, à arranger avec votre hôte",
         "home.card.openForm": "Nouvelle déclaration",
         "home.card.thanks": "Merci — votre hôte a été prévenu.",
         "home.card.title": "Objets perdus ou trouvés",
@@ -38,6 +41,17 @@
               {
                 "subtitle": "i18n:form.kind.lost",
                 "title": "Chargeur de téléphone blanc",
+                "type": "ListItem"
+              },
+              {
+                "leading": "package",
+                "subtitle": "i18n:guest.return.ship.paidByGuest",
+                "title": "i18n:guest.return.ship",
+                "type": "ListItem"
+              },
+              {
+                "leading": "map-pin",
+                "title": "i18n:guest.return.pickup",
                 "type": "ListItem"
               },
               {
@@ -76,6 +90,8 @@
         "form.kind.found": "J'ai trouvé quelque chose",
         "form.kind.label": "Type",
         "form.kind.lost": "J'ai perdu quelque chose",
+        "form.returnAddress.label": "Adresse de renvoi",
+        "form.returnAddress.placeholder": "Nom, rue, code postal, ville, pays",
         "form.submit": "Envoyer",
         "nav.lost-found": "Objets trouvés"
       },
@@ -136,6 +152,18 @@
           {
             "children": [
               {
+                "name": "returnAddress",
+                "placeholder": "i18n:form.returnAddress.placeholder",
+                "type": "TextArea"
+              }
+            ],
+            "label": "i18n:form.returnAddress.label",
+            "name": "returnAddress",
+            "type": "Field"
+          },
+          {
+            "children": [
+              {
                 "name": "details",
                 "placeholder": "i18n:form.details.placeholder",
                 "type": "TextArea"
@@ -162,6 +190,9 @@
     {
       "i18n": {
         "form.kind.lost": "J'ai perdu quelque chose",
+        "guest.return.pickup": "Récupération sur place",
+        "guest.return.ship": "Renvoi postal",
+        "guest.return.ship.paidByGuest": "À vos frais, à arranger avec votre hôte",
         "home.card.openForm": "Nouvelle déclaration",
         "home.card.thanks": "Merci — votre hôte a été prévenu.",
         "home.card.title": "Objets perdus ou trouvés",
@@ -196,6 +227,17 @@
               {
                 "subtitle": "i18n:form.kind.lost",
                 "title": "Chargeur de téléphone blanc",
+                "type": "ListItem"
+              },
+              {
+                "leading": "package",
+                "subtitle": "i18n:guest.return.ship.paidByGuest",
+                "title": "i18n:guest.return.ship",
+                "type": "ListItem"
+              },
+              {
+                "leading": "map-pin",
+                "title": "i18n:guest.return.pickup",
                 "type": "ListItem"
               },
               {

@@ -9,13 +9,13 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
 
 use home::build_home_card;
-use load::load_guest_reports;
+use load::load_guest_data;
 
 pub use form::render_guest_form;
 
 /// Shared renderer for the home card and the end-of-stay (post-stay) card: same content.
 fn render_card(ctx: &GuestContext) -> Result<Surface> {
-    Ok(build_home_card(&load_guest_reports(ctx)?))
+    Ok(build_home_card(&load_guest_data(ctx)?))
 }
 
 /// Guest home card — teaser + open form overlay.

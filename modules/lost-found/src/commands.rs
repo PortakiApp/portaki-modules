@@ -21,6 +21,9 @@ pub struct SubmitArgs {
     pub contact_hint: Option<String>,
     #[serde(default)]
     pub details: Option<String>,
+    /// L'adresse de renvoi — présente seulement quand le formulaire l'a demandée.
+    #[serde(default)]
+    pub return_address: Option<String>,
 }
 
 #[portaki_sdk::command(
@@ -41,15 +44,22 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     let item_description = require_description(&args.item_description)?;
     let contact_hint = normalize_optional(args.contact_hint);
     let details = normalize_optional(args.details);
+    let config = crate::config::ModuleConfig::load(&ctx)?;
 
-    let _ = storage::create(
+    let _ = storage::create(storage::ReportDraft {
         stay_id,
-        kind.clone(),
-        item_description.clone(),
-        contact_hint.clone(),
-        details.clone(),
-        status::DEFAULT.to_string(),
-    )?;
+        kind: kind.clone(),
+        item_description: item_description.clone(),
+        contact_hint: contact_hint.clone(),
+        details: details.clone(),
+        // Gardée seulement si l'hôte propose le renvoi : un formulaire laissé ouvert dans un
+        // téléphone avant que l'hôte change d'avis ne doit pas faire entrer une adresse.
+        return_address: config
+            .offers_shipping()
+            .then(|| normalize_optional(args.return_address.clone()))
+            .flatten(),
+        status: status::DEFAULT.to_string(),
+    })?;
 
     // The report is saved: a refused email is logged, it does not fail the guest's submit.
     if let Err(error) = email_send::notify_host_submitted(
@@ -112,14 +122,13 @@ pub fn submit_found(ctx: Context, args: SubmitFoundArgs) -> Result<()> {
     }
 
     for stay_id in stay_ids {
-        let report = storage::create(
+        let report = storage::create(storage::ReportDraft {
             stay_id,
-            "found".to_string(),
-            description.clone(),
-            None,
-            None,
-            status.clone(),
-        )?;
+            kind: "found".to_string(),
+            item_description: description.clone(),
+            status: status.clone(),
+            ..storage::ReportDraft::default()
+        })?;
 
         // The report is saved: a refused email is logged, the other stays still get theirs.
         if let Err(error) =

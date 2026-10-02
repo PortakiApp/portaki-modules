@@ -83,27 +83,37 @@ pub fn list_since(since: DateTime<Utc>) -> Result<Vec<LostFoundReport>> {
     Ok(rows)
 }
 
+/// Un signalement à écrire.
+///
+/// Une structure plutôt que des paramètres positionnels : `contact_hint`, `details` et maintenant
+/// `return_address` sont trois `Option<String>` voisines, et les intervertir à l'appel compilerait
+/// sans bruit.
+#[derive(Debug, Clone, Default)]
+pub struct ReportDraft {
+    pub stay_id: Uuid,
+    pub kind: String,
+    pub item_description: String,
+    pub contact_hint: Option<String>,
+    pub details: Option<String>,
+    pub return_address: Option<String>,
+    pub status: String,
+}
+
 /// Inserts a new report for the stay.
-pub fn create(
-    stay_id: Uuid,
-    kind: String,
-    item_description: String,
-    contact_hint: Option<String>,
-    details: Option<String>,
-    status: String,
-) -> Result<LostFoundReport> {
+pub fn create(draft: ReportDraft) -> Result<LostFoundReport> {
     let now = time::now()?;
     let row = LostFoundReport {
         id: Uuid::new_v4(),
-        stay_id,
-        kind,
-        item_description,
-        contact_hint,
-        details,
-        status: if status.trim().is_empty() {
+        stay_id: draft.stay_id,
+        kind: draft.kind,
+        item_description: draft.item_description,
+        contact_hint: draft.contact_hint,
+        details: draft.details,
+        return_address: draft.return_address,
+        status: if draft.status.trim().is_empty() {
             status::DEFAULT.to_string()
         } else {
-            status
+            draft.status
         },
         created_at: now,
     };

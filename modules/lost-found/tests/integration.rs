@@ -1,6 +1,7 @@
 //! Integration-style unit tests with `portaki-test-utils`.
 
 use chrono::Duration;
+use serde_json::json;
 use serial_test::serial;
 use uuid::Uuid;
 
@@ -54,7 +55,7 @@ fn home_card_opens_form_overlay_when_no_reports() {
             assert!(SurfaceAssertions::new(&form).contains_type("Button"));
             assert!(!SurfaceAssertions::new(&form).contains_type("Card"));
             let form_json = serde_json::to_string(&form).expect("form json");
-            assert!(form_json.contains("form.kind.label"));
+            assert!(form_json.contains("form.kind.label"), "{form_json}");
         });
 }
 
@@ -72,6 +73,7 @@ fn submit_allows_multiple_reports_and_shows_list() {
                     item_description: "Blue scarf".into(),
                     contact_hint: Some("guest@example.com".into()),
                     details: Some("Left in living room".into()),
+                    return_address: None,
                 },
             )
             .expect("submit");
@@ -89,6 +91,7 @@ fn submit_allows_multiple_reports_and_shows_list() {
                     item_description: "Room key".into(),
                     contact_hint: None,
                     details: None,
+                    return_address: None,
                 },
             )
             .expect("submit second");
@@ -119,6 +122,7 @@ fn host_stats_list_recent_after_guest_submit() {
                     item_description: "Umbrella".into(),
                     contact_hint: None,
                     details: None,
+                    return_address: None,
                 },
             )
             .expect("submit");
@@ -224,6 +228,7 @@ fn email_context_includes_descriptions_when_declaration_exists() {
                     item_description: "Écharpe bleue".into(),
                     contact_hint: None,
                     details: None,
+                    return_address: None,
                 },
             )
             .expect("submit");
@@ -434,6 +439,7 @@ fn checkout_follow_up_sends_at_j2_and_stops_after_the_guest_window() {
                         item_description: "Écharpe bleue".into(),
                         contact_hint: None,
                         details: None,
+                        return_address: None,
                     },
                 )
                 .expect("submit");
@@ -480,6 +486,7 @@ fn long_description_is_stored_whole_and_quoted_in_the_host_email() {
                     item_description: description.clone(),
                     contact_hint: None,
                     details: None,
+                    return_address: None,
                 },
             )
             .expect("submit");
@@ -514,6 +521,7 @@ fn long_description_is_stored_whole_and_quoted_in_the_host_email() {
                     item_description: "Parapluie".into(),
                     contact_hint: None,
                     details: None,
+                    return_address: None,
                 },
             )
             .expect("short submit");
@@ -539,6 +547,7 @@ fn a_refused_host_email_does_not_fail_the_submit() {
                         item_description: format!("Objet {index}"),
                         contact_hint: None,
                         details: None,
+                        return_address: None,
                     },
                 )
                 .expect("submit despite a refused email");
@@ -568,6 +577,7 @@ fn checkout_follow_up_quotes_long_declarations_within_the_body_cap() {
                     item_description: long.clone(),
                     contact_hint: None,
                     details: None,
+                    return_address: None,
                 },
             )
             .expect("submit");
@@ -612,6 +622,7 @@ fn a_feed_row_opens_the_item_detail() {
                     item_description: "Blue scarf".into(),
                     contact_hint: None,
                     details: None,
+                    return_address: None,
                 },
             )
             .expect("submit");
@@ -670,4 +681,122 @@ fn host_found_email_is_declared_and_names_the_property() {
         assert!(email.email_id.starts_with("host-found-"));
         assert_eq!(email.property_id, Some(ctx.property_id));
     });
+}
+
+/// Le délai de signalement ferme le formulaire (§10). Avant, la carte proposait un signalement
+/// pour toujours — y compris des mois après, quand plus personne ne le traiterait.
+#[test]
+#[serial]
+fn the_card_closes_the_form_once_the_window_has_passed() {
+    for (days_after_checkout, open) in [(3, true), (30, false)] {
+        reset_test_store();
+        let builder = MockContext::guest().with_property(Property::default());
+        let stay_id = builder.context().guest.expect("guest").session_id;
+        let booking = Booking {
+            id: stay_id,
+            ..Booking::default()
+        };
+        let now = booking.check_out + Duration::days(days_after_checkout);
+
+        builder.with_stay(booking).with_now(now).run(|ctx| {
+            let json = serde_json::to_string(&render_home_card(ctx).expect("render")).unwrap();
+            assert_eq!(
+                json.contains("home.card.openForm"),
+                open,
+                "{days_after_checkout} jours après le départ : {json}"
+            );
+            assert_eq!(json.contains("home.card.windowClosed"), !open, "{json}");
+        });
+    }
+}
+
+/// Le délai de l'hôte fait loi : à trente jours, ce qui était fermé reste ouvert.
+#[test]
+#[serial]
+fn the_host_may_widen_the_window() {
+    reset_test_store();
+    let builder = MockContext::guest()
+        .with_property(Property::default())
+        .with_config(&json!({ "window_days": 45 }));
+    let stay_id = builder.context().guest.expect("guest").session_id;
+    let booking = Booking {
+        id: stay_id,
+        ..Booking::default()
+    };
+    let now = booking.check_out + Duration::days(30);
+
+    builder.with_stay(booking).with_now(now).run(|ctx| {
+        let json = serde_json::to_string(&render_home_card(ctx).expect("render")).unwrap();
+        assert!(json.contains("home.card.openForm"), "{json}");
+        assert!(!json.contains("home.card.windowClosed"), "{json}");
+    });
+}
+
+/// La carte annonce ce que l'hôte propose vraiment, et pas les trois options à tout le monde.
+#[test]
+#[serial]
+fn the_card_lists_only_the_return_options_the_host_offers() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_config(&json!({ "return_pickup": true, "return_donate": true }))
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_home_card(ctx).expect("render")).unwrap();
+            assert!(json.contains("guest.return.pickup"), "{json}");
+            assert!(json.contains("guest.return.donate"), "{json}");
+            assert!(!json.contains("guest.return.ship"), "{json}");
+        });
+
+    // Rien coché : le module garde ce qu'il disait en toutes lettres avant ce réglage.
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_home_card(ctx).expect("render")).unwrap();
+            assert!(json.contains("guest.return.ship"), "{json}");
+            assert!(json.contains("guest.return.pickup"), "{json}");
+            assert!(!json.contains("guest.return.donate"), "{json}");
+        });
+}
+
+/// L'adresse n'est demandée que si le renvoi est proposé — et n'est gardée que dans ce cas.
+#[test]
+#[serial]
+fn the_address_is_asked_and_kept_only_when_shipping_is_offered() {
+    for (ships, asked) in [(true, true), (false, false)] {
+        reset_test_store();
+        let config = if ships {
+            json!({ "return_ship": true })
+        } else {
+            json!({ "return_pickup": true })
+        };
+        MockContext::guest()
+            .with_property(Property::default())
+            .with_config(&config)
+            .run(|ctx| {
+                let form =
+                    serde_json::to_string(&render_guest_form(ctx.clone()).expect("form")).unwrap();
+                assert_eq!(form.contains("form.returnAddress.label"), asked, "{form}");
+
+                submit(
+                    ctx.clone(),
+                    SubmitArgs {
+                        kind: "lost".into(),
+                        item_description: "Écharpe bleue".into(),
+                        contact_hint: None,
+                        details: None,
+                        return_address: Some("12 rue des Lilas, 06600 Antibes".into()),
+                    },
+                )
+                .expect("submit");
+
+                let rows = list_for_stay(ctx, ListForStayArgs::default()).expect("list");
+                assert_eq!(rows.len(), 1);
+                let kept = serde_json::to_string(&rows[0]).unwrap().contains("Lilas");
+                assert_eq!(
+                    kept, asked,
+                    "adresse gardée: {kept}, renvoi proposé: {ships}"
+                );
+            });
+    }
 }

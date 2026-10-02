@@ -9,7 +9,7 @@ use uuid::Uuid;
 /// `item_description` may be plain text (guest) or TipTap JSON (host-found).
 /// `status` tracks host workflow — see [`crate::status`].
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 1)]
+#[portaki_sdk::entity(schema_version = 2)]
 pub struct LostFoundReport {
     pub id: Uuid,
     pub stay_id: Uuid,
@@ -17,6 +17,9 @@ pub struct LostFoundReport {
     pub item_description: String,
     pub contact_hint: Option<String>,
     pub details: Option<String>,
+    /// L'adresse de renvoi, quand l'hôte propose le renvoi postal et que le voyageur l'a écrite.
+    #[serde(default)]
+    pub return_address: Option<String>,
     /// Wire: `to_collect` | `sent` | `returned` — default `to_collect`.
     #[serde(default = "default_status")]
     pub status: String,
