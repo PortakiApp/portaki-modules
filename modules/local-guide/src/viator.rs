@@ -64,6 +64,7 @@ pub struct ModuleViator;
 #[allow(dead_code)] // metadata-only; macros emit manifest emissions at compile time
 impl ModuleViator {
     #[portaki_sdk::connector_op(
+        connector = "viator",
         method = "POST",
         path = "/partner/search/freetext",
         fields = "lang, searchTerm, currency, searchTypes, productFiltering",
