@@ -18,7 +18,7 @@ portaki_sdk::portaki_module!(
     author = "Portaki",
     author_url = "https://portaki.app",
     module_type = ModuleType::Official,
-    icon = IconName::Sliders,
+    icon = IconName::Shield,
     maturity = Maturity::Stable,
     sort_order = 180,
 );

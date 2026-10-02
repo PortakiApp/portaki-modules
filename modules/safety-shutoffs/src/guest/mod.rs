@@ -42,7 +42,7 @@ fn empty_content_state(surface_id: SurfaceId) -> Surface {
         EmptyState::new()
             .title("i18n:guest.empty.title")
             .description("i18n:guest.empty.description")
-            .icon(IconName::Sliders),
+            .icon(IconName::Shield),
     )
     .with_id(surface_id)
 }

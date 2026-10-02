@@ -110,7 +110,7 @@
                 "variant": "body"
               }
             ],
-            "icon": "triangle-alert",
+            "icon": "fire-extinguisher",
             "surface": "elevated",
             "title": "Extincteur",
             "type": "Card"
