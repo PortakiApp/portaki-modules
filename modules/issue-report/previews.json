@@ -79,6 +79,8 @@
         "form.submit": "Envoyer",
         "form.summary.label": "Résumé court",
         "form.summary.placeholder": "ex. Lave-vaisselle ne se vide pas",
+        "form.urgent.link": "Numéros d’urgence",
+        "form.urgent.note": "En cas d’urgence, n’attendez pas de réponse : appelez directement.",
         "nav.issue-report": "Signaler un problème"
       },
       "surfaceId": "guest.form",
@@ -170,6 +172,21 @@
             },
             "label": "i18n:form.submit",
             "type": "Button"
+          },
+          {
+            "emphasis": "subtle",
+            "text": "i18n:form.urgent.note",
+            "type": "Text",
+            "variant": "caption"
+          },
+          {
+            "action": {
+              "to": "aide",
+              "type": "navigate"
+            },
+            "label": "i18n:form.urgent.link",
+            "type": "Button",
+            "variant": "ghost"
           }
         ],
         "type": "Form"

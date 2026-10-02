@@ -13,6 +13,8 @@
   "form.submit": "发送",
   "form.summary.label": "简要说明",
   "form.summary.placeholder": "例如：洗碗机不排水",
+  "form.urgent.link": "紧急电话",
+  "form.urgent.note": "紧急情况下不要等回复，请直接拨打电话。",
   "guest.error.description": "无法加载表单。",
   "guest.error.title": "报告功能暂时不可用",
   "guest.teaser": "向房东报告问题",

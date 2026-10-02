@@ -13,6 +13,8 @@
   "form.submit": "Senden",
   "form.summary.label": "Kurze Zusammenfassung",
   "form.summary.placeholder": "z. B. Spülmaschine pumpt nicht ab",
+  "form.urgent.link": "Notrufnummern",
+  "form.urgent.note": "Im Notfall nicht auf eine Antwort warten: direkt anrufen.",
   "guest.error.description": "Das Formular konnte nicht geladen werden.",
   "guest.error.title": "Meldung vorübergehend nicht verfügbar",
   "guest.teaser": "Dem Gastgeber ein Problem melden",

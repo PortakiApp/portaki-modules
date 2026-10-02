@@ -429,3 +429,18 @@ fn a_dropped_category_is_refused_on_submit() {
             .expect("la catégorie proposée passe");
         });
 }
+
+/// Le rappel d'urgence du §2.17, et son lien vers les numéros.
+///
+/// Un signalement n'est pas un appel : il attend que l'hôte le lise. Quand ça ne peut pas
+/// attendre, le formulaire doit le dire — et emmener là où sont les numéros, pas afficher un
+/// numéro de plus que l'hôte aurait saisi ici.
+#[test]
+#[serial]
+fn the_form_says_not_to_wait_in_an_emergency() {
+    MockContext::guest().run(|ctx| {
+        let json = serde_json::to_string(&render_guest_form(ctx).expect("form")).expect("json");
+        assert!(json.contains("form.urgent.note"), "{json}");
+        assert!(json.contains(r#""type":"navigate","to":"aide""#), "{json}");
+    });
+}
