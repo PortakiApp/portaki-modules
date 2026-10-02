@@ -1,0 +1,13 @@
+{
+  "explore.detail.disclaimer": "Zeiten ohne Gewähr · TER SUD PACA",
+  "explore.detail.from": "Abfahrt",
+  "explore.detail.to": "Ziel",
+  "explore.detail.upcoming": "Nächste Abfahrten",
+  "guest.teaser": "Nächste Abfahrten vom Bahnhof",
+  "home.card.title": "Zugzeiten",
+  "module.catalogDescription": "Nächste Abfahrten vom Bahnhof in der Nähe der Unterkunft.",
+  "module.description": "Nächste Abfahrten vom nächstgelegenen Bahnhof.",
+  "module.displayName": "Zugzeiten",
+  "nav.train": "Zugzeiten",
+  "station.distance": "2,3 km"
+}
