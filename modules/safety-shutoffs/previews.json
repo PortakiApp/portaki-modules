@@ -1,0 +1,133 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "guest.danger.message": "Sortez du logement, puis appelez le 112. Ne touchez à aucun interrupteur.",
+        "guest.danger.title": "Odeur de gaz ou fumée",
+        "guest.emergency": "Numéros d’urgence",
+        "guest.note.title": "Le mot de votre hôte",
+        "guest.subtitle": "Où couper l’électricité, l’eau et le gaz",
+        "guest.title": "En cas de problème",
+        "nav.safety-shutoffs": "Coupures & sécurité"
+      },
+      "surfaceId": "explore.detail",
+      "title": "Coupures & sécurité",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "text": "i18n:guest.title",
+                "type": "Text",
+                "variant": "title"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "i18n:guest.subtitle",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 4.0,
+            "type": "Stack"
+          },
+          {
+            "message": "i18n:guest.danger.message",
+            "title": "i18n:guest.danger.title",
+            "tone": "danger",
+            "type": "InfoBanner"
+          },
+          {
+            "message": "En cas de fuite d’eau, coupez d’abord la vanne, puis appelez-moi à toute heure.",
+            "title": "i18n:guest.note.title",
+            "tone": "info",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "emphasis": "strong",
+                "text": "Placard à droite de l’entrée",
+                "type": "Text",
+                "variant": "body"
+              },
+              {
+                "text": "Disjoncteur principal en haut à gauche : abaissez-le pour tout couper.",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "icon": "zap",
+            "surface": "elevated",
+            "title": "Tableau électrique",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "emphasis": "strong",
+                "text": "Trappe au plafond des WC",
+                "type": "Text",
+                "variant": "body"
+              },
+              {
+                "text": "Eau froide à gauche, eau chaude à droite. Tournez dans le sens des aiguilles d’une montre.",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "icon": "droplet",
+            "surface": "elevated",
+            "title": "Vannes d’arrêt d’eau",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "emphasis": "strong",
+                "text": "Sous l’évier de la cuisine",
+                "type": "Text",
+                "variant": "body"
+              },
+              {
+                "text": "Quart de tour : poignée en travers du tuyau = fermé.",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "icon": "flame",
+            "surface": "elevated",
+            "title": "Robinet de gaz",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "emphasis": "strong",
+                "text": "Derrière la porte du cellier",
+                "type": "Text",
+                "variant": "body"
+              }
+            ],
+            "icon": "triangle-alert",
+            "surface": "elevated",
+            "title": "Extincteur",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "to": "aide",
+              "type": "navigate"
+            },
+            "label": "i18n:guest.emergency",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    }
+  ]
+}

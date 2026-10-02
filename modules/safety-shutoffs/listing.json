@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
+  "category": "stay",
+  "tagline": {
+    "fr": "Où couper l’électricité, l’eau et le gaz, le jour où il faut le savoir.",
+    "en": "Where to shut off the power, the water and the gas, the day it matters."
+  },
+  "description": {
+    "fr": "Le voyageur ouvre une page en plein écran : le rappel du 112, votre consigne, puis un bloc par organe de coupure — son emplacement en gras, la manœuvre en dessous. Rien n’apparaît sur l’accueil du livret à part une carte discrète : personne n’a envie de lire où couper le gaz en arrivant.",
+    "en": "Guests open one full-screen page: the 112 reminder, your instruction, then one block per shutoff point — its location in bold, the move to make underneath. The booklet's home shows nothing but a discreet card: nobody wants to read about the gas valve on arrival."
+  },
+  "guestSurface": {
+    "fr": "Une carte discrète dans Aide, et une page en plein écran : le 112, votre consigne, et chaque organe avec son emplacement.",
+    "en": "A discreet card in the Help section and a full-screen page: 112, your instruction, and every shutoff point with its location."
+  },
+  "hostSurface": {
+    "fr": "Un onglet où vous ajoutez jusqu’à huit organes — type, titre, emplacement, manœuvre — et votre consigne générale.",
+    "en": "A tab where you add up to eight shutoff points — type, title, location, what to do — and your general instruction."
+  },
+  "configItems": [
+    {
+      "fr": "Jusqu’à huit organes : type, titre, emplacement, consigne",
+      "en": "Up to eight shutoff points: type, title, location, instruction"
+    },
+    {
+      "fr": "Votre consigne générale (facultative)",
+      "en": "Your general instruction (optional)"
+    }
+  ],
+  "capabilities": [],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
