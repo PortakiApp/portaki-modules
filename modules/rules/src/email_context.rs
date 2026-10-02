@@ -2,6 +2,7 @@
 
 use portaki_sdk::prelude::*;
 
+use crate::content::RulesPayload;
 use crate::queries::{get_content, GetContentArgs};
 
 const MAX_RULES: usize = 3;
@@ -50,9 +51,10 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
         },
     )?;
 
-    let lines: Vec<String> = view
-        .items
-        .iter()
+    let payload = RulesPayload { items: view.items };
+    let lines: Vec<String> = payload
+        .by_weight()
+        .into_iter()
         .filter_map(|item| {
             let title = item.title.trim();
             if title.is_empty() {
@@ -97,11 +99,13 @@ mod tests {
                     icon: "clock".into(),
                     title: "Silence après 22h".into(),
                     subtitle: "Respectez le voisinage".into(),
+                    ..RuleItem::default()
                 },
                 RuleItem {
                     icon: "paw".into(),
                     title: "Animaux non admis".into(),
                     subtitle: String::new(),
+                    ..RuleItem::default()
                 },
             ],
         };

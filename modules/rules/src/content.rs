@@ -5,6 +5,49 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+/// Le poids d'une règle, tel que l'hôte le pose (§2.8).
+///
+/// Liste fermée, donc indépendante de la langue : elle se recopie dans chaque payload comme
+/// l'icône. `Neutral` est l'absence de poids — une règle qu'on énonce sans la souligner.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum RuleStatus {
+    #[default]
+    Neutral,
+    Important,
+    Allowed,
+}
+
+impl RuleStatus {
+    /// Lit un statut venu du formulaire hôte ou d'un payload stocké. `ok` est l'orthographe du
+    /// mockup pour `allowed` ; tout le reste retombe sur neutre plutôt que d'échouer.
+    pub fn from_wire(raw: &str) -> Self {
+        match raw.trim().to_ascii_lowercase().as_str() {
+            "important" => Self::Important,
+            "allowed" | "ok" => Self::Allowed,
+            _ => Self::Neutral,
+        }
+    }
+
+    /// Le nom qui part dans le formulaire hôte (valeur du `Select`).
+    pub fn as_wire(self) -> &'static str {
+        match self {
+            Self::Neutral => "neutral",
+            Self::Important => "important",
+            Self::Allowed => "allowed",
+        }
+    }
+
+    /// Ordre du tri de la carte : important, puis autorisé, puis le reste (§2.8).
+    pub fn rank(self) -> u8 {
+        match self {
+            Self::Important => 0,
+            Self::Allowed => 1,
+            Self::Neutral => 2,
+        }
+    }
+}
+
 /// One rule row shown in the guest booklet.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct RuleItem {
@@ -17,6 +60,14 @@ pub struct RuleItem {
     /// Optional supporting line.
     #[serde(default)]
     pub subtitle: String,
+    /// Poids de la règle — partagé entre les langues, comme l'icône.
+    #[serde(default)]
+    pub status: RuleStatus,
+    /// Thème libre, écrit par l'hôte **dans sa langue** : le mockup groupe « Voisinage »,
+    /// « Piscine », « Animaux »… C'est un texte, il vit donc dans le payload de sa langue, à côté
+    /// du titre, et ne se recopie pas.
+    #[serde(default)]
+    pub theme: String,
 }
 
 /// Locale payload for one language.
@@ -41,6 +92,42 @@ impl RulesPayload {
 
     pub fn is_empty(&self) -> bool {
         self.items.iter().all(|item| item.title.trim().is_empty())
+    }
+
+    /// Les règles qui portent un titre — une ligne vide ne s'affiche pas.
+    pub fn named(&self) -> impl Iterator<Item = &RuleItem> {
+        self.items
+            .iter()
+            .filter(|item| !item.title.trim().is_empty())
+    }
+
+    /// Triées important → autorisé → neutres (§2.8). Tri **stable** : à statut égal, l'ordre que
+    /// l'hôte a choisi tient. Ne sert qu'au coup d'œil de la carte ; le détail garde l'ordre brut.
+    pub fn by_weight(&self) -> Vec<&RuleItem> {
+        let mut out: Vec<&RuleItem> = self.named().collect();
+        out.sort_by_key(|item| item.status.rank());
+        out
+    }
+
+    /// Groupées par thème, dans l'ordre où l'hôte a posé les règles — c'est ce que fait le mockup
+    /// (`[...new Set(rules.map(r => r.group))]`), et l'ordre d'apparition est une intention.
+    ///
+    /// Le regroupement se fait sur le thème normalisé (sans casse ni espaces de bord) mais garde la
+    /// première orthographe rencontrée : « Piscine » et « piscine » sont le même thème.
+    pub fn by_theme(&self) -> Vec<(String, Vec<&RuleItem>)> {
+        let mut groups: Vec<(String, String, Vec<&RuleItem>)> = Vec::new();
+        for item in self.named() {
+            let label = item.theme.trim();
+            let key = label.to_lowercase();
+            match groups.iter_mut().find(|(k, _, _)| *k == key) {
+                Some((_, _, rules)) => rules.push(item),
+                None => groups.push((key, label.to_string(), vec![item])),
+            }
+        }
+        groups
+            .into_iter()
+            .map(|(_, label, rules)| (label, rules))
+            .collect()
     }
 }
 
@@ -119,14 +206,24 @@ impl RulesBundle {
         }
     }
 
-    /// Sync shared icons from `source` into every language payload (by index).
-    pub fn sync_icons_from(&mut self, source: &RulesPayload) {
+    /// Recopie dans chaque langue ce qui n'appartient pas à une langue : l'icône et le statut.
+    ///
+    /// L'icône ne s'écrase que si la source en porte une — une langue éditée sans icône ne doit pas
+    /// effacer celle qui existe. Le statut, lui, se recopie toujours : « neutre » est une valeur que
+    /// l'hôte a choisie, et la sauter laisserait une règle importante en français et neutre en
+    /// anglais. Le thème n'est pas ici : c'est un texte, il reste dans sa langue.
+    ///
+    /// ponytail: l'alignement se fait par index, après que `build_payload_for_lang` ait écarté les
+    /// lignes sans titre — vider la règle 2 en français décale donc l'anglais. Défaut antérieur, à
+    /// corriger en donnant un identifiant stable à chaque règle.
+    pub fn sync_shared_from(&mut self, source: &RulesPayload) {
         for payload in self.by_lang.values_mut() {
             for (index, item) in payload.items.iter_mut().enumerate() {
                 if let Some(src) = source.items.get(index) {
                     if !src.icon.trim().is_empty() {
                         item.icon = src.icon.clone();
                     }
+                    item.status = src.status;
                 }
             }
         }

@@ -4,23 +4,21 @@
 //! Body: icon rows (title + optional subtitle), glance of first rules.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::common::Leading;
+use portaki_sdk::sdui::common::{BadgeSpec, Leading, Trailing, TrailingVisual};
 use portaki_sdk::sdui::primitives::{Button, Card, ListItem, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::content::{RuleItem, RulesPayload};
+use crate::content::{RuleItem, RuleStatus, RulesPayload};
 
 /// Design glance shows four rules on the Séjour card.
 const CARD_GLANCE_LIMIT: usize = 4;
 
 pub fn build_home_card(payload: &RulesPayload) -> Surface {
-    let named: Vec<&RuleItem> = payload
-        .items
-        .iter()
-        .filter(|item| !item.title.trim().is_empty())
-        .collect();
-    let total = named.len();
-    let shown: Vec<&RuleItem> = named.into_iter().take(CARD_GLANCE_LIMIT).collect();
+    // Les essentielles d'abord : important → autorisé → neutres (§2.8). Le tri décide donc *quelles*
+    // quatre règles le voyageur voit, pas seulement dans quel ordre.
+    let ranked = payload.by_weight();
+    let total = ranked.len();
+    let shown: Vec<&RuleItem> = ranked.into_iter().take(CARD_GLANCE_LIMIT).collect();
 
     // Aucune règle : la carte disparaît (§2.8). Un logement sans règlement n'a pas de règlement à
     // annoncer, et une carte qui dit « rien pour l'instant » occupe l'accueil pour ne rien dire.
@@ -54,6 +52,11 @@ pub fn build_home_card(payload: &RulesPayload) -> Surface {
         Card::new()
             .icon(IconName::Scale)
             .title("i18n:nav.rules")
+            .subtitle(count_line(
+                "home.card.subtitle",
+                "home.card.subtitle.one",
+                total,
+            ))
             .action(Action::open_overlay(
                 OverlayPresentation::Fullscreen,
                 crate::guest::EXPLORE_DETAIL,
@@ -78,15 +81,49 @@ pub fn rule_list_item(item: &RuleItem) -> Component {
     if !item.subtitle.trim().is_empty() {
         list = list.subtitle(item.subtitle.clone());
     }
+    if let Some(badge) = status_badge(item.status) {
+        list = list.trailing(Trailing::Visual(Box::new(TrailingVisual {
+            badge: Some(badge),
+            ..TrailingVisual::default()
+        })));
+    }
     Component::ListItem(list)
 }
 
+/// Une ligne qui compte des règles, au singulier quand il n'y en a qu'une.
+pub fn count_line(plural_key: &str, one_key: &str, count: usize) -> String {
+    let key = if count == 1 { one_key } else { plural_key };
+    t!(key, count = count).unwrap_or_else(|_| format!("i18n:{key}"))
+}
+
+/// L'étiquette d'un statut (§2.8) : warning « Important », success « Autorisé ».
+///
+/// Neutre ne porte rien — une règle sur trois serait étiquetée « Normal », ce qui ne dit rien et
+/// affaiblit les deux autres.
+fn status_badge(status: RuleStatus) -> Option<BadgeSpec> {
+    let (key, tone) = match status {
+        RuleStatus::Important => ("rule.status.important", Tone::Warning),
+        RuleStatus::Allowed => ("rule.status.allowed", Tone::Success),
+        RuleStatus::Neutral => return None,
+    };
+    Some(BadgeSpec::new(
+        t!(key).unwrap_or_else(|_| format!("i18n:{key}")),
+        tone,
+    ))
+}
+
 pub fn rules_stack(items: &[RuleItem]) -> Component {
-    let children: Vec<Component> = items
-        .iter()
-        .filter(|item| !item.title.trim().is_empty())
-        .map(rule_list_item)
-        .collect();
+    rules_rows(
+        items
+            .iter()
+            .filter(|item| !item.title.trim().is_empty())
+            .collect(),
+    )
+}
+
+/// Un bloc de rangées, ou la phrase du vide quand il n'y a rien à montrer.
+pub fn rules_rows(items: Vec<&RuleItem>) -> Component {
+    let children: Vec<Component> = items.into_iter().map(rule_list_item).collect();
     if children.is_empty() {
         return Component::Text(
             Text::new()
