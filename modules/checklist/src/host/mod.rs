@@ -190,6 +190,9 @@ fn edit_panel(list: &Checklist, items: &[&ChecklistItem], fr: bool) -> Component
                 label_en: (!host).then_some(label.en),
                 photo: host.then_some(item.photo_required),
                 checked: None,
+                // SDK 9.4 : la checklist n'a ni sections ni ligne secondaire.
+                group: None,
+                description: None,
             }
         })
         .collect();
