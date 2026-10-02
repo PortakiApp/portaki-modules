@@ -8,7 +8,7 @@ mod host;
 pub use config::{ContactRow, ModuleConfig};
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use guest::{render_explore_detail, render_home_card};
-pub use host::render_host_main;
+pub use host::{render_host_main, MAX_CONTACTS};
 
 portaki_sdk::portaki_module!(
     id = "emergency-contacts",

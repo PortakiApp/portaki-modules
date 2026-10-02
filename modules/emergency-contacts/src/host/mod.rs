@@ -2,12 +2,17 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
-use portaki_sdk::sdui::primitives::{Card, Field, Form, Page, Stack, Text, TextInput};
+use portaki_sdk::sdui::primitives::{Card, Field, Form, Page, Stack, StepList, Text, TextInput};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{ContactRow, ModuleConfig};
 
-const CONTACT_SLOTS: usize = 6;
+/// Combien de contacts le formulaire accepte.
+///
+/// Une capacité, pas un nombre de lignes dessinées : six emplacements figés gelaient la liste à
+/// six — l'hôte ne pouvait pas en saisir un septième parce que le formulaire ne le dessinait
+/// jamais, et voyait quatre cartes vides quand il en avait saisi deux.
+pub const MAX_CONTACTS: usize = 12;
 
 #[portaki_sdk::surface(
     host,
@@ -30,16 +35,13 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
             .child(
                 TextInput::new()
                     .name("host_visible_phone")
-                    .value(config.host_visible_phone)
+                    .value(config.host_visible_phone.clone())
                     .placeholder("i18n:host.phone.placeholder"),
             )
             .into()])
         .into()];
 
-    // The stored rows where they are, blank ones included, then empty slots.
-    for index in 0..CONTACT_SLOTS.max(config.contacts.len()) {
-        cards.push(contact_card(index, config.contacts.get(index), &ctx));
-    }
+    cards.push(contacts_card(&config, &ctx));
 
     // No Save button — the modules drawer owns the footer Save.
     Ok(Surface::new(
@@ -54,8 +56,51 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     .with_id(MAIN))
 }
 
-fn contact_card(index: usize, contact: Option<&ContactRow>, ctx: &HostContext) -> Component {
-    let slot = index + 1;
+/// Les contacts de l'hôte, en lignes dynamiques bornées.
+fn contacts_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let rows_count = draft_rows(ctx, config.contacts.len());
+    let rows: Vec<Component> = (0..rows_count)
+        .map(|index| contact_row(index, config.contacts.get(index), ctx))
+        .collect();
+
+    Card::new()
+        .title("i18n:host.contacts.title")
+        .subtitle("i18n:host.contacts.subtitle")
+        .icon(IconName::Users)
+        .child(
+            StepList::new()
+                .addLabel("i18n:host.contacts.add")
+                .removeLabel("i18n:host.contacts.remove")
+                .emptyTitle("i18n:host.contacts.emptyTitle")
+                .emptyDescription("i18n:host.contacts.emptyDescription")
+                .itemKeyPrefix("contacts")
+                .addAction(emit_input(RowCount {
+                    contacts_count: (rows_count + 1).min(MAX_CONTACTS),
+                }))
+                .children(rows),
+        )
+        .into()
+}
+
+/// Combien de lignes dessiner : ce que « Ajouter » a demandé, sinon ce qui est stocké, borné.
+fn draft_rows(ctx: &HostContext, stored: usize) -> usize {
+    match ctx.input_u64("contacts_count") {
+        Some(asked) => (asked as usize).clamp(1, MAX_CONTACTS),
+        None => stored.clamp(1, MAX_CONTACTS),
+    }
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+struct RowCount {
+    contacts_count: usize,
+}
+
+fn emit_input(payload: impl serde::Serialize) -> Action {
+    Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
+}
+
+fn contact_row(index: usize, contact: Option<&ContactRow>, ctx: &HostContext) -> Component {
     let label = contact.map(|c| c.label.host_value(ctx)).unwrap_or_default();
     let phone = contact.map(|c| c.phone.as_str()).unwrap_or("");
     // A filled row sends its id, so a save merges into it (and keeps its note, its category, its
@@ -64,9 +109,9 @@ fn contact_card(index: usize, contact: Option<&ContactRow>, ctx: &HostContext) -
         .filter(|c| !c.is_blank())
         .map(|c| sdui::row_id("contacts", index, Some(&c.id)));
 
-    Card::new()
-        .title(format!("i18n:host.contact.slot{slot}"))
-        .icon(IconName::Users)
+    Stack::new()
+        .id(format!("contact-{index}"))
+        .gap(10.0)
         .children(
             id.into_iter()
                 .chain([
