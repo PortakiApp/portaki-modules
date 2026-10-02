@@ -23,7 +23,7 @@
   "host.save": "Enregistrer",
   "host.section.subtitle": "Consignes courtes affichées aux voyageurs — ajoutez-en autant que nécessaire.",
   "host.section.title": "Règles du logement",
-  "module.catalogDescription": "Les consignes du logement, en français et en anglais, lisibles par les voyageurs.",
+  "module.catalogDescription": "Les consignes du logement, dans la langue du voyageur, lisibles d'un coup d'œil.",
   "module.description": "Règles de la maison structurées pour le livret invité",
   "module.displayName": "Règlement intérieur",
   "nav.rules": "Règlement intérieur",
