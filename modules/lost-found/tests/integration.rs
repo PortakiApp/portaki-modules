@@ -7,10 +7,10 @@ use uuid::Uuid;
 
 use lost_found::{
     build_email_context, list_for_stay, list_recent, render_guest_form, render_home_card,
-    render_host_create, render_host_stats, render_host_stay, render_post_stay_card,
-    reset_test_store, send_checkout_follow_up, stats_summary, submit, submit_found, update_status,
-    EmailContextArgs, ListForStayArgs, SubmitArgs, SubmitFoundArgs, UpdateStatusArgs,
-    GUEST_TEXT_EMAIL_MAX_CHARS, STATUS_DEFAULT,
+    render_host_create, render_host_main, render_host_stats, render_host_stay,
+    render_post_stay_card, reset_test_store, send_checkout_follow_up, stats_summary, submit,
+    submit_found, update_status, EmailContextArgs, ListForStayArgs, SubmitArgs, SubmitFoundArgs,
+    UpdateStatusArgs, GUEST_TEXT_EMAIL_MAX_CHARS, STATUS_DEFAULT,
 };
 use portaki_sdk::contracts::stats::StatsSummaryArgs;
 use portaki_sdk::host::email::{EmailAudience, EmailError};
@@ -18,6 +18,13 @@ use portaki_sdk::limits;
 use portaki_sdk::prelude::{EmailTemplateKey, PortakiError};
 use portaki_sdk::sdui::action::EmptyArgs;
 use portaki_test_utils::{Booking, MockContext, Property, SurfaceAssertions};
+
+// La configuration ne déclare aucun texte traduit : `localized_paths` n'a rien à dire ici.
+#[allow(dead_code)]
+#[path = "../../../support/config_save.rs"]
+mod config_save;
+
+const EMISSIONS: &str = concat!(env!("OUT_DIR"), "/portaki-emissions");
 
 #[test]
 #[serial]
@@ -799,4 +806,28 @@ fn the_address_is_asked_and_kept_only_when_shipping_is_offered() {
                 );
             });
     }
+}
+
+/// Ce que l'enregistrement du formulaire hôte écrit doit se relire.
+///
+/// Le `NumberInput` du délai envoie un nombre, pas un entier : `45.0` au retour d'un
+/// enregistrement faisait refuser la ligne par serde, donc toute la configuration, et le module
+/// rendait son état d'erreur dès le premier enregistrement d'un hôte.
+#[test]
+#[serial]
+fn saving_the_window_keeps_it_readable() {
+    reset_test_store();
+    let stored = json!({ "window_days": 45 });
+    MockContext::host()
+        .with_property(Property::default())
+        .with_config(&stored)
+        .run(|ctx| {
+            let surface = render_host_main(ctx).expect("host main");
+            let saved = config_save::save(EMISSIONS, &surface, &stored, "fr");
+            assert_eq!(saved["window_days"], 45.0);
+
+            let reread: lost_found::ModuleConfig =
+                serde_json::from_value(saved).expect("la config relue après enregistrement");
+            assert_eq!(reread.window_days(), 45);
+        });
 }
