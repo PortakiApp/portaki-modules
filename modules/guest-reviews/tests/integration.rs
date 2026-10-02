@@ -499,6 +499,58 @@ fn chrono_like_days_ago(days: i64) -> String {
         .to_rfc3339()
 }
 
+/// La note que le formulaire envoie doit arriver au module.
+///
+/// Tout ce qui sort d'un formulaire HTML est une chaîne : le `Select` de la note envoie `"5"`,
+/// `collectFormValues` rend un `Record<string, string>`, et la plateforme passe les arguments
+/// tels quels — rien ne les convertit d'après le type déclaré. Un `u8` nu les faisait refuser
+/// par serde, et le voyageur n'enregistrait jamais sa note.
+#[test]
+#[serial]
+fn the_rating_the_form_sends_reaches_the_command() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({ "platform_airbnb": false, "platform_portaki": true }))
+        .with_stay(Booking::default())
+        .run(|ctx| {
+            let tree = serde_json::to_value(render_home_card(ctx.clone()).expect("home card"))
+                .expect("tree");
+            let sent = form_value(&tree, "rating").expect("le Select de la note");
+
+            // Ce que le navigateur poste : la valeur du champ, en chaîne.
+            let args: SubmitReviewArgs =
+                serde_json::from_value(json!({ "rating": sent, "comment": "Super séjour" }))
+                    .expect("les arguments que le formulaire envoie");
+            submit_review(ctx.clone(), args).expect("submit");
+
+            let stay_id = ctx.stay.as_ref().expect("stay").stay_id;
+            let stored = portaki_sdk::host::kv::get(&format!("stay:{stay_id}:review"))
+                .expect("kv")
+                .expect("la note enregistrée");
+            let stored: serde_json::Value = serde_json::from_slice(&stored).expect("json");
+            assert_eq!(stored["rating"], 5);
+        });
+}
+
+/// La valeur d'un champ du formulaire, en chaîne — ce que `FormData` en fait côté navigateur.
+fn form_value(tree: &serde_json::Value, name: &str) -> Option<String> {
+    match tree {
+        serde_json::Value::Object(object) => {
+            if object.get("name").and_then(serde_json::Value::as_str) == Some(name) {
+                if let Some(value) = object.get("value") {
+                    return Some(match value {
+                        serde_json::Value::String(text) => text.clone(),
+                        other => other.to_string(),
+                    });
+                }
+            }
+            object.values().find_map(|child| form_value(child, name))
+        }
+        serde_json::Value::Array(items) => items.iter().find_map(|item| form_value(item, name)),
+        _ => None,
+    }
+}
+
 fn uuid_for(days: i64) -> String {
     format!("00000000-0000-4000-8000-{days:012}")
 }

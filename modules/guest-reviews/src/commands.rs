@@ -6,7 +6,7 @@ use portaki_sdk::host::email::{
     ModuleEmailSdui, SendEmailArgs,
 };
 use portaki_sdk::prelude::*;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::config::ModuleConfig;
 use crate::email_text;
@@ -17,9 +17,34 @@ const GUEST_NAME_ROW_MAX_CHARS: usize = 80;
 #[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SubmitReviewArgs {
+    /// La note, de 1 à 5. Lue en nombre comme en texte : voir [`deserialize_rating`].
+    #[serde(deserialize_with = "deserialize_rating")]
     pub rating: u8,
     #[serde(default)]
     pub comment: String,
+}
+
+/// La note, telle que le formulaire l'envoie : un nombre, ou le `Select` en texte (`"5"`).
+///
+/// Tout ce qui sort d'un formulaire HTML est une chaîne, et rien sur le chemin ne la convertit
+/// d'après le type déclaré — ni le livret, qui poste ce que `FormData` lui donne, ni la
+/// plateforme, qui passe les arguments tels quels. Un `u8` nu les faisait donc refuser par serde
+/// (`wasm_params_invalid`), et le voyageur n'enregistrait jamais sa note. Le contrôle de 1 à 5 de
+/// [`submit_review`] reste le seul juge de la valeur : ici on ne fait que la lire.
+fn deserialize_rating<'de, D>(deserializer: D) -> std::result::Result<u8, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let not_a_rating =
+        |raw: &dyn std::fmt::Display| serde::de::Error::custom(format!("not a rating: {raw}"));
+    match serde_json::Value::deserialize(deserializer)? {
+        serde_json::Value::Number(number) => number
+            .as_u64()
+            .and_then(|number| u8::try_from(number).ok())
+            .ok_or_else(|| not_a_rating(&number)),
+        serde_json::Value::String(text) => text.trim().parse().map_err(|_| not_a_rating(&text)),
+        other => Err(not_a_rating(&other)),
+    }
 }
 
 /// Where every review used to go, one blob for the property: still read, never written.
@@ -189,4 +214,43 @@ pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    /// Le `Select` du formulaire envoie la note comme texte : `"5"` doit se lire.
+    ///
+    /// Avec un `u8` nu, serde refusait les arguments — `wasm_params_invalid` — et la note du
+    /// voyageur n'arrivait jamais au module. Le contrôle de 1 à 5 de [`submit_review`] reste le
+    /// seul juge de la valeur.
+    #[test]
+    fn a_rating_sent_as_text_still_reads() {
+        let parsed = |value| serde_json::from_value::<SubmitReviewArgs>(value).expect("args");
+        assert_eq!(
+            parsed(json!({ "rating": "5", "comment": "Super" })).rating,
+            5
+        );
+        assert_eq!(parsed(json!({ "rating": " 3 " })).rating, 3);
+        // Un nombre reste lisible : les exemples du manifeste en envoient.
+        assert_eq!(parsed(json!({ "rating": 4 })).rating, 4);
+    }
+
+    /// Ce qui n'est pas une note est refusé à la lecture, et non lu comme zéro : un champ vide
+    /// n'est pas une note d'une étoile.
+    #[test]
+    fn what_is_not_a_rating_is_refused() {
+        for value in [
+            json!({ "rating": "" }),
+            json!({ "rating": "cinq" }),
+            json!({ "rating": 2.5 }),
+        ] {
+            assert!(
+                serde_json::from_value::<SubmitReviewArgs>(value.clone()).is_err(),
+                "{value}"
+            );
+        }
+    }
 }
