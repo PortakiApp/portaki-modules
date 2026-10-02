@@ -266,6 +266,39 @@ fn an_inactive_module_shows_the_sdk_state() {
         });
 }
 
+/// Les lignes suivent ce que l'hôte a saisi, et « Ajouter » en demande une de plus.
+#[test]
+#[serial]
+fn the_form_draws_the_bins_the_host_has() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({}))
+        .run(|ctx| {
+            let json =
+                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            assert!(json.contains("bins.0.title"), "{json}");
+            assert!(!json.contains("bins.1.title"), "{json}");
+            assert!(json.contains(r#""bins_count":2"#), "{json}");
+        });
+
+    let rows: Vec<Value> = (0..waste_recycling::MAX_BINS)
+        .map(|i| json!({ "title": format!("Bac {i}"), "items": "Tout" }))
+        .collect();
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({ "bins": rows }))
+        .run(|ctx| {
+            let json =
+                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            assert!(json.contains("bins.11.title"), "{json}");
+            assert!(!json.contains("bins.12.title"), "{json}");
+            assert!(
+                json.contains(&format!(r#""bins_count":{}"#, waste_recycling::MAX_BINS)),
+                "{json}"
+            );
+        });
+}
+
 /// A host writing in English: the French title, items and schedule stay, and so do the id and
 /// the color; rows keep their place.
 #[test]
@@ -308,7 +341,8 @@ fn a_save_in_english_keeps_the_french() {
             assert_eq!(sent["bins"][0]["items"], "Plastic\nCardboard");
             assert!(sent["bins"][1].get("id").is_none());
             assert_eq!(sent["bins"][2]["id"], "glass");
-            assert_eq!(sent["bins"].as_array().unwrap().len(), 6);
+            // Trois lignes stockées, trois dessinées : plus d'emplacements vides en bout de liste.
+            assert_eq!(sent["bins"].as_array().unwrap().len(), 3);
 
             let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
             assert_eq!(saved["bins"][0], stored["bins"][0]);
