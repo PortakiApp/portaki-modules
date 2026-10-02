@@ -500,6 +500,44 @@ fn the_status_follows_the_rule_into_every_language() {
         });
 }
 
+/// Un hôte qui n'a rangé qu'une partie de ses règles garde son groupement, et le reste se lit à la
+/// fin — jamais un bloc sans titre coincé entre deux blocs titrés, ni en tête de page.
+#[test]
+#[serial]
+fn unthemed_rules_close_the_detail_instead_of_breaking_it_up() {
+    reset_test_store();
+    let mixed = json!({
+        "items": [
+            {"icon": "clock-circle", "title": "Calme après 22 h", "theme": "Voisinage"},
+            {"icon": "users", "title": "Six personnes maximum"},
+            {"icon": "sun", "title": "Piscine de 8 h à 20 h", "theme": "Piscine"}
+        ]
+    })
+    .to_string();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            save_content(
+                ctx.clone(),
+                SaveContentArgs {
+                    items: Vec::new(),
+                    content_fr: mixed.clone(),
+                    content_en: String::new(),
+                },
+            )
+            .expect("save");
+            let json = serde_json::to_string(&render_explore_detail(ctx).expect("render")).unwrap();
+
+            // Jamais de carte sans titre au milieu : la règle sans thème ferme la page.
+            let voisinage = json.find("Voisinage").expect("Voisinage");
+            let piscine = json.find("Piscine de 8 h").expect("Piscine");
+            let sans_theme = json.find("Six personnes maximum").expect("sans thème");
+            assert!(voisinage < piscine, "{json}");
+            assert!(piscine < sans_theme, "{json}");
+        });
+}
+
 /// Toutes les `ListItem` d'un arbre rendu, dans l'ordre.
 fn find_list_items(node: &serde_json::Value) -> Vec<serde_json::Value> {
     let mut out = Vec::new();
