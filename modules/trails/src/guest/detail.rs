@@ -160,18 +160,15 @@ fn measures(trail: &TrailRow) -> Option<Component> {
         ));
     }
     if let Some(km) = trail.distance() {
-        // ponytail: `compass` n'est pas dans `IconName` (9.5.1) — `gauge` est le cadran le plus
-        // proche. À remplacer si la boussole entre au vocabulaire.
         tiles.push(tile(
-            IconName::Gauge,
+            IconName::Compass,
             "i18n:guest.tile.distance",
             format::distance(km),
         ));
     }
     if let Some(metres) = trail.elevation() {
-        // ponytail: pas d'`arrow-up` non plus ; la montagne dit le dénivelé sans flèche.
         tiles.push(tile(
-            IconName::Mountain,
+            IconName::ArrowUp,
             "i18n:guest.tile.elevation",
             format::elevation(metres),
         ));

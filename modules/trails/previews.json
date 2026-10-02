@@ -170,14 +170,14 @@
                 "value": "1 h"
               },
               {
-                "icon": "gauge",
+                "icon": "compass",
                 "key": "i18n:guest.tile.distance",
                 "layout": "tile",
                 "type": "KeyValue",
                 "value": "2.6 km"
               },
               {
-                "icon": "mountain",
+                "icon": "arrow-up",
                 "key": "i18n:guest.tile.elevation",
                 "layout": "tile",
                 "type": "KeyValue",
