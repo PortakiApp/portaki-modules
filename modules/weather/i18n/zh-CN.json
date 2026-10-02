@@ -22,7 +22,7 @@
   "email.condition.variable": "天气多变",
   "email.place.inCity": "{name}",
   "email.place.onSite": "当地",
-  "email.weather.summary": "今天{place}天气：{emoji} {temp}°C，{condition}。",
+  "email.weather.summary": "今天{place}天气：{emoji} {temp}，{condition}。",
   "explore.forecast.hint": "未来 5 天",
   "explore.forecast.title": "预报",
   "guest.error.description": "天气加载失败。请稍后再试。",

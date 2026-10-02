@@ -22,7 +22,7 @@
   "email.condition.variable": "wisselend",
   "email.place.inCity": "in {name}",
   "email.place.onSite": "ter plaatse",
-  "email.weather.summary": "Weer {place} vandaag: {emoji} {temp}°C, {condition}.",
+  "email.weather.summary": "Weer {place} vandaag: {emoji} {temp}, {condition}.",
   "explore.forecast.hint": "Verwachting voor 5 dagen",
   "explore.forecast.title": "Verwachting",
   "guest.error.description": "De weersituatie kon niet worden geladen. Probeer het over een ogenblik opnieuw.",

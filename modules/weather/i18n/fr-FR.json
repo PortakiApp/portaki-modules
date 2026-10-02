@@ -55,7 +55,7 @@
   "sheet.contactHost": "Contacter l'hôte",
   "email.place.inCity": "à {name}",
   "email.place.onSite": "sur place",
-  "email.weather.summary": "Météo {place} aujourd'hui : {emoji} {temp}°C, {condition}.",
+  "email.weather.summary": "Météo {place} aujourd'hui : {emoji} {temp}, {condition}.",
   "email.condition.sunny": "ciel dégagé",
   "email.condition.cloudy": "ciel nuageux",
   "email.condition.rainy": "pluie possible",

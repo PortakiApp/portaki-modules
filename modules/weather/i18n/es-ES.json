@@ -22,7 +22,7 @@
   "email.condition.variable": "condiciones variables",
   "email.place.inCity": "en {name}",
   "email.place.onSite": "en el alojamiento",
-  "email.weather.summary": "Tiempo {place} hoy: {emoji} {temp}°C, {condition}.",
+  "email.weather.summary": "Tiempo {place} hoy: {emoji} {temp}, {condition}.",
   "explore.forecast.hint": "Previsión a 5 días",
   "explore.forecast.title": "Previsión",
   "guest.error.description": "No se han podido cargar las condiciones. Inténtelo dentro de un momento.",

@@ -22,7 +22,7 @@
   "email.condition.variable": "変わりやすい天気",
   "email.place.inCity": "{name}の",
   "email.place.onSite": "現地の",
-  "email.weather.summary": "今日の{place}天気：{emoji} {temp}°C、{condition}。",
+  "email.weather.summary": "今日の{place}天気：{emoji} {temp}、{condition}。",
   "explore.forecast.hint": "5 日間の見通し",
   "explore.forecast.title": "予報",
   "guest.error.description": "天気を読み込めませんでした。少しあとでもう一度お試しください。",
