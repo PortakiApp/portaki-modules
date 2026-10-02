@@ -104,6 +104,45 @@ fn an_inactive_module_shows_the_sdk_state() {
         });
 }
 
+/// Les lignes suivent ce que l'hôte a saisi, et « Ajouter » en demande une de plus.
+///
+/// Six emplacements figés gelaient la liste à six : l'hôte voyait quatre cartes vides quand il
+/// avait saisi deux contacts, et ne pouvait pas en saisir un septième.
+#[test]
+#[serial]
+fn the_form_draws_the_contacts_the_host_has() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({}))
+        .run(|ctx| {
+            let json =
+                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            assert!(json.contains("contacts.0.label"), "{json}");
+            assert!(!json.contains("contacts.1.label"), "{json}");
+            assert!(json.contains(r#""contacts_count":2"#), "{json}");
+        });
+
+    let rows: Vec<Value> = (0..emergency_contacts::MAX_CONTACTS)
+        .map(|i| json!({ "label": format!("Contact {i}"), "phone": "18" }))
+        .collect();
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({ "contacts": rows }))
+        .run(|ctx| {
+            let json =
+                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            assert!(json.contains("contacts.11.label"), "{json}");
+            assert!(!json.contains("contacts.12.label"), "{json}");
+            assert!(
+                json.contains(&format!(
+                    r#""contacts_count":{}"#,
+                    emergency_contacts::MAX_CONTACTS
+                )),
+                "{json}"
+            );
+        });
+}
+
 /// A host writing in English: the French label and note stay, and so do the note, the category
 /// and the id the form does not carry; rows keep their place.
 #[test]
@@ -134,7 +173,8 @@ fn a_save_in_english_keeps_the_french() {
             assert_eq!(sent["contacts"][0]["label"], "Ambulance");
             assert!(sent["contacts"][1].get("id").is_none());
             assert_eq!(sent["contacts"][2]["id"], "pompiers");
-            assert_eq!(sent["contacts"].as_array().unwrap().len(), 6);
+            // Trois lignes stockées, trois dessinées : plus d'emplacements vides en bout de liste.
+            assert_eq!(sent["contacts"].as_array().unwrap().len(), 3);
 
             let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
             assert_eq!(saved["contacts"][0], stored["contacts"][0]);
