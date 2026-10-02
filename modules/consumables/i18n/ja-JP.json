@@ -17,6 +17,7 @@
   "home.card.title": "消耗品",
   "home.card.yourReports": "今回の滞在であなたが知らせたもの",
   "host.item.empty": "空の項目 — 空のままにすると表示されません",
+  "host.main.addItem": "品目を追加",
   "host.main.banner": "ゲストはこのリストから消耗品を選び、「切れ」または「残り少ない」と伝えます。メールで通知が届き、ここで「補充済み」にできます。",
   "host.main.catalogHelp": "例：トイレットペーパー、石けん、コーヒー、食洗機用タブレットなど。保存するとリスト全体が置き換わります。",
   "host.main.catalogTitle": "消耗品のリスト",

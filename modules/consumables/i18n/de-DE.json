@@ -17,6 +17,7 @@
   "home.card.title": "Verbrauchsmaterial",
   "home.card.yourReports": "Ihre Meldungen in diesem Aufenthalt",
   "host.item.empty": "Leerer Eintrag — leer lassen, um ihn auszublenden",
+  "host.main.addItem": "Produkt hinzufügen",
   "host.main.banner": "Gäste wählen ein Verbrauchsmaterial aus dieser Liste und melden „fehlt“ oder „fast leer“. Sie werden per E-Mail benachrichtigt und können hier auf „nachgefüllt“ setzen.",
   "host.main.catalogHelp": "Z. B. Toilettenpapier, Seife, Kaffee, Spülmaschinentabs… Beim Speichern wird die ganze Liste ersetzt.",
   "host.main.catalogTitle": "Liste des Verbrauchsmaterials",

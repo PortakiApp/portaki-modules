@@ -13,7 +13,16 @@ use crate::storage;
 
 use super::report_ui::build_report_block;
 
+/// Les cases que le formulaire propose d'emblée, prêtes à remplir.
+///
+/// La grille de huit est le dessin, et il tient : huit petites cases numérotées se lisent d'un
+/// coup d'œil là où huit cartes empilées prendraient un écran. Ce qui ne tenait pas, c'est
+/// qu'elle était aussi un plafond — un neuvième produit n'avait nulle part où s'écrire, et un
+/// neuvième déjà stocké ne s'affichait même pas.
 const ITEM_SLOTS: usize = 8;
+
+/// Combien de produits le formulaire accepte en tout.
+pub const MAX_ITEMS: usize = 24;
 
 /// Host-provided wall clock (the Wasm sandbox has none — never call `Utc::now()`).
 fn host_now() -> chrono::DateTime<chrono::Utc> {
@@ -39,8 +48,9 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     let open_reports = storage::list_open().unwrap_or_default();
     let locale = ctx.locale.as_str();
 
-    let mut tiles: Vec<Component> = Vec::with_capacity(ITEM_SLOTS);
-    for index in 0..ITEM_SLOTS {
+    let tiles_count = draft_rows(&ctx, items.len());
+    let mut tiles: Vec<Component> = Vec::with_capacity(tiles_count);
+    for index in 0..tiles_count {
         let label = items
             .get(index)
             .map(|item| labels::get_label(item, &lang))
@@ -68,6 +78,17 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                     .gap(10.0)
                     .minColumnWidth(280.0)
                     .children(tiles),
+            )
+            // Une case de plus, quand les huit sont prises. Sous la grille et non dans un
+            // `StepList` : empiler vingt-quatre rangées rendrait illisible ce qui se lit d'un
+            // coup d'œil en grille.
+            .child(
+                Button::new()
+                    .label("i18n:host.main.addItem")
+                    .variant(ButtonVariant::Outline)
+                    .action(emit_input(RowCount {
+                        items_count: (tiles_count + 1).min(MAX_ITEMS),
+                    })),
             ),
     );
 
@@ -120,4 +141,23 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     children.push(recent_card.into());
 
     Surface::new(Page::new().child(Stack::new().gap(16.0).children(children))).with_id(MAIN)
+}
+
+/// Combien de cases dessiner : ce que « Ajouter » a demandé, sinon les huit d'origine — ou plus
+/// si l'hôte a déjà plus de produits que de cases.
+fn draft_rows(ctx: &HostContext, stored: usize) -> usize {
+    match ctx.input_u64("items_count") {
+        Some(asked) => (asked as usize).clamp(ITEM_SLOTS, MAX_ITEMS),
+        None => stored.clamp(ITEM_SLOTS, MAX_ITEMS),
+    }
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+struct RowCount {
+    items_count: usize,
+}
+
+fn emit_input(payload: impl serde::Serialize) -> Action {
+    Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
 }
