@@ -13,6 +13,8 @@
   "form.submit": "Enviar",
   "form.summary.label": "Resumo breve",
   "form.summary.placeholder": "ex.: A máquina de lavar loiça não escoa",
+  "form.urgent.link": "Números de emergência",
+  "form.urgent.note": "Em caso de emergência, não espere resposta: ligue diretamente.",
   "guest.error.description": "Não foi possível carregar o formulário.",
   "guest.error.title": "Comunicação temporariamente indisponível",
   "guest.teaser": "Comunicar um problema ao seu anfitrião",

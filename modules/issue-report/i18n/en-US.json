@@ -13,6 +13,8 @@
   "form.submit": "Send report",
   "form.summary.label": "Short summary",
   "form.summary.placeholder": "e.g. Dishwasher not draining",
+  "form.urgent.link": "Emergency numbers",
+  "form.urgent.note": "In an emergency, do not wait for a reply: call directly.",
   "guest.error.description": "The form could not be loaded.",
   "guest.error.title": "Reporting temporarily unavailable",
   "guest.teaser": "Report a problem to your host",

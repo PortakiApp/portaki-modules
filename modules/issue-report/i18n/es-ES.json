@@ -13,6 +13,8 @@
   "form.submit": "Enviar",
   "form.summary.label": "Resumen breve",
   "form.summary.placeholder": "ej. El lavavajillas no desagua",
+  "form.urgent.link": "Números de emergencia",
+  "form.urgent.note": "En caso de urgencia, no esperes respuesta: llama directamente.",
   "guest.error.description": "No se ha podido cargar el formulario.",
   "guest.error.title": "Informe temporalmente no disponible",
   "guest.teaser": "Informar de un problema a su anfitrión",

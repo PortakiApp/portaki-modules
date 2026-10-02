@@ -13,6 +13,8 @@
   "form.submit": "送信",
   "form.summary.label": "ひとことで",
   "form.summary.placeholder": "例：食洗機の水が抜けない",
+  "form.urgent.link": "緊急連絡先",
+  "form.urgent.note": "緊急のときは返信を待たず、直接お電話ください。",
   "guest.error.description": "フォームを読み込めませんでした。",
   "guest.error.title": "報告を一時的にご利用いただけません",
   "guest.teaser": "ホストに問題を知らせる",

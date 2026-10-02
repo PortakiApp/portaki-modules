@@ -13,6 +13,8 @@
   "form.submit": "Invia",
   "form.summary.label": "Riassunto breve",
   "form.summary.placeholder": "es. La lavastoviglie non scarica",
+  "form.urgent.link": "Numeri di emergenza",
+  "form.urgent.note": "In caso di emergenza non aspettare una risposta: chiama direttamente.",
   "guest.error.description": "Non è stato possibile caricare il modulo.",
   "guest.error.title": "Segnalazione temporaneamente non disponibile",
   "guest.teaser": "Segnala un problema al tuo host",

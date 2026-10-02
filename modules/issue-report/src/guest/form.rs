@@ -1,8 +1,10 @@
 //! Guest bottom-sheet form surface opened from the home card.
 
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui::action::NavigateTarget;
+use portaki_sdk::sdui::common::Emphasis;
 use portaki_sdk::sdui::primitives::{
-    Button, ChoiceList, Field, Form, ImageUpload, TextArea, TextInput,
+    Button, ChoiceList, Field, Form, ImageUpload, Text, TextArea, TextInput,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -65,7 +67,22 @@ fn build_form(categories: &[&str]) -> Form {
                 .label("i18n:form.submit")
                 .action(submit_action),
         )
+        .child(
+            Text::new()
+                .text("i18n:form.urgent.note")
+                .variant(TextVariant::Caption)
+                .emphasis(Emphasis::Subtle),
+        )
+        .child(
+            Button::new()
+                .label("i18n:form.urgent.link")
+                .variant(ButtonVariant::Ghost)
+                .action(Action::navigate(NavigateTarget::path(AIDE), None)),
+        )
 }
+
+/// La page de la section Aide, où les numéros d'urgence vivent.
+const AIDE: &str = "aide";
 
 fn category_choice_list(categories: &[&str]) -> ChoiceList {
     ChoiceList::new()

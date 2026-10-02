@@ -13,6 +13,8 @@
   "form.submit": "إرسال",
   "form.summary.label": "ملخّص قصير",
   "form.summary.placeholder": "مثال: غسالة الصحون لا تصرّف الماء",
+  "form.urgent.link": "أرقام الطوارئ",
+  "form.urgent.note": "في الحالات الطارئة لا تنتظر الردّ: اتصل مباشرة.",
   "guest.error.description": "تعذّر تحميل النموذج.",
   "guest.error.title": "الإبلاغ غير متاح مؤقتًا",
   "guest.teaser": "أبلغ مضيفك بمشكلة",
