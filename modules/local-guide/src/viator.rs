@@ -20,13 +20,12 @@
 //! servirait indéfiniment le même cache.
 
 use portaki_connectors::viator::{FreetextProductsArgs, Viator, ViatorProduct};
-use portaki_sdk::host::{self, log, time};
+use portaki_sdk::host::{log, time};
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::activities::destination_from_address;
 use crate::config::ViatorConfig;
-use crate::tiqets::lang_code;
 
 /// Fraîcheur d'une entrée du cache.
 pub const FRESH_SECS: i64 = 24 * 60 * 60;
@@ -82,10 +81,6 @@ pub struct ViatorView {
 /// Noté quand Viator a été appelé sans la clé de Portaki ; effacé au premier appel qui aboutit.
 const KEY_MISSING_KEY: &str = "viator_key_missing";
 
-fn key_missing() -> bool {
-    matches!(host::kv::get(KEY_MISSING_KEY), Ok(Some(_)))
-}
-
 /// Pourquoi la section ne peut pas s'afficher, pour le dire à l'hôte.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ViatorStatus {
@@ -106,7 +101,7 @@ fn property_city(ctx: &Context) -> Option<String> {
 pub fn status(ctx: &Context, config: &ViatorConfig) -> ViatorStatus {
     if !config.enabled {
         ViatorStatus::Off
-    } else if key_missing() {
+    } else if crate::provider::missing_key(KEY_MISSING_KEY) {
         ViatorStatus::MissingKey
     } else if property_city(ctx).is_none() {
         ViatorStatus::MissingCity
@@ -157,7 +152,7 @@ pub fn resolve(ctx: &Context, config: &ViatorConfig) -> Option<ViatorView> {
     );
     match Viator::search_products(&args) {
         Ok(response) => {
-            let _ = host::kv::delete(KEY_MISSING_KEY);
+            crate::provider::clear_missing_key(KEY_MISSING_KEY);
             let mut products = response.products;
             products.truncate(MAX_PRODUCTS);
             let _ = write_cache(&ViatorCache {
@@ -172,7 +167,7 @@ pub fn resolve(ctx: &Context, config: &ViatorConfig) -> Option<ViatorView> {
         Err(error) => {
             if error.to_string().contains("connector_credential_missing") {
                 // Dit à l'hôte que la clé de Portaki manque ; oublié de lui-même au bout d'un jour.
-                let _ = host::kv::set(KEY_MISSING_KEY, b"1", Some(24 * 60 * 60));
+                crate::provider::note_missing_key(KEY_MISSING_KEY);
             }
             let mut fields = log::Fields::new();
             fields.insert("error", &error.to_string());
@@ -196,12 +191,7 @@ fn view(products: Vec<ViatorProduct>) -> Option<ViatorView> {
 
 /// La langue du livret si Viator la sert, l'anglais sinon.
 pub fn viator_lang(locale: &str) -> String {
-    let code = lang_code(locale);
-    if VIATOR_LANGS.contains(&code.as_str()) {
-        code
-    } else {
-        "en".to_string()
-    }
+    crate::provider::served_lang(locale, &VIATOR_LANGS)
 }
 
 /// « 2 h », « 1 h 30 », « 45 min ».
@@ -218,14 +208,11 @@ fn cache_key(lang: &str) -> String {
 }
 
 fn read_cache(lang: &str) -> Option<ViatorCache> {
-    let bytes = host::kv::get(&cache_key(lang)).ok()??;
-    serde_json::from_slice(&bytes).ok()
+    crate::provider::read(&cache_key(lang))
 }
 
 fn write_cache(cache: &ViatorCache) -> Result<()> {
-    let bytes = serde_json::to_vec(cache)
-        .map_err(|error| PortakiError::Storage(format!("viator cache serialize: {error}")))?;
-    host::kv::set(&cache_key(&cache.lang), &bytes, Some(STALE_MAX_SECS as u32))
+    crate::provider::write(&cache_key(&cache.lang), cache, STALE_MAX_SECS)
 }
 
 #[cfg(test)]

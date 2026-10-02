@@ -22,7 +22,7 @@
 //! servirait indéfiniment un cache que Tiqets interdit de garder.
 
 use portaki_connectors::tiqets::{NearbyProductsArgs, Tiqets, TiqetsProduct};
-use portaki_sdk::host::{self, log, time};
+use portaki_sdk::host::{log, time};
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -82,11 +82,6 @@ pub struct TiqetsView {
 /// Noté quand Tiqets a été appelé sans aucune clé ; effacé au premier appel qui aboutit.
 const KEY_MISSING_KEY: &str = "tiqets_key_missing";
 
-/// Le dernier appel a manqué de clé : ni celle de l'hôte, ni celle de Portaki.
-fn key_missing() -> bool {
-    matches!(host::kv::get(KEY_MISSING_KEY), Ok(Some(_)))
-}
-
 /// Pourquoi la section ne peut pas s'afficher, pour le dire à l'hôte.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TiqetsStatus {
@@ -105,7 +100,7 @@ fn property_position(ctx: &Context) -> Option<(f64, f64)> {
 pub fn status(ctx: &Context, config: &TiqetsConfig) -> TiqetsStatus {
     if !config.enabled {
         TiqetsStatus::Off
-    } else if key_missing() {
+    } else if crate::provider::missing_key(KEY_MISSING_KEY) {
         TiqetsStatus::MissingKey
     } else if property_position(ctx).is_none() {
         TiqetsStatus::MissingCoordinates
@@ -154,7 +149,7 @@ pub fn resolve(ctx: &Context, config: &TiqetsConfig) -> Option<TiqetsView> {
     args.min_rating = min_rating;
     match Tiqets::nearby_products(&args) {
         Ok(response) => {
-            let _ = host::kv::delete(KEY_MISSING_KEY);
+            crate::provider::clear_missing_key(KEY_MISSING_KEY);
             let mut products = response.products;
             products.truncate(MAX_PRODUCTS);
             let _ = write_cache(&TiqetsCache {
@@ -171,7 +166,7 @@ pub fn resolve(ctx: &Context, config: &TiqetsConfig) -> Option<TiqetsView> {
         Err(error) => {
             if error.to_string().contains("connector_credential_missing") {
                 // Dit à l'hôte qu'il manque une clé ; oublié de lui-même au bout d'un jour.
-                let _ = host::kv::set(KEY_MISSING_KEY, b"1", Some(24 * 60 * 60));
+                crate::provider::note_missing_key(KEY_MISSING_KEY);
             }
             let mut fields = log::Fields::new();
             fields.insert("error", &error.to_string());
@@ -193,22 +188,9 @@ fn view(products: Vec<TiqetsProduct>) -> Option<TiqetsView> {
     }
 }
 
-/// `fr` pour `fr-FR` ; `fr` quand la locale est vide.
-pub(crate) fn lang_code(locale: &str) -> String {
-    match locale.trim().split(['-', '_']).next() {
-        Some(code) if !code.is_empty() => code.to_ascii_lowercase(),
-        _ => "fr".to_string(),
-    }
-}
-
 /// La langue du livret si Tiqets la sert, l'anglais sinon.
 pub fn tiqets_lang(locale: &str) -> String {
-    let code = lang_code(locale);
-    if TIQETS_LANGS.contains(&code.as_str()) {
-        code
-    } else {
-        "en".to_string()
-    }
+    crate::provider::served_lang(locale, &TIQETS_LANGS)
 }
 
 fn same_query(
@@ -229,15 +211,11 @@ fn cache_key(lang: &str) -> String {
 }
 
 fn read_cache(lang: &str) -> Option<TiqetsCache> {
-    let bytes = host::kv::get(&cache_key(lang)).ok()??;
-    serde_json::from_slice(&bytes).ok()
+    crate::provider::read(&cache_key(lang))
 }
 
 fn write_cache(cache: &TiqetsCache) -> Result<()> {
-    let bytes = serde_json::to_vec(cache)
-        .map_err(|error| PortakiError::Storage(format!("tiqets cache serialize: {error}")))?;
-    // Le KV oublie de lui-même ce que Tiqets interdit de garder plus de 14 jours.
-    host::kv::set(&cache_key(&cache.lang), &bytes, Some(STALE_MAX_SECS as u32))
+    crate::provider::write(&cache_key(&cache.lang), cache, STALE_MAX_SECS)
 }
 
 /// « 22 € », « 22,50 € » en français ; « €22 », « €22.50 » ailleurs.
@@ -254,7 +232,7 @@ pub fn format_price(amount: f64, currency: &str, lang: &str) -> String {
         "GBP" => "£",
         other => other,
     };
-    if lang_code(lang) == "fr" {
+    if crate::provider::lang_code(lang) == "fr" {
         format!("{} {symbol}", number.replace('.', ","))
     } else if symbol.len() == 3 && symbol.chars().all(|c| c.is_ascii_uppercase()) {
         format!("{number} {symbol}")
@@ -266,7 +244,7 @@ pub fn format_price(amount: f64, currency: &str, lang: &str) -> String {
 /// « 4,6 » en français, « 4.6 » ailleurs.
 pub fn format_rating(average: f64, lang: &str) -> String {
     let text = format!("{:.1}", (average * 10.0).round() / 10.0);
-    if lang_code(lang) == "fr" {
+    if crate::provider::lang_code(lang) == "fr" {
         text.replace('.', ",")
     } else {
         text
