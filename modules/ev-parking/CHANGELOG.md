@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v1.2.0...ev-parking-v1.3.0) (2026-10-02)
+
+
+### Features
+
+* **ev-parking:** speak the ten languages of the picker ([f8b475f](https://github.com/PortakiApp/portaki-modules/commit/f8b475fcfebfa069fc83df7ae24ee1c79ee48eb6))
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+
 ## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v1.1.0...ev-parking-v1.2.0) (2026-09-30)
 
 

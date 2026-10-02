@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.3.0...appliances-v1.4.0) (2026-10-02)
+
+
+### Features
+
+* **appliances:** a step reads its text, and the manuals get a card ([356ec9f](https://github.com/PortakiApp/portaki-modules/commit/356ec9fb861b2989eeadfe6d37007ed6de4f2db1))
+* **appliances:** speak the ten languages of the picker ([b4f70a0](https://github.com/PortakiApp/portaki-modules/commit/b4f70a03daa359f4b37bd6c73d68a61b19567e57))
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+
 ## [1.3.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.2.0...appliances-v1.3.0) (2026-09-30)
 
 

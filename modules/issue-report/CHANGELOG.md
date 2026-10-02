@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.1.0...issue-report-v1.2.0) (2026-10-02)
+
+
+### Features
+
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+* **issue-report:** let the host pick the form categories ([3522ce9](https://github.com/PortakiApp/portaki-modules/commit/3522ce9104ae2fd8213f0fbacd121a89808e8840))
+* **issue-report:** speak the ten languages of the picker ([1a53b34](https://github.com/PortakiApp/portaki-modules/commit/1a53b348c47a4350002a1e40751396b9b9a7d0e1))
+
 ## [1.1.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.0.0...issue-report-v1.1.0) (2026-09-29)
 
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v1.1.0...ical-sync-v1.2.0) (2026-10-02)
+
+
+### Features
+
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+* **ical-sync:** speak the ten languages of the picker ([80fd640](https://github.com/PortakiApp/portaki-modules/commit/80fd6400372748f113e0893db34147a632331451))
+
 ## [1.1.0](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v1.0.0...ical-sync-v1.1.0) (2026-09-29)
 
 

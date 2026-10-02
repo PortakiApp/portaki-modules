@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.1.0...pre-arrival-form-v1.2.0) (2026-10-02)
+
+
+### Features
+
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+* **pre-arrival-form:** speak the ten languages of the picker ([98dcd8a](https://github.com/PortakiApp/portaki-modules/commit/98dcd8aa9324120a68ca0dcfaf78d273488c3d73))
+
 ## [1.1.0](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.0.0...pre-arrival-form-v1.1.0) (2026-09-29)
 
 

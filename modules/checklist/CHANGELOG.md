@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.1.0...checklist-v1.2.0) (2026-10-02)
+
+
+### Features
+
+* **checklist:** group the departure steps and keep the ticks ([6d3b409](https://github.com/PortakiApp/portaki-modules/commit/6d3b409ad732b0da8167096c0fd173ec442ef7cf))
+* **checklist:** speak the ten languages of the picker ([d255859](https://github.com/PortakiApp/portaki-modules/commit/d25585980b655d6f0e91115882fe53405314a32d))
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+
 ## [1.1.0](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.0.0...checklist-v1.1.0) (2026-09-29)
 
 

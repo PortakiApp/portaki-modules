@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/nuki-v1.1.0...nuki-v1.2.0) (2026-10-02)
+
+
+### Features
+
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+* **nuki:** speak the ten languages of the picker ([997140d](https://github.com/PortakiApp/portaki-modules/commit/997140d68c9bdba4cd80b95bc265f3560151a417))
+
 ## [1.1.0](https://github.com/PortakiApp/portaki-modules/compare/nuki-v1.0.0...nuki-v1.1.0) (2026-09-29)
 
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0](https://github.com/PortakiApp/portaki-modules/compare/rules-v1.3.0...rules-v1.4.0) (2026-10-02)
+
+
+### Features
+
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+* **rules:** speak the ten languages of the picker ([851e9d1](https://github.com/PortakiApp/portaki-modules/commit/851e9d1dd8f4c75e7dfe3239c016f5edc88c7de5))
+* **rules:** weigh and group the house rules ([a9dc924](https://github.com/PortakiApp/portaki-modules/commit/a9dc924dd76b6cafe209f399ac2d0442c3633707))
+
+
+### Bug Fixes
+
+* **rules:** send the unthemed rules to the end ([820cf33](https://github.com/PortakiApp/portaki-modules/commit/820cf33d78cb2b9bc0a0bbf6b9dfe1d814c1a1f0))
+
 ## [1.3.0](https://github.com/PortakiApp/portaki-modules/compare/rules-v1.2.0...rules-v1.3.0) (2026-09-30)
 
 

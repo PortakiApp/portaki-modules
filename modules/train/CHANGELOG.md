@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/train-v1.1.0...train-v1.2.0) (2026-10-02)
+
+
+### Features
+
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+* **train:** speak the ten languages of the picker ([994a7d3](https://github.com/PortakiApp/portaki-modules/commit/994a7d35fbdf355260c178773b8966cd477ecba0))
+
 ## [1.1.0](https://github.com/PortakiApp/portaki-modules/compare/train-v1.0.0...train-v1.1.0) (2026-09-29)
 
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.4.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.3.0...waste-recycling-v1.4.0) (2026-10-02)
+
+
+### Features
+
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+* **waste-recycling:** add dropoff points and the compost ([554548e](https://github.com/PortakiApp/portaki-modules/commit/554548eb6131bc21106007a4e27253b7eea4d807))
+* **waste-recycling:** finish the dropoff points and the compost ([9bb287e](https://github.com/PortakiApp/portaki-modules/commit/9bb287ec7740339226c309b4ba4b5914f4fc8e18))
+* **waste-recycling:** one block in the day-after email ([de5ea82](https://github.com/PortakiApp/portaki-modules/commit/de5ea824e4ac4ed68df79dc4bfd3afeda8383075))
+* **waste-recycling:** speak the ten languages of the picker ([9cf4bee](https://github.com/PortakiApp/portaki-modules/commit/9cf4beeffbe19eeb9745a3374d410afa3d7b12e1))
+
 ## [1.3.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.2.0...waste-recycling-v1.3.0) (2026-09-30)
 
 

@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.1.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.0.0...consumables-v2.1.0) (2026-10-02)
+
+
+### Features
+
+* **consumables:** a grid the guest can tick more than once ([543c253](https://github.com/PortakiApp/portaki-modules/commit/543c253d11678ab9d479fcbc83e4ff00b0dacd2b))
+* **consumables:** show item and level as rows ([1ea2703](https://github.com/PortakiApp/portaki-modules/commit/1ea270399794efd993317fede1cd5a14b6d35497))
+* **consumables:** speak the ten languages of the picker ([6378481](https://github.com/PortakiApp/portaki-modules/commit/63784810392c2e4e28896a0c1817de078e68ece5))
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+
+
+### Bug Fixes
+
+* **consumables:** example for updateStatus ([51939d6](https://github.com/PortakiApp/portaki-modules/commit/51939d633a43f522966e94f7dde8eb1bbe31c72f))
+* **consumables:** no label key in example input ([fd1daa7](https://github.com/PortakiApp/portaki-modules/commit/fd1daa77903898abe252b7700cf1d0a39979b916))
+* **deps:** bump portaki-sdk to 8.11.0 ([f7fded1](https://github.com/PortakiApp/portaki-modules/commit/f7fded1fa42013f963eecdeaa8280c89c1803172))
+* **deps:** bump portaki-sdk to 8.11.1 ([bdce7fc](https://github.com/PortakiApp/portaki-modules/commit/bdce7fcf958ed3f1935e5f12662fe71ddc58ca9e))
+* **deps:** bump portaki-sdk to 8.12.0 ([b6ef90f](https://github.com/PortakiApp/portaki-modules/commit/b6ef90f6cb2324b9ee4363939a52213e81ba8424))
+* **deps:** bump portaki-sdk to 8.8.1 ([474417d](https://github.com/PortakiApp/portaki-modules/commit/474417d9ac43536f465f10afbc25e46723aface5))
+* **deps:** bump portaki-sdk to 9.0.0 ([e5f9c7f](https://github.com/PortakiApp/portaki-modules/commit/e5f9c7f53100ce123c34af4aae4f6aee91b1569c))
+* **modules:** republish signed artifacts ([26d3c6e](https://github.com/PortakiApp/portaki-modules/commit/26d3c6eb7ed41c0be9988f783fa68146e11e45fe))
+
 ## [2.0.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v1.2.0...consumables-v2.0.0) (2026-09-30)
 
 

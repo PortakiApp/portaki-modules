@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.1.0...lost-found-v1.2.0) (2026-10-02)
+
+
+### Features
+
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+* **lost-found:** let the host set the window and the returns ([d6dac70](https://github.com/PortakiApp/portaki-modules/commit/d6dac70c4605a8f4537d2a98874491cbde4e1efc))
+* **lost-found:** speak the ten languages of the picker ([0f58252](https://github.com/PortakiApp/portaki-modules/commit/0f582528967c3b70130215e753877d9a723699bf))
+
 ## [1.1.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.0.0...lost-found-v1.1.0) (2026-09-29)
 
 
