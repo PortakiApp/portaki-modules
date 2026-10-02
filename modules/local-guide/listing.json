@@ -35,15 +35,6 @@
       "en": "Nearby tickets: radius and minimum rating (optional)"
     }
   ],
-  "capabilities": [
-    {
-      "label": {
-        "fr": "Catalogue de billets et d’activités",
-        "en": "Tickets and activities catalogue"
-      },
-      "kind": "pool"
-    }
-  ],
   "publishedLangs": [
     "fr",
     "en"

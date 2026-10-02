@@ -4,7 +4,7 @@ use std::collections::BTreeSet;
 
 use chrono::{DateTime, Duration, Utc};
 use portaki_sdk::capability::{self, CapabilityId};
-use portaki_sdk::host::with_host;
+use portaki_sdk::host::{with_host, HostBackend};
 use portaki_sdk::sdui::surface::Surface;
 use portaki_test_utils::MockContext;
 use serde_json::{json, Value};
@@ -43,8 +43,9 @@ fn guest(capabilities: &[CapabilityId]) -> MockContext {
         .with_now(now())
 }
 
-fn pool() -> [CapabilityId; 2] {
-    [capability::core::STORAGE, capability::external::TIQETS_POOL]
+/// Plus de capacité Tiqets (ADR-0021) : seul le stockage, que le cache demande.
+fn pool() -> [CapabilityId; 1] {
+    [capability::core::STORAGE]
 }
 
 /// Une entrée de cache telle que le module l'écrit, datée de `age` avant [`now`].
@@ -149,29 +150,44 @@ fn the_section_is_off_until_the_host_turns_it_on() {
         });
 }
 
+/// ADR-0021 : sans clé (ni celle de l'hôte, ni celle de Portaki), l'appel échoue ; la section se
+/// tait, et l'écran de l'hôte le dit tant que le constat a moins d'un jour.
 #[test]
 #[serial]
-fn without_pool_or_own_key_nothing_is_called() {
-    guest(&[capability::core::STORAGE])
+fn without_any_key_the_section_is_silent_and_the_host_is_told() {
+    let (ctx, host) = guest(&pool())
         .with_config(&enabled())
-        .with_connector_response("tiqets", "nearby_products", RECORDED)
-        .run_with(|ctx, host| {
-            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
-            assert!(!json.contains("guest.tiqets.title"), "{json}");
-            assert!(host.connector_calls().is_empty());
+        .with_connector_error("tiqets", "nearby_products", "connector_credential_missing")
+        .build();
+    let backend = host.clone();
+    with_host(host, ctx.clone(), || {
+        let json = surface_json(&render_explore_detail(ctx.clone()).expect("surface"));
+        assert!(!json.contains("guest.tiqets.title"), "{json}");
+    });
+    assert!(backend.kv_get("tiqets_key_missing").expect("kv").is_some());
+    MockContext::host()
+        .with_config(&enabled())
+        .with_kv("tiqets_key_missing", b"1".to_vec())
+        .run(|ctx| {
+            let json = surface_json(&render_host_main(ctx).expect("host main"));
+            assert!(json.contains("i18n:host.tiqets.status.missingKey"), "{json}");
         });
 }
 
+/// Un appel qui aboutit efface le constat : la clé a été posée depuis.
 #[test]
 #[serial]
-fn the_hosts_own_key_is_enough() {
-    guest(&[capability::core::STORAGE, capability::external::TIQETS_BYOK])
+fn a_successful_call_clears_the_missing_key_note() {
+    let (ctx, host) = guest(&pool())
         .with_config(&enabled())
+        .with_kv("tiqets_key_missing", b"1".to_vec())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
-        .run(|ctx| {
-            assert!(surface_json(&render_explore_detail(ctx).expect("surface"))
-                .contains("Musée Van Gogh"));
-        });
+        .build();
+    let backend = host.clone();
+    with_host(host, ctx.clone(), || {
+        assert!(surface_json(&render_explore_detail(ctx.clone()).expect("surface")).contains("Musée Van Gogh"));
+    });
+    assert!(backend.kv_get("tiqets_key_missing").expect("kv").is_none());
 }
 
 #[test]
@@ -301,6 +317,7 @@ fn the_host_sheet_says_why_nothing_would_show() {
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&enabled())
+        .with_kv("tiqets_key_missing", b"1".to_vec())
         .run(|ctx| {
             let json = surface_json(&render_host_main(ctx).expect("host main"));
             assert!(json.contains("i18n:host.section.tiqets"), "{json}");
@@ -379,10 +396,7 @@ fn every_tiqets_key_exists_in_both_bundles() {
         "guest.tiqets.priceFrom",
         "guest.tiqets.rating",
         "connector.tiqets.name",
-        "capability.tiqets.purpose",
-        "capability.tiqets.fallback",
-        "capability.tiqets.byok.purpose",
-        "capability.tiqets.byok.fallback",
+        "host.tiqets.status.missingKey",
         "host.tiqets.radius.5",
         "host.tiqets.radius.10",
         "host.tiqets.radius.20",

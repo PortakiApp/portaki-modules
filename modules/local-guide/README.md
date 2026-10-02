@@ -11,10 +11,10 @@ Official Portaki local guide module — nearby spots and host picks.
 | Capability | Required | Purpose |
 |------------|----------|---------|
 | `core.storage` | Yes | KV config (`spots`, `disclaimer`, `activities`, `tiqets`) and the Tiqets cache |
-| `external.tiqets.pool` | No | Tiqets section with Portaki's partner key (monthly quota per workspace) |
-| `external.tiqets.byok` | No | Tiqets section with the host's own partner key |
 
-Permission `connectors:tiqets` — the only connector this module calls.
+Permission `connectors:tiqets` — the only connector this module calls. It is declared by the
+module itself (ADR-0021), not by the platform catalogue: its key is Portaki's, set as the module's
+publisher key in the developer space, or the host's own, set in "Services this module calls".
 
 ## Sections
 
@@ -110,16 +110,18 @@ property's coordinates (`lat`, `lng`, `max_distance`). Read-only — the partner
 key covers content and availability, never ordering. Booking happens on Tiqets,
 through each product's `product_url`, which Tiqets returns **with the calling
 key's affiliate code already in it** (`?partner=…`). The module never rewrites
-it: on the pool key the commission goes to Portaki, on a BYOK key to the host.
+it: on Portaki's key the commission goes to Portaki, on the host's own key to the host.
 
-The platform pins the host (`api.tiqets.com`) and the credential shape
-(`Authorization: Token <key>`) in `contracts/connectors/tiqets.json`; the module
-declares only the operation path.
+The connector is declared here: `api.tiqets.com`, `Authorization: Token <key>`
+(`auth = "header:Authorization"`, `auth_prefix = "Token "`), the operation's
+`fields` and `sends = "property_coordinates"`. The runtime only sends it there
+because the published manifest says so.
 
 - **Off by default** (`tiqets.enabled`), like the GetYourGuide section. Host
   settings: radius (5, 10, 20 or 40 km, default 10) and minimum rating (any, 3+, 4+).
-  The host sheet says why nothing would show: section off, no key (neither pool
-  nor BYOK), or no property position.
+  The host sheet says why nothing would show: section off, no key (the last
+  call found neither the host's nor Portaki's — noted for a day), or no
+  property position.
 - **Cache**: one KV entry per booklet language (`tiqets_cache.<lang>`), fresh for
   24 h. When Tiqets fails (down, quota spent) an entry up to **14 days** old is
   still served; past that the section disappears — Tiqets requires image caches
