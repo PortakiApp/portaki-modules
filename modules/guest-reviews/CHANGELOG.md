@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v1.2.0...guest-reviews-v1.2.1) (2026-10-02)
+
+
+### Bug Fixes
+
+* **guest-reviews:** read the rating the form actually sends ([073d327](https://github.com/PortakiApp/portaki-modules/commit/073d32776d85da6d4ed31d34c2190ac2eb4f857f)), closes [#214](https://github.com/PortakiApp/portaki-modules/issues/214)
+
 ## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v1.1.0...guest-reviews-v1.2.0) (2026-10-02)
 
 
