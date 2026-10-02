@@ -48,6 +48,12 @@ pub struct ReorderAppliancesArgs {
 pub struct SaveSafetyNoticeArgs {
     #[serde(default, rename = "safetyNotice", alias = "safety_notice")]
     pub safety_notice: String,
+    #[serde(
+        default,
+        rename = "paperManualsLocation",
+        alias = "paper_manuals_location"
+    )]
+    pub paper_manuals_location: String,
 }
 
 /// Host SDUI form payload — nested `devices.N.*` + `safetyNotice`.
@@ -56,6 +62,14 @@ pub struct SaveSafetyNoticeArgs {
 pub struct ReplaceDevicesArgs {
     #[serde(default, rename = "safetyNotice", alias = "safety_notice")]
     pub safety_notice: String,
+    /// Absent = laissée telle quelle. Un formulaire qui n'envoie que les appareils ne doit pas
+    /// effacer l'emplacement des notices papier au passage.
+    #[serde(
+        default,
+        rename = "paperManualsLocation",
+        alias = "paper_manuals_location"
+    )]
+    pub paper_manuals_location: Option<String>,
     #[serde(default)]
     pub devices: Vec<ReplaceDeviceSlot>,
 }
@@ -220,6 +234,7 @@ pub fn save_safety_notice(ctx: Context, args: SaveSafetyNoticeArgs) -> Result<()
     let lang = crate::content::AppliancesBundle::lang_code(&ctx.locale);
     let mut payload = store::load_payload_for(&lang, &ctx.property.locale)?;
     payload.safety_notice = normalize_description(&args.safety_notice);
+    payload.paper_manuals_location = args.paper_manuals_location.trim().to_string();
     let _ = store::save_payload_for(&lang, &payload)?;
     Ok(())
 }
@@ -289,6 +304,9 @@ pub fn replace_devices(ctx: Context, args: ReplaceDevicesArgs) -> Result<()> {
 
     let mut payload = store::load_payload_for(&lang, &ctx.property.locale)?;
     payload.safety_notice = normalize_description(&args.safety_notice);
+    if let Some(location) = args.paper_manuals_location.as_deref() {
+        payload.paper_manuals_location = location.trim().to_string();
+    }
     payload.devices = next_devices;
     payload.sort_by_order();
     let _ = store::save_payload_for(&lang, &payload)?;

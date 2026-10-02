@@ -7,8 +7,9 @@ use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use serde_json::json;
 
 use appliances::{
-    get_content, render_explore_detail, render_explore_item, render_home_card, reset_test_store,
-    save_appliance, ApplianceStatus, GetContentArgs, SaveApplianceArgs,
+    get_content, render_explore_detail, render_explore_item, render_home_card, replace_devices,
+    reset_test_store, save_appliance, ApplianceStatus, GetContentArgs, ReplaceDeviceSlot,
+    ReplaceDevicesArgs, SaveApplianceArgs,
 };
 
 fn seed_two_devices(ctx: portaki_sdk::prelude::Context) {
@@ -170,7 +171,8 @@ fn explore_item_uses_device_id_and_howto_steps() {
             assert!(SurfaceAssertions::new(&tv).contains_type("ListItem"));
             assert!(SurfaceAssertions::new(&tv).contains_type("Eyebrow"));
             assert!(SurfaceAssertions::new(&tv).contains_type("Button"));
-            assert!(SurfaceAssertions::new(&tv).contains_type("Link"));
+            // La notice n'est plus un lien nu : elle est une rangée de la carte « Notices » (§3.1).
+            assert!(SurfaceAssertions::new(&tv).contains_type("Card"));
             let tv_json = serde_json::to_string(&tv).expect("json");
             assert!(tv_json.contains("Télévision"));
             assert!(tv_json.contains("Allumez avec la télécommande."));
@@ -265,5 +267,122 @@ fn migrates_legacy_payload_on_read() {
             let card = render_home_card(ctx).expect("render");
             // featured=false after migration → empty featured card children, still Card
             assert!(SurfaceAssertions::new(&card).contains_type("Card"));
+        });
+}
+
+/// La carte « Notices » : lien seul, papier seul, les deux, ou masquée (§3.1 et §9).
+#[test]
+#[serial]
+fn the_manuals_card_appears_only_when_there_is_a_manual() {
+    for (manual_url, paper, shown) in [
+        (
+            "https://example.com/m.pdf",
+            "Boîte rouge, étagère du salon",
+            true,
+        ),
+        ("https://example.com/m.pdf", "", true),
+        ("", "Boîte rouge, étagère du salon", true),
+        ("", "", false),
+    ] {
+        reset_test_store();
+        MockContext::guest()
+            .with_property(Property::default())
+            .with_capabilities(&[capability::core::STORAGE])
+            .run(|ctx| {
+                replace_devices(
+                    ctx.clone(),
+                    ReplaceDevicesArgs {
+                        safety_notice: String::new(),
+                        paper_manuals_location: Some(paper.to_string()),
+                        devices: vec![ReplaceDeviceSlot {
+                            id: "tv".into(),
+                            name: "Télévision".into(),
+                            manual_url: manual_url.to_string(),
+                            ..ReplaceDeviceSlot::default()
+                        }],
+                    },
+                )
+                .expect("save");
+
+                let mut item_ctx = ctx.clone();
+                item_ctx.input = json!({ "deviceId": "tv" });
+                let json_out =
+                    serde_json::to_string(&render_explore_item(item_ctx).expect("render")).unwrap();
+
+                assert_eq!(
+                    json_out.contains("explore.item.manuals"),
+                    shown,
+                    "lien: {manual_url:?}, papier: {paper:?} — {json_out}"
+                );
+                assert_eq!(
+                    json_out.contains("explore.item.manual.paper"),
+                    !paper.is_empty()
+                );
+            });
+    }
+}
+
+/// L'emplacement des notices papier vaut pour tous les appareils, pas pour un seul.
+#[test]
+#[serial]
+fn the_paper_location_is_shared_by_every_appliance() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            replace_devices(
+                ctx.clone(),
+                ReplaceDevicesArgs {
+                    safety_notice: String::new(),
+                    paper_manuals_location: Some("Boîte rouge".into()),
+                    devices: vec![
+                        ReplaceDeviceSlot {
+                            id: "tv".into(),
+                            name: "Télévision".into(),
+                            ..ReplaceDeviceSlot::default()
+                        },
+                        ReplaceDeviceSlot {
+                            id: "washer".into(),
+                            name: "Lave-linge".into(),
+                            ..ReplaceDeviceSlot::default()
+                        },
+                    ],
+                },
+            )
+            .expect("save");
+
+            for device in ["tv", "washer"] {
+                let mut item_ctx = ctx.clone();
+                item_ctx.input = json!({ "deviceId": device });
+                let out =
+                    serde_json::to_string(&render_explore_item(item_ctx).expect("render")).unwrap();
+                assert!(out.contains("Boîte rouge"), "{device}: {out}");
+            }
+        });
+}
+
+/// Le numéro d'une étape est un repère en tête de rangée, pas le texte de l'étape.
+#[test]
+#[serial]
+fn a_step_reads_its_text_not_its_number() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            seed_two_devices(ctx.clone());
+            let mut item_ctx = ctx.clone();
+            item_ctx.input = json!({ "deviceId": "tv" });
+            let out =
+                serde_json::to_string(&render_explore_item(item_ctx).expect("render")).unwrap();
+
+            // Le titre porte la consigne, le repère porte le rang.
+            assert!(
+                out.contains("\"title\":\"Allumez avec la télécommande.\""),
+                "{out}"
+            );
+            assert!(out.contains("\"index\":1"), "{out}");
+            assert!(!out.contains("\"title\":\"1\""), "{out}");
         });
 }
