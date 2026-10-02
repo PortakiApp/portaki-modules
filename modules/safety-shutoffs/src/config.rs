@@ -15,17 +15,12 @@ pub const MAX_SHUTOFFS: usize = 8;
 ///
 /// La valeur de fil est stable et la traduction vit dans les bundles : renommer un libellé ne
 /// doit pas perdre le type que l'hôte a choisi.
-///
-/// ponytail: la maquette dessine l'extincteur et la carte d'accueil avec `shield`, qui n'existe
-/// pas dans `IconName` du SDK 9.5.0 — MynaUI l'exporte, le vocabulaire ne le reprend pas encore.
-/// D'ici là l'extincteur porte le triangle et la carte les curseurs ; deux lignes à changer quand
-/// `shield` arrive.
 pub const KINDS: &[(&str, IconName)] = &[
     ("electricity", IconName::Zap),
     ("water", IconName::Droplet),
     ("gas", IconName::Flame),
-    ("extinguisher", IconName::TriangleAlert),
-    ("smoke_detector", IconName::Bell),
+    ("extinguisher", IconName::FireExtinguisher),
+    ("smoke_detector", IconName::AlarmSmoke),
     ("other", IconName::InfoCircle),
 ];
 

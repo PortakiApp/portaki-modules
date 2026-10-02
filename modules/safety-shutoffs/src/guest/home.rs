@@ -12,14 +12,14 @@ use portaki_sdk::sdui::surface::Surface;
 pub fn build_home_card() -> Surface {
     Surface::new(
         Card::new()
-            .icon(IconName::Sliders)
+            .icon(IconName::Shield)
             .title("i18n:home.card.title")
             .subtitle("i18n:home.card.subtitle")
             .action(Action::open_overlay(
                 OverlayPresentation::Fullscreen,
                 crate::guest::EXPLORE_DETAIL,
                 OverlayArgs::new()
-                    .icon(IconName::Sliders)
+                    .icon(IconName::Shield)
                     .title("i18n:nav.safety-shutoffs"),
             )),
     )

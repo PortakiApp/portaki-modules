@@ -15,7 +15,7 @@ use crate::config::{ModuleConfig, ShutoffRow, KINDS, MAX_SHUTOFFS};
     id = "main",
     placement = HostPlacement::PropertyWorkspaceTab,
     label_key = "catalog.host.main",
-    icon = IconName::Sliders
+    icon = IconName::Shield
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let config = ModuleConfig::load(&ctx)?;
@@ -48,7 +48,7 @@ fn shutoffs_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
     Card::new()
         .title("i18n:host.shutoffs.title")
         .subtitle("i18n:host.shutoffs.subtitle")
-        .icon(IconName::Sliders)
+        .icon(IconName::Shield)
         .child(
             StepList::new()
                 .addLabel("i18n:host.shutoffs.add")
