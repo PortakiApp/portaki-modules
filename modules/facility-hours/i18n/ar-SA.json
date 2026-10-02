@@ -39,5 +39,10 @@
   "module.displayName": "المواعيد والدخول",
   "nav.facility-hours": "المواعيد والدخول",
   "surface.host.main.subtitle": "اضبط مواعيد مرافق مكان الإقامة",
-  "surface.host.main.title": "المواعيد والدخول"
+  "surface.host.main.title": "المواعيد والدخول",
+  "email.block.label": "ساعات العمل",
+  "email.block.title": "اليوم",
+  "email.block.link": "كل ساعات العمل",
+  "email.state.open": "٢٤ ساعة",
+  "email.state.closed": "مغلق"
 }

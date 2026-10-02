@@ -39,5 +39,10 @@
   "module.displayName": "开放时间与通行",
   "nav.facility-hours": "开放时间与通行",
   "surface.host.main.subtitle": "设置住所各项设施的开放时间",
-  "surface.host.main.title": "开放时间与通行"
+  "surface.host.main.title": "开放时间与通行",
+  "email.block.label": "开放时间",
+  "email.block.title": "今天",
+  "email.block.link": "查看全部开放时间",
+  "email.state.open": "24 小时",
+  "email.state.closed": "关闭"
 }

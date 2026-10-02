@@ -39,5 +39,10 @@
   "module.displayName": "Zeiten & Zugang",
   "nav.facility-hours": "Zeiten & Zugang",
   "surface.host.main.subtitle": "Legen Sie die Öffnungszeiten der Einrichtungen fest",
-  "surface.host.main.title": "Zeiten & Zugang"
+  "surface.host.main.title": "Zeiten & Zugang",
+  "email.block.label": "Öffnungszeiten",
+  "email.block.title": "Heute",
+  "email.block.link": "Alle Öffnungszeiten",
+  "email.state.open": "0–24 Uhr",
+  "email.state.closed": "Geschlossen"
 }

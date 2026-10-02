@@ -1,11 +1,13 @@
 //! Portaki facility-hours module — amenity schedules.
 
 mod config;
+mod email_context;
 mod guest;
 mod host;
 mod schedule;
 
 pub use config::{FacilityRow, ModuleConfig};
+pub use email_context::email_blocks;
 pub use guest::{render_explore_detail, render_home_card};
 pub use host::render_host_main;
 

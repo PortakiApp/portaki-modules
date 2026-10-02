@@ -50,7 +50,11 @@ pub fn email_blocks(ctx: Context, _args: EmailContextArgs) -> Result<EmailBlocks
         None => {
             let note = config.takeout_note.get(&ctx.locale).trim().to_string();
             if note.is_empty() {
-                config.collection_schedule.get(&ctx.locale).trim().to_string()
+                config
+                    .collection_schedule
+                    .get(&ctx.locale)
+                    .trim()
+                    .to_string()
             } else {
                 note
             }
