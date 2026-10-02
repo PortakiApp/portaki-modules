@@ -147,7 +147,8 @@ property data sent. Read-only: booking happens on viator.com through each
 product's `product_url`, which Viator returns **with Portaki's affiliate
 parameters already in it** (`pid`, `mcid`, `medium`). The module never rewrites it.
 
-The connector is declared here: `api.viator.com`, the key as `exp-api-key`
+The connector is declared here: `api.sandbox.viator.com` for now (Portaki's key is a sandbox key;
+production is `api.viator.com`, switched with the production key), the key as `exp-api-key`
 (`auth = "header:exp-api-key"`), `Accept: application/json;version=2.0`, the
 `lang` argument moved into `Accept-Language` (`header_arg`), the operation's
 `fields` and `sends = "property_city"`.
