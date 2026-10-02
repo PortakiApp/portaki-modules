@@ -26,6 +26,7 @@ High-value guest booklet modules that should work end-to-end.
 | 150 | `facility-hours` | |
 | 160 | `waste-recycling` | |
 | 170 | `ev-parking` | |
+| 180 | `safety-shutoffs` | |
 
 ## Beta (shown after, with Beta badge)
 
