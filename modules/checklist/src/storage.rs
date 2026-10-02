@@ -130,12 +130,27 @@ pub fn create_from_template(template: &Template) -> Result<Checklist> {
         created_at: time::now()?,
     };
     save_checklist(list.clone())?;
+    let groups = template.item_groups();
     let items = template
         .item_labels()
         .into_iter()
-        .map(|(fr, en, photo)| {
+        .enumerate()
+        .map(|(index, (fr, en, photo))| {
             let labels = Labels::from([("fr".to_string(), fr), ("en".to_string(), en)]);
-            (None, labels, photo)
+            let group = match groups.get(index) {
+                Some((fr, en)) if !fr.trim().is_empty() => Labels::from([
+                    ("fr".to_string(), fr.clone()),
+                    ("en".to_string(), en.clone()),
+                ]),
+                _ => Labels::new(),
+            };
+            ItemDraft {
+                id: None,
+                labels,
+                group,
+                description: Labels::new(),
+                photo_required: photo,
+            }
         })
         .collect();
     replace_items(list.id, items)?;
@@ -189,18 +204,30 @@ pub fn items_of(checklist_id: Uuid) -> Result<Vec<ChecklistItem>> {
 }
 
 /// Replaces the items of a list; an item keeping its id keeps its guest completions.
-pub fn replace_items(checklist_id: Uuid, items: Vec<(Option<Uuid>, Labels, bool)>) -> Result<()> {
+/// Une étape telle que le formulaire hôte la rend : ce qui identifie la ligne, ses textes par
+/// langue, et les deux cases du §2.9.
+pub struct ItemDraft {
+    pub id: Option<Uuid>,
+    pub labels: Labels,
+    pub group: Labels,
+    pub description: Labels,
+    pub photo_required: bool,
+}
+
+pub fn replace_items(checklist_id: Uuid, items: Vec<ItemDraft>) -> Result<()> {
     let existing = items_of(checklist_id)?;
-    let kept: Vec<Uuid> = items.iter().filter_map(|(id, _, _)| *id).collect();
+    let kept: Vec<Uuid> = items.iter().filter_map(|draft| draft.id).collect();
     for row in &existing {
         if !kept.contains(&row.id) {
             remove(&TEST_ITEMS, row.id)?;
         }
     }
     let now = time::now()?;
-    for (index, (id, labels, photo_required)) in items.into_iter().enumerate() {
-        let previous = id.and_then(|id| existing.iter().find(|row| row.id == id));
-        let (label_fr, label_en) = labels::encode_labels(&labels);
+    for (index, draft) in items.into_iter().enumerate() {
+        let previous = draft
+            .id
+            .and_then(|id| existing.iter().find(|row| row.id == id));
+        let (label_fr, label_en) = labels::encode_labels(&draft.labels);
         upsert(
             &TEST_ITEMS,
             ChecklistItem {
@@ -208,7 +235,9 @@ pub fn replace_items(checklist_id: Uuid, items: Vec<(Option<Uuid>, Labels, bool)
                 checklist_id,
                 label_fr,
                 label_en,
-                photo_required,
+                group_i18n: labels::encode_map(&draft.group),
+                description_i18n: labels::encode_map(&draft.description),
+                photo_required: draft.photo_required,
                 sort_order: index as i32,
                 created_at: previous.map_or(now, |row| row.created_at),
             },

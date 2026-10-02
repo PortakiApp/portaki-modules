@@ -53,7 +53,7 @@ fn the_departure_list_opens_two_days_before_check_out() {
             .map_err(|e| e.to_string())?;
         let shown = serde_json::to_string(&surface)
             .unwrap()
-            .contains("completeItem");
+            .contains("setCompleted");
         let due = scenario.stay.check_out_offset <= 2;
         if shown == due {
             Ok(())

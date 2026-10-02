@@ -138,6 +138,33 @@ impl Template {
             })
             .collect()
     }
+
+    /// La rubrique de chaque étape (§2.9), vide quand le modèle n'en range aucune.
+    ///
+    /// Seule la liste de départ en pose : c'est celle que le voyageur lit, et le groupement n'a de
+    /// sens que là. Deux rubriques pour cinq étapes — ce qu'on fait dans le logement, puis ce qu'on
+    /// fait en partant — plutôt qu'une par étape, qui n'aurait rien regroupé.
+    pub fn item_groups(&self) -> Vec<(String, String)> {
+        (0..self.items)
+            .map(|index| match self.group_key(index) {
+                Some(key) => {
+                    let text = i18n::text(key, &[]);
+                    (text.fr, text.en)
+                }
+                None => (String::new(), String::new()),
+            })
+            .collect()
+    }
+
+    fn group_key(&self, index: usize) -> Option<&'static str> {
+        if self.id != "departure" {
+            return None;
+        }
+        Some(match index {
+            0 | 1 | 4 => "template.departure.group.home",
+            _ => "template.departure.group.leaving",
+        })
+    }
 }
 
 /// Ticking this item of a host list means the consumables were restocked.

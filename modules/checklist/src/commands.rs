@@ -2,14 +2,36 @@
 
 use portaki_sdk::host::events;
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::EditableListItem;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use uuid::Uuid;
 
-use crate::labels::Labels;
+use crate::labels::{self, Labels};
 use crate::lists;
 use crate::storage;
+
+/// Une ligne du formulaire hôte, telle que la primitive `EditableList` la sérialise.
+///
+/// Le module lit sa propre forme plutôt que `EditableListItem` du SDK : les deux champs du §2.9
+/// arrivent par le fil dès que le dashboard les envoie, sans attendre une version du SDK.
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct HostRow {
+    #[serde(default)]
+    id: Option<String>,
+    #[serde(default)]
+    label: String,
+    #[serde(default)]
+    label_en: Option<String>,
+    #[serde(default)]
+    photo: Option<bool>,
+    /// Rubrique de l'étape (§2.9), dans la langue éditée.
+    #[serde(default)]
+    group: Option<String>,
+    /// Précision sous le libellé (§2.9), dans la langue éditée.
+    #[serde(default)]
+    description: Option<String>,
+}
 
 /// Workspace header Save → the list selected in the editor.
 ///
@@ -48,7 +70,7 @@ pub struct UpdateConfigArgs {
         input = r#"{"id":"3f2b8c1e-7a4d-4e9b-9c61-2d5e8f0a1b47","name":"Avant de partir","items":[{"label":"Fermer les fenêtres"},{"label":"Sortir les poubelles"}]}"#
     )
 )]
-pub fn update_config(_ctx: Context, args: UpdateConfigArgs) -> Result<()> {
+pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
     let Some(mut list) = Uuid::parse_str(args.id.trim()).ok().and_then(|id| {
         storage::list_checklists()
             .ok()?
@@ -77,7 +99,9 @@ pub fn update_config(_ctx: Context, args: UpdateConfigArgs) -> Result<()> {
         list.placement = lists::pick(&args.placement, lists::PLACEMENTS).to_string();
     }
     let items = parse_items(args.items.as_ref())?;
+    let existing_items = storage::items_of(list.id)?;
     storage::save_checklist(list.clone())?;
+    let lang = labels::lang_code(&ctx.locale);
     let rows = items
         .into_iter()
         .filter(|item| !item.label.trim().is_empty())
@@ -91,13 +115,39 @@ pub fn update_config(_ctx: Context, args: UpdateConfigArgs) -> Result<()> {
                 .unwrap_or_else(|| fr.clone());
             let id = item.id.and_then(|id| Uuid::parse_str(&id).ok());
             let labels = Labels::from([("fr".to_string(), fr), ("en".to_string(), en)]);
-            (id, labels, host && item.photo == Some(true))
+            // Le formulaire n'édite qu'une langue à la fois pour ces deux champs : on écrit celle
+            // de la requête et on garde ce que les autres langues contenaient déjà, sinon passer
+            // en anglais pour corriger une faute effacerait le groupe français.
+            let previous = id.and_then(|id| existing_items.iter().find(|row| row.id == id));
+            let merge = |typed: Option<String>, stored: Option<&str>| -> Labels {
+                let mut map = stored.map(labels::decode_map).unwrap_or_default();
+                match typed.map(|value| value.trim().to_string()) {
+                    Some(value) if value.is_empty() => {
+                        map.remove(&lang);
+                    }
+                    Some(value) => {
+                        map.insert(lang.clone(), value);
+                    }
+                    None => {}
+                }
+                map
+            };
+            storage::ItemDraft {
+                id,
+                labels,
+                group: merge(item.group, previous.map(|row| row.group_i18n.as_str())),
+                description: merge(
+                    item.description,
+                    previous.map(|row| row.description_i18n.as_str()),
+                ),
+                photo_required: host && item.photo == Some(true),
+            }
         })
         .collect();
     storage::replace_items(list.id, rows)
 }
 
-fn parse_items(raw: Option<&Value>) -> Result<Vec<EditableListItem>> {
+fn parse_items(raw: Option<&Value>) -> Result<Vec<HostRow>> {
     let invalid = |error: serde_json::Error| PortakiError::Host(format!("invalid_items: {error}"));
     match raw {
         None | Some(Value::Null) => Ok(Vec::new()),
@@ -198,6 +248,68 @@ pub fn uncomplete_item(ctx: Context, args: ItemIdArgs) -> Result<()> {
     let stay_id = require_stay_id(&ctx)?;
     require_guest_item(args.item_id)?;
     storage::uncomplete_item(stay_id, args.item_id)?;
+    emit_progress(ctx.property_id, stay_id)
+}
+
+/// Les étapes cochées, telles que la primitive `ChoiceList` les sérialise : une liste de valeurs
+/// séparées par des virgules.
+#[portaki_sdk::wire]
+#[portaki_sdk::params]
+pub struct SetCompletedArgs {
+    #[serde(default)]
+    pub item_ids: String,
+}
+
+/// Remplace l'ensemble des étapes cochées d'un séjour.
+///
+/// Un `ChoiceList` multiple est un ensemble, pas un événement : il renvoie tout ce qui est coché à
+/// chaque basculement. Remplacer est donc idempotent — rejouer le même appel ne double rien.
+///
+/// ponytail: dernier écrit gagne. Deux téléphones qui cochent chacun une étape au même instant
+/// s'écrasent l'un l'autre ; pour une liste de départ remplie par un voyageur sur son téléphone,
+/// l'échange ne vaut pas un journal d'opérations.
+#[portaki_sdk::command(
+    name = "setCompleted",
+    guest,
+    example(
+        label = "Deux étapes cochées",
+        input = r#"{"itemIds":"8c0e5a4b-1d2f-4e6a-9b7c-3f1d2e4a5b6c,1f8e7d6c-5b4a-4938-8271-6e5d4c3b2a19"}"#
+    ),
+    example(label = "Tout décoché", input = r#"{"itemIds":""}"#)
+)]
+pub fn set_completed(ctx: Context, args: SetCompletedArgs) -> Result<()> {
+    let stay_id = require_stay_id(&ctx)?;
+    let guest_items = crate::queries::guest_items()?;
+    let mut wanted = Vec::new();
+    for raw in args.item_ids.split(',') {
+        let trimmed = raw.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        let id = Uuid::parse_str(trimmed)
+            .map_err(|_| PortakiError::Host("invalid_item_id".to_string()))?;
+        if !guest_items.iter().any(|item| item.id == id) {
+            return Err(PortakiError::Host("not_guest_item".to_string()));
+        }
+        if !wanted.contains(&id) {
+            wanted.push(id);
+        }
+    }
+
+    let already: Vec<Uuid> = storage::list_completions(Some(stay_id))?
+        .into_iter()
+        .map(|row| row.item_id)
+        .collect();
+    for id in &already {
+        if !wanted.contains(id) && guest_items.iter().any(|item| item.id == *id) {
+            storage::uncomplete_item(stay_id, *id)?;
+        }
+    }
+    for id in &wanted {
+        if !already.contains(id) {
+            storage::complete_item(stay_id, *id)?;
+        }
+    }
     emit_progress(ctx.property_id, stay_id)
 }
 

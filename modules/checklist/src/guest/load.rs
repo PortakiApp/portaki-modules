@@ -15,15 +15,16 @@ pub enum GuestLoad {
     Ready(GuestChecklistData),
 }
 
+/// Ce que le livret a besoin de savoir pour rendre la liste.
+///
+/// Plus de compte ni de pourcentage : la barre de progression et le « n / N » sont dessinés par le
+/// livret à partir de ce qui est coché, et les calculer ici revenait à décider deux fois.
 pub struct GuestChecklistData {
     /// Guest lists open right now, each with its items.
     pub lists: Vec<(Checklist, Vec<ChecklistItem>)>,
     pub completed: Vec<Uuid>,
     pub locale: String,
     pub property_locale: String,
-    pub done: usize,
-    pub total: usize,
-    pub percent: u8,
     /// Departure instant (UTC) — rendered as the card title in the property timezone.
     pub checkout_at: Option<chrono::DateTime<chrono::Utc>>,
     pub property_timezone: String,
@@ -64,19 +65,11 @@ pub fn load_guest_checklist(ctx: &GuestContext, departure_only: bool) -> Result<
             .collect(),
         None => Vec::new(),
     };
-    let items = guest_lists.iter().flat_map(|(_, items)| items);
-    let total = items.clone().count();
-    let done = items.filter(|item| completed.contains(&item.id)).count();
-    let percent = (done * 100).checked_div(total).unwrap_or(0) as u8;
-
     Ok(GuestLoad::Ready(GuestChecklistData {
         lists: guest_lists,
         completed,
         locale: ctx.locale.clone(),
         property_locale: ctx.property.locale.clone(),
-        done,
-        total,
-        percent,
         checkout_at,
         property_timezone: ctx.property.timezone.clone(),
     }))

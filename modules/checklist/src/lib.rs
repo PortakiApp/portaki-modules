@@ -15,8 +15,9 @@ mod storage;
 mod tasks;
 
 pub use commands::{
-    complete_item, create_checklist, delete_checklist, uncomplete_item, update_config,
-    CreateChecklistArgs, DeleteChecklistArgs, ItemIdArgs, UpdateConfigArgs,
+    complete_item, create_checklist, delete_checklist, set_completed, uncomplete_item,
+    update_config, CreateChecklistArgs, DeleteChecklistArgs, ItemIdArgs, SetCompletedArgs,
+    UpdateConfigArgs,
 };
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use entities::{Checklist, ChecklistCompletion, ChecklistItem, TaskItemState};
