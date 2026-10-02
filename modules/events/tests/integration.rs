@@ -5,7 +5,7 @@ use serial_test::serial;
 
 use events::{render_explore_detail, render_home_card, render_host_main, render_upcoming_card};
 use portaki_test_utils::{MockContext, SurfaceAssertions};
-use serde_json::json;
+use serde_json::{json, Value};
 
 #[path = "../../../support/config_form.rs"]
 mod config_form;
@@ -187,6 +187,44 @@ fn without_a_position_nothing_is_searched_nearby() {
         });
 }
 
+/// Les lignes suivent ce que l'hôte a saisi, et « Ajouter » en demande une de plus.
+///
+/// Six emplacements figés gelaient la liste à six : l'hôte voyait quatre cartes vides quand il
+/// avait saisi deux événements, et ne pouvait pas en saisir un septième parce que le formulaire
+/// ne le dessinait jamais.
+#[test]
+#[serial]
+fn the_form_draws_the_rows_the_host_has() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({}))
+        .run(|ctx| {
+            let json =
+                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            assert!(json.contains("events.0.title"), "{json}");
+            assert!(!json.contains("events.1.title"), "{json}");
+            assert!(json.contains(r#""events_count":2"#), "{json}");
+        });
+
+    let rows: Vec<Value> = (0..events::MAX_EVENTS)
+        .map(|i| json!({ "title": format!("Événement {i}"), "place": "Ici" }))
+        .collect();
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({ "events": rows }))
+        .run(|ctx| {
+            let json =
+                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            assert!(json.contains("events.11.title"), "{json}");
+            assert!(!json.contains("events.12.title"), "{json}");
+            // La borne tient : au douzième, « Ajouter » n'en demande pas un treizième.
+            assert!(
+                json.contains(&format!(r#""events_count":{}"#, events::MAX_EVENTS)),
+                "{json}"
+            );
+        });
+}
+
 /// A host writing in English: the French texts stay, and so do the end, the note and the id the
 /// form does not carry; rows keep their place.
 #[test]
@@ -224,7 +262,8 @@ fn a_save_in_english_keeps_the_french() {
             assert!(sent["events"][1].get("id").is_none());
             assert_eq!(sent["events"][2]["id"], "evt-3");
             assert_eq!(sent["events"][2]["title"], "Brocante");
-            assert_eq!(sent["events"].as_array().unwrap().len(), 6);
+            // Trois lignes stockées, trois dessinées : plus de créneaux vides en bout de liste.
+            assert_eq!(sent["events"].as_array().unwrap().len(), 3);
             assert_eq!(sent["disclaimer"], "Dates are indicative");
 
             let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
