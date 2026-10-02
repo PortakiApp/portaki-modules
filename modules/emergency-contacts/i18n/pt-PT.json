@@ -25,7 +25,7 @@
   "host.phone.label": "Telefone do anfitrião (visível)",
   "host.phone.placeholder": "+33 6 12 34 56 78",
   "host.section.hostPhone": "Telefone do anfitrião",
-  "host.section.hostPhone.help": "Mostrado no guia, contactável durante a estadia.",
+  "host.section.hostPhone.help": "Por omissão, o da sua conta. Preencha-o para mostrar outro número aos hóspedes.",
   "module.catalogDescription": "Números de emergência, farmácia, médico e linha direta.",
   "module.description": "Números úteis e linha do anfitrião",
   "module.displayName": "Emergências e úteis",

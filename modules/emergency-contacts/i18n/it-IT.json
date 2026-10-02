@@ -25,7 +25,7 @@
   "host.phone.label": "Telefono dell'host (visibile)",
   "host.phone.placeholder": "+33 6 12 34 56 78",
   "host.section.hostPhone": "Telefono dell'host",
-  "host.section.hostPhone.help": "Mostrato nella guida, raggiungibile durante il soggiorno.",
+  "host.section.hostPhone.help": "Per impostazione predefinita, quello del tuo account. Compilalo per mostrarne un altro agli ospiti.",
   "module.catalogDescription": "Numeri di emergenza, farmacia, medico e linea diretta.",
   "module.description": "Numeri utili e linea dell'host",
   "module.displayName": "Emergenze e utili",

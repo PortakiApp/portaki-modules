@@ -27,7 +27,6 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
         .children(vec![Field::new()
             .name("host_visible_phone")
             .label("i18n:host.phone.label")
-            .required(true)
             .child(
                 TextInput::new()
                     .name("host_visible_phone")

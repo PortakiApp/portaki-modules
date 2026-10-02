@@ -25,7 +25,7 @@
   "host.phone.label": "Telefon des Gastgebers (sichtbar)",
   "host.phone.placeholder": "+33 6 12 34 56 78",
   "host.section.hostPhone": "Telefon des Gastgebers",
-  "host.section.hostPhone.help": "Erscheint in der Gästemappe, erreichbar während des Aufenthalts.",
+  "host.section.hostPhone.help": "Standardmäßig die Nummer Ihres Kontos. Tragen Sie eine andere ein, um Gästen diese zu zeigen.",
   "module.catalogDescription": "Notrufnummern, Apotheke, Arzt und Ihre direkte Leitung.",
   "module.description": "Nützliche Nummern und die Leitung des Gastgebers",
   "module.displayName": "Notfall & Nützliches",
