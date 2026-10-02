@@ -6,9 +6,9 @@ use crate::content::{
 };
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::common::SurfaceLevel;
+use portaki_sdk::sdui::common::{Leading, LeadingVisual, SurfaceLevel};
 use portaki_sdk::sdui::primitives::{
-    Button, Card, EmptyState, Eyebrow, InfoBanner, Link, ListItem, RichText, Stack, Text,
+    Button, Card, EmptyState, Eyebrow, InfoBanner, ListItem, RichText, Stack, Text,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -44,15 +44,53 @@ pub fn build_item_detail(payload: &AppliancesPayload, device_id: Option<&str>) -
         .with_id(crate::guest::EXPLORE_ITEM);
     };
 
-    Surface::new(
-        Stack::new()
-            .gap(14.0)
-            .children(device_detail_children(device)),
-    )
+    Surface::new(Stack::new().gap(14.0).children(device_detail_children(
+        device,
+        &payload.paper_manuals_location,
+    )))
     .with_id(crate::guest::EXPLORE_ITEM)
 }
 
-fn device_detail_children(device: &Appliance) -> Vec<Component> {
+/// La carte « Notices » : le lien du fabricant, et où trouver la version papier (§3.1).
+///
+/// Masquée quand il n'y a ni l'un ni l'autre — une carte qui annonce des notices et n'en liste
+/// aucune ne dit rien. Le dépôt d'un PDF attend le lot de stockage de fichiers.
+fn manuals_card(device: &Appliance, paper_location: &str) -> Option<Component> {
+    let url = device.manual_url.trim();
+    let paper = paper_location.trim();
+    if url.is_empty() && paper.is_empty() {
+        return None;
+    }
+
+    let mut rows: Vec<Component> = Vec::new();
+    if !url.is_empty() {
+        rows.push(Component::ListItem(
+            ListItem::new()
+                .title("i18n:explore.item.manual")
+                .leading(Leading::Icon("file-text".into()))
+                .chevron(true)
+                .action(Action::external(url.to_string())),
+        ));
+    }
+    if !paper.is_empty() {
+        rows.push(Component::ListItem(
+            ListItem::new()
+                .title("i18n:explore.item.manual.paper")
+                .subtitle(paper.to_string())
+                .leading(Leading::Icon("home".into())),
+        ));
+    }
+
+    Some(Component::Card(
+        Card::new()
+            .surface(SurfaceLevel::Elevated)
+            .icon(IconName::FileText)
+            .title("i18n:explore.item.manuals")
+            .children(rows),
+    ))
+}
+
+fn device_detail_children(device: &Appliance, paper_manuals_location: &str) -> Vec<Component> {
     let mut children = vec![header_row(device)];
 
     let steps = extract_howto_steps(&device.description);
@@ -61,10 +99,15 @@ fn device_detail_children(device: &Appliance) -> Vec<Component> {
             Eyebrow::new().text("i18n:explore.item.howto"),
         )];
         for (index, step) in steps.iter().enumerate() {
+            // Le numéro est un repère, pas le texte de l'étape : il passe en tête de rangée et
+            // l'étape reprend le titre. L'inverse se lisait « 1 » en gros, la consigne en petit.
             howto_children.push(Component::ListItem(
                 ListItem::new()
-                    .title((index + 1).to_string())
-                    .subtitle(step.clone()),
+                    .title(step.clone())
+                    .leading(Leading::Visual(Box::new(LeadingVisual {
+                        index: Some((index + 1) as u32),
+                        ..LeadingVisual::default()
+                    }))),
             ));
         }
         children.push(Component::Card(
@@ -90,15 +133,8 @@ fn device_detail_children(device: &Appliance) -> Vec<Component> {
         ));
     }
 
-    if !device.manual_url.trim().is_empty() {
-        let url = device.manual_url.trim().to_string();
-        let action = Action::external(url.clone());
-        children.push(Component::Link(
-            Link::new()
-                .label("i18n:explore.item.manual")
-                .href(url)
-                .action(action),
-        ));
+    if let Some(card) = manuals_card(device, paper_manuals_location) {
+        children.push(card);
     }
 
     let contact_action = Action::emit(

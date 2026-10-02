@@ -56,6 +56,16 @@ pub struct AppliancesPayload {
     /// Global TipTap JSON safety notice (shown above the guest device list).
     #[serde(default, rename = "safetyNotice", alias = "safety_notice")]
     pub safety_notice: String,
+    /// Où les notices papier sont rangées, pour tous les appareils (§3.1).
+    ///
+    /// Au niveau du logement et non de l'appareil : les notices tiennent dans la même boîte, et le
+    /// demander une fois par appareil ferait répéter « étagère du salon » quinze fois.
+    #[serde(
+        default,
+        rename = "paperManualsLocation",
+        alias = "paper_manuals_location"
+    )]
+    pub paper_manuals_location: String,
 }
 
 impl AppliancesPayload {
@@ -345,6 +355,7 @@ fn migrate_legacy(value: &Value) -> AppliancesPayload {
 
     let legacy_safety = string_field(value, "safety_notice");
     AppliancesPayload {
+        paper_manuals_location: string_field(value, "paperManualsLocation"),
         devices: migrated,
         safety_notice: plain_text_to_tiptap(&legacy_safety),
     }

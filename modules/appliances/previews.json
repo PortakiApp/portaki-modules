@@ -70,6 +70,7 @@
         "explore.item.contactHost": "Un souci avec cet appareil ?",
         "explore.item.howto": "Mode d'emploi",
         "explore.item.manual": "Notice / manuel",
+        "explore.item.manuals": "Notices",
         "nav.appliance": "Appareil"
       },
       "surfaceId": "explore.item",
@@ -124,13 +125,22 @@
             "type": "InfoBanner"
           },
           {
-            "action": {
-              "type": "external",
-              "url": "https://example.com/notice-plaques.pdf"
-            },
-            "href": "https://example.com/notice-plaques.pdf",
-            "label": "i18n:explore.item.manual",
-            "type": "Link"
+            "children": [
+              {
+                "action": {
+                  "type": "external",
+                  "url": "https://example.com/notice-plaques.pdf"
+                },
+                "chevron": true,
+                "leading": "file-text",
+                "title": "i18n:explore.item.manual",
+                "type": "ListItem"
+              }
+            ],
+            "icon": "file-text",
+            "surface": "elevated",
+            "title": "i18n:explore.item.manuals",
+            "type": "Card"
           },
           {
             "action": {
