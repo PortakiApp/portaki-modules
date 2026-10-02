@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.2.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.1.0...consumables-v2.2.0) (2026-10-02)
+
+
+### Features
+
+* **consumables:** a grid the guest can tick more than once ([543c253](https://github.com/PortakiApp/portaki-modules/commit/543c253d11678ab9d479fcbc83e4ff00b0dacd2b))
+* **consumables:** speak the ten languages of the picker ([6378481](https://github.com/PortakiApp/portaki-modules/commit/63784810392c2e4e28896a0c1817de078e68ece5))
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+
 ## [2.1.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.0.0...consumables-v2.1.0) (2026-10-02)
 
 
