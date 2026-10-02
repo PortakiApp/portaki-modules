@@ -248,6 +248,37 @@ fn an_inactive_module_shows_the_sdk_state() {
         });
 }
 
+/// Les lignes suivent ce que l'hôte a saisi, et « Ajouter » en demande une de plus.
+#[test]
+#[serial]
+fn the_form_draws_the_facilities_the_host_has() {
+    MockContext::host().with_config(&json!({})).run(|ctx| {
+        let json = serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+        assert!(json.contains("facilities.0.title"), "{json}");
+        assert!(!json.contains("facilities.1.title"), "{json}");
+        assert!(json.contains(r#""facilities_count":2"#), "{json}");
+    });
+
+    let rows: Vec<serde_json::Value> = (0..facility_hours::MAX_FACILITIES)
+        .map(|i| json!({ "title": format!("Équipement {i}") }))
+        .collect();
+    MockContext::host()
+        .with_config(&json!({ "facilities": rows }))
+        .run(|ctx| {
+            let json =
+                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            assert!(json.contains("facilities.11.title"), "{json}");
+            assert!(!json.contains("facilities.12.title"), "{json}");
+            assert!(
+                json.contains(&format!(
+                    r#""facilities_count":{}"#,
+                    facility_hours::MAX_FACILITIES
+                )),
+                "{json}"
+            );
+        });
+}
+
 /// A host writing in English: the French title, lines and note stay, and so does the id; rows
 /// keep their place.
 #[test]
@@ -289,7 +320,8 @@ fn a_save_in_english_keeps_the_french() {
             assert_eq!(sent["facilities"][0]["note"], "Cap");
             assert!(sent["facilities"][1].get("id").is_none());
             assert_eq!(sent["facilities"][2]["id"], "spa");
-            assert_eq!(sent["facilities"].as_array().unwrap().len(), 6);
+            // Trois lignes stockées, trois dessinées : plus d'emplacements vides en bout de liste.
+            assert_eq!(sent["facilities"].as_array().unwrap().len(), 3);
             assert_eq!(sent["general_note"], "Indicative hours");
 
             let saved = config_save::save(EMISSIONS, &surface, &stored, "en");

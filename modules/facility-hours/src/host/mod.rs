@@ -3,13 +3,18 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
-    Card, Field, FieldHint, Form, Page, Stack, Text, TextArea, TextInput, Toggle,
+    Card, Field, FieldHint, Form, Page, Stack, StepList, Text, TextArea, TextInput, Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{FacilityRow, ModuleConfig};
 
-const FACILITY_SLOTS: usize = 6;
+/// Combien d'équipements le formulaire accepte.
+///
+/// Une capacité, pas un nombre de lignes dessinées : six emplacements figés gelaient la liste à
+/// six — l'hôte ne pouvait pas en saisir un septième parce que le formulaire ne le dessinait
+/// jamais, et voyait quatre cartes vides quand il en avait saisi deux.
+pub const MAX_FACILITIES: usize = 12;
 
 #[portaki_sdk::surface(
     host,
@@ -22,11 +27,7 @@ const FACILITY_SLOTS: usize = 6;
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let config = ModuleConfig::load(&ctx)?;
 
-    // The stored rows where they are, blank ones included, then empty slots.
-    let mut cards: Vec<Component> = Vec::new();
-    for index in 0..FACILITY_SLOTS.max(config.facilities.len()) {
-        cards.push(facility_card(index, config.facilities.get(index), &ctx));
-    }
+    let mut cards: Vec<Component> = vec![facilities_card(&config, &ctx)];
     cards.push(
         Card::new()
             .title("i18n:host.section.note")
@@ -57,8 +58,51 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     .with_id(MAIN))
 }
 
-fn facility_card(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext) -> Component {
-    let slot = index + 1;
+/// Les équipements, en lignes dynamiques bornées.
+fn facilities_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let rows_count = draft_rows(ctx, config.facilities.len());
+    let rows: Vec<Component> = (0..rows_count)
+        .map(|index| facility_row(index, config.facilities.get(index), ctx))
+        .collect();
+
+    Card::new()
+        .title("i18n:host.facilities.title")
+        .subtitle("i18n:host.facilities.subtitle")
+        .icon(IconName::ClockCircle)
+        .child(
+            StepList::new()
+                .addLabel("i18n:host.facilities.add")
+                .removeLabel("i18n:host.facilities.remove")
+                .emptyTitle("i18n:host.facilities.emptyTitle")
+                .emptyDescription("i18n:host.facilities.emptyDescription")
+                .itemKeyPrefix("facilities")
+                .addAction(emit_input(RowCount {
+                    facilities_count: (rows_count + 1).min(MAX_FACILITIES),
+                }))
+                .children(rows),
+        )
+        .into()
+}
+
+/// Combien de lignes dessiner : ce que « Ajouter » a demandé, sinon ce qui est stocké, borné.
+fn draft_rows(ctx: &HostContext, stored: usize) -> usize {
+    match ctx.input_u64("facilities_count") {
+        Some(asked) => (asked as usize).clamp(1, MAX_FACILITIES),
+        None => stored.clamp(1, MAX_FACILITIES),
+    }
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+struct RowCount {
+    facilities_count: usize,
+}
+
+fn emit_input(payload: impl serde::Serialize) -> Action {
+    Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
+}
+
+fn facility_row(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext) -> Component {
     let title = facility
         .map(|f| f.title.host_value(ctx))
         .unwrap_or_default();
@@ -75,9 +119,9 @@ fn facility_card(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext
         .filter(|f| !f.is_blank())
         .map(|f| sdui::row_id("facilities", index, Some(&f.id)));
 
-    Card::new()
-        .title(format!("i18n:host.facility.slot{slot}"))
-        .icon(IconName::ClockCircle)
+    Stack::new()
+        .id(format!("facility-{index}"))
+        .gap(10.0)
         .children(
             id.into_iter()
                 .chain([
