@@ -149,8 +149,19 @@ impl ModuleConfig {
         self.dropoff_points
             .iter()
             .filter(|point| !point.is_blank())
+            .take(MAX_DROPOFF_POINTS)
             .cloned()
             .collect()
+    }
+
+    /// Un point nommé sans rien d'accepté : l'hôte a commencé une ligne et ne l'a pas finie. Le
+    /// module ne peut pas refuser l'enregistrement — la plateforme tient la configuration — donc
+    /// c'est la porte de publication qui le dit.
+    pub fn dropoff_points_missing_accepts(&self) -> usize {
+        self.parse_dropoff_points()
+            .iter()
+            .filter(|point| point.accepted_keys().is_empty())
+            .count()
     }
 
     /// Le composteur n'existe que si l'hôte l'a activé **et** dit où il est : une case cochée sans
@@ -218,6 +229,11 @@ impl BinRow {
             .collect()
     }
 }
+
+/// Au plus dix points d'apport, et dix lignes par liste du composteur (§10). Des constantes du
+/// module : une borne n'est pas un réglage, et elle ne doit jamais arriver par le formulaire.
+pub const MAX_DROPOFF_POINTS: usize = 10;
+pub const MAX_COMPOST_LINES: usize = 10;
 
 /// Un point d'apport : un conteneur de quartier, le plus souvent sur un parking.
 ///

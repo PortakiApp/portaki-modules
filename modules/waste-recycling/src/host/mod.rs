@@ -3,11 +3,13 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
-    Card, Eyebrow, Field, FieldHint, Form, Page, Select, Stack, Text, TextArea, TextInput, Toggle,
+    AddressMapPicker, Card, Eyebrow, Field, FieldHint, Form, Page, Select, Stack, StepList, Text,
+    TextArea, TextInput, Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
+use serde::Serialize;
 
-use crate::config::{bin_color_name, BinRow, ModuleConfig};
+use crate::config::{bin_color_name, BinRow, DropoffRow, ModuleConfig, MAX_DROPOFF_POINTS};
 
 const BIN_SLOTS: usize = 6;
 
@@ -29,6 +31,8 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
         cards.push(bin_card(index, config.bins.get(index), &ctx));
     }
     cards.push(schedule_card(&config, &ctx));
+    cards.push(dropoff_card(&config, &ctx));
+    cards.push(compost_card(&config, &ctx));
 
     // No Save button — the modules drawer owns the footer Save.
     Ok(Surface::new(
@@ -105,6 +109,186 @@ fn schedule_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
     Card::new()
         .title("i18n:host.section.schedule")
         .icon(IconName::Calendar)
+        .children(children)
+        .into()
+}
+
+/// Les points d'apport : des lignes dessinées à la demande, pas dix emplacements vides.
+///
+/// Le motif est celui de `rules` et d'`ical-sync` — un `StepList` dont « Ajouter » émet le nombre
+/// de lignes voulu, relu ici dans la borne du module. Il passera par l'aide du SDK quand elle sera
+/// publiée ; en attendant les quatre lignes vivent ici plutôt que de figer la liste à six.
+fn dropoff_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let stored = config.parse_dropoff_points().len();
+    let rows_count = draft_rows(ctx, "dropoff_points", stored);
+    let rows: Vec<Component> = (0..rows_count)
+        .map(|index| dropoff_row(index, config.dropoff_points.get(index), ctx))
+        .collect();
+
+    Card::new()
+        .title("i18n:host.dropoff.title")
+        .subtitle("i18n:host.dropoff.subtitle")
+        .icon(IconName::MapPin)
+        .child(
+            StepList::new()
+                .addLabel("i18n:host.dropoff.add")
+                .removeLabel("i18n:host.dropoff.remove")
+                .emptyTitle("i18n:host.dropoff.emptyTitle")
+                .emptyDescription("i18n:host.dropoff.emptyDescription")
+                .itemKeyPrefix("dropoff_points")
+                .addAction(emit_input(RowCount {
+                    dropoff_points_count: (rows_count + 1).min(MAX_DROPOFF_POINTS),
+                }))
+                .children(rows),
+        )
+        .into()
+}
+
+/// Combien de lignes dessiner : ce que « Ajouter » a demandé, sinon ce qui est stocké, borné.
+fn draft_rows(ctx: &HostContext, key: &str, stored: usize) -> usize {
+    match ctx.input_u64(&format!("{key}_count")) {
+        Some(asked) => (asked as usize).clamp(1, MAX_DROPOFF_POINTS),
+        None => stored.clamp(1, MAX_DROPOFF_POINTS),
+    }
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "snake_case")]
+struct RowCount {
+    dropoff_points_count: usize,
+}
+
+fn emit_input(payload: impl Serialize) -> Action {
+    Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
+}
+
+fn dropoff_row(index: usize, point: Option<&DropoffRow>, ctx: &HostContext) -> Component {
+    let title = point.map(|p| p.title.host_value(ctx)).unwrap_or_default();
+    let note = point.map(|p| p.note.host_value(ctx)).unwrap_or_default();
+    let address = point.and_then(|p| p.address.as_deref()).unwrap_or("");
+    let id = point
+        .filter(|p| !p.is_blank())
+        .map(|p| sdui::row_id("dropoff_points", index, Some(&p.id)));
+
+    let mut picker = AddressMapPicker::new()
+        .addressName(format!("dropoff_points.{index}.address"))
+        .latName(format!("dropoff_points.{index}.lat"))
+        .lngName(format!("dropoff_points.{index}.lng"))
+        .address(address)
+        .label("i18n:host.dropoff.position");
+    if let Some((lat, lng)) = point.and_then(DropoffRow::coordinates) {
+        picker = picker.lat(lat).lng(lng);
+    }
+
+    let mut children: Vec<Component> = id.into_iter().collect();
+    children.push(
+        Field::new()
+            .name(format!("dropoff_points.{index}.title"))
+            .label("i18n:host.dropoff.pointTitle")
+            .child(
+                TextInput::new()
+                    .name(format!("dropoff_points.{index}.title"))
+                    .value(title)
+                    .placeholder("i18n:host.dropoff.pointTitle.placeholder"),
+            )
+            .into(),
+    );
+    children.push(picker.into());
+    children.push(Eyebrow::new().text("i18n:host.dropoff.accepts").into());
+    for (suffix, ticked) in [
+        (
+            "accepts_household",
+            point.is_some_and(|p| p.accepts_household),
+        ),
+        (
+            "accepts_packaging",
+            point.is_some_and(|p| p.accepts_packaging),
+        ),
+        ("accepts_glass", point.is_some_and(|p| p.accepts_glass)),
+        ("accepts_paper", point.is_some_and(|p| p.accepts_paper)),
+    ] {
+        let name = format!("dropoff_points.{index}.{suffix}");
+        children.push(
+            Field::new()
+                .name(name.clone())
+                .label(format!("i18n:host.dropoff.{suffix}"))
+                .child(Toggle::new().name(name).checked(ticked))
+                .into(),
+        );
+    }
+    children.push(
+        Field::new()
+            .name(format!("dropoff_points.{index}.note"))
+            .label("i18n:host.dropoff.note")
+            .child(
+                TextInput::new()
+                    .name(format!("dropoff_points.{index}.note"))
+                    .value(note)
+                    .placeholder("i18n:host.dropoff.note.placeholder"),
+            )
+            .into(),
+    );
+
+    Stack::new()
+        .id(format!("dropoff-{index}"))
+        .gap(10.0)
+        .children(children)
+        .into()
+}
+
+/// Le composteur : une case, un emplacement, et deux listes d'une ligne par élément.
+fn compost_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let mut children: Vec<Component> = vec![
+        Field::new()
+            .name("compost_enabled")
+            .label("i18n:host.compost.enabled")
+            .child(
+                Toggle::new()
+                    .name("compost_enabled")
+                    .checked(config.compost_enabled),
+            )
+            .into(),
+        Field::new()
+            .name("compost_location")
+            .label("i18n:host.compost.location")
+            .child(
+                TextInput::new()
+                    .name("compost_location")
+                    .value(config.compost_location.host_value(ctx))
+                    .placeholder("i18n:host.compost.location.placeholder"),
+            )
+            .into(),
+        FieldHint::new()
+            .text("i18n:host.compost.location.hint")
+            .into(),
+    ];
+    for (name, label) in [
+        ("compost_accepted", "i18n:host.compost.accepted"),
+        ("compost_refused", "i18n:host.compost.refused"),
+    ] {
+        let value = if name == "compost_accepted" {
+            config.compost_accepted.host_value(ctx)
+        } else {
+            config.compost_refused.host_value(ctx)
+        };
+        children.push(
+            Field::new()
+                .name(name)
+                .label(label)
+                .child(
+                    TextArea::new()
+                        .name(name)
+                        .value(value)
+                        .placeholder("i18n:host.compost.lines.placeholder"),
+                )
+                .into(),
+        );
+    }
+
+    Card::new()
+        .title("i18n:host.compost.title")
+        .subtitle("i18n:host.compost.subtitle")
+        .icon(IconName::Recycle)
         .children(children)
         .into()
 }

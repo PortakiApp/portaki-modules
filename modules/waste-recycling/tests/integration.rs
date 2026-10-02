@@ -9,7 +9,9 @@ use portaki_sdk::prelude::{DateTime, Utc};
 use portaki_test_utils::{MockContext, SurfaceAssertions};
 use serde_json::{json, Value};
 
-use waste_recycling::{render_explore_detail, render_home_card, render_host_main};
+use waste_recycling::{
+    publish_readiness, render_explore_detail, render_home_card, render_host_main,
+};
 
 #[path = "../../../support/config_form.rs"]
 mod config_form;
@@ -269,12 +271,19 @@ fn an_inactive_module_shows_the_sdk_state() {
 #[test]
 #[serial]
 fn a_save_in_english_keeps_the_french() {
+    // L'inventaire des textes traduits : les champs du composteur et des points d'apport en font
+    // partie, donc un hôte qui écrit en anglais garde aussi son français sur ceux-là.
     assert_eq!(
         config_save::localized_paths(EMISSIONS),
         [
             "bins.items",
             "bins.title",
             "collection_schedule",
+            "compost_accepted",
+            "compost_location",
+            "compost_refused",
+            "dropoff_points.note",
+            "dropoff_points.title",
             "takeout_note"
         ]
     );
@@ -306,5 +315,161 @@ fn a_save_in_english_keeps_the_french() {
             assert_eq!(saved["bins"][2]["title"]["fr"], "Verre");
             assert_eq!(saved["bins"][2]["items"]["fr"], "Bouteilles");
             assert_eq!(saved["collection_schedule"], stored["collection_schedule"]);
+        });
+}
+
+/// Le cas rural du §9 : pas de ramassage, deux points d'apport, un composteur.
+///
+/// Sans jour coché il n'y a plus de bandeau de collecte, et plus de ligne vide à la place.
+#[test]
+#[serial]
+fn the_rural_case_shows_points_and_compost_without_a_collection_banner() {
+    let config = json!({
+        "dropoff_points": [
+            { "title": "Parking du cimetière", "lat": 45.60, "lng": 6.00,
+              "accepts_household": true, "accepts_packaging": true },
+            { "title": "Salle des fêtes", "lat": 45.61, "lng": 6.01,
+              "accepts_household": true, "accepts_glass": true }
+        ],
+        "compost_enabled": true,
+        "compost_location": "Au fond du jardin, à gauche du portillon",
+        "compost_accepted": "Épluchures\nMarc de café",
+        "compost_refused": "Viande\nPlastique"
+    });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&config)
+        .run(|ctx| {
+            let card =
+                serde_json::to_string(&render_home_card(ctx.clone()).expect("card")).unwrap();
+            assert!(card.contains("Parking du cimetière"), "{card}");
+            assert!(card.contains("guest.compost.title"), "{card}");
+            // Aucun jour, aucune phrase : pas de bandeau, et surtout pas un bandeau vide.
+            assert!(!card.contains("InfoBanner"), "{card}");
+
+            let detail =
+                serde_json::to_string(&render_explore_detail(ctx).expect("detail")).unwrap();
+            assert!(detail.contains("guest.dropoff.title"), "{detail}");
+            assert!(detail.contains("guest.compost.accepted"), "{detail}");
+            assert!(detail.contains("Épluchures"), "{detail}");
+        });
+}
+
+/// Ramassage **et** points d'apport : le bandeau revient, les points restent.
+#[test]
+#[serial]
+fn collection_days_and_dropoff_points_live_together() {
+    let config = json!({
+        "collects_tue": true,
+        "bins": [{ "title": "Bac jaune", "items": "Emballages", "color": "yellow" }],
+        "dropoff_points": [
+            { "title": "Parking du cimetière", "lat": 45.60, "lng": 6.00, "accepts_glass": true }
+        ]
+    });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&config)
+        .run(|ctx| {
+            let card = serde_json::to_string(&render_home_card(ctx).expect("card")).unwrap();
+            assert!(card.contains("Bac jaune"), "{card}");
+            assert!(card.contains("Parking du cimetière"), "{card}");
+        });
+}
+
+/// Le composteur ne s'affiche pas sans emplacement : le voyageur ne doit pas le chercher.
+#[test]
+#[serial]
+fn a_compost_without_a_location_stays_hidden() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({
+            "compost_enabled": true,
+            "bins": [{ "title": "Bac jaune", "items": "Emballages" }]
+        }))
+        .run(|ctx| {
+            let card = serde_json::to_string(&render_home_card(ctx).expect("card")).unwrap();
+            assert!(!card.contains("guest.compost.title"), "{card}");
+        });
+}
+
+/// La porte de publication : une source suffit, et chacune des trois compte.
+#[test]
+#[serial]
+fn one_source_is_enough_to_publish() {
+    let ok_of = |config: Value| {
+        let mut ok = false;
+        MockContext::guest()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&config)
+            .run(|ctx| {
+                let readiness = publish_readiness(ctx).expect("readiness");
+                ok = readiness
+                    .items
+                    .iter()
+                    .find(|c| c.id == "where")
+                    .expect("where")
+                    .ok;
+            });
+        ok
+    };
+
+    assert!(!ok_of(json!({})), "rien du tout ne publie pas");
+    assert!(
+        ok_of(json!({ "collects_tue": true })),
+        "des jours suffisent"
+    );
+    assert!(
+        ok_of(json!({ "bins": [{ "title": "Bac jaune", "items": "Emballages" }] })),
+        "un bac suffit"
+    );
+    assert!(
+        ok_of(json!({
+            "dropoff_points": [{ "title": "Parking", "lat": 45.6, "lng": 6.0, "accepts_glass": true }]
+        })),
+        "un point d'apport suffit"
+    );
+}
+
+/// Un point nommé dont on ne dit pas ce qu'il accepte est signalé — recommandé, pas bloquant.
+#[test]
+#[serial]
+fn a_point_that_takes_nothing_is_reported() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({
+            "dropoff_points": [{ "title": "Parking du cimetière", "lat": 45.6, "lng": 6.0 }]
+        }))
+        .run(|ctx| {
+            let readiness = publish_readiness(ctx).expect("readiness");
+            let accepts = readiness
+                .items
+                .iter()
+                .find(|check| check.id == "dropoffAccepts")
+                .expect("le défaut est signalé");
+            assert!(!accepts.ok);
+            // Le module reste publiable : le point existe, il manque juste son contenu.
+            assert!(readiness.items.iter().find(|c| c.id == "where").unwrap().ok);
+        });
+}
+
+/// Les points situés partent sur la carte du livret ; un point sans position n'y figure pas.
+#[test]
+#[serial]
+fn only_located_points_reach_the_booklet_map() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({
+            "dropoff_points": [
+                { "title": "Parking du cimetière", "lat": 45.60, "lng": 6.00, "accepts_glass": true },
+                { "title": "Sans position", "accepts_glass": true }
+            ]
+        }))
+        .run(|ctx| {
+            let response = waste_recycling::map_markers(ctx).expect("markers");
+            assert_eq!(response.markers.len(), 1);
+            assert_eq!(
+                response.markers[0].label.as_deref(),
+                Some("Parking du cimetière")
+            );
         });
 }
