@@ -1,8 +1,4 @@
 {
-  "capability.tiqets.byok.fallback": "Voeg een Tiqets-partnersleutel toe bij de integraties",
-  "capability.tiqets.byok.purpose": "Gebruikt je eigen Tiqets-partnersleutel: de commissies zijn voor jou",
-  "capability.tiqets.fallback": "Kies een pakket met Tiqets, of voeg je eigen Tiqets-partnersleutel toe",
-  "capability.tiqets.purpose": "Laadt Tiqets-tickets in de buurt met de partnersleutel van Portaki",
   "catalog.host.main": "Aanraders",
   "config.spots": "Plekken",
   "connector.tiqets.name": "Tiqets",

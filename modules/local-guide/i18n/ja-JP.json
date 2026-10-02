@@ -1,8 +1,4 @@
 {
-  "capability.tiqets.byok.fallback": "連携設定に Tiqets の提携キーを登録してください",
-  "capability.tiqets.byok.purpose": "ご自身の Tiqets 提携キーを使います：手数料はホストに入ります",
-  "capability.tiqets.fallback": "Tiqets を含むプランに変更するか、ご自身の Tiqets 提携キーを登録してください",
-  "capability.tiqets.purpose": "Portaki の提携キーで近くの Tiqets のチケットを読み込みます",
   "catalog.host.main": "おすすめ",
   "config.spots": "場所",
   "connector.tiqets.name": "Tiqets",

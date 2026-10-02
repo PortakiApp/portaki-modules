@@ -1,8 +1,4 @@
 {
-  "capability.tiqets.byok.fallback": "أضِف مفتاح شراكة Tiqets في التكاملات",
-  "capability.tiqets.byok.purpose": "يستخدم مفتاح شراكة Tiqets الخاص بك: العمولات لك",
-  "capability.tiqets.fallback": "انتقل إلى خطة تشمل Tiqets، أو أضِف مفتاح شراكة Tiqets الخاص بك",
-  "capability.tiqets.purpose": "يحمّل تذاكر Tiqets القريبة بمفتاح الشراكة الخاص بـ Portaki",
   "catalog.host.main": "أماكن مختارة",
   "config.spots": "الأماكن",
   "connector.tiqets.name": "Tiqets",
