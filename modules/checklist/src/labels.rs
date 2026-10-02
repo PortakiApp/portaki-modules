@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use portaki_sdk::contracts::i18n::I18nText;
 use serde_json::Value;
 
-use crate::entities::ChecklistItem;
+use crate::entities::{Checklist, ChecklistItem};
 
 /// Label per language code (`fr`, `en`, …).
 pub type Labels = BTreeMap<String, String>;
@@ -53,6 +53,18 @@ pub fn labels_from_item(item: &ChecklistItem) -> Labels {
     out
 }
 
+/// Le nom d'une liste par langue. `name_fr` et `name_en` sont deux colonnes, pas une carte.
+pub fn labels_from_list(list: &Checklist) -> Labels {
+    let mut out = Labels::new();
+    if !list.name_fr.trim().is_empty() {
+        out.insert("fr".into(), list.name_fr.trim().to_string());
+    }
+    if !list.name_en.trim().is_empty() {
+        out.insert("en".into(), list.name_en.trim().to_string());
+    }
+    out
+}
+
 pub fn encode_labels(labels: &Labels) -> (String, String) {
     let cleaned: BTreeMap<String, String> = labels
         .iter()
@@ -61,6 +73,39 @@ pub fn encode_labels(labels: &Labels) -> (String, String) {
         .collect();
     let json = serde_json::to_string(&cleaned).unwrap_or_else(|_| "{}".into());
     (json, String::new())
+}
+
+/// Encode une carte de langues pour une colonne qui n'a pas d'héritage bilingue à traîner
+/// (le groupe, la précision) : une seule colonne, une seule forme.
+pub fn encode_map(values: &Labels) -> String {
+    let cleaned: BTreeMap<String, String> = values
+        .iter()
+        .filter(|(_, v)| !v.trim().is_empty())
+        .map(|(k, v)| (lang_code(k), v.trim().to_string()))
+        .collect();
+    if cleaned.is_empty() {
+        return String::new();
+    }
+    serde_json::to_string(&cleaned).unwrap_or_default()
+}
+
+/// Relit une telle colonne. Un texte nu est accepté et rangé en français : c'est ce qu'une ligne
+/// écrite avant que la colonne existe contiendrait si elle était remplie à la main.
+pub fn decode_map(raw: &str) -> Labels {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return Labels::new();
+    }
+    if let Ok(Value::Object(map)) = serde_json::from_str::<Value>(trimmed) {
+        return map
+            .into_iter()
+            .filter_map(|(key, value)| {
+                let text = value.as_str()?.trim();
+                (!text.is_empty()).then(|| (lang_code(&key), text.to_string()))
+            })
+            .collect();
+    }
+    Labels::from([("fr".to_string(), trimmed.to_string())])
 }
 
 pub fn pick_label(labels: &Labels, guest_locale: &str, property_locale: &str) -> String {

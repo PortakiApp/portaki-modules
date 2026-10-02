@@ -16,9 +16,9 @@ use uuid::Uuid;
 use checklist::{
     complete_item, create_checklist, items_of, list_checklists, list_completions, list_items,
     publish_readiness, render_home_card, render_host_main, render_post_stay_card,
-    render_stats_checklist, render_stats_cleaning, reset_test_store, stats_summary, task_complete,
-    task_toggle, timeline_tasks, uncomplete_item, update_config, CreateChecklistArgs, ItemIdArgs,
-    UpdateConfigArgs,
+    render_stats_checklist, render_stats_cleaning, reset_test_store, set_completed, stats_summary,
+    task_complete, task_toggle, timeline_tasks, uncomplete_item, update_config,
+    CreateChecklistArgs, ItemIdArgs, SetCompletedArgs, UpdateConfigArgs,
 };
 use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 
@@ -60,14 +60,16 @@ fn departure_template_renders_toggles_and_ticks() {
             let items = list_items(ctx.clone()).expect("list");
             assert_eq!(items.len(), 5);
 
+            // Une seule liste à cocher, et c'est le livret qui la dessine (§2.9).
             let surface = render_home_card(ctx.clone()).expect("render");
-            assert!(SurfaceAssertions::new(&surface).contains_type("ChecklistItem"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ChoiceList"));
             let json = json_of(&surface);
-            assert!(json.contains("Fermer les volets"));
-            assert!(json.contains("completeItem"));
+            assert!(json.contains("Fermer les volets"), "{json}");
+            assert!(json.contains("\"layout\":\"checklist\""), "{json}");
+            assert!(json.contains("setCompleted"), "{json}");
             assert!(
                 json_of(&render_post_stay_card(ctx.clone()).expect("render"))
-                    .contains("completeItem")
+                    .contains("setCompleted")
             );
 
             let item_id = items[0].id;
@@ -412,5 +414,162 @@ fn publish_readiness_requires_an_item() {
             assert!(!ok(&ctx), "an empty list shows nothing");
             create(&ctx, "cleaning");
             assert!(ok(&ctx));
+        });
+}
+
+/// Les rubriques du modèle de départ arrivent au voyageur, et c'est le livret qui les rend : le
+/// module ne pose pas de titres, il dit sous quelle rubrique chaque étape se range (§2.9).
+#[test]
+#[serial]
+fn the_departure_template_carries_its_groups() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            create(&ctx, "departure");
+            let json = json_of(&render_home_card(ctx).expect("render"));
+
+            assert!(json.contains("Dans le logement"), "{json}");
+            assert!(json.contains("En partant"), "{json}");
+            // Deux rubriques pour cinq étapes : un groupe par étape n'aurait rien regroupé.
+            assert_eq!(json.matches("Dans le logement").count(), 3, "{json}");
+            assert_eq!(json.matches("En partant").count(), 2, "{json}");
+        });
+}
+
+/// L'état coché part du serveur : une coche doit survivre à la fermeture du livret.
+#[test]
+#[serial]
+fn the_card_hands_the_booklet_what_is_already_ticked() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            create(&ctx, "departure");
+            let items = list_items(ctx.clone()).expect("list");
+            let first = items[0].id;
+            complete_item(ctx.clone(), ItemIdArgs { item_id: first }).expect("complete");
+
+            let json = json_of(&render_home_card(ctx).expect("render"));
+            assert!(json.contains(&format!("\"value\":\"{first}\"")), "{json}");
+            assert!(json.contains("\"emitOnChange\":true"), "{json}");
+            assert!(json.contains("\"limit\":5"), "{json}");
+            assert!(json.contains("\"multi\":true"), "{json}");
+        });
+}
+
+/// `setCompleted` remplace l'ensemble : il coche ce qui manque et décoche ce qui n'y est plus.
+#[test]
+#[serial]
+fn set_completed_replaces_the_whole_set() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            create(&ctx, "departure");
+            let items = list_items(ctx.clone()).expect("list");
+            let (a, b, c) = (items[0].id, items[1].id, items[2].id);
+
+            set_completed(
+                ctx.clone(),
+                SetCompletedArgs {
+                    item_ids: format!("{a},{b}"),
+                },
+            )
+            .expect("set");
+            let mut done = list_completions(ctx.clone()).expect("done");
+            done.sort();
+            let mut expected = vec![a, b];
+            expected.sort();
+            assert_eq!(done, expected);
+
+            // b disparaît, c arrive : l'ensemble envoyé fait loi.
+            set_completed(
+                ctx.clone(),
+                SetCompletedArgs {
+                    item_ids: format!("{a}, {c}"),
+                },
+            )
+            .expect("set");
+            let mut done = list_completions(ctx.clone()).expect("done");
+            done.sort();
+            let mut expected = vec![a, c];
+            expected.sort();
+            assert_eq!(done, expected);
+
+            // Rejouer le même appel ne double rien.
+            set_completed(
+                ctx.clone(),
+                SetCompletedArgs {
+                    item_ids: format!("{a},{c}"),
+                },
+            )
+            .expect("set");
+            assert_eq!(list_completions(ctx.clone()).expect("done").len(), 2);
+
+            // Vide : tout se décoche.
+            set_completed(
+                ctx.clone(),
+                SetCompletedArgs {
+                    item_ids: String::new(),
+                },
+            )
+            .expect("set");
+            assert!(list_completions(ctx).expect("done").is_empty());
+        });
+}
+
+/// Un voyageur ne coche que les listes écrites pour lui.
+#[test]
+#[serial]
+fn set_completed_refuses_a_host_item() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            create(&ctx, "cleaning");
+            let host_list = list_checklists().expect("lists")[0].id;
+            let host_item = items_of(host_list).expect("items")[0].id;
+
+            let refused = set_completed(
+                ctx,
+                SetCompletedArgs {
+                    item_ids: host_item.to_string(),
+                },
+            );
+            assert!(refused.is_err(), "une étape de l'hôte n'est pas cochable");
+        });
+}
+
+/// Le groupe et la précision que l'hôte écrit arrivent jusqu'au voyageur, et la langue qu'il
+/// n'édite pas garde ce qu'elle contenait.
+#[test]
+#[serial]
+fn the_host_group_and_line_reach_the_guest() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            create(&ctx, "emptyGuest");
+            let list = list_checklists().expect("lists")[0].id;
+            update_config(
+                ctx.clone(),
+                UpdateConfigArgs {
+                    id: list.to_string(),
+                    items: Some(json!([
+                        {
+                            "label": "Vider le réfrigérateur",
+                            "group": "Cuisine",
+                            "description": "Laissez la porte entrouverte"
+                        }
+                    ])),
+                    ..UpdateConfigArgs::default()
+                },
+            )
+            .expect("save");
+
+            let json = json_of(&render_home_card(ctx).expect("render"));
+            assert!(json.contains("Cuisine"), "{json}");
+            assert!(json.contains("Laissez la porte entrouverte"), "{json}");
         });
 }
