@@ -1,0 +1,274 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "guest.commune.label": "Tous les sentiers de la commune",
+        "guest.page.title": "Randonnées",
+        "nav.trails": "Randonnées"
+      },
+      "surfaceId": "explore.detail",
+      "title": "Randonnées",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "text": "i18n:guest.page.title",
+                "type": "Text",
+                "variant": "title"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "4 itinéraires · durées de marche sans les pauses",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 4.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "action": {
+                  "to": "trails/garoupe",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "leading": "mountain",
+                "subtitle": "1 h · 2.6 km · ↑ 80 m · Aller-retour",
+                "title": "Phare de la Garoupe",
+                "trailing": {
+                  "text": "▲ Facile"
+                },
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "to": "trails/littoral",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "leading": "mountain",
+                "subtitle": "2 h 30 · 8 km · ↑ 60 m · Boucle",
+                "title": "Sentier du littoral du Cap",
+                "trailing": {
+                  "text": "▲ Facile"
+                },
+                "type": "ListItem"
+              }
+            ],
+            "icon": "mountain",
+            "title": "▲ Facile · 2",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "action": {
+                  "to": "trails/brague",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "leading": "mountain",
+                "subtitle": "3 h · 9.5 km · ↑ 220 m · Aller-retour",
+                "title": "Vallée de la Brague",
+                "trailing": {
+                  "text": "▲▲ Moyen"
+                },
+                "type": "ListItem"
+              }
+            ],
+            "icon": "mountain",
+            "title": "▲▲ Moyen · 1",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "action": {
+                  "to": "trails/baou",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "leading": "mountain",
+                "subtitle": "4 h · 8 km · ↑ 600 m · Aller-retour",
+                "title": "Baou de Saint-Jeannet",
+                "trailing": {
+                  "text": "▲▲▲ Sportif"
+                },
+                "type": "ListItem"
+              }
+            ],
+            "icon": "mountain",
+            "title": "▲▲▲ Sportif · 1",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.antibesjuanlespins.com/randonnees"
+            },
+            "href": "https://www.antibesjuanlespins.com/randonnees",
+            "label": "i18n:guest.commune.label",
+            "type": "Link"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.before.title": "Avant de partir",
+        "guest.before.water": "Emportez 1,5 L d’eau par personne",
+        "guest.before.weather": "Déconseillé par orage ou vent fort",
+        "guest.map.label": "Plan du départ",
+        "guest.map.property": "Le logement",
+        "guest.map.start": "Départ",
+        "guest.openTrace": "Ouvrir la trace",
+        "guest.routeToStart": "Itinéraire jusqu’au départ",
+        "guest.tile.distance": "Distance",
+        "guest.tile.duration": "Durée",
+        "guest.tile.elevation": "Dénivelé",
+        "guest.tile.shape": "Type",
+        "nav.trail": "Randonnée"
+      },
+      "surfaceId": "explore.item",
+      "title": "Randonnée",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "label": "▲ Facile",
+                "type": "Badge"
+              },
+              {
+                "text": "Phare de la Garoupe",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "Départ : Chemin du Calvaire, Antibes",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "icon": "clock-circle",
+                "key": "i18n:guest.tile.duration",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "1 h"
+              },
+              {
+                "icon": "gauge",
+                "key": "i18n:guest.tile.distance",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "2.6 km"
+              },
+              {
+                "icon": "mountain",
+                "key": "i18n:guest.tile.elevation",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "80 m"
+              },
+              {
+                "icon": "refresh",
+                "key": "i18n:guest.tile.shape",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "Aller-retour"
+              }
+            ],
+            "minColumnWidth": 136.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "text": "Montée courte par le chemin du Calvaire jusqu’au phare et à sa table d’orientation. Vue sur la baie des Anges.",
+            "type": "Text",
+            "variant": "body"
+          },
+          {
+            "interactionMode": "none",
+            "isStatic": true,
+            "label": "i18n:guest.map.label",
+            "markers": [
+              {
+                "id": "property",
+                "kind": "property",
+                "label": "i18n:guest.map.property",
+                "lat": 43.5513,
+                "lng": 7.0128
+              },
+              {
+                "icon": "mountain",
+                "id": "start",
+                "kind": "poi",
+                "label": "i18n:guest.map.start",
+                "lat": 43.5612,
+                "lng": 7.1298
+              }
+            ],
+            "type": "Map",
+            "viewport": {
+              "center": {
+                "lat": 43.5612,
+                "lng": 7.1298
+              },
+              "zoom": 13.0
+            }
+          },
+          {
+            "children": [
+              {
+                "leading": "droplet",
+                "title": "i18n:guest.before.water",
+                "type": "ListItem"
+              },
+              {
+                "leading": "cloud-sun",
+                "title": "i18n:guest.before.weather",
+                "type": "ListItem"
+              }
+            ],
+            "icon": "info-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.before.title",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.visorando.com/randonnee-phare-de-la-garoupe"
+            },
+            "label": "i18n:guest.openTrace",
+            "type": "Button"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.google.com/maps/search/?api=1&query=43.5612,7.1298"
+            },
+            "label": "i18n:guest.routeToStart",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    }
+  ]
+}

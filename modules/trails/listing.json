@@ -1,0 +1,39 @@
+{
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
+  "category": "around",
+  "tagline": {
+    "fr": "Les randonnées que vous conseillez, classées par niveau.",
+    "en": "The walks you recommend, sorted by level."
+  },
+  "description": {
+    "fr": "Trois niveaux figés — facile, moyen, sportif — et pour chaque itinéraire la durée, la distance et le dénivelé. Le voyageur ouvre la fiche, voit où ça part, lit les quatre mesures, et suit la trace chez Visorando ou l’IGN. S’il faut d’abord rejoindre le départ, un bouton l’y emmène.",
+    "en": "Three fixed levels — easy, moderate, demanding — and for each walk the duration, distance and ascent. Guests open the page, see where it starts, read the four measures, and follow the route on Visorando or IGN. When the trailhead is a drive away, a button takes them there."
+  },
+  "guestSurface": {
+    "fr": "Une carte avec le compte par niveau, la liste groupée par niveau, et une fiche par itinéraire : mesures, description, plan du départ.",
+    "en": "A card with the count per level, the list grouped by level, and a page per walk: measures, description, map of the trailhead."
+  },
+  "hostSurface": {
+    "fr": "Un onglet où vous ajoutez jusqu’à douze itinéraires — nom, niveau, durée, distance, dénivelé, départ sur le plan, lien.",
+    "en": "A tab where you add up to twelve walks — name, level, duration, distance, ascent, trailhead on the map, link."
+  },
+  "configItems": [
+    {
+      "fr": "Jusqu’à douze itinéraires : nom, niveau, durée, distance, dénivelé, type",
+      "en": "Up to twelve walks: name, level, duration, distance, ascent, type"
+    },
+    {
+      "fr": "Le point de départ de chacun, posé sur le plan",
+      "en": "Each trailhead, dropped on the map"
+    },
+    {
+      "fr": "Le lien « tous les sentiers de la commune » (facultatif)",
+      "en": "The “all the trails around town” link (optional)"
+    }
+  ],
+  "capabilities": [],
+  "publishedLangs": [
+    "fr",
+    "en"
+  ]
+}
