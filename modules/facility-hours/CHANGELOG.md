@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.5.0...facility-hours-v1.6.0) (2026-10-02)
+
+
+### Features
+
+* **facility-hours:** draw the facilities the host has, not six empty slots ([a35c57e](https://github.com/PortakiApp/portaki-modules/commit/a35c57e07e7373ca525642638be79a029b39d37c))
+* **trails:** the compass for distance, the arrow for ascent ([9aa2e31](https://github.com/PortakiApp/portaki-modules/commit/9aa2e31862e8f226cad5f43ea33b37b84be34e67))
+
 ## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.4.0...facility-hours-v1.5.0) (2026-10-02)
 
 

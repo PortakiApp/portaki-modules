@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.0](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.2.0...emergency-contacts-v1.3.0) (2026-10-02)
+
+
+### Features
+
+* **emergency-contacts:** draw the contacts the host has, not six empty slots ([7fbbfbe](https://github.com/PortakiApp/portaki-modules/commit/7fbbfbe62b63e309bf1efc27093294b54a1ca939))
+* **emergency-contacts:** take the host's number from the platform ([aafbd08](https://github.com/PortakiApp/portaki-modules/commit/aafbd08f0d1d22751a72c545c17c33dd242e0136))
+* **trails:** the compass for distance, the arrow for ascent ([9aa2e31](https://github.com/PortakiApp/portaki-modules/commit/9aa2e31862e8f226cad5f43ea33b37b84be34e67))
+
 ## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.1.0...emergency-contacts-v1.2.0) (2026-10-02)
 
 
