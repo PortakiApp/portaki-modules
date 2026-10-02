@@ -64,6 +64,7 @@ pub struct ModuleTiqets;
 #[allow(dead_code)] // metadata-only; macros emit manifest emissions at compile time
 impl ModuleTiqets {
     #[portaki_sdk::connector_op(
+        connector = "tiqets",
         method = "GET",
         path = "/v2/products",
         cache = "24h",
