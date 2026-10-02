@@ -119,7 +119,7 @@ fn trail_row(index: usize, trail: Option<&TrailRow>, ctx: &HostContext) -> Compo
         "duration_min",
         "i18n:host.trails.duration",
         MAX_DURATION_MIN,
-        trail.and_then(|t| t.duration_min).map(f64::from),
+        trail.and_then(|t| t.duration_min),
     ));
     children.push(number_field(
         index,
@@ -133,7 +133,7 @@ fn trail_row(index: usize, trail: Option<&TrailRow>, ctx: &HostContext) -> Compo
         "elevation_m",
         "i18n:host.trails.elevation",
         MAX_ELEVATION_M,
-        trail.and_then(|t| t.elevation_m).map(f64::from),
+        trail.and_then(|t| t.elevation_m),
     ));
     children.push(choice_field(
         index,

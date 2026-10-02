@@ -330,6 +330,12 @@ fn saving_in_english_keeps_the_french_text() {
             assert_eq!(saved["trails"][0]["duration_min"], 60.0);
             assert_eq!(saved["trails"][0]["distance_km"], 2.6);
             assert_eq!(saved["commune_url"], stored["commune_url"]);
+            // Et surtout : ce que l'enregistrement a écrit se relit. Les mesures reviennent en
+            // flottants (`60.0`), ce qu'un entier refusait — la configuration entière devenait
+            // illisible et le module rendait son état d'erreur.
+            let reread: trails::ModuleConfig =
+                serde_json::from_value(saved).expect("la config relue après enregistrement");
+            assert_eq!(reread.trails[0].duration(), Some(60));
         });
 }
 
