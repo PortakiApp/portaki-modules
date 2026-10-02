@@ -26,11 +26,12 @@ pub struct GuestData {
     pub property: Option<(f64, f64)>,
 }
 
-/// Un élément par ligne, les lignes vides sautées.
+/// Un élément par ligne, les lignes vides sautées, dix au plus (§10).
 fn lines(raw: &str) -> Vec<String> {
     raw.lines()
         .map(str::trim)
         .filter(|line| !line.is_empty())
+        .take(crate::config::MAX_COMPOST_LINES)
         .map(String::from)
         .collect()
 }
