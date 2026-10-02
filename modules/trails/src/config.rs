@@ -66,7 +66,7 @@ impl ModuleConfig {
     pub fn trails_missing_stats(&self) -> usize {
         self.parse_trails()
             .iter()
-            .filter(|row| row.duration_min.is_none() || row.distance_km.is_none())
+            .filter(|row| row.duration().is_none() || row.distance().is_none())
             .count()
     }
 
@@ -95,12 +95,18 @@ pub struct TrailRow {
     /// Une des valeurs de [`SHAPES`] ; absente, la tuile « Type » disparaît.
     #[serde(skip_serializing_if = "String::is_empty")]
     pub shape: String,
+    /// Les trois mesures sont des flottants, y compris la durée et le dénivelé.
+    ///
+    /// Le `NumberInput` du formulaire hôte envoie un nombre, pas un entier : un hôte qui tape
+    /// « 7,5 » en minutes, ou la plateforme qui renvoie `60.0` après un enregistrement, suffisait
+    /// à faire refuser toute la configuration par serde — et le module rendait son état d'erreur
+    /// à partir du premier enregistrement. Les accesseurs arrondissent à l'affichage.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub duration_min: Option<u32>,
+    pub duration_min: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub distance_km: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub elevation_m: Option<u32>,
+    pub elevation_m: Option<f64>,
     pub description: I18nText,
     /// Le départ, tel que le sélecteur l'a résolu.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -112,6 +118,11 @@ pub struct TrailRow {
     /// La fiche de l'itinéraire chez un tiers (Visorando, IGN) — le bouton « Ouvrir la trace ».
     #[serde(skip_serializing_if = "String::is_empty")]
     pub link_url: String,
+}
+
+/// Une mesure utilisable : finie et strictement positive.
+fn positive(value: Option<f64>) -> Option<f64> {
+    value.filter(|measure| measure.is_finite() && *measure > 0.0)
 }
 
 impl TrailRow {
@@ -148,6 +159,23 @@ impl TrailRow {
         Some((self.lat?, self.lng?))
     }
 
+    /// La durée de marche, en minutes entières. Une durée nulle ou négative n'est pas une mesure.
+    pub fn duration(&self) -> Option<u32> {
+        positive(self.duration_min).map(|minutes| minutes.round() as u32)
+    }
+
+    /// La distance, au dixième de kilomètre près à l'affichage.
+    pub fn distance(&self) -> Option<f64> {
+        positive(self.distance_km)
+    }
+
+    /// Le dénivelé positif, en mètres entiers. Zéro est une mesure — un sentier plat — donc il
+    /// s'affiche ; un négatif n'en est pas une.
+    pub fn elevation(&self) -> Option<u32> {
+        let metres = self.elevation_m?;
+        (metres.is_finite() && metres >= 0.0).then(|| metres.round() as u32)
+    }
+
     /// L'identifiant de route de la fiche, stable par ligne.
     pub fn route_id(&self, index: usize) -> String {
         let id = self.id.trim();
@@ -170,13 +198,13 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    fn config(value: serde_json::Value) -> ModuleConfig {
+    fn parsed(value: serde_json::Value) -> ModuleConfig {
         serde_json::from_value(value).expect("config")
     }
 
     #[test]
     fn a_trail_without_a_level_does_not_reach_the_guest() {
-        let config = config(json!({
+        let config = parsed(json!({
             "trails": [
                 { "title": "Phare de la Garoupe", "level": "easy" },
                 { "title": "Baou de Saint-Jeannet" },
@@ -193,14 +221,14 @@ mod tests {
 
     #[test]
     fn only_https_links_are_offered() {
-        let refused = config(json!({
+        let refused = parsed(json!({
             "trails": [{ "title": "A", "level": "hard", "link_url": "javascript:alert(1)" }],
             "commune_url": "www.antibesjuanlespins.com"
         }));
         assert_eq!(refused.trails[0].link(), None);
         assert_eq!(refused.commune_link(), None);
 
-        let accepted = config(json!({
+        let accepted = parsed(json!({
             "trails": [{ "title": "A", "level": "hard", "link_url": " https://visorando.com/x " }],
             "commune_url": "https://www.antibesjuanlespins.com"
         }));
@@ -213,7 +241,7 @@ mod tests {
         let rows: Vec<_> = (0..MAX_TRAILS + 3)
             .map(|i| json!({ "title": format!("Sentier {i}"), "level": "easy" }))
             .collect();
-        let config = config(json!({ "trails": rows }));
+        let config = parsed(json!({ "trails": rows }));
         assert_eq!(config.parse_trails().len(), MAX_TRAILS);
     }
 
@@ -226,6 +254,46 @@ mod tests {
             ..TrailRow::default()
         };
         assert_eq!(named.route_id(4), "garoupe");
+    }
+
+    /// Le formulaire hôte envoie des nombres, pas des entiers : `60.0` doit se relire.
+    ///
+    /// Avec un `u32`, serde refusait la ligne — donc toute la configuration — et le module rendait
+    /// son état d'erreur dès le premier enregistrement d'un hôte.
+    #[test]
+    fn a_measure_sent_as_a_float_still_reads() {
+        let config = parsed(json!({
+            "trails": [{ "title": "A", "level": "easy",
+                         "duration_min": 60.0, "distance_km": 2.6, "elevation_m": 80.0 }]
+        }));
+        let row = &config.trails[0];
+        assert_eq!(row.duration(), Some(60));
+        assert_eq!(row.elevation(), Some(80));
+        assert_eq!(row.distance(), Some(2.6));
+        // Une durée saisie à la virgule s'arrondit à la minute.
+        let rounded = parsed(json!({
+            "trails": [{ "title": "A", "level": "easy", "duration_min": 7.5, "elevation_m": 12.4 }]
+        }));
+        assert_eq!(rounded.trails[0].duration(), Some(8));
+        assert_eq!(rounded.trails[0].elevation(), Some(12));
+    }
+
+    /// Ce qui n'est pas une mesure ne s'affiche pas : zéro minute, une distance négative, un NaN.
+    #[test]
+    fn an_absurd_measure_is_not_a_measure() {
+        let config = parsed(json!({
+            "trails": [{ "title": "A", "level": "easy",
+                         "duration_min": 0, "distance_km": -3, "elevation_m": -10 }]
+        }));
+        let row = &config.trails[0];
+        assert_eq!(row.duration(), None);
+        assert_eq!(row.distance(), None);
+        assert_eq!(row.elevation(), None);
+        // Un sentier plat garde son dénivelé : zéro mètre est une mesure.
+        let flat = parsed(json!({
+            "trails": [{ "title": "A", "level": "easy", "elevation_m": 0 }]
+        }));
+        assert_eq!(flat.trails[0].elevation(), Some(0));
     }
 
     #[test]

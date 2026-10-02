@@ -152,14 +152,14 @@ fn start_line(data: &GuestData, trail: &TrailRow) -> Option<String> {
 /// Les quatre tuiles. Celles dont l'hôte n'a pas la mesure ne s'affichent pas.
 fn measures(trail: &TrailRow) -> Option<Component> {
     let mut tiles: Vec<Component> = Vec::new();
-    if let Some(minutes) = trail.duration_min {
+    if let Some(minutes) = trail.duration() {
         tiles.push(tile(
             IconName::ClockCircle,
             "i18n:guest.tile.duration",
             format::duration(minutes),
         ));
     }
-    if let Some(km) = trail.distance_km {
+    if let Some(km) = trail.distance() {
         // ponytail: `compass` n'est pas dans `IconName` (9.5.1) — `gauge` est le cadran le plus
         // proche. À remplacer si la boussole entre au vocabulaire.
         tiles.push(tile(
@@ -168,7 +168,7 @@ fn measures(trail: &TrailRow) -> Option<Component> {
             format::distance(km),
         ));
     }
-    if let Some(metres) = trail.elevation_m {
+    if let Some(metres) = trail.elevation() {
         // ponytail: pas d'`arrow-up` non plus ; la montagne dit le dénivelé sans flèche.
         tiles.push(tile(
             IconName::Mountain,

@@ -15,13 +15,13 @@ use crate::format;
 /// sa distance, pas « ↑  m ».
 pub fn stats_line(trail: &TrailRow, with_shape: bool) -> Option<String> {
     let mut parts: Vec<String> = Vec::new();
-    if let Some(minutes) = trail.duration_min {
+    if let Some(minutes) = trail.duration() {
         parts.push(format::duration(minutes));
     }
-    if let Some(km) = trail.distance_km {
+    if let Some(km) = trail.distance() {
         parts.push(format::distance(km));
     }
-    if let Some(metres) = trail.elevation_m {
+    if let Some(metres) = trail.elevation() {
         parts.push(format!("↑ {}", format::elevation(metres)));
     }
     if with_shape {
