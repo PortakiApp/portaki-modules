@@ -4,7 +4,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Card, Field, Form, InfoBanner, Page, Select, Stack, Text, TextArea,
+    AddressMapPicker, Card, Field, Form, InfoBanner, Page, Select, Stack, StepList, Text, TextArea,
     TextInput, ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
@@ -14,7 +14,12 @@ use crate::config::{ActivityRow, ModuleConfig, SpotRow, TIQETS_RADIUS_CHOICES_KM
 use crate::tiqets::TiqetsStatus;
 use crate::viator::ViatorStatus;
 
-const SPOT_SLOTS: usize = 6;
+/// Combien d'adresses le formulaire accepte.
+///
+/// Une capacité, pas un nombre de lignes dessinées : six emplacements figés gelaient la liste à
+/// six — l'hôte ne pouvait pas en saisir une septième parce que le formulaire ne la dessinait
+/// jamais, et voyait quatre cartes vides quand il en avait saisi deux.
+pub const MAX_SPOTS: usize = 12;
 
 /// Créneaux d'activités affichés : les lignes stockées, plus un libre.
 ///
@@ -81,11 +86,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
         },
     );
 
-    let mut cards: Vec<Component> = Vec::new();
-    // The stored rows where they are, blank ones included, then empty slots.
-    for index in 0..SPOT_SLOTS.max(config.spots.len()) {
-        cards.push(spot_card(index, config.spots.get(index), &ctx));
-    }
+    let mut cards: Vec<Component> = vec![spots_card(&config, &ctx)];
     cards.push(activities_card(
         &ctx,
         activities_enabled,
@@ -417,8 +418,51 @@ fn viator_card(enabled: bool, min_rating: &str, status: ViatorStatus) -> Compone
         .into()
 }
 
-fn spot_card(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Component {
-    let slot = index + 1;
+/// Les adresses de l'hôte, en lignes dynamiques bornées.
+fn spots_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let rows_count = draft_rows(ctx, config.spots.len());
+    let rows: Vec<Component> = (0..rows_count)
+        .map(|index| spot_row(index, config.spots.get(index), ctx))
+        .collect();
+
+    Card::new()
+        .title("i18n:host.spots.title")
+        .subtitle("i18n:host.spots.subtitle")
+        .icon(IconName::MapPin)
+        .child(
+            StepList::new()
+                .addLabel("i18n:host.spots.add")
+                .removeLabel("i18n:host.spots.remove")
+                .emptyTitle("i18n:host.spots.emptyTitle")
+                .emptyDescription("i18n:host.spots.emptyDescription")
+                .itemKeyPrefix("spots")
+                .addAction(emit_input(RowCount {
+                    spots_count: (rows_count + 1).min(MAX_SPOTS),
+                }))
+                .children(rows),
+        )
+        .into()
+}
+
+/// Combien de lignes dessiner : ce que « Ajouter » a demandé, sinon ce qui est stocké, borné.
+fn draft_rows(ctx: &HostContext, stored: usize) -> usize {
+    match ctx.input_u64("spots_count") {
+        Some(asked) => (asked as usize).clamp(1, MAX_SPOTS),
+        None => stored.clamp(1, MAX_SPOTS),
+    }
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+struct RowCount {
+    spots_count: usize,
+}
+
+fn emit_input(payload: impl serde::Serialize) -> Action {
+    Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
+}
+
+fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Component {
     let title = spot.map(|s| s.title.host_value(ctx)).unwrap_or_default();
     let category = spot.and_then(|s| s.category.as_deref()).unwrap_or("");
     let distance = spot.and_then(|s| s.distance.as_deref()).unwrap_or("");
@@ -492,9 +536,9 @@ fn spot_card(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Compone
         picker.into(),
     ];
 
-    Card::new()
-        .title(t!("host.spot.slot", n = slot).unwrap_or_default())
-        .icon(IconName::MapPin)
+    Stack::new()
+        .id(format!("spot-{index}"))
+        .gap(10.0)
         .children(id.into_iter().chain(fields).collect())
         .into()
 }

@@ -267,6 +267,40 @@ fn the_host_form_sends_the_declared_keys() {
         });
 }
 
+/// Les lignes suivent ce que l'hôte a saisi, et « Ajouter » en demande une de plus.
+///
+/// Six emplacements figés gelaient la liste à six : l'hôte voyait quatre cartes vides quand il
+/// avait saisi deux adresses, et ne pouvait pas en saisir une septième.
+#[test]
+#[serial]
+fn the_form_draws_the_spots_the_host_has() {
+    MockContext::host()
+        .with_config(&serde_json::json!({}))
+        .run(|ctx| {
+            let json =
+                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            assert!(json.contains("spots.0.title"), "{json}");
+            assert!(!json.contains("spots.1.title"), "{json}");
+            assert!(json.contains(r#""spots_count":2"#), "{json}");
+        });
+
+    let rows: Vec<serde_json::Value> = (0..local_guide::MAX_SPOTS)
+        .map(|i| serde_json::json!({ "title": format!("Adresse {i}") }))
+        .collect();
+    MockContext::host()
+        .with_config(&serde_json::json!({ "spots": rows }))
+        .run(|ctx| {
+            let json =
+                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            assert!(json.contains("spots.11.title"), "{json}");
+            assert!(!json.contains("spots.12.title"), "{json}");
+            assert!(
+                json.contains(&format!(r#""spots_count":{}"#, local_guide::MAX_SPOTS)),
+                "{json}"
+            );
+        });
+}
+
 /// A host writing in English: the French texts stay, and so do the url, the note and the ids the
 /// form does not carry; rows keep their place.
 #[test]
@@ -313,7 +347,8 @@ fn a_save_in_english_keeps_the_french() {
             assert!(sent["spots"][1].get("id").is_none());
             assert_eq!(sent["spots"][2]["id"], "beach");
             assert_eq!(sent["spots"][2]["title"], "Plage");
-            assert_eq!(sent["spots"].as_array().unwrap().len(), 6);
+            // Trois lignes stockées, trois dessinées : plus d'emplacements vides en bout de liste.
+            assert_eq!(sent["spots"].as_array().unwrap().len(), 3);
             assert_eq!(sent["activities"][0]["id"], "suquet");
             assert_eq!(sent["activities"][0]["label"], "Old town");
             assert!(sent["activities"][1].get("id").is_none());
