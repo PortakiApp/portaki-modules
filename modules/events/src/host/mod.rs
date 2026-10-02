@@ -2,13 +2,20 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
-use portaki_sdk::sdui::primitives::{Card, Field, Form, Page, Select, Text, TextArea, TextInput};
+use portaki_sdk::sdui::primitives::{
+    Card, Field, Form, Page, Select, Stack, StepList, Text, TextArea, TextInput,
+};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{EventRow, ModuleConfig};
 use crate::nearby::has_open_agenda;
 
-const EVENT_SLOTS: usize = 6;
+/// Combien d'événements le formulaire accepte.
+///
+/// Une capacité, pas un nombre de lignes dessinées : six emplacements figés gelaient la liste à
+/// six — l'hôte ne pouvait pas saisir un septième parce que le formulaire ne le dessinait jamais,
+/// et voyait quatre cartes vides quand il en avait saisi deux.
+pub const MAX_EVENTS: usize = 12;
 
 #[portaki_sdk::surface(
     host,
@@ -22,13 +29,9 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let disclaimer = config.disclaimer.host_value(&ctx);
     let open_agenda = has_open_agenda(&ctx);
 
-    let mut form_children: Vec<Component> = Vec::new();
-    form_children.push(nearby_card(&config, open_agenda));
-    // The stored rows where they are, blank ones included, then empty slots.
-    for index in 0..EVENT_SLOTS.max(config.events.len()) {
-        form_children.push(event_slot_card(index, config.events.get(index), &ctx));
-    }
-    form_children.push(
+    let form_children: Vec<Component> = vec![
+        nearby_card(&config, open_agenda),
+        events_card(&config, &ctx),
         Card::new()
             .title("i18n:host.section.disclaimer")
             .subtitle("i18n:host.section.disclaimer.help")
@@ -44,13 +47,11 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
                 )
                 .into()])
             .into(),
-    );
-    form_children.push(
         Text::new()
             .text("i18n:host.main.help")
             .variant(TextVariant::Caption)
             .into(),
-    );
+    ];
 
     // No Page title / Save — the modules sheet owns chrome + footer Save.
     Ok(Surface::new(Page::new().child(Form::new().children(form_children))).with_id(MAIN))
@@ -113,8 +114,51 @@ fn nearby_card(config: &ModuleConfig, open_agenda: bool) -> Component {
         .into()
 }
 
-fn event_slot_card(index: usize, event: Option<&EventRow>, ctx: &HostContext) -> Component {
-    let slot = index + 1;
+/// Les événements saisis à la main, en lignes dynamiques bornées.
+fn events_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let rows_count = draft_rows(ctx, config.events.len());
+    let rows: Vec<Component> = (0..rows_count)
+        .map(|index| event_row(index, config.events.get(index), ctx))
+        .collect();
+
+    Card::new()
+        .title("i18n:host.events.title")
+        .subtitle("i18n:host.events.subtitle")
+        .icon(IconName::Calendar)
+        .child(
+            StepList::new()
+                .addLabel("i18n:host.events.add")
+                .removeLabel("i18n:host.events.remove")
+                .emptyTitle("i18n:host.events.emptyTitle")
+                .emptyDescription("i18n:host.events.emptyDescription")
+                .itemKeyPrefix("events")
+                .addAction(emit_input(RowCount {
+                    events_count: (rows_count + 1).min(MAX_EVENTS),
+                }))
+                .children(rows),
+        )
+        .into()
+}
+
+/// Combien de lignes dessiner : ce que « Ajouter » a demandé, sinon ce qui est stocké, borné.
+fn draft_rows(ctx: &HostContext, stored: usize) -> usize {
+    match ctx.input_u64("events_count") {
+        Some(asked) => (asked as usize).clamp(1, MAX_EVENTS),
+        None => stored.clamp(1, MAX_EVENTS),
+    }
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+struct RowCount {
+    events_count: usize,
+}
+
+fn emit_input(payload: impl serde::Serialize) -> Action {
+    Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
+}
+
+fn event_row(index: usize, event: Option<&EventRow>, ctx: &HostContext) -> Component {
     let title = event.map(|e| e.title.host_value(ctx)).unwrap_or_default();
     let place = event.map(|e| e.place.host_value(ctx)).unwrap_or_default();
     let starts_at = event.map(|e| e.starts_at.as_str()).unwrap_or("");
@@ -192,9 +236,9 @@ fn event_slot_card(index: usize, event: Option<&EventRow>, ctx: &HostContext) ->
             .into(),
     ];
 
-    Card::new()
-        .title(t!("host.event.slot", n = slot).unwrap_or_default())
-        .icon(IconName::Calendar)
+    Stack::new()
+        .id(format!("event-{index}"))
+        .gap(10.0)
         .children(id.into_iter().chain(fields).collect())
         .into()
 }
