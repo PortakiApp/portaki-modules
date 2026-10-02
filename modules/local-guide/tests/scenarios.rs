@@ -4,16 +4,17 @@
 mod scenarios;
 
 use local_guide as _;
-use portaki_sdk::capability;
 use portaki_test_utils::MockContextBuilder;
 use serde_json::json;
 use serial_test::serial;
 
-/// Trois adresses de l'hôte, situées, et la billetterie Tiqets (pool Portaki) contre sa
-/// réponse enregistrée.
+/// Trois adresses de l'hôte, situées, et la billetterie Tiqets contre sa réponse enregistrée.
+///
+/// Plus de capacité à accorder : depuis l'ADR-0021, Tiqets est un connecteur du module et la
+/// plateforme n'accorde rien pour lui. Le constant du SDK est déprimé, et `-D warnings` refusait
+/// le module entier à cause de cette ligne.
 fn setup(builder: MockContextBuilder) -> MockContextBuilder {
     builder
-        .with_extra_capability_ids(&[capability::external::TIQETS_POOL.as_str()])
         .with_connector_response(
             "tiqets",
             "nearby_products",
