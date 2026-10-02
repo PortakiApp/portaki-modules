@@ -18,6 +18,9 @@ pub struct LostFoundReportRow {
     pub contact_hint: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub details: Option<String>,
+    /// L'adresse de renvoi écrite par le voyageur — l'hôte en a besoin pour expédier.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub return_address: Option<String>,
     pub status: String,
     pub created_at: DateTime<Utc>,
 }
@@ -31,6 +34,7 @@ impl From<crate::entities::LostFoundReport> for LostFoundReportRow {
             item_description: row.item_description,
             contact_hint: row.contact_hint,
             details: row.details,
+            return_address: row.return_address,
             status: row.status,
             created_at: row.created_at,
         }

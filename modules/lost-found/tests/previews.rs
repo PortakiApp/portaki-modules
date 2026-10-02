@@ -31,6 +31,7 @@ fn previews_match_the_rendered_surfaces() {
                     item_description: "Chargeur de téléphone blanc".into(),
                     contact_hint: None,
                     details: Some("Sans doute branché près du lit de la chambre 2.".into()),
+                    return_address: None,
                 },
             )
             .expect("submit");
