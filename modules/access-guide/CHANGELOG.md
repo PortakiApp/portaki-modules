@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.2.0...access-guide-v1.3.0) (2026-10-02)
+
+
+### Features
+
+* **access-guide:** speak the ten languages of the picker ([501b6b6](https://github.com/PortakiApp/portaki-modules/commit/501b6b601b8d91954fa06ffe2406050d982d8c19))
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+
 ## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.1.0...access-guide-v1.2.0) (2026-09-30)
 
 

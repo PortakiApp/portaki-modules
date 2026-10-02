@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.0](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.3.0...wifi-guest-v1.4.0) (2026-10-02)
+
+
+### Features
+
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+* **wifi-guest:** speak the ten languages of the picker ([012dba0](https://github.com/PortakiApp/portaki-modules/commit/012dba006f05cab032fc103ff943e5c80ba9d2fc))
+
 ## [1.3.0](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.2.0...wifi-guest-v1.3.0) (2026-09-30)
 
 

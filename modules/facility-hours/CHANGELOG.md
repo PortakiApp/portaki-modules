@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.4.0...facility-hours-v1.5.0) (2026-10-02)
+
+
+### Features
+
+* **facility-hours:** speak the ten languages of the picker ([213c562](https://github.com/PortakiApp/portaki-modules/commit/213c5626a0b330330d0f05d9a91f0bcd140f1644))
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+
 ## [1.4.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.3.0...facility-hours-v1.4.0) (2026-09-30)
 
 

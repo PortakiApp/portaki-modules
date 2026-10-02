@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/events-v1.1.0...events-v1.2.0) (2026-10-02)
+
+
+### Features
+
+* **events:** speak the ten languages of the picker ([50c537c](https://github.com/PortakiApp/portaki-modules/commit/50c537cce160d91132538fa2a6bdf15e0d487568))
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+
 ## [1.1.0](https://github.com/PortakiApp/portaki-modules/compare/events-v1.0.0...events-v1.1.0) (2026-09-29)
 
 

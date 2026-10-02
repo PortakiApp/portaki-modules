@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.1.0...local-guide-v1.2.0) (2026-10-02)
+
+
+### Features
+
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+* **local-guide:** add the viator section ([cf46277](https://github.com/PortakiApp/portaki-modules/commit/cf46277d25b412fd1a30d7402e8f81907596c070))
+* **local-guide:** declare the tiqets connector itself ([fbcdc5f](https://github.com/PortakiApp/portaki-modules/commit/fbcdc5ff31462ccd5da2b2b34b4c3fd292c0bf11))
+* **local-guide:** speak the ten languages of the picker ([5070094](https://github.com/PortakiApp/portaki-modules/commit/5070094ebc8cb15ae81ca91d8613482cfa54c2bd))
+
+
+### Bug Fixes
+
+* **local-guide:** call the viator sandbox for now ([462330b](https://github.com/PortakiApp/portaki-modules/commit/462330b863afbdc1c1ebcca2e095f2ce21fe794c))
+* **local-guide:** drop tiqets capability texts ([bdd861d](https://github.com/PortakiApp/portaki-modules/commit/bdd861dfb82dcf7159b901480a2e32c35600cb58))
+
 ## [1.1.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.0.0...local-guide-v1.1.0) (2026-09-29)
 
 

@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.1.0...weather-v1.2.0) (2026-10-02)
+
+
+### Features
+
+* **facility-hours:** today's hours in two stay emails ([64f467f](https://github.com/PortakiApp/portaki-modules/commit/64f467fbd8d64524bfb696c5f09290ef1076893f))
+* **weather:** speak the ten languages of the picker ([d35a211](https://github.com/PortakiApp/portaki-modules/commit/d35a2116b7d612227e958cf10926b7e459f341c6))
+
+
+### Bug Fixes
+
+* **weather:** honour units in the arrival-day e-mail ([dac5bd7](https://github.com/PortakiApp/portaki-modules/commit/dac5bd7fe0d3e9ffe99d94d7eb3b9d7ecfaca12d))
+
 ## [1.1.0](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.0.0...weather-v1.1.0) (2026-09-29)
 
 
