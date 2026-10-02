@@ -1,0 +1,493 @@
+{
+  "products": {
+    "totalCount": 69,
+    "results": [
+      {
+        "productCode": "273628P2",
+        "title": "Le Petit Train d'Antibes Juan-les-Pins",
+        "description": "Profitez du Petit Train touristique d’Antibes pour parcourir cette ville à la situation géographique exceptionnelle et riche des trésors du passé.\nCette situation particulière, avec le site exceptionnel du Cap d’Antibes, les plages de sable de Juan-les-Pins, le charme de sa Vieille Ville et ses Remparts donnent à Antibes ses caractéristiques spécifiques qui la distinguent des autres villes de la Côte d’Azur.\nÀ la fois ville-musée, ville-spectacle et ville-novatrice, elle mélange avec aisance ses contrastes et ses multiples facettes. Très appréciée des artistes à travers le monde qui trouvent dans les rues et monuments historiques de la ville une nouvelle source d’inspiration, Antibes Juan-les-Pins est connue pour être une ville ouverte à toutes les formes d’art.",
+        "images": [
+          {
+            "imageSource": "SUPPLIER_PROVIDED",
+            "caption": "",
+            "isCover": true,
+            "variants": [
+              {
+                "height": 100,
+                "width": 100,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-100x100/10/24/33/0b.jpg"
+              },
+              {
+                "height": 200,
+                "width": 200,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-200x200/10/24/33/0b.jpg"
+              },
+              {
+                "height": 400,
+                "width": 400,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-400x400/10/24/33/0b.jpg"
+              },
+              {
+                "height": 240,
+                "width": 360,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-360x240/10/24/33/0b.jpg"
+              },
+              {
+                "height": 320,
+                "width": 480,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-480x320/10/24/33/0b.jpg"
+              },
+              {
+                "height": 360,
+                "width": 540,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-540x360/10/24/33/0b.jpg"
+              },
+              {
+                "height": 446,
+                "width": 674,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/10/24/33/0b.jpg"
+              },
+              {
+                "height": 480,
+                "width": 720,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-720x480/10/24/33/0b.jpg"
+              },
+              {
+                "height": 118,
+                "width": 210,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-210x118/10/24/33/0b.jpg"
+              },
+              {
+                "height": 75,
+                "width": 75,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-75x75/10/24/33/0b.jpg"
+              }
+            ]
+          }
+        ],
+        "reviews": {
+          "sources": [
+            {
+              "provider": "VIATOR",
+              "totalCount": 23,
+              "averageRating": 4.1
+            },
+            {
+              "provider": "TRIPADVISOR",
+              "totalCount": 25,
+              "averageRating": 4.2
+            }
+          ],
+          "totalReviews": 48,
+          "combinedAverageRating": 4.1458335
+        },
+        "duration": {
+          "fixedDurationInMinutes": 45
+        },
+        "confirmationType": "INSTANT",
+        "itineraryType": "STANDARD",
+        "pricing": {
+          "summary": {
+            "fromPrice": 13.0
+          },
+          "currency": "EUR"
+        },
+        "productUrl": "https://shop.live.rc.viator.com/fr-FR/tours/Antibes/The-Little-Train-of-Antibes-Juan-les-Pins/d21941-273628P2?mcid=42383&pid=P00322642&medium=api&api_version=2.0",
+        "destinations": [
+          {
+            "ref": "21941",
+            "primary": true
+          }
+        ],
+        "tags": [
+          367654,
+          12032,
+          11938,
+          367659,
+          367653,
+          367661,
+          12011,
+          12029,
+          22143,
+          367667,
+          12075,
+          367652
+        ],
+        "flags": [
+          "FREE_CANCELLATION"
+        ],
+        "translationInfo": {
+          "containsMachineTranslatedText": false,
+          "translationSource": "ORIGINAL"
+        }
+      },
+      {
+        "productCode": "479450P1",
+        "title": "Visite guidée à pied de 2 heures dans la vieille ville d'Antibes",
+        "description": "Je vous ferai découvrir le port et la vieille ville d'Antibes, où je vous ferai découvrir les lieux emblématiques ainsi que ceux que seuls les habitants connaissent ! Vous serez émerveillé par les superbes panoramas, les ruelles typiques, le marché animé, l'architecture ancienne, mais aussi par l'art urbain et les galeries d'art.\n\nJe vous présenterai la riche histoire d'Antibes ainsi que certaines traditions locales, et je vous donnerai également des conseils sur les activités, les plages et les restaurants. Antibes a tant à offrir !\n\nAprès cette balade, je suis sûr que vous aimerez Antibes autant que moi !",
+        "images": [
+          {
+            "imageSource": "SUPPLIER_PROVIDED",
+            "caption": "",
+            "isCover": true,
+            "variants": [
+              {
+                "height": 100,
+                "width": 100,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-100x100/r/33/86/2e/1c/caption.jpg"
+              },
+              {
+                "height": 200,
+                "width": 200,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-200x200/r/33/86/2e/1c/caption.jpg"
+              },
+              {
+                "height": 400,
+                "width": 400,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-400x400/r/33/86/2e/1c/caption.jpg"
+              },
+              {
+                "height": 240,
+                "width": 360,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-360x240/r/33/86/2e/1c/caption.jpg"
+              },
+              {
+                "height": 320,
+                "width": 480,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-480x320/r/33/86/2e/1c/caption.jpg"
+              },
+              {
+                "height": 360,
+                "width": 540,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-540x360/r/33/86/2e/1c/caption.jpg"
+              },
+              {
+                "height": 446,
+                "width": 674,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/r/33/86/2e/1c/caption.jpg"
+              },
+              {
+                "height": 480,
+                "width": 720,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-720x480/r/33/86/2e/1c/caption.jpg"
+              },
+              {
+                "height": 118,
+                "width": 210,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-210x118/r/33/86/2e/1c/caption.jpg"
+              },
+              {
+                "height": 75,
+                "width": 75,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-75x75/r/33/86/2e/1c/caption.jpg"
+              }
+            ]
+          }
+        ],
+        "reviews": {
+          "sources": [
+            {
+              "provider": "VIATOR",
+              "totalCount": 41,
+              "averageRating": 5.0
+            },
+            {
+              "provider": "TRIPADVISOR",
+              "totalCount": 22,
+              "averageRating": 5.0
+            }
+          ],
+          "totalReviews": 63,
+          "combinedAverageRating": 5.0
+        },
+        "duration": {
+          "fixedDurationInMinutes": 120
+        },
+        "confirmationType": "INSTANT",
+        "itineraryType": "STANDARD",
+        "pricing": {
+          "summary": {
+            "fromPrice": 25.0
+          },
+          "currency": "EUR"
+        },
+        "productUrl": "https://shop.live.rc.viator.com/fr-FR/tours/Antibes/Antibes-2-hour-walking-tour-in-the-old-town/d21941-479450P1?mcid=42383&pid=P00322642&medium=api&api_version=2.0",
+        "destinations": [
+          {
+            "ref": "21941",
+            "primary": true
+          }
+        ],
+        "tags": [
+          367654,
+          367667,
+          11938,
+          367668,
+          21972,
+          367661,
+          12046,
+          367658,
+          12028,
+          12029,
+          367653,
+          21860
+        ],
+        "flags": [
+          "FREE_CANCELLATION"
+        ],
+        "translationInfo": {
+          "containsMachineTranslatedText": true,
+          "translationSource": "MACHINE"
+        }
+      },
+      {
+        "productCode": "122416P8",
+        "title": "Visite à pied d'Antibes + petite dégustation",
+        "description": "Flâner dans la vieille ville d'Antibes et se perdre dans le temps dans les ruelles pavées. Vérifiez toutes les attractions principales mais aussi les joyaux cachés ! Un incontournable quand on vient à Antibes pour découvrir cette incroyable ville côtière. La seule ville de la côte avec une vraie ambiance provençale et moins fréquentée que les autres. Le joyau de la Côte d'Azur !",
+        "images": [
+          {
+            "imageSource": "SUPPLIER_PROVIDED",
+            "caption": "",
+            "isCover": true,
+            "variants": [
+              {
+                "height": 100,
+                "width": 100,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-100x100/13/29/fb/b1.jpg"
+              },
+              {
+                "height": 200,
+                "width": 200,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-200x200/13/29/fb/b1.jpg"
+              },
+              {
+                "height": 400,
+                "width": 400,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-400x400/13/29/fb/b1.jpg"
+              },
+              {
+                "height": 240,
+                "width": 360,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-360x240/13/29/fb/b1.jpg"
+              },
+              {
+                "height": 320,
+                "width": 480,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-480x320/13/29/fb/b1.jpg"
+              },
+              {
+                "height": 360,
+                "width": 540,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-540x360/13/29/fb/b1.jpg"
+              },
+              {
+                "height": 446,
+                "width": 674,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/13/29/fb/b1.jpg"
+              },
+              {
+                "height": 480,
+                "width": 720,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-720x480/13/29/fb/b1.jpg"
+              },
+              {
+                "height": 118,
+                "width": 210,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-210x118/13/29/fb/b1.jpg"
+              },
+              {
+                "height": 75,
+                "width": 75,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-75x75/13/29/fb/b1.jpg"
+              }
+            ]
+          }
+        ],
+        "reviews": {
+          "sources": [
+            {
+              "provider": "VIATOR",
+              "totalCount": 3,
+              "averageRating": 5.0
+            },
+            {
+              "provider": "TRIPADVISOR",
+              "totalCount": 18,
+              "averageRating": 4.7
+            }
+          ],
+          "totalReviews": 21,
+          "combinedAverageRating": 4.7619047
+        },
+        "duration": {
+          "variableDurationFromMinutes": 120,
+          "variableDurationToMinutes": 150
+        },
+        "confirmationType": "INSTANT",
+        "itineraryType": "STANDARD",
+        "pricing": {
+          "summary": {
+            "fromPrice": 20.0
+          },
+          "currency": "EUR"
+        },
+        "productUrl": "https://shop.live.rc.viator.com/fr-FR/tours/Antibes/Antibes-Christmas-Tasting-Tour/d21941-122416P8?mcid=42383&pid=P00322642&medium=api&api_version=2.0",
+        "destinations": [
+          {
+            "ref": "21941",
+            "primary": true
+          }
+        ],
+        "tags": [
+          21972,
+          11938,
+          367654,
+          12031,
+          12046,
+          21519,
+          367668,
+          20757,
+          367663,
+          12028,
+          22083,
+          367661
+        ],
+        "flags": [
+          "FREE_CANCELLATION",
+          "LIKELY_TO_SELL_OUT"
+        ],
+        "translationInfo": {
+          "containsMachineTranslatedText": true,
+          "translationSource": "MACHINE",
+          "translationAttribution": "GOOGLE"
+        }
+      },
+      {
+        "productCode": "5566646P1",
+        "title": "Antibes : Excursion en voilier avec Petit-déjeuner, plongée et paddle",
+        "description": "Profitez d'une matinée unique en mer avec voile, Petit-déjeuner à bord, baignade, paddle et plongée en apnée dans des eaux cristallines. Loin de la foule, cette expérience en petit groupe allie détente, découverte et beauté authentique de la Côte d’Azur",
+        "images": [
+          {
+            "imageSource": "SUPPLIER_PROVIDED",
+            "caption": "",
+            "isCover": true,
+            "variants": [
+              {
+                "height": 100,
+                "width": 100,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-100x100/r/33/a9/ff/80/caption.jpg"
+              },
+              {
+                "height": 200,
+                "width": 200,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-200x200/r/33/a9/ff/80/caption.jpg"
+              },
+              {
+                "height": 400,
+                "width": 400,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-400x400/r/33/a9/ff/80/caption.jpg"
+              },
+              {
+                "height": 240,
+                "width": 360,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-360x240/r/33/a9/ff/80/caption.jpg"
+              },
+              {
+                "height": 320,
+                "width": 480,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-480x320/r/33/a9/ff/80/caption.jpg"
+              },
+              {
+                "height": 360,
+                "width": 540,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-540x360/r/33/a9/ff/80/caption.jpg"
+              },
+              {
+                "height": 446,
+                "width": 674,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/r/33/a9/ff/80/caption.jpg"
+              },
+              {
+                "height": 480,
+                "width": 720,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-720x480/r/33/a9/ff/80/caption.jpg"
+              },
+              {
+                "height": 118,
+                "width": 210,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-210x118/r/33/a9/ff/80/caption.jpg"
+              },
+              {
+                "height": 75,
+                "width": 75,
+                "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-75x75/r/33/a9/ff/80/caption.jpg"
+              }
+            ]
+          }
+        ],
+        "reviews": {
+          "sources": [
+            {
+              "provider": "VIATOR",
+              "totalCount": 6,
+              "averageRating": 4.8
+            },
+            {
+              "provider": "TRIPADVISOR",
+              "totalCount": 11,
+              "averageRating": 4.7
+            }
+          ],
+          "totalReviews": 17,
+          "combinedAverageRating": 4.7647057
+        },
+        "duration": {
+          "fixedDurationInMinutes": 150
+        },
+        "confirmationType": "INSTANT",
+        "itineraryType": "STANDARD",
+        "pricing": {
+          "summary": {
+            "fromPrice": 55.0
+          },
+          "currency": "EUR"
+        },
+        "productUrl": "https://shop.live.rc.viator.com/fr-FR/tours/Cannes/Golfe-Juan-Sailing-Discovery-Experience/d786-5566646P1?mcid=42383&pid=P00322642&medium=api&api_version=2.0",
+        "destinations": [
+          {
+            "ref": "786",
+            "primary": true
+          }
+        ],
+        "tags": [
+          21768,
+          21972,
+          12058,
+          22083,
+          367661,
+          367653,
+          367654,
+          20757,
+          11938,
+          12056,
+          21707,
+          367664,
+          367658,
+          11888,
+          11885,
+          11967,
+          20255,
+          21860
+        ],
+        "flags": [
+          "FREE_CANCELLATION",
+          "LIKELY_TO_SELL_OUT"
+        ],
+        "translationInfo": {
+          "containsMachineTranslatedText": true,
+          "translationSource": "MACHINE"
+        }
+      }
+    ]
+  }
+}

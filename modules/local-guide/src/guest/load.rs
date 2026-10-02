@@ -5,6 +5,7 @@ use portaki_sdk::prelude::*;
 use crate::activities::{self, ActivitiesView};
 use crate::config::{valid_coords, ModuleConfig, SpotRow};
 use crate::tiqets::{self, TiqetsView};
+use crate::viator::{self, ViatorView};
 
 pub struct GuestData {
     pub spots: Vec<SpotRow>,
@@ -14,13 +15,15 @@ pub struct GuestData {
     pub activities: Option<ActivitiesView>,
     /// Section Tiqets, quand elle a des produits à montrer.
     pub tiqets: Option<TiqetsView>,
+    /// Section Viator, quand elle a des produits à montrer.
+    pub viator: Option<ViatorView>,
     /// Repère du logement sur la carte, quand il est géocodé.
     pub property_coords: Option<(f64, f64)>,
     pub property_name: String,
 }
 
 /// Ce qu'il y a à montrer, ou `None` quand il n'y a rien : ni lieu, ni mention, ni section
-/// activités ou Tiqets à proposer.
+/// activités, Tiqets ou Viator à proposer.
 pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<Box<GuestData>>> {
     let config = ModuleConfig::load(ctx)?;
     let activities = activities::resolve(
@@ -30,11 +33,12 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<Box<GuestData>>> {
     );
 
     let tiqets = tiqets::resolve(ctx, &config.tiqets());
+    let viator = viator::resolve(ctx, &config.viator());
 
     // La section activités se suffit à elle-même : elle sort de l'adresse du logement,
     // donc un hôte qui n'a saisi aucune adresse a tout de même quelque chose à montrer.
-    // Tiqets de même, depuis la position du logement.
-    if config.is_empty() && activities.is_none() && tiqets.is_none() {
+    // Tiqets de même, depuis la position du logement, et Viator depuis sa ville.
+    if config.is_empty() && activities.is_none() && tiqets.is_none() && viator.is_none() {
         return Ok(None);
     }
 
@@ -44,6 +48,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<Box<GuestData>>> {
         locale: ctx.locale.clone(),
         activities,
         tiqets,
+        viator,
         property_coords: ctx
             .property
             .coordinates

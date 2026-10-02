@@ -38,6 +38,11 @@ pub struct ModuleConfig {
     #[field(kind = "select", options = ["0", "3", "4"], label = "host.tiqets.minRating")]
     #[serde(deserialize_with = "deserialize_min_rating")]
     pub tiqets_min_rating: u8,
+    #[field(label = "host.viator.enabled")]
+    pub viator_enabled: bool,
+    #[field(kind = "select", options = ["0", "3", "4"], label = "host.viator.minRating")]
+    #[serde(deserialize_with = "deserialize_viator_min_rating")]
+    pub viator_min_rating: u8,
 }
 
 impl Default for ModuleConfig {
@@ -52,6 +57,8 @@ impl Default for ModuleConfig {
             tiqets_enabled: false,
             tiqets_radius_km: TIQETS_DEFAULT_RADIUS_KM,
             tiqets_min_rating: 0,
+            viator_enabled: false,
+            viator_min_rating: VIATOR_DEFAULT_MIN_RATING,
         }
     }
 }
@@ -65,6 +72,9 @@ pub const TIQETS_RADIUS_CHOICES_KM: [u32; 4] = [5, 10, 20, 40];
 
 /// Notes minimales proposées à l'hôte ; 0 = aucun filtre.
 const TIQETS_MIN_RATING_CHOICES: [u32; 3] = [0, 3, 4];
+
+/// Note minimale Viator par défaut : la liste suit la ville entière, le filtre écarte le tout-venant.
+pub const VIATOR_DEFAULT_MIN_RATING: u8 = 4;
 
 /// The old KV blob onto the declared keys: the nested `activities: {enabled, destination, intro,
 /// links}` and `tiqets: {enabled, radius_km, min_rating}` sections go flat (numbers to their
@@ -173,6 +183,32 @@ impl TiqetsConfig {
     }
 }
 
+/// Configuration de la section Viator.
+///
+/// **Éteinte par défaut**, comme les sections GetYourGuide et Tiqets.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ViatorConfig {
+    pub enabled: bool,
+    /// Note minimale des avis, 1 à 5 ; 0 = aucun filtre.
+    pub min_rating: u8,
+}
+
+impl Default for ViatorConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            min_rating: VIATOR_DEFAULT_MIN_RATING,
+        }
+    }
+}
+
+impl ViatorConfig {
+    /// 0 = pas de filtre, sinon 1 à 5 : écrite hors du formulaire, elle ne doit pas devenir un `400`.
+    pub fn normalized_min_rating(&self) -> u8 {
+        self.min_rating.min(5)
+    }
+}
+
 /// Configuration de la section « Activités & billets ».
 ///
 /// La section est **éteinte par défaut**. Ces liens rapportent une commission à Portaki :
@@ -255,6 +291,13 @@ impl ModuleConfig {
             enabled: self.tiqets_enabled,
             radius_km: self.tiqets_radius_km,
             min_rating: self.tiqets_min_rating,
+        }
+    }
+
+    pub fn viator(&self) -> ViatorConfig {
+        ViatorConfig {
+            enabled: self.viator_enabled,
+            min_rating: self.viator_min_rating,
         }
     }
 }
@@ -389,6 +432,13 @@ where
     number_or_text(deserializer, 0)
 }
 
+fn deserialize_viator_min_rating<'de, D>(deserializer: D) -> std::result::Result<u8, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    number_or_text(deserializer, VIATOR_DEFAULT_MIN_RATING)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -416,6 +466,32 @@ mod tests {
     fn tiqets_stays_off_on_a_config_that_predates_it() {
         let config: ModuleConfig = serde_json::from_value(json!({ "spots": [] })).unwrap();
         assert_eq!(config.tiqets(), TiqetsConfig::default());
+    }
+
+    #[test]
+    fn viator_stays_off_on_a_config_that_predates_it() {
+        let config: ModuleConfig = serde_json::from_value(json!({ "spots": [] })).unwrap();
+        assert_eq!(config.viator(), ViatorConfig::default());
+        assert_eq!(config.viator().min_rating, 4);
+        let config: ModuleConfig = serde_json::from_value(json!({
+            "viator_enabled": true, "viator_min_rating": "0"
+        }))
+        .unwrap();
+        assert_eq!(
+            config.viator(),
+            ViatorConfig {
+                enabled: true,
+                min_rating: 0
+            }
+        );
+        assert_eq!(
+            ViatorConfig {
+                enabled: true,
+                min_rating: 9
+            }
+            .normalized_min_rating(),
+            5
+        );
     }
 
     #[test]

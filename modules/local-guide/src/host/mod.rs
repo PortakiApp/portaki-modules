@@ -12,6 +12,7 @@ use portaki_sdk::sdui::surface::Surface;
 use crate::affiliate::{looks_like_url, normalize_curated_url, CuratedUrlError, MAX_CURATED_LINKS};
 use crate::config::{ActivityRow, ModuleConfig, SpotRow, TIQETS_RADIUS_CHOICES_KM};
 use crate::tiqets::TiqetsStatus;
+use crate::viator::ViatorStatus;
 
 const SPOT_SLOTS: usize = 6;
 
@@ -38,6 +39,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let disclaimer = config.disclaimer.host_value(&ctx);
     let activities = config.activities();
     let tiqets = config.tiqets();
+    let viator = config.viator();
 
     let activities_enabled = ctx.input_bool("activities_enabled", activities.enabled);
     let activities_destination = ctx
@@ -66,6 +68,19 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
         },
     );
 
+    let viator_enabled = ctx.input_bool("viator_enabled", viator.enabled);
+    let viator_min_rating = ctx
+        .input_str("viator_min_rating")
+        .map(str::to_string)
+        .unwrap_or_else(|| viator.min_rating.to_string());
+    let viator_status = crate::viator::status(
+        &ctx,
+        &crate::config::ViatorConfig {
+            enabled: viator_enabled,
+            ..viator
+        },
+    );
+
     let mut cards: Vec<Component> = Vec::new();
     // The stored rows where they are, blank ones included, then empty slots.
     for index in 0..SPOT_SLOTS.max(config.spots.len()) {
@@ -83,6 +98,11 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
         &tiqets_radius,
         &tiqets_min_rating,
         tiqets_status,
+    ));
+    cards.push(viator_card(
+        viator_enabled,
+        &viator_min_rating,
+        viator_status,
     ));
     cards.push(
         Card::new()
@@ -327,6 +347,71 @@ fn tiqets_card(enabled: bool, radius: &str, min_rating: &str, status: TiqetsStat
     Card::new()
         .title("i18n:host.section.tiqets")
         .subtitle("i18n:host.section.tiqets.help")
+        .icon(IconName::Ticket)
+        .children(children)
+        .into()
+}
+
+/// Carte « Activités (Viator) ».
+///
+/// L'état dit à l'hôte pourquoi rien ne s'afficherait : section éteinte, clé de Portaki
+/// indisponible (l'hôte ne peut pas en poser une, la licence Viator l'interdit), ou adresse
+/// sans ville lisible.
+fn viator_card(enabled: bool, min_rating: &str, status: ViatorStatus) -> Component {
+    let status_key = match status {
+        ViatorStatus::Off => "i18n:host.viator.status.off",
+        ViatorStatus::MissingKey => "i18n:host.viator.status.missingKey",
+        ViatorStatus::MissingCity => "i18n:host.viator.status.missingCity",
+        ViatorStatus::Ready => "i18n:host.viator.status.ready",
+    };
+
+    let mut children: Vec<Component> = vec![
+        ToggleRow::new()
+            .name("viator_enabled")
+            .label("i18n:host.viator.enabled")
+            .icon(IconName::Ticket)
+            .checked(enabled)
+            .into(),
+        Field::new()
+            .name("viator_min_rating")
+            .label("i18n:host.viator.minRating")
+            .child(
+                Select::new()
+                    .name("viator_min_rating")
+                    .options(vec![
+                        ChoiceOption::new("0", "i18n:host.viator.minRating.0"),
+                        ChoiceOption::new("3", "i18n:host.viator.minRating.3"),
+                        ChoiceOption::new("4", "i18n:host.viator.minRating.4"),
+                    ])
+                    .value(min_rating.to_string()),
+            )
+            .into(),
+    ];
+    if matches!(status, ViatorStatus::MissingKey | ViatorStatus::MissingCity) {
+        children.push(
+            InfoBanner::new()
+                .tone(Tone::Warning)
+                .message(status_key)
+                .into(),
+        );
+    } else {
+        children.push(
+            Text::new()
+                .text(status_key)
+                .variant(TextVariant::Caption)
+                .into(),
+        );
+    }
+    children.push(
+        Text::new()
+            .text("i18n:host.viator.help")
+            .variant(TextVariant::Caption)
+            .into(),
+    );
+
+    Card::new()
+        .title("i18n:host.section.viator")
+        .subtitle("i18n:host.section.viator.help")
         .icon(IconName::Ticket)
         .children(children)
         .into()

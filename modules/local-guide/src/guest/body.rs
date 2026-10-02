@@ -8,6 +8,7 @@ use portaki_sdk::sdui::primitives::{
 
 use crate::activities::ActivitiesView;
 use crate::tiqets::{format_price, format_rating, TiqetsView, HOME_PRODUCTS};
+use crate::viator::{self, format_duration, ViatorView};
 
 use super::load::GuestData;
 
@@ -92,6 +93,14 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
             Stack::new()
                 .gap(8.0)
                 .children(build_tiqets(view, enriched, &data.locale)),
+        ));
+    }
+
+    if let Some(view) = data.viator.as_ref() {
+        children.push(Component::Stack(
+            Stack::new()
+                .gap(8.0)
+                .children(build_viator(view, enriched, &data.locale)),
         ));
     }
 
@@ -191,6 +200,104 @@ fn product_subtitle(product: &portaki_connectors::tiqets::TiqetsProduct, locale:
             t!("guest.tiqets.rating", rating = &average, count = &count)
                 .unwrap_or_else(|_| format!("★ {average} ({count})")),
         );
+    }
+    parts.join(" · ")
+}
+
+/// Section Viator : les activités de la ville, mention de la source et de l'affiliation dessous.
+///
+/// Le détail montre image, prix, note, durée, annulation gratuite et traduction automatique ;
+/// la carte d'accueil n'en garde que [`viator::HOME_PRODUCTS`], sans image. Chaque lien est le
+/// `product_url` de Viator tel quel : c'est lui qui porte les paramètres d'affiliation.
+fn build_viator(view: &ViatorView, enriched: bool, locale: &str) -> Vec<Component> {
+    let mut children: Vec<Component> = vec![Text::new()
+        .text("i18n:guest.viator.title")
+        .variant(TextVariant::Title)
+        .into()];
+
+    let shown = if enriched {
+        view.products.len()
+    } else {
+        viator::HOME_PRODUCTS
+    };
+    for product in view.products.iter().take(shown) {
+        let action = Action::External {
+            url: product.product_url.clone(),
+        };
+        let mut item = ListItem::new().title(product.title.clone());
+        let subtitle = viator_subtitle(product, locale);
+        if !subtitle.is_empty() {
+            item = item.subtitle(subtitle);
+        }
+
+        if !enriched {
+            children.push(Component::Pressable(
+                Pressable::new().action(action).child(item),
+            ));
+            continue;
+        }
+
+        if let Some(url) = product.image_url.as_ref() {
+            children.push(
+                Image::new()
+                    .url(url.clone())
+                    .alt(product.title.clone())
+                    .aspectRatio("16 / 9")
+                    .into(),
+            );
+        }
+        if product.free_cancellation {
+            item = item.child(Pill::new().label("i18n:guest.viator.freeCancellation"));
+        }
+        // Viator demande de signaler un titre ou une description traduits par machine.
+        if product.machine_translated {
+            item = item.child(
+                Text::new()
+                    .text("i18n:guest.viator.machineTranslated")
+                    .variant(TextVariant::Caption),
+            );
+        }
+        item = item.child(
+            Link::new()
+                .label("i18n:guest.viator.book")
+                .href(product.product_url.clone())
+                .action(action),
+        );
+        children.push(Component::ListItem(item));
+    }
+
+    children.push(
+        Text::new()
+            .text("i18n:guest.viator.attribution")
+            .variant(TextVariant::Caption)
+            .into(),
+    );
+    children.push(
+        Text::new()
+            .text("i18n:guest.viator.disclosure")
+            .variant(TextVariant::Caption)
+            .into(),
+    );
+    children
+}
+
+/// « À partir de 25 € · ★ 4,8 (151 avis) · 2 h » — ce qui est connu, dans cet ordre.
+fn viator_subtitle(product: &portaki_connectors::viator::ViatorProduct, locale: &str) -> String {
+    let mut parts = Vec::new();
+    if let (Some(price), Some(currency)) = (product.price, product.currency.as_deref()) {
+        let formatted = format_price(price, currency, locale);
+        parts.push(t!("guest.viator.priceFrom", price = &formatted).unwrap_or(formatted));
+    }
+    if let Some(rating) = product.rating {
+        let average = format_rating(rating, locale);
+        let count = product.rating_count.to_string();
+        parts.push(
+            t!("guest.viator.rating", rating = &average, count = &count)
+                .unwrap_or_else(|_| format!("★ {average} ({count})")),
+        );
+    }
+    if let Some(minutes) = product.duration_minutes {
+        parts.push(format_duration(minutes));
     }
     parts.join(" · ")
 }
