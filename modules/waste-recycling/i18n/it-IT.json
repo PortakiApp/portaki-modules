@@ -92,5 +92,11 @@
   "waste.glass": "Vetro",
   "waste.household": "Rifiuti indifferenziati",
   "waste.packaging": "Imballaggi",
-  "waste.paper": "Carta"
+  "waste.paper": "Carta",
+  "email.block.label": "Raccolta differenziata",
+  "email.block.link": "Guida alla raccolta",
+  "email.collection.today": "Raccolta oggi",
+  "email.collection.next": "Prossima raccolta {day}",
+  "email.collection.departureDay": "È il giorno della partenza: porti fuori il bidone prima di andare.",
+  "email.collection.departureEve": "Parte il giorno prima: porti fuori il bidone prima di chiudere la porta."
 }

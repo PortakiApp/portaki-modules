@@ -92,5 +92,11 @@
   "waste.glass": "Glas",
   "waste.household": "Restmüll",
   "waste.packaging": "Verpackungen",
-  "waste.paper": "Papier"
+  "waste.paper": "Papier",
+  "email.block.label": "Mülltrennung",
+  "email.block.link": "Trennhinweise",
+  "email.collection.today": "Abholung heute",
+  "email.collection.next": "Nächste Abholung {day}",
+  "email.collection.departureDay": "Es ist Ihr Abreisetag: Stellen Sie die Tonne vor der Abreise raus.",
+  "email.collection.departureEve": "Sie reisen am Vortag ab: Stellen Sie die Tonne raus, bevor Sie die Tür schließen."
 }

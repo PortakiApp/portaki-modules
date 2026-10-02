@@ -92,5 +92,11 @@
   "waste.glass": "زجاج",
   "waste.household": "نفايات منزلية",
   "waste.packaging": "عبوات",
-  "waste.paper": "ورق"
+  "waste.paper": "ورق",
+  "email.block.label": "فرز النفايات",
+  "email.block.link": "دليل الفرز",
+  "email.collection.today": "الجمع اليوم",
+  "email.collection.next": "الجمع القادم {day}",
+  "email.collection.departureDay": "إنه يوم مغادرتك: أخرج الحاوية قبل الرحيل.",
+  "email.collection.departureEve": "تغادر في اليوم السابق: أخرج الحاوية قبل إغلاق الباب."
 }

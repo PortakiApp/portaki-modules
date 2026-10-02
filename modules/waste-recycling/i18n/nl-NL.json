@@ -92,5 +92,11 @@
   "waste.glass": "Glas",
   "waste.household": "Restafval",
   "waste.packaging": "Verpakkingen",
-  "waste.paper": "Papier"
+  "waste.paper": "Papier",
+  "email.block.label": "Afval scheiden",
+  "email.block.link": "Sorteerwijzer",
+  "email.collection.today": "Vandaag ophaaldag",
+  "email.collection.next": "Volgende ophaaldag {day}",
+  "email.collection.departureDay": "Het is uw vertrekdag: zet de bak buiten voordat u gaat.",
+  "email.collection.departureEve": "U vertrekt de dag ervoor: zet de bak buiten voordat u de deur sluit."
 }

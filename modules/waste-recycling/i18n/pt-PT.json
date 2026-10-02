@@ -92,5 +92,11 @@
   "waste.glass": "Vidro",
   "waste.household": "Resíduos indiferenciados",
   "waste.packaging": "Embalagens",
-  "waste.paper": "Papel"
+  "waste.paper": "Papel",
+  "email.block.label": "Separação de resíduos",
+  "email.block.link": "Guia de separação",
+  "email.collection.today": "Recolha hoje",
+  "email.collection.next": "Próxima recolha {day}",
+  "email.collection.departureDay": "É o dia da sua partida: ponha o contentor na rua antes de sair.",
+  "email.collection.departureEve": "Parte na véspera: ponha o contentor na rua antes de fechar a porta."
 }
