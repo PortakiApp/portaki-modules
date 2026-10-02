@@ -92,5 +92,11 @@
   "waste.glass": "Vidrio",
   "waste.household": "Basura doméstica",
   "waste.packaging": "Envases",
-  "waste.paper": "Papel"
+  "waste.paper": "Papel",
+  "email.block.label": "Separación de residuos",
+  "email.block.link": "Guía de reciclaje",
+  "email.collection.today": "Recogida hoy",
+  "email.collection.next": "Próxima recogida {day}",
+  "email.collection.departureDay": "Es el día de su salida: saque el cubo antes de irse.",
+  "email.collection.departureEve": "Se va la víspera: saque el cubo antes de cerrar la puerta."
 }

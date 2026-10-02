@@ -92,5 +92,11 @@
   "waste.glass": "Glass",
   "waste.household": "Household waste",
   "waste.packaging": "Packaging",
-  "waste.paper": "Paper"
+  "waste.paper": "Paper",
+  "email.block.label": "Waste sorting",
+  "email.block.link": "Sorting guide",
+  "email.collection.today": "Collection today",
+  "email.collection.next": "Next collection {day}",
+  "email.collection.departureDay": "It is your departure day: put the bin out before you leave.",
+  "email.collection.departureEve": "You leave the day before: put the bin out before you close the door."
 }

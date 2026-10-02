@@ -92,5 +92,11 @@
   "waste.glass": "Verre",
   "waste.household": "Ordures ménagères",
   "waste.packaging": "Emballages",
-  "waste.paper": "Papier"
+  "waste.paper": "Papier",
+  "email.block.label": "Tri des déchets",
+  "email.block.link": "Guide du tri",
+  "email.collection.today": "Collecte aujourd’hui",
+  "email.collection.next": "Prochaine collecte {day}",
+  "email.collection.departureDay": "C’est le jour de votre départ : sortez le bac avant de partir.",
+  "email.collection.departureEve": "Vous partez la veille : sortez le bac avant de fermer la porte."
 }

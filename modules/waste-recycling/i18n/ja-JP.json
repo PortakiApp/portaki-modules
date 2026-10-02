@@ -92,5 +92,11 @@
   "waste.glass": "ガラス",
   "waste.household": "可燃ごみ",
   "waste.packaging": "容器包装",
-  "waste.paper": "紙"
+  "waste.paper": "紙",
+  "email.block.label": "ごみの分別",
+  "email.block.link": "分別ガイド",
+  "email.collection.today": "本日が収集日です",
+  "email.collection.next": "次の収集は{day}",
+  "email.collection.departureDay": "ご出発日です。お出かけ前にごみを出してください。",
+  "email.collection.departureEve": "前日にご出発です。ドアを閉める前にごみを出してください。"
 }

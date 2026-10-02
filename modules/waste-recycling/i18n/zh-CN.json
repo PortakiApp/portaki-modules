@@ -92,5 +92,11 @@
   "waste.glass": "玻璃",
   "waste.household": "生活垃圾",
   "waste.packaging": "包装物",
-  "waste.paper": "纸类"
+  "waste.paper": "纸类",
+  "email.block.label": "垃圾分类",
+  "email.block.link": "分类指南",
+  "email.collection.today": "今天收运",
+  "email.collection.next": "下次收运{day}",
+  "email.collection.departureDay": "今天是您退房的日子：离开前请把垃圾桶放到外面。",
+  "email.collection.departureEve": "您前一天退房：关门前请把垃圾桶放到外面。"
 }
