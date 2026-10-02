@@ -1,6 +1,7 @@
 //! Integration-style unit tests with `portaki-test-utils`.
 
 use chrono::{DateTime, Duration, Utc};
+use serde_json::json;
 use serial_test::serial;
 
 use issue_report::{
@@ -362,5 +363,69 @@ fn a_feed_row_opens_the_report_detail() {
             assert!(detail.contains("host.detail.resolve"));
             assert!(detail.contains(&format!("/stays/{}", report.stay_id)));
             assert!(!detail.contains("FeedItem"));
+        });
+}
+
+/// L'hôte retire une catégorie : la pastille disparaît du formulaire (§10).
+#[test]
+#[serial]
+fn the_form_shows_only_the_categories_the_host_offers() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_config(&json!({ "category_appliance": true, "category_other": true }))
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_guest_form(ctx).expect("form")).unwrap();
+            assert!(json.contains("form.category.appliance"), "{json}");
+            assert!(json.contains("form.category.other"), "{json}");
+            assert!(!json.contains("form.category.noise"), "{json}");
+        });
+
+    // Rien coché : le formulaire reste celui que l'hôte avait, les cinq pastilles.
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_guest_form(ctx).expect("form")).unwrap();
+            for wire in ["appliance", "cleanliness", "noise", "access", "other"] {
+                assert!(json.contains(&format!("form.category.{wire}")), "{json}");
+            }
+        });
+}
+
+/// Le refus tient à la configuration et non à l'écran : un formulaire resté ouvert dans un
+/// téléphone proposait encore la pastille que l'hôte vient de retirer.
+#[test]
+#[serial]
+fn a_dropped_category_is_refused_on_submit() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_config(&json!({ "category_appliance": true }))
+        .run(|ctx| {
+            let refused = submit(
+                ctx.clone(),
+                SubmitArgs {
+                    category: Category::Noise,
+                    summary: "Musique forte chez les voisins".into(),
+                    details: None,
+                    photo: None,
+                },
+            );
+            assert!(
+                refused.is_err(),
+                "une catégorie retirée n'est pas signalable"
+            );
+
+            submit(
+                ctx,
+                SubmitArgs {
+                    category: Category::Appliance,
+                    summary: "Le four ne chauffe plus".into(),
+                    details: None,
+                    photo: None,
+                },
+            )
+            .expect("la catégorie proposée passe");
         });
 }
