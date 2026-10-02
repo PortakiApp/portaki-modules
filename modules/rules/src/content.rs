@@ -114,6 +114,10 @@ impl RulesPayload {
     ///
     /// Le regroupement se fait sur le thème normalisé (sans casse ni espaces de bord) mais garde la
     /// première orthographe rencontrée : « Piscine » et « piscine » sont le même thème.
+    ///
+    /// Les règles sans thème forment un bloc sans titre, et ce bloc passe en dernier : un hôte qui
+    /// n'a rangé qu'une partie de ses règles garde son groupement, et le reste se lit à la fin
+    /// plutôt qu'en tête de page sans qu'on sache ce qu'il annonce.
     pub fn by_theme(&self) -> Vec<(String, Vec<&RuleItem>)> {
         let mut groups: Vec<(String, String, Vec<&RuleItem>)> = Vec::new();
         for item in self.named() {
@@ -124,6 +128,7 @@ impl RulesPayload {
                 None => groups.push((key, label.to_string(), vec![item])),
             }
         }
+        groups.sort_by_key(|(key, _, _)| key.is_empty());
         groups
             .into_iter()
             .map(|(_, label, rules)| (label, rules))
