@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.4.0...waste-recycling-v1.5.0) (2026-10-02)
+
+
+### Features
+
+* **trails:** the compass for distance, the arrow for ascent ([9aa2e31](https://github.com/PortakiApp/portaki-modules/commit/9aa2e31862e8f226cad5f43ea33b37b84be34e67))
+* **waste-recycling:** draw the bins the host has, not six empty slots ([cbef762](https://github.com/PortakiApp/portaki-modules/commit/cbef762936e7004bea44de4fc157b543930958ac))
+
 ## [1.4.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.3.0...waste-recycling-v1.4.0) (2026-10-02)
 
 

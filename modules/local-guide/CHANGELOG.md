@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.2.0...local-guide-v1.3.0) (2026-10-02)
+
+
+### Features
+
+* **local-guide:** draw the places the host has, not six empty slots ([6d44c9c](https://github.com/PortakiApp/portaki-modules/commit/6d44c9c4e381f80a613397f6aa0a150a21567897))
+* **trails:** the compass for distance, the arrow for ascent ([9aa2e31](https://github.com/PortakiApp/portaki-modules/commit/9aa2e31862e8f226cad5f43ea33b37b84be34e67))
+
 ## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.1.0...local-guide-v1.2.0) (2026-10-02)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v1.2.0...ical-sync-v1.3.0) (2026-10-02)
+
+
+### Features
+
+* **trails:** the compass for distance, the arrow for ascent ([9aa2e31](https://github.com/PortakiApp/portaki-modules/commit/9aa2e31862e8f226cad5f43ea33b37b84be34e67))
+
 ## [1.2.0](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v1.1.0...ical-sync-v1.2.0) (2026-10-02)
 
 

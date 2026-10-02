@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.2.0...consumables-v2.3.0) (2026-10-02)
+
+
+### Features
+
+* **consumables:** let the catalog grid grow past its eight tiles ([a912371](https://github.com/PortakiApp/portaki-modules/commit/a91237118169d0b3eb8f21f6d92a50266ab6ffa1))
+* **trails:** the compass for distance, the arrow for ascent ([9aa2e31](https://github.com/PortakiApp/portaki-modules/commit/9aa2e31862e8f226cad5f43ea33b37b84be34e67))
+
 ## [2.2.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.1.0...consumables-v2.2.0) (2026-10-02)
 
 
