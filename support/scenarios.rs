@@ -127,6 +127,7 @@ pub fn check_examples(emissions: &str, setup: Setup, without: &[&str]) {
                 )
             });
         for example in examples {
+            let example = resolve_vocabulary(example.clone());
             let label = example["label"].as_str().unwrap_or_default();
             let unknown: Vec<&String> = example["input"]
                 .as_object()
@@ -151,6 +152,30 @@ pub fn check_examples(emissions: &str, setup: Setup, without: &[&str]) {
         }
     }
     assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// Remplace les valeurs typées (`EmailTemplateKey::Arrival`) par ce qu'elles valent sur le fil.
+///
+/// Une macro voit des tokens, pas des valeurs : elle écrit `Vocabulaire::Variante` dans son
+/// émission, et `portaki build` la résout. Un exemple généré, lui, est **exécuté** ici avant tout
+/// build : sans la même résolution, il arriverait au module sous une forme qu'il ne sait pas lire.
+fn resolve_vocabulary(value: Value) -> Value {
+    match value {
+        Value::String(text) => match text.split_once("::") {
+            Some((vocabulary, variant)) => portaki_sdk::vocab::wire_of(vocabulary, variant)
+                .map(|wire| Value::String(wire.to_string()))
+                .unwrap_or(Value::String(text)),
+            None => Value::String(text),
+        },
+        Value::Array(items) => Value::Array(items.into_iter().map(resolve_vocabulary).collect()),
+        Value::Object(fields) => Value::Object(
+            fields
+                .into_iter()
+                .map(|(key, field)| (key, resolve_vocabulary(field)))
+                .collect(),
+        ),
+        other => other,
+    }
 }
 
 /// Les déclarations `query-*.json` et `command-*.json` que les macros ont écrites.
