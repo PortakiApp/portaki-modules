@@ -52,7 +52,9 @@ const CACHE_KEY_PREFIX: &str = "viator_cache.";
 #[portaki_sdk::custom_connector(
     id = "viator",
     display_name_key = "connector.viator.name",
-    base_url = "https://api.viator.com",
+    // Sandbox tant que Portaki n'a pas sa clé de production : une clé sandbox n'ouvre que cet hôte.
+    // Repasser à `https://api.viator.com` avec la clé de production — une republication.
+    base_url = "https://api.sandbox.viator.com",
     auth = "header:exp-api-key",
     header = "Accept: application/json;version=2.0",
     header_arg = "Accept-Language=lang",
