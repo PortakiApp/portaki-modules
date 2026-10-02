@@ -128,7 +128,7 @@ fn email_context_returns_french_summary() {
         .with_translation("email.place.onSite", "sur place")
         .with_translation(
             "email.weather.summary",
-            "Météo {place} aujourd'hui : {emoji} {temp}°C, {condition}.",
+            "Météo {place} aujourd'hui : {emoji} {temp}, {condition}.",
         )
         .with_translation("email.condition.sunny", "ciel dégagé")
         .with_translation("email.condition.variable", "conditions variables")

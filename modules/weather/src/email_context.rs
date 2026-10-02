@@ -3,7 +3,7 @@
 use portaki_sdk::prelude::*;
 
 use crate::queries::{get_current, GetCurrentArgs};
-use crate::weather::{resolve_city_label, WeatherCurrent};
+use crate::weather::{convert_temp, format_temp_label, resolve_city_label, WeatherCurrent};
 
 /// Arguments for `emailContext`.
 #[portaki_sdk::wire]
@@ -93,7 +93,13 @@ fn format_weather_summary(current: &WeatherCurrent, address: Option<&str>) -> Re
         Some(name) if !name.is_empty() => t!("email.place.inCity", name = name)?,
         _ => t!("email.place.onSite")?,
     };
-    let rounded = current.temp_c.round() as i64;
+    // `current.units` is the host config (loaded by `get_current`): same conversion as the
+    // guest surfaces, and the unit letter travels with the number instead of living in the copy.
+    let temp = format_temp_label(
+        convert_temp(current.temp_c, current.units),
+        current.units.sdui_unit(),
+        true,
+    );
     let condition = condition_phrase(&current.description_key, &current.condition)?;
     let emoji = condition_emoji(&current.condition);
 
@@ -101,7 +107,7 @@ fn format_weather_summary(current: &WeatherCurrent, address: Option<&str>) -> Re
         "email.weather.summary",
         place = place,
         emoji = emoji,
-        temp = rounded,
+        temp = temp,
         condition = condition
     )
 }
@@ -165,9 +171,8 @@ mod tests {
     use chrono::Utc;
     use portaki_test_utils::MockContext;
 
-    #[test]
-    fn formats_summary_via_i18n() {
-        let current = WeatherCurrent {
+    fn sample_current(units: WeatherUnits) -> WeatherCurrent {
+        WeatherCurrent {
             temp_c: 27.4,
             condition: "Clear".into(),
             humidity: 50,
@@ -178,22 +183,36 @@ mod tests {
             pressure_hpa: None,
             cloud_pct: None,
             description_key: "weather.description.sunny".into(),
-            units: WeatherUnits::Celsius,
+            units,
             fetched_at: Utc::now(),
-        };
+        }
+    }
 
+    fn summary_for(units: WeatherUnits) -> String {
+        let current = sample_current(units);
         MockContext::guest()
             .with_translation("email.place.inCity", "à {name}")
             .with_translation(
                 "email.weather.summary",
-                "Météo {place} aujourd'hui : {emoji} {temp}°C, {condition}.",
+                "Météo {place} aujourd'hui : {emoji} {temp}, {condition}.",
             )
             .with_translation("email.condition.sunny", "ciel dégagé")
-            .run(|_| {
-                let summary = format_weather_summary(&current, None).expect("summary");
-                assert!(summary.contains("Antibes"));
-                assert!(summary.contains("27°C"));
-                assert!(summary.contains("aujourd'hui"));
-            });
+            .run(|_| format_weather_summary(&current, None).expect("summary"))
+    }
+
+    #[test]
+    fn formats_summary_via_i18n() {
+        assert_eq!(
+            summary_for(WeatherUnits::Celsius),
+            "Météo à Antibes aujourd'hui : ☀️ 27°C, ciel dégagé."
+        );
+    }
+
+    #[test]
+    fn converts_summary_temperature_to_fahrenheit() {
+        assert_eq!(
+            summary_for(WeatherUnits::Fahrenheit),
+            "Météo à Antibes aujourd'hui : ☀️ 81°F, ciel dégagé."
+        );
     }
 }

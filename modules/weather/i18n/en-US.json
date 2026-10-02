@@ -55,7 +55,7 @@
   "sheet.contactHost": "Contact host",
   "email.place.inCity": "in {name}",
   "email.place.onSite": "on site",
-  "email.weather.summary": "Weather {place} today: {emoji} {temp}°C, {condition}.",
+  "email.weather.summary": "Weather {place} today: {emoji} {temp}, {condition}.",
   "email.condition.sunny": "clear skies",
   "email.condition.cloudy": "cloudy",
   "email.condition.rainy": "rain possible",
