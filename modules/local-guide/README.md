@@ -10,11 +10,12 @@ Official Portaki local guide module — nearby spots and host picks.
 
 | Capability | Required | Purpose |
 |------------|----------|---------|
-| `core.storage` | Yes | KV config (`spots`, `disclaimer`, `activities`, `tiqets`) and the Tiqets cache |
+| `core.storage` | Yes | KV config (`spots`, `disclaimer`, `activities`, `tiqets`, `viator`) and the Tiqets and Viator caches |
 
-Permission `connectors:tiqets` — the only connector this module calls. It is declared by the
-module itself (ADR-0021), not by the platform catalogue: its key is Portaki's, set as the module's
-publisher key in the developer space, or the host's own, set in "Services this module calls".
+Permissions `connectors:tiqets` and `connectors:viator` — the only connectors this module calls.
+Both are declared by the module itself (ADR-0021), not by the platform catalogue. Tiqets' key is
+Portaki's, set as the module's publisher key in the developer space, or the host's own, set in
+"Services this module calls". Viator only ever uses Portaki's publisher key (see below).
 
 ## Sections
 
@@ -24,6 +25,7 @@ publisher key in the developer space, or the host's own, set in "Services this m
 | Map | The located spots plus the property, on the enriched surface only |
 | Activities & tickets | GetYourGuide affiliate links (**off by default**) — an automatic destination search plus up to 10 host-curated links |
 | Tickets & activities (Tiqets) | Bookable Tiqets products around the property — title, image, price, rating, affiliate link (**off by default**) |
+| Tours & activities (Viator) | Bookable Viator products in the property's city — title, image, price, rating, duration, affiliate link (**off by default**) |
 
 ### Map
 
@@ -136,14 +138,52 @@ because the published manifest says so.
   (`guest.tiqets.attribution`, `guest.tiqets.disclosure`).
 - A Tiqets failure never breaks the booklet: the rest of the surface renders.
 
+### Tours & activities (Viator)
+
+The `viator` connector, `POST /partner/search/freetext` of the Viator Partner
+API v2 (Basic affiliate access), searched by the **property's city** — the city
+the GetYourGuide section reads from the property address. That city is the only
+property data sent. Read-only: booking happens on viator.com through each
+product's `product_url`, which Viator returns **with Portaki's affiliate
+parameters already in it** (`pid`, `mcid`, `medium`). The module never rewrites it.
+
+The connector is declared here: `api.viator.com`, the key as `exp-api-key`
+(`auth = "header:exp-api-key"`), `Accept: application/json;version=2.0`, the
+`lang` argument moved into `Accept-Language` (`header_arg`), the operation's
+`fields` and `sends = "property_city"`.
+
+**Publisher key only** (`host_key = false`): Viator's licence forbids showing its
+content under a key other than the domain owner's, and the booklet lives on
+Portaki's domain. A host can't add a Viator key; when Portaki's is unavailable,
+the host sheet says so.
+
+- **Off by default** (`viator_enabled`). Host setting: minimum rating (any, 3+,
+  4+; default 4+). The host sheet says why nothing would show: section off,
+  Portaki's key unavailable (the last call found none — noted for a day), or an
+  address with no readable city.
+- **Cache**: one KV entry per booklet language (`viator_cache.<lang>`), keyed by
+  the search term and minimum rating, fresh for 24 h. When Viator fails an entry
+  up to **7 days** old is still served; past that the section disappears. Without
+  the host clock nothing renders.
+- **Languages**: the booklet language when Viator serves it (`da`, `de`, `en`,
+  `es`, `fr`, `it`, `ja`, `ko`, `nl`, `no`, `pt`, `sv`), English otherwise.
+  Prices in EUR.
+- **Display**: `explore.detail` shows up to 12 products with image, price,
+  rating, duration, a free-cancellation badge and a machine-translation note when
+  Viator flags one; `home.card` shows 3 products, no image. Untitled products, and
+  links not on `https://…viator.com`, are dropped by `portaki-connectors`.
+- **Attribution and disclosure** render under the list in every locale
+  (`guest.viator.attribution`, `guest.viator.disclosure`).
+- A Viator failure never breaks the booklet: the rest of the surface renders.
+
 ## Surfaces
 
 | Shell | Surface id | Description |
 |-------|------------|-------------|
-| guest | `home.card` | Spot rows + tags + activities section + 3 Tiqets products |
-| guest | `explore.detail` | Enriched spots + activities section + Tiqets products (bottom sheet) |
+| guest | `home.card` | Spot rows + tags + activities section + 3 Tiqets products + 3 Viator products |
+| guest | `explore.detail` | Enriched spots + activities section + Tiqets and Viator products (bottom sheet) |
 | guest | `upcoming.card` | Compact spot count |
-| host | `main` | Spot slots + activities + Tiqets + disclaimer form |
+| host | `main` | Spot slots + activities + Tiqets + Viator + disclaimer form |
 
 ## Development
 

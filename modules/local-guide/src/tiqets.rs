@@ -194,7 +194,7 @@ fn view(products: Vec<TiqetsProduct>) -> Option<TiqetsView> {
 }
 
 /// `fr` pour `fr-FR` ; `fr` quand la locale est vide.
-fn lang_code(locale: &str) -> String {
+pub(crate) fn lang_code(locale: &str) -> String {
     match locale.trim().split(['-', '_']).next() {
         Some(code) if !code.is_empty() => code.to_ascii_lowercase(),
         _ => "fr".to_string(),

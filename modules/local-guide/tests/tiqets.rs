@@ -170,7 +170,10 @@ fn without_any_key_the_section_is_silent_and_the_host_is_told() {
         .with_kv("tiqets_key_missing", b"1".to_vec())
         .run(|ctx| {
             let json = surface_json(&render_host_main(ctx).expect("host main"));
-            assert!(json.contains("i18n:host.tiqets.status.missingKey"), "{json}");
+            assert!(
+                json.contains("i18n:host.tiqets.status.missingKey"),
+                "{json}"
+            );
         });
 }
 
@@ -185,7 +188,10 @@ fn a_successful_call_clears_the_missing_key_note() {
         .build();
     let backend = host.clone();
     with_host(host, ctx.clone(), || {
-        assert!(surface_json(&render_explore_detail(ctx.clone()).expect("surface")).contains("Musée Van Gogh"));
+        assert!(
+            surface_json(&render_explore_detail(ctx.clone()).expect("surface"))
+                .contains("Musée Van Gogh")
+        );
     });
     assert!(backend.kv_get("tiqets_key_missing").expect("kv").is_none());
 }
