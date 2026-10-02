@@ -1,0 +1,13 @@
+{
+  "explore.detail.disclaimer": "時刻は目安です · TER SUD PACA",
+  "explore.detail.from": "発",
+  "explore.detail.to": "行き先",
+  "explore.detail.upcoming": "次の発車",
+  "guest.teaser": "駅からの次の発車時刻",
+  "home.card.title": "列車の時刻",
+  "module.catalogDescription": "宿泊施設の最寄り駅からの次の発車時刻。",
+  "module.description": "最寄り駅からの次の発車時刻。",
+  "module.displayName": "列車の時刻",
+  "nav.train": "列車の時刻",
+  "station.distance": "2.3 km"
+}
