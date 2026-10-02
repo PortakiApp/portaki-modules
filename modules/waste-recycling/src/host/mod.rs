@@ -11,7 +11,12 @@ use serde::Serialize;
 
 use crate::config::{bin_color_name, BinRow, DropoffRow, ModuleConfig, MAX_DROPOFF_POINTS};
 
-const BIN_SLOTS: usize = 6;
+/// Combien de bacs le formulaire accepte.
+///
+/// Une capacité, pas un nombre de lignes dessinées : six emplacements figés gelaient la liste à
+/// six — l'hôte ne pouvait pas en saisir un septième parce que le formulaire ne le dessinait
+/// jamais, et voyait quatre cartes vides quand il en avait saisi deux.
+pub const MAX_BINS: usize = 12;
 
 /// Host configuration page — bin cards + collection schedule.
 #[portaki_sdk::surface(
@@ -25,11 +30,7 @@ const BIN_SLOTS: usize = 6;
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let config = ModuleConfig::load(&ctx)?;
 
-    // The stored rows where they are, blank ones included, then empty slots.
-    let mut cards: Vec<Component> = Vec::new();
-    for index in 0..BIN_SLOTS.max(config.bins.len()) {
-        cards.push(bin_card(index, config.bins.get(index), &ctx));
-    }
+    let mut cards: Vec<Component> = vec![bins_card(&config, &ctx)];
     cards.push(schedule_card(&config, &ctx));
     cards.push(dropoff_card(&config, &ctx));
     cards.push(compost_card(&config, &ctx));
@@ -120,7 +121,7 @@ fn schedule_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
 /// publiée ; en attendant les quatre lignes vivent ici plutôt que de figer la liste à six.
 fn dropoff_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
     let stored = config.parse_dropoff_points().len();
-    let rows_count = draft_rows(ctx, "dropoff_points", stored);
+    let rows_count = draft_rows(ctx, "dropoff_points", stored, MAX_DROPOFF_POINTS);
     let rows: Vec<Component> = (0..rows_count)
         .map(|index| dropoff_row(index, config.dropoff_points.get(index), ctx))
         .collect();
@@ -145,10 +146,13 @@ fn dropoff_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
 }
 
 /// Combien de lignes dessiner : ce que « Ajouter » a demandé, sinon ce qui est stocké, borné.
-fn draft_rows(ctx: &HostContext, key: &str, stored: usize) -> usize {
+///
+/// La borne est un paramètre depuis que deux listes l'appellent : elle était celle des points
+/// d'apport pour tout le monde, ce qui aurait plafonné les bacs à dix sans que rien ne le dise.
+fn draft_rows(ctx: &HostContext, key: &str, stored: usize, max: usize) -> usize {
     match ctx.input_u64(&format!("{key}_count")) {
-        Some(asked) => (asked as usize).clamp(1, MAX_DROPOFF_POINTS),
-        None => stored.clamp(1, MAX_DROPOFF_POINTS),
+        Some(asked) => (asked as usize).clamp(1, max),
+        None => stored.clamp(1, max),
     }
 }
 
@@ -156,6 +160,12 @@ fn draft_rows(ctx: &HostContext, key: &str, stored: usize) -> usize {
 #[serde(rename_all = "snake_case")]
 struct RowCount {
     dropoff_points_count: usize,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "snake_case")]
+struct BinRowCount {
+    bins_count: usize,
 }
 
 fn emit_input(payload: impl Serialize) -> Action {
@@ -293,8 +303,33 @@ fn compost_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         .into()
 }
 
-fn bin_card(index: usize, bin: Option<&BinRow>, ctx: &HostContext) -> Component {
-    let slot = index + 1;
+/// Les bacs du logement, en lignes dynamiques bornées.
+fn bins_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let rows_count = draft_rows(ctx, "bins", config.bins.len(), MAX_BINS);
+    let rows: Vec<Component> = (0..rows_count)
+        .map(|index| bin_row(index, config.bins.get(index), ctx))
+        .collect();
+
+    Card::new()
+        .title("i18n:host.bins.title")
+        .subtitle("i18n:host.bins.subtitle")
+        .icon(IconName::Recycle)
+        .child(
+            StepList::new()
+                .addLabel("i18n:host.bins.add")
+                .removeLabel("i18n:host.bins.remove")
+                .emptyTitle("i18n:host.bins.emptyTitle")
+                .emptyDescription("i18n:host.bins.emptyDescription")
+                .itemKeyPrefix("bins")
+                .addAction(emit_input(BinRowCount {
+                    bins_count: (rows_count + 1).min(MAX_BINS),
+                }))
+                .children(rows),
+        )
+        .into()
+}
+
+fn bin_row(index: usize, bin: Option<&BinRow>, ctx: &HostContext) -> Component {
     let title = bin.map(|b| b.title.host_value(ctx)).unwrap_or_default();
     let items = bin.map(|b| b.items.host_value(ctx)).unwrap_or_default();
     let color = bin_color_name(bin.and_then(|b| b.color.as_deref())).unwrap_or("");
@@ -304,9 +339,9 @@ fn bin_card(index: usize, bin: Option<&BinRow>, ctx: &HostContext) -> Component 
         .filter(|b| !b.is_blank())
         .map(|b| sdui::row_id("bins", index, Some(&b.id)));
 
-    Card::new()
-        .title(format!("i18n:host.bin.slot{slot}"))
-        .icon(IconName::Refresh)
+    Stack::new()
+        .id(format!("bin-{index}"))
+        .gap(10.0)
         .children(
             id.into_iter()
                 .chain([
