@@ -17,15 +17,23 @@ pub const MAX_WINDOW_DAYS: u32 = 60;
 /// Qui paie le renvoi. Seule la valeur qui s'écarte du défaut a besoin d'un nom.
 pub const SHIPPING_HOST: &str = "host";
 
+// Pas d'`Eq` : le délai est un flottant, et deux flottants ne se comparent pas par égalité
+// totale.
 #[portaki_sdk::config]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct ModuleConfig {
     /// Combien de jours après le départ le voyageur peut encore signaler un oubli.
     ///
-    /// `0` veut dire « rien choisi » et non « aucun délai » : un `u32` dérivé vaut zéro par
+    /// `0` veut dire « rien choisi » et non « aucun délai » : un flottant dérivé vaut zéro par
     /// défaut, et fermer la porte le jour même serait un choix que l'hôte n'a pas fait.
+    ///
+    /// Un flottant, parce que le `NumberInput` du formulaire hôte envoie un nombre, pas un
+    /// entier : `45.0` au retour d'un enregistrement — ou « 7,5 » tapé en jours — faisait refuser
+    /// le champ par serde, donc toute la configuration, et le module rendait son état d'erreur sur
+    /// chacune de ses surfaces dès le premier enregistrement d'un hôte. [`Self::window_days`]
+    /// arrondit au jour.
     #[field(label = "host.window.label")]
-    pub window_days: u32,
+    pub window_days: f64,
     /// Renvoi postal proposé.
     #[field(label = "host.return.ship")]
     #[serde(skip_serializing_if = "std::ops::Not::not")]
@@ -47,13 +55,20 @@ pub struct ModuleConfig {
     pub shipping_paid_by: String,
 }
 
+/// Un délai utilisable : fini et strictement positif.
+fn positive(value: f64) -> Option<f64> {
+    (value.is_finite() && value > 0.0).then_some(value)
+}
+
 impl ModuleConfig {
-    /// Le délai effectif, borné. Zéro — « rien choisi » — vaut le défaut.
+    /// Le délai effectif, en jours entiers, borné. Ce qui n'est pas un délai — zéro, « rien
+    /// choisi », mais aussi un négatif ou un NaN — vaut le défaut, et non la borne basse : l'hôte
+    /// n'a pas choisi de fermer la fenêtre dès le lendemain.
     pub fn window_days(&self) -> u32 {
-        if self.window_days == 0 {
+        let Some(days) = positive(self.window_days) else {
             return DEFAULT_WINDOW_DAYS;
-        }
-        self.window_days.clamp(MIN_WINDOW_DAYS, MAX_WINDOW_DAYS)
+        };
+        (days.round() as u32).clamp(MIN_WINDOW_DAYS, MAX_WINDOW_DAYS)
     }
 
     /// Les options de restitution que l'hôte propose, dans l'ordre où le voyageur les lit.
@@ -92,6 +107,39 @@ impl ModuleConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
+
+    /// Le formulaire hôte envoie un nombre, pas un entier : `7.0` doit se relire.
+    ///
+    /// Avec un `u32`, serde refusait le champ — donc toute la configuration, `ModuleConfig::load`
+    /// échouant d'un coup — et le module rendait son état d'erreur sur chacune de ses surfaces dès
+    /// le premier enregistrement d'un hôte.
+    #[test]
+    fn a_window_sent_as_a_float_still_reads() {
+        let parsed = |value| serde_json::from_value::<ModuleConfig>(value).expect("config");
+        assert_eq!(parsed(json!({ "window_days": 7.0 })).window_days(), 7);
+        // Un délai tapé à la virgule s'arrondit au jour.
+        assert_eq!(parsed(json!({ "window_days": 7.5 })).window_days(), 8);
+    }
+
+    /// Ce qui n'est pas un délai vaut « rien choisi », et non un délai d'un jour : un hôte qui
+    /// laisse le champ vide garde la fenêtre que le module annonçait.
+    #[test]
+    fn an_absurd_window_falls_back_to_the_default() {
+        let bounded = |days| {
+            ModuleConfig {
+                window_days: days,
+                ..ModuleConfig::default()
+            }
+            .window_days()
+        };
+        assert_eq!(bounded(0.0), DEFAULT_WINDOW_DAYS);
+        assert_eq!(bounded(-5.0), DEFAULT_WINDOW_DAYS);
+        assert_eq!(bounded(f64::NAN), DEFAULT_WINDOW_DAYS);
+        assert_eq!(bounded(f64::INFINITY), DEFAULT_WINDOW_DAYS);
+        // Une fraction de jour reste un choix : la borne basse est d'un jour.
+        assert_eq!(bounded(0.2), MIN_WINDOW_DAYS);
+    }
 
     #[test]
     fn an_untouched_config_keeps_what_the_module_used_to_say() {
@@ -111,9 +159,9 @@ mod tests {
             }
             .window_days()
         };
-        assert_eq!(bounded(1), 1);
-        assert_eq!(bounded(30), 30);
-        assert_eq!(bounded(900), MAX_WINDOW_DAYS);
+        assert_eq!(bounded(1.0), 1);
+        assert_eq!(bounded(30.0), 30);
+        assert_eq!(bounded(900.0), MAX_WINDOW_DAYS);
     }
 
     /// Un hôte qui ne propose que le don ne propose pas le renvoi : pas d'adresse à demander.
