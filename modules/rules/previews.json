@@ -10,6 +10,11 @@
       "tree": {
         "children": [
           {
+            "text": "5 règles pour un séjour serein. Merci de les respecter.",
+            "type": "Text",
+            "variant": "caption"
+          },
+          {
             "children": [
               {
                 "children": [
@@ -17,25 +22,91 @@
                     "leading": "clock-circle",
                     "subtitle": "Merci de penser au voisinage",
                     "title": "Calme après 22 h",
+                    "trailing": {
+                      "badge": {
+                        "label": "Important",
+                        "tone": "warning"
+                      }
+                    },
                     "type": "ListItem"
-                  },
+                  }
+                ],
+                "gap": 0.0,
+                "type": "Stack"
+              }
+            ],
+            "icon": "scale",
+            "surface": "elevated",
+            "title": "Voisinage",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "children": [
                   {
                     "leading": "x",
                     "subtitle": "Vous pouvez fumer sur la terrasse",
                     "title": "Logement non-fumeur",
+                    "trailing": {
+                      "badge": {
+                        "label": "Important",
+                        "tone": "warning"
+                      }
+                    },
                     "type": "ListItem"
                   },
                   {
                     "leading": "users",
                     "title": "Pas de fête ni d'événement",
+                    "trailing": {
+                      "badge": {
+                        "label": "Important",
+                        "tone": "warning"
+                      }
+                    },
                     "type": "ListItem"
-                  },
+                  }
+                ],
+                "gap": 0.0,
+                "type": "Stack"
+              }
+            ],
+            "icon": "scale",
+            "surface": "elevated",
+            "title": "Logement",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "children": [
                   {
                     "leading": "check-circle",
                     "subtitle": "Prévenez-nous avant votre arrivée",
                     "title": "Animaux bienvenus",
+                    "trailing": {
+                      "badge": {
+                        "label": "Autorisé",
+                        "tone": "success"
+                      }
+                    },
                     "type": "ListItem"
-                  },
+                  }
+                ],
+                "gap": 0.0,
+                "type": "Stack"
+              }
+            ],
+            "icon": "scale",
+            "surface": "elevated",
+            "title": "Animaux",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "children": [
                   {
                     "leading": "clock-circle",
                     "subtitle": "Laissez les clés sur la table de la cuisine",
@@ -47,7 +118,9 @@
                 "type": "Stack"
               }
             ],
+            "icon": "scale",
             "surface": "elevated",
+            "title": "Départ",
             "type": "Card"
           }
         ],

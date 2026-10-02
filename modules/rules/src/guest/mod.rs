@@ -1,6 +1,6 @@
 //! Guest booklet surfaces. The SDK renders the inactive / incomplete / error states.
 
-mod home;
+pub mod home;
 mod page;
 
 use portaki_sdk::prelude::*;

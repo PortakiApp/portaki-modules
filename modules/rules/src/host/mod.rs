@@ -5,11 +5,13 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::primitives::{Card, Field, Form, Page, Select, Stack, StepList, TextInput};
+use portaki_sdk::sdui::primitives::{
+    Card, Field, FieldHint, Form, Page, Select, Stack, StepList, TextInput,
+};
 use portaki_sdk::sdui::surface::Surface;
 use serde::Serialize;
 
-use crate::content::{RuleItem, RulesBundle, RulesPayload};
+use crate::content::{RuleItem, RuleStatus, RulesBundle, RulesPayload};
 use crate::store;
 
 /// Design / mobile upper bound — « ajoutez-en autant que nécessaire », capped.
@@ -109,21 +111,29 @@ pub(crate) fn default_for_lang(lang: &str) -> RulesPayload {
                     icon: "clock-circle".into(),
                     title: "Quiet after 10 pm".into(),
                     subtitle: "Please respect neighbours".into(),
+                    status: RuleStatus::Important,
+                    theme: "Neighbours".into(),
                 },
                 RuleItem {
                     icon: "x".into(),
                     title: "Non-smoking property".into(),
                     subtitle: "Terrace allowed".into(),
+                    status: RuleStatus::Important,
+                    theme: "The home".into(),
                 },
                 RuleItem {
                     icon: "gift".into(),
                     title: "Pets on request".into(),
                     subtitle: "Let us know before arrival".into(),
+                    status: RuleStatus::Allowed,
+                    theme: "Pets".into(),
                 },
                 RuleItem {
                     icon: "users".into(),
                     title: "No parties".into(),
                     subtitle: "Respect the guest count".into(),
+                    status: RuleStatus::Important,
+                    theme: "The home".into(),
                 },
             ],
         }
@@ -134,21 +144,29 @@ pub(crate) fn default_for_lang(lang: &str) -> RulesPayload {
                     icon: "clock-circle".into(),
                     title: "Calme après 22 h".into(),
                     subtitle: "Merci pour le voisinage".into(),
+                    status: RuleStatus::Important,
+                    theme: "Voisinage".into(),
                 },
                 RuleItem {
                     icon: "x".into(),
                     title: "Logement non-fumeur".into(),
                     subtitle: "Terrasse autorisée".into(),
+                    status: RuleStatus::Important,
+                    theme: "Logement".into(),
                 },
                 RuleItem {
                     icon: "gift".into(),
                     title: "Animaux sur demande".into(),
                     subtitle: "Prévenez-nous avant l'arrivée".into(),
+                    status: RuleStatus::Allowed,
+                    theme: "Animaux".into(),
                 },
                 RuleItem {
                     icon: "users".into(),
                     title: "Pas de fête".into(),
                     subtitle: "Respect du nombre de voyageurs".into(),
+                    status: RuleStatus::Important,
+                    theme: "Logement".into(),
                 },
             ],
         }
@@ -194,6 +212,30 @@ fn rule_row(index: usize, item: Option<&RuleItem>) -> Component {
                         .value(item.map(|r| r.subtitle.as_str()).unwrap_or("")),
                 )
                 .into(),
+            Field::new()
+                .name(format!("items.{index}.status"))
+                .label("i18n:host.rule.status")
+                .child(
+                    Select::new()
+                        .name(format!("items.{index}.status"))
+                        .options(rule_status_options())
+                        .value(item.map(|r| r.status).unwrap_or_default().as_wire()),
+                )
+                .into(),
+            // Thème : texte libre, pas une liste fermée. Le mockup groupe « Voisinage »,
+            // « Piscine », « Extérieur » — un hôte sait nommer ses propres rubriques mieux
+            // qu'une énumération écrite ici, et le détail se groupe sur ce qu'il a écrit.
+            Field::new()
+                .name(format!("items.{index}.theme"))
+                .label("i18n:host.rule.theme")
+                .child(
+                    TextInput::new()
+                        .name(format!("items.{index}.theme"))
+                        .placeholder("i18n:host.rule.theme.placeholder")
+                        .value(item.map(|r| r.theme.as_str()).unwrap_or("")),
+                )
+                .into(),
+            FieldHint::new().text("i18n:host.rule.theme.hint").into(),
         ])
         .into()
 }
@@ -207,6 +249,15 @@ fn rule_icon_options() -> Vec<ChoiceOption> {
         ChoiceOption::new("check-circle", "i18n:host.rule.icon.ok"),
         ChoiceOption::new("gift", "i18n:host.rule.icon.pets"),
         ChoiceOption::new("minus", "i18n:host.rule.icon.noise"),
+    ]
+}
+
+/// Statut d'une règle (§2.8) — liste fermée de trois valeurs.
+fn rule_status_options() -> Vec<ChoiceOption> {
+    vec![
+        ChoiceOption::new("neutral", "i18n:rule.status.neutral"),
+        ChoiceOption::new("important", "i18n:rule.status.important"),
+        ChoiceOption::new("allowed", "i18n:rule.status.allowed"),
     ]
 }
 

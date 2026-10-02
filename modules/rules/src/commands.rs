@@ -3,7 +3,7 @@
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::content::{RuleItem, RulesBundle, RulesPayload};
+use crate::content::{RuleItem, RuleStatus, RulesBundle, RulesPayload};
 use crate::store;
 
 /// One rule row from the host form (`items.N.*`) for the active locale.
@@ -16,6 +16,12 @@ pub struct RuleItemInput {
     pub title: String,
     #[serde(default)]
     pub subtitle: String,
+    /// `neutral` · `important` · `allowed` — partagé entre les langues.
+    #[serde(default)]
+    pub status: String,
+    /// Thème libre, dans la langue éditée.
+    #[serde(default)]
+    pub theme: String,
     /// Legacy bilingual fields.
     #[serde(default)]
     pub title_fr: String,
@@ -50,7 +56,7 @@ pub struct SaveContentArgs {
     name = "updateConfig",
     example(
         label = "Enregistrer le règlement",
-        input = r#"{"items":[{"icon":"clock-circle","title":"Calme après 22 h","subtitle":"Merci de penser au voisinage"},{"icon":"x","title":"Logement non-fumeur"}]}"#
+        input = r#"{"items":[{"icon":"clock-circle","title":"Calme après 22 h","subtitle":"Merci de penser au voisinage","status":"important","theme":"Voisinage"},{"icon":"x","title":"Logement non-fumeur","status":"important","theme":"Logement"}]}"#
     )
 )]
 pub fn update_config(ctx: Context, args: SaveContentArgs) -> Result<()> {
@@ -61,7 +67,7 @@ pub fn update_config(ctx: Context, args: SaveContentArgs) -> Result<()> {
     name = "saveContent",
     example(
         label = "Trois règles",
-        input = r#"{"items":[{"icon":"clock-circle","title":"Calme après 22 h","subtitle":"Merci de penser au voisinage"},{"icon":"users","title":"Pas de fête ni d'événement"},{"icon":"check-circle","title":"Animaux bienvenus","subtitle":"Prévenez-nous avant votre arrivée"}]}"#
+        input = r#"{"items":[{"icon":"clock-circle","title":"Calme après 22 h","subtitle":"Merci de penser au voisinage","status":"important","theme":"Voisinage"},{"icon":"users","title":"Pas de fête ni d'événement","status":"important","theme":"Logement"},{"icon":"check-circle","title":"Animaux bienvenus","subtitle":"Prévenez-nous avant votre arrivée","status":"allowed","theme":"Animaux"}]}"#
     )
 )]
 pub fn save_content(ctx: Context, args: SaveContentArgs) -> Result<()> {
@@ -84,11 +90,11 @@ pub fn save_content(ctx: Context, args: SaveContentArgs) -> Result<()> {
             let (fr, en) = build_payloads_from_legacy_items(&args.items);
             bundle.set("fr", fr.clone());
             bundle.set("en", en);
-            bundle.sync_icons_from(&fr);
+            bundle.sync_shared_from(&fr);
         } else {
             let payload = build_payload_for_lang(&args.items);
             bundle.set(&lang, payload.clone());
-            bundle.sync_icons_from(&payload);
+            bundle.sync_shared_from(&payload);
         }
     } else if !args.content_fr.trim().is_empty() || !args.content_en.trim().is_empty() {
         // Legacy raw JSON path — seed/migrate into bundle.
@@ -115,6 +121,8 @@ fn build_payload_for_lang(items: &[RuleItemInput]) -> RulesPayload {
             icon: item.icon.trim().to_string(),
             title: item.title.trim().to_string(),
             subtitle: item.subtitle.trim().to_string(),
+            status: RuleStatus::from_wire(&item.status),
+            theme: item.theme.trim().to_string(),
         });
     }
     RulesPayload { items: out }
@@ -128,15 +136,21 @@ fn build_payloads_from_legacy_items(items: &[RuleItemInput]) -> (RulesPayload, R
             continue;
         }
         let icon = item.icon.trim().to_string();
+        let status = RuleStatus::from_wire(&item.status);
+        let theme = item.theme.trim().to_string();
         fr_items.push(RuleItem {
             icon: icon.clone(),
             title: item.title_fr.trim().to_string(),
             subtitle: item.subtitle_fr.trim().to_string(),
+            status,
+            theme: theme.clone(),
         });
         en_items.push(RuleItem {
             icon,
             title: item.title_en.trim().to_string(),
             subtitle: item.subtitle_en.trim().to_string(),
+            status,
+            theme,
         });
     }
     (

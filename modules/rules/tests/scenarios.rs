@@ -13,9 +13,9 @@ fn setup(builder: MockContextBuilder) -> MockContextBuilder {
     builder.clone().run(|ctx| {
         let content_fr = json!({
             "items": [
-                { "icon": "clock-circle", "title": "Calme après 22 h", "subtitle": "Merci de penser au voisinage" },
-                { "icon": "x", "title": "Logement non-fumeur", "subtitle": "" },
-                { "icon": "check-circle", "title": "Animaux bienvenus", "subtitle": "Prévenez-nous avant votre arrivée" }
+                { "icon": "clock-circle", "title": "Calme après 22 h", "subtitle": "Merci de penser au voisinage", "status": "important", "theme": "Voisinage" },
+                { "icon": "x", "title": "Logement non-fumeur", "subtitle": "", "status": "important", "theme": "Logement" },
+                { "icon": "check-circle", "title": "Animaux bienvenus", "subtitle": "Prévenez-nous avant votre arrivée", "status": "allowed", "theme": "Animaux" }
             ]
         });
         let args = SaveContentArgs {

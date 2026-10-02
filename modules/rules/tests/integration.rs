@@ -275,3 +275,267 @@ fn publish_readiness_requires_one_rule() {
             assert!(publish_readiness(ctx).expect("publishReadiness").items[0].ok);
         });
 }
+
+/// Le tri décide *quelles* quatre règles la carte montre : une règle importante posée en
+/// cinquième position passe devant les neutres (§2.8).
+#[test]
+#[serial]
+fn the_card_lifts_the_important_rule_above_the_neutral_ones() {
+    reset_test_store();
+    let five = json!({
+        "items": [
+            {"icon": "x", "title": "Pas de chaussures à l'intérieur"},
+            {"icon": "users", "title": "Visiteurs en journée seulement"},
+            {"icon": "minus", "title": "Barbecue à éteindre après usage"},
+            {"icon": "check-circle", "title": "Vélos au garage"},
+            {"icon": "clock-circle", "title": "Calme après 22 h", "status": "important"}
+        ]
+    })
+    .to_string();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            save_content(
+                ctx.clone(),
+                SaveContentArgs {
+                    items: Vec::new(),
+                    content_fr: five.clone(),
+                    content_en: String::new(),
+                },
+            )
+            .expect("save");
+            let surface = render_home_card(ctx).expect("render");
+            let json = serde_json::to_string(&surface).expect("json");
+
+            assert!(json.contains("Calme après 22 h"), "{json}");
+            // La dernière neutre cède sa place et attend dans la page.
+            assert!(!json.contains("Vélos au garage"), "{json}");
+        });
+}
+
+/// Les étiquettes : warning « Important », success « Autorisé », et rien du tout sur une neutre —
+/// une étiquette « Normal » partout affaiblirait les deux autres (§2.8).
+#[test]
+#[serial]
+fn only_important_and_allowed_rules_wear_a_badge() {
+    reset_test_store();
+    let three = json!({
+        "items": [
+            {"icon": "clock-circle", "title": "Calme après 22 h", "status": "important"},
+            {"icon": "check-circle", "title": "Animaux bienvenus", "status": "allowed"},
+            {"icon": "users", "title": "Six personnes maximum"}
+        ]
+    })
+    .to_string();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            save_content(
+                ctx.clone(),
+                SaveContentArgs {
+                    items: Vec::new(),
+                    content_fr: three.clone(),
+                    content_en: String::new(),
+                },
+            )
+            .expect("save");
+            let tree = serde_json::to_value(render_home_card(ctx).expect("render")).expect("json");
+            let rows = find_list_items(&tree);
+            assert_eq!(rows.len(), 3, "{tree}");
+
+            let badge = |row: &serde_json::Value| -> Option<(String, String)> {
+                let b = row.get("trailing")?.get("badge")?;
+                Some((
+                    b.get("label")?.as_str()?.to_string(),
+                    b.get("tone")?.as_str()?.to_string(),
+                ))
+            };
+            // Le libellé passe par `t!`, donc il vaut la clé tant qu'aucun bundle n'est chargé —
+            // c'est `previews.json` qui vérifie le texte rendu. Ici c'est le ton qui compte.
+            assert_eq!(
+                badge(&rows[0]),
+                Some(("rule.status.important".into(), "warning".into())),
+                "{tree}"
+            );
+            assert_eq!(
+                badge(&rows[1]),
+                Some(("rule.status.allowed".into(), "success".into())),
+                "{tree}"
+            );
+            assert_eq!(badge(&rows[2]), None, "{tree}");
+        });
+}
+
+/// Le détail groupe par thème, dans l'ordre où l'hôte a posé les règles ; un thème unique ne vaut
+/// pas un en-tête (§2.8).
+#[test]
+#[serial]
+fn the_detail_groups_by_theme_but_not_when_there_is_only_one() {
+    reset_test_store();
+    let grouped = json!({
+        "items": [
+            {"icon": "clock-circle", "title": "Calme après 22 h", "theme": "Voisinage"},
+            {"icon": "x", "title": "Pas de verre au bord du bassin", "theme": "Piscine"},
+            {"icon": "sun", "title": "Piscine de 8 h à 20 h", "theme": "piscine"}
+        ]
+    })
+    .to_string();
+    let single = json!({
+        "items": [
+            {"icon": "clock-circle", "title": "Calme après 22 h", "theme": "Voisinage"},
+            {"icon": "users", "title": "Six personnes maximum", "theme": "Voisinage"}
+        ]
+    })
+    .to_string();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            save_content(
+                ctx.clone(),
+                SaveContentArgs {
+                    items: Vec::new(),
+                    content_fr: grouped.clone(),
+                    content_en: String::new(),
+                },
+            )
+            .expect("save");
+            let json = serde_json::to_string(&render_explore_detail(ctx.clone()).expect("render"))
+                .unwrap();
+            // Deux thèmes, deux cartes titrées — et « piscine » rejoint « Piscine ».
+            assert!(json.contains("\"title\":\"Voisinage\""), "{json}");
+            assert_eq!(json.matches("\"title\":\"Piscine\"").count(), 1, "{json}");
+            assert!(!json.contains("\"title\":\"piscine\""), "{json}");
+
+            save_content(
+                ctx.clone(),
+                SaveContentArgs {
+                    items: Vec::new(),
+                    content_fr: single.clone(),
+                    content_en: String::new(),
+                },
+            )
+            .expect("save");
+            let json = serde_json::to_string(&render_explore_detail(ctx).expect("render")).unwrap();
+            assert!(
+                !json.contains("Voisinage"),
+                "un seul thème, pas d'en-tête : {json}"
+            );
+        });
+}
+
+/// Le statut ne dépend pas de la langue : l'hôte qui marque une règle importante en français la
+/// retrouve importante en anglais, sinon le voyageur anglophone lit un règlement plus mou.
+#[test]
+#[serial]
+fn the_status_follows_the_rule_into_every_language() {
+    reset_test_store();
+    let bilingual = json!({
+        "items": [
+            {"icon": "clock-circle", "title": "Calme après 22 h"},
+            {"icon": "check-circle", "title": "Animaux bienvenus"}
+        ]
+    })
+    .to_string();
+    let en = json!({
+        "items": [
+            {"icon": "clock-circle", "title": "Quiet after 10 pm"},
+            {"icon": "check-circle", "title": "Pets welcome"}
+        ]
+    })
+    .to_string();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            save_content(
+                ctx.clone(),
+                SaveContentArgs {
+                    items: Vec::new(),
+                    content_fr: bilingual.clone(),
+                    content_en: en.clone(),
+                },
+            )
+            .expect("save");
+            // L'hôte repasse en français et pose les statuts.
+            save_content(
+                ctx.clone(),
+                SaveContentArgs {
+                    items: vec![
+                        RuleItemInput {
+                            icon: "clock-circle".into(),
+                            title: "Calme après 22 h".into(),
+                            status: "important".into(),
+                            theme: "Voisinage".into(),
+                            ..RuleItemInput::default()
+                        },
+                        RuleItemInput {
+                            icon: "check-circle".into(),
+                            title: "Animaux bienvenus".into(),
+                            status: "allowed".into(),
+                            theme: "Animaux".into(),
+                            ..RuleItemInput::default()
+                        },
+                    ],
+                    content_fr: String::new(),
+                    content_en: String::new(),
+                },
+            )
+            .expect("save");
+
+            let view = get_content(
+                ctx,
+                GetContentArgs {
+                    locale: Some("en-US".into()),
+                },
+            )
+            .expect("view");
+            assert_eq!(view.items[0].title, "Quiet after 10 pm");
+            assert_eq!(view.items[0].status, rules::RuleStatus::Important);
+            assert_eq!(view.items[1].status, rules::RuleStatus::Allowed);
+            // Le thème, lui, est un texte : il reste dans la langue où il a été écrit.
+            assert!(view.items[0].theme.is_empty(), "{:?}", view.items[0]);
+        });
+}
+
+/// Toutes les `ListItem` d'un arbre rendu, dans l'ordre.
+fn find_list_items(node: &serde_json::Value) -> Vec<serde_json::Value> {
+    let mut out = Vec::new();
+    if node.get("type").and_then(|t| t.as_str()) == Some("ListItem") {
+        out.push(node.clone());
+    }
+    match node {
+        serde_json::Value::Object(map) => {
+            for value in map.values() {
+                out.extend(find_list_items(value));
+            }
+        }
+        serde_json::Value::Array(items) => {
+            for value in items {
+                out.extend(find_list_items(value));
+            }
+        }
+        _ => {}
+    }
+    out
+}
+
+/// Le formulaire hôte porte bien les deux nouveaux champs par règle (§2.8).
+#[test]
+#[serial]
+fn host_rows_carry_status_and_theme() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            let surface = render_host_main(ctx);
+            let json = serde_json::to_string(&surface).expect("json");
+            assert!(json.contains("items.0.status"), "{json}");
+            assert!(json.contains("items.0.theme"), "{json}");
+            assert!(json.contains("rule.status.important"), "{json}");
+            assert!(json.contains("host.rule.theme.hint"), "{json}");
+        });
+}
