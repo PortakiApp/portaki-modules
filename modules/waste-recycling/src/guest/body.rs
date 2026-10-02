@@ -2,10 +2,11 @@
 
 use portaki_sdk::host::time::{self, PropertyTz};
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui::common::Leading;
 use portaki_sdk::sdui::primitives::{ColorDotItem, Highlight, InfoBanner, ListItem, Text};
 
 use crate::collection::{next_collection, Departure, NextCollection};
-use crate::config::bin_swatch;
+use crate::config::{bin_swatch, DropoffRow};
 
 use super::load::GuestData;
 
@@ -41,6 +42,18 @@ pub fn build_bins_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         }
     }
 
+    // Les points d'apport viennent après les bacs : on trie chez soi avant d'aller déposer. Sur la
+    // carte seulement — le détail a son plan et ses deux blocs, et répéter les rangées au-dessus
+    // ferait lire la même chose deux fois.
+    if !enriched {
+        for point in &data.dropoff_points {
+            children.push(dropoff_row(data, point));
+        }
+        if let Some(row) = compost_row(data) {
+            children.push(row);
+        }
+    }
+
     // La consigne de sortie, en clair dans la feuille — sauf le jour où elle est déjà remontée en
     // tête, où la répéter la banaliserait.
     let takeout = data.takeout_note.trim();
@@ -51,6 +64,80 @@ pub fn build_bins_body(data: &GuestData, enriched: bool) -> Vec<Component> {
     }
 
     children
+}
+
+/// Une rangée de point d'apport : ce qu'il accepte, puis la distance quand on sait la mesurer.
+pub fn dropoff_row(data: &GuestData, point: &DropoffRow) -> Component {
+    let accepts: Vec<String> = point
+        .accepted_keys()
+        .into_iter()
+        .map(|key| t!(key).unwrap_or_else(|_| key.to_string()))
+        .collect();
+    let distance = point
+        .coordinates()
+        .zip(data.property)
+        .map(|(point, home)| walking_distance(home, point));
+    let subtitle = [Some(accepts.join(", ")).filter(|s| !s.is_empty()), distance]
+        .into_iter()
+        .flatten()
+        .collect::<Vec<_>>()
+        .join(" · ");
+
+    let mut item = ListItem::new()
+        .title(point.title.get(&data.locale))
+        .leading(Leading::Icon("map-pin".into()));
+    if !subtitle.is_empty() {
+        item = item.subtitle(subtitle);
+    }
+    let note = point.note.get(&data.locale);
+    if !note.trim().is_empty() {
+        item = item.meta(note);
+    }
+    Component::ListItem(item)
+}
+
+/// La rangée du composteur, quand l'hôte en a un et dit où.
+pub fn compost_row(data: &GuestData) -> Option<Component> {
+    let location = data.compost_location.trim();
+    if location.is_empty() {
+        return None;
+    }
+    Some(Component::ListItem(
+        ListItem::new()
+            .title(t!("guest.compost.title").unwrap_or_else(|_| "i18n:guest.compost.title".into()))
+            .subtitle(location)
+            .leading(Leading::Icon("recycle".into())),
+    ))
+}
+
+/// La distance à vol d'oiseau, écrite en mètres sous le kilomètre et en kilomètres au-delà.
+///
+/// ponytail: à vol d'oiseau, pas par la route — un itinéraire coûterait un appel réseau par point.
+/// Pas de durée de marche non plus : « 8 min à pied » serait une estimation déguisée en fait, et
+/// l'hôte peut la mettre dans sa note s'il la connaît.
+fn walking_distance(from: (f64, f64), to: (f64, f64)) -> String {
+    let metres = haversine_metres(from, to).round() as i64;
+    if metres < 1000 {
+        // Arrondi à 50 m : annoncer « 643 m » sur une ligne droite serait une fausse précision.
+        let rounded = ((metres + 25) / 50) * 50;
+        t!("guest.distance.metres", value = rounded.max(50))
+            .unwrap_or_else(|_| format!("{} m", rounded.max(50)))
+    } else {
+        let km = (metres as f64) / 1000.0;
+        t!("guest.distance.km", value = format!("{km:.1}"))
+            .unwrap_or_else(|_| format!("{km:.1} km"))
+    }
+}
+
+/// Haversine, rayon moyen de la Terre.
+fn haversine_metres((lat1, lng1): (f64, f64), (lat2, lng2): (f64, f64)) -> f64 {
+    const EARTH_RADIUS_M: f64 = 6_371_000.0;
+    let (phi1, phi2) = (lat1.to_radians(), lat2.to_radians());
+    let delta_phi = phi2 - phi1;
+    let delta_lambda = (lng2 - lng1).to_radians();
+    let a = (delta_phi / 2.0).sin().powi(2)
+        + phi1.cos() * phi2.cos() * (delta_lambda / 2.0).sin().powi(2);
+    2.0 * EARTH_RADIUS_M * a.sqrt().asin()
 }
 
 /// La collecte qui vient, si l'hôte a coché des jours et si l'hôte a une horloge.

@@ -4,11 +4,14 @@ mod collection;
 mod config;
 mod guest;
 mod host;
+mod i18n;
+mod queries;
 
 pub use collection::{next_collection, Departure, NextCollection};
-pub use config::{BinRow, ModuleConfig};
+pub use config::{BinRow, DropoffRow, ModuleConfig};
 pub use guest::{render_explore_detail, render_home_card};
 pub use host::render_host_main;
+pub use queries::{map_markers, publish_readiness, MapMarkersResponse, MAX_MARKERS};
 
 portaki_sdk::portaki_module!(
     id = "waste-recycling",

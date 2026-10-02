@@ -8,10 +8,16 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
 /// The keys are the names of the host form fields: the platform takes `updateConfig` itself.
+// Pas d'`Eq` : un point d'apport porte des coordonnées, et deux flottants ne se comparent pas par
+// égalité totale. `PartialEq` suffit partout où la configuration est comparée.
 #[portaki_sdk::config(legacy = legacy)]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct ModuleConfig {
-    #[field(required, label = "config.bins")]
+    /// Les bacs du logement. Plus obligatoires : un gîte rural n'a pas de ramassage devant la
+    /// porte, seulement des points d'apport (§3.2). La porte de publication est passée dans
+    /// `publishReadiness`, qui sait dire « des bacs **ou** un point d'apport » — ce qu'un
+    /// `required` sur un champ ne peut pas exprimer.
+    #[field(label = "config.bins")]
     pub bins: Vec<BinRow>,
     /// La phrase que l'hôte a écrite. Conservée : elle s'affiche tant qu'aucun jour n'est coché, et
     /// reste en second sous le jour calculé — elle dit souvent ce que des cases ne disent pas
@@ -46,6 +52,22 @@ pub struct ModuleConfig {
     /// part la veille d'une collecte, puisque c'est le seul moment où il doit agir avant de partir.
     #[field(label = "host.takeout.label")]
     pub takeout_note: I18nText,
+    /// Les points d'apport, quand les déchets ne se sortent pas devant la porte (§3.2).
+    #[field(label = "config.dropoffPoints")]
+    pub dropoff_points: Vec<DropoffRow>,
+    /// Le composteur. Quatre champs plats plutôt qu'une structure imbriquée : le formulaire hôte
+    /// envoie des noms plats, et `bins` est la seule forme imbriquée dont la fusion est éprouvée.
+    #[field(label = "host.compost.enabled")]
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub compost_enabled: bool,
+    #[field(label = "host.compost.location")]
+    pub compost_location: I18nText,
+    /// Un élément par ligne.
+    #[field(label = "host.compost.accepted")]
+    pub compost_accepted: I18nText,
+    /// Un élément par ligne.
+    #[field(label = "host.compost.refused")]
+    pub compost_refused: I18nText,
 }
 
 /// The old KV blob: the bins as a JSON string, `bins_json`, before the form slots; each bin's
@@ -118,6 +140,23 @@ impl ModuleConfig {
             && self.collection_schedule.is_blank()
             && self.collection_days().is_empty()
             && self.takeout_note.is_blank()
+            && self.parse_dropoff_points().is_empty()
+            && !self.has_compost()
+    }
+
+    /// The named dropoff rows, for the guest: the form sends its slots, blank ones included.
+    pub fn parse_dropoff_points(&self) -> Vec<DropoffRow> {
+        self.dropoff_points
+            .iter()
+            .filter(|point| !point.is_blank())
+            .cloned()
+            .collect()
+    }
+
+    /// Le composteur n'existe que si l'hôte l'a activé **et** dit où il est : une case cochée sans
+    /// emplacement enverrait le voyageur chercher dans le jardin.
+    pub fn has_compost(&self) -> bool {
+        self.compost_enabled && !self.compost_location.is_blank()
     }
 
     /// Les jours cochés, `mon` … `sun`, dans l'ordre de la semaine.
@@ -177,6 +216,62 @@ impl BinRow {
             .filter(|item| !item.is_empty())
             .map(String::from)
             .collect()
+    }
+}
+
+/// Un point d'apport : un conteneur de quartier, le plus souvent sur un parking.
+///
+/// Ce qu'il accepte est quatre booléens et non une liste : le formulaire hôte envoie des champs
+/// plats, et c'est le raisonnement déjà appliqué aux jours de collecte — une liste de chaînes n'a
+/// pas de ligne à fusionner et ne reviendrait jamais de l'enregistrement.
+#[portaki_sdk::params]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[serde(default)]
+pub struct DropoffRow {
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub id: String,
+    pub title: I18nText,
+    /// L'adresse telle que le sélecteur l'a résolue, pour la relire dans le formulaire.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub address: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lat: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lng: Option<f64>,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub accepts_household: bool,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub accepts_packaging: bool,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub accepts_glass: bool,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub accepts_paper: bool,
+    pub note: I18nText,
+}
+
+impl DropoffRow {
+    /// Rien que le formulaire montre : un emplacement que l'hôte a laissé (ou vidé).
+    pub fn is_blank(&self) -> bool {
+        self.title.is_blank() && self.coordinates().is_none()
+    }
+
+    /// La position du point, quand le sélecteur en a posé une.
+    pub fn coordinates(&self) -> Option<(f64, f64)> {
+        Some((self.lat?, self.lng?))
+    }
+
+    /// Les clés i18n de ce qu'il accepte, dans l'ordre du formulaire.
+    pub fn accepted_keys(&self) -> Vec<&'static str> {
+        [
+            ("waste.household", self.accepts_household),
+            ("waste.packaging", self.accepts_packaging),
+            ("waste.glass", self.accepts_glass),
+            ("waste.paper", self.accepts_paper),
+        ]
+        .into_iter()
+        .filter(|(_, ticked)| *ticked)
+        .map(|(key, _)| key)
+        .collect()
     }
 }
 
