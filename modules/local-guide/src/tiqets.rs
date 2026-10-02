@@ -4,8 +4,12 @@
 //! interroge l'API Content de Tiqets par le connecteur `tiqets` : titre, image, prix et note des
 //! billets à proximité. Lecture seule — la clé partenaire ne couvre que le contenu et les
 //! disponibilités. Le voyageur réserve chez Tiqets, en suivant `product_url`, qui porte déjà le
-//! code d'affiliation de la clé qui a fait l'appel : celle de Portaki (pool), ou celle de l'hôte
-//! (BYOK). Le module ne le réécrit jamais.
+//! code d'affiliation de la clé qui a fait l'appel : celle de l'hôte s'il en a posé une, celle de
+//! Portaki (l'éditeur du module) sinon. Le module ne le réécrit jamais.
+//!
+//! ADR-0021 : le connecteur est déclaré ici, plus au catalogue de la plateforme. Le module ne sait
+//! donc pas à l'avance si une clé existe ; il le constate quand Tiqets est appelé sans clé
+//! (`connector_credential_missing`), le note, et l'écran de l'hôte le dit.
 //!
 //! Les résultats sont gardés en KV, une entrée par langue de livret :
 //! - fraîche pendant [`FRESH_SECS`] (24 h) — un logement fait donc au plus un appel par jour et
@@ -51,14 +55,21 @@ const CACHE_KEY_PREFIX: &str = "tiqets_cache.";
     id = "tiqets",
     display_name_key = "connector.tiqets.name",
     base_url = "https://api.tiqets.com",
-    credential_provider_id = "tiqets"
+    auth = "header:Authorization",
+    auth_prefix = "Token "
 )]
 #[allow(dead_code)] // metadata-only; macros emit manifest emissions at compile time
 pub struct ModuleTiqets;
 
 #[allow(dead_code)] // metadata-only; macros emit manifest emissions at compile time
 impl ModuleTiqets {
-    #[portaki_sdk::connector_op(method = "GET", path = "/v2/products", cache = "24h")]
+    #[portaki_sdk::connector_op(
+        method = "GET",
+        path = "/v2/products",
+        cache = "24h",
+        fields = "lat, lng, max_distance, lang, currency, page_size, tag_id, min_rating",
+        sends = "property_coordinates"
+    )]
     pub fn nearby_products() {}
 }
 
@@ -68,10 +79,12 @@ pub struct TiqetsView {
     pub products: Vec<TiqetsProduct>,
 }
 
-/// Clé partenaire disponible : celle de Portaki (plan) ou celle de l'hôte.
-pub fn has_tiqets(ctx: &Context) -> bool {
-    ctx.has_capability(capability::external::TIQETS_POOL)
-        || ctx.has_capability(capability::external::TIQETS_BYOK)
+/// Noté quand Tiqets a été appelé sans aucune clé ; effacé au premier appel qui aboutit.
+const KEY_MISSING_KEY: &str = "tiqets_key_missing";
+
+/// Le dernier appel a manqué de clé : ni celle de l'hôte, ni celle de Portaki.
+fn key_missing() -> bool {
+    matches!(host::kv::get(KEY_MISSING_KEY), Ok(Some(_)))
 }
 
 /// Pourquoi la section ne peut pas s'afficher, pour le dire à l'hôte.
@@ -92,7 +105,7 @@ fn property_position(ctx: &Context) -> Option<(f64, f64)> {
 pub fn status(ctx: &Context, config: &TiqetsConfig) -> TiqetsStatus {
     if !config.enabled {
         TiqetsStatus::Off
-    } else if !has_tiqets(ctx) {
+    } else if key_missing() {
         TiqetsStatus::MissingKey
     } else if property_position(ctx).is_none() {
         TiqetsStatus::MissingCoordinates
@@ -117,7 +130,8 @@ struct TiqetsCache {
 /// Résout la section pour le voyageur, ou `None` — éteinte, sans clé, sans position, sans
 /// horloge, ou sans produit à montrer. Aucune de ces issues n'est une erreur de rendu.
 pub fn resolve(ctx: &Context, config: &TiqetsConfig) -> Option<TiqetsView> {
-    if status(ctx, config) != TiqetsStatus::Ready {
+    // Une clé manquante n'empêche pas d'essayer : l'hôte ou Portaki peut l'avoir posée depuis.
+    if !config.enabled {
         return None;
     }
     let (lat, lng) = property_position(ctx)?;
@@ -140,6 +154,7 @@ pub fn resolve(ctx: &Context, config: &TiqetsConfig) -> Option<TiqetsView> {
     args.min_rating = min_rating;
     match Tiqets::nearby_products(&args) {
         Ok(response) => {
+            let _ = host::kv::delete(KEY_MISSING_KEY);
             let mut products = response.products;
             products.truncate(MAX_PRODUCTS);
             let _ = write_cache(&TiqetsCache {
@@ -154,6 +169,10 @@ pub fn resolve(ctx: &Context, config: &TiqetsConfig) -> Option<TiqetsView> {
             view(products)
         }
         Err(error) => {
+            if error.to_string().contains("connector_credential_missing") {
+                // Dit à l'hôte qu'il manque une clé ; oublié de lui-même au bout d'un jour.
+                let _ = host::kv::set(KEY_MISSING_KEY, b"1", Some(24 * 60 * 60));
+            }
             let mut fields = log::Fields::new();
             fields.insert("error", &error.to_string());
             let _ = log::warn("local_guide_tiqets_fetch_failed", &fields);
