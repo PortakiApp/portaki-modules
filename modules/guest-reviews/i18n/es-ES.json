@@ -17,6 +17,8 @@
   "guest.scanQr": "O escanee el QR hacia la página de opiniones de Airbnb",
   "guest.submit": "Enviar mi opinión",
   "guest.teaser": "Deje su opinión sobre la estancia",
+  "guest.thanks": "Dos minutos, y gracias",
+  "guest.thanks.named": "Dos minutos, y {host} se lo agradece",
   "home.card.title": "Su opinión",
   "host.airbnb.label": "Enlace de opiniones de Airbnb",
   "host.airbnb.placeholder": "https://www.airbnb.es/users/review/…",

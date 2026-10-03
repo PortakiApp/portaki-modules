@@ -17,6 +17,8 @@
   "guest.scanQr": "أو امسح رمز QR للوصول إلى صفحة مراجعات Airbnb",
   "guest.submit": "إرسال مراجعتي",
   "guest.teaser": "اكتب مراجعتك عن الإقامة",
+  "guest.thanks": "دقيقتان، وشكرًا لك",
+  "guest.thanks.named": "دقيقتان، و{host} يشكرك",
   "home.card.title": "مراجعتك",
   "host.airbnb.label": "رابط مراجعات Airbnb",
   "host.airbnb.placeholder": "https://www.airbnb.com/users/review/…",

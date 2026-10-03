@@ -17,6 +17,8 @@
   "guest.scanQr": "Oder scannen Sie den QR-Code zur Airbnb-Bewertungsseite",
   "guest.submit": "Bewertung senden",
   "guest.teaser": "Bewerten Sie Ihren Aufenthalt",
+  "guest.thanks": "Zwei Minuten, und danke",
+  "guest.thanks.named": "Zwei Minuten, und {host} dankt Ihnen",
   "home.card.title": "Ihre Bewertung",
   "host.airbnb.label": "Airbnb-Bewertungslink",
   "host.airbnb.placeholder": "https://www.airbnb.de/users/review/…",

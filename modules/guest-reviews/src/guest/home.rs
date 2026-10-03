@@ -2,6 +2,7 @@
 //!
 //! Only selected *and* feasible platforms are offered (Airbnb needs a URL).
 
+use portaki_sdk::host::i18n::{translate, Vars};
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::primitives::{
@@ -108,7 +109,22 @@ pub fn build_home_card(data: &GuestData) -> Surface {
         Card::new()
             .icon(IconName::Star)
             .title("i18n:home.card.title")
+            .subtitle(thanks_line(&data.host_name))
             .child(Stack::new().gap(12.0).children(children)),
     )
     .with_id(crate::guest::HOME_CARD)
+}
+
+/// « Deux minutes, et Claire vous en remercie » — le nom de l'hôte vient de la plateforme.
+///
+/// Sans nom servi, la phrase se passe de lui plutôt que de laisser un trou ou un « votre hôte »
+/// qui sonne comme un formulaire.
+fn thanks_line(host_name: &str) -> String {
+    if host_name.is_empty() {
+        return translate("guest.thanks", &Vars::new())
+            .unwrap_or_else(|_| "guest.thanks".to_string());
+    }
+    let mut vars = Vars::new();
+    vars.set("host", host_name);
+    translate("guest.thanks.named", &vars).unwrap_or_else(|_| "guest.thanks.named".to_string())
 }

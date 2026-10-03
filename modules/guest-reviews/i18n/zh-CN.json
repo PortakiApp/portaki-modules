@@ -17,6 +17,8 @@
   "guest.scanQr": "或扫描二维码前往 Airbnb 的评价页",
   "guest.submit": "提交我的评价",
   "guest.teaser": "留下这次住宿的评价",
+  "guest.thanks": "两分钟，谢谢您",
+  "guest.thanks.named": "两分钟，{host} 向您致谢",
   "home.card.title": "您的评价",
   "host.airbnb.label": "Airbnb 评价链接",
   "host.airbnb.placeholder": "https://www.airbnb.com/users/review/…",

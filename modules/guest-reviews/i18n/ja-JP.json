@@ -17,6 +17,8 @@
   "guest.scanQr": "または QR を読み取って Airbnb のレビューページへ",
   "guest.submit": "レビューを送る",
   "guest.teaser": "ご滞在のレビューをお願いします",
+  "guest.thanks": "2分で完了、ありがとうございます",
+  "guest.thanks.named": "2分で完了。{host} より御礼申し上げます",
   "home.card.title": "レビュー",
   "host.airbnb.label": "Airbnb のレビューのリンク",
   "host.airbnb.placeholder": "https://www.airbnb.jp/users/review/…",
