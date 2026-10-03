@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+L'import de calendrier dans la langue de l'hôte et du voyageur.
+
+* Tous les textes que lit le voyageur existent dans les dix langues du sélecteur du livret.
+
 ## 1.0.0 (2026-09-29)
 
 Première version stable. Les réservations arrivent seules dans Portaki, importées des calendriers que l'hôte tient déjà.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+Les numéros d'urgence dans la langue du voyageur.
+
+* Tous les textes que lit le voyageur existent dans les dix langues du sélecteur du livret.
+
 ## 1.0.0 (2026-09-29)
 
 Première version stable. Les numéros dont le voyageur a besoin dans un mauvais moment, dans le livret plutôt que dans un fil de SMS.

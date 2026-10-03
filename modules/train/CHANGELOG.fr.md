@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+Les transports dans la langue du voyageur.
+
+* Tous les textes que lit le voyageur existent dans les dix langues du sélecteur du livret.
+
 ## 1.0.0 (2026-09-29)
 
 Première version stable. Un tableau des départs de la gare la plus proche, d'un coup d'œil dans le livret.

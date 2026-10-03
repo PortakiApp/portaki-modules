@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.2.0
+
+La grille se coche plus d'une fois.
+
+* Le voyageur peut signaler plusieurs articles manquants dans la même grille, sans la recharger.
+* Tous les textes que lit le voyageur existent dans les dix langues du sélecteur du livret.
+
 ## 1.0.0 (2026-09-29)
 
 Première version stable. Le voyageur signale ce qui manque, pour que l'hôte réapprovisionne avant l'arrivée suivante plutôt qu'après la plainte.

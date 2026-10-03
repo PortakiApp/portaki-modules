@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0
+
+La recharge et le stationnement dans la langue du voyageur.
+
+* Tous les textes que lit le voyageur existent dans les dix langues du sélecteur du livret.
+
 ## 1.0.0 (2026-09-29)
 
 Première version stable. Le voyageur qui arrive en voiture électrique a sa place, le code barrière et le code de la borne, sans un coup de fil.

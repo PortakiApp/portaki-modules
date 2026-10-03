@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+L'agenda local dans la langue du voyageur.
+
+* Tous les textes que lit le voyageur existent dans les dix langues du sélecteur du livret.
+
 ## 1.0.0 (2026-09-29)
 
 Première version stable. Ce qui se passe autour du logement cette semaine, trouvé automatiquement, sans que l'hôte tienne un agenda.

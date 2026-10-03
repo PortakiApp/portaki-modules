@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1
+
+Correctif.
+
+* La période de déclaration saisie par l'hôte est bien celle qui est appliquée.
+
 ## 1.0.0 (2026-09-29)
 
 Première version stable. Un chargeur oublié est suivi du moment où il est trouvé jusqu'à son retour chez son propriétaire.
