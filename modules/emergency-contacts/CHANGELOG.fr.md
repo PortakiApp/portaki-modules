@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0
+
+Les contacts saisis, et le numéro de l'hôte déjà connu.
+
+* L'onglet de l'hôte n'affiche plus six emplacements vides : il dessine ce qui est saisi, et un bouton ajoute la ligne suivante.
+* Le numéro de l'hôte vient de son compte Portaki quand il ne l'a pas saisi dans le module.
+
 ## 1.2.0
 
 Les numéros d'urgence dans la langue du voyageur.

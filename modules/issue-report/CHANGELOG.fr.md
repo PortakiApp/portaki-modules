@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0
+
+Ce qui ne peut pas attendre ne passe pas par le formulaire.
+
+* Sous le formulaire, une mention dit de ne pas attendre une réponse en cas d'urgence, et renvoie vers la page des numéros d'urgence.
+
 ## 1.2.0
 
 L'hôte choisit ce que le formulaire propose.

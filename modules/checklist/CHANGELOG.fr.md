@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0
+
+Montée technique.
+
+* Le module est passé à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 1.2.0
 
 Le départ en étapes groupées, et les cases qui restent cochées.

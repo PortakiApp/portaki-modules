@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.0
+
+Le formulaire dessine les équipements saisis.
+
+* L'onglet de l'hôte n'affiche plus six emplacements vides : il dessine ce qui est saisi, et un bouton ajoute la ligne suivante.
+
 ## 1.5.0
 
 Les horaires du jour arrivent par e-mail.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.0
+
+La grille de l'hôte dépasse ses huit cases.
+
+* L'hôte peut saisir plus de huit articles dans la grille, jusqu'à vingt-quatre.
+
 ## 2.2.0
 
 La grille se coche plus d'une fois.

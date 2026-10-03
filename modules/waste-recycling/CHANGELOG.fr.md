@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0
+
+Le formulaire dessine les bacs saisis.
+
+* L'onglet de l'hôte n'affiche plus six emplacements vides : il dessine ce qui est saisi, et un bouton ajoute la ligne suivante.
+
 ## 1.4.0
 
 Les points de collecte, le compost, et un seul bloc dans l'e-mail.
