@@ -10,12 +10,14 @@ on:
       - "**.md"
       - "docs/**"
       - ".github/CI.md"
-  # `module` sert au premier tir d'une liaison : publier UN module précis, sans attendre
-  # qu'un commit le modifie. La liaison enregistrée au registre autorise `workflow_dispatch`.
+  # `module` sert au premier tir d'une liaison : publier un module précis, sans attendre qu'un
+  # commit le modifie. `all` vise les vingt-trois d'un coup — remettre tout le dépôt au registre
+  # après une panne d'Actions, ou derrière une montée de SDK que release-please a bumpée partout.
+  # La liaison enregistrée au registre autorise `workflow_dispatch`.
   workflow_dispatch:
     inputs:
       module:
-        description: "Publier ce module seul (laisser vide pour le comportement normal)"
+        description: "Un module, plusieurs séparés par des virgules, `all` pour tous (vide : comportement normal)"
         required: false
 
 concurrency:
@@ -66,7 +68,9 @@ jobs:
           REQUESTED: ${{ inputs.module }}
         run: |
           set -euo pipefail
-          if [ -n "$REQUESTED" ]; then
+          if [ "$REQUESTED" = "all" ]; then
+            portaki ci modules --all
+          elif [ -n "$REQUESTED" ]; then
             portaki ci modules --only "$REQUESTED"
           else
             portaki ci modules --changed-since "${{ steps.base.outputs.ref }}"
@@ -91,6 +95,13 @@ jobs:
       # ce controle, la divergence n'apparaitrait qu'a la publication, module par module.
       - name: SDK pin
         run: ./scripts/check-sdk-pin.sh
+
+      # Une stable publiée sans notes françaises reste en brouillon au registre, sans que rien ne
+      # rougisse : la publication réussit, la version n'entre jamais au catalogue. C'est ce qui a
+      # figé les vingt-trois modules. Le contrôle est ici parce qu'il ne coûte rien et qu'il doit
+      # tomber en PR, avant que la version soit prise.
+      - name: Notes de version françaises
+        run: ./scripts/check-changelog-fr.sh
 
       - name: Format
         run: cargo fmt --all -- --check
@@ -178,7 +189,10 @@ jobs:
           set -euo pipefail
           version_of() { sed -n 's/^version *= *"\(.*\)"/\1/p' | head -n 1; }
 
-          # Un dispatch nomme le module à publier : c'est une demande explicite, on la sert.
+          # Un dispatch nomme les modules à publier : c'est une demande explicite, on la sert, sans
+          # regarder si la version a bougé. Un module dont la version est déjà au registre sera
+          # refusé par lui (`VERSION_ALREADY_PUBLISHED`) ; le quality gate ne lit pas `publish` sur
+          # un dispatch, donc le run restera vert — lisez les jobs, pas le badge.
           if [ "$EVENT" = "workflow_dispatch" ]; then
             echo "modules=$MODULES" >>"$GITHUB_OUTPUT"
             echo "any=true" >>"$GITHUB_OUTPUT"
