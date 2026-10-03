@@ -96,6 +96,7 @@
           }
         ],
         "icon": "star",
+        "subtitle": "Deux minutes, et on vous en remercie",
         "title": "i18n:home.card.title",
         "type": "Card"
       }

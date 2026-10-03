@@ -17,6 +17,8 @@
   "guest.scanQr": "Of scan de QR naar de beoordelingspagina van Airbnb",
   "guest.submit": "Mijn beoordeling versturen",
   "guest.teaser": "Laat je beoordeling van het verblijf achter",
+  "guest.thanks": "Twee minuten, en bedankt",
+  "guest.thanks.named": "Twee minuten, en {host} bedankt u",
   "home.card.title": "Jouw beoordeling",
   "host.airbnb.label": "Airbnb-beoordelingslink",
   "host.airbnb.placeholder": "https://www.airbnb.nl/users/review/…",

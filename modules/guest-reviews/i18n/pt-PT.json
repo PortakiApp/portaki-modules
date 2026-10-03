@@ -17,6 +17,8 @@
   "guest.scanQr": "Ou leia o QR para a página de avaliações do Airbnb",
   "guest.submit": "Enviar a minha avaliação",
   "guest.teaser": "Deixe a sua avaliação da estadia",
+  "guest.thanks": "Dois minutos, e obrigado",
+  "guest.thanks.named": "Dois minutos, e {host} agradece-lhe",
   "home.card.title": "A sua avaliação",
   "host.airbnb.label": "Link de avaliações do Airbnb",
   "host.airbnb.placeholder": "https://www.airbnb.pt/users/review/…",

@@ -14,6 +14,7 @@ pub fn build_home_card(data: &GuestData) -> Surface {
         Card::new()
             .icon(IconName::Calendar)
             .title("i18n:home.card.title")
+            .subtitle("i18n:home.card.subtitle")
             .action(Action::open_overlay(
                 OverlayPresentation::BottomSheet,
                 crate::guest::EXPLORE_DETAIL,

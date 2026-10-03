@@ -11,6 +11,8 @@ pub struct GuestData {
     pub airbnb_url: Option<String>,
     pub thank_you: String,
     pub property_name: String,
+    /// Prénom de l'hôte, servi par la plateforme ; vide quand elle ne le donne pas.
+    pub host_name: String,
 }
 
 /// What the card shows, or `None` when no platform is usable for this stay.
@@ -33,5 +35,10 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         airbnb_url: config.airbnb_url(),
         thank_you: config.thank_you_message.get(&ctx.locale).to_string(),
         property_name: ctx.property.name.clone(),
+        host_name: ctx
+            .host
+            .as_ref()
+            .map(|host| host.name.trim().to_string())
+            .unwrap_or_default(),
     }))
 }
