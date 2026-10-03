@@ -15,6 +15,7 @@ pub fn build_home_card(data: &GuestData) -> Surface {
         Card::new()
             .icon(IconName::Car)
             .title("i18n:nav.access-guide")
+            .subtitle(super::body::access_summary(data))
             .action(Action::open_overlay(
                 OverlayPresentation::Fullscreen,
                 crate::guest::EXPLORE_DETAIL,

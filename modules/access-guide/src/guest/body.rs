@@ -1,12 +1,18 @@
 //! Shared guest SDUI body for access guide.
 
+use portaki_sdk::host::i18n::{translate, Vars};
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
+use portaki_sdk::sdui::common::{
+    BadgeSpec, KeyValueLayout, Leading, LeadingVisual, Trailing, TrailingVisual,
+};
 use portaki_sdk::sdui::primitives::{
-    Badge, Button, InfoBanner, KeyValue, Link, ListItem, Map, Text,
+    Button, Eyebrow, Grid, InfoBanner, KeyValue, Link, ListItem, Map,
 };
 
-use crate::config::{BuildingAccess, DoorCodeTarget, MethodFields, ParkingLayer, StaffKind};
+use crate::config::{
+    BuildingAccess, DoorCodeTarget, MethodFields, ParkingLayer, PrimaryMethod, StaffKind,
+};
 use crate::reveal::SECRET_MASK;
 
 use super::load::GuestData;
@@ -104,6 +110,46 @@ fn push_secret_row(children: &mut Vec<Component>, data: &GuestData, key_i18n: &s
         return;
     }
     children.push(kv_row(key_i18n, &secret_display(data, trimmed), true));
+}
+
+/// Un code, en tuile : l'étiquette au-dessus, la valeur en grand dessous, et de quoi la copier.
+///
+/// C'est ce que le voyageur cherche sur la carte d'accueil — pas une ligne de tableau parmi
+/// d'autres. La copie n'est offerte que sur un code révélé : copier un masque ne sert personne.
+fn secret_tile(data: &GuestData, key_i18n: &str, icon: IconName, code: &str) -> Component {
+    Component::KeyValue(
+        KeyValue::new()
+            .key(key_i18n)
+            .value(secret_display(data, code.trim()))
+            .mono(true)
+            .layout(KeyValueLayout::Tile)
+            .icon(icon)
+            .copy(data.secrets_revealed),
+    )
+}
+
+/// Les codes du moyen d'accès principal, en tuiles côte à côte.
+///
+/// Vide quand il n'y a rien à montrer : une grille d'une seule case vaudrait moins qu'une ligne.
+fn secret_tiles(data: &GuestData) -> Vec<Component> {
+    let mut tiles = Vec::new();
+    if let Some(code) = data.config.keybox_code() {
+        tiles.push(secret_tile(
+            data,
+            "i18n:guest.keybox.code",
+            IconName::Key,
+            code,
+        ));
+    }
+    if let Some(code) = data.config.gate_code() {
+        tiles.push(secret_tile(
+            data,
+            "i18n:guest.building.gateCode",
+            IconName::Lock,
+            code,
+        ));
+    }
+    tiles
 }
 
 fn push_text_row(children: &mut Vec<Component>, key_i18n: &str, value: &str) {
@@ -411,6 +457,35 @@ fn push_reveal_banner(children: &mut Vec<Component>, data: &GuestData) {
     ));
 }
 
+/// Une étape du chemin jusqu'à la porte.
+///
+/// Le rang va à gauche et le type à droite : ce sont des emplacements du `ListItem`, pas des
+/// enfants. En enfants, le badge se dessinait dans le corps de la ligne au lieu de sa colonne, et
+/// le voyageur perdait le fil de l'ordre — or une arrivée se suit dans l'ordre.
+fn arrival_step(step: &crate::texts::StepText, rank: u32) -> ListItem {
+    let mut item = ListItem::new()
+        .title(step.title.trim())
+        .leading(Leading::Visual(Box::new(LeadingVisual {
+            index: Some(rank),
+            ..LeadingVisual::default()
+        })))
+        .trailing(Trailing::Visual(Box::new(TrailingVisual {
+            badge: Some(BadgeSpec {
+                label: kind_label(step.kind.as_deref()),
+                dot: true,
+                ..BadgeSpec::default()
+            }),
+            ..TrailingVisual::default()
+        })));
+    if let Some(detail) = step.detail.as_ref() {
+        let text = detail.trim();
+        if !text.is_empty() {
+            item = item.subtitle(text);
+        }
+    }
+    item
+}
+
 fn push_arrival_extras(children: &mut Vec<Component>, data: &GuestData) {
     let video = data.config.arrival.arrival_video_url.trim();
     if is_https(video) {
@@ -422,21 +497,14 @@ fn push_arrival_extras(children: &mut Vec<Component>, data: &GuestData) {
         ));
     }
 
+    let mut rank = 1;
     for step in &data.texts.steps {
         let title = step.title.trim();
         if title.is_empty() {
             continue;
         }
-        let mut item = ListItem::new()
-            .title(title)
-            .child(Badge::new().label(kind_label(step.kind.as_deref())));
-        if let Some(detail) = step.detail.as_ref() {
-            let text = detail.trim();
-            if !text.is_empty() {
-                item = item.child(Text::new().text(text).variant(TextVariant::Caption));
-            }
-        }
-        children.push(Component::ListItem(item));
+        children.push(Component::ListItem(arrival_step(step, rank)));
+        rank += 1;
     }
 }
 
@@ -447,6 +515,17 @@ pub fn build_access_glance(data: &GuestData) -> Vec<Component> {
 
     if let Some(map) = property_map(data) {
         children.push(map);
+    }
+
+    // Les codes d'abord, en tuiles : c'est ce que le voyageur ouvre la carte pour trouver.
+    let tiles = secret_tiles(data);
+    if !tiles.is_empty() {
+        children.push(Component::Grid(
+            Grid::new()
+                .minColumnWidth(130.0)
+                .plain(true)
+                .children(tiles),
+        ));
     }
 
     if !data.address.is_empty() {
@@ -469,6 +548,10 @@ pub fn build_access_glance(data: &GuestData) -> Vec<Component> {
     }
     push_parking(&mut children, data, data.config.parking.as_ref(), false);
 
+    // Le chemin jusqu'à la porte tient sur la carte, pas seulement dans la sous-page : c'est ce
+    // qu'on relit en arrivant, une main sur la valise, sans vouloir ouvrir quoi que ce soit.
+    push_arrival_path(&mut children, data);
+
     if let Some(url) = maps_url(data) {
         children.push(Component::Button(
             Button::new()
@@ -479,6 +562,27 @@ pub fn build_access_glance(data: &GuestData) -> Vec<Component> {
     }
 
     children
+}
+
+/// Les étapes d'arrivée, précédées de leur intertitre. Rien du tout quand l'hôte n'en a saisi
+/// aucune — un intertitre seul annoncerait un chemin qui n'existe pas.
+fn push_arrival_path(children: &mut Vec<Component>, data: &GuestData) {
+    let mut steps = Vec::new();
+    let mut rank = 1;
+    for step in &data.texts.steps {
+        if step.title.trim().is_empty() {
+            continue;
+        }
+        steps.push(Component::ListItem(arrival_step(step, rank)));
+        rank += 1;
+    }
+    if steps.is_empty() {
+        return;
+    }
+    children.push(Component::Eyebrow(
+        Eyebrow::new().text("i18n:guest.arrivalPath"),
+    ));
+    children.extend(steps);
 }
 
 pub fn build_access_detail(data: &GuestData) -> Vec<Component> {
@@ -531,4 +635,42 @@ pub fn build_access_detail(data: &GuestData) -> Vec<Component> {
     push_arrival_extras(&mut children, data);
 
     children
+}
+
+/// Le sous-titre de la carte : le moyen d'accès, et s'il se fait sans personne.
+///
+/// « Boîte à clés · entrée autonome » dit en une ligne ce que le voyageur veut savoir avant
+/// d'ouvrir : par quoi il entre, et s'il doit attendre quelqu'un.
+///
+/// Les deux morceaux sont traduits ici, pas assemblés en `i18n:` : le shell résout une chaîne
+/// entière, jamais un fragment, et `"i18n:a · i18n:b"` s'afficherait tel quel.
+fn method_key(method: PrimaryMethod) -> &'static str {
+    // Le fil est en snake_case, les clés en camelCase : les dériver l'une de l'autre donnerait
+    // trois clés fausses sur sept, et le voyageur lirait « guest.method.door_code ».
+    match method {
+        PrimaryMethod::Keybox => "guest.method.keybox",
+        PrimaryMethod::DoorCode => "guest.method.doorCode",
+        PrimaryMethod::SmartLock => "guest.method.smartLock",
+        PrimaryMethod::InPerson => "guest.method.inPerson",
+        PrimaryMethod::BuildingStaff => "guest.method.buildingStaff",
+        PrimaryMethod::HostGreets => "guest.method.hostGreets",
+        PrimaryMethod::Other => "guest.method.other",
+    }
+}
+
+pub fn access_summary(data: &GuestData) -> String {
+    let key = method_key(data.config.primary_method);
+    let method = translate(key, &Vars::new()).unwrap_or_else(|_| key.to_string());
+    let autonomous = matches!(
+        data.config.primary_method,
+        PrimaryMethod::Keybox | PrimaryMethod::DoorCode | PrimaryMethod::SmartLock
+    );
+    let qualifier_key = if autonomous {
+        "guest.entry.selfCheckin"
+    } else {
+        "guest.entry.greeted"
+    };
+    let qualifier =
+        translate(qualifier_key, &Vars::new()).unwrap_or_else(|_| qualifier_key.to_string());
+    format!("{method} · {qualifier}")
 }

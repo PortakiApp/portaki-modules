@@ -200,10 +200,19 @@ fn detail_has_steps_and_video() {
         .run(|ctx| {
             let surface = render_explore_detail(ctx).expect("surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("Badge"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Link"));
             let json = serde_json::to_string(&surface).expect("json");
             assert!(json.contains("Se garer"));
+            // Le rang à gauche, le type à droite : ce sont des emplacements du ListItem, pas des
+            // enfants. En enfants, le badge se dessinait dans le corps de la ligne.
+            assert!(
+                json.contains(r#""leading":{"index":1}"#),
+                "une étape porte son rang"
+            );
+            assert!(
+                json.contains(r#""trailing":{"badge":"#),
+                "le type d'étape est un badge de fin de ligne"
+            );
         });
 }
 
