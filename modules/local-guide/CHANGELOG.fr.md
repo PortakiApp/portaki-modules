@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0
+
+Le formulaire dessine les lieux saisis.
+
+* L'onglet de l'hôte n'affiche plus six emplacements vides : il dessine ce qui est saisi, et un bouton ajoute la ligne suivante.
+
 ## 1.2.0
 
 Une section Viator, et le connecteur Tiqets déclaré par le module.
