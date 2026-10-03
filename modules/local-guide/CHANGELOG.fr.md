@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0
+
+Une section Viator, et le connecteur Tiqets déclaré par le module.
+
+* Une section Viator propose des activités à réserver autour du logement.
+* Les activités Viator viennent pour l'instant du bac à sable du fournisseur, pas de son catalogue réel.
+* Le module déclare lui-même le connecteur Tiqets, au lieu de l'attendre de la plateforme.
+* Tous les textes que lit le voyageur existent dans les dix langues du sélecteur du livret.
+
 ## 1.0.0 (2026-09-29)
 
 Première version stable. La courte liste de bonnes adresses de l'hôte, sur une carte, plutôt qu'un guide de ville générique.

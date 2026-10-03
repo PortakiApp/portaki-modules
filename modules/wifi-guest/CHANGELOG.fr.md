@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0
+
+Le Wi-Fi dans la langue du voyageur.
+
+* Tous les textes que lit le voyageur existent dans les dix langues du sélecteur du livret.
+
 ## 1.0.0 (2026-09-29)
 
 Première version stable. Le nom du réseau et le mot de passe, affichés au bon moment, plutôt qu'une photo de l'étiquette de la box.

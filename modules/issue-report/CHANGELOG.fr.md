@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0
+
+L'hôte choisit ce que le formulaire propose.
+
+* L'hôte décide des catégories qu'affiche le formulaire de signalement.
+* Tous les textes que lit le voyageur existent dans les dix langues du sélecteur du livret.
+
 ## 1.0.0 (2026-09-29)
 
 Première version stable. Le voyageur signale un problème depuis le livret et l'hôte l'apprend dans la minute, photo à l'appui.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0
+
+Les horaires du jour arrivent par e-mail.
+
+* Les horaires du jour figurent dans deux des e-mails du séjour, en plus de la page du livret.
+* Tous les textes que lit le voyageur existent dans les dix langues du sélecteur du livret.
+
 ## 1.0.0 (2026-09-29)
 
 Première version stable. Piscine, spa, salle de sport : quand chacun est ouvert, répondu avant que la question soit posée.

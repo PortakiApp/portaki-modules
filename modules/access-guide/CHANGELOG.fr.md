@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0
+
+Le code d'entrée dans la langue du voyageur.
+
+* Tous les textes que lit le voyageur existent dans les dix langues du sélecteur du livret.
+* Le voyageur qui change de langue retrouve la page d'accès dans la sienne, sans phrase restée en français.
+
 ## 1.0.0 (2026-09-29)
 
 Première version stable. Le guide d'accès dit au voyageur comment entrer, et garde les codes masqués jusqu'au moment choisi par l'hôte.

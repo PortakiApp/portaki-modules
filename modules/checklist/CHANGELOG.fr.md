@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0
+
+Le départ en étapes groupées, et les cases qui restent cochées.
+
+* Les étapes du départ sont groupées plutôt que listées à plat.
+* Une case cochée par le voyageur le reste quand il revient sur la page.
+* Tous les textes que lit le voyageur existent dans les dix langues du sélecteur du livret.
+
 ## 1.0.0 (2026-09-29)
 
 Première version stable. Un module pour les listes qui font tourner un séjour : ce que le voyageur coche avant de partir, ce que l'équipe coche après.

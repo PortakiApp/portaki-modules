@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+La serrure Nuki dans la langue du voyageur.
+
+* Tous les textes que lit le voyageur existent dans les dix langues du sélecteur du livret.
+
 ## 1.0.0 (2026-09-29)
 
 Première version stable. Le pont entre une serrure Nuki et le livret : le module Accès reçoit le code clavier et, si un compte est connecté, l'ouverture à distance.

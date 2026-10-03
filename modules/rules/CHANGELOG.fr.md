@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0
+
+Les règles pesées et groupées.
+
+* Les règles sont groupées par thème, les plus importantes devant.
+* Une règle sans thème part en fin de liste au lieu de couper les autres.
+* Tous les textes que lit le voyageur existent dans les dix langues du sélecteur du livret.
+
 ## 1.0.0 (2026-09-29)
 
 Première version stable. Le règlement en quelques points lisibles plutôt qu'un pavé que personne ne termine.

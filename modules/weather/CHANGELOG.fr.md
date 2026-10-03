@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0
+
+L'e-mail d'arrivée respecte l'unité choisie.
+
+* L'e-mail du jour d'arrivée donne la température dans l'unité choisie par l'hôte.
+* Tous les textes que lit le voyageur existent dans les dix langues du sélecteur du livret.
+
 ## 1.0.0 (2026-09-29)
 
 Première version stable. La météo de l'endroit où le voyageur se trouve vraiment, dans le livret et dans l'e-mail d'arrivée.

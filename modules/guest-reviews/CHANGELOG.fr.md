@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1
+
+Correctif.
+
+* La note envoyée par le formulaire est bien celle qui est enregistrée.
+
 ## 1.0.0 (2026-09-29)
 
 Première version stable. C'est à la fin du séjour que les avis se gagnent ; ce module le demande pendant que le voyageur est encore sur place.
