@@ -100,33 +100,33 @@
             "variant": "outline"
           },
           {
-            "children": [
-              {
-                "label": "i18n:host.step.kind.parking",
-                "type": "Badge"
-              },
-              {
-                "text": "Rampe à gauche de l'immeuble, place n° 8.",
-                "type": "Text",
-                "variant": "caption"
-              }
-            ],
+            "leading": {
+              "index": 1
+            },
+            "subtitle": "Rampe à gauche de l'immeuble, place n° 8.",
             "title": "Garez-vous au sous-sol",
+            "trailing": {
+              "badge": {
+                "dot": true,
+                "label": "i18n:host.step.kind.parking",
+                "tone": "neutral"
+              }
+            },
             "type": "ListItem"
           },
           {
-            "children": [
-              {
-                "label": "i18n:host.step.kind.door",
-                "type": "Badge"
-              },
-              {
-                "text": "Digicode au portail, puis ascenseur jusqu'au 2e étage.",
-                "type": "Text",
-                "variant": "caption"
-              }
-            ],
+            "leading": {
+              "index": 2
+            },
+            "subtitle": "Digicode au portail, puis ascenseur jusqu'au 2e étage.",
             "title": "Entrez dans l'immeuble",
+            "trailing": {
+              "badge": {
+                "dot": true,
+                "label": "i18n:host.step.kind.door",
+                "tone": "neutral"
+              }
+            },
             "type": "ListItem"
           }
         ],
