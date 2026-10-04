@@ -9,6 +9,7 @@ mod host;
 mod map_markers;
 mod provider;
 mod tiqets;
+mod tiqets_api;
 mod viator;
 mod viator_api;
 

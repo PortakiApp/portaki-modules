@@ -374,7 +374,7 @@ fn scrolling_tiles(tiles: Vec<Component>) -> Option<Component> {
 }
 
 /// « Dès 22 € · ★ 4,6 (18 234) » — ce qui est connu, dans cet ordre.
-fn product_subtitle(product: &portaki_connectors::tiqets::TiqetsProduct, locale: &str) -> String {
+fn product_subtitle(product: &crate::tiqets_api::TiqetsProduct, locale: &str) -> String {
     let mut parts = Vec::new();
     if let (Some(price), Some(currency)) = (product.price, product.currency.as_deref()) {
         let formatted = format_price(price, currency, locale);

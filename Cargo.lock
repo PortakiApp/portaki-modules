@@ -657,7 +657,6 @@ version = "1.7.0"
 dependencies = [
  "chrono",
  "extism-pdk",
- "portaki-connectors",
  "portaki-sdk",
  "portaki-sdk-macros",
  "portaki-test-utils",
