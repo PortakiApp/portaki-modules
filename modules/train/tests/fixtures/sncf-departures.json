@@ -1,0 +1,51 @@
+{
+  "_comment": "Forme Navitia /departures, écrite d'après doc.navitia.io — PAS une réponse capturée : Portaki n'a pas encore de clé SNCF. Le premier appel réel confirmera ou corrigera ce fichier, et `sncf.rs` est le seul endroit à reprendre.",
+  "departures": [
+    {
+      "stop_date_time": {
+        "departure_date_time": "20261004T081200",
+        "base_departure_date_time": "20261004T081000",
+        "arrival_date_time": "20261004T081100",
+        "data_freshness": "realtime"
+      },
+      "display_informations": {
+        "direction": "Nice-Ville (Nice)",
+        "headsign": "17654",
+        "commercial_mode": "TER",
+        "network": "TER Sud Provence-Alpes-Côte d'Azur",
+        "physical_mode": "Train régional / TER",
+        "code": "17654"
+      }
+    },
+    {
+      "stop_date_time": {
+        "departure_date_time": "20261004T084200",
+        "data_freshness": "base_schedule"
+      },
+      "display_informations": {
+        "direction": "Cannes (Cannes)",
+        "headsign": "86021",
+        "commercial_mode": "TGV INOUI",
+        "network": "SNCF"
+      }
+    },
+    {
+      "stop_date_time": {
+        "departure_date_time": "20261005T052100",
+        "data_freshness": "base_schedule"
+      },
+      "display_informations": {
+        "direction": "Nice-Ville (Nice)",
+        "commercial_mode": "TER"
+      }
+    },
+    {
+      "stop_date_time": { "data_freshness": "realtime" },
+      "display_informations": { "direction": "Sans horaire" }
+    },
+    {
+      "stop_date_time": { "departure_date_time": "20261004T090500" },
+      "display_informations": { "headsign": "sans direction" }
+    }
+  ]
+}

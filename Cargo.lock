@@ -1359,6 +1359,7 @@ dependencies = [
 name = "train"
 version = "1.4.0"
 dependencies = [
+ "chrono",
  "extism-pdk",
  "portaki-sdk",
  "portaki-sdk-macros",

@@ -5,7 +5,7 @@
       "i18n": {
         "explore.detail.direction.from": "Depuis la gare",
         "explore.detail.direction.to": "Vers la gare",
-        "explore.detail.disclaimer": "Horaires indicatifs · TER SUD PACA",
+        "explore.detail.disclaimer": "Horaires SNCF · temps réel quand il est disponible",
         "explore.detail.station.all": "Toutes les gares",
         "explore.detail.station.hint.from": "Départ : la gare du logement.",
         "explore.detail.station.label": "Gare d’arrivée",
@@ -18,14 +18,14 @@
         "children": [
           {
             "emphasis": "subtle",
-            "text": "Gare d'Antibes · 2,3 km",
+            "text": "Gare d'Antibes",
             "type": "Text",
             "variant": "caption"
           },
           {
             "action": {
               "params": {
-                "dest": "Nice-Ville",
+                "dest": "all",
                 "dir": "from"
               },
               "to": "train",
@@ -56,7 +56,7 @@
                   {
                     "action": {
                       "params": {
-                        "dest": "Nice-Ville",
+                        "dest": "all",
                         "dir": "from"
                       },
                       "to": "train",
@@ -69,30 +69,20 @@
                       },
                       {
                         "icon": "train",
-                        "label": "Nice-Ville",
-                        "value": "Nice-Ville"
+                        "label": "Nice-Ville (Nice)",
+                        "value": "Nice-Ville (Nice)"
                       },
                       {
                         "icon": "train",
-                        "label": "Cannes",
-                        "value": "Cannes"
-                      },
-                      {
-                        "icon": "train",
-                        "label": "Monaco",
-                        "value": "Monaco"
-                      },
-                      {
-                        "icon": "train",
-                        "label": "Grasse",
-                        "value": "Grasse"
+                        "label": "Cannes (Cannes)",
+                        "value": "Cannes (Cannes)"
                       }
                     ],
                     "emitOnChange": true,
                     "layout": "combobox",
                     "name": "dest",
                     "type": "ChoiceList",
-                    "value": "Nice-Ville"
+                    "value": "all"
                   }
                 ],
                 "label": "i18n:explore.detail.station.label",
@@ -116,18 +106,18 @@
             "children": [
               {
                 "action": {
-                  "to": "train/nice-ville-0812",
+                  "to": "train/20261004-0812-17654",
                   "type": "navigate"
                 },
                 "chevron": true,
                 "leading": {
                   "time": "08:12"
                 },
-                "subtitle": "quai 2",
-                "title": "Nice-Ville",
+                "subtitle": "17654 · Demain",
+                "title": "Nice-Ville (Nice)",
                 "trailing": {
                   "badge": {
-                    "label": "direct",
+                    "label": "TER",
                     "tone": "success"
                   }
                 },
@@ -135,37 +125,18 @@
               },
               {
                 "action": {
-                  "to": "train/nice-ville-0842",
+                  "to": "train/20261004-0842-86021",
                   "type": "navigate"
                 },
                 "chevron": true,
                 "leading": {
                   "time": "08:42"
                 },
-                "subtitle": "quai 1",
-                "title": "Nice-Ville",
+                "subtitle": "86021 · Demain",
+                "title": "Cannes (Cannes)",
                 "trailing": {
                   "badge": {
-                    "label": "direct",
-                    "tone": "success"
-                  }
-                },
-                "type": "ListItem"
-              },
-              {
-                "action": {
-                  "to": "train/nice-ville-0905",
-                  "type": "navigate"
-                },
-                "chevron": true,
-                "leading": {
-                  "time": "09:05"
-                },
-                "subtitle": "quai 2",
-                "title": "Nice-Ville",
-                "trailing": {
-                  "badge": {
-                    "label": "1 arrêt",
+                    "label": "TGV INOUI",
                     "tone": "neutral"
                   }
                 },
@@ -173,19 +144,19 @@
               },
               {
                 "action": {
-                  "to": "train/nice-ville-0938",
+                  "to": "train/20261005-0521-nice-ville--nice-",
                   "type": "navigate"
                 },
                 "chevron": true,
                 "leading": {
-                  "time": "09:38"
+                  "time": "05:21"
                 },
-                "subtitle": "quai 1",
-                "title": "Nice-Ville",
+                "subtitle": "Demain",
+                "title": "Nice-Ville (Nice)",
                 "trailing": {
                   "badge": {
-                    "label": "direct",
-                    "tone": "success"
+                    "label": "TER",
+                    "tone": "neutral"
                   }
                 },
                 "type": "ListItem"
@@ -207,11 +178,12 @@
     },
     {
       "i18n": {
-        "explore.item.connection": "Correspondance",
+        "explore.item.day": "Jour",
         "explore.item.departure": "Départ",
-        "explore.item.platform": "Quai",
+        "explore.item.network": "Réseau",
         "explore.item.route": "Itinéraire vers la gare",
         "explore.item.station": "Aller à la gare",
+        "explore.item.stationName": "Gare",
         "nav.departure": "Départ"
       },
       "surfaceId": "explore.item",
@@ -221,17 +193,17 @@
           {
             "children": [
               {
-                "label": "direct",
+                "label": "TER",
                 "type": "Badge"
               },
               {
-                "text": "Gare d'Antibes → Nice-Ville",
+                "text": "Gare d'Antibes → Nice-Ville (Nice)",
                 "type": "Text",
                 "variant": "display"
               },
               {
                 "emphasis": "subtle",
-                "text": "quai 2",
+                "text": "17654",
                 "type": "Text",
                 "variant": "caption"
               }
@@ -249,18 +221,18 @@
                 "value": "08:12"
               },
               {
-                "icon": "train",
-                "key": "i18n:explore.item.platform",
+                "icon": "calendar",
+                "key": "i18n:explore.item.day",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "quai 2"
+                "value": "2026-10-04"
               },
               {
-                "icon": "refresh",
-                "key": "i18n:explore.item.connection",
+                "icon": "train",
+                "key": "i18n:explore.item.network",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "direct"
+                "value": "TER Sud Provence-Alpes-Côte d'Azur"
               }
             ],
             "minColumnWidth": 96.0,
@@ -270,9 +242,9 @@
           {
             "children": [
               {
-                "key": "Gare d'Antibes",
+                "key": "i18n:explore.item.stationName",
                 "type": "KeyValue",
-                "value": "2,3 km"
+                "value": "Gare d'Antibes"
               }
             ],
             "icon": "map-pin",
@@ -313,7 +285,7 @@
         "children": [
           {
             "emphasis": "subtle",
-            "text": "Gare d'Antibes → Nice-Ville · 08:12",
+            "text": "Gare d'Antibes → Nice-Ville (Nice) · 08:12",
             "type": "Text",
             "variant": "caption"
           }

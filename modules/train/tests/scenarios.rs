@@ -6,9 +6,26 @@ mod scenarios;
 use portaki_test_utils::MockContextBuilder;
 use train as _;
 
-/// Sans configuration : gare et horaires sont ceux que le module embarque.
+/// La gare de l'hôte et un fournisseur qui répond : les cas pathologiques portent sur le rendu,
+/// pas sur l'absence de données, que `integration.rs` couvre à part.
 fn setup(builder: MockContextBuilder) -> MockContextBuilder {
     builder
+        .with_config(&serde_json::json!({ "station": "Antibes" }))
+        .with_connector_response(
+            "sncf",
+            "find_place",
+            include_str!("fixtures/sncf-places.json"),
+        )
+        .with_connector_response(
+            "sncf",
+            "departures",
+            include_str!("fixtures/sncf-departures.json"),
+        )
+        .with_connector_response(
+            "sncf",
+            "arrivals",
+            include_str!("fixtures/sncf-departures.json"),
+        )
 }
 
 #[test]

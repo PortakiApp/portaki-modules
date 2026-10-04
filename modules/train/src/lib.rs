@@ -1,15 +1,19 @@
-//! Portaki train module — nearest station schedule glance for guests.
+//! Portaki train module — les prochains trains de la gare du logement.
 //!
-//! v0.1: station info and destination schedules are static Rust constants
-//! ([`content`]). No host editor, no storage — see `README.md`.
+//! L'hôte donne le nom de sa gare ; le module le résout en `stop_area` Navitia et lit les départs
+//! réels par le connecteur [`sncf`]. Les destinations proposées au voyageur sortent du tableau
+//! lui-même — aucune liste de gares n'est écrite ici.
 
-mod content;
+mod board;
+mod config;
 mod guest;
+mod host;
+mod sncf;
 
-pub use content::{DEFAULT_DESTINATION, DESTINATIONS};
 pub use guest::{
     render_explore_detail, render_explore_item, render_home_card, render_upcoming_card,
 };
+pub use host::render_host_main;
 
 portaki_sdk::portaki_module!(
     id = "train",
