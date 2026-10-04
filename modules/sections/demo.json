@@ -7,11 +7,23 @@
       "tree": {
         "children": [
           {
-            "content": "Nous sommes heureux de vous accueillir.\n\nFaites comme chez vous : le café est dans le placard au-dessus de la machine, et les serviettes de plage sont dans le coffre de l'entrée.",
-            "type": "Markdown"
+            "children": [
+              {
+                "content": "Nous sommes heureux de vous accueillir.\n\nFaites comme chez vous : le café est dans le placard au-dessus de la machine, et les serviettes de plage sont dans le coffre de l'entrée.",
+                "type": "Markdown"
+              }
+            ],
+            "gap": 12.0,
+            "type": "Stack"
+          },
+          {
+            "signature": {
+              "name": ""
+            },
+            "type": "RichText"
           }
         ],
-        "gap": 12.0,
+        "gap": 14.0,
         "type": "Stack"
       }
     },
