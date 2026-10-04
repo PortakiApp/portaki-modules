@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.0
+
+L'adresse de renvoi au bon moment.
+
+* L'adresse n'apparaît que sous « Me le renvoyer », et seulement quand le voyageur la choisit.
+* Elle devient alors obligatoire — sans rien imposer à qui préfère repasser la prendre.
+
 ## 1.5.1
 
 Une déclaration sans réponse ne part plus.

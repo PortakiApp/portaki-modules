@@ -802,6 +802,13 @@ fn the_address_is_asked_and_kept_only_when_shipping_is_offered() {
                 let form =
                     serde_json::to_string(&render_guest_form(ctx.clone()).expect("form")).unwrap();
                 assert_eq!(form.contains("form.returnAddress.label"), asked, "{form}");
+                // Obligatoire, et révélée par « Me le renvoyer » seulement (§2.18). Masquée, le
+                // livret ne la monte pas : elle n'est alors ni validée ni envoyée.
+                assert_eq!(
+                    form.contains("\"visibleWhen\":\"returnChoice=ship\""),
+                    asked,
+                    "{form}"
+                );
 
                 submit(
                     ctx.clone(),
