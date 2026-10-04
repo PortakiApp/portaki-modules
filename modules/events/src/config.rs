@@ -103,6 +103,21 @@ pub struct EventRow {
     #[serde(deserialize_with = "deserialize_coord")]
     pub lng: Option<f64>,
     pub note: Option<I18nText>,
+    /// L'adresse telle que le sélecteur de carte l'a géocodée, pour la ligne de lieu de la fiche.
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub address: Option<String>,
+    /// Ce que ça coûte, écrit par l'hôte : « Gratuit », « 12 € », « dès 8 € ». Pas un nombre :
+    /// « Gratuit » n'en est pas un, et c'est la valeur la plus fréquente (§2.11).
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub price: Option<String>,
+    /// La photo que l'hôte a déposée, en référence `portaki-file:` — la plateforme l'échange
+    /// contre une URL signée au rendu. Vide quand il n'en a pas mis, et la fiche s'ouvre alors
+    /// sur son titre.
+    #[serde(default)]
+    pub photo: String,
+    /// « Bon à savoir » : une ligne par conseil, écrites par l'hôte.
+    #[serde(default)]
+    pub tips: I18nText,
 }
 
 impl EventRow {
@@ -111,6 +126,34 @@ impl EventRow {
             (Some(lat), Some(lng)) => lat != 0.0 || lng != 0.0,
             _ => false,
         }
+    }
+
+    /// L'identifiant de route de cet événement, pour `events/:eventId`.
+    ///
+    /// Le rang en secours : un hôte peut avoir des lignes sans id (une config d'avant les slots,
+    /// un événement venu de la recherche à proximité), et deux fiches ne doivent pas partager
+    /// une adresse.
+    pub fn route_id(&self, index: usize) -> String {
+        let id = self.id.trim();
+        if id.is_empty() {
+            format!("e{index}")
+        } else {
+            id.to_string()
+        }
+    }
+
+    /// La durée en minutes, quand l'hôte a donné une fin postérieure au début.
+    pub fn duration_minutes(&self) -> Option<i64> {
+        let starts = crate::time_format::parse_starts_at(&self.starts_at)?;
+        let ends = crate::time_format::parse_starts_at(self.ends_at.as_deref()?)?;
+        let minutes = (ends - starts).num_minutes();
+        (minutes > 0).then_some(minutes)
+    }
+
+    /// La photo déposée, en référence, ou `None` quand il n'y en a pas.
+    pub fn photo_ref(&self) -> Option<&str> {
+        let photo = self.photo.trim();
+        (!photo.is_empty()).then_some(photo)
     }
 
     /// Nothing the form shows: a slot the host left (or emptied).

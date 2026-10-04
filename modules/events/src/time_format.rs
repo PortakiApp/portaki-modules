@@ -97,6 +97,7 @@ mod tests {
                 lat: None,
                 lng: None,
                 note: None,
+                ..Default::default()
             },
             EventRow {
                 id: "b".into(),
@@ -108,6 +109,7 @@ mod tests {
                 lat: None,
                 lng: None,
                 note: None,
+                ..Default::default()
             },
         ];
         let now = Utc.with_ymd_and_hms(2050, 1, 1, 0, 0, 0).unwrap();

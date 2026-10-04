@@ -3,7 +3,8 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
-    Card, Field, Form, Page, Select, Stack, StepList, Text, TextArea, TextInput,
+    AddressMapPicker, Card, Field, FieldHint, Form, ImageUpload, Page, Select, Stack, StepList,
+    Text, TextArea, TextInput,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -163,14 +164,31 @@ fn event_row(index: usize, event: Option<&EventRow>, ctx: &HostContext) -> Compo
     let place = event.map(|e| e.place.host_value(ctx)).unwrap_or_default();
     let starts_at = event.map(|e| e.starts_at.as_str()).unwrap_or("");
     let url = event.and_then(|e| e.url.as_deref()).unwrap_or("");
-    let lat = event
-        .and_then(|e| e.lat)
-        .map(|v| v.to_string())
-        .unwrap_or_default();
-    let lng = event
-        .and_then(|e| e.lng)
-        .map(|v| v.to_string())
-        .unwrap_or_default();
+
+    let ends_at = event.and_then(|e| e.ends_at.as_deref()).unwrap_or("");
+    let price = event.and_then(|e| e.price.as_deref()).unwrap_or("");
+    let photo = event.map(|e| e.photo.clone()).unwrap_or_default();
+    let address = event.and_then(|e| e.address.as_deref()).unwrap_or("");
+    let note = event
+        .and_then(|e| e.note.as_ref())
+        .map(|note| note.host_value(ctx))
+        .unwrap_or_default()
+        .to_string();
+    let tips = event
+        .map(|e| e.tips.host_value(ctx))
+        .unwrap_or_default()
+        .to_string();
+
+    let mut picker = AddressMapPicker::new()
+        .addressName(format!("events.{index}.address"))
+        .latName(format!("events.{index}.lat"))
+        .lngName(format!("events.{index}.lng"))
+        .address(address)
+        .label("i18n:host.event.where")
+        .hint("i18n:host.event.where.hint");
+    if let (Some(lat), Some(lng)) = (event.and_then(|e| e.lat), event.and_then(|e| e.lng)) {
+        picker = picker.lat(lat).lng(lng);
+    }
 
     // A filled row sends its id, so a save merges into it (and keeps its end, its note, its
     // other languages). A blank slot has nothing to keep — and an id would make it count as filled.
@@ -217,21 +235,60 @@ fn event_row(index: usize, event: Option<&EventRow>, ctx: &HostContext) -> Compo
             )
             .into(),
         Field::new()
-            .name(format!("events.{index}.lat"))
-            .label("i18n:host.event.lat")
+            .name(format!("events.{index}.ends_at"))
+            .label("i18n:host.event.endsAt")
             .child(
                 TextInput::new()
-                    .name(format!("events.{index}.lat"))
-                    .value(lat),
+                    .name(format!("events.{index}.ends_at"))
+                    .value(ends_at)
+                    .placeholder("i18n:host.event.startsAt.placeholder"),
+            )
+            .into(),
+        FieldHint::new().text("i18n:host.event.endsAt.hint").into(),
+        Field::new()
+            .name(format!("events.{index}.price"))
+            .label("i18n:host.event.price")
+            .child(
+                TextInput::new()
+                    .name(format!("events.{index}.price"))
+                    .value(price)
+                    .placeholder("i18n:host.event.price.placeholder"),
+            )
+            .into(),
+        // Le lieu par le sélecteur de carte, et non deux cases de coordonnées : un hôte ne connaît
+        // pas la latitude de la place du port, et une virgule de travers posait l'événement
+        // au large.
+        picker.into(),
+        Field::new()
+            .name(format!("events.{index}.note"))
+            .label("i18n:host.event.note")
+            .child(
+                TextArea::new()
+                    .name(format!("events.{index}.note"))
+                    .value(note)
+                    .rows(3)
+                    .placeholder("i18n:host.event.note.placeholder"),
             )
             .into(),
         Field::new()
-            .name(format!("events.{index}.lng"))
-            .label("i18n:host.event.lng")
+            .name(format!("events.{index}.tips"))
+            .label("i18n:host.event.tips")
             .child(
-                TextInput::new()
-                    .name(format!("events.{index}.lng"))
-                    .value(lng),
+                TextArea::new()
+                    .name(format!("events.{index}.tips"))
+                    .value(tips)
+                    .rows(3)
+                    .placeholder("i18n:host.event.tips.placeholder"),
+            )
+            .into(),
+        FieldHint::new().text("i18n:host.event.tips.hint").into(),
+        Field::new()
+            .name(format!("events.{index}.photo"))
+            .label("i18n:host.event.photo")
+            .child(
+                ImageUpload::new()
+                    .name(format!("events.{index}.photo"))
+                    .value(photo),
             )
             .into(),
     ];

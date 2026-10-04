@@ -3,7 +3,7 @@
 #[path = "../../../support/previews.rs"]
 mod previews;
 
-use events::{render_explore_detail, render_upcoming_card};
+use events::{render_explore_detail, render_explore_item, render_upcoming_card};
 use serde_json::json;
 
 /// Trois rendez-vous saisis par l'hôte pendant le séjour d'exemple. L'agenda OpenAgenda reste
@@ -17,7 +17,13 @@ fn sample_config() -> serde_json::Value {
                 "place": { "fr": "Place du village", "en": "Village square" },
                 "starts_at": "2026-06-02T18:00:00",
                 "ends_at": "2026-06-02T22:00:00",
-                "note": { "fr": "Entrée libre", "en": "Free entry" },
+                "note": { "fr": "Une trentaine d'artisans, de la poterie au miel du pays.", "en": "Thirty-odd makers, from pottery to local honey." },
+                "price": "Entrée libre",
+                "tips": {
+                    "fr": "Venez avant 19 h, la place se remplit vite.\nLe stand de socca est au fond, côté fontaine.",
+                    "en": "Come before 7pm, the square fills up fast.\nThe socca stall is at the back, by the fountain."
+                },
+                "address": "Place du village, Cannes",
                 "lat": 43.5528, "lng": 7.0171
             },
             {
@@ -46,10 +52,18 @@ fn previews_match_the_rendered_surfaces() {
     let detail = context
         .clone()
         .run(|ctx| render_explore_detail(ctx).expect("surface"));
+    let item = context.clone().run(|mut ctx| {
+        ctx.input = json!({ "eventId": "marche-nocturne" });
+        render_explore_item(ctx).expect("surface")
+    });
     let upcoming = context.run(|ctx| render_upcoming_card(ctx).expect("surface"));
     previews::check(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
-        vec![("explore.detail", detail), ("upcoming.card", upcoming)],
+        vec![
+            ("explore.detail", detail),
+            ("explore.item", item),
+            ("upcoming.card", upcoming),
+        ],
     );
 }
