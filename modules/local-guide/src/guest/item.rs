@@ -38,6 +38,12 @@ pub fn build_spot_item(data: &GuestData, spot: &SpotRow) -> Surface {
 
     children.push(header(data, spot));
 
+    // Fermé aujourd'hui, tout de suite sous le titre : la fiche sert à décider d'y aller
+    // maintenant, et l'information arrive avant l'avantage et les horaires (§2.12).
+    if let Some(closed) = super::body::closed_today_label(data, spot) {
+        children.push(InfoBanner::new().tone(Tone::Warning).title(closed).into());
+    }
+
     // L'avantage en bandeau de marque : c'est la raison d'être d'un bon plan, et une ligne de
     // texte parmi d'autres le faisait passer pour un détail d'horaires.
     let perk = spot.perk.get(&data.locale).trim().to_string();

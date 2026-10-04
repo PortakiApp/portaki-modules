@@ -5,6 +5,7 @@
 //! the map picker's coordinates as text (`"20"`, `spots.0.lat: "43.5"`); the readers below accept
 //! that and numbers alike. The old KV blob went through [`legacy`].
 
+use chrono::Weekday;
 use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
@@ -405,6 +406,20 @@ pub const MAX_INCLUDED_LINES: usize = 10;
 /// Les activités que l'hôte décrit lui-même : six lignes, comme les autres listes du module.
 pub const MAX_HOST_ACTIVITIES: usize = 6;
 
+/// Les sept jours, dans l'ordre de la semaine : le jeton stocké et le jour qu'il désigne.
+///
+/// Une liste figée plutôt qu'un analyseur : le formulaire n'envoie que ces jetons, et tout le
+/// reste doit rester sans effet.
+pub const WEEKDAYS: [(&str, Weekday); 7] = [
+    ("mon", Weekday::Mon),
+    ("tue", Weekday::Tue),
+    ("wed", Weekday::Wed),
+    ("thu", Weekday::Thu),
+    ("fri", Weekday::Fri),
+    ("sat", Weekday::Sat),
+    ("sun", Weekday::Sun),
+];
+
 /// A place. The form sends `title`, `category`, `distance`, `tag`, `detail` and the map picker's
 /// `address`, `lat`, `lng` (and `id`); the platform keeps the rest — `url`, `note`, the texts'
 /// other languages.
@@ -446,6 +461,13 @@ pub struct SpotRow {
     /// Les horaires, en une ligne : « 12:00 – 14:30 · 19:00 – 22:30 ».
     #[serde(default, deserialize_with = "deserialize_nonempty")]
     pub hours: Option<String>,
+    /// Le jour de fermeture hebdomadaire, `mon` … `sun`. Vide quand l'adresse ouvre tous les jours.
+    ///
+    /// ponytail: un seul jour, là où certains commerces en ferment deux. Un deuxième créneau par
+    /// adresse alourdirait un formulaire qui porte déjà quinze champs ; à ajouter si des hôtes le
+    /// demandent. `opening` reste la phrase libre, et rien ici ne la réécrit.
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub closed_day: Option<String>,
     /// Les jours d'ouverture : « Fermé le lundi », « D'avril à octobre ».
     #[serde(default, deserialize_with = "deserialize_nonempty")]
     pub opening: Option<String>,
@@ -487,6 +509,21 @@ impl SpotRow {
     }
 
     /// Nothing stored but the id: a slot the host left (or emptied).
+    /// Le jour de fermeture, s'il est l'un des sept : un jeton hors de la liste ne ferme rien
+    /// plutôt que de fermer un jour deviné.
+    pub fn closed_weekday(&self) -> Option<Weekday> {
+        let raw = self.closed_day.as_deref()?.trim().to_ascii_lowercase();
+        WEEKDAYS
+            .iter()
+            .find(|(token, _)| *token == raw)
+            .map(|(_, day)| *day)
+    }
+
+    /// Fermé le jour demandé.
+    pub fn closed_on(&self, day: Weekday) -> bool {
+        self.closed_weekday() == Some(day)
+    }
+
     pub fn is_blank(&self) -> bool {
         self.title.is_blank()
             && self.detail.is_blank()
@@ -851,5 +888,40 @@ mod tests {
             .with_kv("config", serde_json::to_vec(&legacy_blob()).unwrap())
             .with_config(&json!({}))
             .run(|ctx| assert_eq!(ModuleConfig::load(&ctx).unwrap(), ModuleConfig::default()));
+    }
+
+    /// Le jour de fermeture : les sept jetons du formulaire, et rien d'autre.
+    #[test]
+    fn a_closing_day_closes_only_that_day() {
+        for (token, day) in WEEKDAYS {
+            let row = SpotRow {
+                closed_day: Some(token.to_string()),
+                ..SpotRow::default()
+            };
+            assert_eq!(row.closed_weekday(), Some(day));
+            assert!(row.closed_on(day));
+            assert!(!row.closed_on(day.succ()));
+        }
+        // Les espaces et la casse du formulaire passent ; un jeton inventé ne ferme rien, plutôt
+        // que de fermer un jour deviné.
+        let tolerant = SpotRow {
+            closed_day: Some(" MON ".to_string()),
+            ..SpotRow::default()
+        };
+        assert_eq!(tolerant.closed_weekday(), Some(Weekday::Mon));
+        for raw in ["", "lundi", "monday", "8", "mo"] {
+            let row = SpotRow {
+                closed_day: Some(raw.to_string()),
+                ..SpotRow::default()
+            };
+            assert_eq!(row.closed_weekday(), None, "{raw}");
+        }
+        // Une adresse sans jour renseigné n'est jamais fermée, et le champ ne la rend pas remplie.
+        let blank = SpotRow {
+            closed_day: Some("sun".to_string()),
+            ..SpotRow::default()
+        };
+        assert!(blank.is_blank());
+        assert_eq!(SpotRow::default().closed_weekday(), None);
     }
 }
