@@ -784,6 +784,32 @@ fn the_card_lists_only_the_return_options_the_host_offers() {
         });
 }
 
+/// La promesse de l'hôte sur l'étape de restitution, et rien quand il n'a rien promis (§2.18).
+///
+/// Rien, parce que le module ne promet pas un délai à sa place : c'est lui qui devrait le tenir.
+#[test]
+#[serial]
+fn the_host_s_response_time_reaches_the_form() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_config(&json!({ "return_ship": true, "response_delay": { "fr": "sous 48 h" } }))
+        .with_translation("form.response", "Votre hôte répond sous 48 h.")
+        .run(|ctx| {
+            let form = serde_json::to_string(&render_guest_form(ctx).expect("form")).unwrap();
+            assert!(form.contains("Votre hôte répond sous 48 h."), "{form}");
+        });
+
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_config(&json!({ "return_ship": true }))
+        .run(|ctx| {
+            let form = serde_json::to_string(&render_guest_form(ctx).expect("form")).unwrap();
+            assert!(!form.contains("i18n:form.response"), "{form}");
+        });
+}
+
 /// L'adresse n'est demandée que si le renvoi est proposé — et n'est gardée que dans ce cas.
 #[test]
 #[serial]

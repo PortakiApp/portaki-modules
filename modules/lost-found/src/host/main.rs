@@ -2,7 +2,7 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{
-    Card, Field, FieldHint, Form, NumberInput, Page, Select, Stack, Toggle,
+    Card, Field, FieldHint, Form, NumberInput, Page, Select, Stack, TextInput, Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -23,7 +23,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
             Form::new().child(
                 Stack::new()
                     .gap(16.0)
-                    .child(window_card(&config))
+                    .child(window_card(&config, &ctx))
                     .child(return_card(&config)),
             ),
         ),
@@ -32,7 +32,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
 }
 
 /// Le délai : combien de jours après le départ le voyageur peut encore signaler.
-fn window_card(config: &ModuleConfig) -> Component {
+fn window_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
     Card::new()
         .title("i18n:host.window.title")
         .subtitle("i18n:host.window.subtitle")
@@ -50,6 +50,20 @@ fn window_card(config: &ModuleConfig) -> Component {
                 ),
         )
         .child(FieldHint::new().text("i18n:host.window.hint"))
+        // La promesse à côté du délai : les deux répondent à « et après ? », l'une pour le
+        // voyageur qui hésite à déclarer, l'autre pour celui qui a déclaré.
+        .child(
+            Field::new()
+                .name("response_delay")
+                .label("i18n:host.responseDelay.label")
+                .child(
+                    TextInput::new()
+                        .name("response_delay")
+                        .value(config.response_delay.host_value(ctx))
+                        .placeholder("i18n:host.responseDelay.placeholder"),
+                ),
+        )
+        .child(FieldHint::new().text("i18n:host.responseDelay.hint"))
         .into()
 }
 
