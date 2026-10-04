@@ -10,12 +10,24 @@ use crate::config::{bin_swatch, DropoffRow};
 
 use super::load::GuestData;
 
-/// Glance / detail shared body: collection banner, bin rows, takeout note.
-pub fn build_bins_body(data: &GuestData, enriched: bool) -> Vec<Component> {
+/// Le bandeau de collecte seul (§2.7) : c'est la seule chose de cette carte qui change d'un jour
+/// à l'autre, et donc la seule qu'on relit.
+///
+/// Rendu à part pour que la feuille puisse glisser « Dans le logement » et « Le local poubelles »
+/// entre lui et les bacs, comme la maquette les ordonne.
+pub fn build_collection_banner(data: &GuestData) -> Vec<Component> {
+    collection_banner(data, next_up(data))
+}
+
+/// Glance / detail shared body: bin rows, takeout note. `with_banner` pose le bandeau en tête —
+/// la feuille le pose elle-même, plus haut.
+pub fn build_bins_body(data: &GuestData, enriched: bool, with_banner: bool) -> Vec<Component> {
     let next = next_up(data);
-    // Le bandeau vient en tête (§2.7) : c'est la seule chose de cette carte qui change d'un jour à
-    // l'autre, et donc la seule qu'on relit.
-    let mut children = collection_banner(data, next);
+    let mut children = if with_banner {
+        collection_banner(data, next)
+    } else {
+        Vec::new()
+    };
 
     for bin in &data.bins {
         let title = bin.title.get(&data.locale);

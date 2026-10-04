@@ -17,7 +17,8 @@ fn sample_config() -> serde_json::Value {
                     "fr": "Emballages plastique et métal\nCartons et papiers",
                     "en": "Plastic and metal packaging\nCardboard and paper"
                 },
-                "color": "yellow"
+                "color": "yellow",
+                "location": { "fr": "Placard de l'entrée", "en": "Hallway cupboard" }
             },
             {
                 "id": "verre",
@@ -29,7 +30,8 @@ fn sample_config() -> serde_json::Value {
                 "id": "biodechets",
                 "title": { "fr": "Bac à biodéchets", "en": "Food waste bin" },
                 "items": { "fr": "Épluchures, marc de café, restes de repas", "en": "Peelings, coffee grounds, leftovers" },
-                "color": "brown"
+                "color": "brown",
+                "location": { "fr": "Sous l'évier", "en": "Under the sink" }
             },
             {
                 "id": "ordures",
@@ -45,6 +47,10 @@ fn sample_config() -> serde_json::Value {
         "collection_schedule": {
             "fr": "Mardi pour le bac jaune, vendredi pour les ordures ménagères.",
             "en": "Tuesday for the yellow bin, Friday for general waste."
+        },
+        "bin_room_steps": {
+            "fr": "Sortez par le portail, allée de gauche\nPorte grise du local, ouverte de 7 h à 22 h\nDéposez vos sacs dans le bon bac",
+            "en": "Out through the gate, left-hand path\nGrey door of the store, open 7am to 10pm\nPut your bags in the right bin"
         },
         "takeout_note": {
             "fr": "Sortez les bacs devant le portail la veille au soir, après 19 h.",

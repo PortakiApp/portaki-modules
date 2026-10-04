@@ -68,6 +68,12 @@ pub struct ModuleConfig {
     /// Un élément par ligne.
     #[field(label = "host.compost.refused")]
     pub compost_refused: I18nText,
+    /// Le chemin jusqu'au local poubelles, une étape par ligne (§2.7).
+    ///
+    /// Numérotées chez le voyageur : un local derrière une haie, une porte grise et un bac à
+    /// couvercle jaune se suivent, et une phrase unique les mélange.
+    #[field(label = "host.binRoom.label")]
+    pub bin_room_steps: I18nText,
 }
 
 /// The old KV blob: the bins as a JSON string, `bins_json`, before the form slots; each bin's
@@ -208,6 +214,12 @@ pub struct BinRow {
     pub title: I18nText,
     /// One item per line.
     pub items: I18nText,
+    /// Où le bac se trouve dans le logement — « Sous l'évier », « Placard de l'entrée ».
+    ///
+    /// Le voyageur cherche la poubelle avant de chercher comment trier (§2.7) ; sans cette ligne,
+    /// le livret disait quoi mettre dedans sans dire où elle était.
+    #[serde(default, skip_serializing_if = "I18nText::is_blank")]
+    pub location: I18nText,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub color: Option<String>,
 }

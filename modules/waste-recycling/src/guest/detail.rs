@@ -1,15 +1,26 @@
 //! Guest explore / bottom-sheet detail surface.
 
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui::common::{Leading, LeadingVisual};
 use portaki_sdk::sdui::primitives::{Card, Eyebrow, ListItem, Map, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
-use super::body::{build_bins_body, dropoff_row};
+use super::body::{build_bins_body, build_collection_banner, dropoff_row};
 use super::load::GuestData;
 
 /// Body-only tree for the bottom sheet (shell supplies header chrome).
 pub fn build_detail_surface(data: &GuestData) -> Surface {
-    let mut children = build_bins_body(data, true);
+    // L'ordre de la maquette : quand la collecte passe, où sont les poubelles, comment aller au
+    // local, puis comment trier. On cherche la poubelle sous l'évier avant d'apprendre ce qui va
+    // dans le bac jaune (§2.7).
+    let mut children = build_collection_banner(data);
+    if let Some(card) = inside_card(data) {
+        children.push(card);
+    }
+    if let Some(card) = bin_room_card(data) {
+        children.push(card);
+    }
+    children.extend(build_bins_body(data, true, false));
     if let Some(map) = dropoff_map(data) {
         children.push(map);
     }
@@ -20,6 +31,67 @@ pub fn build_detail_surface(data: &GuestData) -> Surface {
         children.push(card);
     }
     Surface::new(Stack::new().gap(12.0).children(children)).with_id(crate::guest::EXPLORE_DETAIL)
+}
+
+/// « Dans le logement » : où chaque bac se trouve, pour les bacs dont l'hôte l'a dit.
+fn inside_card(data: &GuestData) -> Option<Component> {
+    let rows: Vec<Component> = data
+        .bins
+        .iter()
+        .filter_map(|bin| {
+            let location = bin.location.get(&data.locale).trim().to_string();
+            if location.is_empty() {
+                return None;
+            }
+            let items = bin.items(&data.locale).join(", ");
+            let mut item = ListItem::new()
+                .title(location)
+                .leading(Leading::Icon("home".into()));
+            // L'endroit est le titre, le bac le sous-titre : on cherche « sous l'évier », on y
+            // trouve « ordures ménagères ». L'inverse fait lire la consigne avant l'endroit.
+            let subtitle = if items.is_empty() {
+                bin.title.get(&data.locale).to_string()
+            } else {
+                format!("{} · {items}", bin.title.get(&data.locale))
+            };
+            item = item.subtitle(subtitle);
+            Some(Component::ListItem(item))
+        })
+        .collect();
+    (!rows.is_empty()).then(|| {
+        Component::Card(
+            Card::new()
+                .icon(IconName::Home)
+                .title("i18n:guest.inside.title")
+                .children(rows),
+        )
+    })
+}
+
+/// « Le local poubelles » : le chemin, numéroté.
+fn bin_room_card(data: &GuestData) -> Option<Component> {
+    if data.bin_room_steps.is_empty() {
+        return None;
+    }
+    let rows: Vec<Component> = data
+        .bin_room_steps
+        .iter()
+        .enumerate()
+        .map(|(index, step)| {
+            Component::ListItem(ListItem::new().title(step.clone()).leading(Leading::Visual(
+                Box::new(LeadingVisual {
+                    index: Some((index + 1) as u32),
+                    ..LeadingVisual::default()
+                }),
+            )))
+        })
+        .collect();
+    Some(Component::Card(
+        Card::new()
+            .icon(IconName::MapPin)
+            .title("i18n:guest.binRoom.title")
+            .children(rows),
+    ))
 }
 
 /// Le plan, centré sur le logement, avec un repère par point situé (§3.2).
