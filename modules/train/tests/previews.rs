@@ -5,16 +5,28 @@ mod previews;
 
 use train::{render_explore_detail, render_explore_item, render_upcoming_card};
 
-/// Le module n'a pas encore de configuration : gare et horaires sont ceux qu'il embarque.
+/// Les aperçus du catalogue montrent un vrai tableau : la gare vient de la configuration
+/// d'exemple, les départs du fournisseur mocké.
 #[test]
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
-    let context = previews::guest(root);
+    let context = previews::guest(root)
+        .with_config(&serde_json::json!({ "station": "Antibes" }))
+        .with_connector_response(
+            "sncf",
+            "find_place",
+            include_str!("fixtures/sncf-places.json"),
+        )
+        .with_connector_response(
+            "sncf",
+            "departures",
+            include_str!("fixtures/sncf-departures.json"),
+        );
     let detail = context
         .clone()
         .run(|ctx| render_explore_detail(ctx).expect("render"));
     let item = context.clone().run(|mut ctx| {
-        ctx.input = serde_json::json!({ "departureId": "nice-ville-0812" });
+        ctx.input = serde_json::json!({ "departureId": "20261004-0812-17654" });
         render_explore_item(ctx).expect("render")
     });
     let upcoming = context.run(|ctx| render_upcoming_card(ctx).expect("render"));

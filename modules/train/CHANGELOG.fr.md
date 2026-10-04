@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.0
+
+Les vrais horaires de votre gare.
+
+* Vous donnez le nom de votre gare, et c'est tout : le module la retrouve lui-même.
+* Les départs et les arrivées sont ceux de la SNCF, en temps réel quand il est disponible.
+* Les destinations proposées au voyageur sortent des trains réels de votre gare — vous n'avez aucune liste à tenir.
+* La nuit, le voyageur voit le premier train du matin, annoncé pour demain.
+* Horaires injoignables, gare introuvable, gare non renseignée : le livret dit lequel des trois, au lieu d'un tableau vide.
+* Le quai et la distance jusqu'à la gare disparaissent : ils étaient écrits en dur et valaient pour un seul logement.
+
 ## 1.4.0
 
 Le sens, la gare, la fiche.

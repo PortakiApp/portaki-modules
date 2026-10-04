@@ -12,29 +12,43 @@ OCI image: `oci.portaki.app/modules/train:<semver>`
 
 ## Capabilities
 
-None. v0.1 has no host editor and no storage — station info and destination
-schedules are static Rust constants in `src/content.rs`. A future pass will
-read this from module config and/or a Navitia connector.
+The `sncf` connector, declared by the module itself (ADR-0021) against SNCF's Navitia API, with
+**no host key**: one publisher key serves every property, as for Viator. Every operation declares
+`sends = "module_config"` — the station the host wrote, and nothing else. No guest data and no
+property address leave the module.
+
+| Operation | Call | Cache |
+|-----------|------|-------|
+| `find_place` | `GET /coverage/sncf/places` | 24 h (gateway) + 30 days (KV), keyed by station name |
+| `departures` | `GET /coverage/sncf/stop_areas/{id}/departures` | 2 min (KV) |
+| `arrivals` | `GET /coverage/sncf/stop_areas/{id}/arrivals` | 2 min (KV) |
+
+Needs the `kv` feature for those caches. Without the host's clock nothing is shown: judging
+freshness on a wrong time would serve the same board forever.
 
 ## Content model
 
-Static, hardcoded in `src/content.rs`:
+Nothing is hardcoded. The host gives **one** field — the station's name, as they call it
+(`Gare d'Antibes`, `Antibes`) — plus an optional line shown under the board. The module resolves
+the name to a Navitia `stop_area` itself and keeps the mapping.
 
-- Nearest station label + distance (`DEFAULT_STATION_LABEL`, `default_station_distance`)
-- Destinations: `Nice-Ville`, `Cannes`, `Monaco`, `Grasse`
-- Mock TER SUD PACA departure times per destination (`schedule_for`)
+The destinations offered to the guest are the distinct `display_informations.direction` values of
+the board itself, in the order they appear there — the order of the next train, which beats the
+alphabet. No station list is written in the module, and none is asked of the host.
 
-## Surfaces
+### The night with no train
 
-| Shell | Surface id | Description |
-|-------|------------|--------------|
-| guest | `home.card` | Mixed-destination departure board glance (4 rows) |
-| guest | `explore.detail` | From/to header, destination filter chips, next departures |
+`/departures` is called without `from_datetime`: Navitia defaults to *now* and looks 24 h ahead.
+A guest reading the booklet at 2 a.m. therefore gets the first morning train, marked `Demain`
+when its local date differs from the property's — which is what distinguishes a night with no
+train from an empty board.
 
-Guest route: `pathSegment = "train"` (see the guest `#[surface]`s).
+### The response shape is documented, not captured
 
-Destination filter chips re-navigate to `train` with `{ "dest": "<destination>" }`
-params, read back via `ctx.input.dest` in `render_explore_detail`.
+`tests/fixtures/sncf-*.json` are written from [doc.navitia.io](https://doc.navitia.io/), **not**
+captured from a real call: Portaki has no SNCF key yet. Every field is therefore `Option`, and a
+body nobody can read gives the error template rather than a wrong board. The first real call will
+confirm or fix those fixtures, and `src/sncf.rs` is the only place to touch.
 
 ## Development
 
