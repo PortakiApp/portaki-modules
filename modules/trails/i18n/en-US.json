@@ -67,6 +67,8 @@
   "host.trails.link.hint": "Visorando, IGN, the tourist office: this is the guest's “Open the route” button.",
   "host.trails.link.placeholder": "https://www.visorando.com/walk-…",
   "host.trails.photo": "Photo",
+  "host.trails.prefill": "Read the measurements from the track",
+  "host.trails.prefill.done": "Distance, elevation and type have just been read from the track. Correct them if needed, then save.",
   "host.trails.remove": "Remove",
   "host.trails.rowTitle": "Name",
   "host.trails.rowTitle.placeholder": "La Garoupe lighthouse",

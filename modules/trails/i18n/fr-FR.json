@@ -67,6 +67,8 @@
   "host.trails.link.hint": "Visorando, IGN, l’office de tourisme : c’est le bouton « Ouvrir la trace » du voyageur.",
   "host.trails.link.placeholder": "https://www.visorando.com/randonnee-…",
   "host.trails.photo": "Photo",
+  "host.trails.prefill": "Lire les mesures de la trace",
+  "host.trails.prefill.done": "Distance, dénivelé et type viennent d’être lus dans la trace. Corrigez-les si besoin, puis enregistrez.",
   "host.trails.remove": "Retirer",
   "host.trails.rowTitle": "Nom",
   "host.trails.rowTitle.placeholder": "Phare de la Garoupe",

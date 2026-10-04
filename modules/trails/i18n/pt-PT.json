@@ -67,6 +67,8 @@
   "host.trails.link.hint": "Wikiloc, o posto de turismo, um site de caminhadas: é o botão «Abrir o percurso» do hóspede.",
   "host.trails.link.placeholder": "https://pt.wikiloc.com/trilhas-…",
   "host.trails.photo": "Foto",
+  "host.trails.prefill": "Ler as medidas do trajeto",
+  "host.trails.prefill.done": "Distância, desnível e tipo acabaram de ser lidos do trajeto. Corrija se necessário e guarde.",
   "host.trails.remove": "Remover",
   "host.trails.rowTitle": "Nome",
   "host.trails.rowTitle.placeholder": "Farol da Garoupe",
