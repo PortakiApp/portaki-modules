@@ -7,7 +7,7 @@
         "guest.return.pickup": "Récupération sur place",
         "guest.return.ship": "Renvoi postal",
         "guest.return.ship.paidByGuest": "À vos frais, à arranger avec votre hôte",
-        "home.card.openForm": "Nouvelle déclaration",
+        "home.card.sent": "Déclaration envoyée",
         "home.card.thanks": "Merci — votre hôte a été prévenu.",
         "home.card.title": "Objets perdus ou trouvés",
         "home.card.yourReports": "Vos signalements ce séjour",
@@ -66,7 +66,7 @@
                 },
                 "chevron": true,
                 "leading": "search",
-                "title": "i18n:home.card.openForm",
+                "title": "i18n:home.card.sent",
                 "type": "ListItem"
               }
             ],
@@ -383,7 +383,7 @@
         "guest.return.pickup": "Récupération sur place",
         "guest.return.ship": "Renvoi postal",
         "guest.return.ship.paidByGuest": "À vos frais, à arranger avec votre hôte",
-        "home.card.openForm": "Nouvelle déclaration",
+        "home.card.sent": "Déclaration envoyée",
         "home.card.thanks": "Merci — votre hôte a été prévenu.",
         "home.card.title": "Objets perdus ou trouvés",
         "home.card.yourReports": "Vos signalements ce séjour",
@@ -442,7 +442,7 @@
                 },
                 "chevron": true,
                 "leading": "search",
-                "title": "i18n:home.card.openForm",
+                "title": "i18n:home.card.sent",
                 "type": "ListItem"
               }
             ],

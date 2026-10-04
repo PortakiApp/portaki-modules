@@ -60,6 +60,8 @@
   "guest.teaser": "有东西忘了吗？告诉我们",
   "home.card.intro": "丢了东西，或是捡到了什么？告诉您的房东 — 他会联系您。",
   "home.card.openForm": "新建反馈",
+  "home.card.sent": "已提交申报",
+  "home.card.sent.named": "已提交申报 · {host}正在寻找",
   "home.card.thanks": "谢谢 — 已通知您的房东。",
   "home.card.title": "遗失与拾获",
   "home.card.windowClosed": "反馈期限已过。如果缺了东西，请直接联系您的房东。",

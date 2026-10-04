@@ -35,7 +35,8 @@ pub fn render_explore_detail(ctx: GuestContext) -> Result<Surface> {
     if data.trails.is_empty() {
         return Ok(empty_content_state(EXPLORE_DETAIL));
     }
-    Ok(build_trails_page(&data))
+    let level = ctx.input.get("level").and_then(|value| value.as_str());
+    Ok(build_trails_page(&data, level))
 }
 
 /// La fiche d'un itinéraire. `trailId` arrive par les paramètres de route du livret.

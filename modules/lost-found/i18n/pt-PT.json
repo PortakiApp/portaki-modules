@@ -60,6 +60,8 @@
   "guest.teaser": "Esqueceu-se de algo? Avise-nos",
   "home.card.intro": "Perdeu algo ou encontrou um objeto? Avise o seu anfitrião — ele entrará em contacto.",
   "home.card.openForm": "Novo aviso",
+  "home.card.sent": "Declaração enviada",
+  "home.card.sent.named": "Declaração enviada · {host} está a procurar",
   "home.card.thanks": "Obrigado — o seu anfitrião foi avisado.",
   "home.card.title": "Perdidos e achados",
   "home.card.windowClosed": "O prazo para avisar já passou. Escreva diretamente ao seu anfitrião se lhe faltar algo.",

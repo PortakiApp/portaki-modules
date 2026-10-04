@@ -60,6 +60,8 @@
   "guest.teaser": "忘れ物はありませんか",
   "home.card.intro": "何か失くされましたか、あるいは見つけられましたか。ホストにお知らせください — 折り返しご連絡します。",
   "home.card.openForm": "新しく知らせる",
+  "home.card.sent": "申し出を送信しました",
+  "home.card.sent.named": "申し出を送信しました・{host}さんが探しています",
   "home.card.thanks": "ありがとうございます — ホストに伝わりました。",
   "home.card.title": "忘れ物・落とし物",
   "home.card.windowClosed": "お申し出の期限を過ぎました。足りないものがあれば、ホストに直接ご連絡ください。",

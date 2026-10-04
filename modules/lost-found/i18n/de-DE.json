@@ -60,6 +60,8 @@
   "guest.teaser": "Etwas vergessen? Sagen Sie es uns",
   "home.card.intro": "Etwas verloren oder gefunden? Sagen Sie es Ihrem Gastgeber — er meldet sich bei Ihnen.",
   "home.card.openForm": "Neue Meldung",
+  "home.card.sent": "Meldung gesendet",
+  "home.card.sent.named": "Meldung gesendet · {host} sucht",
   "home.card.thanks": "Danke — Ihr Gastgeber ist benachrichtigt.",
   "home.card.title": "Fundsachen",
   "home.card.windowClosed": "Die Meldefrist ist abgelaufen. Schreiben Sie Ihrem Gastgeber direkt, wenn etwas fehlt.",

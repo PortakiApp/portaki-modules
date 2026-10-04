@@ -78,9 +78,16 @@ pub fn build_home_card(data: &GuestData) -> Surface {
         children.push(row.into());
     }
 
+    // Une déclaration déjà envoyée : la rangée dit où ça en est, pas « Déclarer un objet » —
+    // un voyageur qui a déjà écrit relirait le formulaire en croyant que rien n'est parti (§2.18).
+    let open_label = if reports.is_empty() {
+        "i18n:home.card.openForm".to_string()
+    } else {
+        sent_label(&data.host_name)
+    };
     children.push(
         ListItem::new()
-            .title("i18n:home.card.openForm")
+            .title(open_label)
             .leading(Leading::Icon("search".into()))
             .chevron(true)
             .action(open_form.clone())
@@ -117,4 +124,13 @@ fn report_list_item(report: &LostFoundReport) -> ListItem {
     ListItem::new()
         .title(title)
         .subtitle(format!("i18n:{subtitle}"))
+}
+
+/// « Déclaration envoyée · Claire cherche », ou sans prénom « Déclaration envoyée ».
+fn sent_label(host_name: &str) -> String {
+    if host_name.is_empty() {
+        return "i18n:home.card.sent".to_string();
+    }
+    t!("home.card.sent.named", host = host_name.to_string())
+        .unwrap_or_else(|_| "i18n:home.card.sent".to_string())
 }

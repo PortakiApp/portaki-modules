@@ -60,6 +60,8 @@
   "guest.teaser": "Un oubli ? Signalez-le",
   "home.card.intro": "Vous avez perdu quelque chose ou trouvé un objet ? Prévenez votre hôte — il vous recontactera.",
   "home.card.openForm": "Nouvelle déclaration",
+  "home.card.sent": "Déclaration envoyée",
+  "home.card.sent.named": "Déclaration envoyée · {host} cherche",
   "home.card.thanks": "Merci — votre hôte a été prévenu.",
   "home.card.title": "Objets perdus ou trouvés",
   "home.card.windowClosed": "Le délai de signalement est passé. Écrivez directement à votre hôte s'il vous manque quelque chose.",

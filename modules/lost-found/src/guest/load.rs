@@ -16,6 +16,8 @@ pub struct GuestData {
     pub return_options: Vec<&'static str>,
     /// Le renvoi est proposé, et c'est le voyageur qui en paie les frais.
     pub shipping_paid_by_guest: bool,
+    /// Le prénom de l'hôte, pour « Claire cherche ». Vide quand la plateforme ne le donne pas.
+    pub host_name: String,
 }
 
 /// The stay's reports, oldest first; none outside a stay.
@@ -33,6 +35,11 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestData> {
         window_closed: window_closed(ctx, config.window_days()),
         return_options: config.return_options(),
         shipping_paid_by_guest: config.shipping_paid_by_guest(),
+        host_name: ctx
+            .host
+            .as_ref()
+            .map(|host| host.name.trim().to_string())
+            .unwrap_or_default(),
     })
 }
 

@@ -7,6 +7,7 @@ Le formulaire en trois étapes.
 * Trois écrans au lieu d'un : quel objet, où il est resté, ce qu'il faut en faire.
 * L'étape de restitution porte votre prénom, et dit si vous ne renvoyez pas les objets oubliés.
 * Une barre de progression, « Retour » et « Continuer » : le livret les dessine.
+* Une déclaration déjà envoyée : la rangée dit « Déclaration envoyée · {votre prénom} cherche ».
 
 ## 1.4.0
 

@@ -24,6 +24,7 @@
   "guest.map.property": "宿泊先",
   "guest.map.start": "出発地点",
   "guest.openTrace": "コースを開く",
+  "guest.page.allLevels": "すべて",
   "guest.page.subtitle": "{count} 件 · 休憩を含まない歩行時間",
   "guest.page.subtitle.one": "1 件 · 休憩を含まない歩行時間",
   "guest.page.title": "ハイキング",

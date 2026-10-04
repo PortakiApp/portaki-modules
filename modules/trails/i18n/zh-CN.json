@@ -24,6 +24,7 @@
   "guest.map.property": "住所",
   "guest.map.start": "起点",
   "guest.openTrace": "打开路线",
+  "guest.page.allLevels": "全部",
   "guest.page.subtitle": "{count} 条路线 · 步行时间不含休息",
   "guest.page.subtitle.one": "1 条路线 · 步行时间不含休息",
   "guest.page.title": "徒步路线",
