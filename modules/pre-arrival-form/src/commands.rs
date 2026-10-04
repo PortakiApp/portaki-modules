@@ -18,6 +18,9 @@ struct CompletedPayload {
     guest_occasion: Option<String>,
     guest_allergies: Option<String>,
     message_to_host: Option<String>,
+    /// Le moyen d'arrivée, pour que le séjour le garde et que le livret mette Trains en avant la
+    /// veille (§2.20). La plateforme n'en retient que les valeurs qu'elle sait lire.
+    guest_transport: Option<String>,
 }
 
 /// Arguments for `submit`.
@@ -129,7 +132,7 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
             guest_count,
             special_needs,
             id_document,
-            transport,
+            transport: transport.clone(),
             guest_message: message.clone(),
         },
     )?;
@@ -141,6 +144,7 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
             guest_occasion: occasion,
             guest_allergies: allergies,
             message_to_host: message,
+            guest_transport: transport,
         },
     )?;
     Ok(())
@@ -177,6 +181,7 @@ mod tests {
             guest_occasion: some(),
             guest_allergies: some(),
             message_to_host: some(),
+            guest_transport: some(),
         })
         .expect("json");
         let mut keys: Vec<&str> = payload
@@ -192,6 +197,7 @@ mod tests {
                 "arrivalTimeEstimated",
                 "guestAllergies",
                 "guestOccasion",
+                "guestTransport",
                 "messageToHost"
             ]
         );
