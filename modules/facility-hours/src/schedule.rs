@@ -84,6 +84,8 @@ pub enum State {
     /// Shut for now; opens at this many minutes past midnight, today.
     OpensAt(u32),
     Closed,
+    /// Hors saison : la ligne rouvrira, mais pas aujourd'hui ni demain.
+    OutOfSeason,
 }
 
 /// The opening and closing of one day, once exceptions are applied.
@@ -116,6 +118,12 @@ pub struct Schedule {
     pub opens_at: Option<u32>,
     pub closes_at: Option<u32>,
     pub exceptions: Vec<DayHours>,
+    /// La saison, en `MM-JJ` : hors de ces dates, la ligne est fermée quoi que disent ses heures.
+    ///
+    /// Sans année : une piscine ouvre « d'avril à octobre » chaque année, et demander les dates à
+    /// l'hôte tous les ans le ferait oublier une fois sur deux. L'intervalle peut passer l'hiver
+    /// (`11-15` → `03-15`) ; il se lit alors à l'envers.
+    pub season: Option<(u32, u32)>,
 }
 
 impl Schedule {
@@ -156,10 +164,7 @@ impl Schedule {
     /// still inside *yesterday's* span, and looking only at today would send the guest away from an
     /// open door.
     pub fn state_at(&self, now: DateTime<Utc>, tz: Option<&PropertyTz>) -> Option<State> {
-        if self.all_day {
-            return Some(State::AlwaysOpen);
-        }
-        if !self.is_structured() {
+        if !self.all_day && !self.is_structured() {
             return None;
         }
 
@@ -167,6 +172,15 @@ impl Schedule {
             Some(tz) => tz.to_local(now).naive_local(),
             None => now.naive_utc(),
         };
+
+        // La saison d'abord : un sauna ouvert de 17 h à 21 h en juillet est fermé en janvier, et
+        // annoncer « Ouvert » parce que l'heure colle envoie le voyageur devant une porte close.
+        if !self.in_season(&local) {
+            return Some(State::OutOfSeason);
+        }
+        if self.all_day {
+            return Some(State::AlwaysOpen);
+        }
         let minutes = local.hour() * 60 + local.minute();
         let today = local.weekday();
 
@@ -187,6 +201,41 @@ impl Schedule {
         }
         Some(State::Closed)
     }
+
+    /// Ce jour tombe-t-il dans la saison — toujours vrai quand l'hôte n'en a pas donné.
+    fn in_season(&self, local: &chrono::NaiveDateTime) -> bool {
+        let Some((from, to)) = self.season else {
+            return true;
+        };
+        let day = month_day(local);
+        if from <= to {
+            (from..=to).contains(&day)
+        } else {
+            // La saison passe l'hiver : elle court de `from` à la fin de l'année, puis du début
+            // de l'année à `to`.
+            day >= from || day <= to
+        }
+    }
+}
+
+/// `MM-JJ` en un nombre comparable : `0415` pour le 15 avril.
+fn month_day(local: &chrono::NaiveDateTime) -> u32 {
+    use chrono::Datelike;
+    local.month() * 100 + local.day()
+}
+
+/// `MM-JJ` → le même nombre comparable, ou `None` quand ce n'est pas une date du calendrier.
+pub fn parse_month_day(raw: &str) -> Option<u32> {
+    let raw = raw.trim();
+    let (month, day) = raw.split_once('-')?;
+    let month: u32 = month.trim().parse().ok()?;
+    let day: u32 = day.trim().parse().ok()?;
+    // 31 partout : février à 31 jours ne ferme rien de travers, et refuser le 31 janvier parce
+    // qu'un mois voisin est plus court serait pire.
+    if !(1..=12).contains(&month) || !(1..=31).contains(&day) {
+        return None;
+    }
+    Some(month * 100 + day)
 }
 
 #[cfg(test)]
@@ -199,12 +248,43 @@ mod tests {
         Utc.with_ymd_and_hms(2026, 9, 30, hour, minute, 0).unwrap()
     }
 
+    /// Une saison d'avril à octobre ferme en janvier ; une saison de novembre à mars l'ouvre.
+    #[test]
+    fn a_season_closes_outside_its_months_and_may_cross_the_winter() {
+        let summer = Schedule {
+            season: (parse_month_day("04-01")).zip(parse_month_day("10-31")),
+            ..day("09:00", "20:00")
+        };
+        let winter = Schedule {
+            season: (parse_month_day("11-15")).zip(parse_month_day("03-15")),
+            ..day("09:00", "20:00")
+        };
+        let january = Utc.with_ymd_and_hms(2026, 1, 20, 10, 0, 0).unwrap();
+        let july = Utc.with_ymd_and_hms(2026, 7, 20, 10, 0, 0).unwrap();
+
+        assert_eq!(summer.state_at(january, None), Some(State::OutOfSeason));
+        assert_eq!(summer.state_at(july, None), Some(State::Open));
+        assert_eq!(winter.state_at(january, None), Some(State::Open));
+        assert_eq!(winter.state_at(july, None), Some(State::OutOfSeason));
+    }
+
+    /// Une seule date ne fait pas une saison : la ligne reste de toute saison.
+    #[test]
+    fn a_month_day_that_is_not_one_is_refused() {
+        assert_eq!(parse_month_day("04-01"), Some(401));
+        assert_eq!(parse_month_day("13-01"), None);
+        assert_eq!(parse_month_day("04-32"), None);
+        assert_eq!(parse_month_day("avril"), None);
+        assert_eq!(parse_month_day(""), None);
+    }
+
     fn day(opens: &str, closes: &str) -> Schedule {
         Schedule {
             all_day: false,
             opens_at: parse_hm(opens),
             closes_at: parse_hm(closes),
             exceptions: Vec::new(),
+            season: None,
         }
     }
 

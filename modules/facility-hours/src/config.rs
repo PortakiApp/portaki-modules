@@ -134,6 +134,15 @@ pub struct FacilityRow {
     /// qu'une liste figée. Vide quand il n'a rien mis, et la ligne se range alors en dernier.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub group: Option<String>,
+    /// Le début de la saison, en `MM-JJ` — « 04-01 » pour le 1er avril (§2.6).
+    ///
+    /// Sans année : une piscine ouvre « d'avril à octobre » chaque année. Vides, la ligne est de
+    /// toute saison, et rien ne change pour un hôte qui n'y touche pas.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub season_from: String,
+    /// La fin de la saison, en `MM-JJ`.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub season_to: String,
     /// L'icône de la ligne, prise dans le vocabulaire du livret ([`ICONS`]). Vide quand l'hôte
     /// n'en a pas choisi — la ligne sort alors sans pictogramme plutôt qu'avec un deviné.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -174,6 +183,10 @@ impl FacilityRow {
             opens_at: parse_hm(&self.opens_at),
             closes_at: parse_hm(&self.closes_at),
             exceptions: self.exceptions.clone(),
+            // Les deux bornes, ou aucune : une saison à une seule date ne dit pas quand elle
+            // s'arrête, et la deviner fermerait la ligne à une date inventée.
+            season: crate::schedule::parse_month_day(&self.season_from)
+                .zip(crate::schedule::parse_month_day(&self.season_to)),
         }
     }
 }
