@@ -129,6 +129,41 @@ pub struct FacilityRow {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub exceptions: Vec<DayHours>,
     pub note: I18nText,
+    /// Le groupe sous lequel la ligne se rangera dans la sous-page — « Séjour », « Équipements »,
+    /// « Services » (§2.6). Texte libre : l'hôte sait comment son logement se découpe mieux
+    /// qu'une liste figée. Vide quand il n'a rien mis, et la ligne se range alors en dernier.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub group: Option<String>,
+    /// L'icône de la ligne, prise dans le vocabulaire du livret ([`ICONS`]). Vide quand l'hôte
+    /// n'en a pas choisi — la ligne sort alors sans pictogramme plutôt qu'avec un deviné.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+}
+
+/// Les icônes proposées à l'hôte, celles du dessin (§2.6) plus les lieux qui reviennent.
+///
+/// Une liste figée, pas du texte libre : un nom hors du vocabulaire du livret ne dessine rien.
+pub const ICONS: [&str; 12] = [
+    "key", "logout", "sun", "zap", "sparkles", "building", "package", "recycle", "clock", "wifi",
+    "car", "droplet",
+];
+
+impl FacilityRow {
+    /// Le groupe, débarrassé des espaces, ou `None` quand l'hôte n'en a pas donné.
+    pub fn group_label(&self) -> Option<&str> {
+        self.group
+            .as_deref()
+            .map(str::trim)
+            .filter(|group| !group.is_empty())
+    }
+
+    /// L'icône, et seulement si elle est du vocabulaire : le reste ne dessinerait rien.
+    pub fn icon_name(&self) -> Option<&str> {
+        self.icon
+            .as_deref()
+            .map(str::trim)
+            .filter(|icon| ICONS.contains(icon))
+    }
 }
 
 impl FacilityRow {
