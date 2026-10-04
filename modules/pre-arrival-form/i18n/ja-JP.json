@@ -68,6 +68,7 @@
   "host.stay.specialNeeds.label": "特別なご要望",
   "host.stay.status.done": "記入済み",
   "host.stay.status.pending": "未記入",
+  "host.stay.transport.label": "到着手段",
   "host.when": "フォームを表示するタイミング",
   "host.when.before": "到着前",
   "host.when.before.desc": "チェックインの 48 時間前",

@@ -56,15 +56,15 @@ pub fn notify_host_submitted(
         body.push_str(&extra.text);
     }
     // La pièce, le souhait du voyageur et la photo : pas des détails de formulaire, mais ce qui
-    // décide où chercher et quoi faire ensuite. Les clés vont telles quelles — ce sont des
-    // valeurs de liste, pas du texte écrit par le voyageur.
+    // décide où chercher et quoi faire ensuite. En clair : l'hôte lit un e-mail, pas un journal
+    // de valeurs de liste.
     if let Some(room) = report.room.as_deref() {
         body.push_str("\n\nPièce indiquée : ");
-        body.push_str(room);
+        body.push_str(room_label(room));
     }
     if let Some(choice) = report.return_choice.as_deref() {
         body.push_str("\n\nCe que le voyageur souhaite : ");
-        body.push_str(choice);
+        body.push_str(return_label(choice));
     }
     if report.photo.is_some() {
         body.push_str("\n\nUne photo est jointe — visible dans le tableau de bord.");
@@ -96,6 +96,31 @@ pub fn notify_host_submitted(
         property_id: Some(property_id),
         action_url: None,
     })
+}
+
+/// La pièce, en français : l'e-mail de l'hôte est écrit, pas sérialisé.
+///
+/// Une valeur hors liste revient telle quelle — mieux vaut `other_room` lisible qu'un trou.
+fn room_label(room: &str) -> &str {
+    match room {
+        "bedroom" => "la chambre",
+        "bathroom" => "la salle de bain",
+        "kitchen" => "la cuisine",
+        "living" => "le salon",
+        "outside" => "la terrasse ou l'extérieur",
+        "unknown" => "le voyageur ne sait pas",
+        other => other,
+    }
+}
+
+/// Ce que le voyageur voudrait qu'on fasse de l'objet, en français.
+fn return_label(choice: &str) -> &str {
+    match choice {
+        "ship" => "le lui renvoyer",
+        "pickup" => "il repassera le chercher",
+        "donate" => "le donner à une association",
+        other => other,
+    }
 }
 
 /// Host-declared found item → notify guest (multi-locale).

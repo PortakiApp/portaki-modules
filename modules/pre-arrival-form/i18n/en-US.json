@@ -68,6 +68,7 @@
   "host.stay.specialNeeds.label": "Special needs",
   "host.stay.status.done": "Completed",
   "host.stay.status.pending": "Pending",
+  "host.stay.transport.label": "Arriving by",
   "host.when": "When to show the form",
   "host.when.before": "Before arrival",
   "host.when.before.desc": "48 h before check-in",
