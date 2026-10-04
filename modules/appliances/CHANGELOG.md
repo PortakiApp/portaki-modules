@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.6.0...appliances-v1.7.0) (2026-10-04)
+
+
+### Features
+
+* **appliances:** les étapes illustrées, et le filtre par pièce ([9f4448f](https://github.com/PortakiApp/portaki-modules/commit/9f4448f4421f497fe98aa6fcb75edc4ff145f30d))
+
 ## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.5.0...appliances-v1.6.0) (2026-10-04)
 
 

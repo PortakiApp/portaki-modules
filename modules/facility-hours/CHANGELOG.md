@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.7.0...facility-hours-v1.8.0) (2026-10-04)
+
+
+### Features
+
+* **facility-hours:** la saison d'une ligne ([b0811ff](https://github.com/PortakiApp/portaki-modules/commit/b0811ff20df78780d5a78cb19e3d286b286a6865))
+
 ## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.6.0...facility-hours-v1.7.0) (2026-10-04)
 
 
