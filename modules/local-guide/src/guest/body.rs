@@ -129,7 +129,9 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
 
     if let Some(view) = data.activities.as_ref() {
         children.push(Component::Stack(
-            Stack::new().gap(8.0).children(build_activities(view)),
+            Stack::new()
+                .gap(8.0)
+                .children(build_activities(view, &data.host_name, &data.locale)),
         ));
     }
 
@@ -238,6 +240,87 @@ fn build_tiqets(view: &TiqetsView, enriched: bool, locale: &str) -> Vec<Componen
             .into(),
     );
     children
+}
+
+/// La tuile d'un lien que l'hôte a collé et que le catalogue a reconnu (§2.13, `origin: hostLink`).
+///
+/// Le sous-titre dit d'abord que la recommandation vient de l'hôte, puis la note et la durée du
+/// fournisseur : « Recommandé par Claire · ★ 4,8 · 1 h 45 ». L'ordre compte — c'est le choix de
+/// l'hôte qui fait ouvrir la tuile, la note qui rassure ensuite.
+fn host_link_tile(
+    link: &crate::activities::ActivityLink,
+    product: &portaki_connectors::viator::ViatorProduct,
+    host_name: &str,
+    locale: &str,
+    action: Action,
+) -> Component {
+    let title = if link.label.is_empty() {
+        product.title.clone()
+    } else {
+        link.label.clone()
+    };
+    let mut item = ListItem::new()
+        .title(title)
+        .trailing(Trailing::Visual(Box::new(TrailingVisual {
+            badge: Some(BadgeSpec {
+                label: "i18n:guest.viator.via".to_string(),
+                ..BadgeSpec::default()
+            }),
+            ..TrailingVisual::default()
+        })));
+    let subtitle = host_link_subtitle(product, host_name, locale);
+    if !subtitle.is_empty() {
+        item = item.subtitle(subtitle);
+    }
+    // Le conseil de l'hôte sous la tuile : c'est la seule chose qu'aucun fournisseur n'écrira.
+    if !link.tip.is_empty() {
+        item = item.child(
+            Text::new()
+                .text(link.tip.clone())
+                .variant(TextVariant::Caption),
+        );
+    }
+    partner_tile(
+        item,
+        product.image_url.clone(),
+        product
+            .price
+            .zip(product.currency.as_deref())
+            .map(|(price, currency)| {
+                let formatted = format_price(price, currency, locale);
+                t!("guest.viator.priceFrom", price = &formatted).unwrap_or(formatted)
+            }),
+        action,
+    )
+}
+
+/// « Recommandé par Claire · ★ 4,8 (1 037 avis) · 1 h 45 », ce qui en est connu.
+fn host_link_subtitle(
+    product: &portaki_connectors::viator::ViatorProduct,
+    host_name: &str,
+    locale: &str,
+) -> String {
+    let mut parts: Vec<String> = Vec::new();
+    if !host_name.is_empty() {
+        if let Ok(line) = t!(
+            "guest.activities.recommendedBy",
+            host = host_name.to_string()
+        ) {
+            parts.push(line);
+        }
+    }
+    if let Some(rating) = product.rating {
+        let average = format_rating(rating, locale);
+        let count = product.rating_count.to_string();
+        parts.push(
+            t!("guest.viator.rating", rating = &average, count = &count)
+                .unwrap_or_else(|_| format!("★ {average} ({count})")),
+        );
+    }
+    if let Some(minutes) = product.duration_minutes {
+        parts.push(format_duration(minutes));
+    }
+    parts.join(" · ")
 }
 
 /// Une tuile de produit partenaire : la photo en tête, le prix en bout, la page au bout du doigt.
@@ -462,7 +545,7 @@ fn spots_map(data: &GuestData) -> Option<Component> {
 ///
 /// Rien que des liens — pas de script, pas d'iframe, pas une image chargée chez
 /// GetYourGuide. Le livret n'appelle personne pour afficher cette section.
-fn build_activities(view: &ActivitiesView) -> Vec<Component> {
+fn build_activities(view: &ActivitiesView, host_name: &str, locale: &str) -> Vec<Component> {
     let mut children: Vec<Component> = vec![Text::new()
         .text("i18n:guest.activities.title")
         .variant(TextVariant::Title)
@@ -499,22 +582,31 @@ fn build_activities(view: &ActivitiesView) -> Vec<Component> {
             .into(),
     );
 
+    // Les liens reconnus défilent en tuiles illustrées ; les autres restent des liens. C'est
+    // exactement la distinction du §2.13 : un lien enrichi se choisit sur sa photo et sa note,
+    // un lien que le catalogue ne connaît pas n'a que son nom à offrir.
+    let mut tiles: Vec<Component> = Vec::new();
     for link in &view.links {
         let label = if link.label.is_empty() {
             "i18n:guest.activities.openLink".to_string()
         } else {
             link.label.clone()
         };
-        children.push(
-            Link::new()
-                .label(label)
-                .href(link.url.clone())
-                .action(Action::External {
-                    url: link.url.clone(),
-                })
-                .into(),
-        );
+        let action = Action::External {
+            url: link.url.clone(),
+        };
+        match link.product.as_ref() {
+            Some(product) => tiles.push(host_link_tile(link, product, host_name, locale, action)),
+            None => children.push(
+                Link::new()
+                    .label(label)
+                    .href(link.url.clone())
+                    .action(action)
+                    .into(),
+            ),
+        }
     }
+    children.extend(scrolling_tiles(tiles));
 
     // Obligatoire, dans toutes les langues, sous la liste : ces liens rapportent à
     // Portaki, le voyageur doit le lire avant de cliquer et non le découvrir après.

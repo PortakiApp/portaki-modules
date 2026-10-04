@@ -247,6 +247,10 @@ pub struct ActivityRow {
     pub id: String,
     pub url: String,
     pub label: I18nText,
+    /// Le conseil que l'hôte ajoute à un lien collé (§2.13) — la seule chose qu'un fournisseur
+    /// n'écrira jamais. Vide quand il n'en a pas mis.
+    #[serde(default)]
+    pub tip: I18nText,
 }
 
 impl ActivityRow {

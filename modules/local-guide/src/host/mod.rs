@@ -214,6 +214,25 @@ fn activities_card(
                 )
                 .into(),
         );
+        // Le conseil que l'hôte ajoute au lien (§2.13) : le fournisseur donne la note et le
+        // prix, lui donne la raison.
+        rows.push(
+            Field::new()
+                .name(format!("activities.{index}.tip"))
+                .label("i18n:host.activities.link.tip")
+                .child(
+                    TextArea::new()
+                        .name(format!("activities.{index}.tip"))
+                        .value(
+                            stored
+                                .map(|row| row.tip.host_value(ctx))
+                                .unwrap_or_default(),
+                        )
+                        .rows(2)
+                        .placeholder("i18n:host.activities.link.tip.placeholder"),
+                )
+                .into(),
+        );
     }
 
     // La destination accepte une URL : quand c'en est une, elle est relevée ici comme les
