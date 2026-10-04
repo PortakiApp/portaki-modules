@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.5.0
+
+Un emoji par produit, et votre délai annoncé.
+
+* Chaque produit porte son emoji : la grille du voyageur se lit d'un coup d'œil au lieu de huit colis identiques.
+* La liste de départ arrive déjà illustrée.
+* Nouveau réglage : le délai de réapprovisionnement que vous annoncez. Le voyageur le lit avant d'envoyer son signalement.
+* Sans délai renseigné, il lit comme avant que son message part bien.
+
 ## 2.4.1
 
 Montée technique.

@@ -165,28 +165,38 @@ pub fn update_status(id: Uuid, status: String) -> Result<ConsumableReport> {
     Ok(row)
 }
 
+/// Une ligne du catalogue telle que la commande la reconstruit.
+///
+/// Un gabarit nommé et non un n-uplet : trois des champs sont des entiers ou des chaînes
+/// interchangeables, et l'ordre finissait par être le seul garde-fou.
+#[derive(Debug, Clone)]
+pub struct ItemDraft {
+    pub id: Option<Uuid>,
+    pub label_fr: String,
+    pub label_en: String,
+    pub sort_order: i32,
+    pub low_threshold: i32,
+    pub emoji: String,
+}
+
 /// Replace items while keeping IDs when provided (preserves reports + other langs).
-pub fn replace_items_preserving_ids(
-    items: Vec<(Option<Uuid>, String, String, i32, i32)>,
-) -> Result<()> {
+pub fn replace_items_preserving_ids(items: Vec<ItemDraft>) -> Result<()> {
     let existing = list_items()?;
     let keep_ids: std::collections::HashSet<Uuid> =
-        items.iter().filter_map(|(id, _, _, _, _)| *id).collect();
+        items.iter().filter_map(|draft| draft.id).collect();
     for row in &existing {
         if !keep_ids.contains(&row.id) {
             delete_item(row.id)?;
         }
     }
     let now = time::now()?;
-    for (index, (id, label_fr, label_en, sort_order, low_threshold)) in
-        items.into_iter().enumerate()
-    {
-        let order = if sort_order == 0 && index > 0 {
+    for (index, draft) in items.into_iter().enumerate() {
+        let order = if draft.sort_order == 0 && index > 0 {
             index as i32
         } else {
-            sort_order
+            draft.sort_order
         };
-        let item_id = id.unwrap_or_else(Uuid::new_v4);
+        let item_id = draft.id.unwrap_or_else(Uuid::new_v4);
         let created_at = existing
             .iter()
             .find(|row| row.id == item_id)
@@ -194,10 +204,11 @@ pub fn replace_items_preserving_ids(
             .unwrap_or(now);
         persist_item(ConsumableItem {
             id: item_id,
-            label_fr,
-            label_en,
+            label_fr: draft.label_fr,
+            label_en: draft.label_en,
             sort_order: order,
-            low_threshold,
+            low_threshold: draft.low_threshold,
+            emoji: draft.emoji,
             created_at,
         })?;
     }
@@ -259,8 +270,40 @@ pub fn seed_test_items(now: DateTime<Utc>, labels: &[(&str, &str)]) -> Vec<Uuid>
             label_en: (*en).to_string(),
             sort_order: index as i32,
             low_threshold: 0,
+            emoji: String::new(),
             created_at: now,
         });
     }
     ids
+}
+
+/// Le délai de réapprovisionnement que l'hôte annonce, dans la langue du voyageur (§2.5).
+///
+/// En KV et non en entité : c'est une valeur unique par logement, pas une ligne de catalogue, et
+/// une table d'une seule ligne se migrerait pour rien. Pas de TTL — un réglage d'hôte ne périme
+/// pas.
+pub mod restock_delay {
+    use portaki_sdk::contracts::i18n::I18nText;
+    use portaki_sdk::host::kv;
+
+    const KEY: &str = "restock_delay";
+
+    /// Ce que l'hôte a écrit, ou `None` quand il n'a rien annoncé — le livret dit alors sa phrase
+    /// générique plutôt qu'un délai inventé.
+    pub fn read() -> Option<I18nText> {
+        let bytes = kv::get(KEY).ok()??;
+        let text: I18nText = serde_json::from_slice(&bytes).ok()?;
+        (!text.is_blank()).then_some(text)
+    }
+
+    /// Un délai vide efface le réglage : l'hôte doit pouvoir reprendre sa promesse.
+    pub fn write(text: &I18nText) -> portaki_sdk::Result<()> {
+        if text.is_blank() {
+            return kv::delete(KEY);
+        }
+        let bytes = serde_json::to_vec(text).map_err(|error| {
+            portaki_sdk::PortakiError::Storage(format!("{KEY} serialize: {error}"))
+        })?;
+        kv::set(KEY, &bytes, None)
+    }
 }

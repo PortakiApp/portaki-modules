@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 /// Property-scoped consumable catalog entry.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 1)]
+#[portaki_sdk::entity(schema_version = 2)]
 pub struct ConsumableItem {
     pub id: Uuid,
     pub label_fr: String,
@@ -15,6 +15,12 @@ pub struct ConsumableItem {
     /// Reserved for future quantity alerts — 0 means unused in v0.1 UI.
     #[serde(default)]
     pub low_threshold: i32,
+    /// L'emoji du produit, dans la tuile que le voyageur touche (§2.5).
+    ///
+    /// Vide chez un hôte qui n'y touche pas — le colis du vocabulaire reprend alors sa place, et
+    /// une liste d'avant ce champ se lit comme avant.
+    #[serde(default)]
+    pub emoji: String,
     pub created_at: DateTime<Utc>,
 }
 

@@ -2,7 +2,8 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{
-    Button, Card, EmptyState, Form, Grid, IndexedInput, InfoBanner, List, Page, Stack, Text,
+    Button, Card, EmptyState, Field, FieldHint, Form, Grid, IndexedInput, InfoBanner, List, Page,
+    Stack, Text, TextInput,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -48,6 +49,9 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     let open_reports = storage::list_open().unwrap_or_default();
     let locale = ctx.locale.as_str();
 
+    let restock_delay = storage::restock_delay::read()
+        .map(|text| text.host_value(&ctx).to_string())
+        .unwrap_or_default();
     let tiles_count = draft_rows(&ctx, items.len());
     let mut tiles: Vec<Component> = Vec::with_capacity(tiles_count);
     for index in 0..tiles_count {
@@ -56,13 +60,30 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
             .map(|item| labels::get_label(item, &lang))
             .unwrap_or_default();
 
+        // L'emoji à côté du nom, dans la même case : c'est ce que le voyageur touchera, et le
+        // demander dans un second écran le ferait oublier.
+        let emoji = items
+            .get(index)
+            .map(|item| item.emoji.clone())
+            .unwrap_or_default();
         tiles.push(
-            IndexedInput::new()
-                .index((index + 1) as u32)
-                .name(format!("items.{index}.label"))
-                .value(label)
-                .placeholder("i18n:host.item.empty")
-                .showCheck(true)
+            Stack::new()
+                .direction(StackDirection::Horizontal)
+                .gap(8.0)
+                .child(
+                    TextInput::new()
+                        .name(format!("items.{index}.emoji"))
+                        .value(emoji)
+                        .placeholder("i18n:host.item.emoji"),
+                )
+                .child(
+                    IndexedInput::new()
+                        .index((index + 1) as u32)
+                        .name(format!("items.{index}.label"))
+                        .value(label)
+                        .placeholder("i18n:host.item.empty")
+                        .showCheck(true),
+                )
                 .into(),
         );
     }
@@ -79,6 +100,20 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                     .minColumnWidth(280.0)
                     .children(tiles),
             )
+            // Ce que l'hôte promet, à côté de ce qu'il propose : le voyageur le lit avant
+            // d'envoyer son signalement, et c'est ce qui lui dit que quelqu'un l'a lu.
+            .child(
+                Field::new()
+                    .name("restock_delay")
+                    .label("i18n:host.main.restockDelay")
+                    .child(
+                        TextInput::new()
+                            .name("restock_delay")
+                            .value(restock_delay)
+                            .placeholder("i18n:host.main.restockDelay.placeholder"),
+                    ),
+            )
+            .child(FieldHint::new().text("i18n:host.main.restockDelay.hint"))
             // Une case de plus, quand les huit sont prises. Sous la grille et non dans un
             // `StepList` : empiler vingt-quatre rangées rendrait illisible ce qui se lit d'un
             // coup d'œil en grille.
