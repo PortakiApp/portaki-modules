@@ -19,7 +19,7 @@
   "modules/sections": "1.4.1",
   "modules/trails": "0.5.1",
   "modules/train": "2.0.0",
-  "modules/waste-recycling": "1.6.1",
+  "modules/waste-recycling": "1.7.0",
   "modules/weather": "1.4.1",
   "modules/wifi-guest": "1.6.1"
 }
