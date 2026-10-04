@@ -107,6 +107,24 @@ fn schedule_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
             .into(),
     );
 
+    // Le chemin jusqu'au local, une étape par ligne : il appartient à la collecte plus qu'aux
+    // bacs — c'est le trajet du jour de sortie.
+    children.push(
+        Field::new()
+            .name("bin_room_steps")
+            .label("i18n:host.binRoom.label")
+            .children(vec![
+                FieldHint::new().text("i18n:host.binRoom.hint").into(),
+                TextArea::new()
+                    .name("bin_room_steps")
+                    .value(config.bin_room_steps.host_value(ctx))
+                    .rows(3)
+                    .placeholder("i18n:host.binRoom.placeholder")
+                    .into(),
+            ])
+            .into(),
+    );
+
     Card::new()
         .title("i18n:host.section.schedule")
         .icon(IconName::Calendar)
@@ -333,6 +351,7 @@ fn bin_row(index: usize, bin: Option<&BinRow>, ctx: &HostContext) -> Component {
     let title = bin.map(|b| b.title.host_value(ctx)).unwrap_or_default();
     let items = bin.map(|b| b.items.host_value(ctx)).unwrap_or_default();
     let color = bin_color_name(bin.and_then(|b| b.color.as_deref())).unwrap_or("");
+    let location = bin.map(|b| b.location.host_value(ctx)).unwrap_or_default();
     // A filled row sends its id, so a save merges into it (and keeps its other languages). A
     // blank slot has nothing to keep — and an id would make it count as filled.
     let id = bin
@@ -363,6 +382,18 @@ fn bin_row(index: usize, bin: Option<&BinRow>, ctx: &HostContext) -> Component {
                                 .name(format!("bins.{index}.items"))
                                 .value(items)
                                 .placeholder("i18n:host.bin.items.placeholder"),
+                        )
+                        .into(),
+                    // Où le bac se trouve : le voyageur cherche la poubelle avant de chercher
+                    // comment trier.
+                    Field::new()
+                        .name(format!("bins.{index}.location"))
+                        .label("i18n:host.bin.location")
+                        .child(
+                            TextInput::new()
+                                .name(format!("bins.{index}.location"))
+                                .value(location)
+                                .placeholder("i18n:host.bin.location.placeholder"),
                         )
                         .into(),
                     Field::new()

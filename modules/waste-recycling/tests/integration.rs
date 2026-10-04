@@ -309,7 +309,9 @@ fn a_save_in_english_keeps_the_french() {
     assert_eq!(
         config_save::localized_paths(EMISSIONS),
         [
+            "bin_room_steps",
             "bins.items",
+            "bins.location",
             "bins.title",
             "collection_schedule",
             "compost_accepted",
@@ -345,7 +347,13 @@ fn a_save_in_english_keeps_the_french() {
             assert_eq!(sent["bins"].as_array().unwrap().len(), 3);
 
             let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
-            assert_eq!(saved["bins"][0], stored["bins"][0]);
+            // Le texte stocké est intact, champ par champ. Pas d'égalité d'objets : « où il se
+            // trouve » est un champ localisé neuf, et un enregistrement écrit sa clé vide dans
+            // chaque ligne — comme pour tout champ localisé ajouté à une ligne.
+            assert_eq!(saved["bins"][0]["id"], stored["bins"][0]["id"]);
+            assert_eq!(saved["bins"][0]["title"], stored["bins"][0]["title"]);
+            assert_eq!(saved["bins"][0]["items"], stored["bins"][0]["items"]);
+            assert_eq!(saved["bins"][0]["color"], stored["bins"][0]["color"]);
             assert_eq!(saved["bins"][2]["title"]["fr"], "Verre");
             assert_eq!(saved["bins"][2]["items"]["fr"], "Bouteilles");
             assert_eq!(saved["collection_schedule"], stored["collection_schedule"]);

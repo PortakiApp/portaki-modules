@@ -24,6 +24,8 @@ pub struct GuestData {
     pub compost_refused: Vec<String>,
     /// La position du logement, pour mesurer la distance d'un point d'apport.
     pub property: Option<(f64, f64)>,
+    /// Le chemin jusqu'au local poubelles, une étape par ligne.
+    pub bin_room_steps: Vec<String>,
 }
 
 /// Un élément par ligne, les lignes vides sautées, dix au plus (§10).
@@ -60,5 +62,6 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         compost_accepted: lines(config.compost_accepted.get(&ctx.locale)),
         compost_refused: lines(config.compost_refused.get(&ctx.locale)),
         property: ctx.property.coordinates.map(|point| (point.lat, point.lng)),
+        bin_room_steps: lines(config.bin_room_steps.get(&ctx.locale)),
     }))
 }

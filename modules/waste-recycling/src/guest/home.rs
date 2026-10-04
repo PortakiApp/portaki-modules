@@ -20,7 +20,7 @@ pub fn build_home_card(data: &GuestData) -> Surface {
                     .icon(IconName::Recycle)
                     .title("i18n:home.card.title"),
             ))
-            .children(build_bins_body(data, false)),
+            .children(build_bins_body(data, false, true)),
     )
     .with_id(crate::guest::HOME_CARD)
 }
