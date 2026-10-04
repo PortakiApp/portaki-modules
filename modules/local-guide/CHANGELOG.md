@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.7.0...local-guide-v1.8.0) (2026-10-04)
+
+
+### Features
+
+* **local-guide:** a sheet for the links the host pastes ([687d625](https://github.com/PortakiApp/portaki-modules/commit/687d625216040d263ce28efa3e974ce90e64423f))
+
+
+### Bug Fixes
+
+* **ci:** pin every module to portaki-sdk 9.8.0 ([a06c2c7](https://github.com/PortakiApp/portaki-modules/commit/a06c2c7bd26763fb6846d0633ab83431c596f383))
+
 ## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.6.0...local-guide-v1.7.0) (2026-10-04)
 
 
