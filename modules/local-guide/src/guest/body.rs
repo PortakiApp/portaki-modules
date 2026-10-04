@@ -2,6 +2,7 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
+use portaki_sdk::sdui::common::{BadgeSpec, Tone, Trailing, TrailingVisual};
 use portaki_sdk::sdui::primitives::{
     Image, InfoBanner, Link, ListItem, Map, Pill, Pressable, Stack, Text,
 };
@@ -45,7 +46,16 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
             item = item.subtitle(subtitle);
         }
         if let Some(tag) = spot.tag.as_deref().filter(|t| !t.trim().is_empty()) {
-            item = item.child(Pill::new().label(tag));
+            // L'avantage va en fin de ligne, pas dans son corps : c'est ce que la maquette
+            // montre, et un badge enfant se dessinait au milieu du texte.
+            item = item.trailing(Trailing::Visual(Box::new(TrailingVisual {
+                badge: Some(BadgeSpec {
+                    label: tag.to_string(),
+                    tone: Tone::Primary,
+                    ..BadgeSpec::default()
+                }),
+                ..TrailingVisual::default()
+            })));
         }
         if enriched {
             if let Some(note) = spot.note.as_ref() {

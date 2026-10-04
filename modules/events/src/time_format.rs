@@ -69,33 +69,12 @@ pub fn sort_events_by_start(mut events: Vec<EventRow>) -> Vec<EventRow> {
     events
 }
 
-pub fn day_badge_label(at: DateTime<Utc>) -> String {
-    let weekday_key = weekday_i18n_key(at);
-    let weekday = t!(&weekday_key).unwrap_or_else(|_| weekday_key.clone());
-    let day = at.format("%d").to_string();
-    t!("guest.event.dayBadge", weekday = &weekday, day = &day)
-        .unwrap_or_else(|_| format!("{weekday} {day}"))
-}
-
 pub fn format_starts_at_display(raw: &str) -> String {
     let Some(at) = parse_starts_at(raw) else {
         return raw.trim().to_string();
     };
     let time = at.format("%H:%M").to_string();
     t!("guest.event.startsAt", time = &time).unwrap_or_else(|_| time)
-}
-
-fn weekday_i18n_key(at: DateTime<Utc>) -> String {
-    use chrono::Datelike;
-    match at.weekday().number_from_monday() {
-        1 => "guest.weekday.mon".to_string(),
-        2 => "guest.weekday.tue".to_string(),
-        3 => "guest.weekday.wed".to_string(),
-        4 => "guest.weekday.thu".to_string(),
-        5 => "guest.weekday.fri".to_string(),
-        6 => "guest.weekday.sat".to_string(),
-        _ => "guest.weekday.sun".to_string(),
-    }
 }
 
 #[cfg(test)]

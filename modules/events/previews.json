@@ -45,7 +45,9 @@
                 "variant": "caption"
               }
             ],
-            "leading": "mar. 02",
+            "leading": {
+              "time": "18:00"
+            },
             "subtitle": "Place du village · à 18:00",
             "title": "Marché nocturne des artisans",
             "type": "ListItem"
@@ -62,13 +64,17 @@
                 "type": "Link"
               }
             ],
-            "leading": "jeu. 04",
+            "leading": {
+              "time": "20:30"
+            },
             "subtitle": "Jardin public · à 20:30",
             "title": "Concert de jazz en plein air",
             "type": "ListItem"
           },
           {
-            "leading": "dim. 07",
+            "leading": {
+              "time": "08:00"
+            },
             "subtitle": "Parking de la plage · à 08:00",
             "title": "Vide-grenier du dimanche",
             "type": "ListItem"
