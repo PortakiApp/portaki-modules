@@ -12,6 +12,9 @@ pub fn build_home_card(data: &GuestData) -> Surface {
         Card::new()
             .icon(IconName::Zap)
             .title("i18n:nav.ev-parking")
+            // L'emplacement — « Place P2 n° 14 · niveau −1 » — est ce qu'on relit en descendant
+            // au parking, pas ce qu'on va chercher dans une sous-page.
+            .subtitle(data.config.spot_label.get(&data.locale).trim())
             .action(Action::open_overlay(
                 OverlayPresentation::BottomSheet,
                 crate::guest::EXPLORE_DETAIL,
