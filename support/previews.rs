@@ -98,6 +98,12 @@ fn check_previews(module_root: &str, emissions: &str, rendered: Vec<(&str, Surfa
     let bundle = fr_bundle(module_root);
     let declared = guest_routes(Path::new(emissions));
 
+    // Un module dont aucune surface n'a de chemin n'entre pas au catalogue : pas de fichier
+    // d'aperçus plutôt qu'un fichier vide, qui laisserait croire qu'il n'a rien à montrer.
+    if declared.is_empty() && rendered.is_empty() {
+        return;
+    }
+
     let mut got: Vec<&str> = rendered.iter().map(|(id, _)| *id).collect();
     got.sort_unstable();
     let ids: Vec<&str> = declared.keys().map(String::as_str).collect();
