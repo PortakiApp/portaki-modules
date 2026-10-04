@@ -31,6 +31,7 @@ pub struct GuestData {
 pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<Box<GuestData>>> {
     let config = ModuleConfig::load(ctx)?;
     let activities = activities::resolve(
+        ctx,
         &config.activities(),
         ctx.property.address.as_deref(),
         &ctx.locale,

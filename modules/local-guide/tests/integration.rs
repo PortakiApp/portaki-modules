@@ -316,6 +316,7 @@ fn a_save_in_english_keeps_the_french() {
         config_save::localized_paths(EMISSIONS),
         [
             "activities.label",
+            "activities.tip",
             "activities_intro",
             "disclaimer",
             "host_activities.cancel",
@@ -513,8 +514,8 @@ fn every_link_reaching_the_guest_carries_our_partner_id() {
             "activities": [
                 // Un identifiant collé par l'hôte ne survit pas au rendu.
                 { "url": "https://www.getyourguide.com/paris-l16/?partner_id=someone" },
-                // La plateforme garde ce que l'hôte a saisi : un domaine étranger n'est
-                // arrêté qu'au rendu.
+                // Une page de destination Viator n'est pas un produit : rien à enrichir, aucune
+                // attribution, elle reste arrêtée au rendu (§2.13).
                 { "url": "https://viator.com/paris" },
                 { "url": "https://gyg.me/aBcD12" }
             ]

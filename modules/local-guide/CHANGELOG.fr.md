@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.0
+
+Les liens Viator que vous collez.
+
+* Collez l'adresse d'une activité Viator : photo, note, durée et prix viennent du catalogue.
+* Ajoutez-y votre conseil — c'est la seule chose qu'aucun fournisseur n'écrira.
+* Une adresse que le catalogue ne retrouve pas garde son nom et son lien, rien d'inventé.
+* Seules les adresses de produit sont acceptées : une page de destination n'a rien à montrer.
+
 ## 1.5.0
 
 Vos activités, sans commission.

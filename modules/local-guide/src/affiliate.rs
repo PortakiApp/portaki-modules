@@ -42,12 +42,21 @@ const GYG_DOMAIN: &str = "getyourguide.com";
 /// Domaine des liens courts. Ils portent déjà un identifiant : on n'y touche pas.
 const GYG_SHORT_DOMAIN: &str = "gyg.me";
 
+/// Domaine des liens Viator que l'hôte colle (§2.13, `origin: hostLink`).
+///
+/// Seules les adresses de produit passent, et **sans** y poser d'identifiant : l'attribution d'un produit Viator vient de l'URL
+/// que l'API rend pour ce produit, pas d'un paramètre qu'on écrirait ici. Un lien reconnu part
+/// donc à l'enrichissement, qui le remplace par celle-là ; un lien que l'enrichissement ne
+/// retrouve pas reste le lien de l'hôte, tel qu'il l'a collé — c'est le cas « lien non reconnu »
+/// du §2.13, et inventer des paramètres d'affiliation serait pire que ne pas en avoir.
+const VIATOR_DOMAIN: &str = "viator.com";
+
 /// Pourquoi une URL proposée par l'hôte a été refusée.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CuratedUrlError {
     /// Champ laissé vide — la ligne est simplement ignorée, ce n'est pas une faute.
     Empty,
-    /// Ni GetYourGuide ni un lien court `gyg.me` : refusé à l'enregistrement.
+    /// Ni GetYourGuide, ni `gyg.me`, ni Viator : refusé à l'enregistrement.
     NotGetYourGuide,
 }
 
@@ -192,7 +201,77 @@ pub fn normalize_curated_url(raw: &str) -> Result<String, CuratedUrlError> {
     if is_domain_or_subdomain(&host, GYG_DOMAIN) {
         return Ok(set_partner_param(&https));
     }
+    if is_domain_or_subdomain(&host, VIATOR_DOMAIN) {
+        // Seulement une adresse de **produit**. Une page de destination Viator n'a rien à
+        // enrichir et ne porte aucune attribution : elle sortirait du livret comme un lien nu,
+        // au bénéfice de personne. Refusée à l'enregistrement, comme tout domaine non géré.
+        if viator_product_code(&https).is_some() {
+            return Ok(https);
+        }
+        return Err(CuratedUrlError::NotGetYourGuide);
+    }
     Err(CuratedUrlError::NotGetYourGuide)
+}
+
+/// Le code produit d'une URL Viator, quand elle en porte un.
+///
+/// Les adresses de produit finissent par `…/d<destination>-<code>` : `d21941-273628P2`. Le code
+/// est ce qui suit le tiret, et c'est lui que l'enrichissement cherche dans le catalogue.
+///
+/// `None` pour une page Viator qui n'est pas un produit — une destination, une catégorie. Elle
+/// reste affichable comme lien, elle n'a simplement rien à enrichir.
+pub fn viator_product_code(url: &str) -> Option<String> {
+    let host = host_of(
+        url.strip_prefix("https://")
+            .or_else(|| url.strip_prefix("http://"))
+            .unwrap_or(url),
+    )
+    .to_ascii_lowercase();
+    if !is_domain_or_subdomain(&host, VIATOR_DOMAIN) {
+        return None;
+    }
+
+    let path = url.split(['?', '#']).next().unwrap_or(url);
+    let segment = path.rsplit('/').find(|part| !part.is_empty())?;
+    let (destination, code) = segment.rsplit_once('-')?;
+    // Le segment de destination est `d` suivi de chiffres ; sans lui, ce tiret est celui d'un
+    // titre et ce qui suit n'est pas un code.
+    let digits = destination
+        .strip_prefix('d')
+        .or_else(|| destination.strip_prefix('D'))?;
+    if digits.is_empty() || !digits.chars().all(|c| c.is_ascii_digit()) {
+        return None;
+    }
+    // Un code de produit commence par des chiffres : `273628P2`, `5995P1`. Sans cette
+    // exigence, `d21941-ttd` — la page « things to do » d'une destination — passerait pour un
+    // produit, et l'enrichissement chercherait un code qui n'existe pas.
+    if !code.chars().next().is_some_and(|c| c.is_ascii_digit())
+        || !code.chars().all(|c| c.is_ascii_alphanumeric())
+    {
+        return None;
+    }
+    Some(code.to_ascii_uppercase())
+}
+
+/// Les mots du titre d'une URL Viator, pour les donner à la recherche du catalogue.
+///
+/// Le catalogue ne sait chercher que du texte libre : c'est le slug du produit qui sert de
+/// requête, et le code trouvé dans l'URL qui tranche ensuite. Chercher le code seul ne rend
+/// rien — ce n'est pas du texte que Viator indexe.
+pub fn viator_search_term(url: &str) -> Option<String> {
+    let path = url.split(['?', '#']).next().unwrap_or(url);
+    let parts: Vec<&str> = path.split('/').filter(|part| !part.is_empty()).collect();
+    // L'avant-dernier segment est le titre ; le dernier porte le code.
+    let title = parts.get(parts.len().checked_sub(2)?)?;
+    let words: Vec<String> = title
+        .split('-')
+        .filter(|word| !word.is_empty())
+        .map(|word| percent_decode(word).unwrap_or_else(|| word.to_string()))
+        .collect();
+    if words.is_empty() {
+        return None;
+    }
+    Some(words.join(" "))
 }
 
 /// `host` est exactement `domain`, ou l'un de ses sous-domaines.
@@ -477,10 +556,12 @@ mod tests {
     fn foreign_domains_are_refused() {
         for raw in [
             "https://example.com/tour",
-            "https://viator.com/paris",
             // Le suffixe seul ne suffit pas — le point de séparation est vérifié.
             "https://evil-getyourguide.com/x",
             "https://getyourguide.com.evil.example/x",
+            // Viator est accepté depuis le §2.13, mais pas un domaine qui s'en approche.
+            "https://evil-viator.com/x",
+            "https://viator.com.evil.example/x",
             // Le userinfo ne déguise pas l'hôte réel.
             "https://www.getyourguide.com@evil.example/x",
             // Un autre schéma ne passe pas, même vers le bon domaine.
@@ -635,5 +716,74 @@ mod tests {
             out.push_str(fragment);
         }
         out
+    }
+}
+
+#[cfg(test)]
+mod viator_link_tests {
+    use super::*;
+
+    #[test]
+    fn a_viator_product_url_passes_and_keeps_its_own_parameters() {
+        let url = "https://www.viator.com/fr-FR/tours/Antibes/Kayak/d21941-273628P2";
+        assert_eq!(normalize_curated_url(url), Ok(url.to_string()));
+    }
+
+    /// Une page Viator qui n'est pas un produit n'a rien à enrichir et aucune attribution :
+    /// elle est refusée comme tout domaine non géré.
+    #[test]
+    fn a_viator_page_that_is_not_a_product_is_refused() {
+        for raw in [
+            "https://www.viator.com/fr-FR/Antibes/d21941-ttd",
+            "https://www.viator.com/paris",
+            "https://www.viator.com/",
+        ] {
+            assert_eq!(
+                normalize_curated_url(raw),
+                Err(CuratedUrlError::NotGetYourGuide),
+                "{raw}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_product_code_comes_from_the_last_segment() {
+        assert_eq!(
+            viator_product_code("https://www.viator.com/fr-FR/tours/Antibes/Kayak/d21941-273628P2"),
+            Some("273628P2".to_string())
+        );
+        // Une page de destination n'est pas un produit : rien à enrichir.
+        assert_eq!(
+            viator_product_code("https://www.viator.com/fr-FR/Antibes/d21941-ttd"),
+            None
+        );
+        // Un autre domaine, même avec la même forme de chemin.
+        assert_eq!(
+            viator_product_code("https://evil-viator.com/tours/X/d1-2P2"),
+            None
+        );
+    }
+
+    #[test]
+    fn the_search_term_is_the_title_slug() {
+        assert_eq!(
+            viator_search_term(
+                "https://www.viator.com/fr-FR/tours/Antibes/Kayak-au-Cap/d21941-273628P2"
+            ),
+            Some("Kayak au Cap".to_string())
+        );
+    }
+
+    /// Un sous-domaine louche ne passe pas, pour Viator comme pour GetYourGuide.
+    #[test]
+    fn a_lookalike_domain_is_still_refused() {
+        assert_eq!(
+            normalize_curated_url("https://evil-viator.com/tours/X/d1-2P2"),
+            Err(CuratedUrlError::NotGetYourGuide)
+        );
+        assert_eq!(
+            normalize_curated_url("https://www.viator.com@ailleurs.example/x"),
+            Err(CuratedUrlError::NotGetYourGuide)
+        );
     }
 }

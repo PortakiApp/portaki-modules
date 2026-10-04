@@ -24,6 +24,11 @@ pub struct ActivityLink {
     pub label: String,
     /// URL normalisée.
     pub url: String,
+    /// Le conseil de l'hôte sur ce lien. Vide = pas de conseil.
+    pub tip: String,
+    /// Le produit du catalogue, quand le lien est une adresse de produit Viator reconnue
+    /// (§2.13, `origin: hostLink`). `None` = nom et lien seuls.
+    pub product: Option<portaki_connectors::viator::ViatorProduct>,
 }
 
 /// Résout la section, ou `None` quand il n'y a rien à afficher.
@@ -32,6 +37,7 @@ pub struct ActivityLink {
 /// n'est exploitable, ou la destination ne produit pas d'URL. Aucune n'est une erreur — un
 /// logement sans adresse géocodée et sans saisie hôte n'a simplement pas de ville à proposer.
 pub fn resolve(
+    ctx: &portaki_sdk::context::Context,
     config: &ActivitiesConfig,
     address: Option<&str>,
     locale: &str,
@@ -50,9 +56,18 @@ pub fn resolve(
             // formulaire ne l'a jamais traversée, et un lien stocké sous un ancien
             // identifiant partenaire doit repartir avec l'actuel.
             let url = affiliate::normalize_curated_url(&row.url).ok()?;
+            // Le lien reconnu repart avec l'adresse que l'API rend pour ce produit : c'est elle
+            // qui porte l'attribution, pas un paramètre qu'on écrirait à la main.
+            let product = crate::viator::product_of_link(ctx, &url);
+            let url = product
+                .as_ref()
+                .map(|product| product.product_url.clone())
+                .unwrap_or(url);
             Some(ActivityLink {
                 label: row.label.get(locale).trim().to_string(),
                 url,
+                tip: row.tip.get(locale).trim().to_string(),
+                product,
             })
         })
         .take(MAX_CURATED_LINKS)
@@ -181,6 +196,12 @@ fn city_from_part(part: &str) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
+    /// Un contexte nu. Aucun cas de ce fichier ne colle une adresse de produit Viator, donc
+    /// `product_of_link` rend `None` sans appeler le catalogue.
+    fn ctx() -> portaki_sdk::context::Context {
+        portaki_sdk::context::Context::default()
+    }
+
     use super::*;
     use crate::config::ActivityRow;
     use portaki_sdk::contracts::i18n::I18nText;
@@ -274,16 +295,17 @@ mod tests {
     #[test]
     fn a_destination_url_written_outside_the_form_is_dropped_at_render() {
         // Un domaine étranger est refusé à l'enregistrement ; s'il arrive quand même,
-        // la section ne s'affiche pas plutôt que de sortir le lien.
-        let config = activities("https://viator.com/paris");
+        // la section ne s'affiche pas plutôt que de sortir le lien. Viator ne sert plus
+        // d'exemple : il est accepté depuis le §2.13.
+        let config = activities("https://example.com/paris");
         assert!(destination(&config, Some("Cannes, France")).is_none());
-        assert!(resolve(&config, Some("Cannes, France"), "fr-FR").is_none());
+        assert!(resolve(&ctx(), &config, Some("Cannes, France"), "fr-FR").is_none());
     }
 
     #[test]
     fn free_text_still_produces_the_search_url() {
         let config = activities("Nîmes");
-        let view = resolve(&config, Some("Cannes, France"), "fr-FR").expect("view");
+        let view = resolve(&ctx(), &config, Some("Cannes, France"), "fr-FR").expect("view");
         assert_eq!(view.destination, "Nîmes");
         assert_eq!(
             view.destination_url,
@@ -297,8 +319,8 @@ mod tests {
             enabled: true,
             ..ActivitiesConfig::default()
         };
-        assert!(resolve(&config, None, "fr-FR").is_none());
-        assert!(resolve(&config, Some("   "), "fr-FR").is_none());
+        assert!(resolve(&ctx(), &config, None, "fr-FR").is_none());
+        assert!(resolve(&ctx(), &config, Some("   "), "fr-FR").is_none());
     }
 
     #[test]
@@ -307,7 +329,7 @@ mod tests {
         // l'hôte n'a rien décidé, aucun lien d'affiliation ne part vers le livret.
         let config = ActivitiesConfig::default();
         assert!(!config.enabled);
-        assert!(resolve(&config, Some("Cannes, France"), "fr-FR").is_none());
+        assert!(resolve(&ctx(), &config, Some("Cannes, France"), "fr-FR").is_none());
     }
 
     #[test]
@@ -317,7 +339,7 @@ mod tests {
             destination: "Antibes".into(),
             ..ActivitiesConfig::default()
         };
-        assert!(resolve(&config, Some("Cannes, France"), "fr-FR").is_none());
+        assert!(resolve(&ctx(), &config, Some("Cannes, France"), "fr-FR").is_none());
     }
 
     #[test]
@@ -334,7 +356,7 @@ mod tests {
             links,
             ..ActivitiesConfig::default()
         };
-        let view = resolve(&config, Some("Cannes, France"), "fr-FR").expect("view");
+        let view = resolve(&ctx(), &config, Some("Cannes, France"), "fr-FR").expect("view");
         assert_eq!(view.links.len(), MAX_CURATED_LINKS);
         // L'URL complète, plutôt qu'un suffixe : l'identifiant partenaire est en queue,
         // et « finit par tour-1 » se confondrait de toute façon avec `tour-10`.
@@ -358,7 +380,7 @@ mod tests {
             enabled: true,
             links: vec![
                 ActivityRow {
-                    url: "https://viator.com/paris".into(),
+                    url: "https://example.com/paris".into(),
                     ..ActivityRow::default()
                 },
                 ActivityRow {
@@ -368,7 +390,7 @@ mod tests {
             ],
             ..ActivitiesConfig::default()
         };
-        let view = resolve(&config, Some("Cannes, France"), "fr-FR").expect("view");
+        let view = resolve(&ctx(), &config, Some("Cannes, France"), "fr-FR").expect("view");
         assert_eq!(view.links.len(), 1);
         assert_eq!(view.links[0].url, "https://gyg.me/aBcD12");
     }

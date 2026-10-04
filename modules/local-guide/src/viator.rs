@@ -238,3 +238,83 @@ mod tests {
         assert_eq!(format_duration(45), "45 min");
     }
 }
+
+/// Le produit d'un lien que l'hôte a collé (§2.13, `origin: hostLink`).
+///
+/// Viator ne sait chercher que du texte libre : on lui donne les mots du titre lus dans l'URL,
+/// puis on retient le produit dont le **code** est celui de l'URL. Deux produits peuvent porter
+/// le même titre ; un seul porte ce code.
+///
+/// `None` quand le lien n'est pas un produit, quand Viator ne répond pas, ou quand aucun des
+/// résultats ne porte ce code. L'appelant affiche alors le nom et le lien seuls — le cas « lien
+/// non reconnu ou fournisseur indisponible » du §2.13, et c'est voulu : plutôt rien qu'une
+/// activité confondue avec une autre.
+pub fn product_of_link(ctx: &Context, url: &str) -> Option<ViatorProduct> {
+    let code = crate::affiliate::viator_product_code(url)?;
+    let search_term = crate::affiliate::viator_search_term(url)?;
+    let lang = viator_lang(&ctx.locale);
+    let now = time::now().ok()?.timestamp();
+
+    if let Some(cache) = read_link_cache(&code) {
+        if now - cache.fetched_at >= 0 && now - cache.fetched_at < FRESH_SECS {
+            return cache.product;
+        }
+    }
+
+    // Sans note minimale : le lien vient de l'hôte, pas du catalogue. Filtrer sur la note
+    // ferait disparaître une activité qu'il a choisie parce qu'elle est peu notée.
+    let args = FreetextProductsArgs::new(&search_term, &lang, CURRENCY, MAX_PRODUCTS as u32, 0);
+    let found = match Viator::search_products(&args) {
+        Ok(response) => {
+            crate::provider::clear_missing_key(KEY_MISSING_KEY);
+            response
+                .products
+                .into_iter()
+                .find(|product| product.code.eq_ignore_ascii_case(&code))
+        }
+        Err(error) => {
+            if error.to_string().contains("connector_credential_missing") {
+                crate::provider::note_missing_key(KEY_MISSING_KEY);
+            }
+            let mut fields = log::Fields::new();
+            fields.insert("error", &error.to_string());
+            fields.insert("code", &code);
+            let _ = log::warn("local_guide_viator_link_fetch_failed", &fields);
+            // L'entrée d'avant vaut mieux que rien, tant qu'elle reste sous les sept jours.
+            return read_link_cache(&code)
+                .filter(|cache| now - cache.fetched_at < STALE_MAX_SECS)
+                .and_then(|cache| cache.product);
+        }
+    };
+
+    // L'absence est gardée elle aussi : sans ça, un lien qui n'est pas au catalogue relancerait
+    // une recherche à chaque ouverture du livret.
+    let _ = write_link_cache(&LinkCache {
+        code: code.clone(),
+        lang,
+        fetched_at: now,
+        product: found.clone(),
+    });
+    found
+}
+
+/// Ce qu'on garde d'un lien collé : son produit, ou le fait qu'il n'en a pas.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+struct LinkCache {
+    code: String,
+    lang: String,
+    fetched_at: i64,
+    product: Option<ViatorProduct>,
+}
+
+fn link_cache_key(code: &str) -> String {
+    format!("{CACHE_KEY_PREFIX}link.{code}")
+}
+
+fn read_link_cache(code: &str) -> Option<LinkCache> {
+    crate::provider::read(&link_cache_key(code))
+}
+
+fn write_link_cache(cache: &LinkCache) -> Result<()> {
+    crate::provider::write(&link_cache_key(&cache.code), cache, STALE_MAX_SECS)
+}
