@@ -30,24 +30,31 @@
             "type": "Link"
           },
           {
-            "copy": true,
-            "copyLabel": "i18n:guest.copyParkingCode",
-            "icon": "lock",
-            "key": "i18n:guest.parkingCode",
-            "layout": "tile",
-            "mono": true,
-            "type": "KeyValue",
-            "value": "1357"
-          },
-          {
-            "copy": true,
-            "copyLabel": "i18n:guest.copyChargerPin",
-            "icon": "zap",
-            "key": "i18n:guest.chargerPin",
-            "layout": "tile",
-            "mono": true,
-            "type": "KeyValue",
-            "value": "2468"
+            "children": [
+              {
+                "copy": true,
+                "copyLabel": "i18n:guest.copyParkingCode",
+                "icon": "lock",
+                "key": "i18n:guest.parkingCode",
+                "layout": "tile",
+                "mono": true,
+                "type": "KeyValue",
+                "value": "1357"
+              },
+              {
+                "copy": true,
+                "copyLabel": "i18n:guest.copyChargerPin",
+                "icon": "zap",
+                "key": "i18n:guest.chargerPin",
+                "layout": "tile",
+                "mono": true,
+                "type": "KeyValue",
+                "value": "2468"
+              }
+            ],
+            "minColumnWidth": 130.0,
+            "plain": true,
+            "type": "Grid"
           },
           {
             "text": "Branchez le câble Type 2 fourni, puis saisissez le PIN sur la borne.",

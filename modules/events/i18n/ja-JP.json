@@ -15,6 +15,7 @@
   "guest.event.dateTbd": "日程は未定",
   "guest.event.dayBadge": "{day}（{weekday}）",
   "guest.event.startsAt": "{time} から",
+  "guest.next": "このあと",
   "guest.openLink": "リンクを開く",
   "guest.teaser": "まわりで開かれていること",
   "guest.weekday.fri": "金",

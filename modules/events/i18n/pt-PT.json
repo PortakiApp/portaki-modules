@@ -15,6 +15,7 @@
   "guest.event.dateTbd": "Data a confirmar",
   "guest.event.dayBadge": "{weekday} {day}",
   "guest.event.startsAt": "às {time}",
+  "guest.next": "A seguir",
   "guest.openLink": "Abrir a ligação",
   "guest.teaser": "O que se passa à sua volta",
   "guest.weekday.fri": "sex.",

@@ -60,44 +60,50 @@
           {
             "children": [
               {
-                "text": "Croissants dès 7 h, fermée le lundi.",
-                "type": "Text",
-                "variant": "body"
-              }
-            ],
-            "subtitle": "Boulangerie · 350 m",
-            "title": "La boulangerie du village",
-            "type": "ListItem"
-          },
-          {
-            "children": [
+                "children": [
+                  {
+                    "text": "Croissants dès 7 h, fermée le lundi.",
+                    "type": "Text",
+                    "variant": "body"
+                  }
+                ],
+                "subtitle": "Boulangerie · 350 m",
+                "title": "La boulangerie du village",
+                "type": "ListItem"
+              },
               {
-                "text": "Fruits, fromages et fleurs, le samedi matin.",
-                "type": "Text",
-                "variant": "body"
-              }
-            ],
-            "subtitle": "Marché · 1,2 km",
-            "title": "Marché provençal",
-            "trailing": {
-              "badge": {
-                "label": "Samedi matin",
-                "tone": "primary"
-              }
-            },
-            "type": "ListItem"
-          },
-          {
-            "children": [
+                "children": [
+                  {
+                    "text": "Fruits, fromages et fleurs, le samedi matin.",
+                    "type": "Text",
+                    "variant": "body"
+                  }
+                ],
+                "subtitle": "Marché · 1,2 km",
+                "title": "Marché provençal",
+                "trailing": {
+                  "badge": {
+                    "label": "Samedi matin",
+                    "tone": "primary"
+                  }
+                },
+                "type": "ListItem"
+              },
               {
-                "text": "Eau calme et plage de galets, idéal avec des enfants.",
-                "type": "Text",
-                "variant": "body"
+                "children": [
+                  {
+                    "text": "Eau calme et plage de galets, idéal avec des enfants.",
+                    "type": "Text",
+                    "variant": "body"
+                  }
+                ],
+                "subtitle": "Baignade · 9 km",
+                "title": "Lac de Saint-Cassien",
+                "type": "ListItem"
               }
             ],
-            "subtitle": "Baignade · 9 km",
-            "title": "Lac de Saint-Cassien",
-            "type": "ListItem"
+            "gap": 8.0,
+            "type": "Stack"
           }
         ],
         "gap": 12.0,

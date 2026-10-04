@@ -3,7 +3,9 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::{Leading, LeadingVisual};
-use portaki_sdk::sdui::primitives::{InfoBanner, Link, ListItem, Map, Pill, Pressable, Text};
+use portaki_sdk::sdui::primitives::{
+    Eyebrow, InfoBanner, Link, ListItem, Map, Pill, Pressable, Text,
+};
 
 use crate::time_format::{format_starts_at_display, parse_starts_at};
 
@@ -26,7 +28,13 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         ));
     }
 
-    for event in &data.events {
+    for (rank, event) in data.events.iter().enumerate() {
+        // « Ensuite » sépare le premier événement des suivants (§2.11) : sur la carte, le premier
+        // est mis en avant et les autres se lisent comme une suite. Pas d'intertitre s'il n'y a
+        // qu'un événement — il annoncerait une suite qui n'existe pas.
+        if rank == 1 {
+            children.push(Component::Eyebrow(Eyebrow::new().text("i18n:guest.next")));
+        }
         let title = event.title.get(&data.locale);
         let place = event.place.get(&data.locale).to_string();
 

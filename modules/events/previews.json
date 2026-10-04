@@ -4,6 +4,7 @@
     {
       "i18n": {
         "guest.disclaimer.title": "Info",
+        "guest.next": "Ensuite",
         "guest.openLink": "Ouvrir le lien",
         "nav.events": "Événements locaux"
       },
@@ -51,6 +52,10 @@
             "subtitle": "Place du village · à 18:00",
             "title": "Marché nocturne des artisans",
             "type": "ListItem"
+          },
+          {
+            "text": "i18n:guest.next",
+            "type": "Eyebrow"
           },
           {
             "children": [
