@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.1
+
+Une déclaration sans réponse ne part plus.
+
+* La question « si l'hôte le retrouve » doit être répondue avant de passer à l'envoi.
+
 ## 1.5.0
 
 Le formulaire en trois étapes.
