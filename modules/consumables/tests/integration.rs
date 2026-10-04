@@ -1,5 +1,6 @@
 //! Integration-style unit tests with `portaki-test-utils`.
 
+use serde_json::json;
 use serial_test::serial;
 use uuid::Uuid;
 
@@ -40,6 +41,7 @@ fn home_card_opens_form_overlay_with_catalog() {
                 ctx.clone(),
                 ReplaceItemsArgs {
                     items: vec![ConsumableItemInput {
+                        emoji: String::new(),
                         label: String::new(),
                         label_fr: "Café".into(),
                         label_en: "Coffee".into(),
@@ -83,6 +85,7 @@ fn one_submit_reports_every_product_the_guest_picked() {
                 ReplaceItemsArgs {
                     items: vec![
                         ConsumableItemInput {
+                            emoji: String::new(),
                             label: String::new(),
                             label_fr: "Papier toilette".into(),
                             label_en: "Toilet paper".into(),
@@ -90,6 +93,7 @@ fn one_submit_reports_every_product_the_guest_picked() {
                             low_threshold: 0,
                         },
                         ConsumableItemInput {
+                            emoji: String::new(),
                             label: String::new(),
                             label_fr: "Café".into(),
                             label_en: "Coffee".into(),
@@ -135,6 +139,7 @@ fn the_single_product_field_is_still_accepted() {
                 ctx.clone(),
                 ReplaceItemsArgs {
                     items: vec![ConsumableItemInput {
+                        emoji: String::new(),
                         label: String::new(),
                         label_fr: "Papier toilette".into(),
                         label_en: "Toilet paper".into(),
@@ -179,6 +184,7 @@ fn the_product_grid_starts_with_nothing_picked() {
                 ctx.clone(),
                 ReplaceItemsArgs {
                     items: vec![ConsumableItemInput {
+                        emoji: String::new(),
                         label: String::new(),
                         label_fr: "Papier toilette".into(),
                         label_en: "Toilet paper".into(),
@@ -215,6 +221,7 @@ fn submit_creates_open_report_and_lists_on_card() {
                 ctx.clone(),
                 ReplaceItemsArgs {
                     items: vec![ConsumableItemInput {
+                        emoji: String::new(),
                         label: String::new(),
                         label_fr: "Papier toilette".into(),
                         label_en: "Toilet paper".into(),
@@ -277,6 +284,7 @@ fn host_mark_restocked_clears_open_list() {
                 ctx.clone(),
                 ReplaceItemsArgs {
                     items: vec![ConsumableItemInput {
+                        emoji: String::new(),
                         label: String::new(),
                         label_fr: "Savon".into(),
                         label_en: "Soap".into(),
@@ -379,6 +387,119 @@ fn seed_defaults_fills_empty_catalog() {
         });
 }
 
+/// L'emoji suit son produit, et un champ vide ne l'efface pas (§2.5).
+///
+/// Vide, il ne l'efface pas parce que l'hôte qui renomme un produit dans une autre langue ne doit
+/// pas perdre le pictogramme qu'il avait choisi — le formulaire ne porte qu'une langue à la fois.
+#[test]
+#[serial]
+fn an_emoji_follows_its_product_and_an_empty_field_does_not_erase_it() {
+    reset_test_store();
+    let save = |emoji: &str, label: &str| ConsumableItemInput {
+        emoji: emoji.into(),
+        label: label.into(),
+        label_fr: String::new(),
+        label_en: String::new(),
+        sort_order: 0,
+        low_threshold: 0,
+    };
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            update_config(
+                ctx.clone(),
+                UpdateConfigArgs {
+                    restock_delay: Default::default(),
+                    items: vec![save("☕", "Café")],
+                },
+            )
+            .expect("premier enregistrement");
+            // Même produit, nouveau nom, emoji laissé vide par le formulaire.
+            update_config(
+                ctx.clone(),
+                UpdateConfigArgs {
+                    restock_delay: Default::default(),
+                    items: vec![save("", "Coffee")],
+                },
+            )
+            .expect("second enregistrement");
+            let form = serde_json::to_string(&render_guest_form(ctx).expect("formulaire")).unwrap();
+            assert!(form.contains("☕"), "{form}");
+            // L'emoji remplace le colis du vocabulaire, il ne s'y ajoute pas.
+            assert!(!form.contains("\"icon\":\"package\""), "{form}");
+        });
+}
+
+/// Le délai de l'hôte remplace la phrase générique, et un délai effacé la ramène (§2.5).
+///
+/// Deux contextes parce que le KV du bac à sable est propre à chacun : l'écriture se vérifie là où
+/// elle a lieu, la lecture sur une entrée posée d'avance.
+#[test]
+#[serial]
+fn the_host_s_restocking_time_reaches_the_guest() {
+    reset_test_store();
+    let item = || ConsumableItemInput {
+        emoji: String::new(),
+        label: "Café".into(),
+        label_fr: String::new(),
+        label_en: String::new(),
+        sort_order: 0,
+        low_threshold: 0,
+    };
+
+    // Écriture : l'hôte enregistre, et son propre écran le relit.
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            update_config(
+                ctx.clone(),
+                UpdateConfigArgs {
+                    restock_delay: serde_json::from_value(json!({ "fr": "sous 24 h" }))
+                        .expect("délai"),
+                    items: vec![item()],
+                },
+            )
+            .expect("enregistrement");
+            let host = serde_json::to_string(&render_host_main(ctx.clone())).unwrap();
+            assert!(host.contains("sous 24 h"), "{host}");
+
+            // Effacé, le réglage disparaît — l'hôte doit pouvoir reprendre sa promesse.
+            update_config(
+                ctx.clone(),
+                UpdateConfigArgs {
+                    restock_delay: Default::default(),
+                    items: vec![item()],
+                },
+            )
+            .expect("effacement");
+            let host = serde_json::to_string(&render_host_main(ctx)).unwrap();
+            assert!(!host.contains("sous 24 h"), "{host}");
+        });
+
+    // Lecture : le bandeau du voyageur dit le délai au lieu de la phrase générique.
+    let stored = serde_json::to_vec(&json!({ "fr": "sous 24 h" })).expect("octets");
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_kv("restock_delay", stored)
+        .with_translation("form.notice.delay", "Votre hôte réapprovisionne sous 24 h.")
+        .run(|ctx| {
+            let form = serde_json::to_string(&render_guest_form(ctx).expect("formulaire")).unwrap();
+            assert!(
+                form.contains("Votre hôte réapprovisionne sous 24 h."),
+                "{form}"
+            );
+            assert!(!form.contains("\"i18n:form.notice\""), "{form}");
+        });
+
+    // Sans réglage, la phrase générique : le voyageur sait quand même que son envoi part.
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let form = serde_json::to_string(&render_guest_form(ctx).expect("formulaire")).unwrap();
+            assert!(form.contains("i18n:form.notice"), "{form}");
+        });
+}
+
 #[test]
 #[serial]
 fn update_config_replaces_catalog() {
@@ -389,7 +510,9 @@ fn update_config_replaces_catalog() {
             update_config(
                 ctx.clone(),
                 UpdateConfigArgs {
+                    restock_delay: Default::default(),
                     items: vec![ConsumableItemInput {
+                        emoji: String::new(),
                         label: "Coffee pods".into(),
                         label_fr: String::new(),
                         label_en: String::new(),
@@ -480,6 +603,7 @@ fn long_note_is_stored_whole_and_quoted_in_the_host_email() {
                 ctx.clone(),
                 ReplaceItemsArgs {
                     items: vec![ConsumableItemInput {
+                        emoji: String::new(),
                         label: String::new(),
                         label_fr: "Serviettes".into(),
                         label_en: "Towels".into(),

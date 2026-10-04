@@ -414,6 +414,7 @@ mod tests {
     #[test]
     fn restock_rhythm_is_the_mean_gap_to_the_next_shortage() {
         let item = ConsumableItem {
+            emoji: String::new(),
             id: Uuid::new_v4(),
             label_fr: "Café".into(),
             label_en: "Coffee".into(),

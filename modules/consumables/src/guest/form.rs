@@ -64,14 +64,28 @@ fn build_form(data: &GuestConsumablesData) -> Form {
                 .label("i18n:form.submit")
                 .action(submit_action),
         )
-        // Ce que l'envoi déclenche, dit par le module et non par l'hôte : c'est vrai de tous les
-        // logements, et un hôte qui n'aurait pas rempli ses horaires ne doit pas laisser le
-        // voyageur se demander si quelqu'un l'a lu.
-        .child(
-            InfoBanner::new()
-                .tone(Tone::Neutral)
-                .message("i18n:form.notice"),
+        // Le délai que l'hôte a annoncé, et à défaut ce que l'envoi déclenche de toute façon : un
+        // hôte qui n'a rien promis ne doit pas laisser le voyageur se demander si quelqu'un l'a lu.
+        .child(InfoBanner::new().tone(Tone::Neutral).message(notice(data)))
+}
+
+/// « Claire réapprovisionne sous 24 h », ou la phrase générique du module.
+fn notice(data: &GuestConsumablesData) -> String {
+    let Some(delay) = data.restock_delay.as_deref().map(str::trim) else {
+        return "i18n:form.notice".to_string();
+    };
+    if delay.is_empty() {
+        return "i18n:form.notice".to_string();
+    }
+    match data.host_name.trim() {
+        "" => t!("form.notice.delay", delay = delay).unwrap_or_else(|_| "i18n:form.notice".into()),
+        host => t!(
+            "form.notice.delay.named",
+            host = host.to_string(),
+            delay = delay
         )
+        .unwrap_or_else(|_| "i18n:form.notice".into()),
+    }
 }
 
 /// Rien n'est présélectionné : en choix multiple, une case déjà cochée part au signalement sans
@@ -86,7 +100,15 @@ fn item_choice_list(data: &GuestConsumablesData) -> ChoiceList {
                 &data.locale,
                 &data.property_locale,
             );
-            ChoiceOption::new(item.id.to_string(), label).icon(IconName::Package)
+            let option = ChoiceOption::new(item.id.to_string(), label);
+            // L'emoji de l'hôte quand il en a choisi un, le colis du vocabulaire sinon : une
+            // grille de huit colis identiques ne se lit pas d'un coup d'œil (§2.5).
+            let emoji = item.emoji.trim();
+            if emoji.is_empty() {
+                option.icon(IconName::Package)
+            } else {
+                option.emoji(emoji.to_string())
+            }
         })
         .collect();
 

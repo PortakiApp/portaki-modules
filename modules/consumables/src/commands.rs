@@ -1,5 +1,6 @@
 //! Module commands — host catalog + guest submit + host status.
 
+use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -25,6 +26,8 @@ pub struct ConsumableItemInput {
     pub sort_order: i32,
     #[serde(default, alias = "lowThreshold")]
     pub low_threshold: i32,
+    #[serde(default)]
+    pub emoji: String,
 }
 
 /// Arguments for `replaceItems`.
@@ -51,6 +54,7 @@ impl ReplaceItemsArgs {
                     return None;
                 }
                 Some(ConsumableItemInput {
+                    emoji: item.emoji.trim().to_string(),
                     label: item.label.trim().to_string(),
                     label_fr: item.label_fr.trim().to_string(),
                     label_en: item.label_en.trim().to_string(),
@@ -84,6 +88,11 @@ impl ReplaceItemsArgs {
 pub struct UpdateConfigArgs {
     #[serde(default)]
     pub items: Vec<ConsumableItemInput>,
+    /// Le délai de réapprovisionnement annoncé au voyageur : « sous 24 h », « le lendemain
+    /// matin » (§2.5). Du texte et non un nombre d'heures — « le lendemain matin » n'en est pas
+    /// un, et c'est ce qu'un hôte écrit.
+    #[serde(default, alias = "restockDelay")]
+    pub restock_delay: I18nText,
 }
 
 /// Persists catalog items from the host workspace Save chrome.
@@ -95,6 +104,9 @@ pub struct UpdateConfigArgs {
     )
 )]
 pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
+    // Le délai d'abord : si le catalogue échoue, l'hôte voit son erreur sans avoir perdu sa
+    // promesse de réapprovisionnement, qui n'y est pour rien.
+    storage::restock_delay::write(&args.restock_delay)?;
     replace_items(
         ctx,
         ReplaceItemsArgs {
@@ -137,17 +149,28 @@ pub fn replace_items(ctx: Context, args: ReplaceItemsArgs) -> Result<()> {
             .get(index)
             .map(|item| item.low_threshold)
             .unwrap_or(input.low_threshold);
-        next.push((
+        // L'emoji suit la ligne, et un champ vide ne l'efface pas : l'hôte qui renomme un
+        // produit dans une autre langue ne doit pas perdre le pictogramme qu'il avait choisi.
+        let emoji = if input.emoji.trim().is_empty() {
+            existing
+                .get(index)
+                .map(|item| item.emoji.clone())
+                .unwrap_or_default()
+        } else {
+            input.emoji.trim().to_string()
+        };
+        next.push(storage::ItemDraft {
             id,
             label_fr,
             label_en,
-            input.sort_order,
-            if input.low_threshold > 0 {
+            sort_order: input.sort_order,
+            low_threshold: if input.low_threshold > 0 {
                 input.low_threshold
             } else {
                 low_threshold
             },
-        ));
+            emoji,
+        });
     }
     storage::replace_items_preserving_ids(next)
 }
@@ -168,24 +191,27 @@ pub fn seed_defaults(ctx: Context, _args: EmptyArgs) -> Result<()> {
 }
 
 fn default_catalog() -> Vec<ConsumableItemInput> {
+    // Chacun avec son emoji : la grille du voyageur se lit alors d'un coup d'œil, et un hôte qui
+    // clique « Partir de la liste courante » n'a pas huit colis identiques à distinguer.
     [
-        ("Papier toilette", "Toilet paper"),
-        ("Savon", "Hand soap"),
-        ("Gel douche", "Shower gel"),
-        ("Shampoing", "Shampoo"),
-        ("Café", "Coffee"),
-        ("Tablettes lave-vaisselle", "Dishwasher tablets"),
-        ("Essuie-tout", "Paper towels"),
-        ("Lessive", "Laundry detergent"),
+        ("Papier toilette", "Toilet paper", "🧻"),
+        ("Savon", "Hand soap", "🧼"),
+        ("Gel douche", "Shower gel", "🚿"),
+        ("Shampoing", "Shampoo", "🧴"),
+        ("Café", "Coffee", "☕"),
+        ("Tablettes lave-vaisselle", "Dishwasher tablets", "🍽️"),
+        ("Essuie-tout", "Paper towels", "🧽"),
+        ("Lessive", "Laundry detergent", "🧺"),
     ]
     .into_iter()
     .enumerate()
-    .map(|(index, (fr, en))| ConsumableItemInput {
+    .map(|(index, (fr, en, emoji))| ConsumableItemInput {
         label: String::new(),
         label_fr: fr.into(),
         label_en: en.into(),
         sort_order: index as i32,
         low_threshold: 0,
+        emoji: emoji.into(),
     })
     .collect()
 }

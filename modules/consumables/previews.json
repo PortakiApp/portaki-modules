@@ -75,42 +75,42 @@
               {
                 "choices": [
                   {
-                    "icon": "package",
+                    "emoji": "🧻",
                     "label": "Papier toilette",
                     "value": "00000000-0000-0000-0000-000000000001"
                   },
                   {
-                    "icon": "package",
+                    "emoji": "🧼",
                     "label": "Savon",
                     "value": "00000000-0000-0000-0000-000000000002"
                   },
                   {
-                    "icon": "package",
+                    "emoji": "🚿",
                     "label": "Gel douche",
                     "value": "00000000-0000-0000-0000-000000000003"
                   },
                   {
-                    "icon": "package",
+                    "emoji": "🧴",
                     "label": "Shampoing",
                     "value": "00000000-0000-0000-0000-000000000004"
                   },
                   {
-                    "icon": "package",
+                    "emoji": "☕",
                     "label": "Café",
                     "value": "00000000-0000-0000-0000-000000000005"
                   },
                   {
-                    "icon": "package",
+                    "emoji": "🍽️",
                     "label": "Tablettes lave-vaisselle",
                     "value": "00000000-0000-0000-0000-000000000006"
                   },
                   {
-                    "icon": "package",
+                    "emoji": "🧽",
                     "label": "Essuie-tout",
                     "value": "00000000-0000-0000-0000-000000000007"
                   },
                   {
-                    "icon": "package",
+                    "emoji": "🧺",
                     "label": "Lessive",
                     "value": "00000000-0000-0000-0000-000000000008"
                   }
