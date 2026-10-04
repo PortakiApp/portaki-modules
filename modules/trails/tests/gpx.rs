@@ -94,3 +94,59 @@ fn la_simplification_garde_le_depart_et_l_arrivee() {
     assert!((track.points[0].lat - 43.5500).abs() < 1e-9);
     assert!((track.points[track.points.len() - 1].lat - 43.5530).abs() < 1e-9);
 }
+
+/// La barre du bas suit ce que le voyageur fera : la trace d'abord, s'il en a une.
+mod barre_du_bas {
+    use portaki_sdk::capability;
+    use portaki_test_utils::{MockContext, SurfaceAssertions};
+    use serde_json::json;
+    use trails::render_explore_item;
+
+    const GPX_REF: &str = "portaki-file:6f1c1d2e-3a4b-4c5d-8e9f-0a1b2c3d4e5f";
+
+    fn config(with_gpx: bool, with_link: bool) -> serde_json::Value {
+        let mut trail = json!({
+            "id": "t1",
+            "title": { "fr": "Cap Garoupe" },
+            "level": "easy",
+            "lat": 43.55,
+            "lng": 6.94,
+        });
+        if with_gpx {
+            trail["gpx_file"] = json!(GPX_REF);
+        }
+        if with_link {
+            trail["link_url"] = json!("https://www.visorando.com/randonnee-cap");
+        }
+        json!({ "trails": [trail] })
+    }
+
+    fn detail(with_gpx: bool, with_link: bool) -> String {
+        MockContext::guest()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&config(with_gpx, with_link))
+            .run(|mut ctx| {
+                ctx.input = json!({ "trailId": "t1" });
+                let surface = render_explore_item(ctx).expect("surface");
+                assert!(SurfaceAssertions::new(&surface).contains_type("Button"));
+                serde_json::to_string(&surface).expect("json")
+            })
+    }
+
+    #[test]
+    fn la_trace_part_en_reference_pas_en_url() {
+        let json = detail(true, true);
+
+        // Le module ne fabrique pas d'URL : la plateforme échange la référence contre une URL
+        // signée au rendu, et retire le lien si le fichier n'est pas à ce logement.
+        assert!(json.contains(GPX_REF), "la référence voyage telle quelle");
+    }
+
+    #[test]
+    fn sans_trace_deposee_aucun_bouton_de_telechargement() {
+        let json = detail(false, true);
+
+        assert!(!json.contains("downloadGpx"));
+        assert!(json.contains("openTrace"), "la fiche tierce prend la place");
+    }
+}
