@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.0
+
+Le local poubelles, en entier.
+
+* Deux nouveaux champs : le code de la porte du local et ses heures d'accès.
+* Le voyageur les lit avant le chemin — un local fermé arrête le trajet avant qu'il commence.
+* Le code se copie d'un geste, devant le digicode.
+* Corrigé : un hôte qui n'avait renseigné que le local n'obtenait aucune carte.
+
 ## 1.6.1
 
 Montée technique.

@@ -85,6 +85,47 @@ fn bins_render_as_named_swatches() {
         });
 }
 
+/// Le code et les heures du local passent **avant** le chemin (§2.7).
+///
+/// Avant, parce qu'un local verrouillé ou fermé arrête le trajet avant qu'il commence : descendre
+/// trois étages pour lire « fermé le dimanche » en bas est ce qu'un livret existe pour éviter.
+/// Et rien des trois renseigné : pas de carte, qui promettrait un local.
+#[test]
+#[serial]
+fn the_bin_room_says_its_code_and_its_hours_before_the_way_there() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({
+            "bin_room_steps": { "fr": "Derrière la haie\nPorte grise" },
+            "bin_room_code": "1234A",
+            "bin_room_hours": { "fr": "7 h – 21 h, fermé le dimanche" }
+        }))
+        .run(|ctx| {
+            let surface = render_explore_detail(ctx).expect("detail");
+            let json_text = serde_json::to_string(&surface).unwrap();
+            let code = json_text.find("1234A").expect("le code");
+            let hours = json_text.find("fermé le dimanche").expect("les heures");
+            let way = json_text.find("Derrière la haie").expect("le chemin");
+            assert!(code < hours && hours < way, "{json_text}");
+            // Copiable — on le lit devant un digicode — et non masqué : le local est derrière une
+            // porte que le voyageur a déjà franchie.
+            assert!(json_text.contains("\"copy\":true"), "{json_text}");
+            assert!(!json_text.contains("\"secret\""), "{json_text}");
+        });
+
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({ "collection_schedule": { "fr": "Mardi et vendredi" } }))
+        .run(|ctx| {
+            let json_text =
+                serde_json::to_string(&render_explore_detail(ctx).expect("detail")).unwrap();
+            assert!(
+                !json_text.contains("i18n:guest.binRoom.title"),
+                "{json_text}"
+            );
+        });
+}
+
 #[test]
 #[serial]
 fn detail_renders_enriched_bins() {
@@ -309,6 +350,7 @@ fn a_save_in_english_keeps_the_french() {
     assert_eq!(
         config_save::localized_paths(EMISSIONS),
         [
+            "bin_room_hours",
             "bin_room_steps",
             "bins.items",
             "bins.location",

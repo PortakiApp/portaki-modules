@@ -26,6 +26,10 @@ pub struct GuestData {
     pub property: Option<(f64, f64)>,
     /// Le chemin jusqu'au local poubelles, une étape par ligne.
     pub bin_room_steps: Vec<String>,
+    /// Le code de la porte du local, vide quand il n'y en a pas.
+    pub bin_room_code: String,
+    /// Les heures d'ouverture du local, vides quand il est toujours accessible.
+    pub bin_room_hours: String,
 }
 
 /// Un élément par ligne, les lignes vides sautées, dix au plus (§10).
@@ -63,5 +67,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         compost_refused: lines(config.compost_refused.get(&ctx.locale)),
         property: ctx.property.coordinates.map(|point| (point.lat, point.lng)),
         bin_room_steps: lines(config.bin_room_steps.get(&ctx.locale)),
+        bin_room_code: config.bin_room_code.trim().to_string(),
+        bin_room_hours: config.bin_room_hours.get(&ctx.locale).trim().to_string(),
     }))
 }

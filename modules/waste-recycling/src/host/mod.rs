@@ -125,6 +125,33 @@ fn schedule_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
             .into(),
     );
 
+    // Le code et les horaires du local, à côté du chemin : c'est la même porte (§2.7).
+    children.push(
+        Field::new()
+            .name("bin_room_code")
+            .label("i18n:host.binRoom.code")
+            .child(
+                TextInput::new()
+                    .name("bin_room_code")
+                    .value(config.bin_room_code.clone())
+                    .placeholder("i18n:host.binRoom.code.placeholder"),
+            )
+            .into(),
+    );
+    children.push(FieldHint::new().text("i18n:host.binRoom.code.hint").into());
+    children.push(
+        Field::new()
+            .name("bin_room_hours")
+            .label("i18n:host.binRoom.hours")
+            .child(
+                TextInput::new()
+                    .name("bin_room_hours")
+                    .value(config.bin_room_hours.host_value(ctx))
+                    .placeholder("i18n:host.binRoom.hours.placeholder"),
+            )
+            .into(),
+    );
+
     Card::new()
         .title("i18n:host.section.schedule")
         .icon(IconName::Calendar)
