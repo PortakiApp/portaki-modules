@@ -21,15 +21,6 @@
             "value": "Place n° 8, niveau -1"
           },
           {
-            "action": {
-              "type": "external",
-              "url": "https://maps.example.com/parking"
-            },
-            "href": "https://maps.example.com/parking",
-            "label": "i18n:guest.openMap",
-            "type": "Link"
-          },
-          {
             "children": [
               {
                 "copy": true,
@@ -55,6 +46,15 @@
             "minColumnWidth": 130.0,
             "plain": true,
             "type": "Grid"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://maps.example.com/parking"
+            },
+            "href": "https://maps.example.com/parking",
+            "label": "i18n:guest.openMap",
+            "type": "Link"
           },
           {
             "text": "Branchez le câble Type 2 fourni, puis saisissez le PIN sur la borne.",

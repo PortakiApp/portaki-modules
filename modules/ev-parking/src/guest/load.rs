@@ -14,6 +14,8 @@ pub struct GuestData {
     pub locale: String,
     pub secrets_revealed: bool,
     pub reveal_locked_message: Option<String>,
+    /// Le moment où les codes s'ouvrent, pour les tuiles masquées.
+    pub reveal_at_label: Option<String>,
 }
 
 /// The config to show, or `None` when the host has filled in nothing yet.
@@ -39,6 +41,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         config,
         locale: ctx.locale.clone(),
         secrets_revealed: decision.revealed,
+        reveal_at_label: reveal_at_label(&decision, &property_timezone),
         reveal_locked_message: locked_banner(&decision, &property_timezone),
     }))
 }
@@ -79,4 +82,16 @@ fn locked_banner(decision: &RevealDecision, property_timezone: &str) -> Option<S
         .available_from
         .map(|at| format_available_from(at, property_timezone));
     Some(locked_message(when.as_deref()))
+}
+
+/// Quand les secrets s'ouvrent, écrit pour le voyageur. `None` une fois révélés, une fois le séjour
+/// fini, ou sans date calculable — la ligne masquée se passe alors de promesse plutôt que d'en
+/// inventer une.
+fn reveal_at_label(decision: &RevealDecision, property_timezone: &str) -> Option<String> {
+    if decision.revealed || decision.ended {
+        return None;
+    }
+    decision
+        .available_from
+        .map(|at| format_available_from(at, property_timezone))
 }

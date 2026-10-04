@@ -74,10 +74,12 @@ fn detail_shows_security_banner_and_copy_when_revealed() {
         .run(|ctx| {
             let surface = render_explore_detail(ctx).expect("guest surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("Button"));
             let json = serde_json::to_string(&surface).expect("json");
             assert!(json.contains("soleil2026"));
-            assert!(json.contains("\"type\":\"copy\"") || json.contains("\"type\": \"copy\""));
+            // La copie est portée par la ligne du mot de passe, pas par un bouton dessous : le
+            // livret dessine l'action dans la ligne (§2.2).
+            assert!(json.contains("\"copy\":true"));
+            assert!(json.contains("i18n:guest.copyPassword"));
         });
 }
 

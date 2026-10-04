@@ -2,7 +2,7 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::common::KeyValueLayout;
+use portaki_sdk::sdui::common::{KeyValueLayout, SecretState};
 use portaki_sdk::sdui::primitives::{Grid, InfoBanner, KeyValue, Link, Text};
 
 use super::load::{has_any_secret, secret_display, GuestData};
@@ -58,6 +58,11 @@ fn push_secret_tile(
         .layout(KeyValueLayout::Tile)
         .icon(icon)
         .mono(true);
+    // Masquée, la tuile dit qu'elle s'ouvrira et quand : des points sans promesse se lisent comme
+    // un code que l'hôte aurait oublié de mettre (§2.3).
+    if !data.secrets_revealed {
+        tile = tile.secret(SecretState::hidden(data.reveal_at_label.clone()));
+    }
     // Pas de copie sur une valeur masquée : il n'y aurait que des points à mettre dans le presse-
     // papiers, et le voyageur croirait tenir son code.
     if data.secrets_revealed {
@@ -71,22 +76,18 @@ fn push_secret_tile(
     children.push(Component::KeyValue(tile));
 }
 
-pub fn build_ev_parking_body(data: &GuestData) -> Vec<Component> {
+/// `enriched` : la sous-page, qui n'a pas le sous-titre de la carte pour porter l'emplacement.
+pub fn build_ev_parking_body(data: &GuestData, enriched: bool) -> Vec<Component> {
     let mut children = Vec::new();
 
     push_reveal_banner(&mut children, data);
 
-    if let Some(spot) = data.config.spot_text(&data.locale) {
-        children.push(kv_row("i18n:guest.spot", spot, false));
-    }
-
-    if let Some(url) = data.config.map_url_text() {
-        children.push(Component::Link(
-            Link::new()
-                .label("i18n:guest.openMap")
-                .href(url.to_string())
-                .action(external_action(url)),
-        ));
+    // Sur la carte d'accueil, l'emplacement est déjà le sous-titre : le répéter en ligne poussait
+    // les deux codes sous le pli, alors que ce sont eux qu'on vient chercher (§2.3).
+    if enriched {
+        if let Some(spot) = data.config.spot_text(&data.locale) {
+            children.push(kv_row("i18n:guest.spot", spot, false));
+        }
     }
 
     // Les deux codes côte à côte, en grille : ce sont les deux choses qu'on cherche en arrivant
@@ -114,6 +115,16 @@ pub fn build_ev_parking_body(data: &GuestData) -> Vec<Component> {
                 .minColumnWidth(130.0)
                 .plain(true)
                 .children(tiles),
+        ));
+    }
+
+    // Le plan après les codes : on ouvre une carte quand on cherche la place, pas le code.
+    if let Some(url) = data.config.map_url_text() {
+        children.push(Component::Link(
+            Link::new()
+                .label("i18n:guest.openMap")
+                .href(url.to_string())
+                .action(external_action(url)),
         ));
     }
 

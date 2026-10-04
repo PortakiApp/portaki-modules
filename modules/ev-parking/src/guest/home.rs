@@ -22,7 +22,7 @@ pub fn build_home_card(data: &GuestData) -> Surface {
                     .icon(IconName::Zap)
                     .title("i18n:nav.ev-parking"),
             ))
-            .children(build_ev_parking_body(data)),
+            .children(build_ev_parking_body(data, false)),
     )
     .with_id(crate::guest::HOME_CARD)
 }

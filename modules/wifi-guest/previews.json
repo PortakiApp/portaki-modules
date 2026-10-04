@@ -3,7 +3,6 @@
   "surfaces": [
     {
       "i18n": {
-        "guest.copy.toast": "Mot de passe copié",
         "guest.copyPassword": "Copier le mot de passe",
         "guest.password": "Mot de passe",
         "guest.security.message": "Utilisez ce Wi-Fi pour votre séjour. Ne partagez pas le mot de passe en dehors de votre groupe.",
@@ -27,20 +26,12 @@
             "value": "Maison-Invites"
           },
           {
+            "copy": true,
+            "copyLabel": "i18n:guest.copyPassword",
             "key": "i18n:guest.password",
             "mono": true,
             "type": "KeyValue",
             "value": "soleil-2026"
-          },
-          {
-            "action": {
-              "toast_key": "i18n:guest.copy.toast",
-              "type": "copy",
-              "value": "soleil-2026"
-            },
-            "label": "i18n:guest.copyPassword",
-            "type": "Button",
-            "variant": "outline"
           },
           {
             "type": "QRCode",

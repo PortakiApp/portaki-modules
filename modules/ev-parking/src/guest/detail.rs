@@ -7,6 +7,10 @@ use super::body::build_ev_parking_body;
 use super::load::GuestData;
 
 pub fn build_detail_surface(data: &GuestData) -> Surface {
-    Surface::new(Stack::new().gap(12.0).children(build_ev_parking_body(data)))
-        .with_id(crate::guest::EXPLORE_DETAIL)
+    Surface::new(
+        Stack::new()
+            .gap(12.0)
+            .children(build_ev_parking_body(data, true)),
+    )
+    .with_id(crate::guest::EXPLORE_DETAIL)
 }
