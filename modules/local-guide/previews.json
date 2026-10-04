@@ -60,9 +60,19 @@
           {
             "children": [
               {
+                "action": {
+                  "to": "local-guide/detail/boulangerie",
+                  "type": "navigate"
+                },
+                "chevron": true,
                 "children": [
                   {
-                    "text": "Croissants dès 7 h, fermée le lundi.",
+                    "text": "Venez avant 9 h : les croissants partent vite le dimanche.",
+                    "type": "Text",
+                    "variant": "caption"
+                  },
+                  {
+                    "text": "Pains au levain et croissants au beurre, cuits sur place.",
                     "type": "Text",
                     "variant": "body"
                   }
@@ -72,6 +82,11 @@
                 "type": "ListItem"
               },
               {
+                "action": {
+                  "to": "local-guide/detail/marche",
+                  "type": "navigate"
+                },
+                "chevron": true,
                 "children": [
                   {
                     "text": "Fruits, fromages et fleurs, le samedi matin.",
@@ -90,6 +105,11 @@
                 "type": "ListItem"
               },
               {
+                "action": {
+                  "to": "local-guide/detail/lac",
+                  "type": "navigate"
+                },
+                "chevron": true,
                 "children": [
                   {
                     "text": "Eau calme et plage de galets, idéal avec des enfants.",
@@ -107,6 +127,160 @@
           }
         ],
         "gap": 12.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.call": "Appeler",
+        "guest.map.label": "Plan : le logement et l’adresse",
+        "guest.perk.title": "Votre avantage",
+        "guest.practical.hours": "Horaires",
+        "guest.practical.opening": "Ouverture",
+        "guest.practical.parking": "Parking",
+        "guest.practical.phone": "Téléphone",
+        "guest.practical.title": "Infos pratiques",
+        "guest.route": "Itinéraire",
+        "guest.tile.walk": "À pied",
+        "nav.spot": "Adresse"
+      },
+      "surfaceId": "explore.item",
+      "title": "Adresse",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "text": "La boulangerie du village",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "Boulangerie · €",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "Pains au levain et croissants au beurre, cuits sur place.",
+                "type": "Text",
+                "variant": "body"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "message": "Un café offert avec deux croissants, sur présentation de cette page.",
+            "title": "i18n:guest.perk.title",
+            "tone": "primary",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "icon": "users",
+                "key": "i18n:guest.tile.walk",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "environ 4 min"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "interactionMode": "none",
+            "isStatic": true,
+            "label": "i18n:guest.map.label",
+            "markers": [
+              {
+                "id": "spot",
+                "kind": "poi",
+                "label": "La boulangerie du village",
+                "lat": 43.5531,
+                "lng": 7.0152
+              },
+              {
+                "id": "property",
+                "kind": "property",
+                "label": "Villa Azur",
+                "lat": 43.5513,
+                "lng": 7.0128
+              }
+            ],
+            "type": "Map",
+            "viewport": {
+              "center": {
+                "lat": 43.5531,
+                "lng": 7.0152
+              },
+              "zoom": 14.0
+            }
+          },
+          {
+            "children": [
+              {
+                "key": "i18n:guest.practical.hours",
+                "mono": true,
+                "type": "KeyValue",
+                "value": "07:00 – 13:00 · 16:00 – 19:00"
+              },
+              {
+                "key": "i18n:guest.practical.opening",
+                "type": "KeyValue",
+                "value": "Fermée le lundi"
+              },
+              {
+                "key": "i18n:guest.practical.parking",
+                "type": "KeyValue",
+                "value": "Place de l'église, en face"
+              },
+              {
+                "key": "i18n:guest.practical.phone",
+                "mono": true,
+                "type": "KeyValue",
+                "value": "+33 4 93 00 00 01"
+              }
+            ],
+            "icon": "info-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.practical.title",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "text": "Venez avant 9 h : les croissants partent vite le dimanche.",
+                "type": "Text",
+                "variant": "body"
+              }
+            ],
+            "icon": "message",
+            "surface": "elevated",
+            "title": "Le conseil de votre hôte",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.google.com/maps/search/?api=1&query=43.5531,7.0152"
+            },
+            "label": "i18n:guest.route",
+            "type": "Button"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:+33493000001"
+            },
+            "label": "i18n:guest.call",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "gap": 14.0,
         "type": "Stack"
       }
     },

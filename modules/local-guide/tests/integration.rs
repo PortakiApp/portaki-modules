@@ -307,8 +307,8 @@ fn the_form_draws_the_spots_the_host_has() {
         });
 }
 
-/// A host writing in English: the French texts stay, and so do the url, the note and the ids the
-/// form does not carry; rows keep their place.
+/// A host writing in English: the French texts stay, and so do the ids the form does not carry;
+/// rows keep their place.
 #[test]
 #[serial]
 fn a_save_in_english_keeps_the_french() {
@@ -320,6 +320,7 @@ fn a_save_in_english_keeps_the_french() {
             "disclaimer",
             "spots.detail",
             "spots.note",
+            "spots.perk",
             "spots.title"
         ]
     );

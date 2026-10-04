@@ -35,7 +35,7 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
     // Sur la carte d'accueil, les adresses défilent en tuiles ; dans la sous-page, elles se
     // déroulent en lignes avec leur note et leur lien. Même contenu, deux lectures (§2.12).
     let mut spots: Vec<Component> = Vec::new();
-    for spot in &data.spots {
+    for (index, spot) in data.spots.iter().enumerate() {
         let title = spot.title.get(&data.locale);
         let mut subtitle_parts = Vec::new();
         if let Some(cat) = spot.category.as_deref().filter(|c| !c.trim().is_empty()) {
@@ -62,6 +62,13 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
                 ..TrailingVisual::default()
             })));
         }
+        // La fiche, pas le lien du commerçant : la maquette donne à chaque tuile `action: detail`,
+        // et le site se rejoint depuis la fiche, après l'avantage, le plan et les horaires.
+        item = item.chevron(true).action(Action::navigate(
+            NavigateTarget::path(format!("local-guide/detail/{}", spot.route_id(index))),
+            None,
+        ));
+
         if enriched {
             if let Some(note) = spot.note.as_ref() {
                 let text = note.get(&data.locale);
@@ -85,14 +92,6 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
                 );
             }
             spots.push(Component::ListItem(item));
-        } else if let Some(url) = spot.url.as_deref().map(str::trim).filter(|u| !u.is_empty()) {
-            spots.push(Component::Pressable(
-                Pressable::new()
-                    .action(Action::External {
-                        url: url.to_string(),
-                    })
-                    .child(item.layout(ListItemLayout::Tile)),
-            ));
         } else {
             spots.push(Component::ListItem(item.layout(ListItemLayout::Tile)));
         }

@@ -17,7 +17,9 @@ pub use affiliate::{
 };
 pub use config::{ActivitiesConfig, ActivityRow, ModuleConfig, TiqetsConfig, ViatorConfig};
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
-pub use guest::{render_explore_detail, render_home_card, render_upcoming_card};
+pub use guest::{
+    render_explore_detail, render_explore_item, render_home_card, render_upcoming_card,
+};
 pub use host::{render_host_main, MAX_SPOTS};
 pub use map_markers::{map_markers, MapMarkersResponse, MAX_MARKERS};
 pub use tiqets::{FRESH_SECS, MAX_PRODUCTS, STALE_MAX_SECS};
