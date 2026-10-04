@@ -262,7 +262,7 @@ fn build_tiqets(view: &TiqetsView, enriched: bool, locale: &str) -> Vec<Componen
 /// l'hôte qui fait ouvrir la tuile, la note qui rassure ensuite.
 fn host_link_tile(
     link: &crate::activities::ActivityLink,
-    product: &portaki_connectors::viator::ViatorProduct,
+    product: &crate::viator_api::ViatorProduct,
     host_name: &str,
     locale: &str,
     action: Action,
@@ -308,8 +308,8 @@ fn host_link_tile(
 }
 
 /// « Recommandé par Claire · ★ 4,8 (1 037 avis) · 1 h 45 », ce qui en est connu.
-fn host_link_subtitle(
-    product: &portaki_connectors::viator::ViatorProduct,
+pub(super) fn host_link_subtitle(
+    product: &crate::viator_api::ViatorProduct,
     host_name: &str,
     locale: &str,
 ) -> String {
@@ -477,7 +477,7 @@ fn build_viator(view: &ViatorView, enriched: bool, locale: &str) -> Vec<Componen
 }
 
 /// « À partir de 25 € · ★ 4,8 (151 avis) · 2 h » — ce qui est connu, dans cet ordre.
-fn viator_subtitle(product: &portaki_connectors::viator::ViatorProduct, locale: &str) -> String {
+fn viator_subtitle(product: &crate::viator_api::ViatorProduct, locale: &str) -> String {
     let mut parts = Vec::new();
     if let (Some(price), Some(currency)) = (product.price, product.currency.as_deref()) {
         let formatted = format_price(price, currency, locale);
@@ -605,16 +605,29 @@ fn build_activities(view: &ActivitiesView, host_name: &str, locale: &str) -> Vec
         } else {
             link.label.clone()
         };
-        let action = Action::External {
-            url: link.url.clone(),
-        };
         match link.product.as_ref() {
-            Some(product) => tiles.push(host_link_tile(link, product, host_name, locale, action)),
+            // Un lien enrichi ouvre sa fiche, pas la boutique : la galerie, la note, l'annulation
+            // et le conseil de l'hôte s'y lisent avant de quitter le livret (§2.13). Le bouton de
+            // la fiche, lui, part chez le fournisseur.
+            Some(product) => tiles.push(host_link_tile(
+                link,
+                product,
+                host_name,
+                locale,
+                Action::navigate(
+                    NavigateTarget::path(format!("local-guide/link/{}", product.code)),
+                    None,
+                ),
+            )),
+            // Un lien que le catalogue ne connaît pas n'a que son nom à offrir : pas de fiche à
+            // ouvrir, donc il reste un lien qui sort.
             None => children.push(
                 Link::new()
                     .label(label)
                     .href(link.url.clone())
-                    .action(action)
+                    .action(Action::External {
+                        url: link.url.clone(),
+                    })
                     .into(),
             ),
         }

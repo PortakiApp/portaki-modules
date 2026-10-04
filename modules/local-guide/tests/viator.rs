@@ -56,6 +56,8 @@ fn guest() -> MockContext {
 
 /// Une entrée de cache telle que le module l'écrit, datée de `age` avant [`now`]. Le contexte
 /// de test est à « Cannes, France ».
+/// Une entrée de cache **telle que la version précédente l'écrivait** : sans `gallery` ni
+/// `description`. Elle doit rester lisible, sinon chaque livret rappellerait Viator pour rien.
 fn cached(age: Duration, title: &str) -> Vec<u8> {
     serde_json::to_vec(&json!({
         "search_term": "Cannes",

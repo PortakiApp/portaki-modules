@@ -140,10 +140,13 @@
     },
     {
       "i18n": {
+        "guest.activities.disclosure": "Liens partenaires : Portaki peut percevoir une commission, sans surcoût pour vous.",
+        "guest.activities.title": "Activités & billets",
         "guest.disclaimer.title": "Info",
         "guest.hostActivities.choice": "Choix de votre hôte",
         "guest.hostActivities.disclosure": "Activité proposée par votre hôte, sans commission. La réservation se fait directement avec le prestataire.",
         "guest.hostActivities.title": "Vos activités",
+        "guest.viator.via": "via Viator",
         "nav.local-guide": "Bons plans"
       },
       "surfaceId": "explore.detail",
@@ -324,6 +327,66 @@
             ],
             "gap": 8.0,
             "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "text": "i18n:guest.activities.title",
+                "type": "Text",
+                "variant": "title"
+              },
+              {
+                "action": {
+                  "type": "external",
+                  "url": "https://www.getyourguide.com/s/?q=Antibes&partner_id=CLOQ42U"
+                },
+                "href": "https://www.getyourguide.com/s/?q=Antibes&partner_id=CLOQ42U",
+                "label": "Voir les activités à Antibes",
+                "type": "Link"
+              },
+              {
+                "children": [
+                  {
+                    "action": {
+                      "to": "local-guide/link/273628P2",
+                      "type": "navigate"
+                    },
+                    "children": [
+                      {
+                        "text": "Asseyez-vous à droite : c'est le côté qui longe les remparts.",
+                        "type": "Text",
+                        "variant": "caption"
+                      }
+                    ],
+                    "layout": "tile",
+                    "leading": {
+                      "image": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-720x480/10/24/33/0b.jpg"
+                    },
+                    "meta": "À partir de 13 €",
+                    "subtitle": "★ 4,1 (48 avis) · 45 min",
+                    "title": "Le petit train d'Antibes",
+                    "trailing": {
+                      "badge": {
+                        "label": "i18n:guest.viator.via",
+                        "tone": "neutral"
+                      }
+                    },
+                    "type": "ListItem"
+                  }
+                ],
+                "direction": "horizontal",
+                "gap": 8.0,
+                "scroll": true,
+                "type": "Stack"
+              },
+              {
+                "text": "i18n:guest.activities.disclosure",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 8.0,
+            "type": "Stack"
           }
         ],
         "gap": 12.0,
@@ -478,6 +541,142 @@
             "label": "i18n:guest.call",
             "type": "Button",
             "variant": "outline"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.activities.disclosure": "Liens partenaires : Portaki peut percevoir une commission, sans surcoût pour vous.",
+        "guest.activity.about": "À propos",
+        "guest.activity.duration": "Durée",
+        "guest.activity.provider": "Fournisseur",
+        "guest.activity.rating": "Avis",
+        "guest.activity.tip": "Le conseil de votre hôte",
+        "guest.practical.title": "Infos pratiques",
+        "guest.viator.freeCancellation": "Annulation gratuite",
+        "guest.viator.priceFromLabel": "Dès",
+        "guest.viator.via": "via Viator",
+        "nav.activity": "Activité"
+      },
+      "surfaceId": "explore.link",
+      "title": "Activité",
+      "tree": {
+        "children": [
+          {
+            "alt": "Le petit train d'Antibes",
+            "aspectRatio": "4 / 3",
+            "type": "Image",
+            "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-720x480/10/24/33/0b.jpg"
+          },
+          {
+            "children": [
+              {
+                "label": "i18n:guest.viator.via",
+                "type": "Badge"
+              },
+              {
+                "text": "Le petit train d'Antibes",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "★ 4,1 (48 avis) · 45 min",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "icon": "ticket",
+                "key": "i18n:guest.viator.priceFromLabel",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "13 €"
+              },
+              {
+                "icon": "clock-circle",
+                "key": "i18n:guest.activity.duration",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "45 min"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "title": "i18n:guest.viator.freeCancellation",
+            "tone": "success",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "text": "Asseyez-vous à droite : c'est le côté qui longe les remparts.",
+                "type": "Text"
+              }
+            ],
+            "icon": "sparkles",
+            "surface": "elevated",
+            "title": "i18n:guest.activity.tip",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "text": "Profitez du Petit Train touristique d’Antibes pour parcourir cette ville à la situation géographique exceptionnelle et riche des trésors du passé.\nCette situation particulière, avec le site exceptionnel du Cap d’Antibes, les plages de sable de Juan-les-Pins, le charme de sa Vieille Ville et ses Remparts donnent à Antibes ses caractéristiques spécifiques qui la distinguent des autres villes de la Côte d’Azur.\nÀ la fois ville-musée, ville-spectacle et ville-novatrice, elle mélange avec aisance ses contrastes et ses multiples facettes. Très appréciée des artistes à travers le monde qui trouvent dans les rues et monuments historiques de la ville une nouvelle source d’inspiration, Antibes Juan-les-Pins est connue pour être une ville ouverte à toutes les formes d’art.",
+                "type": "Text"
+              }
+            ],
+            "icon": "info-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.activity.about",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "key": "i18n:guest.activity.rating",
+                "type": "KeyValue",
+                "value": "★ 4,1 (48 avis)"
+              },
+              {
+                "key": "i18n:guest.activity.duration",
+                "type": "KeyValue",
+                "value": "45 min"
+              },
+              {
+                "key": "i18n:guest.activity.provider",
+                "type": "KeyValue",
+                "value": "Viator"
+              }
+            ],
+            "icon": "info-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.practical.title",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://shop.live.rc.viator.com/fr-FR/tours/Antibes/The-Little-Train-of-Antibes-Juan-les-Pins/d21941-273628P2?mcid=42383&pid=P00322642&medium=api&api_version=2.0"
+            },
+            "label": "guest.activity.bookOn",
+            "type": "Button"
+          },
+          {
+            "text": "i18n:guest.activities.disclosure",
+            "type": "Text",
+            "variant": "caption"
           }
         ],
         "gap": 14.0,

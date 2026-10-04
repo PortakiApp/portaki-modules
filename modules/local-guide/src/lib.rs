@@ -10,6 +10,7 @@ mod map_markers;
 mod provider;
 mod tiqets;
 mod viator;
+mod viator_api;
 
 pub use affiliate::{
     normalize_curated_url, search_url, CuratedUrlError, MAX_CURATED_LINKS, PARTNER_ID,
@@ -18,8 +19,8 @@ pub use affiliate::{
 pub use config::{ActivitiesConfig, ActivityRow, ModuleConfig, TiqetsConfig, ViatorConfig};
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use guest::{
-    render_explore_activity, render_explore_detail, render_explore_item, render_home_card,
-    render_upcoming_card,
+    render_explore_activity, render_explore_detail, render_explore_item, render_explore_link,
+    render_home_card, render_upcoming_card,
 };
 pub use host::{render_host_main, MAX_SPOTS};
 pub use map_markers::{map_markers, MapMarkersResponse, MAX_MARKERS};

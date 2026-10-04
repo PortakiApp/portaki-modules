@@ -19,7 +19,7 @@
 //! Sans horloge de l'hôte, rien n'est affiché : juger la fraîcheur sur une fausse heure
 //! servirait indéfiniment le même cache.
 
-use portaki_connectors::viator::{FreetextProductsArgs, Viator, ViatorProduct};
+use crate::viator_api::{FreetextProductsArgs, Viator, ViatorProduct};
 use portaki_sdk::host::{log, time};
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};

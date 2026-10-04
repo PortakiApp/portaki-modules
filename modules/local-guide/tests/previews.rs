@@ -4,7 +4,8 @@
 mod previews;
 
 use local_guide::{
-    render_explore_activity, render_explore_detail, render_explore_item, render_upcoming_card,
+    render_explore_activity, render_explore_detail, render_explore_item, render_explore_link,
+    render_upcoming_card,
 };
 
 use serde_json::json;
@@ -71,14 +72,34 @@ fn sample_config() -> serde_json::Value {
                 "phone": "+33 6 22 33 44 55"
             }
         ],
+        // Un lien collé par l'hôte et reconnu par le catalogue (§2.13, `origin: hostLink`) : c'est
+        // lui qui donne la fiche `explore.link` de l'aperçu.
+        "activities_enabled": true,
+        "activities_destination": "Antibes",
+        "activities": [
+            {
+                "id": "petit-train",
+                "url": "https://www.viator.com/fr-FR/tours/Antibes/The-Little-Train-of-Antibes-Juan-les-Pins/d21941-273628P2",
+                "label": { "fr": "Le petit train d'Antibes", "en": "The little train of Antibes" },
+                "tip": {
+                    "fr": "Asseyez-vous à droite : c'est le côté qui longe les remparts.",
+                    "en": "Sit on the right: that side runs along the ramparts."
+                }
+            }
+        ],
         "disclaimer": { "fr": "Suggestions de votre hôte, sans partenariat.", "en": "Your host's picks, no partnership." }
     })
 }
 
+/// La réponse Viator réelle du bac à sable, celle des tests : l'aperçu montre une vraie fiche.
+const VIATOR: &str = include_str!("fixtures/viator-freetext.json");
+
 #[test]
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
-    let context = previews::guest(root).with_config(&sample_config());
+    let context = previews::guest(root)
+        .with_config(&sample_config())
+        .with_connector_response("viator", "search_products", VIATOR);
     let detail = context
         .clone()
         .run(|ctx| render_explore_detail(ctx).expect("surface"));
@@ -90,6 +111,10 @@ fn previews_match_the_rendered_surfaces() {
         ctx.input = json!({ "activityId": "voilier" });
         render_explore_activity(ctx).expect("surface")
     });
+    let hostlink = context.clone().run(|mut ctx| {
+        ctx.input = json!({ "productCode": "273628P2" });
+        render_explore_link(ctx).expect("surface")
+    });
     let upcoming = context.run(|ctx| render_upcoming_card(ctx).expect("surface"));
     previews::check(
         root,
@@ -98,6 +123,7 @@ fn previews_match_the_rendered_surfaces() {
             ("explore.activity", activity),
             ("explore.detail", detail),
             ("explore.item", item),
+            ("explore.link", hostlink),
             ("upcoming.card", upcoming),
         ],
     );

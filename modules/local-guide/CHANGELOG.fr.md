@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.0
+
+Les liens que vous collez ont enfin leur fiche.
+
+* Une activité que vous avez collée s'ouvre dans le livret : galerie de photos, note et avis, prix et durée, annulation, et votre conseil.
+* Le bouton « Réserver sur Viator » part à la fin, une fois tout lu.
+* Un lien que le catalogue ne reconnaît pas reste un simple lien, comme avant.
+
 ## 1.7.0
 
 « Fermé aujourd'hui » plutôt qu'un jour à compter.
