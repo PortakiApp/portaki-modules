@@ -353,7 +353,9 @@
                 ],
                 "label": "i18n:form.returnAddress.label",
                 "name": "returnAddress",
-                "type": "Field"
+                "required": true,
+                "type": "Field",
+                "visibleWhen": "returnChoice=ship"
               },
               {
                 "message": "i18n:form.deadline.message",

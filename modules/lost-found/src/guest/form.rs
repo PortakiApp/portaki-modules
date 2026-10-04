@@ -271,13 +271,16 @@ fn address_field(ask_address: bool) -> Vec<Component> {
     if !ask_address {
         return Vec::new();
     }
-    // ponytail: l'adresse reste facultative et visible dès que l'hôte propose le renvoi, là où
-    // §2.18 la veut obligatoire et révélée par « Me le renvoyer ». L'exiger sans la révéler
-    // forcerait une adresse à qui choisit le passage ; la révéler demande une visibilité
-    // conditionnelle que les primitives n'ont pas (`Field.visibleWhen`).
+    // Obligatoire, et révélée par « Me le renvoyer » seulement (§2.18) : masquée, elle n'est ni
+    // validée ni envoyée, donc l'exiger ne force rien à qui choisit de repasser la prendre.
+    //
+    // Le livret seul honore `visibleWhen` ; cet écran est celui du voyageur, et le formulaire
+    // n'existe pas côté hôte.
     vec![Field::new()
         .name("returnAddress")
         .label("i18n:form.returnAddress.label")
+        .required(true)
+        .visibleWhen("returnChoice=ship")
         .child(
             TextArea::new()
                 .name("returnAddress")
