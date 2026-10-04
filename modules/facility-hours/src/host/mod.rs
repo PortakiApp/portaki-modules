@@ -3,11 +3,11 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
-    Card, Field, FieldHint, Form, Page, Stack, StepList, Text, TextArea, TextInput, Toggle,
+    Card, Field, FieldHint, Form, Page, Select, Stack, StepList, Text, TextArea, TextInput, Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{FacilityRow, ModuleConfig};
+use crate::config::{FacilityRow, ModuleConfig, ICONS};
 
 /// Combien d'équipements le formulaire accepte.
 ///
@@ -107,6 +107,8 @@ fn facility_row(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext)
         .map(|f| f.title.host_value(ctx))
         .unwrap_or_default();
     let hours = facility.and_then(|f| f.hours.as_deref()).unwrap_or("");
+    let group = facility.and_then(FacilityRow::group_label).unwrap_or("");
+    let icon = facility.and_then(FacilityRow::icon_name).unwrap_or("");
     let opens_at = facility.map(|f| f.opens_at.as_str()).unwrap_or("");
     let closes_at = facility.map(|f| f.closes_at.as_str()).unwrap_or("");
     let all_day = facility.is_some_and(|f| f.all_day);
@@ -132,6 +134,38 @@ fn facility_row(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext)
                             TextInput::new()
                                 .name(format!("facilities.{index}.title"))
                                 .value(title),
+                        )
+                        .into(),
+                    Field::new()
+                        .name(format!("facilities.{index}.group"))
+                        .label("i18n:host.facility.group")
+                        .child(
+                            TextInput::new()
+                                .name(format!("facilities.{index}.group"))
+                                .value(group)
+                                .placeholder("i18n:host.facility.group.placeholder"),
+                        )
+                        .into(),
+                    FieldHint::new()
+                        .text("i18n:host.facility.group.hint")
+                        .into(),
+                    Field::new()
+                        .name(format!("facilities.{index}.icon"))
+                        .label("i18n:host.facility.icon")
+                        .child(
+                            Select::new()
+                                .name(format!("facilities.{index}.icon"))
+                                .options(
+                                    std::iter::once(ChoiceOption::new(
+                                        "",
+                                        "i18n:host.facility.icon.none",
+                                    ))
+                                    .chain(ICONS.iter().map(|icon| {
+                                        ChoiceOption::new(*icon, format!("i18n:host.icon.{icon}"))
+                                    }))
+                                    .collect(),
+                                )
+                                .value(icon.to_string()),
                         )
                         .into(),
                     Field::new()

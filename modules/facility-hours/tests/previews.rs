@@ -13,6 +13,10 @@ fn sample_config() -> serde_json::Value {
             {
                 "id": "piscine",
                 "title": { "fr": "Piscine", "en": "Swimming pool" },
+                "group": "Équipements",
+                "icon": "sun",
+                "opens_at": "09:00",
+                "closes_at": "20:00",
                 "lines": {
                     "fr": "Tous les jours, de juin à septembre\nEnfants sous la surveillance d'un adulte",
                     "en": "Every day, June to September\nChildren must be supervised by an adult"
@@ -23,12 +27,20 @@ fn sample_config() -> serde_json::Value {
             {
                 "id": "laverie",
                 "title": { "fr": "Laverie", "en": "Laundry room" },
+                "group": "Équipements",
+                "icon": "droplet",
+                "opens_at": "07:00",
+                "closes_at": "22:00",
                 "lines": { "fr": "Rez-de-chaussée, bâtiment B", "en": "Ground floor, building B" },
                 "hours": "7 h – 22 h"
             },
             {
                 "id": "accueil",
                 "title": { "fr": "Accueil de la résidence", "en": "Reception" },
+                "group": "Services",
+                "icon": "building",
+                "opens_at": "08:30",
+                "closes_at": "18:00",
                 "lines": { "fr": "Du lundi au samedi", "en": "Monday to Saturday" },
                 "hours": "8 h 30 – 12 h · 14 h – 18 h"
             }

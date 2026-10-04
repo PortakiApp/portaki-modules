@@ -4,9 +4,11 @@ use portaki_sdk::host::i18n::{translate, Vars};
 use portaki_sdk::host::time::{self, PropertyTz};
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::{
-    BadgeSpec, DetailRow, KeyValueLayout, Tone, Trailing, TrailingVisual,
+    BadgeSpec, DetailRow, KeyValueLayout, Leading, SurfaceLevel, Tone, Trailing, TrailingVisual,
 };
-use portaki_sdk::sdui::primitives::{Button, Grid, InfoBanner, KeyValue, ListItem, Text};
+use portaki_sdk::sdui::primitives::{
+    Button, Card, Grid, InfoBanner, KeyValue, ListItem, Stack, Text,
+};
 
 use chrono::Datelike;
 
@@ -106,6 +108,7 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
     };
     let hidden = data.facilities.len().saturating_sub(shown.len());
 
+    let mut rows: Vec<(Option<String>, Component)> = Vec::new();
     for facility in shown {
         let title = facility.title.get(&data.locale);
         let lines = facility.lines(&data.locale);
@@ -120,6 +123,9 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
 
         if enriched {
             let mut item = ListItem::new().title(title);
+            if let Some(icon) = facility.icon_name() {
+                item = item.leading(Leading::Icon(icon.to_string()));
+            }
             if !hours.is_empty() {
                 item = item.subtitle(hours.clone());
             }
@@ -136,17 +142,61 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
             if !note.trim().is_empty() {
                 item = item.child(Text::new().text(note).variant(TextVariant::Caption));
             }
-            children.push(Component::ListItem(item));
+            rows.push((
+                facility.group_label().map(str::to_string),
+                Component::ListItem(item),
+            ));
         } else {
             let schedule = facility.schedule();
-            match now.and_then(|now| schedule.state_at(now, tz.as_ref())) {
+            let row = match now.and_then(|now| schedule.state_at(now, tz.as_ref())) {
                 // Sur la carte, l'état remplace l'horaire : c'est ce qu'on lit d'un coup d'œil.
-                Some(state) => children.push(Component::ListItem(
-                    ListItem::new().title(title).trailing(state_badge(&state)),
-                )),
-                None => children.push(Component::KeyValue(KeyValue::new().key(title).value(hours))),
+                Some(state) => {
+                    let mut item = ListItem::new().title(title).trailing(state_badge(&state));
+                    if let Some(icon) = facility.icon_name() {
+                        item = item.leading(Leading::Icon(icon.to_string()));
+                    }
+                    Component::ListItem(item)
+                }
+                None => Component::KeyValue(KeyValue::new().key(title).value(hours)),
+            };
+            rows.push((None, row));
+        }
+    }
+
+    // La sous-page range les lignes par groupe, une carte par groupe, dans l'ordre où l'hôte les a
+    // saisies (§2.6) : « Séjour », « Équipements », « Services ». Une liste de huit lignes d'affilée
+    // se lit comme un tableau d'horaires de gare. La carte d'accueil, elle, n'en montre que trois :
+    // les grouper y ferait trois cartes d'une ligne.
+    if enriched && rows.iter().any(|(group, _)| group.is_some()) {
+        children.push(Component::Text(
+            Text::new()
+                .text(count_caption(data.facilities.len()))
+                .variant(TextVariant::Caption),
+        ));
+        let mut order: Vec<Option<String>> = Vec::new();
+        for (group, _) in &rows {
+            if !order.contains(group) {
+                order.push(group.clone());
             }
         }
+        // Les lignes sans groupe en dernier : elles ferment la liste au lieu de la couper.
+        order.sort_by_key(Option::is_none);
+        for group in order {
+            let items: Vec<Component> = rows
+                .iter()
+                .filter(|(row_group, _)| *row_group == group)
+                .map(|(_, row)| row.clone())
+                .collect();
+            let mut card = Card::new().surface(SurfaceLevel::Elevated);
+            if let Some(label) = &group {
+                card = card.title(label.clone()).icon(IconName::Clock);
+            }
+            children.push(Component::Card(
+                card.child(Stack::new().gap(4.0).children(items)),
+            ));
+        }
+    } else {
+        children.extend(rows.into_iter().map(|(_, row)| row));
     }
 
     // « Voir tous les horaires », et seulement s'il y en a d'autres à voir : le §2.6 ne veut pas de
@@ -167,6 +217,16 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
     }
 
     children
+}
+
+/// « 8 lignes d'horaires » au-dessus de la liste complète.
+fn count_caption(count: usize) -> String {
+    let key = if count == 1 {
+        "guest.page.count.one"
+    } else {
+        "guest.page.count"
+    };
+    t!(key, count = count).unwrap_or_else(|_| format!("i18n:{key}"))
 }
 
 /// Les tuiles « Arrivée » et « Départ », tirées des dates du séjour (§2.6).
