@@ -135,8 +135,16 @@ pub fn device_list_item(device: &Appliance) -> Component {
 ///
 /// Un seul groupe : pas de titre. Il n'apprendrait rien qu'on ne lise déjà sur chaque ligne, où la
 /// pièce est en sous-titre, et un logement d'une seule pièce n'a pas de plan à annoncer.
-pub fn devices_list(payload: &AppliancesPayload) -> Vec<Component> {
-    let rooms = payload.guest_devices_by_room();
+pub fn devices_list(payload: &AppliancesPayload, only_room: Option<&str>) -> Vec<Component> {
+    let rooms: Vec<_> = payload
+        .guest_devices_by_room()
+        .into_iter()
+        .filter(|(room, _)| match only_room {
+            // Un filtre posé sur une pièce ne garde que la sienne ; « Autres » n'en est pas une.
+            Some(wanted) => room.as_deref() == Some(wanted),
+            None => true,
+        })
+        .collect();
     if rooms.is_empty() {
         return vec![Component::EmptyState(
             EmptyState::new()

@@ -8,7 +8,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::{Leading, LeadingVisual, SurfaceLevel};
 use portaki_sdk::sdui::primitives::{
-    Button, Card, EmptyState, Eyebrow, InfoBanner, ListItem, RichText, Stack, Text,
+    Button, Card, EmptyState, Eyebrow, Image, InfoBanner, ListItem, RichText, Stack, Text,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -101,14 +101,25 @@ fn device_detail_children(device: &Appliance, paper_manuals_location: &str) -> V
         for (index, step) in steps.iter().enumerate() {
             // Le numéro est un repère, pas le texte de l'étape : il passe en tête de rangée et
             // l'étape reprend le titre. L'inverse se lisait « 1 » en gros, la consigne en petit.
-            howto_children.push(Component::ListItem(
-                ListItem::new()
-                    .title(step.clone())
-                    .leading(Leading::Visual(Box::new(LeadingVisual {
-                        index: Some((index + 1) as u32),
-                        ..LeadingVisual::default()
-                    }))),
-            ));
+            let row = ListItem::new()
+                .title(step.text.clone())
+                .leading(Leading::Visual(Box::new(LeadingVisual {
+                    index: Some((index + 1) as u32),
+                    ..LeadingVisual::default()
+                })));
+            match step.image.as_deref() {
+                // Le schéma sous sa consigne, dans la même pile : une poignée de fenêtre
+                // oscillo-battante se montre (§2.4). La référence devient une URL signée au rendu.
+                Some(image) => howto_children.push(Component::Stack(
+                    Stack::new().gap(6.0).child(row).child(
+                        Image::new()
+                            .url(image.to_string())
+                            .alt(step_alt(index + 1, &step.text))
+                            .aspectRatio("4 / 3"),
+                    ),
+                )),
+                None => howto_children.push(Component::ListItem(row)),
+            }
         }
         children.push(Component::Card(
             Card::new()
@@ -187,4 +198,12 @@ fn header_row(device: &Appliance) -> Component {
             .gap(12.0)
             .children(header_children),
     )
+}
+
+/// « Schéma 1 : Poignée vers le bas » — le texte de remplacement du schéma d'une étape.
+///
+/// Il reprend la consigne : un lecteur d'écran annonce ce que l'image montre, pas « image ».
+fn step_alt(rank: usize, text: &str) -> String {
+    t!("explore.item.step.alt", rank = rank, step = text)
+        .unwrap_or_else(|_| format!("{rank}. {text}"))
 }

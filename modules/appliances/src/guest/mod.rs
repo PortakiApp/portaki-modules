@@ -27,7 +27,17 @@ pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
     label_key = "nav.appliances"
 )]
 pub fn render_explore_detail(ctx: GuestContext) -> Result<Surface> {
-    render_with_payload(&ctx, EXPLORE_DETAIL, build_detail_page)
+    // `room` arrive par les paramètres de route quand le voyageur a touché un filtre de pièce.
+    let room = ctx
+        .input
+        .get("room")
+        .and_then(|value| value.as_str())
+        .map(str::to_string);
+    let payload = load_payload(&ctx)?;
+    if payload.is_empty_for_guest() {
+        return Ok(no_appliances_state(EXPLORE_DETAIL));
+    }
+    Ok(build_detail_page(&payload, room.as_deref()))
 }
 
 /// Device detail. `deviceId` arrives via guest route params → render `input` → `ctx.input`.

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.0
+
+Les étapes illustrées.
+
+* Une étape du mode d'emploi peut porter un schéma : glissez l'image dans l'étape, elle s'affiche sous sa consigne.
+* Un schéma posé hors d'une liste n'est plus perdu : il s'affiche dans le texte riche.
+* Au-delà de vingt appareils, la liste complète gagne un filtre par pièce.
+
 ## 1.6.0
 
 Une carte par pièce.
