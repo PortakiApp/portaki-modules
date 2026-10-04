@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0
+
+Le train annoncé change le livret.
+
+* Le moyen d'arrivée du voyageur est retenu sur le séjour.
+* Le voyageur qui annonce le train voit le module Trains mis en avant la veille de son arrivée.
+
 ## 1.4.0
 
 Des choix, pas des champs libres.
