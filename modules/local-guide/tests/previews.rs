@@ -3,7 +3,7 @@
 #[path = "../../../support/previews.rs"]
 mod previews;
 
-use local_guide::{render_explore_detail, render_upcoming_card};
+use local_guide::{render_explore_detail, render_explore_item, render_upcoming_card};
 
 use serde_json::json;
 
@@ -17,7 +17,15 @@ fn sample_config() -> serde_json::Value {
                 "title": { "fr": "La boulangerie du village", "en": "The village bakery" },
                 "category": "Boulangerie",
                 "distance": "350 m",
-                "detail": { "fr": "Croissants dès 7 h, fermée le lundi.", "en": "Croissants from 7am, closed on Mondays." },
+                "detail": { "fr": "Pains au levain et croissants au beurre, cuits sur place.", "en": "Sourdough and butter croissants, baked on site." },
+                "note": { "fr": "Venez avant 9 h : les croissants partent vite le dimanche.", "en": "Come before 9am: the croissants go fast on Sundays." },
+                "perk": { "fr": "Un café offert avec deux croissants, sur présentation de cette page.", "en": "A free coffee with two croissants, on showing this page." },
+                "price": "€",
+                "hours": "07:00 – 13:00 · 16:00 – 19:00",
+                "opening": "Fermée le lundi",
+                "parking": "Place de l'église, en face",
+                "phone": "+33 4 93 00 00 01",
+                "address": "Place de l'église, Cannes",
                 "lat": 43.5531, "lng": 7.0152
             },
             {
@@ -49,10 +57,18 @@ fn previews_match_the_rendered_surfaces() {
     let detail = context
         .clone()
         .run(|ctx| render_explore_detail(ctx).expect("surface"));
+    let item = context.clone().run(|mut ctx| {
+        ctx.input = json!({ "spotId": "boulangerie" });
+        render_explore_item(ctx).expect("surface")
+    });
     let upcoming = context.run(|ctx| render_upcoming_card(ctx).expect("surface"));
     previews::check(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
-        vec![("explore.detail", detail), ("upcoming.card", upcoming)],
+        vec![
+            ("explore.detail", detail),
+            ("explore.item", item),
+            ("upcoming.card", upcoming),
+        ],
     );
 }

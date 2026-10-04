@@ -333,9 +333,51 @@ pub struct SpotRow {
     /// Longitude WGS-84.
     #[serde(deserialize_with = "deserialize_coord")]
     pub lng: Option<f64>,
+    /// L'avantage, écrit en entier : « 10 % sur le menu du soir, sur présentation de cette page. »
+    /// Le `tag` en est la version courte, celle du badge ; celui-ci est la phrase de la fiche.
+    #[serde(default)]
+    pub perk: I18nText,
+    /// L'ordre de prix, tel que l'hôte l'écrit : « €€€ », « dès 18 € / jour », « transat 25 € ».
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub price: Option<String>,
+    /// Les horaires, en une ligne : « 12:00 – 14:30 · 19:00 – 22:30 ».
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub hours: Option<String>,
+    /// Les jours d'ouverture : « Fermé le lundi », « D'avril à octobre ».
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub opening: Option<String>,
+    /// Où se garer : « Parking du port », « Stationnement minute devant ».
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub parking: Option<String>,
+    /// Le téléphone, en forme internationale — le bouton « Appeler » s'en sert tel quel.
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub phone: Option<String>,
+    /// La photo déposée par l'hôte, en référence `portaki-file:`.
+    ///
+    /// ponytail: une seule photo là où la maquette en fait défiler trois. Une rangée de champs de
+    /// dépôt par adresse alourdirait le formulaire pour un gain d'illustration ; passer à
+    /// plusieurs demande un champ répétable, pas un deuxième `photo2`.
+    #[serde(default)]
+    pub photo: String,
 }
 
 impl SpotRow {
+    /// L'identifiant de route de cette adresse, pour `local-guide/:spotId`.
+    pub fn route_id(&self, index: usize) -> String {
+        let id = self.id.trim();
+        if id.is_empty() {
+            format!("s{index}")
+        } else {
+            id.to_string()
+        }
+    }
+
+    /// La photo déposée, en référence, ou `None` quand il n'y en a pas.
+    pub fn photo_ref(&self) -> Option<&str> {
+        let photo = self.photo.trim();
+        (!photo.is_empty()).then_some(photo)
+    }
+
     /// Position affichable du spot, ou `None`.
     pub fn coords(&self) -> Option<(f64, f64)> {
         valid_coords(self.lat?, self.lng?)

@@ -4,8 +4,8 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Card, Field, Form, InfoBanner, Page, Select, Stack, StepList, Text, TextArea,
-    TextInput, ToggleRow,
+    AddressMapPicker, Card, Field, FieldHint, Form, ImageUpload, InfoBanner, Page, Select, Stack,
+    StepList, Text, TextArea, TextInput, ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -462,6 +462,16 @@ fn emit_input(payload: impl serde::Serialize) -> Action {
     Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
 }
 
+/// Une ligne de texte d'une adresse — le motif se répète six fois, autant le nommer une fois.
+fn text_field(index: usize, name: &str, label: &str, value: &str) -> Component {
+    let field = format!("spots.{index}.{name}");
+    Field::new()
+        .name(field.clone())
+        .label(label)
+        .child(TextInput::new().name(field).value(value))
+        .into()
+}
+
 fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Component {
     let title = spot.map(|s| s.title.host_value(ctx)).unwrap_or_default();
     let category = spot.and_then(|s| s.category.as_deref()).unwrap_or("");
@@ -469,6 +479,18 @@ fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Componen
     let tag = spot.and_then(|s| s.tag.as_deref()).unwrap_or("");
     let detail = spot.map(|s| s.detail.host_value(ctx)).unwrap_or_default();
     let address = spot.and_then(|s| s.address.as_deref()).unwrap_or("");
+    let perk = spot.map(|s| s.perk.host_value(ctx)).unwrap_or_default();
+    let note = spot
+        .and_then(|s| s.note.as_ref())
+        .map(|note| note.host_value(ctx))
+        .unwrap_or_default();
+    let price = spot.and_then(|s| s.price.as_deref()).unwrap_or("");
+    let hours = spot.and_then(|s| s.hours.as_deref()).unwrap_or("");
+    let opening = spot.and_then(|s| s.opening.as_deref()).unwrap_or("");
+    let parking = spot.and_then(|s| s.parking.as_deref()).unwrap_or("");
+    let phone = spot.and_then(|s| s.phone.as_deref()).unwrap_or("");
+    let url = spot.and_then(|s| s.url.as_deref()).unwrap_or("");
+    let photo = spot.map(|s| s.photo.clone()).unwrap_or_default();
     // Sans position, le sélecteur ne reçoit ni latitude ni longitude : il part vide.
     let mut picker = AddressMapPicker::new()
         .addressName(format!("spots.{index}.address"))
@@ -533,7 +555,47 @@ fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Componen
                     .value(detail),
             )
             .into(),
+        // L'avantage en entier, à côté du badge : « −10 % » tient sur une tuile, « 10 % sur le
+        // menu du soir, sur présentation de cette page » demande une phrase.
+        Field::new()
+            .name(format!("spots.{index}.perk"))
+            .label("i18n:host.spot.perk")
+            .child(
+                TextArea::new()
+                    .name(format!("spots.{index}.perk"))
+                    .value(perk)
+                    .rows(2)
+                    .placeholder("i18n:host.spot.perk.placeholder"),
+            )
+            .into(),
+        Field::new()
+            .name(format!("spots.{index}.note"))
+            .label("i18n:host.spot.note")
+            .child(
+                TextArea::new()
+                    .name(format!("spots.{index}.note"))
+                    .value(note)
+                    .rows(2)
+                    .placeholder("i18n:host.spot.note.placeholder"),
+            )
+            .into(),
+        FieldHint::new().text("i18n:host.spot.note.hint").into(),
+        text_field(index, "price", "i18n:host.spot.price", price),
+        text_field(index, "hours", "i18n:host.spot.hours", hours),
+        text_field(index, "opening", "i18n:host.spot.opening", opening),
+        text_field(index, "parking", "i18n:host.spot.parking", parking),
+        text_field(index, "phone", "i18n:host.spot.phone", phone),
+        text_field(index, "url", "i18n:host.spot.url", url),
         picker.into(),
+        Field::new()
+            .name(format!("spots.{index}.photo"))
+            .label("i18n:host.spot.photo")
+            .child(
+                ImageUpload::new()
+                    .name(format!("spots.{index}.photo"))
+                    .value(photo),
+            )
+            .into(),
     ];
 
     Stack::new()
