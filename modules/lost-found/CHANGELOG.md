@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.5.0...lost-found-v1.5.1) (2026-10-04)
+
+
+### Bug Fixes
+
+* **lost-found:** require an answer on the return step ([a628e94](https://github.com/PortakiApp/portaki-modules/commit/a628e9459a657e43f0542771db27c9ebe83b7cff))
+
 ## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.4.0...lost-found-v1.5.0) (2026-10-04)
 
 

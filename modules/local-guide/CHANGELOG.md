@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.6.0...local-guide-v1.7.0) (2026-10-04)
+
+
+### Features
+
+* **local-guide:** say when a spot is closed today ([bbff1f2](https://github.com/PortakiApp/portaki-modules/commit/bbff1f2006f22aef175bf5c8f3e0ebaaae430662))
+
 ## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.5.0...local-guide-v1.6.0) (2026-10-04)
 
 
