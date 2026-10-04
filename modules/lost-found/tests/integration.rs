@@ -59,10 +59,18 @@ fn home_card_opens_form_overlay_when_no_reports() {
 
             let form = render_guest_form(ctx).expect("guest surface");
             assert!(SurfaceAssertions::new(&form).contains_type("Form"));
-            assert!(SurfaceAssertions::new(&form).contains_type("Button"));
             assert!(!SurfaceAssertions::new(&form).contains_type("Card"));
             let form_json = serde_json::to_string(&form).expect("form json");
             assert!(form_json.contains("form.kind.label"), "{form_json}");
+            // Trois étapes, et l'envoi porté par le formulaire : un `Button` enfant deviendrait
+            // une quatrième étape, et le livret dessine déjà « Retour » et « Continuer ».
+            assert!(form_json.contains("\"wizard\":true"), "{form_json}");
+            assert!(
+                !SurfaceAssertions::new(&form).contains_type("Button"),
+                "{form_json}"
+            );
+            assert_eq!(form_json.matches("\"step\":").count(), 3, "{form_json}");
+            assert!(form_json.contains("form.submit"), "{form_json}");
         });
 }
 

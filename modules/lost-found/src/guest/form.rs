@@ -3,7 +3,7 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
-    Button, ChoiceList, Field, FieldHint, Form, ImageUpload, InfoBanner, TextArea, TextInput,
+    ChoiceList, Field, FieldHint, Form, ImageUpload, InfoBanner, Stack, TextArea, TextInput,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -40,6 +40,10 @@ pub fn render_guest_form(ctx: GuestContext) -> Result<Surface> {
         config.offers_shipping(),
         config.return_options(),
         deadline_label(&ctx, config.window_days()),
+        ctx.host
+            .as_ref()
+            .map(|host| host.name.trim().to_string())
+            .filter(|name| !name.is_empty()),
     ))
 }
 
@@ -47,20 +51,30 @@ pub fn build_form_surface(
     ask_address: bool,
     return_options: Vec<&'static str>,
     deadline: Option<String>,
+    host_name: Option<String>,
 ) -> Surface {
-    Surface::new(build_form(ask_address, return_options, deadline)).with_id(GUEST_FORM)
+    Surface::new(build_form(ask_address, return_options, deadline, host_name)).with_id(GUEST_FORM)
 }
 
+/// Le formulaire en trois étapes du §2.18.
+///
+/// `Form::wizard` + un `Stack::step` par étape : le livret dessine la barre de progression, le
+/// titre de l'étape, « Retour » et « Continuer », et n'affiche que l'étape courante. D'où
+/// `submitLabel` au lieu d'un `Button` enfant — un bouton enfant deviendrait une quatrième étape.
+///
+/// Trois questions, trois écrans : quel objet, où il est resté, ce qu'on en fait. En une seule
+/// page, le choix de restitution — la question qui engage — se lisait après dix champs.
 fn build_form(
     ask_address: bool,
     return_options: Vec<&'static str>,
     deadline: Option<String>,
+    host_name: Option<String>,
 ) -> Form {
     let submit_action = crate::ids::module_id().command_empty(crate::commands::SUBMIT);
 
     // Les enfants sont assemblés puis posés d'un coup : `children` remplace la liste, il ne
     // l'allonge pas, et l'appeler au milieu d'une chaîne de `child` efface ce qui précède.
-    let mut children: Vec<Component> = vec![
+    let object_step: Vec<Component> = vec![
         Field::new()
             .name("kind")
             .label("i18n:form.kind.label")
@@ -87,6 +101,9 @@ fn build_form(
         FieldHint::new()
             .text("i18n:form.itemDescription.hint")
             .into(),
+    ];
+
+    let where_step: Vec<Component> = vec![
         Field::new()
             .name("room")
             .label("i18n:form.room.label")
@@ -101,8 +118,6 @@ fn build_form(
                     .placeholder("i18n:form.contactHint.placeholder"),
             )
             .into(),
-    ];
-    children.push(
         Field::new()
             .name("details")
             .label("i18n:form.details.label")
@@ -112,27 +127,31 @@ fn build_form(
                     .placeholder("i18n:form.details.placeholder"),
             )
             .into(),
-    );
-    // Une photo vaut toute la description : l'hôte reconnaît le chargeur sur la table de nuit
-    // sans avoir à deviner ce que « blanc, petit » veut dire.
-    children.push(
+        // Une photo vaut toute la description : l'hôte reconnaît le chargeur sur la table de nuit
+        // sans avoir à deviner ce que « blanc, petit » veut dire.
         Field::new()
             .name("photo")
             .label("i18n:form.photo.label")
             .child(ImageUpload::new().name("photo"))
             .into(),
-    );
-    children.extend(return_choice_field(&return_options));
-    children.extend(address_field(ask_address));
-    children.push(
-        Button::new()
-            .label("i18n:form.submit")
-            .action(submit_action)
-            .into(),
-    );
+    ];
+
+    let mut return_step: Vec<Component> = Vec::new();
+    return_step.extend(return_choice_field(&return_options));
+    return_step.extend(address_field(ask_address));
+    // Sans renvoi, le dire : un voyageur qui attend un colis et n'en reçoit pas se demande ce
+    // qu'il a mal rempli (§2.18).
+    if !ask_address {
+        return_step.push(
+            InfoBanner::new()
+                .tone(Tone::Neutral)
+                .message(no_shipping_message(host_name.as_deref()))
+                .into(),
+        );
+    }
     // Le délai en dernier : il ne presse pas celui qui remplit, il rassure celui qui hésite.
     if let Some(deadline) = deadline {
-        children.push(
+        return_step.push(
             InfoBanner::new()
                 .tone(Tone::Neutral)
                 .title(deadline)
@@ -141,7 +160,48 @@ fn build_form(
         );
     }
 
-    Form::new().children(children)
+    Form::new()
+        .wizard(true)
+        .submitLabel("i18n:form.submit")
+        .onSubmit(submit_action)
+        .children(vec![
+            Component::Stack(
+                Stack::new()
+                    .step("i18n:form.step.object")
+                    .gap(12.0)
+                    .children(object_step),
+            ),
+            Component::Stack(
+                Stack::new()
+                    .step("i18n:form.step.where")
+                    .gap(12.0)
+                    .children(where_step),
+            ),
+            Component::Stack(
+                Stack::new()
+                    .step(step_return_label(host_name.as_deref()))
+                    .gap(12.0)
+                    .children(return_step),
+            ),
+        ])
+}
+
+/// « Si Claire le retrouve », ou « Si votre hôte le retrouve » sans prénom servi.
+fn step_return_label(host_name: Option<&str>) -> String {
+    match host_name {
+        Some(host) => t!("form.step.found.named", host = host.to_string())
+            .unwrap_or_else(|_| "i18n:form.step.found".into()),
+        None => "i18n:form.step.found".to_string(),
+    }
+}
+
+/// « Claire ne renvoie pas les objets oubliés : elle le garde jusqu'à votre passage. »
+fn no_shipping_message(host_name: Option<&str>) -> String {
+    match host_name {
+        Some(host) => t!("form.noShipping.named", host = host.to_string())
+            .unwrap_or_else(|_| "i18n:form.noShipping".into()),
+        None => "i18n:form.noShipping".to_string(),
+    }
 }
 
 /// Ce que le voyageur voudrait qu'on en fasse, parmi ce que l'hôte propose.
