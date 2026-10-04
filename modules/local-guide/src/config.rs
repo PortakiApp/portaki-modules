@@ -406,6 +406,11 @@ pub const MAX_INCLUDED_LINES: usize = 10;
 /// Les activités que l'hôte décrit lui-même : six lignes, comme les autres listes du module.
 pub const MAX_HOST_ACTIVITIES: usize = 6;
 
+/// Photos par fiche, côté hôte comme côté fournisseur (§2.12, §2.13).
+///
+/// Cinq, la borne du PROMPT : au-delà, on fait défiler un album au lieu de choisir une adresse.
+pub const MAX_GALLERY: usize = 5;
+
 /// Les sept jours, dans l'ordre de la semaine : le jeton stocké et le jour qu'il désigne.
 ///
 /// Une liste figée plutôt qu'un analyseur : le formulaire n'envoie que ces jetons, et tout le
@@ -477,13 +482,18 @@ pub struct SpotRow {
     /// Le téléphone, en forme internationale — le bouton « Appeler » s'en sert tel quel.
     #[serde(default, deserialize_with = "deserialize_nonempty")]
     pub phone: Option<String>,
-    /// La photo déposée par l'hôte, en référence `portaki-file:`.
+    /// La première photo, telle que le formulaire l'envoyait avant la galerie.
     ///
-    /// ponytail: une seule photo là où la maquette en fait défiler trois. Une rangée de champs de
-    /// dépôt par adresse alourdirait le formulaire pour un gain d'illustration ; passer à
-    /// plusieurs demande un champ répétable, pas un deuxième `photo2`.
+    /// Gardée en lecture : les configurations écrites avant [`SpotRow::photos`] la portent, et
+    /// [`SpotRow::photo_refs`] les réunit pour que le rendu n'ait qu'une source.
     #[serde(default)]
     pub photo: String,
+    /// Les photos de la fiche, dans l'ordre de l'hôte, cinq au plus (§2.12).
+    ///
+    /// Le formulaire n'en dessine qu'une de plus que celles déjà déposées : une rangée de cinq
+    /// champs vides par adresse, sur douze adresses, serait un formulaire qu'on ne lit plus.
+    #[serde(default)]
+    pub photos: Vec<String>,
 }
 
 impl SpotRow {
@@ -497,10 +507,29 @@ impl SpotRow {
         }
     }
 
-    /// La photo déposée, en référence, ou `None` quand il n'y en a pas.
+    /// La photo de couverture : la première de la galerie.
     pub fn photo_ref(&self) -> Option<&str> {
-        let photo = self.photo.trim();
-        (!photo.is_empty()).then_some(photo)
+        self.photo_refs().into_iter().next()
+    }
+
+    /// Toutes les photos, l'ancienne d'abord, sans doublon ni vide, cinq au plus.
+    ///
+    /// Une seule source pour le rendu : sans ça, chaque appelant devait se souvenir que `photo`
+    /// existe encore à côté de `photos`, et l'un l'aurait oublié.
+    pub fn photo_refs(&self) -> Vec<&str> {
+        let mut refs: Vec<&str> = Vec::new();
+        for candidate in
+            std::iter::once(self.photo.as_str()).chain(self.photos.iter().map(String::as_str))
+        {
+            let candidate = candidate.trim();
+            if !candidate.is_empty() && !refs.contains(&candidate) {
+                refs.push(candidate);
+            }
+            if refs.len() == MAX_GALLERY {
+                break;
+            }
+        }
+        refs
     }
 
     /// Position affichable du spot, ou `None`.
@@ -508,7 +537,6 @@ impl SpotRow {
         valid_coords(self.lat?, self.lng?)
     }
 
-    /// Nothing stored but the id: a slot the host left (or emptied).
     /// Le jour de fermeture, s'il est l'un des sept : un jeton hors de la liste ne ferme rien
     /// plutôt que de fermer un jour deviné.
     pub fn closed_weekday(&self) -> Option<Weekday> {
@@ -524,10 +552,12 @@ impl SpotRow {
         self.closed_weekday() == Some(day)
     }
 
+    /// Rien de stocké que l'id : un emplacement que l'hôte a laissé (ou vidé).
     pub fn is_blank(&self) -> bool {
         self.title.is_blank()
             && self.detail.is_blank()
             && self.note.as_ref().is_none_or(I18nText::is_blank)
+            && self.photo_refs().is_empty()
             && [
                 &self.url,
                 &self.category,
@@ -923,5 +953,51 @@ mod tests {
         };
         assert!(blank.is_blank());
         assert_eq!(SpotRow::default().closed_weekday(), None);
+    }
+
+    /// Les photos d'une adresse : l'ancien champ d'abord, sans doublon ni vide, cinq au plus.
+    ///
+    /// L'ancien `photo` est gardé en lecture parce que toute configuration écrite avant la galerie
+    /// le porte. Le réunir ici est ce qui permet au rendu de n'avoir qu'une source — sinon chaque
+    /// appelant devait se souvenir des deux, et l'un l'aurait oublié.
+    #[test]
+    fn a_gallery_joins_the_old_photo_with_the_new_ones() {
+        // Une configuration d'avant la galerie.
+        let legacy = SpotRow {
+            photo: "portaki-file:a".into(),
+            ..SpotRow::default()
+        };
+        assert_eq!(legacy.photo_refs(), ["portaki-file:a"]);
+        assert_eq!(legacy.photo_ref(), Some("portaki-file:a"));
+
+        // L'ancienne vient en tête, et le doublon que le formulaire renvoie ne compte qu'une fois.
+        let both = SpotRow {
+            photo: "portaki-file:a".into(),
+            photos: vec![
+                "portaki-file:a".into(),
+                "  ".into(),
+                "portaki-file:b".into(),
+            ],
+            ..SpotRow::default()
+        };
+        assert_eq!(both.photo_refs(), ["portaki-file:a", "portaki-file:b"]);
+
+        // La couverture est la première, pas l'ancien champ par principe.
+        let only_new = SpotRow {
+            photos: vec!["portaki-file:b".into(), "portaki-file:c".into()],
+            ..SpotRow::default()
+        };
+        assert_eq!(only_new.photo_ref(), Some("portaki-file:b"));
+
+        // Jamais plus de cinq : au-delà on ferait défiler un album.
+        let many = SpotRow {
+            photos: (0..9).map(|n| format!("portaki-file:{n}")).collect(),
+            ..SpotRow::default()
+        };
+        assert_eq!(many.photo_refs().len(), MAX_GALLERY);
+
+        // Une adresse qui n'a que des photos n'est pas un emplacement vide.
+        assert!(SpotRow::default().is_blank());
+        assert!(!only_new.is_blank());
     }
 }

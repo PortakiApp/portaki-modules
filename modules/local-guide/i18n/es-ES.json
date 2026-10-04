@@ -149,6 +149,7 @@
   "host.spot.perk.placeholder": "10 % en el menú de la noche, mostrando esta página.",
   "host.spot.phone": "Teléfono",
   "host.spot.photo": "Foto",
+  "host.spot.photo.more": "Foto {rank}",
   "host.spot.price": "Precio",
   "host.spot.tag": "Etiqueta",
   "host.spot.url": "Web",

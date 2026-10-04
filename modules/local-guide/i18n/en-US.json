@@ -149,6 +149,7 @@
   "host.spot.perk.placeholder": "10% off the evening menu, on showing this page.",
   "host.spot.phone": "Phone",
   "host.spot.photo": "Photo",
+  "host.spot.photo.more": "Photo {rank}",
   "host.spot.price": "Price",
   "host.spot.tag": "Tag",
   "host.spot.url": "Website",

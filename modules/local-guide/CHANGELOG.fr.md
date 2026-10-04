@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.0
+
+Jusqu'à cinq photos par bon plan.
+
+* Déposez-en plusieurs : le formulaire ouvre une case de plus à chaque fois, jamais cinq vides.
+* Le voyageur les fait défiler sur la fiche ; une seule photo garde le plein format.
+* Vos photos existantes restent la première de la galerie.
+
 ## 1.8.0
 
 Les liens que vous collez ont enfin leur fiche.

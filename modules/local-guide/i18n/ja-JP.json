@@ -149,6 +149,7 @@
   "host.spot.perk.placeholder": "このページの提示で夜のメニューが10%オフ。",
   "host.spot.phone": "電話",
   "host.spot.photo": "写真",
+  "host.spot.photo.more": "写真 {rank}",
   "host.spot.price": "料金",
   "host.spot.tag": "タグ",
   "host.spot.url": "サイト",
