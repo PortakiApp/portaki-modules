@@ -226,15 +226,31 @@ fn start_map(data: &GuestData, trail: &TrailRow) -> Option<Component> {
         return None;
     }
 
-    Some(
-        Map::new()
-            .viewport(MapViewport::new(center_lat, center_lng, Some(13.0)))
-            .markers(markers)
-            .label("i18n:guest.map.label")
-            .isStatic(true)
-            .interactionMode(MapInteractionMode::None)
-            .into(),
-    )
+    let mut map = Map::new()
+        .viewport(MapViewport::new(center_lat, center_lng, Some(13.0)))
+        .markers(markers)
+        .label("i18n:guest.map.label")
+        .isStatic(true)
+        .interactionMode(MapInteractionMode::None);
+
+    // Les repères disent où, le tracé dit par où. Sans trace déposée, pas de clé `path` : un
+    // tableau vide ferait dessiner un segment au lieu de montrer le seul départ (§2.23).
+    if let Some(track) = read_track(trail) {
+        map = map.path(track.points);
+    }
+
+    Some(map.into())
+}
+
+/// La trace de cet itinéraire, lue depuis le fichier que l'hôte a déposé.
+///
+/// Une lecture qui échoue — fichier retiré, hôte changé, plafond dépassé — rend `None` : la fiche
+/// montre alors son départ sans tracé, comme avant le dépôt. Un itinéraire ne doit pas disparaître
+/// parce que sa trace est illisible.
+fn read_track(trail: &TrailRow) -> Option<crate::gpx::Track> {
+    let reference = trail.gpx_ref()?;
+    let bytes = portaki_sdk::host::files::read(reference).ok()?;
+    crate::gpx::read(&String::from_utf8_lossy(&bytes))
 }
 
 /// « Avant de partir » : l'eau et la météo (§2.23).

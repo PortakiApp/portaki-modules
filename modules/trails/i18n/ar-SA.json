@@ -60,6 +60,8 @@
   "host.trails.elevation": "الارتفاع الصاعد (م)",
   "host.trails.emptyDescription": "أضف المسار الذي تنصح به أكثر من غيره.",
   "host.trails.emptyTitle": "لا مسارات",
+  "host.trails.gpx": "مسار GPX",
+  "host.trails.gpx.hint": "ملف تطبيق المشي لديك. يظهر المسار على الخريطة، ويمكن للمسافر تنزيله.",
   "host.trails.link": "صفحة المسار (اختيارية)",
   "host.trails.link.hint": "موقع للمشي، أو مكتب السياحة: هذا هو زرّ «فتح المسار» عند الضيف.",
   "host.trails.link.placeholder": "https://www.example-hiking.com/…",

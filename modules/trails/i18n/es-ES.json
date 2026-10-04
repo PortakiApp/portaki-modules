@@ -60,6 +60,8 @@
   "host.trails.elevation": "Desnivel positivo (m)",
   "host.trails.emptyDescription": "Añade la ruta que recomiendas más a menudo.",
   "host.trails.emptyTitle": "Ninguna ruta",
+  "host.trails.gpx": "Traza GPX",
+  "host.trails.gpx.hint": "El archivo de su aplicación de senderismo. El recorrido aparece en el mapa y el viajero puede descargarlo.",
   "host.trails.link": "Ficha de la ruta (opcional)",
   "host.trails.link.hint": "Wikiloc, el IGN, la oficina de turismo: es el botón «Abrir la ruta» del viajero.",
   "host.trails.link.placeholder": "https://es.wikiloc.com/rutas-…",

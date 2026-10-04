@@ -118,6 +118,12 @@ pub struct TrailRow {
     /// La fiche de l'itinéraire chez un tiers (Visorando, IGN) — le bouton « Ouvrir la trace ».
     #[serde(skip_serializing_if = "String::is_empty")]
     pub link_url: String,
+    /// La trace déposée par l'hôte : `portaki-file:<id>`, jamais les octets.
+    ///
+    /// C'est elle qui donne le tracé sur le plan, et c'est elle que le voyageur télécharge pour
+    /// son application de randonnée — donc le fichier d'origine, pas une version recalculée.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub gpx_file: String,
 }
 
 /// Une mesure utilisable : finie et strictement positive.
@@ -126,6 +132,11 @@ fn positive(value: Option<f64>) -> Option<f64> {
 }
 
 impl TrailRow {
+    /// La référence de la trace, si elle en est bien une — une URL externe n'en est pas une.
+    pub fn gpx_ref(&self) -> Option<portaki_sdk::files::FileRef> {
+        portaki_sdk::files::FileRef::parse(&self.gpx_file)
+    }
+
     /// Rien que le formulaire montre : une ligne que l'hôte a laissée (ou vidée).
     pub fn is_blank(&self) -> bool {
         self.title.is_blank()

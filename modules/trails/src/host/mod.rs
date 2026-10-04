@@ -3,8 +3,8 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Card, Field, FieldHint, Form, NumberInput, Page, Select, Stack, StepList,
-    Text, TextArea, TextInput,
+    AddressMapPicker, Card, Field, FieldHint, Form, ImageUpload, NumberInput, Page, Select, Stack,
+    StepList, Text, TextArea, TextInput,
 };
 use portaki_sdk::sdui::surface::Surface;
 use serde::Serialize;
@@ -176,6 +176,18 @@ fn trail_row(index: usize, trail: Option<&TrailRow>, ctx: &HostContext) -> Compo
         trail.map(|t| t.link_url.clone()).unwrap_or_default(),
     ));
     children.push(FieldHint::new().text("i18n:host.trails.link.hint").into());
+    children.push(
+        Field::new()
+            .name(format!("trails.{index}.gpx_file"))
+            .label("i18n:host.trails.gpx")
+            .child(
+                ImageUpload::new()
+                    .name(format!("trails.{index}.gpx_file"))
+                    .value(trail.map(|t| t.gpx_file.clone()).unwrap_or_default()),
+            )
+            .into(),
+    );
+    children.push(FieldHint::new().text("i18n:host.trails.gpx.hint").into());
 
     Stack::new()
         .id(format!("trail-{index}"))
