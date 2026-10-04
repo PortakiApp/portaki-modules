@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.4.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.3.0...lost-found-v1.4.0) (2026-10-04)
+
+
+### Features
+
+* **lost-found:** le formulaire de la maquette ([8681146](https://github.com/PortakiApp/portaki-modules/commit/8681146db761cd2621f318e4a7da7f8fc9767980))
+* **trails:** le tracé d'un itinéraire, lu du GPX de l'hôte ([0fae471](https://github.com/PortakiApp/portaki-modules/commit/0fae471f7ef8c106306f0d7b782d22d9ebbac9ba))
+
+
+### Bug Fixes
+
+* **lost-found, pre-arrival-form:** des valeurs lisibles chez l'hôte ([676e8e6](https://github.com/PortakiApp/portaki-modules/commit/676e8e6b93d97ad81abcea49c2981a2405769258))
+
 ## [1.3.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.2.1...lost-found-v1.3.0) (2026-10-02)
 
 

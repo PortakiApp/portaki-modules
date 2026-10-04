@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.0](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v1.2.1...guest-reviews-v1.3.0) (2026-10-04)
+
+
+### Features
+
+* **trails:** le tracé d'un itinéraire, lu du GPX de l'hôte ([0fae471](https://github.com/PortakiApp/portaki-modules/commit/0fae471f7ef8c106306f0d7b782d22d9ebbac9ba))
+
+
+### Bug Fixes
+
+* **events, guest-reviews:** le sous-titre de carte de la maquette ([f144e7b](https://github.com/PortakiApp/portaki-modules/commit/f144e7b96c5f48822918f923ddd6e43e34443dc1))
+* **guest-reviews:** des étoiles, et le QR en dernier ([16af127](https://github.com/PortakiApp/portaki-modules/commit/16af127e856bd0e58c848617ff1887ea1a1b4db8))
+
 ## [1.2.1](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v1.2.0...guest-reviews-v1.2.1) (2026-10-02)
 
 

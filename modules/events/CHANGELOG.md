@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.4.0](https://github.com/PortakiApp/portaki-modules/compare/events-v1.3.0...events-v1.4.0) (2026-10-04)
+
+
+### Features
+
+* **events:** la fiche d'un événement, et le prochain en vedette ([b256c67](https://github.com/PortakiApp/portaki-modules/commit/b256c67a708858c1f898a8ec35f1aed4e37225b8))
+* **trails:** le tracé d'un itinéraire, lu du GPX de l'hôte ([0fae471](https://github.com/PortakiApp/portaki-modules/commit/0fae471f7ef8c106306f0d7b782d22d9ebbac9ba))
+
+
+### Bug Fixes
+
+* **events, guest-reviews:** le sous-titre de carte de la maquette ([f144e7b](https://github.com/PortakiApp/portaki-modules/commit/f144e7b96c5f48822918f923ddd6e43e34443dc1))
+* **local-guide, events, ev-parking:** les tuiles et le pli ([d8cfd1d](https://github.com/PortakiApp/portaki-modules/commit/d8cfd1d141ef2a396318f4c839430ffde64fad09))
+* **local-guide, events:** le badge de fin et l'heure à sa place ([c35184c](https://github.com/PortakiApp/portaki-modules/commit/c35184cdd5a35530a9dcfc52c4157208f8574497))
+
 ## [1.3.0](https://github.com/PortakiApp/portaki-modules/compare/events-v1.2.0...events-v1.3.0) (2026-10-02)
 
 

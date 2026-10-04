@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v1.4.0...ev-parking-v1.5.0) (2026-10-04)
+
+
+### Features
+
+* **trails:** le tracé d'un itinéraire, lu du GPX de l'hôte ([0fae471](https://github.com/PortakiApp/portaki-modules/commit/0fae471f7ef8c106306f0d7b782d22d9ebbac9ba))
+
+
+### Bug Fixes
+
+* **access-guide, wifi-guest, ev-parking:** l'état du secret ([6694154](https://github.com/PortakiApp/portaki-modules/commit/66941545221f57f10d059807ea329b8155c67df6))
+* **local-guide, events, ev-parking:** les tuiles et le pli ([d8cfd1d](https://github.com/PortakiApp/portaki-modules/commit/d8cfd1d141ef2a396318f4c839430ffde64fad09))
+* **wifi-guest, ev-parking, sections:** le sous-titre de carte ([03db5af](https://github.com/PortakiApp/portaki-modules/commit/03db5aff19e82ce5b490b635662fde04bc4a9a62))
+
 ## [1.4.0](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v1.3.0...ev-parking-v1.4.0) (2026-10-02)
 
 

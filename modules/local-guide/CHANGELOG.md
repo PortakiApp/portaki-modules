@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.4.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.3.0...local-guide-v1.4.0) (2026-10-04)
+
+
+### Features
+
+* **local-guide:** la fiche d'une adresse ([92af43a](https://github.com/PortakiApp/portaki-modules/commit/92af43af75b27e89a87178f489096eee08e1a336))
+* **trails:** le tracé d'un itinéraire, lu du GPX de l'hôte ([0fae471](https://github.com/PortakiApp/portaki-modules/commit/0fae471f7ef8c106306f0d7b782d22d9ebbac9ba))
+
+
+### Bug Fixes
+
+* **local-guide, events, ev-parking:** les tuiles et le pli ([d8cfd1d](https://github.com/PortakiApp/portaki-modules/commit/d8cfd1d141ef2a396318f4c839430ffde64fad09))
+* **local-guide, events:** le badge de fin et l'heure à sa place ([c35184c](https://github.com/PortakiApp/portaki-modules/commit/c35184cdd5a35530a9dcfc52c4157208f8574497))
+* **local-guide:** les tuiles partenaires, et la vignette de plan ([6d278f2](https://github.com/PortakiApp/portaki-modules/commit/6d278f299f85f827307c6feefccf5ce90048537b))
+
 ## [1.3.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.2.0...local-guide-v1.3.0) (2026-10-02)
 
 

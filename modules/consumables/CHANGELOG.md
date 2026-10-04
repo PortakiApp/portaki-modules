@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.4.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.3.0...consumables-v2.4.0) (2026-10-04)
+
+
+### Features
+
+* **pre-arrival-form, consumables:** des choix, pas des champs libres ([f0b5e16](https://github.com/PortakiApp/portaki-modules/commit/f0b5e163dc29eaafe52759cd4eba97fc836b6a60))
+* **trails:** le tracé d'un itinéraire, lu du GPX de l'hôte ([0fae471](https://github.com/PortakiApp/portaki-modules/commit/0fae471f7ef8c106306f0d7b782d22d9ebbac9ba))
+
 ## [2.3.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.2.0...consumables-v2.3.0) (2026-10-02)
 
 

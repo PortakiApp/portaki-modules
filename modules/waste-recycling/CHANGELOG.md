@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.5.0...waste-recycling-v1.6.0) (2026-10-04)
+
+
+### Features
+
+* **trails:** le tracé d'un itinéraire, lu du GPX de l'hôte ([0fae471](https://github.com/PortakiApp/portaki-modules/commit/0fae471f7ef8c106306f0d7b782d22d9ebbac9ba))
+* **waste-recycling:** où sont les poubelles, et comment aller au local ([101bc8d](https://github.com/PortakiApp/portaki-modules/commit/101bc8d9e3dc94527113dc43f5c97152aa48c4a6))
+
 ## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.4.0...waste-recycling-v1.5.0) (2026-10-02)
 
 

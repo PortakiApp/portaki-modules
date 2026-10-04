@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.0](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.3.0...trails-v0.4.0) (2026-10-04)
+
+
+### Features
+
+* **safety-shutoffs, trails:** la photo de l'hôte ([317d6c5](https://github.com/PortakiApp/portaki-modules/commit/317d6c52f76b0d93cce9d19384d5a87149c107c2))
+* **trails:** le tracé d'un itinéraire, lu du GPX de l'hôte ([0fae471](https://github.com/PortakiApp/portaki-modules/commit/0fae471f7ef8c106306f0d7b782d22d9ebbac9ba))
+* **trails:** télécharger la trace GPX ([960fa56](https://github.com/PortakiApp/portaki-modules/commit/960fa56ff2e2c5c064c5a6fc7cbabc705aab359e))
+
 ## [0.3.0](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.2.0...trails-v0.3.0) (2026-10-02)
 
 
