@@ -23,6 +23,10 @@ fn sample_config() -> serde_json::Value {
                     "fr": "Venez avant 19 h, la place se remplit vite.\nLe stand de socca est au fond, côté fontaine.",
                     "en": "Come before 7pm, the square fills up fast.\nThe socca stall is at the back, by the fountain."
                 },
+                "access": {
+                    "fr": "Place piétonne, accès de plain-pied\nParking de l'église à 200 m",
+                    "en": "Pedestrian square, step-free access\nChurch car park 200 m away"
+                },
                 "address": "Place du village, Cannes",
                 "lat": 43.5528, "lng": 7.0171
             },
