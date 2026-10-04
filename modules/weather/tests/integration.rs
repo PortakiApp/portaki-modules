@@ -266,8 +266,11 @@ fn forecast_renders_5_days() {
             assert!(json.contains("explore.forecast.hint"));
             assert!(!json.contains("sheet.assistant.tip"));
             assert!(!json.contains("sheet.contactHost"));
-            // now icon + 5 day icons
-            assert!(json.matches("\"Icon\"").count() >= 6);
+            // L'icône du moment, et une par jour — désormais dans l'emplacement `leading` des
+            // lignes et non en composant `Icon` : la maquette met l'icône devant la ligne.
+            assert!(json.matches("\"Icon\"").count() >= 1);
+            assert!(json.matches("\"leading\"").count() >= 5);
+            assert!(json.contains("explore.forecast.days"));
         });
 }
 

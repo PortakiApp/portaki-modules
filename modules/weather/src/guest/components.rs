@@ -37,22 +37,3 @@ pub fn metric_tile(
             .child(Component::Text(value_text)),
     )
 }
-
-pub fn table_header_cell(label: &str) -> Component {
-    Component::Text(
-        Text::new()
-            .text(label)
-            .variant(TextVariant::Caption)
-            .emphasis(Emphasis::Strong),
-    )
-}
-
-pub fn table_value_cell(value: &str) -> Component {
-    Component::Text(Text::new().text(value).variant(TextVariant::Caption))
-}
-
-pub fn optional_pct(value: Option<u8>) -> String {
-    value
-        .map(|pct| format!("{pct}%"))
-        .unwrap_or_else(|| "—".to_string())
-}
