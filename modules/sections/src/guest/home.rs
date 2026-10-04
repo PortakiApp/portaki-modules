@@ -9,11 +9,12 @@ use crate::model::SectionView;
 
 const CARD_SECTION_LIMIT: usize = 2;
 
-pub fn build_home_card(sections: &[SectionView]) -> Surface {
+pub fn build_home_card(sections: &[SectionView], host_byline: &str) -> Surface {
     Surface::new(
         Card::new()
             .icon(IconName::Home)
             .title("i18n:home.card.title")
+            .subtitle(host_byline)
             .action(Action::open_overlay(
                 OverlayPresentation::BottomSheet,
                 crate::guest::EXPLORE_SHEET,
