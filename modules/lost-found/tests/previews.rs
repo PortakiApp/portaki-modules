@@ -42,7 +42,7 @@ fn previews_match_the_rendered_surfaces() {
                 render_post_stay_card(ctx).expect("guest surface"),
             )
         });
-    previews::check(
+    previews::check_all(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![
@@ -50,5 +50,7 @@ fn previews_match_the_rendered_surfaces() {
             ("guest.form", form),
             ("post-stay.card", post_stay),
         ],
+        // Toutes les surfaces ont un chemin : rien à ajouter pour la démo.
+        Vec::new(),
     );
 }

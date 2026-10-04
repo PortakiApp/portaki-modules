@@ -4,8 +4,8 @@
 mod previews;
 
 use appliances::{
-    render_explore_detail, render_explore_item, reset_test_store, save_appliance, ApplianceStatus,
-    SaveApplianceArgs,
+    render_explore_detail, render_explore_item, render_home_card, reset_test_store, save_appliance,
+    ApplianceStatus, SaveApplianceArgs,
 };
 use portaki_sdk::prelude::Context;
 use serde_json::{json, Value};
@@ -74,18 +74,20 @@ fn seed(ctx: Context) {
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
     reset_test_store();
-    let (detail, item) = previews::guest(root).run(|ctx| {
+    let (detail, item, home) = previews::guest(root).run(|ctx| {
         seed(ctx.clone());
         let mut item_ctx = ctx.clone();
         item_ctx.input = json!({ "deviceId": "plaques" });
         (
-            render_explore_detail(ctx).expect("render"),
+            render_explore_detail(ctx.clone()).expect("render"),
             render_explore_item(item_ctx).expect("render"),
+            render_home_card(ctx).expect("render"),
         )
     });
-    previews::check(
+    previews::check_all(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![("explore.detail", detail), ("explore.item", item)],
+        vec![("home.card", home)],
     );
 }

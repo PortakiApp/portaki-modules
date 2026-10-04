@@ -26,6 +26,7 @@ use serde_json::{json, Map, Value};
 
 pub const LOCALE: &str = "fr-FR";
 const FILE: &str = "previews.json";
+const DEMO_FILE: &str = "demo.json";
 
 /// Un contexte voyageur en français, les traductions du module chargées.
 ///
@@ -59,16 +60,40 @@ pub fn at(rfc3339: &str) -> DateTime<Utc> {
         .with_timezone(&Utc)
 }
 
-/// Compare `previews.json` à ce que les surfaces rendent, ou le réécrit.
+/// Les aperçus du catalogue **et** les surfaces de la démo, rendus une fois.
 ///
-/// Chaque surface voyageur que le livret sert — un `#[surface(guest, path = …)]` — doit être
-/// rendue, et rien d'autre : un aperçu d'une surface que le livret ne sert pas mentirait sur le
-/// module.
+/// `rendered` compare `previews.json` : chaque surface voyageur que le livret sert — un
+/// `#[surface(guest, path = …)]` — doit y être, et rien d'autre, sans quoi un aperçu mentirait
+/// sur le module.
+///
+/// `extra` porte ce que cet invariant exclut par construction : les cartes d'accueil, qui n'ont
+/// pas de chemin — et que la démo du livret montre en premier. L'invariant du catalogue reste
+/// donc entier, et `demo.json` reçoit l'ensemble.
 ///
 /// `emissions` est le dossier où les macros du module ont écrit ses déclarations en compilant :
 /// `concat!(env!("OUT_DIR"), "/portaki-emissions")` depuis le test. Le manifeste n'est écrit que
 /// par `portaki build`, qui ne tourne pas avant `cargo test`.
-pub fn check(module_root: &str, emissions: &str, rendered: Vec<(&str, Surface)>) {
+pub fn check_all(
+    module_root: &str,
+    emissions: &str,
+    rendered: Vec<(&str, Surface)>,
+    extra: Vec<(&str, Surface)>,
+) {
+    let demo: Vec<(&str, Value)> = rendered
+        .iter()
+        .chain(extra.iter())
+        .map(|(id, surface)| {
+            (
+                *id,
+                serde_json::to_value(&surface.root).expect("arbre SDUI"),
+            )
+        })
+        .collect();
+    check_demo(module_root, demo);
+    check_previews(module_root, emissions, rendered);
+}
+
+fn check_previews(module_root: &str, emissions: &str, rendered: Vec<(&str, Surface)>) {
     let root = Path::new(module_root);
     let bundle = fr_bundle(module_root);
     let declared = guest_routes(Path::new(emissions));
@@ -121,6 +146,56 @@ pub fn check(module_root: &str, emissions: &str, rendered: Vec<(&str, Surface)>)
 }
 
 /// Les surfaces voyageur que le livret sert, par id : celles dont le `#[surface]` donne une `path`.
+/// Les surfaces de la démo : **tout** ce que le module rend, cartes d'accueil comprises.
+///
+/// Pourquoi un second fichier à côté de `previews.json` : celui-là est tenu par un invariant —
+/// un aperçu par surface *servie par un chemin*, et rien d'autre — qui exclut par construction
+/// les cartes d'accueil. Or ce sont elles que la démo du livret montre en premier. Les y faire
+/// entrer aurait affaibli l'invariant du catalogue pour servir un autre besoin.
+///
+/// `demo.json` n'a donc pas d'invariant de couverture : le module y met ce qu'il veut montrer. La
+/// démo du livret (`portaki-guest`) le lit à la place des arbres qu'elle écrivait à la main, et
+/// ces arbres étaient une troisième source de vérité qui dérivait sans que rien ne le dise.
+///
+/// Pour le régénérer :
+///
+/// ```sh
+/// PORTAKI_UPDATE_DEMO=1 cargo test -p <module> --test previews
+/// ```
+fn check_demo(module_root: &str, rendered: Vec<(&str, Value)>) {
+    let root = Path::new(module_root);
+    let bundle = fr_bundle(module_root);
+
+    let mut ids_seen = Vec::new();
+    let mut surfaces: Vec<Value> = rendered
+        .into_iter()
+        .map(|(surface_id, mut tree)| {
+            stable_uuids(&mut tree, &mut ids_seen);
+            let i18n: Map<String, Value> = i18n_refs(&tree)
+                .into_iter()
+                .filter_map(|key| bundle.get(&key).map(|value| (key, value.clone())))
+                .collect();
+            json!({ "surfaceId": surface_id, "tree": tree, "i18n": i18n })
+        })
+        .collect();
+    // Trié : le fichier ne doit pas bouger parce que le test a listé ses surfaces autrement.
+    surfaces.sort_by(|a, b| a["surfaceId"].as_str().cmp(&b["surfaceId"].as_str()));
+
+    let expected = serde_json::to_string_pretty(&json!({ "locale": LOCALE, "surfaces": surfaces }))
+        .expect("json")
+        + "\n";
+    let path = root.join(DEMO_FILE);
+    if std::env::var_os("PORTAKI_UPDATE_DEMO").is_some() {
+        fs::write(&path, &expected).expect("écrire demo.json");
+        return;
+    }
+    let current = fs::read_to_string(&path).unwrap_or_default();
+    assert!(
+        current == expected,
+        "{DEMO_FILE} ne correspond plus au rendu — PORTAKI_UPDATE_DEMO=1 cargo test --test previews"
+    );
+}
+
 fn guest_routes(emissions: &Path) -> std::collections::BTreeMap<String, Value> {
     fs::read_dir(emissions)
         .expect("déclarations du module — compilé avec portaki-sdk-macros ?")

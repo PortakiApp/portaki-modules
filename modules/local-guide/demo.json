@@ -1,0 +1,934 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "guest.activity.duration": "Durée",
+        "guest.activity.included": "Inclus",
+        "guest.activity.languages": "Langues",
+        "guest.activity.meet": "Rendez-vous",
+        "guest.activity.phone": "Téléphone",
+        "guest.activity.price": "Prix",
+        "guest.hostActivities.choice": "Choix de votre hôte",
+        "guest.hostActivities.disclosure": "Activité proposée par votre hôte, sans commission. La réservation se fait directement avec le prestataire.",
+        "guest.practical.title": "Infos pratiques"
+      },
+      "surfaceId": "explore.activity",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "label": "i18n:guest.hostActivities.choice",
+                "type": "Badge"
+              },
+              {
+                "text": "Sortie voilier au coucher du soleil",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "Proposé par votre hôte · Marc, skipper au port",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "icon": "star",
+                "key": "i18n:guest.activity.price",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "60 € / pers."
+              },
+              {
+                "icon": "clock",
+                "key": "i18n:guest.activity.duration",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "3 h"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "title": "Annulation à voir directement avec Marc.",
+            "tone": "success",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "leading": "check",
+                "title": "Boissons à bord",
+                "type": "ListItem"
+              },
+              {
+                "leading": "check",
+                "title": "Arrêt baignade à la Garoupe",
+                "type": "ListItem"
+              }
+            ],
+            "icon": "check-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.activity.included",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "key": "i18n:guest.activity.meet",
+                "type": "KeyValue",
+                "value": "Port Vauban, ponton C"
+              },
+              {
+                "key": "i18n:guest.activity.languages",
+                "type": "KeyValue",
+                "value": "Français, anglais"
+              },
+              {
+                "key": "i18n:guest.activity.phone",
+                "mono": true,
+                "type": "KeyValue",
+                "value": "+33 6 22 33 44 55"
+              }
+            ],
+            "icon": "info-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.practical.title",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "text": "Dites-lui que vous venez d'ici : il vous garde le coucher de soleil.",
+                "type": "Text",
+                "variant": "body"
+              }
+            ],
+            "icon": "message",
+            "surface": "elevated",
+            "title": "Le conseil de votre hôte",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:+33622334455"
+            },
+            "label": "Réserver auprès de Marc, skipper au port",
+            "type": "Button"
+          },
+          {
+            "text": "i18n:guest.hostActivities.disclosure",
+            "type": "Text",
+            "variant": "caption"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.activities.disclosure": "Liens partenaires : Portaki peut percevoir une commission, sans surcoût pour vous.",
+        "guest.activities.title": "Activités & billets",
+        "guest.disclaimer.title": "Info",
+        "guest.hostActivities.choice": "Choix de votre hôte",
+        "guest.hostActivities.disclosure": "Activité proposée par votre hôte, sans commission. La réservation se fait directement avec le prestataire.",
+        "guest.hostActivities.title": "Vos activités",
+        "guest.viator.via": "via Viator"
+      },
+      "surfaceId": "explore.detail",
+      "tree": {
+        "children": [
+          {
+            "interactionMode": "none",
+            "isStatic": true,
+            "markers": [
+              {
+                "id": "boulangerie",
+                "kind": "poi",
+                "label": "La boulangerie du village",
+                "lat": 43.5531,
+                "lng": 7.0152
+              },
+              {
+                "id": "marche",
+                "kind": "poi",
+                "label": "Marché provençal",
+                "lat": 43.5552,
+                "lng": 7.0214
+              },
+              {
+                "id": "lac",
+                "kind": "poi",
+                "label": "Lac de Saint-Cassien",
+                "lat": 43.5663,
+                "lng": 6.8511
+              },
+              {
+                "id": "property",
+                "kind": "property",
+                "label": "Villa Azur",
+                "lat": 43.5513,
+                "lng": 7.0128
+              }
+            ],
+            "type": "Map",
+            "viewport": {
+              "center": {
+                "lat": 43.556475,
+                "lng": 6.975125
+              },
+              "zoom": 13.0
+            }
+          },
+          {
+            "message": "Suggestions de votre hôte, sans partenariat.",
+            "title": "i18n:guest.disclaimer.title",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "action": {
+                  "to": "local-guide/detail/boulangerie",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "children": [
+                  {
+                    "text": "Venez avant 9 h : les croissants partent vite le dimanche.",
+                    "type": "Text",
+                    "variant": "caption"
+                  },
+                  {
+                    "text": "Pains au levain et croissants au beurre, cuits sur place.",
+                    "type": "Text",
+                    "variant": "body"
+                  }
+                ],
+                "leading": {
+                  "map": {
+                    "lat": 43.5531,
+                    "lng": 7.0152
+                  }
+                },
+                "subtitle": "Boulangerie · 350 m",
+                "title": "La boulangerie du village",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "to": "local-guide/detail/marche",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "children": [
+                  {
+                    "text": "Fruits, fromages et fleurs, le samedi matin.",
+                    "type": "Text",
+                    "variant": "body"
+                  }
+                ],
+                "leading": {
+                  "map": {
+                    "lat": 43.5552,
+                    "lng": 7.0214
+                  }
+                },
+                "subtitle": "Marché · 1,2 km",
+                "title": "Marché provençal",
+                "trailing": {
+                  "badge": {
+                    "label": "Samedi matin",
+                    "tone": "primary"
+                  }
+                },
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "to": "local-guide/detail/lac",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "children": [
+                  {
+                    "text": "Eau calme et plage de galets, idéal avec des enfants.",
+                    "type": "Text",
+                    "variant": "body"
+                  }
+                ],
+                "leading": {
+                  "map": {
+                    "lat": 43.5663,
+                    "lng": 6.8511
+                  }
+                },
+                "subtitle": "Baignade · 9 km",
+                "title": "Lac de Saint-Cassien",
+                "type": "ListItem"
+              }
+            ],
+            "gap": 8.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "text": "i18n:guest.hostActivities.title",
+                "type": "Text",
+                "variant": "title"
+              },
+              {
+                "children": [
+                  {
+                    "action": {
+                      "to": "local-guide/activity/voilier",
+                      "type": "navigate"
+                    },
+                    "chevron": true,
+                    "layout": "tile",
+                    "meta": "60 € / pers.",
+                    "subtitle": "Marc, skipper au port · 3 h",
+                    "title": "Sortie voilier au coucher du soleil",
+                    "trailing": {
+                      "badge": {
+                        "label": "i18n:guest.hostActivities.choice",
+                        "tone": "primary"
+                      }
+                    },
+                    "type": "ListItem"
+                  }
+                ],
+                "direction": "horizontal",
+                "gap": 8.0,
+                "scroll": true,
+                "type": "Stack"
+              },
+              {
+                "text": "i18n:guest.hostActivities.disclosure",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 8.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "text": "i18n:guest.activities.title",
+                "type": "Text",
+                "variant": "title"
+              },
+              {
+                "action": {
+                  "type": "external",
+                  "url": "https://www.getyourguide.com/s/?q=Antibes&partner_id=CLOQ42U"
+                },
+                "href": "https://www.getyourguide.com/s/?q=Antibes&partner_id=CLOQ42U",
+                "label": "Voir les activités à Antibes",
+                "type": "Link"
+              },
+              {
+                "children": [
+                  {
+                    "action": {
+                      "to": "local-guide/link/273628P2",
+                      "type": "navigate"
+                    },
+                    "children": [
+                      {
+                        "text": "Asseyez-vous à droite : c'est le côté qui longe les remparts.",
+                        "type": "Text",
+                        "variant": "caption"
+                      }
+                    ],
+                    "layout": "tile",
+                    "leading": {
+                      "image": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-720x480/10/24/33/0b.jpg"
+                    },
+                    "meta": "À partir de 13 €",
+                    "subtitle": "★ 4,1 (48 avis) · 45 min",
+                    "title": "Le petit train d'Antibes",
+                    "trailing": {
+                      "badge": {
+                        "label": "i18n:guest.viator.via",
+                        "tone": "neutral"
+                      }
+                    },
+                    "type": "ListItem"
+                  }
+                ],
+                "direction": "horizontal",
+                "gap": 8.0,
+                "scroll": true,
+                "type": "Stack"
+              },
+              {
+                "text": "i18n:guest.activities.disclosure",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 8.0,
+            "type": "Stack"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.call": "Appeler",
+        "guest.map.label": "Plan : le logement et l’adresse",
+        "guest.perk.title": "Votre avantage",
+        "guest.practical.hours": "Horaires",
+        "guest.practical.opening": "Ouverture",
+        "guest.practical.parking": "Parking",
+        "guest.practical.phone": "Téléphone",
+        "guest.practical.title": "Infos pratiques",
+        "guest.route": "Itinéraire",
+        "guest.tile.walk": "À pied"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "alt": "La boulangerie du village",
+                "aspectRatio": "4 / 3",
+                "type": "Image",
+                "url": "portaki-file:boulangerie-1"
+              },
+              {
+                "alt": "La boulangerie du village",
+                "aspectRatio": "4 / 3",
+                "type": "Image",
+                "url": "portaki-file:boulangerie-2"
+              }
+            ],
+            "direction": "horizontal",
+            "gap": 8.0,
+            "itemWidth": "78%",
+            "scroll": true,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "text": "La boulangerie du village",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "Boulangerie · €",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "Pains au levain et croissants au beurre, cuits sur place.",
+                "type": "Text",
+                "variant": "body"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "message": "Un café offert avec deux croissants, sur présentation de cette page.",
+            "title": "i18n:guest.perk.title",
+            "tone": "primary",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "icon": "users",
+                "key": "i18n:guest.tile.walk",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "environ 4 min"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "interactionMode": "none",
+            "isStatic": true,
+            "label": "i18n:guest.map.label",
+            "markers": [
+              {
+                "id": "spot",
+                "kind": "poi",
+                "label": "La boulangerie du village",
+                "lat": 43.5531,
+                "lng": 7.0152
+              },
+              {
+                "id": "property",
+                "kind": "property",
+                "label": "Villa Azur",
+                "lat": 43.5513,
+                "lng": 7.0128
+              }
+            ],
+            "type": "Map",
+            "viewport": {
+              "center": {
+                "lat": 43.5531,
+                "lng": 7.0152
+              },
+              "zoom": 14.0
+            }
+          },
+          {
+            "children": [
+              {
+                "key": "i18n:guest.practical.hours",
+                "mono": true,
+                "type": "KeyValue",
+                "value": "07:00 – 13:00 · 16:00 – 19:00"
+              },
+              {
+                "key": "i18n:guest.practical.opening",
+                "type": "KeyValue",
+                "value": "Fermée le lundi"
+              },
+              {
+                "key": "i18n:guest.practical.parking",
+                "type": "KeyValue",
+                "value": "Place de l'église, en face"
+              },
+              {
+                "key": "i18n:guest.practical.phone",
+                "mono": true,
+                "type": "KeyValue",
+                "value": "+33 4 93 00 00 01"
+              }
+            ],
+            "icon": "info-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.practical.title",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "text": "Venez avant 9 h : les croissants partent vite le dimanche.",
+                "type": "Text",
+                "variant": "body"
+              }
+            ],
+            "icon": "message",
+            "surface": "elevated",
+            "title": "Le conseil de votre hôte",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.google.com/maps/search/?api=1&query=43.5531,7.0152"
+            },
+            "label": "i18n:guest.route",
+            "type": "Button"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:+33493000001"
+            },
+            "label": "i18n:guest.call",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.activities.disclosure": "Liens partenaires : Portaki peut percevoir une commission, sans surcoût pour vous.",
+        "guest.activity.about": "À propos",
+        "guest.activity.duration": "Durée",
+        "guest.activity.provider": "Fournisseur",
+        "guest.activity.rating": "Avis",
+        "guest.activity.tip": "Le conseil de votre hôte",
+        "guest.practical.title": "Infos pratiques",
+        "guest.viator.freeCancellation": "Annulation gratuite",
+        "guest.viator.priceFromLabel": "Dès",
+        "guest.viator.via": "via Viator"
+      },
+      "surfaceId": "explore.link",
+      "tree": {
+        "children": [
+          {
+            "alt": "Le petit train d'Antibes",
+            "aspectRatio": "4 / 3",
+            "type": "Image",
+            "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-720x480/10/24/33/0b.jpg"
+          },
+          {
+            "children": [
+              {
+                "label": "i18n:guest.viator.via",
+                "type": "Badge"
+              },
+              {
+                "text": "Le petit train d'Antibes",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "★ 4,1 (48 avis) · 45 min",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "icon": "ticket",
+                "key": "i18n:guest.viator.priceFromLabel",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "13 €"
+              },
+              {
+                "icon": "clock-circle",
+                "key": "i18n:guest.activity.duration",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "45 min"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "title": "i18n:guest.viator.freeCancellation",
+            "tone": "success",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "text": "Asseyez-vous à droite : c'est le côté qui longe les remparts.",
+                "type": "Text"
+              }
+            ],
+            "icon": "sparkles",
+            "surface": "elevated",
+            "title": "i18n:guest.activity.tip",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "text": "Profitez du Petit Train touristique d’Antibes pour parcourir cette ville à la situation géographique exceptionnelle et riche des trésors du passé.\nCette situation particulière, avec le site exceptionnel du Cap d’Antibes, les plages de sable de Juan-les-Pins, le charme de sa Vieille Ville et ses Remparts donnent à Antibes ses caractéristiques spécifiques qui la distinguent des autres villes de la Côte d’Azur.\nÀ la fois ville-musée, ville-spectacle et ville-novatrice, elle mélange avec aisance ses contrastes et ses multiples facettes. Très appréciée des artistes à travers le monde qui trouvent dans les rues et monuments historiques de la ville une nouvelle source d’inspiration, Antibes Juan-les-Pins est connue pour être une ville ouverte à toutes les formes d’art.",
+                "type": "Text"
+              }
+            ],
+            "icon": "info-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.activity.about",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "key": "i18n:guest.activity.rating",
+                "type": "KeyValue",
+                "value": "★ 4,1 (48 avis)"
+              },
+              {
+                "key": "i18n:guest.activity.duration",
+                "type": "KeyValue",
+                "value": "45 min"
+              },
+              {
+                "key": "i18n:guest.activity.provider",
+                "type": "KeyValue",
+                "value": "Viator"
+              }
+            ],
+            "icon": "info-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.practical.title",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://shop.live.rc.viator.com/fr-FR/tours/Antibes/The-Little-Train-of-Antibes-Juan-les-Pins/d21941-273628P2?mcid=42383&pid=P00322642&medium=api&api_version=2.0"
+            },
+            "label": "guest.activity.bookOn",
+            "type": "Button"
+          },
+          {
+            "text": "i18n:guest.activities.disclosure",
+            "type": "Text",
+            "variant": "caption"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.activities.disclosure": "Liens partenaires : Portaki peut percevoir une commission, sans surcoût pour vous.",
+        "guest.activities.title": "Activités & billets",
+        "guest.disclaimer.title": "Info",
+        "guest.hostActivities.choice": "Choix de votre hôte",
+        "guest.hostActivities.disclosure": "Activité proposée par votre hôte, sans commission. La réservation se fait directement avec le prestataire.",
+        "guest.hostActivities.title": "Vos activités",
+        "guest.seeOnMap": "Voir tout sur la carte",
+        "guest.viator.via": "via Viator",
+        "home.card.title": "Bons plans"
+      },
+      "surfaceId": "home.card",
+      "tree": {
+        "action": {
+          "args": {
+            "icon": "map-pin",
+            "title": "i18n:home.card.title"
+          },
+          "presentation": "bottomSheet",
+          "surface_render": "explore.detail",
+          "type": "openOverlay"
+        },
+        "children": [
+          {
+            "message": "Suggestions de votre hôte, sans partenariat.",
+            "title": "i18n:guest.disclaimer.title",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "action": {
+                  "to": "local-guide/detail/boulangerie",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "layout": "tile",
+                "leading": {
+                  "map": {
+                    "lat": 43.5531,
+                    "lng": 7.0152
+                  }
+                },
+                "subtitle": "Boulangerie · 350 m",
+                "title": "La boulangerie du village",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "to": "local-guide/detail/marche",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "layout": "tile",
+                "leading": {
+                  "map": {
+                    "lat": 43.5552,
+                    "lng": 7.0214
+                  }
+                },
+                "subtitle": "Marché · 1,2 km",
+                "title": "Marché provençal",
+                "trailing": {
+                  "badge": {
+                    "label": "Samedi matin",
+                    "tone": "primary"
+                  }
+                },
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "to": "local-guide/detail/lac",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "layout": "tile",
+                "leading": {
+                  "map": {
+                    "lat": 43.5663,
+                    "lng": 6.8511
+                  }
+                },
+                "subtitle": "Baignade · 9 km",
+                "title": "Lac de Saint-Cassien",
+                "type": "ListItem"
+              }
+            ],
+            "direction": "horizontal",
+            "gap": 8.0,
+            "scroll": true,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "text": "i18n:guest.hostActivities.title",
+                "type": "Text",
+                "variant": "title"
+              },
+              {
+                "children": [
+                  {
+                    "action": {
+                      "to": "local-guide/activity/voilier",
+                      "type": "navigate"
+                    },
+                    "chevron": true,
+                    "layout": "tile",
+                    "meta": "60 € / pers.",
+                    "subtitle": "Marc, skipper au port · 3 h",
+                    "title": "Sortie voilier au coucher du soleil",
+                    "trailing": {
+                      "badge": {
+                        "label": "i18n:guest.hostActivities.choice",
+                        "tone": "primary"
+                      }
+                    },
+                    "type": "ListItem"
+                  }
+                ],
+                "direction": "horizontal",
+                "gap": 8.0,
+                "scroll": true,
+                "type": "Stack"
+              },
+              {
+                "text": "i18n:guest.hostActivities.disclosure",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 8.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "text": "i18n:guest.activities.title",
+                "type": "Text",
+                "variant": "title"
+              },
+              {
+                "action": {
+                  "type": "external",
+                  "url": "https://www.getyourguide.com/s/?q=Antibes&partner_id=CLOQ42U"
+                },
+                "href": "https://www.getyourguide.com/s/?q=Antibes&partner_id=CLOQ42U",
+                "label": "Voir les activités à Antibes",
+                "type": "Link"
+              },
+              {
+                "children": [
+                  {
+                    "action": {
+                      "to": "local-guide/link/273628P2",
+                      "type": "navigate"
+                    },
+                    "children": [
+                      {
+                        "text": "Asseyez-vous à droite : c'est le côté qui longe les remparts.",
+                        "type": "Text",
+                        "variant": "caption"
+                      }
+                    ],
+                    "layout": "tile",
+                    "leading": {
+                      "image": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-720x480/10/24/33/0b.jpg"
+                    },
+                    "meta": "À partir de 13 €",
+                    "subtitle": "★ 4,1 (48 avis) · 45 min",
+                    "title": "Le petit train d'Antibes",
+                    "trailing": {
+                      "badge": {
+                        "label": "i18n:guest.viator.via",
+                        "tone": "neutral"
+                      }
+                    },
+                    "type": "ListItem"
+                  }
+                ],
+                "direction": "horizontal",
+                "gap": 8.0,
+                "scroll": true,
+                "type": "Stack"
+              },
+              {
+                "text": "i18n:guest.activities.disclosure",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 8.0,
+            "type": "Stack"
+          },
+          {
+            "action": {
+              "args": {
+                "icon": "map-pin",
+                "title": "i18n:home.card.title"
+              },
+              "presentation": "bottomSheet",
+              "surface_render": "explore.detail",
+              "type": "openOverlay"
+            },
+            "label": "i18n:guest.seeOnMap",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "icon": "map-pin",
+        "title": "i18n:home.card.title",
+        "type": "Card"
+      }
+    },
+    {
+      "i18n": {
+        "nav.local-guide": "Bons plans"
+      },
+      "surfaceId": "upcoming.card",
+      "tree": {
+        "children": [
+          {
+            "text": "3 adresses",
+            "type": "Text",
+            "variant": "body"
+          }
+        ],
+        "icon": "map-pin",
+        "title": "i18n:nav.local-guide",
+        "type": "Card"
+      }
+    }
+  ]
+}

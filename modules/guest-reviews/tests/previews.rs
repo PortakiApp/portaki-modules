@@ -3,7 +3,7 @@
 #[path = "../../../support/previews.rs"]
 mod previews;
 
-use guest_reviews::render_post_stay_card;
+use guest_reviews::{render_home_card, render_post_stay_card};
 use serde_json::json;
 
 /// L'avis déposé sur Portaki seulement : un lien de plateforme d'exemple pointerait vers une
@@ -22,13 +22,18 @@ fn sample_config() -> serde_json::Value {
 #[test]
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
-    let card = previews::guest(root)
-        .with_config(&sample_config())
+    let context = previews::guest(root).with_config(&sample_config());
+    let card = context
+        .clone()
         .run(render_post_stay_card)
         .expect("post-stay card");
-    previews::check(
+    // La carte d'accueil n'a pas de chemin : hors de `previews.json`, mais c'est elle
+    // que la démo du livret montre en premier.
+    let home = context.run(render_home_card).expect("home");
+    previews::check_all(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![("post-stay.card", card)],
+        vec![("home.card", home)],
     );
 }

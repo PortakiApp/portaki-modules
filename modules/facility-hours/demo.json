@@ -1,0 +1,305 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "guest.note.title": "À savoir",
+        "guest.state.open": "Ouvert"
+      },
+      "surfaceId": "explore.detail",
+      "tree": {
+        "children": [
+          {
+            "message": "Horaires susceptibles de varier les jours fériés.",
+            "title": "i18n:guest.note.title",
+            "type": "InfoBanner"
+          },
+          {
+            "text": "3 lignes d’horaires",
+            "type": "Text",
+            "variant": "caption"
+          },
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "text": "Tous les jours, de juin à septembre",
+                        "type": "Text",
+                        "variant": "caption"
+                      },
+                      {
+                        "text": "Enfants sous la surveillance d'un adulte",
+                        "type": "Text",
+                        "variant": "caption"
+                      },
+                      {
+                        "text": "Bonnet de bain non obligatoire.",
+                        "type": "Text",
+                        "variant": "caption"
+                      }
+                    ],
+                    "details": [
+                      {
+                        "label": "lundi",
+                        "value": "09:00 – 20:00"
+                      },
+                      {
+                        "label": "mardi",
+                        "value": "09:00 – 20:00"
+                      },
+                      {
+                        "label": "mercredi",
+                        "value": "09:00 – 20:00"
+                      },
+                      {
+                        "label": "jeudi",
+                        "value": "09:00 – 20:00"
+                      },
+                      {
+                        "label": "vendredi",
+                        "value": "09:00 – 20:00"
+                      },
+                      {
+                        "label": "samedi",
+                        "value": "09:00 – 20:00"
+                      },
+                      {
+                        "current": true,
+                        "label": "dimanche",
+                        "value": "09:00 – 20:00"
+                      }
+                    ],
+                    "leading": "sun",
+                    "subtitle": "9 h – 20 h",
+                    "title": "Piscine",
+                    "trailing": {
+                      "badge": {
+                        "label": "i18n:guest.state.open",
+                        "tone": "success"
+                      }
+                    },
+                    "type": "ListItem"
+                  },
+                  {
+                    "children": [
+                      {
+                        "text": "Rez-de-chaussée, bâtiment B",
+                        "type": "Text",
+                        "variant": "caption"
+                      }
+                    ],
+                    "details": [
+                      {
+                        "label": "lundi",
+                        "value": "07:00 – 22:00"
+                      },
+                      {
+                        "label": "mardi",
+                        "value": "07:00 – 22:00"
+                      },
+                      {
+                        "label": "mercredi",
+                        "value": "07:00 – 22:00"
+                      },
+                      {
+                        "label": "jeudi",
+                        "value": "07:00 – 22:00"
+                      },
+                      {
+                        "label": "vendredi",
+                        "value": "07:00 – 22:00"
+                      },
+                      {
+                        "label": "samedi",
+                        "value": "07:00 – 22:00"
+                      },
+                      {
+                        "current": true,
+                        "label": "dimanche",
+                        "value": "07:00 – 22:00"
+                      }
+                    ],
+                    "leading": "droplet",
+                    "subtitle": "7 h – 22 h",
+                    "title": "Laverie",
+                    "trailing": {
+                      "badge": {
+                        "label": "i18n:guest.state.open",
+                        "tone": "success"
+                      }
+                    },
+                    "type": "ListItem"
+                  }
+                ],
+                "gap": 4.0,
+                "type": "Stack"
+              }
+            ],
+            "icon": "clock",
+            "surface": "elevated",
+            "title": "Équipements",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "text": "Du lundi au samedi",
+                        "type": "Text",
+                        "variant": "caption"
+                      }
+                    ],
+                    "details": [
+                      {
+                        "label": "lundi",
+                        "value": "08:30 – 18:00"
+                      },
+                      {
+                        "label": "mardi",
+                        "value": "08:30 – 18:00"
+                      },
+                      {
+                        "label": "mercredi",
+                        "value": "08:30 – 18:00"
+                      },
+                      {
+                        "label": "jeudi",
+                        "value": "08:30 – 18:00"
+                      },
+                      {
+                        "label": "vendredi",
+                        "value": "08:30 – 18:00"
+                      },
+                      {
+                        "label": "samedi",
+                        "value": "08:30 – 18:00"
+                      },
+                      {
+                        "current": true,
+                        "label": "dimanche",
+                        "value": "08:30 – 18:00"
+                      }
+                    ],
+                    "leading": "building",
+                    "subtitle": "8 h 30 – 12 h · 14 h – 18 h",
+                    "title": "Accueil de la résidence",
+                    "trailing": {
+                      "badge": {
+                        "label": "i18n:guest.state.open",
+                        "tone": "success"
+                      }
+                    },
+                    "type": "ListItem"
+                  }
+                ],
+                "gap": 4.0,
+                "type": "Stack"
+              }
+            ],
+            "icon": "clock",
+            "surface": "elevated",
+            "title": "Services",
+            "type": "Card"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.note.title": "À savoir",
+        "guest.state.open": "Ouvert",
+        "guest.stay.checkin": "Arrivée",
+        "guest.stay.checkout": "Départ",
+        "home.card.subtitle": "État en direct",
+        "home.card.title": "Horaires & accès"
+      },
+      "surfaceId": "home.card",
+      "tree": {
+        "action": {
+          "args": {
+            "icon": "clock",
+            "title": "i18n:home.card.title"
+          },
+          "presentation": "bottomSheet",
+          "surface_render": "explore.detail",
+          "type": "openOverlay"
+        },
+        "children": [
+          {
+            "children": [
+              {
+                "icon": "key",
+                "key": "i18n:guest.stay.checkin",
+                "layout": "tile",
+                "mono": true,
+                "type": "KeyValue",
+                "value": "guest.stay.from 17:00"
+              },
+              {
+                "icon": "clock",
+                "key": "i18n:guest.stay.checkout",
+                "layout": "tile",
+                "mono": true,
+                "type": "KeyValue",
+                "value": "guest.stay.before 12:00"
+              }
+            ],
+            "minColumnWidth": 120.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "message": "Horaires susceptibles de varier les jours fériés.",
+            "title": "i18n:guest.note.title",
+            "type": "InfoBanner"
+          },
+          {
+            "leading": "sun",
+            "title": "Piscine",
+            "trailing": {
+              "badge": {
+                "label": "i18n:guest.state.open",
+                "tone": "success"
+              }
+            },
+            "type": "ListItem"
+          },
+          {
+            "leading": "droplet",
+            "title": "Laverie",
+            "trailing": {
+              "badge": {
+                "label": "i18n:guest.state.open",
+                "tone": "success"
+              }
+            },
+            "type": "ListItem"
+          },
+          {
+            "leading": "building",
+            "title": "Accueil de la résidence",
+            "trailing": {
+              "badge": {
+                "label": "i18n:guest.state.open",
+                "tone": "success"
+              }
+            },
+            "type": "ListItem"
+          }
+        ],
+        "icon": "clock",
+        "subtitle": "i18n:home.card.subtitle",
+        "title": "i18n:home.card.title",
+        "type": "Card"
+      }
+    }
+  ]
+}

@@ -1,0 +1,440 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "explore.forecast.days": "Jour par jour",
+        "explore.forecast.hint": "Prévisions sur 5 jours",
+        "weather.description.sunny": "Ensoleillé",
+        "weather.humidity": "Humidité",
+        "weather.uv": "UV",
+        "weather.uv.high": "UV élevé",
+        "weather.wind": "Vent"
+      },
+      "surfaceId": "explore.forecast",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "name": "sun",
+                "size": 56.0,
+                "type": "Icon"
+              },
+              {
+                "children": [
+                  {
+                    "tone": "warning",
+                    "type": "Temperature",
+                    "unit": "C",
+                    "value": 23.0,
+                    "variant": "hero"
+                  },
+                  {
+                    "text": "i18n:weather.description.sunny",
+                    "type": "Text",
+                    "variant": "caption"
+                  },
+                  {
+                    "text": "Cannes",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 4.0,
+                "type": "Stack"
+              }
+            ],
+            "direction": "horizontal",
+            "gap": 16.0,
+            "type": "Stack"
+          },
+          {
+            "type": "Divider"
+          },
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "name": "droplets",
+                        "size": 14.0,
+                        "type": "Icon"
+                      },
+                      {
+                        "emphasis": "strong",
+                        "text": "i18n:weather.humidity",
+                        "type": "Text",
+                        "variant": "caption"
+                      }
+                    ],
+                    "direction": "horizontal",
+                    "gap": 6.0,
+                    "type": "Stack"
+                  },
+                  {
+                    "text": "58%",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 2.0,
+                "type": "Stack"
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "name": "sun",
+                        "size": 14.0,
+                        "type": "Icon"
+                      },
+                      {
+                        "emphasis": "strong",
+                        "text": "i18n:weather.uv",
+                        "type": "Text",
+                        "variant": "caption"
+                      }
+                    ],
+                    "direction": "horizontal",
+                    "gap": 6.0,
+                    "type": "Stack"
+                  },
+                  {
+                    "text": "i18n:weather.uv.high",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 2.0,
+                "type": "Stack"
+              },
+              {
+                "children": [
+                  {
+                    "children": [
+                      {
+                        "name": "wind",
+                        "size": 14.0,
+                        "type": "Icon"
+                      },
+                      {
+                        "emphasis": "strong",
+                        "text": "i18n:weather.wind",
+                        "type": "Text",
+                        "variant": "caption"
+                      }
+                    ],
+                    "direction": "horizontal",
+                    "gap": 6.0,
+                    "type": "Stack"
+                  },
+                  {
+                    "text": "12 km/h",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 2.0,
+                "type": "Stack"
+              }
+            ],
+            "columns": 2,
+            "gap": 12.0,
+            "type": "Grid"
+          },
+          {
+            "type": "Divider"
+          },
+          {
+            "text": "i18n:explore.forecast.hint",
+            "type": "Text",
+            "variant": "title"
+          },
+          {
+            "children": [
+              {
+                "leading": {
+                  "icon": "sun"
+                },
+                "subtitle": "Ensoleillé · vent 11 km/h · pluie 0 % · humidité 55 %",
+                "title": "Lun 1",
+                "tone": "primary",
+                "trailing": {
+                  "mono": true,
+                  "text": "17° / 25°"
+                },
+                "type": "ListItem"
+              },
+              {
+                "leading": {
+                  "icon": "cloud-sun"
+                },
+                "subtitle": "Nuageux · vent 14 km/h · pluie 20 % · humidité 62 %",
+                "title": "Mar 2",
+                "trailing": {
+                  "mono": true,
+                  "text": "18° / 24°"
+                },
+                "type": "ListItem"
+              },
+              {
+                "leading": {
+                  "icon": "cloud-rain"
+                },
+                "subtitle": "Pluvieux · vent 23 km/h · pluie 80 % · humidité 81 %",
+                "title": "Mer 3",
+                "trailing": {
+                  "mono": true,
+                  "text": "16° / 21°"
+                },
+                "type": "ListItem"
+              },
+              {
+                "leading": {
+                  "icon": "cloud-sun"
+                },
+                "subtitle": "Nuageux · vent 16 km/h · pluie 30 % · humidité 66 %",
+                "title": "Jeu 4",
+                "trailing": {
+                  "mono": true,
+                  "text": "17° / 23°"
+                },
+                "type": "ListItem"
+              },
+              {
+                "leading": {
+                  "icon": "sun"
+                },
+                "subtitle": "Ensoleillé · vent 10 km/h · pluie 0 % · humidité 52 %",
+                "title": "Ven 5",
+                "trailing": {
+                  "mono": true,
+                  "text": "18° / 27°"
+                },
+                "type": "ListItem"
+              }
+            ],
+            "surface": "elevated",
+            "title": "i18n:explore.forecast.days",
+            "type": "Card"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "nav.weather": "Météo",
+        "weather.description.sunny": "Ensoleillé"
+      },
+      "surfaceId": "home.card",
+      "tree": {
+        "action": {
+          "args": {
+            "icon": "sun",
+            "title": "i18n:nav.weather"
+          },
+          "presentation": "bottomSheet",
+          "surface_render": "explore.forecast",
+          "type": "openOverlay"
+        },
+        "children": [
+          {
+            "children": [
+              {
+                "name": "sun",
+                "size": 56.0,
+                "type": "Icon"
+              },
+              {
+                "children": [
+                  {
+                    "tone": "warning",
+                    "type": "Temperature",
+                    "unit": "C",
+                    "value": 23.0,
+                    "variant": "hero"
+                  },
+                  {
+                    "text": "i18n:weather.description.sunny",
+                    "type": "Text",
+                    "variant": "caption"
+                  },
+                  {
+                    "text": "Cannes",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 4.0,
+                "type": "Stack"
+              }
+            ],
+            "direction": "horizontal",
+            "gap": 16.0,
+            "type": "Stack"
+          },
+          {
+            "type": "Divider"
+          },
+          {
+            "children": [
+              {
+                "boxed": true,
+                "children": [
+                  {
+                    "text": "Lun 1",
+                    "type": "Text",
+                    "variant": "caption"
+                  },
+                  {
+                    "name": "sun",
+                    "size": 28.0,
+                    "type": "Icon"
+                  },
+                  {
+                    "emphasis": "strong",
+                    "text": "21°",
+                    "tone": "success",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 6.0,
+                "tone": "primary",
+                "type": "Stack"
+              },
+              {
+                "boxed": true,
+                "children": [
+                  {
+                    "text": "Mar 2",
+                    "type": "Text",
+                    "variant": "caption"
+                  },
+                  {
+                    "name": "cloud-sun",
+                    "size": 28.0,
+                    "type": "Icon"
+                  },
+                  {
+                    "emphasis": "strong",
+                    "text": "21°",
+                    "tone": "success",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 6.0,
+                "type": "Stack"
+              },
+              {
+                "boxed": true,
+                "children": [
+                  {
+                    "text": "Mer 3",
+                    "type": "Text",
+                    "variant": "caption"
+                  },
+                  {
+                    "name": "cloud-rain",
+                    "size": 28.0,
+                    "type": "Icon"
+                  },
+                  {
+                    "emphasis": "strong",
+                    "text": "19°",
+                    "tone": "success",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 6.0,
+                "type": "Stack"
+              },
+              {
+                "boxed": true,
+                "children": [
+                  {
+                    "text": "Jeu 4",
+                    "type": "Text",
+                    "variant": "caption"
+                  },
+                  {
+                    "name": "cloud-sun",
+                    "size": 28.0,
+                    "type": "Icon"
+                  },
+                  {
+                    "emphasis": "strong",
+                    "text": "20°",
+                    "tone": "success",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 6.0,
+                "type": "Stack"
+              },
+              {
+                "boxed": true,
+                "children": [
+                  {
+                    "text": "Ven 5",
+                    "type": "Text",
+                    "variant": "caption"
+                  },
+                  {
+                    "name": "sun",
+                    "size": 28.0,
+                    "type": "Icon"
+                  },
+                  {
+                    "emphasis": "strong",
+                    "text": "23°",
+                    "tone": "warning",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 6.0,
+                "type": "Stack"
+              }
+            ],
+            "gap": 6.0,
+            "minColumnWidth": 44.0,
+            "plain": true,
+            "type": "Grid"
+          }
+        ],
+        "icon": "sun",
+        "subtitle": "La météo des prochains jours",
+        "title": "23° · Ensoleillé",
+        "type": "Card"
+      }
+    },
+    {
+      "i18n": {
+        "nav.weather": "Météo"
+      },
+      "surfaceId": "upcoming.card",
+      "tree": {
+        "children": [
+          {
+            "text": "23°C · Ensoleillé",
+            "type": "Text",
+            "variant": "body"
+          }
+        ],
+        "icon": "cloud-sun",
+        "title": "i18n:nav.weather",
+        "type": "Card"
+      }
+    }
+  ]
+}

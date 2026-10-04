@@ -1,0 +1,259 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "guest.call": "Appeler",
+        "guest.emergency.message": "En cas d’urgence vitale, composez le 112 ou le 15 (SAMU) selon les consignes locales.",
+        "guest.emergency.title": "Urgence vitale",
+        "guest.host.label": "Votre hôte",
+        "guest.numbers.fire": "Pompiers",
+        "guest.numbers.general": "Urgences",
+        "guest.numbers.medical": "SAMU"
+      },
+      "surfaceId": "explore.detail",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "action": {
+                  "type": "external",
+                  "url": "tel:112"
+                },
+                "layout": "tile",
+                "leading": {
+                  "icon": "phone"
+                },
+                "subtitle": "i18n:guest.numbers.general",
+                "title": "112",
+                "tone": "danger",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "type": "external",
+                  "url": "tel:15"
+                },
+                "layout": "tile",
+                "leading": {
+                  "icon": "phone"
+                },
+                "subtitle": "i18n:guest.numbers.medical",
+                "title": "15",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "type": "external",
+                  "url": "tel:18"
+                },
+                "layout": "tile",
+                "leading": {
+                  "icon": "phone"
+                },
+                "subtitle": "i18n:guest.numbers.fire",
+                "title": "18",
+                "type": "ListItem"
+              }
+            ],
+            "minColumnWidth": 90.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "message": "i18n:guest.emergency.message",
+            "title": "i18n:guest.emergency.title",
+            "type": "InfoBanner"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:0639981234"
+            },
+            "subtitle": "06 39 98 12 34",
+            "title": "i18n:guest.host.label",
+            "trailing": "i18n:guest.call",
+            "type": "ListItem"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:3237"
+            },
+            "children": [
+              {
+                "text": "Service national",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "subtitle": "3237",
+            "title": "Pharmacie de garde",
+            "trailing": "i18n:guest.call",
+            "type": "ListItem"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:0199001234"
+            },
+            "children": [
+              {
+                "text": "Cabinet du centre, sur rendez-vous",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "subtitle": "01 99 00 12 34",
+            "title": "Médecin généraliste",
+            "trailing": "i18n:guest.call",
+            "type": "ListItem"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:15"
+            },
+            "subtitle": "15",
+            "title": "SAMU",
+            "trailing": "i18n:guest.call",
+            "type": "ListItem"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.call": "Appeler",
+        "guest.host.label": "Votre hôte",
+        "guest.numbers.fire": "Pompiers",
+        "guest.numbers.general": "Urgences",
+        "guest.numbers.medical": "SAMU",
+        "home.card.subtitle": "Appel direct depuis votre téléphone",
+        "home.card.title": "Urgences & utiles"
+      },
+      "surfaceId": "home.card",
+      "tree": {
+        "action": {
+          "args": {
+            "icon": "phone",
+            "title": "i18n:home.card.title"
+          },
+          "presentation": "bottomSheet",
+          "surface_render": "explore.detail",
+          "type": "openOverlay"
+        },
+        "children": [
+          {
+            "children": [
+              {
+                "action": {
+                  "type": "external",
+                  "url": "tel:112"
+                },
+                "layout": "tile",
+                "leading": {
+                  "icon": "phone"
+                },
+                "subtitle": "i18n:guest.numbers.general",
+                "title": "112",
+                "tone": "danger",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "type": "external",
+                  "url": "tel:15"
+                },
+                "layout": "tile",
+                "leading": {
+                  "icon": "phone"
+                },
+                "subtitle": "i18n:guest.numbers.medical",
+                "title": "15",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "type": "external",
+                  "url": "tel:18"
+                },
+                "layout": "tile",
+                "leading": {
+                  "icon": "phone"
+                },
+                "subtitle": "i18n:guest.numbers.fire",
+                "title": "18",
+                "type": "ListItem"
+              }
+            ],
+            "minColumnWidth": 90.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:0639981234"
+            },
+            "subtitle": "06 39 98 12 34",
+            "title": "i18n:guest.host.label",
+            "trailing": "i18n:guest.call",
+            "type": "ListItem"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:3237"
+            },
+            "children": [
+              {
+                "text": "Service national",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "subtitle": "3237",
+            "title": "Pharmacie de garde",
+            "trailing": "i18n:guest.call",
+            "type": "ListItem"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:0199001234"
+            },
+            "children": [
+              {
+                "text": "Cabinet du centre, sur rendez-vous",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "subtitle": "01 99 00 12 34",
+            "title": "Médecin généraliste",
+            "trailing": "i18n:guest.call",
+            "type": "ListItem"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:15"
+            },
+            "subtitle": "15",
+            "title": "SAMU",
+            "trailing": "i18n:guest.call",
+            "type": "ListItem"
+          }
+        ],
+        "icon": "phone",
+        "subtitle": "i18n:home.card.subtitle",
+        "title": "i18n:home.card.title",
+        "type": "Card"
+      }
+    }
+  ]
+}

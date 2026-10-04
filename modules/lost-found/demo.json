@@ -1,0 +1,456 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "form.category.clothing": "Vêtement",
+        "form.category.glasses": "Lunettes",
+        "form.category.jewellery": "Bijou, montre",
+        "form.category.label": "Quel objet ?",
+        "form.category.other": "Autre",
+        "form.category.papers": "Papiers, clés",
+        "form.category.phone": "Téléphone, chargeur",
+        "form.category.toiletries": "Trousse de toilette",
+        "form.category.toy": "Jouet, doudou",
+        "form.contactHint.label": "Comment vous joindre (optionnel)",
+        "form.contactHint.placeholder": "Téléphone ou e-mail",
+        "form.deadline.message": "Vous avez quelques jours après votre départ pour déclarer un objet.",
+        "form.details.label": "Détails",
+        "form.details.placeholder": "Optionnel — où, quand, couleur, marque…",
+        "form.itemDescription.hint": "Couleur, marque, taille : tout ce qui aide votre hôte à le reconnaître.",
+        "form.itemDescription.label": "De quoi s'agit-il ?",
+        "form.itemDescription.placeholder": "ex. Écharpe bleue, clé de chambre",
+        "form.kind.found": "J'ai trouvé quelque chose",
+        "form.kind.label": "Type",
+        "form.kind.lost": "J'ai perdu quelque chose",
+        "form.photo.label": "Ajouter une photo de l’objet",
+        "form.return.hint": "Les options proposées sont choisies par votre hôte.",
+        "form.return.label": "Que faut-il en faire ?",
+        "form.return.pickup": "Je repasse le chercher",
+        "form.return.pickup.description": "Votre hôte vous proposera un créneau",
+        "form.return.ship": "Me le renvoyer",
+        "form.return.ship.description": "Frais d’envoi à convenir directement avec votre hôte",
+        "form.returnAddress.label": "Adresse de renvoi",
+        "form.returnAddress.placeholder": "Nom, rue, code postal, ville, pays",
+        "form.room.bathroom": "Salle de bain",
+        "form.room.bedroom": "Chambre",
+        "form.room.kitchen": "Cuisine",
+        "form.room.label": "Pièce",
+        "form.room.living": "Salon",
+        "form.room.outside": "Terrasse, extérieur",
+        "form.room.unknown": "Je ne sais pas",
+        "form.step.found": "Si votre hôte le retrouve",
+        "form.step.object": "L’objet",
+        "form.step.where": "Où l’avez-vous laissé ?",
+        "form.submit": "Envoyer"
+      },
+      "surfaceId": "guest.form",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "choices": [
+                      {
+                        "icon": "search-x",
+                        "label": "i18n:form.kind.lost",
+                        "value": "lost"
+                      },
+                      {
+                        "icon": "package-search",
+                        "label": "i18n:form.kind.found",
+                        "value": "found"
+                      }
+                    ],
+                    "layout": "compact",
+                    "name": "kind",
+                    "type": "ChoiceList"
+                  }
+                ],
+                "label": "i18n:form.kind.label",
+                "name": "kind",
+                "required": true,
+                "type": "Field"
+              },
+              {
+                "children": [
+                  {
+                    "choices": [
+                      {
+                        "emoji": "📱",
+                        "label": "i18n:form.category.phone",
+                        "value": "phone"
+                      },
+                      {
+                        "emoji": "👕",
+                        "label": "i18n:form.category.clothing",
+                        "value": "clothing"
+                      },
+                      {
+                        "emoji": "🕶️",
+                        "label": "i18n:form.category.glasses",
+                        "value": "glasses"
+                      },
+                      {
+                        "emoji": "💍",
+                        "label": "i18n:form.category.jewellery",
+                        "value": "jewellery"
+                      },
+                      {
+                        "emoji": "🔑",
+                        "label": "i18n:form.category.papers",
+                        "value": "papers"
+                      },
+                      {
+                        "emoji": "🧸",
+                        "label": "i18n:form.category.toy",
+                        "value": "toy"
+                      },
+                      {
+                        "emoji": "🧴",
+                        "label": "i18n:form.category.toiletries",
+                        "value": "toiletries"
+                      },
+                      {
+                        "icon": "plus",
+                        "label": "i18n:form.category.other",
+                        "value": "other"
+                      }
+                    ],
+                    "layout": "grid",
+                    "name": "category",
+                    "type": "ChoiceList"
+                  }
+                ],
+                "label": "i18n:form.category.label",
+                "name": "category",
+                "type": "Field"
+              },
+              {
+                "children": [
+                  {
+                    "name": "itemDescription",
+                    "placeholder": "i18n:form.itemDescription.placeholder",
+                    "type": "TextInput"
+                  }
+                ],
+                "label": "i18n:form.itemDescription.label",
+                "name": "itemDescription",
+                "required": true,
+                "type": "Field"
+              },
+              {
+                "text": "i18n:form.itemDescription.hint",
+                "type": "FieldHint"
+              }
+            ],
+            "gap": 12.0,
+            "step": "i18n:form.step.object",
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "choices": [
+                      {
+                        "label": "i18n:form.room.bedroom",
+                        "value": "bedroom"
+                      },
+                      {
+                        "label": "i18n:form.room.bathroom",
+                        "value": "bathroom"
+                      },
+                      {
+                        "label": "i18n:form.room.kitchen",
+                        "value": "kitchen"
+                      },
+                      {
+                        "label": "i18n:form.room.living",
+                        "value": "living"
+                      },
+                      {
+                        "label": "i18n:form.room.outside",
+                        "value": "outside"
+                      },
+                      {
+                        "label": "i18n:form.room.unknown",
+                        "value": "unknown"
+                      }
+                    ],
+                    "layout": "compact",
+                    "name": "room",
+                    "type": "ChoiceList"
+                  }
+                ],
+                "label": "i18n:form.room.label",
+                "name": "room",
+                "type": "Field"
+              },
+              {
+                "children": [
+                  {
+                    "name": "contactHint",
+                    "placeholder": "i18n:form.contactHint.placeholder",
+                    "type": "TextInput"
+                  }
+                ],
+                "label": "i18n:form.contactHint.label",
+                "name": "contactHint",
+                "type": "Field"
+              },
+              {
+                "children": [
+                  {
+                    "name": "details",
+                    "placeholder": "i18n:form.details.placeholder",
+                    "type": "TextArea"
+                  }
+                ],
+                "label": "i18n:form.details.label",
+                "name": "details",
+                "type": "Field"
+              },
+              {
+                "children": [
+                  {
+                    "name": "photo",
+                    "type": "ImageUpload"
+                  }
+                ],
+                "label": "i18n:form.photo.label",
+                "name": "photo",
+                "type": "Field"
+              }
+            ],
+            "gap": 12.0,
+            "step": "i18n:form.step.where",
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "choices": [
+                      {
+                        "description": "i18n:form.return.ship.description",
+                        "icon": "send",
+                        "label": "i18n:form.return.ship",
+                        "value": "ship"
+                      },
+                      {
+                        "description": "i18n:form.return.pickup.description",
+                        "icon": "home",
+                        "label": "i18n:form.return.pickup",
+                        "value": "pickup"
+                      }
+                    ],
+                    "layout": "list",
+                    "name": "returnChoice",
+                    "type": "ChoiceList"
+                  }
+                ],
+                "label": "i18n:form.return.label",
+                "name": "returnChoice",
+                "required": true,
+                "type": "Field"
+              },
+              {
+                "text": "i18n:form.return.hint",
+                "type": "FieldHint"
+              },
+              {
+                "children": [
+                  {
+                    "name": "returnAddress",
+                    "placeholder": "i18n:form.returnAddress.placeholder",
+                    "type": "TextArea"
+                  }
+                ],
+                "label": "i18n:form.returnAddress.label",
+                "name": "returnAddress",
+                "required": true,
+                "type": "Field",
+                "visibleWhen": "returnChoice=ship"
+              },
+              {
+                "message": "i18n:form.deadline.message",
+                "title": "Jusqu’au 15 juin 2026",
+                "tone": "neutral",
+                "type": "InfoBanner"
+              }
+            ],
+            "gap": 12.0,
+            "step": "i18n:form.step.found",
+            "type": "Stack"
+          }
+        ],
+        "onSubmit": {
+          "args": {},
+          "module_id": "lost-found",
+          "name": "submit",
+          "type": "command"
+        },
+        "submitLabel": "i18n:form.submit",
+        "type": "Form",
+        "wizard": true
+      }
+    },
+    {
+      "i18n": {
+        "form.kind.lost": "J'ai perdu quelque chose",
+        "guest.return.pickup": "Récupération sur place",
+        "guest.return.ship": "Renvoi postal",
+        "guest.return.ship.paidByGuest": "À vos frais, à arranger avec votre hôte",
+        "home.card.sent": "Déclaration envoyée",
+        "home.card.thanks": "Merci — votre hôte a été prévenu.",
+        "home.card.title": "Objets perdus ou trouvés",
+        "home.card.yourReports": "Vos signalements ce séjour"
+      },
+      "surfaceId": "home.card",
+      "tree": {
+        "action": {
+          "args": {
+            "icon": "search",
+            "title": "i18n:home.card.title"
+          },
+          "presentation": "bottomSheet",
+          "surface_render": "guest.form",
+          "type": "openOverlay"
+        },
+        "children": [
+          {
+            "children": [
+              {
+                "text": "i18n:home.card.thanks",
+                "type": "Text",
+                "variant": "body"
+              },
+              {
+                "text": "i18n:home.card.yourReports",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "subtitle": "i18n:form.kind.lost",
+                "title": "Chargeur de téléphone blanc",
+                "type": "ListItem"
+              },
+              {
+                "leading": "package",
+                "subtitle": "i18n:guest.return.ship.paidByGuest",
+                "title": "i18n:guest.return.ship",
+                "type": "ListItem"
+              },
+              {
+                "leading": "map-pin",
+                "title": "i18n:guest.return.pickup",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "args": {
+                    "icon": "search",
+                    "title": "i18n:home.card.title"
+                  },
+                  "presentation": "bottomSheet",
+                  "surface_render": "guest.form",
+                  "type": "openOverlay"
+                },
+                "chevron": true,
+                "leading": "search",
+                "title": "i18n:home.card.sent",
+                "type": "ListItem"
+              }
+            ],
+            "gap": 12.0,
+            "type": "Stack"
+          }
+        ],
+        "icon": "search",
+        "title": "i18n:home.card.title",
+        "type": "Card"
+      }
+    },
+    {
+      "i18n": {
+        "form.kind.lost": "J'ai perdu quelque chose",
+        "guest.return.pickup": "Récupération sur place",
+        "guest.return.ship": "Renvoi postal",
+        "guest.return.ship.paidByGuest": "À vos frais, à arranger avec votre hôte",
+        "home.card.sent": "Déclaration envoyée",
+        "home.card.thanks": "Merci — votre hôte a été prévenu.",
+        "home.card.title": "Objets perdus ou trouvés",
+        "home.card.yourReports": "Vos signalements ce séjour"
+      },
+      "surfaceId": "post-stay.card",
+      "tree": {
+        "action": {
+          "args": {
+            "icon": "search",
+            "title": "i18n:home.card.title"
+          },
+          "presentation": "bottomSheet",
+          "surface_render": "guest.form",
+          "type": "openOverlay"
+        },
+        "children": [
+          {
+            "children": [
+              {
+                "text": "i18n:home.card.thanks",
+                "type": "Text",
+                "variant": "body"
+              },
+              {
+                "text": "i18n:home.card.yourReports",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "subtitle": "i18n:form.kind.lost",
+                "title": "Chargeur de téléphone blanc",
+                "type": "ListItem"
+              },
+              {
+                "leading": "package",
+                "subtitle": "i18n:guest.return.ship.paidByGuest",
+                "title": "i18n:guest.return.ship",
+                "type": "ListItem"
+              },
+              {
+                "leading": "map-pin",
+                "title": "i18n:guest.return.pickup",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "args": {
+                    "icon": "search",
+                    "title": "i18n:home.card.title"
+                  },
+                  "presentation": "bottomSheet",
+                  "surface_render": "guest.form",
+                  "type": "openOverlay"
+                },
+                "chevron": true,
+                "leading": "search",
+                "title": "i18n:home.card.sent",
+                "type": "ListItem"
+              }
+            ],
+            "gap": 12.0,
+            "type": "Stack"
+          }
+        ],
+        "icon": "search",
+        "title": "i18n:home.card.title",
+        "type": "Card"
+      }
+    }
+  ]
+}

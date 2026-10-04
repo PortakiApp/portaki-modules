@@ -4,7 +4,7 @@
 mod previews;
 
 use serde_json::json;
-use trails::{render_explore_detail, render_explore_item};
+use trails::{render_explore_detail, render_explore_item, render_home_card};
 
 /// Quatre randonnées autour du Cap d'Antibes : les trois niveaux, avec et sans fiche tierce.
 fn sample_config() -> serde_json::Value {
@@ -96,19 +96,21 @@ fn sample_config() -> serde_json::Value {
 #[test]
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
-    let (list, item) = previews::guest(root)
+    let (list, item, home) = previews::guest(root)
         .with_config(&sample_config())
         .run(|ctx| {
             let mut item_ctx = ctx.clone();
             item_ctx.input = json!({ "trailId": "garoupe" });
             (
-                render_explore_detail(ctx).expect("list"),
+                render_explore_detail(ctx.clone()).expect("list"),
                 render_explore_item(item_ctx).expect("item"),
+                render_home_card(ctx).expect("home"),
             )
         });
-    previews::check(
+    previews::check_all(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![("explore.detail", list), ("explore.item", item)],
+        vec![("home.card", home)],
     );
 }

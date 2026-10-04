@@ -5,7 +5,7 @@ mod previews;
 
 use portaki_sdk::capability;
 use serde_json::{json, Value};
-use weather::{render_explore_forecast, render_upcoming_card};
+use weather::{render_explore_forecast, render_home_card, render_upcoming_card};
 
 /// La météo vient d'OpenWeather : l'aperçu lui substitue une réponse d'exemple, une semaine de
 /// début juin ensoleillée avec un passage pluvieux, au format que le connecteur renvoie.
@@ -53,10 +53,14 @@ fn previews_match_the_rendered_surfaces() {
         .clone()
         .run(render_explore_forecast)
         .expect("forecast");
-    let upcoming = context.run(render_upcoming_card).expect("upcoming");
-    previews::check(
+    let upcoming = context.clone().run(render_upcoming_card).expect("upcoming");
+    // La carte d'accueil n'a pas de chemin : elle n'entre pas dans `previews.json`, mais c'est
+    // elle que la démo du livret montre en premier.
+    let home = context.run(render_home_card).expect("home");
+    previews::check_all(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![("explore.forecast", forecast), ("upcoming.card", upcoming)],
+        vec![("home.card", home)],
     );
 }

@@ -5,7 +5,7 @@ mod previews;
 
 use local_guide::{
     render_explore_activity, render_explore_detail, render_explore_item, render_explore_link,
-    render_upcoming_card,
+    render_home_card, render_upcoming_card,
 };
 
 use serde_json::json;
@@ -116,8 +116,13 @@ fn previews_match_the_rendered_surfaces() {
         ctx.input = json!({ "productCode": "273628P2" });
         render_explore_link(ctx).expect("surface")
     });
-    let upcoming = context.run(|ctx| render_upcoming_card(ctx).expect("surface"));
-    previews::check(
+    let upcoming = context
+        .clone()
+        .run(|ctx| render_upcoming_card(ctx).expect("surface"));
+    // La carte d'accueil n'a pas de chemin : hors de `previews.json`, mais c'est elle
+    // que la démo du livret montre en premier.
+    let home = context.run(render_home_card).expect("home");
+    previews::check_all(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![
@@ -127,5 +132,6 @@ fn previews_match_the_rendered_surfaces() {
             ("explore.link", hostlink),
             ("upcoming.card", upcoming),
         ],
+        vec![("home.card", home)],
     );
 }

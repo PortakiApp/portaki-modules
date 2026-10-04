@@ -1,0 +1,222 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {},
+      "surfaceId": "explore.detail",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "action": {
+                  "to": "appliances/plaques",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "leading": "🍳",
+                "subtitle": "Cuisine",
+                "title": "Plaques à induction",
+                "type": "ListItem"
+              }
+            ],
+            "icon": "plug",
+            "surface": "elevated",
+            "title": "Cuisine",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "action": {
+                  "to": "appliances/lave-linge",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "leading": "🌀",
+                "subtitle": "Salle de bain",
+                "title": "Lave-linge",
+                "type": "ListItem"
+              }
+            ],
+            "icon": "plug",
+            "surface": "elevated",
+            "title": "Salle de bain",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "action": {
+                  "to": "appliances/tv",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "leading": "📺",
+                "subtitle": "Salon",
+                "title": "Télévision",
+                "type": "ListItem"
+              }
+            ],
+            "icon": "plug",
+            "surface": "elevated",
+            "title": "Salon",
+            "type": "Card"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "explore.item.contactHost": "Un souci avec cet appareil ?",
+        "explore.item.howto": "Mode d'emploi",
+        "explore.item.manual": "Notice / manuel",
+        "explore.item.manuals": "Notices"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "text": "🍳",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "children": [
+                  {
+                    "text": "Plaques à induction",
+                    "type": "Text",
+                    "variant": "display"
+                  },
+                  {
+                    "emphasis": "subtle",
+                    "text": "Cuisine",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 4.0,
+                "type": "Stack"
+              }
+            ],
+            "direction": "horizontal",
+            "gap": 12.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "text": "i18n:explore.item.howto",
+                "type": "Eyebrow"
+              },
+              {
+                "content": "<p>Appuyez 2 secondes sur la touche marche, puis choisissez le foyer.</p><p>Seules les casseroles à fond aimanté chauffent.</p>",
+                "type": "RichText"
+              }
+            ],
+            "surface": "elevated",
+            "type": "Card"
+          },
+          {
+            "message": "La surface reste chaude quelques minutes après l'arrêt.",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "action": {
+                  "type": "external",
+                  "url": "https://example.com/notice-plaques.pdf"
+                },
+                "chevron": true,
+                "leading": "file-text",
+                "title": "i18n:explore.item.manual",
+                "type": "ListItem"
+              }
+            ],
+            "icon": "file-text",
+            "surface": "elevated",
+            "title": "i18n:explore.item.manuals",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "event": "openHostChat",
+              "payload": {
+                "applianceId": "plaques",
+                "applianceName": "Plaques à induction",
+                "context": "Appuyez 2 secondes sur la touche marche, puis choisissez le foyer.\nSeules les casseroles à fond aimanté chauffent."
+              },
+              "type": "emit"
+            },
+            "label": "i18n:explore.item.contactHost",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "nav.appliances": "Appareils"
+      },
+      "surfaceId": "home.card",
+      "tree": {
+        "action": {
+          "args": {
+            "icon": "plug",
+            "title": "i18n:nav.appliances"
+          },
+          "presentation": "fullscreen",
+          "surface_render": "explore.detail",
+          "type": "openOverlay"
+        },
+        "children": [
+          {
+            "children": [
+              {
+                "action": {
+                  "to": "appliances/plaques",
+                  "type": "navigate"
+                },
+                "chevron": false,
+                "layout": "tile",
+                "leading": "🍳",
+                "subtitle": "Cuisine",
+                "title": "Plaques à induction",
+                "type": "ListItem"
+              }
+            ],
+            "minColumnWidth": 140.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "action": {
+              "args": {
+                "icon": "plug",
+                "title": "i18n:nav.appliances"
+              },
+              "presentation": "fullscreen",
+              "surface_render": "explore.detail",
+              "type": "openOverlay"
+            },
+            "label": "Voir les 3 appareils",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "icon": "plug",
+        "subtitle": "Les plus utiles · 3 au total",
+        "title": "i18n:nav.appliances",
+        "type": "Card"
+      }
+    }
+  ]
+}

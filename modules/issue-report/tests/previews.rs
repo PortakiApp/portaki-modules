@@ -28,9 +28,11 @@ fn previews_match_the_rendered_surfaces() {
             render_guest_form(ctx).expect("guest surface"),
         )
     });
-    previews::check(
+    previews::check_all(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![("home.card", card), ("guest.form", form)],
+        // Toutes les surfaces ont un chemin : rien à ajouter pour la démo.
+        Vec::new(),
     );
 }

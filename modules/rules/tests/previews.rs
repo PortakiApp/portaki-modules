@@ -3,7 +3,9 @@
 #[path = "../../../support/previews.rs"]
 mod previews;
 
-use rules::{render_explore_detail, reset_test_store, save_content, SaveContentArgs};
+use rules::{
+    render_explore_detail, render_home_card, reset_test_store, save_content, SaveContentArgs,
+};
 use serde_json::json;
 
 /// Le règlement type d'une location de vacances — avec statuts et thèmes, pour que l'aperçu du
@@ -25,7 +27,7 @@ fn sample_payload() -> String {
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
     reset_test_store();
-    let detail = previews::guest(root).run(|ctx| {
+    let (detail, home) = previews::guest(root).run(|ctx| {
         save_content(
             ctx.clone(),
             SaveContentArgs {
@@ -35,11 +37,15 @@ fn previews_match_the_rendered_surfaces() {
             },
         )
         .expect("save");
-        render_explore_detail(ctx).expect("render")
+        (
+            render_explore_detail(ctx.clone()).expect("render"),
+            render_home_card(ctx).expect("render"),
+        )
     });
-    previews::check(
+    previews::check_all(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![("explore.detail", detail)],
+        vec![("home.card", home)],
     );
 }

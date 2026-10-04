@@ -3,7 +3,7 @@
 #[path = "../../../support/previews.rs"]
 mod previews;
 
-use events::{render_explore_detail, render_explore_item, render_upcoming_card};
+use events::{render_explore_detail, render_explore_item, render_home_card, render_upcoming_card};
 use serde_json::json;
 
 /// Trois rendez-vous saisis par l'hôte pendant le séjour d'exemple. L'agenda OpenAgenda reste
@@ -60,8 +60,13 @@ fn previews_match_the_rendered_surfaces() {
         ctx.input = json!({ "eventId": "marche-nocturne" });
         render_explore_item(ctx).expect("surface")
     });
-    let upcoming = context.run(|ctx| render_upcoming_card(ctx).expect("surface"));
-    previews::check(
+    let upcoming = context
+        .clone()
+        .run(|ctx| render_upcoming_card(ctx).expect("surface"));
+    // La carte d'accueil n'a pas de chemin : hors de `previews.json`, mais c'est elle
+    // que la démo du livret montre en premier.
+    let home = context.run(render_home_card).expect("home");
+    previews::check_all(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![
@@ -69,5 +74,6 @@ fn previews_match_the_rendered_surfaces() {
             ("explore.item", item),
             ("upcoming.card", upcoming),
         ],
+        vec![("home.card", home)],
     );
 }
