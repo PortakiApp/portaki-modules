@@ -67,6 +67,8 @@
   "host.trails.link.hint": "موقع للمشي، أو مكتب السياحة: هذا هو زرّ «فتح المسار» عند الضيف.",
   "host.trails.link.placeholder": "https://www.example-hiking.com/…",
   "host.trails.photo": "صورة",
+  "host.trails.prefill": "قراءة القياسات من المسار",
+  "host.trails.prefill.done": "قُرئت المسافة والارتفاع والنوع من المسار للتو. صحّحها إن لزم ثم احفظ.",
   "host.trails.remove": "إزالة",
   "host.trails.rowTitle": "الاسم",
   "host.trails.rowTitle.placeholder": "منارة الغاروب",

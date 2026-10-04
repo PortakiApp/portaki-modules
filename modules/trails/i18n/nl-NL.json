@@ -67,6 +67,8 @@
   "host.trails.link.hint": "Komoot, de toeristische dienst, een wandelsite: dit is de knop “Route openen” voor gasten.",
   "host.trails.link.placeholder": "https://www.komoot.com/tour/…",
   "host.trails.photo": "Foto",
+  "host.trails.prefill": "De metingen uit het spoor lezen",
+  "host.trails.prefill.done": "Afstand, hoogtemeters en type zijn net uit het spoor gelezen. Pas ze aan indien nodig en bewaar.",
   "host.trails.remove": "Verwijderen",
   "host.trails.rowTitle": "Naam",
   "host.trails.rowTitle.placeholder": "Vuurtoren van La Garoupe",

@@ -67,6 +67,8 @@
   "host.trails.link.hint": "Wikiloc, el IGN, la oficina de turismo: es el botón «Abrir la ruta» del viajero.",
   "host.trails.link.placeholder": "https://es.wikiloc.com/rutas-…",
   "host.trails.photo": "Foto",
+  "host.trails.prefill": "Leer las medidas del track",
+  "host.trails.prefill.done": "Distancia, desnivel y tipo se acaban de leer del track. Corrígelos si hace falta y guarda.",
   "host.trails.remove": "Quitar",
   "host.trails.rowTitle": "Nombre",
   "host.trails.rowTitle.placeholder": "Faro de la Garoupe",

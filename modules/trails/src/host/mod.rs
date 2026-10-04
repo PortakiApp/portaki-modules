@@ -3,8 +3,8 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Card, Field, FieldHint, Form, ImageUpload, NumberInput, Page, Select, Stack,
-    StepList, Text, TextArea, TextInput,
+    AddressMapPicker, Button, Card, Field, FieldHint, Form, ImageUpload, NumberInput, Page, Select,
+    Stack, StepList, Text, TextArea, TextInput,
 };
 use portaki_sdk::sdui::surface::Surface;
 use serde::Serialize;
@@ -80,11 +80,36 @@ struct RowCount {
     trails_count: usize,
 }
 
+/// Quelle ligne demande à être pré-remplie depuis sa trace.
+#[derive(Serialize)]
+#[serde(rename_all = "snake_case")]
+struct PrefillRow {
+    prefill_trail: usize,
+}
+
+/// Les mesures lues dans la trace de cette ligne, quand l'hôte vient de les demander.
+///
+/// Lues à ce rendu-là seulement : relire le fichier à chaque ouverture du formulaire coûterait un
+/// appel par ligne, et écraserait sans le dire une mesure que l'hôte aurait corrigée à la main.
+/// Une trace illisible rend `None` — le formulaire garde alors ce qui est enregistré, et l'hôte
+/// voit que rien n'a changé plutôt que de voir ses mesures effacées.
+fn prefill(ctx: &HostContext, index: usize, trail: Option<&TrailRow>) -> Option<crate::gpx::Track> {
+    if ctx.input_u64("prefill_trail") != Some(index as u64) {
+        return None;
+    }
+    let reference = trail?.gpx_ref()?;
+    let bytes = portaki_sdk::host::files::read(reference).ok()?;
+    crate::gpx::read(&String::from_utf8_lossy(&bytes))
+}
+
 fn emit_input(payload: impl Serialize) -> Action {
     Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
 }
 
 fn trail_row(index: usize, trail: Option<&TrailRow>, ctx: &HostContext) -> Component {
+    // Les mesures de la trace, si l'hôte vient de cliquer « pré-remplir ». Elles remplacent ce
+    // qu'il avait saisi dans ces trois champs, et il peut encore les corriger avant d'enregistrer.
+    let measured = prefill(ctx, index, trail);
     let title = trail
         .map(|t| t.title.host_value(ctx))
         .unwrap_or_default()
@@ -126,22 +151,39 @@ fn trail_row(index: usize, trail: Option<&TrailRow>, ctx: &HostContext) -> Compo
         "distance_km",
         "i18n:host.trails.distance",
         MAX_DISTANCE_KM,
-        trail.and_then(|t| t.distance_km),
+        measured
+            .as_ref()
+            .map(|track| round_tenth(track.distance_km))
+            .or_else(|| trail.and_then(|t| t.distance_km)),
     ));
     children.push(number_field(
         index,
         "elevation_m",
         "i18n:host.trails.elevation",
         MAX_ELEVATION_M,
-        trail.and_then(|t| t.elevation_m),
+        measured
+            .as_ref()
+            .map(|track| track.elevation_m.round())
+            .or_else(|| trail.and_then(|t| t.elevation_m)),
     ));
     children.push(choice_field(
         index,
         "shape",
         "i18n:host.shape.label",
         SHAPES,
-        trail.and_then(TrailRow::shape_key).unwrap_or(""),
+        measured
+            .as_ref()
+            .map(|track| track.shape)
+            .or_else(|| trail.and_then(TrailRow::shape_key))
+            .unwrap_or(""),
     ));
+    if measured.is_some() {
+        children.push(
+            FieldHint::new()
+                .text("i18n:host.trails.prefill.done")
+                .into(),
+        );
+    }
 
     let mut picker = AddressMapPicker::new()
         .addressName(format!("trails.{index}.address"))
@@ -188,6 +230,19 @@ fn trail_row(index: usize, trail: Option<&TrailRow>, ctx: &HostContext) -> Compo
             .into(),
     );
     children.push(FieldHint::new().text("i18n:host.trails.gpx.hint").into());
+    // « Lire les mesures de la trace » : la distance, le dénivelé et le type s'en déduisent, et
+    // les recopier d'une application de randonnée à la main invite la faute de frappe (§2.23).
+    if trail.and_then(TrailRow::gpx_ref).is_some() {
+        children.push(
+            Button::new()
+                .label("i18n:host.trails.prefill")
+                .variant(ButtonVariant::Outline)
+                .action(emit_input(PrefillRow {
+                    prefill_trail: index,
+                }))
+                .into(),
+        );
+    }
     children.push(
         Field::new()
             .name(format!("trails.{index}.photo"))
@@ -254,6 +309,12 @@ fn choice_field(index: usize, name: &str, label: &str, values: &[&str], chosen: 
                 .value(chosen.to_string()),
         )
         .into()
+}
+
+/// Au dixième de kilomètre : une distance de randonnée au millième dit une précision que ni le
+/// GPS ni le pas n'ont.
+fn round_tenth(value: f64) -> f64 {
+    (value * 10.0).round() / 10.0
 }
 
 /// Le lien de la commune, sous la liste du voyageur.

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0
+
+Les mesures viennent de la trace.
+
+* « Lire les mesures de la trace » remplit la distance, le dénivelé et le type depuis le GPX déposé.
+* Les valeurs restent modifiables : la trace propose, vous décidez.
+* Une trace illisible ne change rien — vos mesures restent celles que vous avez saisies.
+
 ## 0.4.0
 
 Le tracé, et la photo.
