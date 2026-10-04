@@ -3,8 +3,8 @@
 use portaki_sdk::host::i18n::{translate, Vars};
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::common::{Leading, ListItemLayout};
-use portaki_sdk::sdui::primitives::{Button, Card, EmptyState, Eyebrow, Grid, ListItem};
+use portaki_sdk::sdui::common::{Leading, ListItemLayout, SurfaceLevel};
+use portaki_sdk::sdui::primitives::{Button, Card, EmptyState, Grid, ListItem};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::content::{Appliance, AppliancesPayload};
@@ -128,27 +128,36 @@ pub fn device_list_item(device: &Appliance) -> Component {
     Component::ListItem(item)
 }
 
+/// La liste complète : une carte par pièce, comme la maquette la dessine (§2.4).
+///
+/// Une seule carte avec des intertitres faisait une colonne de trente lignes où la cuisine et la
+/// salle de bain se touchaient. Une carte par pièce donne à chaque groupe son bord.
+///
+/// Un seul groupe : pas de titre. Il n'apprendrait rien qu'on ne lise déjà sur chaque ligne, où la
+/// pièce est en sous-titre, et un logement d'une seule pièce n'a pas de plan à annoncer.
 pub fn devices_list(payload: &AppliancesPayload) -> Vec<Component> {
-    let mut children: Vec<Component> = Vec::new();
     let rooms = payload.guest_devices_by_room();
-    // Un seul groupe : pas de titre. Il n'apprendrait rien qu'on ne lise déjà sur chaque ligne, où
-    // la pièce est en sous-titre, et un logement d'une seule pièce n'a pas de plan à annoncer.
-    let titled = rooms.len() > 1;
-    for (room, devices) in rooms {
-        if titled {
-            children.push(Component::Eyebrow(Eyebrow::new().text(
-                room.unwrap_or_else(|| "i18n:explore.detail.room.other".to_string()),
-            )));
-        }
-        children.extend(devices.into_iter().map(device_list_item));
-    }
-    if children.is_empty() {
-        children.push(Component::EmptyState(
+    if rooms.is_empty() {
+        return vec![Component::EmptyState(
             EmptyState::new()
                 .title("i18n:explore.detail.empty.title")
                 .description("i18n:explore.detail.empty.description")
                 .icon(IconName::Plug),
-        ));
+        )];
     }
-    children
+
+    let titled = rooms.len() > 1;
+    rooms
+        .into_iter()
+        .map(|(room, devices)| {
+            let rows: Vec<Component> = devices.into_iter().map(device_list_item).collect();
+            let mut card = Card::new().surface(SurfaceLevel::Elevated);
+            if titled {
+                card = card
+                    .icon(IconName::Plug)
+                    .title(room.unwrap_or_else(|| "i18n:explore.detail.room.other".to_string()));
+            }
+            Component::Card(card.children(rows))
+        })
+        .collect()
 }
