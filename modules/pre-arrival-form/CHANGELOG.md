@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.4.0...pre-arrival-form-v1.5.0) (2026-10-04)
+
+
+### Features
+
+* **pre-arrival-form:** emit guest transport on completion ([f639375](https://github.com/PortakiApp/portaki-modules/commit/f639375a80b23028bef648460bdeb24053be7d05))
+
 ## [1.4.0](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.3.0...pre-arrival-form-v1.4.0) (2026-10-04)
 
 
