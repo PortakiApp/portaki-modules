@@ -3,14 +3,9 @@
   "surfaces": [
     {
       "i18n": {
+        "explore.forecast.days": "Jour par jour",
         "explore.forecast.hint": "Prévisions sur 5 jours",
         "nav.forecast": "Prévisions",
-        "weather.col.day": "Jour",
-        "weather.col.humidity": "Hum.",
-        "weather.col.max": "Max",
-        "weather.col.min": "Min",
-        "weather.col.precip": "Pluie",
-        "weather.col.wind": "Vent",
         "weather.description.sunny": "Ensoleillé",
         "weather.humidity": "Humidité",
         "weather.uv": "UV",
@@ -164,277 +159,70 @@
           {
             "children": [
               {
-                "emphasis": "strong",
-                "text": "i18n:weather.col.day",
-                "type": "Text",
-                "variant": "caption"
+                "leading": {
+                  "icon": "sun"
+                },
+                "subtitle": "Ensoleillé · vent 11 km/h · pluie 0 % · humidité 55 %",
+                "title": "Lun 1",
+                "tone": "primary",
+                "trailing": {
+                  "mono": true,
+                  "text": "17° / 25°"
+                },
+                "type": "ListItem"
               },
               {
-                "emphasis": "strong",
-                "text": "",
-                "type": "Text",
-                "variant": "caption"
+                "leading": {
+                  "icon": "cloud-sun"
+                },
+                "subtitle": "Nuageux · vent 14 km/h · pluie 20 % · humidité 62 %",
+                "title": "Mar 2",
+                "trailing": {
+                  "mono": true,
+                  "text": "18° / 24°"
+                },
+                "type": "ListItem"
               },
               {
-                "emphasis": "strong",
-                "text": "i18n:weather.col.min",
-                "type": "Text",
-                "variant": "caption"
+                "leading": {
+                  "icon": "cloud-rain"
+                },
+                "subtitle": "Pluvieux · vent 23 km/h · pluie 80 % · humidité 81 %",
+                "title": "Mer 3",
+                "trailing": {
+                  "mono": true,
+                  "text": "16° / 21°"
+                },
+                "type": "ListItem"
               },
               {
-                "emphasis": "strong",
-                "text": "i18n:weather.col.max",
-                "type": "Text",
-                "variant": "caption"
+                "leading": {
+                  "icon": "cloud-sun"
+                },
+                "subtitle": "Nuageux · vent 16 km/h · pluie 30 % · humidité 66 %",
+                "title": "Jeu 4",
+                "trailing": {
+                  "mono": true,
+                  "text": "17° / 23°"
+                },
+                "type": "ListItem"
               },
               {
-                "children": [
-                  {
-                    "name": "cloud-rain",
-                    "size": 14.0,
-                    "type": "Icon"
-                  },
-                  {
-                    "emphasis": "strong",
-                    "text": "i18n:weather.col.precip",
-                    "type": "Text",
-                    "variant": "caption"
-                  }
-                ],
-                "direction": "horizontal",
-                "gap": 6.0,
-                "type": "Stack"
-              },
-              {
-                "children": [
-                  {
-                    "name": "droplets",
-                    "size": 14.0,
-                    "type": "Icon"
-                  },
-                  {
-                    "emphasis": "strong",
-                    "text": "i18n:weather.col.humidity",
-                    "type": "Text",
-                    "variant": "caption"
-                  }
-                ],
-                "direction": "horizontal",
-                "gap": 6.0,
-                "type": "Stack"
-              },
-              {
-                "children": [
-                  {
-                    "name": "wind",
-                    "size": 14.0,
-                    "type": "Icon"
-                  },
-                  {
-                    "emphasis": "strong",
-                    "text": "i18n:weather.col.wind",
-                    "type": "Text",
-                    "variant": "caption"
-                  }
-                ],
-                "direction": "horizontal",
-                "gap": 6.0,
-                "type": "Stack"
-              },
-              {
-                "emphasis": "strong",
-                "text": "Lun 1",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "name": "sun",
-                "size": 28.0,
-                "type": "Icon"
-              },
-              {
-                "text": "17°",
-                "tone": "success",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "25°",
-                "tone": "warning",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "0%",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "55%",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "11 km/h",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "emphasis": "strong",
-                "text": "Mar 2",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "name": "cloud-sun",
-                "size": 28.0,
-                "type": "Icon"
-              },
-              {
-                "text": "18°",
-                "tone": "success",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "24°",
-                "tone": "warning",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "20%",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "62%",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "14 km/h",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "emphasis": "strong",
-                "text": "Mer 3",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "name": "cloud-rain",
-                "size": 28.0,
-                "type": "Icon"
-              },
-              {
-                "text": "16°",
-                "tone": "success",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "21°",
-                "tone": "warning",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "80%",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "81%",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "23 km/h",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "emphasis": "strong",
-                "text": "Jeu 4",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "name": "cloud-sun",
-                "size": 28.0,
-                "type": "Icon"
-              },
-              {
-                "text": "17°",
-                "tone": "success",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "23°",
-                "tone": "warning",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "30%",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "66%",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "16 km/h",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "emphasis": "strong",
-                "text": "Ven 5",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "name": "sun",
-                "size": 28.0,
-                "type": "Icon"
-              },
-              {
-                "text": "18°",
-                "tone": "success",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "27°",
-                "tone": "warning",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "0%",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "52%",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "text": "10 km/h",
-                "type": "Text",
-                "variant": "caption"
+                "leading": {
+                  "icon": "sun"
+                },
+                "subtitle": "Ensoleillé · vent 10 km/h · pluie 0 % · humidité 52 %",
+                "title": "Ven 5",
+                "trailing": {
+                  "mono": true,
+                  "text": "18° / 27°"
+                },
+                "type": "ListItem"
               }
             ],
-            "columns": 7,
-            "gap": 10.0,
-            "type": "Grid"
+            "surface": "elevated",
+            "title": "i18n:explore.forecast.days",
+            "type": "Card"
           }
         ],
         "gap": 12.0,

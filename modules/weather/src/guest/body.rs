@@ -61,11 +61,22 @@ pub fn build_current_hero(
     )
 }
 
-fn build_forecast_day_column(day: &ForecastDayView, unit: &str, units: &WeatherUnits) -> Component {
+/// `today` : le premier jour de la bande. La maquette l'encadre en couleur de marque pour qu'on
+/// sache d'où on compte, et met les autres en boîte neutre — sans boîte, les cinq colonnes se
+/// lisaient comme un seul bloc de texte.
+fn build_forecast_day_column(
+    day: &ForecastDayView,
+    unit: &str,
+    units: &WeatherUnits,
+    today: bool,
+) -> Component {
     let display_temp = convert_temp(day.display_temp_c, *units);
+    let mut column = Stack::new().boxed(true).gap(6.0);
+    if today {
+        column = column.tone(Tone::Primary);
+    }
     Component::Stack(
-        Stack::new()
-            .gap(6.0)
+        column
             .child(
                 Text::new()
                     .text(format_day_strip_label(&day.date))
@@ -91,8 +102,18 @@ fn build_forecast_strip(forecast: &WeatherForecast, units: &WeatherUnits) -> Com
     let day_columns: Vec<Component> = forecast
         .days
         .iter()
-        .map(|day| build_forecast_day_column(day, unit, units))
+        .enumerate()
+        .map(|(rank, day)| build_forecast_day_column(day, unit, units, rank == 0))
         .collect();
 
-    Component::Grid(Grid::new().columns(5).gap(6.0).children(day_columns))
+    // Une largeur minimale, pas un nombre de colonnes : la grille du livret décide combien de
+    // jours tiennent sur la largeur qu'elle a (§0.2), et cinq colonnes forcées sur un petit
+    // écran donnaient des cases de trois caractères.
+    Component::Grid(
+        Grid::new()
+            .minColumnWidth(44.0)
+            .plain(true)
+            .gap(6.0)
+            .children(day_columns),
+    )
 }
