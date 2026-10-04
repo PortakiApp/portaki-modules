@@ -12,10 +12,6 @@
           {
             "children": [
               {
-                "text": "Cuisine",
-                "type": "Eyebrow"
-              },
-              {
                 "action": {
                   "to": "appliances/plaques",
                   "type": "navigate"
@@ -25,11 +21,15 @@
                 "subtitle": "Cuisine",
                 "title": "Plaques à induction",
                 "type": "ListItem"
-              },
-              {
-                "text": "Salle de bain",
-                "type": "Eyebrow"
-              },
+              }
+            ],
+            "icon": "plug",
+            "surface": "elevated",
+            "title": "Cuisine",
+            "type": "Card"
+          },
+          {
+            "children": [
               {
                 "action": {
                   "to": "appliances/lave-linge",
@@ -40,11 +40,15 @@
                 "subtitle": "Salle de bain",
                 "title": "Lave-linge",
                 "type": "ListItem"
-              },
-              {
-                "text": "Salon",
-                "type": "Eyebrow"
-              },
+              }
+            ],
+            "icon": "plug",
+            "surface": "elevated",
+            "title": "Salle de bain",
+            "type": "Card"
+          },
+          {
+            "children": [
               {
                 "action": {
                   "to": "appliances/tv",
@@ -57,7 +61,9 @@
                 "type": "ListItem"
               }
             ],
+            "icon": "plug",
             "surface": "elevated",
+            "title": "Salon",
             "type": "Card"
           }
         ],

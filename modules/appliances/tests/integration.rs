@@ -147,9 +147,11 @@ fn the_full_list_is_grouped_by_room() {
             let detail = render_explore_detail(ctx.clone()).expect("render");
             let json = serde_json::to_string(&detail).expect("json");
 
-            // Deux pièces différentes dans la fixture : les titres apparaissent.
+            // Deux pièces différentes dans la fixture : deux cartes titrées, comme la maquette
+            // les dessine. Avant, un seul bloc avec des intertitres `Eyebrow`.
+            assert_eq!(json.matches("\"type\":\"Card\"").count(), 2, "{json}");
             assert!(
-                SurfaceAssertions::new(&detail).contains_type("Eyebrow"),
+                !SurfaceAssertions::new(&detail).contains_type("Eyebrow"),
                 "{json}"
             );
         });
