@@ -132,6 +132,19 @@ fn secret_tile(data: &GuestData, key_i18n: &str, icon: IconName, code: &str) -> 
     Component::KeyValue(tile)
 }
 
+/// L'heure d'arrivée, en tuile à côté du code : les deux choses qu'on vérifie avant de sonner.
+fn arrival_tile(data: &GuestData) -> Option<Component> {
+    let hour = data.checkin_hour.as_deref()?;
+    Some(Component::KeyValue(
+        KeyValue::new()
+            .key("i18n:guest.checkin")
+            .value(hour.to_string())
+            .layout(KeyValueLayout::Tile)
+            .icon(IconName::Clock)
+            .mono(true),
+    ))
+}
+
 /// Les codes du moyen d'accès principal, en tuiles côte à côte.
 ///
 /// Vide quand il n'y a rien à montrer : une grille d'une seule case vaudrait moins qu'une ligne.
@@ -142,6 +155,16 @@ fn secret_tiles(data: &GuestData) -> Vec<Component> {
             data,
             "i18n:guest.keybox.code",
             IconName::Key,
+            code,
+        ));
+    }
+    // Le code de secours d'une serrure connectée est un code comme un autre : il manquait aux
+    // tuiles, et c'est la seule chose à composer quand le téléphone ne déverrouille pas.
+    if let Some(code) = data.config.smart_lock_manual_code() {
+        tiles.push(secret_tile(
+            data,
+            "i18n:guest.smartLock.manualCode",
+            IconName::Lock,
             code,
         ));
     }
@@ -521,8 +544,10 @@ pub fn build_access_glance(data: &GuestData) -> Vec<Component> {
         children.push(map);
     }
 
-    // Les codes d'abord, en tuiles : c'est ce que le voyageur ouvre la carte pour trouver.
-    let tiles = secret_tiles(data);
+    // Les codes d'abord, en tuiles, et l'heure d'arrivée à côté : c'est ce que le voyageur ouvre
+    // la carte pour trouver (§2.1).
+    let mut tiles = secret_tiles(data);
+    tiles.extend(arrival_tile(data));
     if !tiles.is_empty() {
         children.push(Component::Grid(
             Grid::new()
@@ -532,25 +557,21 @@ pub fn build_access_glance(data: &GuestData) -> Vec<Component> {
         ));
     }
 
+    // L'adresse reste : c'est la ligne qu'on lit à un chauffeur, et elle ne tient pas dans un
+    // sous-titre déjà pris par le moyen d'accès.
     if !data.address.is_empty() {
         children.push(kv_row("i18n:guest.address", &data.address, false));
     }
 
-    push_primary_method(&mut children, data, false);
+    // Où se trouve ce par quoi on entre : la boîte à clés, le lieu du rendez-vous, la banque
+    // d'accueil. Une ligne, pas le bloc entier.
+    push_method_location(&mut children, data);
 
-    if let Some(building) = data.config.building_access.as_ref() {
-        push_building_access(&mut children, data, building, false);
-    } else if data
-        .texts
-        .building_note
-        .as_deref()
-        .map(str::trim)
-        .filter(|s| !s.is_empty())
-        .is_some()
-    {
-        push_building_access(&mut children, data, &BuildingAccess::default(), false);
-    }
-    push_parking(&mut children, data, data.config.parking.as_ref(), false);
+    // Le nom du moyen, l'accès à l'immeuble et le parking ne sortent plus en rangées ici : la
+    // maquette garde la carte à l'essentiel — le plan, les codes, le chemin — et le sous-titre
+    // nomme déjà le moyen. Huit rangées entre les tuiles et le chemin poussaient les étapes
+    // d'arrivée sous le pli, alors que ce sont elles qu'on relit une main sur la valise. Tout
+    // reste dans la sous-page, à un doigt.
 
     // Le chemin jusqu'à la porte tient sur la carte, pas seulement dans la sous-page : c'est ce
     // qu'on relit en arrivant, une main sur la valise, sans vouloir ouvrir quoi que ce soit.
@@ -566,6 +587,27 @@ pub fn build_access_glance(data: &GuestData) -> Vec<Component> {
     }
 
     children
+}
+
+/// L'endroit du moyen d'accès, pour la carte d'accueil : une seule ligne, celle qui dit où aller.
+///
+/// Les moyens qui n'ont pas d'endroit à donner — un code de portail, une serrure connectée — n'en
+/// poussent aucune : le code est déjà en tuile, et le clavier se trouve dans les étapes.
+fn push_method_location(children: &mut Vec<Component>, data: &GuestData) {
+    match &data.config.method {
+        MethodFields::Keybox { location, .. } => {
+            push_text_row(children, "i18n:guest.keybox.location", location)
+        }
+        MethodFields::InPerson { meeting_place, .. } => {
+            push_text_row(children, "i18n:guest.inPerson.meetingPlace", meeting_place)
+        }
+        MethodFields::BuildingStaff { desk_location, .. } => push_text_row(
+            children,
+            "i18n:guest.buildingStaff.deskLocation",
+            desk_location,
+        ),
+        _ => {}
+    }
 }
 
 /// Les étapes d'arrivée, précédées de leur intertitre. Rien du tout quand l'hôte n'en a saisi

@@ -24,6 +24,9 @@ pub struct GuestData {
     /// check-in to count from. The status cell puts it under the masked value.
     pub reveal_at_label: Option<String>,
     pub stay_id: Option<Uuid>,
+    /// L'heure d'arrivée, à l'heure du logement — « 16:00 ». `None` sans séjour ou sans fuseau
+    /// lisible : une heure dans le mauvais fuseau fait sonner à la porte trop tôt.
+    pub checkin_hour: Option<String>,
 }
 
 pub enum GuestLoad {
@@ -70,6 +73,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestLoad> {
         reveal_ended: decision.ended,
         reveal_at_label: reveal_at_label(&decision, &property_timezone),
         stay_id,
+        checkin_hour: checkin_hour(ctx, &property_timezone),
     })))
 }
 
@@ -106,4 +110,11 @@ fn reveal_at_label(decision: &RevealDecision, property_timezone: &str) -> Option
     decision
         .available_from
         .map(|at| format_available_from(at, property_timezone))
+}
+
+/// « 16:00 », à l'heure du logement.
+fn checkin_hour(ctx: &GuestContext, property_timezone: &str) -> Option<String> {
+    let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at)?;
+    let tz = portaki_sdk::host::time::PropertyTz::parse(property_timezone)?;
+    Some(tz.to_local(checkin_at).format("%H:%M").to_string())
 }

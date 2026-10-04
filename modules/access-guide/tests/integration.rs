@@ -151,7 +151,10 @@ fn home_card_masks_secrets_without_stay() {
                 !json.contains("i18n:nav.appliances") && !json.contains("i18n:home.card.title"),
                 "must not emit appliances / colliding home.card.title key"
             );
-            assert!(json.contains("i18n:guest.method"));
+            // Le moyen d'accès est le sous-titre de la carte, plus une rangée : la maquette
+            // garde la carte au plan, aux codes et au chemin, et le reste est dans la sous-page.
+            assert!(json.contains("\"subtitle\""));
+            assert!(!json.contains("i18n:guest.method"));
             assert!(json.contains("i18n:guest.openMaps"));
             assert!(!json.contains("4821"));
             assert!(!json.contains("A17B"));
