@@ -2,7 +2,7 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::Emphasis;
-use portaki_sdk::sdui::primitives::{Card, Text, TimedEntry};
+use portaki_sdk::sdui::primitives::{Card, Text};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::content::{home_board, station_caption, DEFAULT_STATION_LABEL, MODULE_ICON};
@@ -73,11 +73,14 @@ fn upcoming_headline() -> String {
     }
 }
 
+/// Les mêmes lignes que la page : l'heure devant, la correspondance en fin, la fiche au bout.
 fn board_entry_component(entry: crate::content::BoardEntry) -> Component {
-    Component::TimedEntry(
-        TimedEntry::new()
-            .time(entry.time)
-            .title(entry.destination)
-            .subtitle(entry.platform),
+    super::detail::departure_row(
+        entry.destination,
+        crate::content::Departure {
+            time: entry.time,
+            platform: entry.platform,
+            note: entry.note,
+        },
     )
 }

@@ -12,7 +12,9 @@ fn home_card_shows_board_glance() {
         .run(|ctx| {
             let card = render_home_card(ctx).expect("render");
             assert!(SurfaceAssertions::new(&card).contains_type("Card"));
-            assert!(SurfaceAssertions::new(&card).contains_type("TimedEntry"));
+            // Des lignes, pas des `TimedEntry` : un départ s'ouvre et porte son état.
+            assert!(SurfaceAssertions::new(&card).contains_type("ListItem"));
+            assert!(!SurfaceAssertions::new(&card).contains_type("TimedEntry"));
 
             let card_json = serde_json::to_string(&card).expect("json");
             assert!(card_json.contains("\"type\":\"openOverlay\""));
@@ -30,7 +32,7 @@ fn upcoming_card_is_compact_with_single_headline() {
             assert!(SurfaceAssertions::new(&card).contains_type("Card"));
             assert!(SurfaceAssertions::new(&card).contains_type("Text"));
             // Compact: no full departure board on the prep card.
-            assert!(!SurfaceAssertions::new(&card).contains_type("TimedEntry"));
+            assert!(!SurfaceAssertions::new(&card).contains_type("ListItem"));
 
             let card_json = serde_json::to_string(&card).expect("json");
             assert!(card_json.contains("upcoming.card"));
@@ -39,21 +41,27 @@ fn upcoming_card_is_compact_with_single_headline() {
 }
 
 #[test]
-fn explore_detail_defaults_to_nice_ville_and_lists_filter_chips() {
+fn explore_detail_defaults_to_nice_ville_and_offers_the_sense_and_the_station() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
             let detail = render_explore_detail(ctx).expect("render");
-            assert!(SurfaceAssertions::new(&detail).contains_type("FilterChip"));
-            assert!(SurfaceAssertions::new(&detail).contains_type("TimedEntry"));
-            assert!(SurfaceAssertions::new(&detail).contains_type("KeyValue"));
+            // Le sens en segmenté, la gare en champ de recherche : les deux questions qu'on se
+            // pose sur un quai, et que des pastilles de filtre ne posaient pas.
+            assert!(SurfaceAssertions::new(&detail).contains_type("ChoiceList"));
+            assert!(SurfaceAssertions::new(&detail).contains_type("ListItem"));
+            assert!(!SurfaceAssertions::new(&detail).contains_type("FilterChip"));
+            assert!(!SurfaceAssertions::new(&detail).contains_type("TimedEntry"));
 
             let detail_json = serde_json::to_string(&detail).expect("json");
+            assert!(detail_json.contains("\"segmented\""));
+            assert!(detail_json.contains("\"combobox\""));
             assert!(detail_json.contains("Nice-Ville"));
             assert!(detail_json.contains("Cannes"));
             assert!(detail_json.contains("Monaco"));
             assert!(detail_json.contains("Grasse"));
-            assert!(detail_json.contains("\"selected\":true"));
+            // La fiche d'un départ est au bout de chaque ligne.
+            assert!(detail_json.contains("train/nice-ville-"));
         });
 }
 

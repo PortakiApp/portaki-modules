@@ -3,9 +3,12 @@
   "surfaces": [
     {
       "i18n": {
+        "explore.detail.direction.from": "Depuis la gare",
+        "explore.detail.direction.to": "Vers la gare",
         "explore.detail.disclaimer": "Horaires indicatifs · TER SUD PACA",
-        "explore.detail.from": "Départ",
-        "explore.detail.to": "Destination",
+        "explore.detail.station.all": "Toutes les gares",
+        "explore.detail.station.hint.from": "Départ : la gare du logement.",
+        "explore.detail.station.label": "Gare d’arrivée",
         "explore.detail.upcoming": "Prochains départs",
         "nav.train": "Horaires trains"
       },
@@ -14,73 +17,95 @@
       "tree": {
         "children": [
           {
-            "children": [
+            "emphasis": "subtle",
+            "text": "Gare d'Antibes · 2,3 km",
+            "type": "Text",
+            "variant": "caption"
+          },
+          {
+            "action": {
+              "params": {
+                "dest": "Nice-Ville",
+                "dir": "from"
+              },
+              "to": "train",
+              "type": "navigate"
+            },
+            "choices": [
               {
-                "key": "i18n:explore.detail.from",
-                "type": "KeyValue",
-                "value": "Gare d'Antibes · 2,3 km"
+                "icon": "train",
+                "label": "i18n:explore.detail.direction.from",
+                "value": "from"
               },
               {
-                "key": "i18n:explore.detail.to",
-                "type": "KeyValue",
-                "value": "Nice-Ville"
+                "icon": "home",
+                "label": "i18n:explore.detail.direction.to",
+                "value": "to"
               }
             ],
-            "surface": "elevated",
-            "type": "Card"
+            "emitOnChange": true,
+            "layout": "segmented",
+            "name": "dir",
+            "type": "ChoiceList",
+            "value": "from"
           },
           {
             "children": [
               {
-                "action": {
-                  "params": {
-                    "dest": "Nice-Ville"
-                  },
-                  "to": "train",
-                  "type": "navigate"
-                },
-                "label": "Nice-Ville",
-                "selected": true,
-                "type": "FilterChip"
+                "children": [
+                  {
+                    "action": {
+                      "params": {
+                        "dest": "Nice-Ville",
+                        "dir": "from"
+                      },
+                      "to": "train",
+                      "type": "navigate"
+                    },
+                    "choices": [
+                      {
+                        "label": "i18n:explore.detail.station.all",
+                        "value": "all"
+                      },
+                      {
+                        "icon": "train",
+                        "label": "Nice-Ville",
+                        "value": "Nice-Ville"
+                      },
+                      {
+                        "icon": "train",
+                        "label": "Cannes",
+                        "value": "Cannes"
+                      },
+                      {
+                        "icon": "train",
+                        "label": "Monaco",
+                        "value": "Monaco"
+                      },
+                      {
+                        "icon": "train",
+                        "label": "Grasse",
+                        "value": "Grasse"
+                      }
+                    ],
+                    "emitOnChange": true,
+                    "layout": "combobox",
+                    "name": "dest",
+                    "type": "ChoiceList",
+                    "value": "Nice-Ville"
+                  }
+                ],
+                "label": "i18n:explore.detail.station.label",
+                "name": "dest",
+                "type": "Field"
               },
               {
-                "action": {
-                  "params": {
-                    "dest": "Cannes"
-                  },
-                  "to": "train",
-                  "type": "navigate"
-                },
-                "label": "Cannes",
-                "selected": false,
-                "type": "FilterChip"
-              },
-              {
-                "action": {
-                  "params": {
-                    "dest": "Monaco"
-                  },
-                  "to": "train",
-                  "type": "navigate"
-                },
-                "label": "Monaco",
-                "selected": false,
-                "type": "FilterChip"
-              },
-              {
-                "action": {
-                  "params": {
-                    "dest": "Grasse"
-                  },
-                  "to": "train",
-                  "type": "navigate"
-                },
-                "label": "Grasse",
-                "selected": false,
-                "type": "FilterChip"
+                "text": "i18n:explore.detail.station.hint.from",
+                "type": "FieldHint"
               }
             ],
-            "type": "FilterBar"
+            "gap": 4.0,
+            "type": "Stack"
           },
           {
             "text": "i18n:explore.detail.upcoming",
@@ -90,28 +115,80 @@
           {
             "children": [
               {
-                "subtitle": "quai 2 · direct",
-                "time": "08:12",
+                "action": {
+                  "to": "train/nice-ville-0812",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "leading": {
+                  "time": "08:12"
+                },
+                "subtitle": "quai 2",
                 "title": "Nice-Ville",
-                "type": "TimedEntry"
+                "trailing": {
+                  "badge": {
+                    "label": "direct",
+                    "tone": "success"
+                  }
+                },
+                "type": "ListItem"
               },
               {
-                "subtitle": "quai 1 · direct",
-                "time": "08:42",
+                "action": {
+                  "to": "train/nice-ville-0842",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "leading": {
+                  "time": "08:42"
+                },
+                "subtitle": "quai 1",
                 "title": "Nice-Ville",
-                "type": "TimedEntry"
+                "trailing": {
+                  "badge": {
+                    "label": "direct",
+                    "tone": "success"
+                  }
+                },
+                "type": "ListItem"
               },
               {
-                "subtitle": "quai 2 · 1 arrêt",
-                "time": "09:05",
+                "action": {
+                  "to": "train/nice-ville-0905",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "leading": {
+                  "time": "09:05"
+                },
+                "subtitle": "quai 2",
                 "title": "Nice-Ville",
-                "type": "TimedEntry"
+                "trailing": {
+                  "badge": {
+                    "label": "1 arrêt",
+                    "tone": "neutral"
+                  }
+                },
+                "type": "ListItem"
               },
               {
-                "subtitle": "quai 1 · direct",
-                "time": "09:38",
+                "action": {
+                  "to": "train/nice-ville-0938",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "leading": {
+                  "time": "09:38"
+                },
+                "subtitle": "quai 1",
                 "title": "Nice-Ville",
-                "type": "TimedEntry"
+                "trailing": {
+                  "badge": {
+                    "label": "direct",
+                    "tone": "success"
+                  }
+                },
+                "type": "ListItem"
               }
             ],
             "surface": "elevated",
@@ -125,6 +202,94 @@
           }
         ],
         "gap": 12.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "explore.item.connection": "Correspondance",
+        "explore.item.departure": "Départ",
+        "explore.item.platform": "Quai",
+        "explore.item.route": "Itinéraire vers la gare",
+        "explore.item.station": "Aller à la gare",
+        "nav.departure": "Départ"
+      },
+      "surfaceId": "explore.item",
+      "title": "Départ",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "label": "direct",
+                "type": "Badge"
+              },
+              {
+                "text": "Gare d'Antibes → Nice-Ville",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "quai 2",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "icon": "clock-circle",
+                "key": "i18n:explore.item.departure",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "08:12"
+              },
+              {
+                "icon": "train",
+                "key": "i18n:explore.item.platform",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "quai 2"
+              },
+              {
+                "icon": "refresh",
+                "key": "i18n:explore.item.connection",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "direct"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "children": [
+              {
+                "key": "Gare d'Antibes",
+                "type": "KeyValue",
+                "value": "2,3 km"
+              }
+            ],
+            "icon": "map-pin",
+            "surface": "elevated",
+            "title": "i18n:explore.item.station",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.google.com/maps/search/?api=1&query=Gare+d'Antibes"
+            },
+            "label": "i18n:explore.item.route",
+            "type": "Button"
+          }
+        ],
+        "gap": 14.0,
         "type": "Stack"
       }
     },
