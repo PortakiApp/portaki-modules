@@ -1,7 +1,7 @@
 //! La fiche d'un départ (§2.17).
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::common::{Emphasis, KeyValueLayout, SurfaceLevel, Tone};
+use portaki_sdk::sdui::common::{Emphasis, KeyValueLayout, SurfaceLevel};
 use portaki_sdk::sdui::primitives::{Badge, Button, Card, Grid, KeyValue, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
@@ -113,7 +113,6 @@ fn station_card(view: &BoardView) -> Component {
                 .emphasis(Emphasis::Subtle),
         );
     }
-    let _ = Tone::Neutral;
     Component::Card(card)
 }
 

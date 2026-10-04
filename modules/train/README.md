@@ -23,6 +23,12 @@ property address leave the module.
 | `departures` | `GET /coverage/sncf/stop_areas/{id}/departures` | 2 min (KV) |
 | `arrivals` | `GET /coverage/sncf/stop_areas/{id}/arrivals` | 2 min (KV) |
 
+**Storing the key.** `auth = "basic"` and SNCF wants the key as the username with an empty
+password — but the gateway encodes the vaulted secret verbatim (`Basic base64(<secret>)`, the vault
+keeps `user:password` as typed). The secret to store is therefore `<key>:`, **trailing colon
+included**. Without it the call goes out as `base64(<key>)` and SNCF answers 401 with nothing
+useful to say.
+
 Needs the `kv` feature for those caches. Without the host's clock nothing is shown: judging
 freshness on a wrong time would serve the same board forever.
 
