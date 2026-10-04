@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/sections-v1.4.1...sections-v1.5.0) (2026-10-04)
+
+
+### Features
+
+* **sections:** sign the welcome note ([856bbd4](https://github.com/PortakiApp/portaki-modules/commit/856bbd4d220412f1f7adca80cdc09cef738652c4))
+
 ## [1.4.1](https://github.com/PortakiApp/portaki-modules/compare/sections-v1.4.0...sections-v1.4.1) (2026-10-04)
 
 
