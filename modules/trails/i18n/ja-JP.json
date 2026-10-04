@@ -7,6 +7,7 @@
   "guest.commune.label": "この地域のすべてのコース",
   "guest.distance.km": "{value} km",
   "guest.distance.metres": "{value} m",
+  "guest.downloadGpx": "GPX トラックをダウンロード",
   "guest.duration.hours": "{hours} 時間",
   "guest.duration.hoursMinutes": "{hours} 時間 {minutes} 分",
   "guest.duration.minutes": "{minutes} 分",

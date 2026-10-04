@@ -7,6 +7,7 @@
   "guest.commune.label": "Tutti i sentieri del comune",
   "guest.distance.km": "{value} km",
   "guest.distance.metres": "{value} m",
+  "guest.downloadGpx": "Scarica la traccia GPX",
   "guest.duration.hours": "{hours} h",
   "guest.duration.hoursMinutes": "{hours} h {minutes}",
   "guest.duration.minutes": "{minutes} min",

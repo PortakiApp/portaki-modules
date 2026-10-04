@@ -7,6 +7,7 @@
   "guest.commune.label": "Alle wandelpaden van de gemeente",
   "guest.distance.km": "{value} km",
   "guest.distance.metres": "{value} m",
+  "guest.downloadGpx": "GPX-track downloaden",
   "guest.duration.hours": "{hours} u",
   "guest.duration.hoursMinutes": "{hours} u {minutes}",
   "guest.duration.minutes": "{minutes} min",

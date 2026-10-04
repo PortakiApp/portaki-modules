@@ -275,19 +275,31 @@ fn before_you_go() -> Component {
         .into()
 }
 
-/// La barre du bas : « Ouvrir la trace » puis « Itinéraire jusqu'au départ ».
+/// La barre du bas : la trace à télécharger, la fiche tierce, puis l'itinéraire jusqu'au départ.
 ///
-/// Sans fiche tierce, l'itinéraire devient l'action principale — c'est le cas « sans trace » du
-/// §2.23, et il est la v1 : le dépôt du GPX attend le lot de stockage de fichiers.
+/// L'ordre suit ce que le voyageur fera : s'il a une trace, il l'ouvre dans son application de
+/// randonnée — c'est l'action principale de §2.23. Sans trace, la fiche tierce prend la place ;
+/// sans fiche, l'itinéraire. Le premier bouton est plein, les suivants en contour.
 fn actions(data: &GuestData, trail: &TrailRow) -> Vec<Component> {
     let mut bar: Vec<Component> = Vec::new();
-    if let Some(url) = trail.link() {
+    // La référence, pas une URL : la plateforme l'échange contre une URL signée au rendu, et
+    // retire le lien si le fichier n'est pas à ce logement et à ce module.
+    if let Some(reference) = trail.gpx_ref() {
         bar.push(
             Button::new()
-                .label("i18n:guest.openTrace")
-                .action(Action::external(url.to_string()))
+                .label("i18n:guest.downloadGpx")
+                .action(Action::external(reference.to_string()))
                 .into(),
         );
+    }
+    if let Some(url) = trail.link() {
+        let mut button = Button::new()
+            .label("i18n:guest.openTrace")
+            .action(Action::external(url.to_string()));
+        if !bar.is_empty() {
+            button = button.variant(ButtonVariant::Outline);
+        }
+        bar.push(button.into());
     }
     if let Some((lat, lng)) = trail.coordinates().filter(|_| data.starts_far(trail)) {
         let mut button = Button::new()

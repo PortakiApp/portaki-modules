@@ -7,6 +7,7 @@
   "guest.commune.label": "كل مسارات المنطقة",
   "guest.distance.km": "{value} كم",
   "guest.distance.metres": "{value} م",
+  "guest.downloadGpx": "تنزيل مسار GPX",
   "guest.duration.hours": "{hours} س",
   "guest.duration.hoursMinutes": "{hours} س {minutes}",
   "guest.duration.minutes": "{minutes} د",

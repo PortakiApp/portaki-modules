@@ -7,6 +7,7 @@
   "guest.commune.label": "本地所有徒步路线",
   "guest.distance.km": "{value} 公里",
   "guest.distance.metres": "{value} 米",
+  "guest.downloadGpx": "下载 GPX 轨迹",
   "guest.duration.hours": "{hours} 小时",
   "guest.duration.hoursMinutes": "{hours} 小时 {minutes} 分",
   "guest.duration.minutes": "{minutes} 分钟",
