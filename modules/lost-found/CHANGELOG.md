@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.4.0...lost-found-v1.5.0) (2026-10-04)
+
+
+### Features
+
+* **lost-found:** le formulaire en trois étapes ([2293497](https://github.com/PortakiApp/portaki-modules/commit/229349771993b97290f509f2ed6590ba47b178e6))
+* **trails, lost-found:** le filtre par niveau, et la déclaration envoyée ([0680370](https://github.com/PortakiApp/portaki-modules/commit/068037096a0ecfaebd199f21dbb75a629e2408bb))
+
 ## [1.4.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.3.0...lost-found-v1.4.0) (2026-10-04)
 
 

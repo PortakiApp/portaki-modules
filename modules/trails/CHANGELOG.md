@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.4.0...trails-v0.5.0) (2026-10-04)
+
+
+### Features
+
+* **trails, lost-found:** le filtre par niveau, et la déclaration envoyée ([0680370](https://github.com/PortakiApp/portaki-modules/commit/068037096a0ecfaebd199f21dbb75a629e2408bb))
+* **trails:** les mesures lues dans la trace ([ffab54d](https://github.com/PortakiApp/portaki-modules/commit/ffab54d46261353b33087bde88f57549b59f4966))
+
 ## [0.4.0](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.3.0...trails-v0.4.0) (2026-10-04)
 
 
