@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0
+
+Le mot de bienvenue est signé.
+
+* Le texte complet se termine par la signature de l'hôte : sa photo ou ses initiales, son nom et depuis quand il reçoit.
+* La signature vient de son profil : rien de plus à renseigner, et elle suit la fiche du logement si elle change.
+
 ## 1.4.1
 
 Montée technique.
