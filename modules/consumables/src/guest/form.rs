@@ -1,7 +1,10 @@
 //! Guest bottom-sheet form surface opened from the home card.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Button, ChoiceList, Field, Form, TextArea};
+use portaki_sdk::sdui::common::Tone;
+use portaki_sdk::sdui::primitives::{
+    Button, ChoiceList, Field, FieldHint, Form, InfoBanner, TextArea,
+};
 use portaki_sdk::sdui::surface::Surface;
 
 use super::load::{load_guest_consumables, GuestConsumablesData};
@@ -36,6 +39,9 @@ fn build_form(data: &GuestConsumablesData) -> Form {
                 .required(true)
                 .child(item_choice_list(data)),
         )
+        // Le choix multiple n'est pas évident dans une grille de tuiles : un voyageur qui a
+        // besoin de café et de sacs poubelle envoyait deux signalements.
+        .child(FieldHint::new().text("i18n:form.item.hint"))
         .child(
             Field::new()
                 .name("level")
@@ -57,6 +63,14 @@ fn build_form(data: &GuestConsumablesData) -> Form {
             Button::new()
                 .label("i18n:form.submit")
                 .action(submit_action),
+        )
+        // Ce que l'envoi déclenche, dit par le module et non par l'hôte : c'est vrai de tous les
+        // logements, et un hôte qui n'aurait pas rempli ses horaires ne doit pas laisser le
+        // voyageur se demander si quelqu'un l'a lu.
+        .child(
+            InfoBanner::new()
+                .tone(Tone::Neutral)
+                .message("i18n:form.notice"),
         )
 }
 
@@ -92,7 +106,9 @@ fn level_choice_list() -> ChoiceList {
         .layout(ChoiceListLayout::Segmented)
         .value(level::DEFAULT)
         .choices(vec![
-            ChoiceOption::new("missing", "i18n:form.level.missing").icon(IconName::CircleX),
+            // « Il n'y en a plus » porte le ton d'alerte du dessin : les deux segments ne
+            // demandent pas la même chose à l'hôte.
+            ChoiceOption::new("missing", "i18n:form.level.missing").icon(IconName::DangerTriangle),
             ChoiceOption::new("low", "i18n:form.level.low").icon(IconName::Gauge),
         ])
 }

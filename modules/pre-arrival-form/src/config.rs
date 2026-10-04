@@ -63,6 +63,13 @@ pub struct ModuleConfig {
     pub ask_special_needs: bool,
     #[field(label = "host.question.idDocument")]
     pub ask_id_document: bool,
+    /// « Vous arrivez en ? » — voiture, train, avion (§2.20).
+    ///
+    /// Elle décide ce que l'hôte prépare : une place de parking, un horaire de train, un
+    /// transfert d'aéroport. Éteinte par défaut, comme toute question neuve : un hôte qui n'a
+    /// pas demandé une question ne doit pas la voir apparaître dans son formulaire.
+    #[field(label = "config.askTransport")]
+    pub ask_transport: bool,
 }
 
 impl Default for ModuleConfig {
@@ -75,6 +82,7 @@ impl Default for ModuleConfig {
             ask_guest_count: true,
             ask_special_needs: false,
             ask_id_document: false,
+            ask_transport: false,
         }
     }
 }

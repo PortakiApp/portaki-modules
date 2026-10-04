@@ -16,6 +16,10 @@ pub struct PreArrivalResponse {
     pub guest_count: Option<String>,
     pub special_needs: Option<String>,
     pub id_document: Option<String>,
+    /// Le moyen de transport choisi — `car`, `train`, `plane`, `other`. Absent des réponses
+    /// d'avant la question.
+    #[serde(default)]
+    pub transport: Option<String>,
     pub guest_message: Option<String>,
     pub completed_at: DateTime<Utc>,
 }

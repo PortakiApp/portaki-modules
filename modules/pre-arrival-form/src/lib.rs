@@ -35,3 +35,15 @@ portaki_sdk::portaki_module!(
 
 #[portaki_sdk::capability(required, id = "core.storage")]
 pub const STORAGE: &str = "core.storage";
+
+/// Les moyens d'arriver que le formulaire propose (§2.20).
+///
+/// Une liste figée : l'hôte prépare une place de parking, un horaire de train ou un transfert
+/// d'aéroport, et « en voiture de location » ne lui dit pas laquelle des trois.
+pub const TRANSPORTS: [&str; 4] = ["car", "train", "plane", "other"];
+
+/// Les occasions que le formulaire propose.
+///
+/// En liste plutôt qu'en texte libre : l'hôte qui lit « anniversaire » sait quoi faire, celui qui
+/// lit « c'est spécial pour nous » ne sait pas.
+pub const OCCASIONS: [&str; 5] = ["birthday", "honeymoon", "family", "remote_work", "none"];

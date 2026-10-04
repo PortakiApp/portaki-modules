@@ -21,8 +21,11 @@ struct CompletedPayload {
 }
 
 /// Arguments for `submit`.
+/// `Default` pour que les tests ne nomment que les champs du cas qu'ils décrivent : les
+/// questions sont facultatives, et les épeler en `None` partout rendrait chaque cas illisible.
 #[portaki_sdk::wire]
 #[portaki_sdk::params]
+#[derive(Default)]
 pub struct SubmitArgs {
     pub arrival_time_estimated: Option<String>,
     pub guest_occasion: Option<String>,
@@ -30,6 +33,9 @@ pub struct SubmitArgs {
     pub guest_count: Option<String>,
     pub special_needs: Option<String>,
     pub id_document: Option<String>,
+    /// Le moyen de transport choisi — `car`, `train`, `plane`, `other`.
+    #[serde(default)]
+    pub transport: Option<String>,
     pub message_to_host: Option<String>,
 }
 
@@ -105,17 +111,27 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     } else {
         None
     };
+    // Et seulement un moyen de la liste : une valeur hors liste ne dit rien à l'hôte, et un
+    // formulaire resté ouvert dans un téléphone peut en porter une.
+    let transport = if q.ask_transport {
+        normalize(args.transport).filter(|value| crate::TRANSPORTS.contains(&value.as_str()))
+    } else {
+        None
+    };
     let message = normalize(args.message_to_host);
 
     let _ = storage::upsert(
         stay_id,
-        arrival_time.clone(),
-        occasion.clone(),
-        allergies.clone(),
-        guest_count,
-        special_needs,
-        id_document,
-        message.clone(),
+        storage::ResponseDraft {
+            arrival_time: arrival_time.clone(),
+            occasion: occasion.clone(),
+            allergies: allergies.clone(),
+            guest_count,
+            special_needs,
+            id_document,
+            transport,
+            guest_message: message.clone(),
+        },
     )?;
 
     events::emit(

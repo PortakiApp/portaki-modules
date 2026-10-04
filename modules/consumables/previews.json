@@ -55,12 +55,14 @@
     },
     {
       "i18n": {
+        "form.item.hint": "Plusieurs choix possibles.",
         "form.item.label": "Consommable",
         "form.level.label": "Situation",
         "form.level.low": "Bientôt vide",
         "form.level.missing": "Il n'y en a plus",
         "form.note.label": "Précision (optionnel)",
         "form.note.placeholder": "Ex. salle de bain du haut, dernière tablette…",
+        "form.notice": "Votre hôte est averti dès l’envoi.",
         "form.submit": "Prévenir l'hôte",
         "nav.consumables": "Consommables"
       },
@@ -125,11 +127,15 @@
             "type": "Field"
           },
           {
+            "text": "i18n:form.item.hint",
+            "type": "FieldHint"
+          },
+          {
             "children": [
               {
                 "choices": [
                   {
-                    "icon": "circle-x",
+                    "icon": "danger-triangle",
                     "label": "i18n:form.level.missing",
                     "value": "missing"
                   },
@@ -171,6 +177,11 @@
             },
             "label": "i18n:form.submit",
             "type": "Button"
+          },
+          {
+            "message": "i18n:form.notice",
+            "tone": "neutral",
+            "type": "InfoBanner"
           }
         ],
         "type": "Form"

@@ -104,7 +104,9 @@ pub fn build_form_surface(
     existing: Option<&PreArrivalResponse>,
     completed: bool,
 ) -> Surface {
-    use portaki_sdk::sdui::primitives::{Button, Field, Form, Text, TextArea, TimePicker};
+    use portaki_sdk::sdui::primitives::{
+        Button, ChoiceList, Field, FieldHint, Form, Text, TextArea, TimePicker,
+    };
 
     let submit_action = crate::ids::module_id().command_empty(crate::commands::SUBMIT);
     let submit_label = if completed {
@@ -135,16 +137,52 @@ pub fn build_form_surface(
                 .into(),
         );
     }
+    // Le transport juste après l'heure : les deux disent ce que l'hôte doit préparer.
+    if questions.ask_transport {
+        let mut choices = ChoiceList::new()
+            .name("transport")
+            .layout(ChoiceListLayout::Compact)
+            .choices(
+                crate::TRANSPORTS
+                    .iter()
+                    .map(|value| {
+                        ChoiceOption::new(*value, format!("i18n:form.transport.{value}"))
+                            .icon(transport_icon(value))
+                    })
+                    .collect(),
+            );
+        if let Some(value) = existing.and_then(|row| row.transport.as_deref()) {
+            choices = choices.value(value.to_string());
+        }
+        form_children.push(
+            Field::new()
+                .name("transport")
+                .label("i18n:form.transport.label")
+                .required(true)
+                .child(choices)
+                .into(),
+        );
+    }
     if questions.ask_occasion {
+        // Des choix, pas un champ libre : l'hôte qui lit « anniversaire » sait quoi faire, celui
+        // qui lit « c'est spécial pour nous » ne sait pas (§2.20).
+        let mut choices = ChoiceList::new()
+            .name("guestOccasion")
+            .layout(ChoiceListLayout::Compact)
+            .choices(
+                crate::OCCASIONS
+                    .iter()
+                    .map(|value| ChoiceOption::new(*value, format!("i18n:form.occasion.{value}")))
+                    .collect(),
+            );
+        if let Some(value) = existing.and_then(|row| row.occasion.as_deref()) {
+            choices = choices.value(value.to_string());
+        }
         form_children.push(
             Field::new()
                 .name("guestOccasion")
                 .label("i18n:form.occasion.label")
-                .child(text_input(
-                    "guestOccasion",
-                    "i18n:form.occasion.placeholder",
-                    existing.and_then(|row| row.occasion.as_deref()),
-                ))
+                .child(choices)
                 .into(),
         );
     }
@@ -175,17 +213,23 @@ pub fn build_form_surface(
         );
     }
     if questions.ask_special_needs {
+        // Un besoin tient rarement sur une ligne : « lit bébé et allergie aux fruits à coque »
+        // était coupé par un champ de saisie d'une ligne.
+        let mut needs = TextArea::new()
+            .name("specialNeeds")
+            .rows(2)
+            .placeholder("i18n:form.specialNeeds.placeholder");
+        if let Some(value) = existing.and_then(|row| row.special_needs.as_deref()) {
+            needs = needs.value(value);
+        }
         form_children.push(
             Field::new()
                 .name("specialNeeds")
                 .label("i18n:form.specialNeeds.label")
-                .child(text_input(
-                    "specialNeeds",
-                    "i18n:form.specialNeeds.placeholder",
-                    existing.and_then(|row| row.special_needs.as_deref()),
-                ))
+                .child(needs)
                 .into(),
         );
+        form_children.push(FieldHint::new().text("i18n:form.specialNeeds.hint").into());
     }
     if questions.ask_id_document {
         form_children.push(
@@ -332,4 +376,14 @@ fn display_or_dash(value: Option<&str>) -> String {
         .filter(|value| !value.is_empty())
         .unwrap_or("—")
         .to_string()
+}
+
+/// L'icône d'un moyen d'arrivée — celles du dessin (§2.20).
+fn transport_icon(value: &str) -> IconName {
+    match value {
+        "car" => IconName::Car,
+        "train" => IconName::Train,
+        "plane" => IconName::Send,
+        _ => IconName::InfoCircle,
+    }
 }
