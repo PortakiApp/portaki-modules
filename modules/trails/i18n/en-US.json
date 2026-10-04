@@ -24,6 +24,7 @@
   "guest.map.property": "The property",
   "guest.map.start": "Trailhead",
   "guest.openTrace": "Open the route",
+  "guest.page.allLevels": "All",
   "guest.page.subtitle": "{count} walks · walking times without breaks",
   "guest.page.subtitle.one": "One walk · walking time without breaks",
   "guest.page.title": "Trails",

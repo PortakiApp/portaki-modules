@@ -60,6 +60,8 @@
   "guest.teaser": "أنسيت شيئًا؟ أبلِغنا",
   "home.card.intro": "أفقدت شيئًا أو وجدت شيئًا؟ أبلِغ مضيفك — سيعاود الاتصال بك.",
   "home.card.openForm": "إبلاغ جديد",
+  "home.card.sent": "أُرسل الإبلاغ",
+  "home.card.sent.named": "أُرسل الإبلاغ · {host} يبحث",
   "home.card.thanks": "شكرًا — أُبلِغ مضيفك.",
   "home.card.title": "المفقودات والموجودات",
   "home.card.windowClosed": "انقضت مدة الإبلاغ. راسِل مضيفك مباشرة إن كان ينقصك شيء.",

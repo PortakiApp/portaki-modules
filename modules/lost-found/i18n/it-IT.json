@@ -60,6 +60,8 @@
   "guest.teaser": "Dimenticato qualcosa? Segnalalo",
   "home.card.intro": "Hai perso qualcosa o trovato un oggetto? Avvisa il tuo host — ti ricontatterà.",
   "home.card.openForm": "Nuova segnalazione",
+  "home.card.sent": "Segnalazione inviata",
+  "home.card.sent.named": "Segnalazione inviata · {host} sta cercando",
   "home.card.thanks": "Grazie — il tuo host è stato avvisato.",
   "home.card.title": "Oggetti smarriti",
   "home.card.windowClosed": "Il termine per segnalare è passato. Scrivi direttamente al tuo host se ti manca qualcosa.",

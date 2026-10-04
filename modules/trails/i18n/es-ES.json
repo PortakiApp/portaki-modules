@@ -24,6 +24,7 @@
   "guest.map.property": "El alojamiento",
   "guest.map.start": "Inicio",
   "guest.openTrace": "Abrir la ruta",
+  "guest.page.allLevels": "Todos",
   "guest.page.subtitle": "{count} rutas · tiempos de marcha sin paradas",
   "guest.page.subtitle.one": "Una ruta · tiempo de marcha sin paradas",
   "guest.page.title": "Rutas",

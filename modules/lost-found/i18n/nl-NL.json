@@ -60,6 +60,8 @@
   "guest.teaser": "Iets vergeten? Meld het",
   "home.card.intro": "Iets verloren of een voorwerp gevonden? Laat het je gastheer weten — die neemt contact op.",
   "home.card.openForm": "Nieuwe melding",
+  "home.card.sent": "Melding verzonden",
+  "home.card.sent.named": "Melding verzonden · {host} zoekt",
   "home.card.thanks": "Bedankt — je gastheer is op de hoogte.",
   "home.card.title": "Verloren en gevonden",
   "home.card.windowClosed": "De meldtermijn is verstreken. Schrijf je gastheer direct als je iets mist.",

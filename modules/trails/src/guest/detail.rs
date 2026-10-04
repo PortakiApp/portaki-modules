@@ -6,7 +6,8 @@ use portaki_sdk::sdui::common::{
     SurfaceLevel,
 };
 use portaki_sdk::sdui::primitives::{
-    Badge, Button, Card, Grid, Image, KeyValue, Link, ListItem, Map, Stack, Text,
+    Badge, Button, Card, FilterBar, FilterChip, Grid, Image, KeyValue, Link, ListItem, Map, Stack,
+    Text,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -19,14 +20,34 @@ use crate::format;
 /// téléphone, en une sur un écran large.
 const TILE_WIDTH: f64 = 136.0;
 
+/// Au-delà de ce nombre, la liste gagne un filtre par niveau en tête (§2.23).
+///
+/// En dessous, les trois cartes de niveaux tiennent à l'écran : le filtre ne ferait que s'ajouter
+/// à ce qu'on parcourt déjà du pouce.
+const FILTER_THRESHOLD: usize = 8;
+
 /// La liste : une carte par niveau, puis le lien de la commune.
-pub fn build_trails_page(data: &GuestData) -> Surface {
+///
+/// `level` arrive par les paramètres de route quand le voyageur a touché un filtre.
+pub fn build_trails_page(data: &GuestData, level_filter: Option<&str>) -> Surface {
+    let levels = levels_with_counts(&data.trails);
+    let selected = level_filter
+        .map(str::trim)
+        .filter(|level| !level.is_empty() && levels.iter().any(|(name, _)| name == level));
+
     let mut children: Vec<Component> = vec![header(
         "i18n:guest.page.title",
         count_subtitle(data.trails.len()),
     )];
 
-    for (level, count) in levels_with_counts(&data.trails) {
+    if data.trails.len() > FILTER_THRESHOLD && levels.len() > 1 {
+        children.push(level_filter_bar(&levels, selected));
+    }
+
+    for (level, count) in levels
+        .into_iter()
+        .filter(|(level, _)| selected.is_none_or(|wanted| *level == wanted))
+    {
         let rows: Vec<Component> = data
             .trails
             .iter()
@@ -55,6 +76,42 @@ pub fn build_trails_page(data: &GuestData) -> Surface {
     }
 
     Surface::new(Stack::new().gap(14.0).children(children)).with_id(crate::guest::EXPLORE_DETAIL)
+}
+
+/// « Tous · ▲ Facile · ▲▲ Moyen » en tête de liste.
+///
+/// Toucher une pastille recharge la page : le livret rend, le module ne garde pas d'état. Les
+/// libellés portent la forme et le texte, jamais une couleur — une difficulté n'est pas une alerte.
+fn level_filter_bar(levels: &[(&'static str, usize)], selected: Option<&str>) -> Component {
+    let mut chips: Vec<Component> = vec![level_chip(
+        "i18n:guest.page.allLevels",
+        "",
+        selected.is_none(),
+    )];
+    chips.extend(
+        levels
+            .iter()
+            .map(|(level, _)| level_chip(&format::level(level), level, selected == Some(*level))),
+    );
+    Component::FilterBar(FilterBar::new().children(chips))
+}
+
+fn level_chip(label: &str, level: &str, is_selected: bool) -> Component {
+    Component::FilterChip(
+        FilterChip::new()
+            .label(label.to_string())
+            .selected(is_selected)
+            .action(Action::navigate(
+                NavigateTarget::path("trails"),
+                Some(json_value(LevelParams { level })),
+            )),
+    )
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct LevelParams<'a> {
+    level: &'a str,
 }
 
 /// La fiche : niveau, titre, départ, quatre tuiles, description, plan, « Avant de partir », actions.
