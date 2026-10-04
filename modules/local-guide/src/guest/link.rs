@@ -31,7 +31,7 @@ const MAX_GALLERY: usize = 5;
 pub fn build_link_item(data: &GuestData, link: &ActivityLink, product: &ViatorProduct) -> Surface {
     let mut children: Vec<Component> = Vec::new();
 
-    if let Some(gallery) = gallery(product, link, data) {
+    if let Some(gallery) = gallery(product, link) {
         children.push(gallery);
     }
 
@@ -85,10 +85,9 @@ pub fn build_link_item(data: &GuestData, link: &ActivityLink, product: &ViatorPr
 /// La galerie : une image seule en tête, plusieurs qui défilent.
 ///
 /// Les photos sont ce sur quoi on choisit une excursion, avant d'en lire le prix.
-fn gallery(product: &ViatorProduct, link: &ActivityLink, data: &GuestData) -> Option<Component> {
+fn gallery(product: &ViatorProduct, link: &ActivityLink) -> Option<Component> {
     let alt = title(link, product);
     let urls: Vec<&String> = product.gallery.iter().take(MAX_GALLERY).collect();
-    let _ = data;
     match urls.as_slice() {
         [] => None,
         [only] => Some(

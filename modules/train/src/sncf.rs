@@ -41,7 +41,12 @@ const BOARD_KEY_PREFIX: &str = "sncf_board.";
     id = "sncf",
     display_name_key = "connector.sncf.name",
     base_url = "https://api.sncf.com/v1",
-    // La clé en nom d'utilisateur, mot de passe vide : c'est ce que l'API SNCF attend.
+    // L'API SNCF attend la clé en nom d'utilisateur, mot de passe vide.
+    //
+    // La passerelle encode le secret **tel qu'il est au coffre** : `Basic base64(<secret>)`, sans
+    // y ajouter de deux-points (`EgressAuth.Kind.BASIC`, le coffre garde « identifiant:mot de
+    // passe » tel que saisi). Le secret à déposer est donc `<clé>:`, **deux-points final compris**.
+    // Sans lui, l'appel part en `base64(<clé>)` et SNCF répond 401 sans rien dire d'utile.
     auth = "basic",
     host_key = false
 )]
