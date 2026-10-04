@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.6.0...facility-hours-v1.7.0) (2026-10-04)
+
+
+### Features
+
+* **facility-hours:** un groupe et une icône par ligne ([44ceb23](https://github.com/PortakiApp/portaki-modules/commit/44ceb23948b2725a5b74942dbfed2d942628aa79))
+* **trails:** le tracé d'un itinéraire, lu du GPX de l'hôte ([0fae471](https://github.com/PortakiApp/portaki-modules/commit/0fae471f7ef8c106306f0d7b782d22d9ebbac9ba))
+
+
+### Bug Fixes
+
+* **appliances, emergency-contacts, facility-hours:** les tuiles de la maquette ([2fab338](https://github.com/PortakiApp/portaki-modules/commit/2fab338295b5c5ee85238798f030291cca217922))
+
 ## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.5.0...facility-hours-v1.6.0) (2026-10-02)
 
 

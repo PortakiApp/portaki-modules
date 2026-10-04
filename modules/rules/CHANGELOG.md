@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/rules-v1.5.0...rules-v1.6.0) (2026-10-04)
+
+
+### Features
+
+* **trails:** le tracé d'un itinéraire, lu du GPX de l'hôte ([0fae471](https://github.com/PortakiApp/portaki-modules/commit/0fae471f7ef8c106306f0d7b782d22d9ebbac9ba))
+
 ## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/rules-v1.4.0...rules-v1.5.0) (2026-10-02)
 
 

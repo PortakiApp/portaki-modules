@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.3.0...weather-v1.4.0) (2026-10-04)
+
+
+### Features
+
+* **trails:** le tracé d'un itinéraire, lu du GPX de l'hôte ([0fae471](https://github.com/PortakiApp/portaki-modules/commit/0fae471f7ef8c106306f0d7b782d22d9ebbac9ba))
+
+
+### Bug Fixes
+
+* **weather:** jour par jour en lignes, et le jour en boîte ([c01d145](https://github.com/PortakiApp/portaki-modules/commit/c01d145c3003f7c95079427d7797942b02eb1d88))
+
 ## [1.3.0](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.2.0...weather-v1.3.0) (2026-10-02)
 
 

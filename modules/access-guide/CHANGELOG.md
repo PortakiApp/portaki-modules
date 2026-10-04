@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.4.0...access-guide-v1.5.0) (2026-10-04)
+
+
+### Features
+
+* **trails:** le tracé d'un itinéraire, lu du GPX de l'hôte ([0fae471](https://github.com/PortakiApp/portaki-modules/commit/0fae471f7ef8c106306f0d7b782d22d9ebbac9ba))
+
+
+### Bug Fixes
+
+* **access-guide, wifi-guest, ev-parking:** l'état du secret ([6694154](https://github.com/PortakiApp/portaki-modules/commit/66941545221f57f10d059807ea329b8155c67df6))
+* **access-guide:** aligner la carte d'accueil sur la maquette ([3d20778](https://github.com/PortakiApp/portaki-modules/commit/3d2077803410acec3bd9e3551e28ccad09680527))
+* **access-guide:** la carte à l'essentiel, et l'heure d'arrivée ([43dbd6d](https://github.com/PortakiApp/portaki-modules/commit/43dbd6dce4e452fd4cdd07b05a490c0d94f9b720))
+
 ## [1.4.0](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.3.0...access-guide-v1.4.0) (2026-10-02)
 
 

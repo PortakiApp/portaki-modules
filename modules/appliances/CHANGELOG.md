@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.5.0...appliances-v1.6.0) (2026-10-04)
+
+
+### Features
+
+* **trails:** le tracé d'un itinéraire, lu du GPX de l'hôte ([0fae471](https://github.com/PortakiApp/portaki-modules/commit/0fae471f7ef8c106306f0d7b782d22d9ebbac9ba))
+
+
+### Bug Fixes
+
+* **appliances, emergency-contacts, facility-hours:** les tuiles de la maquette ([2fab338](https://github.com/PortakiApp/portaki-modules/commit/2fab338295b5c5ee85238798f030291cca217922))
+* **appliances:** une carte par pièce ([06a83f1](https://github.com/PortakiApp/portaki-modules/commit/06a83f1ec6eac63a6984b11d5a07e56b30e95029))
+
 ## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.4.0...appliances-v1.5.0) (2026-10-02)
 
 
