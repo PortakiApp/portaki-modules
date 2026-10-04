@@ -336,6 +336,7 @@
                 ],
                 "label": "i18n:form.return.label",
                 "name": "returnChoice",
+                "required": true,
                 "type": "Field"
               },
               {
