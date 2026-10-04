@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.1](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.4.0...consumables-v2.4.1) (2026-10-04)
+
+
+### Bug Fixes
+
+* **ci:** pin every module to portaki-sdk 9.8.0 ([a06c2c7](https://github.com/PortakiApp/portaki-modules/commit/a06c2c7bd26763fb6846d0633ab83431c596f383))
+
 ## [2.4.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.3.0...consumables-v2.4.0) (2026-10-04)
 
 

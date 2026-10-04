@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/PortakiApp/portaki-modules/compare/train-v1.4.0...train-v2.0.0) (2026-10-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* **train:** la gare devient un réglage obligatoire — une installation existante reste incomplète jusqu'à ce que l'hôte la renseigne. Le quai et la distance jusqu'à la gare disparaissent, l'API n'en donnant pas, et les liens de fiche changent de forme (20261004-0812-17654).
+
+### Features
+
+* **train:** read the real departures of the host's station ([5c617c2](https://github.com/PortakiApp/portaki-modules/commit/5c617c22deeaa58b2272da01e069b3594262204d))
+
+
+### Bug Fixes
+
+* **ci:** pin every module to portaki-sdk 9.8.0 ([a06c2c7](https://github.com/PortakiApp/portaki-modules/commit/a06c2c7bd26763fb6846d0633ab83431c596f383))
+
 ## [1.4.0](https://github.com/PortakiApp/portaki-modules/compare/train-v1.3.0...train-v1.4.0) (2026-10-04)
 
 

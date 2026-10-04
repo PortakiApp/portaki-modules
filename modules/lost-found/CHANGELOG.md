@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.5.1...lost-found-v1.6.0) (2026-10-04)
+
+
+### Features
+
+* **lost-found:** reveal the return address under « ship it » ([c8e87ba](https://github.com/PortakiApp/portaki-modules/commit/c8e87ba1fb386f20c1cef024cd8d4afed5ffe42a))
+
 ## [1.5.1](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.5.0...lost-found-v1.5.1) (2026-10-04)
 
 

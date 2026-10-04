@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/PortakiApp/portaki-modules/compare/safety-shutoffs-v0.4.0...safety-shutoffs-v0.4.1) (2026-10-04)
+
+
+### Bug Fixes
+
+* **ci:** pin every module to portaki-sdk 9.8.0 ([a06c2c7](https://github.com/PortakiApp/portaki-modules/commit/a06c2c7bd26763fb6846d0633ab83431c596f383))
+
 ## [0.4.0](https://github.com/PortakiApp/portaki-modules/compare/safety-shutoffs-v0.3.0...safety-shutoffs-v0.4.0) (2026-10-04)
 
 

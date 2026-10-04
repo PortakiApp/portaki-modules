@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.8.0...facility-hours-v1.8.1) (2026-10-04)
+
+
+### Bug Fixes
+
+* **ci:** pin every module to portaki-sdk 9.8.0 ([a06c2c7](https://github.com/PortakiApp/portaki-modules/commit/a06c2c7bd26763fb6846d0633ab83431c596f383))
+
 ## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.7.0...facility-hours-v1.8.0) (2026-10-04)
 
 

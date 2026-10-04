@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v1.3.0...guest-reviews-v1.3.1) (2026-10-04)
+
+
+### Bug Fixes
+
+* **ci:** pin every module to portaki-sdk 9.8.0 ([a06c2c7](https://github.com/PortakiApp/portaki-modules/commit/a06c2c7bd26763fb6846d0633ab83431c596f383))
+
 ## [1.3.0](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v1.2.1...guest-reviews-v1.3.0) (2026-10-04)
 
 
