@@ -6,6 +6,8 @@
         "guest.binRoom.title": "Le local poubelles",
         "guest.inside.title": "Dans le logement"
       },
+      "labelKey": "nav.waste-recycling",
+      "path": "waste-recycling/detail",
       "surfaceId": "explore.detail",
       "tree": {
         "children": [

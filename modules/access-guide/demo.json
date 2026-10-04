@@ -17,6 +17,8 @@
         "host.step.kind.door": "Porte",
         "host.step.kind.parking": "Parking"
       },
+      "labelKey": "nav.access-guide",
+      "path": "access-guide/detail",
       "surfaceId": "explore.detail",
       "tree": {
         "children": [
@@ -275,6 +277,9 @@
       "i18n": {
         "guest.status.keybox": "Code boîte à clés"
       },
+      "labelKey": "nav.access-guide",
+      "path": "access-guide/status",
+      "role": "status-cell",
       "surfaceId": "status.cell",
       "tree": {
         "copy": true,
@@ -291,6 +296,9 @@
         "guest.method.keybox": "Boîte à clés",
         "nav.access-guide": "Accès & parking"
       },
+      "labelKey": "nav.access-guide",
+      "path": "upcoming",
+      "role": "upcoming",
       "surfaceId": "upcoming.card",
       "tree": {
         "children": [

@@ -89,7 +89,7 @@ pub fn check_all(
             )
         })
         .collect();
-    check_demo(module_root, demo);
+    check_demo(module_root, guest_routes(Path::new(emissions)), demo);
     check_previews(module_root, emissions, rendered);
 }
 
@@ -168,7 +168,11 @@ fn check_previews(module_root: &str, emissions: &str, rendered: Vec<(&str, Surfa
 /// ```sh
 /// PORTAKI_UPDATE_DEMO=1 cargo test -p <module> --test previews
 /// ```
-fn check_demo(module_root: &str, rendered: Vec<(&str, Value)>) {
+fn check_demo(
+    module_root: &str,
+    routes: std::collections::BTreeMap<String, Value>,
+    rendered: Vec<(&str, Value)>,
+) {
     let root = Path::new(module_root);
     let bundle = fr_bundle(module_root);
 
@@ -181,7 +185,24 @@ fn check_demo(module_root: &str, rendered: Vec<(&str, Value)>) {
                 .into_iter()
                 .filter_map(|key| bundle.get(&key).map(|value| (key, value.clone())))
                 .collect();
-            json!({ "surfaceId": surface_id, "tree": tree, "i18n": i18n })
+            // Le chemin que le module déclare, quand il en déclare un. La démo du livret construit
+            // ses routes avec, au lieu d'en tenir une liste à la main : celle-ci avait déjà dérivé
+            // (`sections` y était annoncé sur une surface que le module n'a pas).
+            let mut surface = json!({ "surfaceId": surface_id, "tree": tree, "i18n": i18n });
+            if let Some(catalog) = routes.get(surface_id) {
+                for (from, to) in [("path", "path"), ("label_key", "labelKey")] {
+                    if let Some(value) = catalog.get(from).filter(|value| value.is_string()) {
+                        surface[to] = value.clone();
+                    }
+                }
+                // L'émission garde la forme Rust (`GuestRole::StatusCell`) ; c'est `portaki build`
+                // qui la met sur le fil. La démo lit le même mot que la plateforme sert, sinon le
+                // livret chercherait `status-cell` en face d'un nom de variante.
+                if let Some(role) = catalog["role"].as_str().and_then(wire_role) {
+                    surface["role"] = Value::String(role.to_string());
+                }
+            }
+            surface
         })
         .collect();
     // Trié : le fichier ne doit pas bouger parce que le test a listé ses surfaces autrement.
@@ -200,6 +221,12 @@ fn check_demo(module_root: &str, rendered: Vec<(&str, Value)>) {
         current == expected,
         "{DEMO_FILE} ne correspond plus au rendu — PORTAKI_UPDATE_DEMO=1 cargo test --test previews"
     );
+}
+
+/// `GuestRole::StatusCell` → `"status-cell"`, comme le fait `portaki build`.
+fn wire_role(variant: &str) -> Option<&'static str> {
+    let (vocabulary, variant) = variant.split_once("::")?;
+    portaki_sdk::vocab::wire_of(vocabulary, variant)
 }
 
 fn guest_routes(emissions: &Path) -> std::collections::BTreeMap<String, Value> {

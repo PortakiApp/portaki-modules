@@ -11,6 +11,8 @@
         "weather.uv.high": "UV élevé",
         "weather.wind": "Vent"
       },
+      "labelKey": "nav.forecast",
+      "path": "weather/forecast",
       "surfaceId": "explore.forecast",
       "tree": {
         "children": [
@@ -422,6 +424,9 @@
       "i18n": {
         "nav.weather": "Météo"
       },
+      "labelKey": "nav.weather",
+      "path": "upcoming",
+      "role": "upcoming",
       "surfaceId": "upcoming.card",
       "tree": {
         "children": [

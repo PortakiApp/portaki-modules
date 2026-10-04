@@ -13,6 +13,8 @@
         "form.notice": "Votre hôte est averti dès l’envoi.",
         "form.submit": "Prévenir l'hôte"
       },
+      "labelKey": "nav.consumables",
+      "path": "consumables/form",
       "surfaceId": "guest.form",
       "tree": {
         "children": [
@@ -139,6 +141,8 @@
         "home.card.openForm": "Signaler un manque",
         "home.card.title": "Consommables"
       },
+      "labelKey": "nav.consumables",
+      "path": "consumables",
       "surfaceId": "home.card",
       "tree": {
         "action": {

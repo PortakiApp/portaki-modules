@@ -44,6 +44,8 @@
         "form.step.where": "Où l’avez-vous laissé ?",
         "form.submit": "Envoyer"
       },
+      "labelKey": "nav.lost-found",
+      "path": "lost-found/form",
       "surfaceId": "guest.form",
       "tree": {
         "children": [
@@ -311,6 +313,8 @@
         "home.card.title": "Objets perdus ou trouvés",
         "home.card.yourReports": "Vos signalements ce séjour"
       },
+      "labelKey": "nav.lost-found",
+      "path": "lost-found",
       "surfaceId": "home.card",
       "tree": {
         "action": {
@@ -387,6 +391,9 @@
         "home.card.title": "Objets perdus ou trouvés",
         "home.card.yourReports": "Vos signalements ce séjour"
       },
+      "labelKey": "nav.lost-found",
+      "path": "post-stay",
+      "role": "post-stay",
       "surfaceId": "post-stay.card",
       "tree": {
         "action": {

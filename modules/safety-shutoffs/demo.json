@@ -10,6 +10,8 @@
         "guest.subtitle": "Où couper l’électricité, l’eau et le gaz",
         "guest.title": "En cas de problème"
       },
+      "labelKey": "nav.safety-shutoffs",
+      "path": "safety-shutoffs/detail",
       "surfaceId": "explore.detail",
       "tree": {
         "children": [

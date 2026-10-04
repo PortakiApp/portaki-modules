@@ -9,6 +9,8 @@
         "guest.security.title": "Réseau invité uniquement",
         "guest.ssid": "Réseau"
       },
+      "labelKey": "nav.wifi-guest",
+      "path": "wifi-guest/detail",
       "surfaceId": "explore.detail",
       "tree": {
         "children": [

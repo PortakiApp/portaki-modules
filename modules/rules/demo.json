@@ -3,6 +3,8 @@
   "surfaces": [
     {
       "i18n": {},
+      "labelKey": "nav.rules",
+      "path": "rules",
       "surfaceId": "explore.detail",
       "tree": {
         "children": [

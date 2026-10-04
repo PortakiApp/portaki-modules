@@ -6,6 +6,8 @@
         "guest.commune.label": "Tous les sentiers de la commune",
         "guest.page.title": "Randonnées"
       },
+      "labelKey": "nav.trails",
+      "path": "trails",
       "surfaceId": "explore.detail",
       "tree": {
         "children": [
@@ -132,6 +134,8 @@
         "guest.tile.elevation": "Dénivelé",
         "guest.tile.shape": "Type"
       },
+      "labelKey": "nav.trail",
+      "path": "trails/:trailId",
       "surfaceId": "explore.item",
       "tree": {
         "children": [

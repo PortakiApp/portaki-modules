@@ -13,6 +13,8 @@
         "guest.hostActivities.disclosure": "Activité proposée par votre hôte, sans commission. La réservation se fait directement avec le prestataire.",
         "guest.practical.title": "Infos pratiques"
       },
+      "labelKey": "nav.activity",
+      "path": "local-guide/activity/:activityId",
       "surfaceId": "explore.activity",
       "tree": {
         "children": [
@@ -146,6 +148,8 @@
         "guest.hostActivities.title": "Vos activités",
         "guest.viator.via": "via Viator"
       },
+      "labelKey": "nav.local-guide",
+      "path": "local-guide/detail",
       "surfaceId": "explore.detail",
       "tree": {
         "children": [
@@ -402,6 +406,8 @@
         "guest.route": "Itinéraire",
         "guest.tile.walk": "À pied"
       },
+      "labelKey": "nav.spot",
+      "path": "local-guide/detail/:spotId",
       "surfaceId": "explore.item",
       "tree": {
         "children": [
@@ -575,6 +581,8 @@
         "guest.viator.priceFromLabel": "Dès",
         "guest.viator.via": "via Viator"
       },
+      "labelKey": "nav.activity",
+      "path": "local-guide/link/:productCode",
       "surfaceId": "explore.link",
       "tree": {
         "children": [
@@ -916,6 +924,9 @@
       "i18n": {
         "nav.local-guide": "Bons plans"
       },
+      "labelKey": "nav.local-guide",
+      "path": "upcoming",
+      "role": "upcoming",
       "surfaceId": "upcoming.card",
       "tree": {
         "children": [

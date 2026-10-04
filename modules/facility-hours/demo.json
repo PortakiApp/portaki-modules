@@ -6,6 +6,8 @@
         "guest.note.title": "À savoir",
         "guest.state.open": "Ouvert"
       },
+      "labelKey": "nav.facility-hours",
+      "path": "facility-hours/detail",
       "surfaceId": "explore.detail",
       "tree": {
         "children": [
