@@ -2,7 +2,7 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::{Leading, LeadingVisual};
-use portaki_sdk::sdui::primitives::{Card, Eyebrow, ListItem, Map, Stack, Text};
+use portaki_sdk::sdui::primitives::{Card, Eyebrow, KeyValue, ListItem, Map, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
 use super::body::{build_bins_body, build_collection_banner, dropoff_row};
@@ -68,24 +68,49 @@ fn inside_card(data: &GuestData) -> Option<Component> {
     })
 }
 
-/// « Le local poubelles » : le chemin, numéroté.
+/// « Le local poubelles » : le code et les heures d'abord, puis le chemin, numéroté.
+///
+/// Le code et les heures devant parce qu'un local fermé ou verrouillé arrête le trajet avant qu'il
+/// commence — descendre trois étages pour lire « fermé le dimanche » en bas, c'est le genre de
+/// détail qu'un livret existe pour éviter.
+///
+/// Rien quand l'hôte n'a rempli aucun des trois : une carte vide promettrait un local.
 fn bin_room_card(data: &GuestData) -> Option<Component> {
-    if data.bin_room_steps.is_empty() {
+    if data.bin_room_steps.is_empty()
+        && data.bin_room_code.is_empty()
+        && data.bin_room_hours.is_empty()
+    {
         return None;
     }
-    let rows: Vec<Component> = data
-        .bin_room_steps
-        .iter()
-        .enumerate()
-        .map(|(index, step)| {
-            Component::ListItem(ListItem::new().title(step.clone()).leading(Leading::Visual(
-                Box::new(LeadingVisual {
+    let mut rows: Vec<Component> = Vec::new();
+    if !data.bin_room_code.is_empty() {
+        rows.push(Component::KeyValue(
+            KeyValue::new()
+                .key("i18n:guest.binRoom.code")
+                .value(data.bin_room_code.clone())
+                .mono(true)
+                // Copiable et non masqué : on le lit devant un digicode, et le local est derrière
+                // une porte que le voyageur a déjà franchie.
+                .copy(true),
+        ));
+    }
+    if !data.bin_room_hours.is_empty() {
+        rows.push(Component::KeyValue(
+            KeyValue::new()
+                .key("i18n:guest.binRoom.hours")
+                .value(data.bin_room_hours.clone()),
+        ));
+    }
+    rows.extend(data.bin_room_steps.iter().enumerate().map(|(index, step)| {
+        Component::ListItem(
+            ListItem::new()
+                .title(step.clone())
+                .leading(Leading::Visual(Box::new(LeadingVisual {
                     index: Some((index + 1) as u32),
                     ..LeadingVisual::default()
-                }),
-            )))
-        })
-        .collect();
+                }))),
+        )
+    }));
     Some(Component::Card(
         Card::new()
             .icon(IconName::MapPin)

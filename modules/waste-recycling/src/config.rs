@@ -74,6 +74,19 @@ pub struct ModuleConfig {
     /// couvercle jaune se suivent, et une phrase unique les mélange.
     #[field(label = "host.binRoom.label")]
     pub bin_room_steps: I18nText,
+    /// Le code de la porte du local, s'il y en a une (§2.7).
+    ///
+    /// Pas masqué chez le voyageur, contrairement aux codes d'accès au logement : le local est
+    /// derrière une porte que le voyageur a déjà franchie, et la cérémonie de révélation coûterait
+    /// plus qu'elle ne protège. Copiable, parce qu'on le lit devant un digicode.
+    #[field(label = "host.binRoom.code")]
+    pub bin_room_code: String,
+    /// Les heures d'ouverture du local : « 7 h – 21 h », « fermé le dimanche ».
+    ///
+    /// Du texte et non deux heures : un local fermé le dimanche n'a pas d'horaire à comparer, et
+    /// c'est ce qu'un gardien affiche sur sa porte.
+    #[field(label = "host.binRoom.hours")]
+    pub bin_room_hours: I18nText,
 }
 
 /// The old KV blob: the bins as a JSON string, `bins_json`, before the form slots; each bin's
@@ -148,6 +161,17 @@ impl ModuleConfig {
             && self.takeout_note.is_blank()
             && self.parse_dropoff_points().is_empty()
             && !self.has_compost()
+            && !self.has_bin_room()
+    }
+
+    /// L'hôte a dit quelque chose du local : son chemin, son code ou ses heures.
+    ///
+    /// Le local comptait pour rien dans [`Self::is_empty`] : un hôte qui n'avait rempli que le
+    /// chemin jusqu'au local n'obtenait aucune carte, et le module se taisait sur ce qu'il savait.
+    pub fn has_bin_room(&self) -> bool {
+        !self.bin_room_steps.is_blank()
+            || !self.bin_room_code.trim().is_empty()
+            || !self.bin_room_hours.is_blank()
     }
 
     /// The named dropoff rows, for the guest: the form sends its slots, blank ones included.
