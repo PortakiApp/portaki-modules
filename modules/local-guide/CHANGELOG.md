@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.4.0...local-guide-v1.5.0) (2026-10-04)
+
+
+### Features
+
+* **local-guide:** les activités de l'hôte ([3612328](https://github.com/PortakiApp/portaki-modules/commit/361232880911310f376652a826c6fb6b9a815286))
+
 ## [1.4.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.3.0...local-guide-v1.4.0) (2026-10-04)
 
 
