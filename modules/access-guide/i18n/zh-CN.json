@@ -39,6 +39,7 @@
   "guest.buildingStaff.deskLocation": "位置",
   "guest.buildingStaff.hours": "值班时间",
   "guest.buildingStaff.reception": "前台",
+  "guest.checkin": "入住",
   "guest.doorCode.apartment": "房门密码",
   "guest.doorCode.building": "楼栋密码",
   "guest.doorCode.code": "密码",

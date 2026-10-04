@@ -39,6 +39,7 @@
   "guest.buildingStaff.deskLocation": "Ort",
   "guest.buildingStaff.hours": "Zeiten",
   "guest.buildingStaff.reception": "Rezeption",
+  "guest.checkin": "Anreise",
   "guest.doorCode.apartment": "Wohnungscode",
   "guest.doorCode.building": "Gebäudecode",
   "guest.doorCode.code": "Code",

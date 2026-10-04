@@ -39,6 +39,7 @@
   "guest.buildingStaff.deskLocation": "Plek",
   "guest.buildingStaff.hours": "Openingstijden",
   "guest.buildingStaff.reception": "Receptie",
+  "guest.checkin": "Aankomst",
   "guest.doorCode.apartment": "Code van het appartement",
   "guest.doorCode.building": "Gebouwcode",
   "guest.doorCode.code": "Code",

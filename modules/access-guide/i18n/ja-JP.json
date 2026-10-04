@@ -39,6 +39,7 @@
   "guest.buildingStaff.deskLocation": "場所",
   "guest.buildingStaff.hours": "受付時間",
   "guest.buildingStaff.reception": "受付",
+  "guest.checkin": "チェックイン",
   "guest.doorCode.apartment": "住戸の暗証番号",
   "guest.doorCode.building": "建物の暗証番号",
   "guest.doorCode.code": "コード",
