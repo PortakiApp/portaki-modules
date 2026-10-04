@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.6.1...waste-recycling-v1.7.0) (2026-10-04)
+
+
+### Features
+
+* **waste-recycling:** the bin room's code and hours ([27aa554](https://github.com/PortakiApp/portaki-modules/commit/27aa5542a2ea3bdf41c04d4b4175dc22b3e7cdc5))
+
 ## [1.6.1](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.6.0...waste-recycling-v1.6.1) (2026-10-04)
 
 
