@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.0
+
+Le formulaire en trois étapes.
+
+* Trois écrans au lieu d'un : quel objet, où il est resté, ce qu'il faut en faire.
+* L'étape de restitution porte votre prénom, et dit si vous ne renvoyez pas les objets oubliés.
+* Une barre de progression, « Retour » et « Continuer » : le livret les dessine.
+
 ## 1.4.0
 
 Le formulaire complet.
