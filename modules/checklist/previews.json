@@ -1,0 +1,45 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "home.card.notYet": "La checklist s’ouvrira au moment choisi par l’hôte.",
+        "home.card.title": "Checklists"
+      },
+      "surfaceId": "home.card",
+      "title": "Checklists",
+      "tree": {
+        "children": [
+          {
+            "text": "i18n:home.card.notYet",
+            "type": "Text",
+            "variant": "body"
+          }
+        ],
+        "icon": "clock-circle",
+        "title": "i18n:home.card.title",
+        "type": "Card"
+      }
+    },
+    {
+      "i18n": {
+        "home.card.notYet": "La checklist s’ouvrira au moment choisi par l’hôte.",
+        "home.card.title": "Checklists"
+      },
+      "surfaceId": "post-stay.card",
+      "title": "Checklists",
+      "tree": {
+        "children": [
+          {
+            "text": "i18n:home.card.notYet",
+            "type": "Text",
+            "variant": "body"
+          }
+        ],
+        "icon": "clock-circle",
+        "title": "i18n:home.card.title",
+        "type": "Card"
+      }
+    }
+  ]
+}

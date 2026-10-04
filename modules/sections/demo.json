@@ -1,0 +1,46 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {},
+      "surfaceId": "explore.sheet",
+      "tree": {
+        "children": [
+          {
+            "content": "Nous sommes heureux de vous accueillir.\n\nFaites comme chez vous : le café est dans le placard au-dessus de la machine, et les serviettes de plage sont dans le coffre de l'entrée.",
+            "type": "Markdown"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "home.card.title": "Bienvenue"
+      },
+      "surfaceId": "home.card",
+      "tree": {
+        "action": {
+          "args": {
+            "icon": "home",
+            "title": "i18n:home.card.title"
+          },
+          "presentation": "bottomSheet",
+          "surface_render": "explore.sheet",
+          "type": "openOverlay"
+        },
+        "children": [
+          {
+            "content": "Nous sommes heureux de vous accueillir.\n\nFaites comme chez vous : le café est dans le placard au-dessus de la machine, et les serviettes de plage sont dans le coffre de l'entrée.",
+            "type": "Markdown"
+          }
+        ],
+        "icon": "home",
+        "subtitle": "",
+        "title": "i18n:home.card.title",
+        "type": "Card"
+      }
+    }
+  ]
+}
