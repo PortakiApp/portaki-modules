@@ -18,6 +18,15 @@ pub struct ModuleConfig {
     /// choix délibéré, par exemple une ligne dédiée aux voyageurs.
     #[field(label = "host.phone.label")]
     pub host_visible_phone: String,
+    /// La pharmacie de garde — un numéro, un service, ce que l'hôte veut y mettre.
+    ///
+    /// Les deux lignes que le §2.16 attend de l'hôte et qui manquaient : elles ferment la carte
+    /// en une phrase, sous les numéros qu'on compose.
+    #[field(label = "host.pharmacy.label")]
+    pub pharmacy: String,
+    /// L'hôpital le plus proche, et à quelle distance.
+    #[field(label = "host.hospital.label")]
+    pub hospital: String,
 }
 
 /// The old KV blob kept the contacts as a JSON string, `contacts_json`, before the form slots.

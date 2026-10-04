@@ -45,9 +45,13 @@ fn home_card_renders_contacts() {
         .run(|ctx| {
             let surface = render_home_card(ctx).expect("home card");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("Pressable"));
+            // L'appel est porté par la ligne, pas par un `Pressable` autour : c'est ce que la
+            // maquette donne à chaque rangée, et un niveau de moins à lire.
+            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
+            assert!(!SurfaceAssertions::new(&surface).contains_type("Pressable"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("bottomSheet"));
+            assert!(json.contains("tel:"));
         });
 }
 

@@ -3,7 +3,7 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::{Leading, LeadingVisual, ListItemLayout, Trailing};
-use portaki_sdk::sdui::primitives::{Grid, InfoBanner, ListItem, Pressable, Text};
+use portaki_sdk::sdui::primitives::{Grid, InfoBanner, ListItem, Text};
 
 use super::load::GuestData;
 
@@ -24,14 +24,14 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
     }
 
     if !data.host_phone.is_empty() {
-        let action = tel_action(&data.host_phone);
-        children.push(Component::Pressable(
-            Pressable::new().action(action.clone()).child(
-                ListItem::new()
-                    .title("i18n:guest.host.label")
-                    .subtitle(data.host_phone.clone())
-                    .trailing(Trailing::Text("i18n:guest.call".into())),
-            ),
+        // L'action sur la ligne, pas autour : c'est ce que la maquette donne à chaque rangée, et
+        // un `Pressable` enveloppant ajoutait un niveau que rien ne lit.
+        children.push(Component::ListItem(
+            ListItem::new()
+                .title("i18n:guest.host.label")
+                .subtitle(data.host_phone.clone())
+                .trailing(Trailing::Text("i18n:guest.call".into()))
+                .action(tel_action(&data.host_phone)),
         ));
     }
 
@@ -48,10 +48,15 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
         if !note.trim().is_empty() {
             item = item.child(Text::new().text(note).variant(TextVariant::Caption));
         }
-        children.push(Component::Pressable(
-            Pressable::new()
-                .action(tel_action(&contact.phone))
-                .child(item),
+        children.push(Component::ListItem(item.action(tel_action(&contact.phone))));
+    }
+
+    // La phrase utile ferme la carte : on la lit quand on n'a pas trouvé son numéro au-dessus.
+    if !data.useful_line.is_empty() {
+        children.push(Component::Text(
+            Text::new()
+                .text(data.useful_line.clone())
+                .variant(TextVariant::Caption),
         ));
     }
 
@@ -79,11 +84,7 @@ pub fn country_numbers(locale: &str) -> Component {
                 // c'est la tuile entière qui le prend. Plus appuyé que le dessin, jamais faux.
                 tile = tile.tone(Tone::Danger);
             }
-            Component::Pressable(
-                Pressable::new()
-                    .action(tel_action(number.number))
-                    .child(tile),
-            )
+            Component::ListItem(tile.action(tel_action(number.number)))
         })
         .collect();
 
