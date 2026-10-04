@@ -23,55 +23,40 @@
                   "type": "external",
                   "url": "tel:112"
                 },
-                "children": [
-                  {
-                    "layout": "tile",
-                    "leading": {
-                      "icon": "phone"
-                    },
-                    "subtitle": "i18n:guest.numbers.general",
-                    "title": "112",
-                    "tone": "danger",
-                    "type": "ListItem"
-                  }
-                ],
-                "type": "Pressable"
+                "layout": "tile",
+                "leading": {
+                  "icon": "phone"
+                },
+                "subtitle": "i18n:guest.numbers.general",
+                "title": "112",
+                "tone": "danger",
+                "type": "ListItem"
               },
               {
                 "action": {
                   "type": "external",
                   "url": "tel:15"
                 },
-                "children": [
-                  {
-                    "layout": "tile",
-                    "leading": {
-                      "icon": "phone"
-                    },
-                    "subtitle": "i18n:guest.numbers.medical",
-                    "title": "15",
-                    "type": "ListItem"
-                  }
-                ],
-                "type": "Pressable"
+                "layout": "tile",
+                "leading": {
+                  "icon": "phone"
+                },
+                "subtitle": "i18n:guest.numbers.medical",
+                "title": "15",
+                "type": "ListItem"
               },
               {
                 "action": {
                   "type": "external",
                   "url": "tel:18"
                 },
-                "children": [
-                  {
-                    "layout": "tile",
-                    "leading": {
-                      "icon": "phone"
-                    },
-                    "subtitle": "i18n:guest.numbers.fire",
-                    "title": "18",
-                    "type": "ListItem"
-                  }
-                ],
-                "type": "Pressable"
+                "layout": "tile",
+                "leading": {
+                  "icon": "phone"
+                },
+                "subtitle": "i18n:guest.numbers.fire",
+                "title": "18",
+                "type": "ListItem"
               }
             ],
             "minColumnWidth": 90.0,
@@ -88,15 +73,10 @@
               "type": "external",
               "url": "tel:0639981234"
             },
-            "children": [
-              {
-                "subtitle": "06 39 98 12 34",
-                "title": "i18n:guest.host.label",
-                "trailing": "i18n:guest.call",
-                "type": "ListItem"
-              }
-            ],
-            "type": "Pressable"
+            "subtitle": "06 39 98 12 34",
+            "title": "i18n:guest.host.label",
+            "trailing": "i18n:guest.call",
+            "type": "ListItem"
           },
           {
             "action": {
@@ -105,20 +85,15 @@
             },
             "children": [
               {
-                "children": [
-                  {
-                    "text": "Service national",
-                    "type": "Text",
-                    "variant": "caption"
-                  }
-                ],
-                "subtitle": "3237",
-                "title": "Pharmacie de garde",
-                "trailing": "i18n:guest.call",
-                "type": "ListItem"
+                "text": "Service national",
+                "type": "Text",
+                "variant": "caption"
               }
             ],
-            "type": "Pressable"
+            "subtitle": "3237",
+            "title": "Pharmacie de garde",
+            "trailing": "i18n:guest.call",
+            "type": "ListItem"
           },
           {
             "action": {
@@ -127,35 +102,25 @@
             },
             "children": [
               {
-                "children": [
-                  {
-                    "text": "Cabinet du centre, sur rendez-vous",
-                    "type": "Text",
-                    "variant": "caption"
-                  }
-                ],
-                "subtitle": "01 99 00 12 34",
-                "title": "Médecin généraliste",
-                "trailing": "i18n:guest.call",
-                "type": "ListItem"
+                "text": "Cabinet du centre, sur rendez-vous",
+                "type": "Text",
+                "variant": "caption"
               }
             ],
-            "type": "Pressable"
+            "subtitle": "01 99 00 12 34",
+            "title": "Médecin généraliste",
+            "trailing": "i18n:guest.call",
+            "type": "ListItem"
           },
           {
             "action": {
               "type": "external",
               "url": "tel:15"
             },
-            "children": [
-              {
-                "subtitle": "15",
-                "title": "SAMU",
-                "trailing": "i18n:guest.call",
-                "type": "ListItem"
-              }
-            ],
-            "type": "Pressable"
+            "subtitle": "15",
+            "title": "SAMU",
+            "trailing": "i18n:guest.call",
+            "type": "ListItem"
           }
         ],
         "gap": 12.0,

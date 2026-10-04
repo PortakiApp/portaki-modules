@@ -8,6 +8,9 @@ pub struct GuestData {
     pub contacts: Vec<ContactRow>,
     pub host_phone: String,
     pub locale: String,
+    /// « Pharmacie de garde : 3237 · Hôpital d'Antibes à 3,1 km » — vide quand l'hôte n'a rien
+    /// donné, et la carte se termine alors sur ses contacts.
+    pub useful_line: String,
 }
 
 /// The config to show, or `None` when there is nothing to show at all.
@@ -22,6 +25,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         contacts: config.parse_contacts(),
         host_phone,
         locale: ctx.locale.clone(),
+        useful_line: useful_line(&config),
     }))
 }
 
@@ -42,4 +46,18 @@ fn host_phone(config: &ModuleConfig, ctx: &GuestContext) -> String {
         .map(str::trim)
         .unwrap_or_default()
         .to_string()
+}
+
+/// Les deux lignes utiles en une phrase, dans l'ordre où on les cherche : d'abord la pharmacie,
+/// qu'on appelle, puis l'hôpital, où l'on va.
+fn useful_line(config: &ModuleConfig) -> String {
+    [
+        ("guest.useful.pharmacy", config.pharmacy.trim()),
+        ("guest.useful.hospital", config.hospital.trim()),
+    ]
+    .into_iter()
+    .filter(|(_, value)| !value.is_empty())
+    .filter_map(|(key, value)| t!(key, value = value).ok())
+    .collect::<Vec<_>>()
+    .join(" · ")
 }

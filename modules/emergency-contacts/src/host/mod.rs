@@ -42,6 +42,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
         .into()];
 
     cards.push(contacts_card(&config, &ctx));
+    cards.push(useful_card(&config));
 
     // No Save button — the modules drawer owns the footer Save.
     Ok(Surface::new(
@@ -136,5 +137,37 @@ fn contact_row(index: usize, contact: Option<&ContactRow>, ctx: &HostContext) ->
                 ])
                 .collect(),
         )
+        .into()
+}
+
+/// La pharmacie de garde et l'hôpital : les deux lignes que le §2.16 attend de l'hôte, et qui
+/// ferment la carte du voyageur en une phrase.
+fn useful_card(config: &ModuleConfig) -> Component {
+    Card::new()
+        .title("i18n:host.section.useful")
+        .subtitle("i18n:host.section.useful.help")
+        .icon(IconName::InfoCircle)
+        .children(vec![
+            Field::new()
+                .name("pharmacy")
+                .label("i18n:host.pharmacy.label")
+                .child(
+                    TextInput::new()
+                        .name("pharmacy")
+                        .value(config.pharmacy.clone())
+                        .placeholder("i18n:host.pharmacy.placeholder"),
+                )
+                .into(),
+            Field::new()
+                .name("hospital")
+                .label("i18n:host.hospital.label")
+                .child(
+                    TextInput::new()
+                        .name("hospital")
+                        .value(config.hospital.clone())
+                        .placeholder("i18n:host.hospital.placeholder"),
+                )
+                .into(),
+        ])
         .into()
 }
