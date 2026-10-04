@@ -57,8 +57,12 @@
         "form.guestCount.placeholder": "Ex. 2 adultes, 1 enfant",
         "form.message.label": "Un message pour l’hôte ?",
         "form.message.placeholder": "Ex. nous arriverons peut-être un peu en retard…",
+        "form.occasion.birthday": "Anniversaire",
+        "form.occasion.family": "En famille",
+        "form.occasion.honeymoon": "Lune de miel",
         "form.occasion.label": "Occasion spéciale ?",
-        "form.occasion.placeholder": "Anniversaire (optionnel)",
+        "form.occasion.none": "Aucune",
+        "form.occasion.remote_work": "Télétravail",
         "form.submit": "Envoyer",
         "home.card.intro": "Aidez-nous à préparer votre venue en 1 minute. Ces infos ne servent qu’à votre accueil.",
         "nav.pre-arrival-form": "Pré-arrivée"
@@ -87,9 +91,31 @@
           {
             "children": [
               {
+                "choices": [
+                  {
+                    "label": "i18n:form.occasion.birthday",
+                    "value": "birthday"
+                  },
+                  {
+                    "label": "i18n:form.occasion.honeymoon",
+                    "value": "honeymoon"
+                  },
+                  {
+                    "label": "i18n:form.occasion.family",
+                    "value": "family"
+                  },
+                  {
+                    "label": "i18n:form.occasion.remote_work",
+                    "value": "remote_work"
+                  },
+                  {
+                    "label": "i18n:form.occasion.none",
+                    "value": "none"
+                  }
+                ],
+                "layout": "compact",
                 "name": "guestOccasion",
-                "placeholder": "i18n:form.occasion.placeholder",
-                "type": "TextInput"
+                "type": "ChoiceList"
               }
             ],
             "label": "i18n:form.occasion.label",

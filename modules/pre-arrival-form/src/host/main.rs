@@ -74,6 +74,14 @@ fn question_toggle_rows(questions: &ModuleConfig) -> Vec<Component> {
             IconName::ClockCircle,
             questions.ask_arrival_time,
         ),
+        // Juste après l'heure : les deux disent ce que l'hôte doit préparer — une place de
+        // parking, un horaire de train, un transfert.
+        toggle_row(
+            "ask_transport",
+            "i18n:host.question.transport",
+            IconName::Car,
+            questions.ask_transport,
+        ),
         toggle_row(
             "ask_occasion",
             "i18n:host.question.occasion",

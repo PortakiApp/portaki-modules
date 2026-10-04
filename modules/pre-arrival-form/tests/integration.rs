@@ -22,12 +22,13 @@ mod config_form;
 fn sample_submit() -> SubmitArgs {
     SubmitArgs {
         arrival_time_estimated: Some("17:30".into()),
-        guest_occasion: Some("Anniversaire".into()),
+        guest_occasion: Some("birthday".into()),
         guest_allergies: None,
         guest_count: Some("2".into()),
         special_needs: None,
         id_document: None,
         message_to_host: Some("Merci !".into()),
+        ..Default::default()
     }
 }
 
@@ -90,7 +91,7 @@ fn submit_then_status_and_thanks_card() {
             let after = get_status(ctx.clone()).expect("status after");
             assert!(after.completed);
             assert_eq!(after.arrival_time_estimated.as_deref(), Some("17:30"));
-            assert_eq!(after.guest_occasion.as_deref(), Some("Anniversaire"));
+            assert_eq!(after.guest_occasion.as_deref(), Some("birthday"));
 
             let surface = render_home_card(ctx.clone()).expect("guest surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
@@ -108,7 +109,10 @@ fn submit_then_status_and_thanks_card() {
             let form_json = serde_json::to_string(&form).expect("form json");
             assert!(form_json.contains("form.submitUpdate"));
             assert!(form_json.contains("17:30"));
-            assert!(form_json.contains("Anniversaire"));
+            // L'occasion est désormais une valeur de liste, présélectionnée dans le choix : le
+            // libellé affiché est traduit par le livret, le formulaire porte la valeur.
+            assert!(form_json.contains("\"value\":\"birthday\""));
+            assert!(form_json.contains("i18n:form.occasion.birthday"));
         });
 }
 
@@ -159,6 +163,7 @@ fn completed_form_locks_after_checkin() {
                     special_needs: None,
                     id_document: None,
                     message_to_host: None,
+                    ..Default::default()
                 },
             )
             .expect_err("submit locked after check-in");
@@ -385,6 +390,7 @@ fn host_stay_surface_shows_completed_response() {
                     special_needs: None,
                     id_document: None,
                     message_to_host: Some("Champagne au frais".into()),
+                    ..Default::default()
                 },
             )
             .expect("submit");

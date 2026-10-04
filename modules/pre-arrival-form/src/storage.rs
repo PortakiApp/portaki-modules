@@ -42,44 +42,42 @@ pub fn find_by_stay(stay_id: Uuid) -> Result<Option<PreArrivalResponse>> {
 
 /// Upserts the response for a stay.
 #[allow(clippy::too_many_arguments)]
-pub fn upsert(
-    stay_id: Uuid,
-    arrival_time: Option<String>,
-    occasion: Option<String>,
-    allergies: Option<String>,
-    guest_count: Option<String>,
-    special_needs: Option<String>,
-    id_document: Option<String>,
-    guest_message: Option<String>,
-) -> Result<PreArrivalResponse> {
+/// Ce que le voyageur a répondu, avant d'avoir un identifiant et une date.
+///
+/// Une structure et non neuf paramètres : la liste s'allonge à chaque question du formulaire, et
+/// neuf `Option<String>` positionnels finissent par s'échanger sans que rien ne le dise.
+#[derive(Debug, Clone, Default)]
+pub struct ResponseDraft {
+    pub arrival_time: Option<String>,
+    pub occasion: Option<String>,
+    pub allergies: Option<String>,
+    pub guest_count: Option<String>,
+    pub special_needs: Option<String>,
+    pub id_document: Option<String>,
+    pub transport: Option<String>,
+    pub guest_message: Option<String>,
+}
+
+pub fn upsert(stay_id: Uuid, draft: ResponseDraft) -> Result<PreArrivalResponse> {
     let now = time::now()?;
-    if let Some(existing) = find_by_stay(stay_id)? {
-        delete_row(existing.id)?;
-        let row = PreArrivalResponse {
-            id: existing.id,
-            stay_id,
-            arrival_time,
-            occasion,
-            allergies,
-            guest_count,
-            special_needs,
-            id_document,
-            guest_message,
-            completed_at: now,
-        };
-        persist_row(row.clone())?;
-        return Ok(row);
-    }
+    let id = match find_by_stay(stay_id)? {
+        Some(existing) => {
+            delete_row(existing.id)?;
+            existing.id
+        }
+        None => Uuid::new_v4(),
+    };
     let row = PreArrivalResponse {
-        id: Uuid::new_v4(),
+        id,
         stay_id,
-        arrival_time,
-        occasion,
-        allergies,
-        guest_count,
-        special_needs,
-        id_document,
-        guest_message,
+        arrival_time: draft.arrival_time,
+        occasion: draft.occasion,
+        allergies: draft.allergies,
+        guest_count: draft.guest_count,
+        special_needs: draft.special_needs,
+        id_document: draft.id_document,
+        transport: draft.transport,
+        guest_message: draft.guest_message,
         completed_at: now,
     };
     persist_row(row.clone())?;
