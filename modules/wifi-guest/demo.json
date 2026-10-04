@@ -1,0 +1,108 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "guest.copyPassword": "Copier le mot de passe",
+        "guest.password": "Mot de passe",
+        "guest.security.message": "Utilisez ce Wi-Fi pour votre séjour. Ne partagez pas le mot de passe en dehors de votre groupe.",
+        "guest.security.title": "Réseau invité uniquement",
+        "guest.ssid": "Réseau"
+      },
+      "surfaceId": "explore.detail",
+      "tree": {
+        "children": [
+          {
+            "message": "i18n:guest.security.message",
+            "title": "i18n:guest.security.title",
+            "type": "InfoBanner"
+          },
+          {
+            "key": "i18n:guest.ssid",
+            "mono": true,
+            "type": "KeyValue",
+            "value": "Maison-Invites"
+          },
+          {
+            "copy": true,
+            "copyLabel": "i18n:guest.copyPassword",
+            "key": "i18n:guest.password",
+            "mono": true,
+            "type": "KeyValue",
+            "value": "soleil-2026"
+          },
+          {
+            "type": "QRCode",
+            "value": "WIFI:T:WPA;S:Maison-Invites;P:soleil-2026;;"
+          },
+          {
+            "text": "Le réseau 5 GHz est plus rapide dans le salon.",
+            "type": "Text",
+            "variant": "caption"
+          },
+          {
+            "text": "Choisissez « Maison-Invites » dans les réglages Wi-Fi, puis saisissez le mot de passe.",
+            "type": "Text",
+            "variant": "body"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.copyPassword": "Copier le mot de passe",
+        "guest.password": "Mot de passe",
+        "guest.ssid": "Réseau",
+        "nav.wifi-guest": "Wi-Fi & codes"
+      },
+      "surfaceId": "home.card",
+      "tree": {
+        "action": {
+          "args": {
+            "icon": "wifi",
+            "title": "i18n:nav.wifi-guest"
+          },
+          "presentation": "bottomSheet",
+          "surface_render": "explore.detail",
+          "type": "openOverlay"
+        },
+        "children": [
+          {
+            "key": "i18n:guest.ssid",
+            "mono": true,
+            "type": "KeyValue",
+            "value": "Maison-Invites"
+          },
+          {
+            "copy": true,
+            "copyLabel": "i18n:guest.copyPassword",
+            "key": "i18n:guest.password",
+            "mono": true,
+            "type": "KeyValue",
+            "value": "soleil-2026"
+          },
+          {
+            "type": "QRCode",
+            "value": "WIFI:T:WPA;S:Maison-Invites;P:soleil-2026;;"
+          },
+          {
+            "text": "Le réseau 5 GHz est plus rapide dans le salon.",
+            "type": "Text",
+            "variant": "caption"
+          },
+          {
+            "text": "Choisissez « Maison-Invites » dans les réglages Wi-Fi, puis saisissez le mot de passe.",
+            "type": "Text",
+            "variant": "body"
+          }
+        ],
+        "icon": "wifi",
+        "subtitle": "Le réseau 5 GHz est plus rapide dans le salon.",
+        "title": "i18n:nav.wifi-guest",
+        "type": "Card"
+      }
+    }
+  ]
+}

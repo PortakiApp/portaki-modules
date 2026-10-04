@@ -3,7 +3,7 @@
 #[path = "../../../support/previews.rs"]
 mod previews;
 
-use train::{render_explore_detail, render_explore_item, render_upcoming_card};
+use train::{render_explore_detail, render_explore_item, render_home_card, render_upcoming_card};
 
 /// Les aperçus du catalogue montrent un vrai tableau : la gare vient de la configuration
 /// d'exemple, les départs du fournisseur mocké.
@@ -29,8 +29,13 @@ fn previews_match_the_rendered_surfaces() {
         ctx.input = serde_json::json!({ "departureId": "20261004-0812-17654" });
         render_explore_item(ctx).expect("render")
     });
-    let upcoming = context.run(|ctx| render_upcoming_card(ctx).expect("render"));
-    previews::check(
+    let upcoming = context
+        .clone()
+        .run(|ctx| render_upcoming_card(ctx).expect("render"));
+    // La carte d'accueil n'a pas de chemin : hors de `previews.json`, mais c'est elle
+    // que la démo du livret montre en premier.
+    let home = context.run(render_home_card).expect("home");
+    previews::check_all(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![
@@ -38,5 +43,6 @@ fn previews_match_the_rendered_surfaces() {
             ("explore.item", item),
             ("upcoming.card", upcoming),
         ],
+        vec![("home.card", home)],
     );
 }

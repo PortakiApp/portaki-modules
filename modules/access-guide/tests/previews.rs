@@ -3,7 +3,9 @@
 #[path = "../../../support/previews.rs"]
 mod previews;
 
-use access_guide::{render_explore_detail, render_status_cell, render_upcoming_card};
+use access_guide::{
+    render_explore_detail, render_home_card, render_status_cell, render_upcoming_card,
+};
 use serde_json::json;
 
 /// Une boîte à clés, un digicode d'immeuble et deux étapes d'arrivée, codes visibles tout de
@@ -42,8 +44,13 @@ fn previews_match_the_rendered_surfaces() {
     let upcoming = context
         .clone()
         .run(|ctx| render_upcoming_card(ctx).expect("upcoming"));
-    let status = context.run(|ctx| render_status_cell(ctx).expect("status cell"));
-    previews::check(
+    let status = context
+        .clone()
+        .run(|ctx| render_status_cell(ctx).expect("status cell"));
+    // La carte d'accueil n'a pas de chemin : hors de `previews.json`, mais c'est elle
+    // que la démo du livret montre en premier.
+    let home = context.run(render_home_card).expect("home");
+    previews::check_all(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![
@@ -51,5 +58,6 @@ fn previews_match_the_rendered_surfaces() {
             ("status.cell", status),
             ("upcoming.card", upcoming),
         ],
+        vec![("home.card", home)],
     );
 }

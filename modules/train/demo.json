@@ -1,0 +1,378 @@
+{
+  "locale": "fr-FR",
+  "surfaces": [
+    {
+      "i18n": {
+        "explore.detail.direction.from": "Depuis la gare",
+        "explore.detail.direction.to": "Vers la gare",
+        "explore.detail.disclaimer": "Horaires SNCF · temps réel quand il est disponible",
+        "explore.detail.station.all": "Toutes les gares",
+        "explore.detail.station.hint.from": "Départ : la gare du logement.",
+        "explore.detail.station.label": "Gare d’arrivée",
+        "explore.detail.upcoming": "Prochains départs"
+      },
+      "surfaceId": "explore.detail",
+      "tree": {
+        "children": [
+          {
+            "emphasis": "subtle",
+            "text": "Gare d'Antibes",
+            "type": "Text",
+            "variant": "caption"
+          },
+          {
+            "action": {
+              "params": {
+                "dest": "all",
+                "dir": "from"
+              },
+              "to": "train",
+              "type": "navigate"
+            },
+            "choices": [
+              {
+                "icon": "train",
+                "label": "i18n:explore.detail.direction.from",
+                "value": "from"
+              },
+              {
+                "icon": "home",
+                "label": "i18n:explore.detail.direction.to",
+                "value": "to"
+              }
+            ],
+            "emitOnChange": true,
+            "layout": "segmented",
+            "name": "dir",
+            "type": "ChoiceList",
+            "value": "from"
+          },
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "action": {
+                      "params": {
+                        "dest": "all",
+                        "dir": "from"
+                      },
+                      "to": "train",
+                      "type": "navigate"
+                    },
+                    "choices": [
+                      {
+                        "label": "i18n:explore.detail.station.all",
+                        "value": "all"
+                      },
+                      {
+                        "icon": "train",
+                        "label": "Nice-Ville (Nice)",
+                        "value": "Nice-Ville (Nice)"
+                      },
+                      {
+                        "icon": "train",
+                        "label": "Cannes (Cannes)",
+                        "value": "Cannes (Cannes)"
+                      }
+                    ],
+                    "emitOnChange": true,
+                    "layout": "combobox",
+                    "name": "dest",
+                    "type": "ChoiceList",
+                    "value": "all"
+                  }
+                ],
+                "label": "i18n:explore.detail.station.label",
+                "name": "dest",
+                "type": "Field"
+              },
+              {
+                "text": "i18n:explore.detail.station.hint.from",
+                "type": "FieldHint"
+              }
+            ],
+            "gap": 4.0,
+            "type": "Stack"
+          },
+          {
+            "text": "i18n:explore.detail.upcoming",
+            "type": "Text",
+            "variant": "title"
+          },
+          {
+            "children": [
+              {
+                "action": {
+                  "to": "train/20261004-0812-17654",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "leading": {
+                  "time": "08:12"
+                },
+                "subtitle": "17654 · Demain",
+                "title": "Nice-Ville (Nice)",
+                "trailing": {
+                  "badge": {
+                    "label": "TER",
+                    "tone": "success"
+                  }
+                },
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "to": "train/20261004-0842-86021",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "leading": {
+                  "time": "08:42"
+                },
+                "subtitle": "86021 · Demain",
+                "title": "Cannes (Cannes)",
+                "trailing": {
+                  "badge": {
+                    "label": "TGV INOUI",
+                    "tone": "neutral"
+                  }
+                },
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "to": "train/20261005-0521-nice-ville--nice-",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "leading": {
+                  "time": "05:21"
+                },
+                "subtitle": "Demain",
+                "title": "Nice-Ville (Nice)",
+                "trailing": {
+                  "badge": {
+                    "label": "TER",
+                    "tone": "neutral"
+                  }
+                },
+                "type": "ListItem"
+              }
+            ],
+            "surface": "elevated",
+            "type": "Card"
+          },
+          {
+            "emphasis": "subtle",
+            "text": "i18n:explore.detail.disclaimer",
+            "type": "Text",
+            "variant": "caption"
+          }
+        ],
+        "gap": 12.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "explore.item.day": "Jour",
+        "explore.item.departure": "Départ",
+        "explore.item.network": "Réseau",
+        "explore.item.route": "Itinéraire vers la gare",
+        "explore.item.station": "Aller à la gare",
+        "explore.item.stationName": "Gare"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "label": "TER",
+                "type": "Badge"
+              },
+              {
+                "text": "Gare d'Antibes → Nice-Ville (Nice)",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "17654",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "icon": "clock-circle",
+                "key": "i18n:explore.item.departure",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "08:12"
+              },
+              {
+                "icon": "calendar",
+                "key": "i18n:explore.item.day",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "2026-10-04"
+              },
+              {
+                "icon": "train",
+                "key": "i18n:explore.item.network",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "TER Sud Provence-Alpes-Côte d'Azur"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "children": [
+              {
+                "key": "i18n:explore.item.stationName",
+                "type": "KeyValue",
+                "value": "Gare d'Antibes"
+              }
+            ],
+            "icon": "map-pin",
+            "surface": "elevated",
+            "title": "i18n:explore.item.station",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.google.com/maps/search/?api=1&query=Gare+d'Antibes"
+            },
+            "label": "i18n:explore.item.route",
+            "type": "Button"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "home.card.title": "Horaires trains"
+      },
+      "surfaceId": "home.card",
+      "tree": {
+        "action": {
+          "args": {
+            "icon": "train",
+            "title": "i18n:home.card.title"
+          },
+          "presentation": "fullscreen",
+          "surface_render": "explore.detail",
+          "type": "openOverlay"
+        },
+        "children": [
+          {
+            "emphasis": "subtle",
+            "text": "Gare d'Antibes",
+            "type": "Text",
+            "variant": "caption"
+          },
+          {
+            "action": {
+              "to": "train/20261004-0812-17654",
+              "type": "navigate"
+            },
+            "chevron": true,
+            "leading": {
+              "time": "08:12"
+            },
+            "subtitle": "17654 · Demain",
+            "title": "Nice-Ville (Nice)",
+            "trailing": {
+              "badge": {
+                "label": "TER",
+                "tone": "success"
+              }
+            },
+            "type": "ListItem"
+          },
+          {
+            "action": {
+              "to": "train/20261004-0842-86021",
+              "type": "navigate"
+            },
+            "chevron": true,
+            "leading": {
+              "time": "08:42"
+            },
+            "subtitle": "86021 · Demain",
+            "title": "Cannes (Cannes)",
+            "trailing": {
+              "badge": {
+                "label": "TGV INOUI",
+                "tone": "neutral"
+              }
+            },
+            "type": "ListItem"
+          },
+          {
+            "action": {
+              "to": "train/20261005-0521-nice-ville--nice-",
+              "type": "navigate"
+            },
+            "chevron": true,
+            "leading": {
+              "time": "05:21"
+            },
+            "subtitle": "Demain",
+            "title": "Nice-Ville (Nice)",
+            "trailing": {
+              "badge": {
+                "label": "TER",
+                "tone": "neutral"
+              }
+            },
+            "type": "ListItem"
+          }
+        ],
+        "icon": "train",
+        "title": "i18n:home.card.title",
+        "type": "Card"
+      }
+    },
+    {
+      "i18n": {
+        "home.card.title": "Horaires trains"
+      },
+      "surfaceId": "upcoming.card",
+      "tree": {
+        "action": {
+          "args": {
+            "icon": "train",
+            "title": "i18n:home.card.title"
+          },
+          "presentation": "fullscreen",
+          "surface_render": "explore.detail",
+          "type": "openOverlay"
+        },
+        "children": [
+          {
+            "emphasis": "subtle",
+            "text": "Gare d'Antibes → Nice-Ville (Nice) · 08:12",
+            "type": "Text",
+            "variant": "caption"
+          }
+        ],
+        "icon": "train",
+        "title": "i18n:home.card.title",
+        "type": "Card"
+      }
+    }
+  ]
+}
