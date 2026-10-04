@@ -20,6 +20,19 @@ pub struct LostFoundReport {
     /// L'adresse de renvoi, quand l'hôte propose le renvoi postal et que le voyageur l'a écrite.
     #[serde(default)]
     pub return_address: Option<String>,
+    /// La catégorie d'objet que le voyageur a touchée — `phone`, `clothing`, … `other`.
+    /// Absente des signalements d'avant la grille : une fiche ancienne reste lisible.
+    #[serde(default)]
+    pub category: Option<String>,
+    /// La pièce où l'objet a été laissé, `unknown` quand le voyageur ne sait pas.
+    #[serde(default)]
+    pub room: Option<String>,
+    /// La photo jointe, en référence `portaki-file:` ; `None` quand il n'y en a pas.
+    #[serde(default)]
+    pub photo: Option<String>,
+    /// Ce que le voyageur voudrait qu'on en fasse — `ship`, `pickup`, `donate`.
+    #[serde(default)]
+    pub return_choice: Option<String>,
     /// Wire: `to_collect` | `sent` | `returned` — default `to_collect`.
     #[serde(default = "default_status")]
     pub status: String,

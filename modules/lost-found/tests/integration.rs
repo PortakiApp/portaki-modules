@@ -81,6 +81,7 @@ fn submit_allows_multiple_reports_and_shows_list() {
                     contact_hint: Some("guest@example.com".into()),
                     details: Some("Left in living room".into()),
                     return_address: None,
+                    ..Default::default()
                 },
             )
             .expect("submit");
@@ -99,6 +100,7 @@ fn submit_allows_multiple_reports_and_shows_list() {
                     contact_hint: None,
                     details: None,
                     return_address: None,
+                    ..Default::default()
                 },
             )
             .expect("submit second");
@@ -130,6 +132,7 @@ fn host_stats_list_recent_after_guest_submit() {
                     contact_hint: None,
                     details: None,
                     return_address: None,
+                    ..Default::default()
                 },
             )
             .expect("submit");
@@ -236,6 +239,7 @@ fn email_context_includes_descriptions_when_declaration_exists() {
                     contact_hint: None,
                     details: None,
                     return_address: None,
+                    ..Default::default()
                 },
             )
             .expect("submit");
@@ -447,6 +451,7 @@ fn checkout_follow_up_sends_at_j2_and_stops_after_the_guest_window() {
                         contact_hint: None,
                         details: None,
                         return_address: None,
+                        ..Default::default()
                     },
                 )
                 .expect("submit");
@@ -494,6 +499,7 @@ fn long_description_is_stored_whole_and_quoted_in_the_host_email() {
                     contact_hint: None,
                     details: None,
                     return_address: None,
+                    ..Default::default()
                 },
             )
             .expect("submit");
@@ -529,6 +535,7 @@ fn long_description_is_stored_whole_and_quoted_in_the_host_email() {
                     contact_hint: None,
                     details: None,
                     return_address: None,
+                    ..Default::default()
                 },
             )
             .expect("short submit");
@@ -555,6 +562,7 @@ fn a_refused_host_email_does_not_fail_the_submit() {
                         contact_hint: None,
                         details: None,
                         return_address: None,
+                        ..Default::default()
                     },
                 )
                 .expect("submit despite a refused email");
@@ -585,6 +593,7 @@ fn checkout_follow_up_quotes_long_declarations_within_the_body_cap() {
                     contact_hint: None,
                     details: None,
                     return_address: None,
+                    ..Default::default()
                 },
             )
             .expect("submit");
@@ -630,6 +639,7 @@ fn a_feed_row_opens_the_item_detail() {
                     contact_hint: None,
                     details: None,
                     return_address: None,
+                    ..Default::default()
                 },
             )
             .expect("submit");
@@ -793,6 +803,7 @@ fn the_address_is_asked_and_kept_only_when_shipping_is_offered() {
                         contact_hint: None,
                         details: None,
                         return_address: Some("12 rue des Lilas, 06600 Antibes".into()),
+                        ..Default::default()
                     },
                 )
                 .expect("submit");
