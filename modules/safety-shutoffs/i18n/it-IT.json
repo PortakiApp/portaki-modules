@@ -33,6 +33,8 @@
   "host.shutoffs.location": "Posizione",
   "host.shutoffs.location.hint": "Scrivila come la spiegheresti al telefono: è la prima cosa che l’ospite cerca.",
   "host.shutoffs.location.placeholder": "Armadio a destra dell’ingresso",
+  "host.shutoffs.photo": "Foto",
+  "host.shutoffs.photo.hint": "Una foto del rubinetto o dell'interruttore si riconosce prima di una descrizione.",
   "host.shutoffs.remove": "Rimuovi",
   "host.shutoffs.rowTitle": "Titolo",
   "host.shutoffs.rowTitle.placeholder": "Quadro elettrico",

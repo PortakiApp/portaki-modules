@@ -188,6 +188,17 @@ fn trail_row(index: usize, trail: Option<&TrailRow>, ctx: &HostContext) -> Compo
             .into(),
     );
     children.push(FieldHint::new().text("i18n:host.trails.gpx.hint").into());
+    children.push(
+        Field::new()
+            .name(format!("trails.{index}.photo"))
+            .label("i18n:host.trails.photo")
+            .child(
+                ImageUpload::new()
+                    .name(format!("trails.{index}.photo"))
+                    .value(trail.map(|t| t.photo.clone()).unwrap_or_default()),
+            )
+            .into(),
+    );
 
     Stack::new()
         .id(format!("trail-{index}"))

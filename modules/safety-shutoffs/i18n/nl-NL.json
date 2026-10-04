@@ -33,6 +33,8 @@
   "host.shutoffs.location": "Plek",
   "host.shutoffs.location.hint": "Schrijf het zoals je het aan de telefoon zou uitleggen: dat zoeken gasten eerst.",
   "host.shutoffs.location.placeholder": "Kast rechts van de ingang",
+  "host.shutoffs.photo": "Foto",
+  "host.shutoffs.photo.hint": "Een foto van de kraan of de groep is sneller te herkennen dan een beschrijving.",
   "host.shutoffs.remove": "Verwijderen",
   "host.shutoffs.rowTitle": "Titel",
   "host.shutoffs.rowTitle.placeholder": "Meterkast",

@@ -33,6 +33,8 @@
   "host.shutoffs.location": "位置",
   "host.shutoffs.location.hint": "像在电话里解释那样写：房客最先找的就是位置。",
   "host.shutoffs.location.placeholder": "入口右侧的壁橱",
+  "host.shutoffs.photo": "照片",
+  "host.shutoffs.photo.hint": "阀门或断路器的照片，比文字描述更容易辨认。",
   "host.shutoffs.remove": "删除",
   "host.shutoffs.rowTitle": "名称",
   "host.shutoffs.rowTitle.placeholder": "配电箱",

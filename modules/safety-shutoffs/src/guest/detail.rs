@@ -3,7 +3,7 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::NavigateTarget;
 use portaki_sdk::sdui::common::{Emphasis, SurfaceLevel};
-use portaki_sdk::sdui::primitives::{Button, Card, InfoBanner, Stack, Text};
+use portaki_sdk::sdui::primitives::{Button, Card, Image, InfoBanner, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{ModuleConfig, ShutoffRow};
@@ -78,6 +78,17 @@ fn shutoff_card(row: &ShutoffRow, ctx: &GuestContext) -> Component {
         .variant(TextVariant::Body)
         .emphasis(Emphasis::Strong)
         .into()];
+    // La photo entre l'endroit et la consigne, comme la maquette l'ordonne : on lit où, on voit
+    // quoi, on lit comment. La référence devient une URL signée au rendu.
+    if let Some(reference) = row.photo_ref() {
+        children.push(
+            Image::new()
+                .url(reference.to_string())
+                .alt(row.title.for_ctx(ctx).to_string())
+                .aspectRatio("4 / 3")
+                .into(),
+        );
+    }
     if !row.instruction.is_blank() {
         children.push(
             Text::new()

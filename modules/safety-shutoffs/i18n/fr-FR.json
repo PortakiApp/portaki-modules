@@ -33,6 +33,8 @@
   "host.shutoffs.location": "Emplacement",
   "host.shutoffs.location.hint": "Écrivez-le comme vous l’expliqueriez au téléphone : c’est ce que le voyageur cherche d’abord.",
   "host.shutoffs.location.placeholder": "Placard à droite de l’entrée",
+  "host.shutoffs.photo": "Photo",
+  "host.shutoffs.photo.hint": "Une photo du robinet ou du disjoncteur se reconnaît plus vite qu’une description.",
   "host.shutoffs.remove": "Retirer",
   "host.shutoffs.rowTitle": "Titre",
   "host.shutoffs.rowTitle.placeholder": "Tableau électrique",

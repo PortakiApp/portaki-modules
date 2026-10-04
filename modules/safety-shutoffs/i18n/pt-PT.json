@@ -33,6 +33,8 @@
   "host.shutoffs.location": "Localização",
   "host.shutoffs.location.hint": "Escreva como explicaria ao telefone: é o que o hóspede procura primeiro.",
   "host.shutoffs.location.placeholder": "Armário à direita da entrada",
+  "host.shutoffs.photo": "Foto",
+  "host.shutoffs.photo.hint": "Uma foto da torneira ou do disjuntor reconhece-se mais depressa que uma descrição.",
   "host.shutoffs.remove": "Remover",
   "host.shutoffs.rowTitle": "Título",
   "host.shutoffs.rowTitle.placeholder": "Quadro elétrico",

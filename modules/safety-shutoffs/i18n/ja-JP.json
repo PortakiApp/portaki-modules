@@ -33,6 +33,8 @@
   "host.shutoffs.location": "場所",
   "host.shutoffs.location.hint": "電話で説明するように書いてください。ゲストが最初に探すのは場所です。",
   "host.shutoffs.location.placeholder": "玄関右手の収納",
+  "host.shutoffs.photo": "写真",
+  "host.shutoffs.photo.hint": "元栓やブレーカーは、説明よりも写真のほうが早く見つかります。",
   "host.shutoffs.remove": "削除",
   "host.shutoffs.rowTitle": "名称",
   "host.shutoffs.rowTitle.placeholder": "分電盤",
