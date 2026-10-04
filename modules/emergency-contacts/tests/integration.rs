@@ -60,9 +60,14 @@ fn detail_includes_emergency_banner() {
         .run(|ctx| {
             let surface = render_explore_detail(ctx).expect("detail");
             assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("Link"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("Pompiers"));
+            // Le 112 est une tuile, plus un lien en bas de page : on compose avant de lire.
+            assert!(SurfaceAssertions::new(&surface).contains_type("Grid"));
+            assert!(
+                json.contains("\"title\":\"112\""),
+                "le 112 est là, en tuile"
+            );
         });
 }
 

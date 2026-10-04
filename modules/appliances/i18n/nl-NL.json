@@ -22,6 +22,7 @@
   "home.card.safety": "Veiligheid",
   "home.card.seeAll": "Alle {count} apparaten bekijken",
   "home.card.seeAllPlain": "Alle apparaten bekijken",
+  "home.card.subtitle": "De handigste · {count} in totaal",
   "home.card.title": "Apparaten",
   "host.detail.card.title": "Apparaat",
   "host.detail.edit.title": "Apparaat bewerken",

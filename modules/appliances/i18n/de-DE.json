@@ -22,6 +22,7 @@
   "home.card.safety": "Sicherheit",
   "home.card.seeAll": "Alle {count} Geräte ansehen",
   "home.card.seeAllPlain": "Alle Geräte ansehen",
+  "home.card.subtitle": "Die nützlichsten · {count} insgesamt",
   "home.card.title": "Geräte",
   "host.detail.card.title": "Gerät",
   "host.detail.edit.title": "Gerät bearbeiten",

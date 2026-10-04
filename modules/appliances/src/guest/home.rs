@@ -1,25 +1,39 @@
 //! Guest home booklet card — featured && active appliances (§2.4).
 
+use portaki_sdk::host::i18n::{translate, Vars};
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::common::Leading;
-use portaki_sdk::sdui::primitives::{Button, Card, EmptyState, Eyebrow, ListItem};
+use portaki_sdk::sdui::common::{Leading, ListItemLayout};
+use portaki_sdk::sdui::primitives::{Button, Card, EmptyState, Eyebrow, Grid, ListItem};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::content::{Appliance, AppliancesPayload};
 
 /// Home card: featured active devices only. Card → list path; row → detail path.
 pub fn build_home_card(payload: &AppliancesPayload) -> Surface {
-    let children: Vec<Component> = payload
+    // Les mis en avant en tuiles, dans une grille : quatre vignettes se balaient d'un coup d'œil
+    // là où quatre lignes se lisent une par une (§2.4).
+    let tiles: Vec<Component> = payload
         .featured_guest_devices()
         .into_iter()
-        .map(device_list_item)
+        .map(device_tile)
         .collect();
+    let children: Vec<Component> = if tiles.is_empty() {
+        Vec::new()
+    } else {
+        vec![Component::Grid(
+            Grid::new()
+                .minColumnWidth(140.0)
+                .plain(true)
+                .children(tiles),
+        )]
+    };
 
     Surface::new(
         Card::new()
             .icon(IconName::Plug)
             .title("i18n:nav.appliances")
+            .subtitle(featured_summary(payload))
             .action(Action::open_overlay(
                 OverlayPresentation::Fullscreen,
                 crate::guest::EXPLORE_DETAIL,
@@ -74,6 +88,22 @@ fn see_all_button(payload: &AppliancesPayload) -> Component {
                     .title("i18n:nav.appliances"),
             )),
     )
+}
+
+/// « Les plus utiles · N au total » — ce que la carte montre, et ce qu'elle cache.
+fn featured_summary(payload: &AppliancesPayload) -> String {
+    let total = payload.guest_devices().len();
+    let mut vars = Vars::new();
+    vars.set("count", total);
+    translate("home.card.subtitle", &vars).unwrap_or_default()
+}
+
+/// Un appareil en tuile : l'emoji, le nom, la pièce. Même contenu qu'une ligne, lu d'un coup.
+fn device_tile(device: &Appliance) -> Component {
+    let Component::ListItem(item) = device_list_item(device) else {
+        unreachable!("device_list_item rend toujours un ListItem")
+    };
+    Component::ListItem(item.layout(ListItemLayout::Tile).chevron(false))
 }
 
 /// List row matching Portaki Guest design: emoji leading, name, location, chevron.

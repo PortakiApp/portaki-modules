@@ -22,6 +22,7 @@
   "home.card.safety": "Safety",
   "home.card.seeAll": "See all {count} appliances",
   "home.card.seeAllPlain": "See all appliances",
+  "home.card.subtitle": "The handiest · {count} in all",
   "home.card.title": "Appliances",
   "host.detail.card.title": "Device",
   "host.detail.edit.title": "Edit device",
