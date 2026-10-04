@@ -224,6 +224,9 @@ fn return_choice_field(return_options: &[&'static str]) -> Vec<Component> {
         Field::new()
             .name("returnChoice")
             .label("i18n:form.return.label")
+            // L'étape existe pour cette question : la quitter sans y répondre laisse l'hôte sans
+            // savoir quoi faire de l'objet qu'il vient de retrouver (§2.18).
+            .required(true)
             .child(
                 ChoiceList::new()
                     .name("returnChoice")
@@ -268,6 +271,10 @@ fn address_field(ask_address: bool) -> Vec<Component> {
     if !ask_address {
         return Vec::new();
     }
+    // ponytail: l'adresse reste facultative et visible dès que l'hôte propose le renvoi, là où
+    // §2.18 la veut obligatoire et révélée par « Me le renvoyer ». L'exiger sans la révéler
+    // forcerait une adresse à qui choisit le passage ; la révéler demande une visibilité
+    // conditionnelle que les primitives n'ont pas (`Field.visibleWhen`).
     vec![Field::new()
         .name("returnAddress")
         .label("i18n:form.returnAddress.label")
