@@ -14,7 +14,6 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 portaki-sdk = { version = "9.7.0", features = ["kv", "platform"] }
 portaki-sdk-macros = { workspace = true }
-portaki-connectors = { workspace = true }
 chrono = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

@@ -21,7 +21,7 @@
 //! Sans horloge de l'hôte, rien n'est affiché : juger la fraîcheur sur une fausse heure
 //! servirait indéfiniment un cache que Tiqets interdit de garder.
 
-use portaki_connectors::tiqets::{NearbyProductsArgs, Tiqets, TiqetsProduct};
+use crate::tiqets_api::{NearbyProductsArgs, Tiqets, TiqetsProduct};
 use portaki_sdk::host::{log, time};
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
