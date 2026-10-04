@@ -3,7 +3,9 @@
 #[path = "../../../support/previews.rs"]
 mod previews;
 
-use local_guide::{render_explore_detail, render_explore_item, render_upcoming_card};
+use local_guide::{
+    render_explore_activity, render_explore_detail, render_explore_item, render_upcoming_card,
+};
 
 use serde_json::json;
 
@@ -46,6 +48,29 @@ fn sample_config() -> serde_json::Value {
                 "lat": 43.5663, "lng": 6.8511
             }
         ],
+        // Une activité que l'hôte propose lui-même (§2.13) : pas un lien partenaire, une sortie
+        // qu'on réserve au téléphone avec son prestataire.
+        "host_activities": [
+            {
+                "id": "voilier",
+                "title": { "fr": "Sortie voilier au coucher du soleil", "en": "Sunset sailing trip" },
+                "provider": "Marc, skipper au port",
+                "price": "60 € / pers.",
+                "duration": "3 h",
+                "meet": "Port Vauban, ponton C",
+                "languages": "Français, anglais",
+                "cancel": { "fr": "Annulation à voir directement avec Marc.", "en": "Cancellation to be arranged directly with Marc." },
+                "included": {
+                    "fr": "Boissons à bord\nArrêt baignade à la Garoupe",
+                    "en": "Drinks on board\nSwim stop at La Garoupe"
+                },
+                "tip": {
+                    "fr": "Dites-lui que vous venez d'ici : il vous garde le coucher de soleil.",
+                    "en": "Tell him you are staying here: he will save you the sunset."
+                },
+                "phone": "+33 6 22 33 44 55"
+            }
+        ],
         "disclaimer": { "fr": "Suggestions de votre hôte, sans partenariat.", "en": "Your host's picks, no partnership." }
     })
 }
@@ -61,11 +86,16 @@ fn previews_match_the_rendered_surfaces() {
         ctx.input = json!({ "spotId": "boulangerie" });
         render_explore_item(ctx).expect("surface")
     });
+    let activity = context.clone().run(|mut ctx| {
+        ctx.input = json!({ "activityId": "voilier" });
+        render_explore_activity(ctx).expect("surface")
+    });
     let upcoming = context.run(|ctx| render_upcoming_card(ctx).expect("surface"));
     previews::check(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![
+            ("explore.activity", activity),
             ("explore.detail", detail),
             ("explore.item", item),
             ("upcoming.card", upcoming),

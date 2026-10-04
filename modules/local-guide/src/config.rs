@@ -15,6 +15,13 @@ pub struct ModuleConfig {
     /// The rows of the host form, blank ones included (see [`Self::parse_spots`]).
     #[field(structured, required, label = "config.spots")]
     pub spots: Vec<SpotRow>,
+    /// Les activités que l'hôte propose lui-même (§2.13, `origin: host`).
+    ///
+    /// Rien à voir avec les liens partenaires de « Activités & billets » : ici l'hôte décrit ce
+    /// qu'il connaît — la sortie voilier de Marc —, la réservation se fait avec le prestataire,
+    /// et aucune commission n'est perçue.
+    #[field(structured, label = "config.hostActivities")]
+    pub host_activities: Vec<HostActivityRow>,
     #[field(label = "host.disclaimer.label")]
     pub disclaimer: I18nText,
     #[field(label = "host.activities.enabled")]
@@ -49,6 +56,7 @@ impl Default for ModuleConfig {
     fn default() -> Self {
         Self {
             spots: Vec::new(),
+            host_activities: Vec::new(),
             disclaimer: I18nText::default(),
             activities_enabled: false,
             activities_destination: String::new(),
@@ -301,6 +309,97 @@ impl ModuleConfig {
         }
     }
 }
+
+/// Une activité que l'hôte décrit lui-même (§2.13, `origin: host`).
+#[portaki_sdk::params]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(default)]
+pub struct HostActivityRow {
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub id: String,
+    /// Le nom de l'activité — « Sortie voilier avec Marc ».
+    pub title: I18nText,
+    /// Le prestataire, nom et rôle : « Marc, skipper au port ». C'est lui qu'on réserve, pas
+    /// l'hôte ; sans lui, l'activité ne sort pas.
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub provider: Option<String>,
+    /// Le prix, écrit tel quel : « 60 € / pers. ». Un prix fixe, pas un « dès » — l'hôte connaît
+    /// le tarif de son ami, le fournisseur partenaire annonce un plancher.
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub price: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub duration: Option<String>,
+    /// Les conditions d'annulation, en une phrase.
+    #[serde(default)]
+    pub cancel: I18nText,
+    /// Le point de rendez-vous : « Port Vauban, ponton C ».
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub meet: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub languages: Option<String>,
+    /// Ce qui est inclus, une ligne par élément.
+    #[serde(default)]
+    pub included: I18nText,
+    /// Le conseil de l'hôte, celui qu'aucun fournisseur n'écrira.
+    #[serde(default)]
+    pub tip: I18nText,
+    /// Le téléphone de réservation, en forme internationale.
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub phone: Option<String>,
+    /// Le site du prestataire, quand il en a un.
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub url: Option<String>,
+    /// La photo déposée par l'hôte, en référence `portaki-file:`.
+    #[serde(default)]
+    pub photo: String,
+}
+
+impl HostActivityRow {
+    /// L'identifiant de route de cette activité, pour `local-guide/activity/:activityId`.
+    pub fn route_id(&self, index: usize) -> String {
+        let id = self.id.trim();
+        if id.is_empty() {
+            format!("a{index}")
+        } else {
+            id.to_string()
+        }
+    }
+
+    /// De quoi s'afficher : un nom et un prestataire. Sans prestataire, on ne saurait pas qui
+    /// réserver, et la fiche promettrait une activité sans porte d'entrée.
+    pub fn is_complete(&self, locale: &str) -> bool {
+        !self.title.get(locale).trim().is_empty() && self.provider.is_some()
+    }
+
+    /// Rien que le formulaire montre : une ligne que l'hôte a laissée (ou vidée).
+    pub fn is_blank(&self) -> bool {
+        self.title.is_blank() && self.provider.is_none() && self.photo.trim().is_empty()
+    }
+
+    /// La photo déposée, en référence, ou `None`.
+    pub fn photo_ref(&self) -> Option<&str> {
+        let photo = self.photo.trim();
+        (!photo.is_empty()).then_some(photo)
+    }
+
+    /// Ce qui est inclus, une ligne par élément, dix au plus.
+    pub fn included_lines(&self, locale: &str) -> Vec<String> {
+        self.included
+            .get(locale)
+            .lines()
+            .map(str::trim)
+            .filter(|line| !line.is_empty())
+            .take(MAX_INCLUDED_LINES)
+            .map(String::from)
+            .collect()
+    }
+}
+
+/// Au-delà, « Inclus » devient une liste qu'on ne lit plus.
+pub const MAX_INCLUDED_LINES: usize = 10;
+
+/// Les activités que l'hôte décrit lui-même : six lignes, comme les autres listes du module.
+pub const MAX_HOST_ACTIVITIES: usize = 6;
 
 /// A place. The form sends `title`, `category`, `distance`, `tag`, `detail` and the map picker's
 /// `address`, `lat`, `lng` (and `id`); the platform keeps the rest — `url`, `note`, the texts'

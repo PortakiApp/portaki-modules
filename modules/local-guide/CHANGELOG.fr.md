@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.0
+
+Vos activités, sans commission.
+
+* Décrivez ce que vous proposez vous-même : prestataire, prix, durée, rendez-vous, inclus, conseil.
+* Le voyageur réserve au téléphone, avec votre prestataire — aucune commission n'est perçue.
+* Elles passent avant les activités partenaires, avec l'étiquette « Choix de votre prénom ».
+* La fiche dit « Proposé par vous · votre prestataire » : on sait de qui vient la recommandation.
+
 ## 1.4.0
 
 Une fiche par adresse.

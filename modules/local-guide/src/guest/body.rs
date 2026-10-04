@@ -118,6 +118,15 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         });
     }
 
+    // Les activités de l'hôte avant celles des partenaires : c'est l'ordre du §2.13, et ce sont
+    // les seules dont il se porte garant.
+    let host_activities = super::activity::build_host_activities(data);
+    if !host_activities.is_empty() {
+        children.push(Component::Stack(
+            Stack::new().gap(8.0).children(host_activities),
+        ));
+    }
+
     if let Some(view) = data.activities.as_ref() {
         children.push(Component::Stack(
             Stack::new().gap(8.0).children(build_activities(view)),
