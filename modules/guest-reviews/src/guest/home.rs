@@ -5,8 +5,9 @@
 use portaki_sdk::host::i18n::{translate, Vars};
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
+use portaki_sdk::sdui::common::ChoiceListLayout;
 use portaki_sdk::sdui::primitives::{
-    Button, Card, Field, Form, QRCode, Select, Stack, Text, TextArea,
+    Button, Card, ChoiceList, Divider, Field, Form, QRCode, Stack, Text, TextArea,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -35,20 +36,13 @@ pub fn build_home_card(data: &GuestData) -> Surface {
         ));
     }
 
+    let airbnb_url = data.airbnb_url.clone().unwrap_or_default();
     if data.show_airbnb {
-        let url = data.airbnb_url.clone().unwrap_or_default();
-        let action = Action::external(url.clone());
         children.push(Component::Button(
-            Button::new().label("i18n:guest.airbnbCta").action(action),
+            Button::new()
+                .label("i18n:guest.airbnbCta")
+                .action(Action::external(airbnb_url.clone())),
         ));
-        if data.show_qr && !url.is_empty() {
-            children.push(Component::QRCode(QRCode::new().value(url).size(144.0)));
-            children.push(Component::Text(
-                Text::new()
-                    .text("i18n:guest.scanQr")
-                    .variant(TextVariant::Caption),
-            ));
-        }
     }
 
     if data.show_portaki {
@@ -74,15 +68,18 @@ pub fn build_home_card(data: &GuestData) -> Surface {
                     Field::new()
                         .name("rating")
                         .label("i18n:guest.rating")
+                        // Des étoiles, pas une liste déroulante : une note se donne d'un doigt.
+                        // `Stars` dessine les cinq, et porte les flèches du clavier.
                         .child(
-                            Select::new()
+                            ChoiceList::new()
                                 .name("rating")
-                                .options(vec![
-                                    ChoiceOption::new("1", "★"),
-                                    ChoiceOption::new("2", "★★"),
-                                    ChoiceOption::new("3", "★★★"),
-                                    ChoiceOption::new("4", "★★★★"),
-                                    ChoiceOption::new("5", "★★★★★"),
+                                .layout(ChoiceListLayout::Stars)
+                                .choices(vec![
+                                    ChoiceOption::new("1", "i18n:guest.rating.1"),
+                                    ChoiceOption::new("2", "i18n:guest.rating.2"),
+                                    ChoiceOption::new("3", "i18n:guest.rating.3"),
+                                    ChoiceOption::new("4", "i18n:guest.rating.4"),
+                                    ChoiceOption::new("5", "i18n:guest.rating.5"),
                                 ])
                                 .value("5"),
                         ),
@@ -102,6 +99,22 @@ pub fn build_home_card(data: &GuestData) -> Surface {
                         .label("i18n:guest.submit")
                         .action(submit_action),
                 ),
+        ));
+    }
+
+    // Le QR vient en dernier, séparé par un filet : il sert à finir l'avis sur un téléphone,
+    // pas à le commencer (§2.19). Au-dessus du formulaire, il détournait du champ.
+    if data.show_qr && !airbnb_url.is_empty() {
+        if children.len() > 2 {
+            children.push(Component::Divider(Divider::new()));
+        }
+        children.push(Component::QRCode(
+            QRCode::new().value(airbnb_url).size(144.0),
+        ));
+        children.push(Component::Text(
+            Text::new()
+                .text("i18n:guest.scanQr")
+                .variant(TextVariant::Caption),
         ));
     }
 
