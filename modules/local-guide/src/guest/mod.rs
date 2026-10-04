@@ -5,6 +5,7 @@ mod body;
 mod detail;
 mod home;
 mod item;
+mod link;
 mod load;
 mod upcoming;
 
@@ -16,6 +17,7 @@ use activity::build_activity_item;
 use detail::build_detail_surface;
 use home::build_home_card;
 use item::build_spot_item;
+use link::build_link_item;
 use load::load_guest_data;
 use upcoming::build_upcoming_card;
 
@@ -93,6 +95,40 @@ pub fn render_explore_item(ctx: GuestContext) -> Result<Surface> {
     match found {
         Some(spot) => Ok(build_spot_item(&data, &spot)),
         None => Ok(nothing_to_share(EXPLORE_ITEM)),
+    }
+}
+
+/// La fiche d'un lien collé par l'hôte (§2.13, `origin: hostLink`).
+///
+/// `productCode` est le code du produit chez le fournisseur : il est stable, là où un rang se
+/// décale dès que l'hôte ajoute un lien au-dessus.
+#[portaki_sdk::surface(
+    guest,
+    id = "explore.link",
+    path = "local-guide/link/:productCode",
+    label_key = "nav.activity"
+)]
+pub fn render_explore_link(ctx: GuestContext) -> Result<Surface> {
+    let wanted = ctx
+        .input
+        .get("productCode")
+        .and_then(|value| value.as_str())
+        .unwrap_or_default()
+        .to_string();
+    let Some(data) = load_guest_data(&ctx)? else {
+        return Ok(nothing_to_share(EXPLORE_LINK));
+    };
+    let found = data.activities.as_ref().and_then(|view| {
+        view.links.iter().find_map(|link| {
+            link.product
+                .as_ref()
+                .filter(|product| product.code == wanted)
+                .map(|product| (link.clone(), product.clone()))
+        })
+    });
+    match found {
+        Some((link, product)) => Ok(build_link_item(&data, &link, &product)),
+        None => Ok(nothing_to_share(EXPLORE_LINK)),
     }
 }
 

@@ -19,6 +19,7 @@ pub struct ActivitiesView {
 }
 
 /// Un lien choisi par l'hôte.
+#[derive(Clone)]
 pub struct ActivityLink {
     /// Intitulé saisi par l'hôte. Vide = le rendu retombe sur une clé i18n.
     pub label: String,
@@ -28,7 +29,7 @@ pub struct ActivityLink {
     pub tip: String,
     /// Le produit du catalogue, quand le lien est une adresse de produit Viator reconnue
     /// (§2.13, `origin: hostLink`). `None` = nom et lien seuls.
-    pub product: Option<portaki_connectors::viator::ViatorProduct>,
+    pub product: Option<crate::viator_api::ViatorProduct>,
 }
 
 /// Résout la section, ou `None` quand il n'y a rien à afficher.
