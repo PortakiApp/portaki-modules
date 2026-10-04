@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.0
+
+La saison d'une ligne.
+
+* Deux dates au format MM-JJ, sans année : une piscine ouvre « d'avril à octobre » chaque année.
+* Hors saison, la ligne s'affiche « Hors saison » plutôt que « Fermé » — on ne revient pas demain.
+* La saison peut passer l'hiver : de novembre à mars se lit à l'envers, comme il faut.
+
 ## 1.7.0
 
 Un groupe et une icône par ligne.

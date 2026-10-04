@@ -108,6 +108,8 @@ fn facility_row(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext)
         .unwrap_or_default();
     let hours = facility.and_then(|f| f.hours.as_deref()).unwrap_or("");
     let group = facility.and_then(FacilityRow::group_label).unwrap_or("");
+    let season_from = facility.map(|f| f.season_from.as_str()).unwrap_or("");
+    let season_to = facility.map(|f| f.season_to.as_str()).unwrap_or("");
     let icon = facility.and_then(FacilityRow::icon_name).unwrap_or("");
     let opens_at = facility.map(|f| f.opens_at.as_str()).unwrap_or("");
     let closes_at = facility.map(|f| f.closes_at.as_str()).unwrap_or("");
@@ -167,6 +169,29 @@ fn facility_row(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext)
                                 )
                                 .value(icon.to_string()),
                         )
+                        .into(),
+                    Field::new()
+                        .name(format!("facilities.{index}.season_from"))
+                        .label("i18n:host.facility.season.from")
+                        .child(
+                            TextInput::new()
+                                .name(format!("facilities.{index}.season_from"))
+                                .value(season_from)
+                                .placeholder("04-01"),
+                        )
+                        .into(),
+                    Field::new()
+                        .name(format!("facilities.{index}.season_to"))
+                        .label("i18n:host.facility.season.to")
+                        .child(
+                            TextInput::new()
+                                .name(format!("facilities.{index}.season_to"))
+                                .value(season_to)
+                                .placeholder("10-31"),
+                        )
+                        .into(),
+                    FieldHint::new()
+                        .text("i18n:host.facility.season.hint")
                         .into(),
                     Field::new()
                         .name(format!("facilities.{index}.hours"))

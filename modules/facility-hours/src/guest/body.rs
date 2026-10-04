@@ -32,6 +32,9 @@ fn state_badge(state: &State) -> Trailing {
             Tone::Neutral,
         ),
         State::Closed => ("i18n:guest.state.closed".to_string(), Tone::Neutral),
+        // Hors saison : « Fermé » ferait croire à une fermeture du jour, et le voyageur
+        // reviendrait demain devant la même porte.
+        State::OutOfSeason => ("i18n:guest.state.outOfSeason".to_string(), Tone::Neutral),
     };
     Trailing::Visual(Box::new(TrailingVisual {
         badge: Some(BadgeSpec {
