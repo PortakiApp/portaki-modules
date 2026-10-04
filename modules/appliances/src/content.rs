@@ -447,8 +447,20 @@ pub fn description_to_html(description: &str) -> String {
     out
 }
 
+/// Une étape du mode d'emploi : sa consigne, et le schéma que l'hôte a glissé dedans.
+///
+/// Le schéma est facultatif, et c'est l'extension « étapes illustrées » du §2.4 : une poignée de
+/// fenêtre oscillo-battante se montre, elle ne se décrit pas. Une étape sans image rend
+/// exactement ce qu'elle rendait.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HowToStep {
+    pub text: String,
+    /// La référence `portaki-file:` ou l'URL de l'image, telle que l'éditeur l'a posée.
+    pub image: Option<String>,
+}
+
 /// Extract ordered how-to steps from TipTap bullet/ordered lists (guest detail SDUI).
-pub fn extract_howto_steps(description: &str) -> Vec<String> {
+pub fn extract_howto_steps(description: &str) -> Vec<HowToStep> {
     let trimmed = description.trim();
     if trimmed.is_empty() {
         return Vec::new();
@@ -476,11 +488,36 @@ pub fn extract_howto_steps(description: &str) -> Vec<String> {
             collect_text(item, &mut parts);
             let text = parts.join(" ").trim().to_string();
             if !text.is_empty() {
-                steps.push(text);
+                steps.push(HowToStep {
+                    text,
+                    image: first_image(item),
+                });
             }
         }
     }
     steps
+}
+
+/// Le `src` du premier nœud image de ce sous-arbre.
+///
+/// Le premier seulement : une étape montre un schéma, pas une galerie, et les suivants
+/// descendraient la consigne suivante hors de l'écran.
+fn first_image(node: &Value) -> Option<String> {
+    if node.get("type").and_then(|t| t.as_str()) == Some("image") {
+        let src = node
+            .get("attrs")
+            .and_then(|attrs| attrs.get("src"))
+            .and_then(|src| src.as_str())
+            .map(str::trim)
+            .filter(|src| !src.is_empty());
+        if let Some(src) = src {
+            return Some(src.to_string());
+        }
+    }
+    node.get("content")
+        .and_then(|content| content.as_array())?
+        .iter()
+        .find_map(first_image)
 }
 
 fn wrap_paragraph(text: &str) -> String {
@@ -494,6 +531,21 @@ fn render_block(node: &Value, out: &mut String) {
             out.push_str("<p>");
             render_inline_children(node, out);
             out.push_str("</p>");
+        }
+        // Une image hors liste : sans ce cas, un schéma posé entre deux paragraphes disparaissait
+        // du repli texte riche, et l'hôte ne voyait jamais pourquoi.
+        "image" => {
+            if let Some(src) = node
+                .get("attrs")
+                .and_then(|attrs| attrs.get("src"))
+                .and_then(|src| src.as_str())
+                .map(str::trim)
+                .filter(|src| !src.is_empty())
+            {
+                out.push_str("<img src=\"");
+                out.push_str(&escape_html(src));
+                out.push_str("\" alt=\"\">");
+            }
         }
         "heading" => {
             let level = node
@@ -642,6 +694,47 @@ fn escape_attr(input: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    use super::{extract_howto_steps, HowToStep};
+
+    /// Une étape porte son schéma, et une étape sans image rend exactement ce qu'elle rendait.
+    #[test]
+    fn a_step_carries_the_diagram_the_host_dropped_in_it() {
+        let doc = r#"{"type":"doc","content":[{"type":"orderedList","content":[
+            {"type":"listItem","content":[
+                {"type":"paragraph","content":[{"type":"text","text":"Poignée vers le bas"}]},
+                {"type":"image","attrs":{"src":"portaki-file:abc"}}
+            ]},
+            {"type":"listItem","content":[
+                {"type":"paragraph","content":[{"type":"text","text":"Poignée à l'horizontale"}]}
+            ]}
+        ]}]}"#;
+        assert_eq!(
+            extract_howto_steps(doc),
+            vec![
+                HowToStep {
+                    text: "Poignée vers le bas".into(),
+                    image: Some("portaki-file:abc".into()),
+                },
+                HowToStep {
+                    text: "Poignée à l'horizontale".into(),
+                    image: None,
+                },
+            ]
+        );
+    }
+
+    /// Un `src` vide n'est pas une image : il ferait dessiner un cadre gris sous la consigne.
+    #[test]
+    fn an_empty_source_is_not_a_diagram() {
+        let doc = r#"{"type":"doc","content":[{"type":"orderedList","content":[
+            {"type":"listItem","content":[
+                {"type":"paragraph","content":[{"type":"text","text":"Ouvrir"}]},
+                {"type":"image","attrs":{"src":"  "}}
+            ]}
+        ]}]}"#;
+        assert_eq!(extract_howto_steps(doc)[0].image, None);
+    }
+
     use super::*;
     use serde_json::json;
 
