@@ -4,7 +4,7 @@ use portaki_sdk::host::i18n::{translate, Vars};
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::{
-    BadgeSpec, KeyValueLayout, Leading, LeadingVisual, Trailing, TrailingVisual,
+    BadgeSpec, KeyValueLayout, Leading, LeadingVisual, SecretState, Trailing, TrailingVisual,
 };
 use portaki_sdk::sdui::primitives::{
     Button, Eyebrow, Grid, InfoBanner, KeyValue, Link, ListItem, Map,
@@ -117,15 +117,19 @@ fn push_secret_row(children: &mut Vec<Component>, data: &GuestData, key_i18n: &s
 /// C'est ce que le voyageur cherche sur la carte d'accueil — pas une ligne de tableau parmi
 /// d'autres. La copie n'est offerte que sur un code révélé : copier un masque ne sert personne.
 fn secret_tile(data: &GuestData, key_i18n: &str, icon: IconName, code: &str) -> Component {
-    Component::KeyValue(
-        KeyValue::new()
-            .key(key_i18n)
-            .value(secret_display(data, code.trim()))
-            .mono(true)
-            .layout(KeyValueLayout::Tile)
-            .icon(icon)
-            .copy(data.secrets_revealed),
-    )
+    let mut tile = KeyValue::new()
+        .key(key_i18n)
+        .value(secret_display(data, code.trim()))
+        .mono(true)
+        .layout(KeyValueLayout::Tile)
+        .icon(icon)
+        .copy(data.secrets_revealed);
+    // Masquée, la tuile dit qu'elle s'ouvrira et quand : sans cet état, le livret dessinait des
+    // points sans rien promettre, et le voyageur croyait l'hôte en retard (§2.1).
+    if !data.secrets_revealed {
+        tile = tile.secret(SecretState::hidden(data.reveal_at_label.clone()));
+    }
+    Component::KeyValue(tile)
 }
 
 /// Les codes du moyen d'accès principal, en tuiles côte à côte.

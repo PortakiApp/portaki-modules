@@ -1,8 +1,8 @@
 //! Shared guest SDUI body for guest Wi-Fi.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::primitives::{Button, InfoBanner, KeyValue, QRCode, Text};
+use portaki_sdk::sdui::common::SecretState;
+use portaki_sdk::sdui::primitives::{InfoBanner, KeyValue, QRCode, Text};
 
 use super::load::{password_display, GuestData};
 use super::qr::wifi_payload;
@@ -69,18 +69,19 @@ pub fn build_wifi_body(data: &GuestData, show_security_banner: bool) -> Vec<Comp
 
     let password = data.config.password.trim();
     if !password.is_empty() {
-        children.push(kv_row("i18n:guest.password", &password_display(data), true));
+        // La révélation et la copie tiennent dans la ligne, comme la maquette les dessine (§2.2).
+        // Un bouton « Copier le mot de passe » dessous répétait une action que la ligne porte
+        // déjà, et le posait sous le QR qu'il faut regarder.
+        let mut row = KeyValue::new()
+            .key("i18n:guest.password")
+            .value(password_display(data))
+            .mono(true);
         if data.password_revealed {
-            children.push(Component::Button(
-                Button::new()
-                    .label("i18n:guest.copyPassword")
-                    .variant(ButtonVariant::Outline)
-                    .action(Action::copy(
-                        password.to_string(),
-                        Some("i18n:guest.copy.toast".into()),
-                    )),
-            ));
+            row = row.copy(true).copyLabel("i18n:guest.copyPassword");
+        } else {
+            row = row.secret(SecretState::hidden(data.reveal_at_label.clone()));
         }
+        children.push(Component::KeyValue(row));
     }
 
     push_qr_code(&mut children, data);
