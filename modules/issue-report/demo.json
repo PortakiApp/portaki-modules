@@ -18,6 +18,8 @@
         "form.urgent.link": "Numéros d’urgence",
         "form.urgent.note": "En cas d’urgence, n’attendez pas de réponse : appelez directement."
       },
+      "labelKey": "nav.issue-report",
+      "path": "issue-report/form",
       "surfaceId": "guest.form",
       "tree": {
         "children": [
@@ -134,6 +136,8 @@
         "home.card.title": "Signaler un problème",
         "home.card.yourReports": "Vos signalements ce séjour"
       },
+      "labelKey": "nav.issue-report",
+      "path": "issue-report",
       "surfaceId": "home.card",
       "tree": {
         "action": {

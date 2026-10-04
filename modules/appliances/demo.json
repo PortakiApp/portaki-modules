@@ -3,6 +3,8 @@
   "surfaces": [
     {
       "i18n": {},
+      "labelKey": "nav.appliances",
+      "path": "appliances",
       "surfaceId": "explore.detail",
       "tree": {
         "children": [
@@ -75,6 +77,8 @@
         "explore.item.manual": "Notice / manuel",
         "explore.item.manuals": "Notices"
       },
+      "labelKey": "nav.appliance",
+      "path": "appliances/:deviceId",
       "surfaceId": "explore.item",
       "tree": {
         "children": [

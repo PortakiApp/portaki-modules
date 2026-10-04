@@ -19,6 +19,8 @@
         "form.submit": "Envoyer",
         "home.card.intro": "Aidez-nous à préparer votre venue en 1 minute. Ces infos ne servent qu’à votre accueil."
       },
+      "labelKey": "nav.pre-arrival-form",
+      "path": "pre-arrival-form/form",
       "surfaceId": "guest.form",
       "tree": {
         "children": [
@@ -130,6 +132,9 @@
         "home.task.preArrival.label": "Formulaire de pré-arrivée",
         "home.task.preArrival.sub": "Heure d’arrivée, occasion, allergies"
       },
+      "labelKey": "nav.pre-arrival-form",
+      "path": "pre-arrival-form",
+      "role": "arrival-formality",
       "surfaceId": "home.card",
       "tree": {
         "children": [

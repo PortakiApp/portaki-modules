@@ -33,6 +33,9 @@
         "guest.submit": "Envoyer mon avis",
         "home.card.title": "Votre avis"
       },
+      "labelKey": "nav.guest-reviews",
+      "path": "post-stay",
+      "role": "post-stay",
       "surfaceId": "post-stay.card",
       "tree": {
         "children": [

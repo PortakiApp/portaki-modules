@@ -11,6 +11,8 @@
         "guest.numbers.general": "Urgences",
         "guest.numbers.medical": "SAMU"
       },
+      "labelKey": "nav.emergency-contacts",
+      "path": "emergency-contacts/detail",
       "surfaceId": "explore.detail",
       "tree": {
         "children": [

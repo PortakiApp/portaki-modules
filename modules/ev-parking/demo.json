@@ -10,6 +10,8 @@
         "guest.parkingCode": "Code barrière",
         "guest.spot": "Votre place"
       },
+      "labelKey": "nav.ev-parking",
+      "path": "ev-parking/detail",
       "surfaceId": "explore.detail",
       "tree": {
         "children": [

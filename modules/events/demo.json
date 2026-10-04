@@ -7,6 +7,8 @@
         "guest.next": "Ensuite",
         "guest.openLink": "Ouvrir le lien"
       },
+      "labelKey": "nav.events",
+      "path": "events/detail",
       "surfaceId": "explore.detail",
       "tree": {
         "children": [
@@ -114,6 +116,8 @@
         "guest.tile.price": "Prix",
         "guest.tile.walk": "À pied"
       },
+      "labelKey": "nav.event",
+      "path": "events/detail/:eventId",
       "surfaceId": "explore.item",
       "tree": {
         "children": [
@@ -359,6 +363,9 @@
       "i18n": {
         "home.card.title": "Événements"
       },
+      "labelKey": "nav.events",
+      "path": "upcoming",
+      "role": "upcoming",
       "surfaceId": "upcoming.card",
       "tree": {
         "action": {

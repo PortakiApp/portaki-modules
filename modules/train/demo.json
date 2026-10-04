@@ -11,6 +11,8 @@
         "explore.detail.station.label": "Gare d’arrivée",
         "explore.detail.upcoming": "Prochains départs"
       },
+      "labelKey": "nav.train",
+      "path": "train",
       "surfaceId": "explore.detail",
       "tree": {
         "children": [
@@ -183,6 +185,8 @@
         "explore.item.station": "Aller à la gare",
         "explore.item.stationName": "Gare"
       },
+      "labelKey": "nav.departure",
+      "path": "train/:departureId",
       "surfaceId": "explore.item",
       "tree": {
         "children": [
@@ -350,6 +354,9 @@
       "i18n": {
         "home.card.title": "Horaires trains"
       },
+      "labelKey": "nav.train",
+      "path": "upcoming",
+      "role": "upcoming",
       "surfaceId": "upcoming.card",
       "tree": {
         "action": {
