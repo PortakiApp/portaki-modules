@@ -2,6 +2,7 @@
 
 mod config;
 mod format;
+pub mod gpx;
 mod guest;
 mod host;
 mod i18n;

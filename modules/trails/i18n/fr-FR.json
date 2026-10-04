@@ -60,6 +60,8 @@
   "host.trails.elevation": "Dénivelé positif (m)",
   "host.trails.emptyDescription": "Ajoutez la randonnée que vous conseillez le plus souvent.",
   "host.trails.emptyTitle": "Aucun itinéraire",
+  "host.trails.gpx": "Trace GPX",
+  "host.trails.gpx.hint": "Le fichier de votre application de randonnée. Le tracé apparaît sur le plan, et le voyageur peut le télécharger.",
   "host.trails.link": "Fiche de l’itinéraire (facultative)",
   "host.trails.link.hint": "Visorando, IGN, l’office de tourisme : c’est le bouton « Ouvrir la trace » du voyageur.",
   "host.trails.link.placeholder": "https://www.visorando.com/randonnee-…",

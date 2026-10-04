@@ -60,6 +60,8 @@
   "host.trails.elevation": "Stijging (m)",
   "host.trails.emptyDescription": "Voeg de wandeling toe die je het vaakst aanraadt.",
   "host.trails.emptyTitle": "Geen wandeling",
+  "host.trails.gpx": "GPX-track",
+  "host.trails.gpx.hint": "Het bestand uit uw wandel-app. De route verschijnt op de kaart en de reiziger kan hem downloaden.",
   "host.trails.link": "Routepagina (optioneel)",
   "host.trails.link.hint": "Komoot, de toeristische dienst, een wandelsite: dit is de knop “Route openen” voor gasten.",
   "host.trails.link.placeholder": "https://www.komoot.com/tour/…",

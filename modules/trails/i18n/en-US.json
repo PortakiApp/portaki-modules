@@ -60,6 +60,8 @@
   "host.trails.elevation": "Ascent (m)",
   "host.trails.emptyDescription": "Add the walk you recommend most often.",
   "host.trails.emptyTitle": "No trail",
+  "host.trails.gpx": "GPX track",
+  "host.trails.gpx.hint": "The file from your hiking app. The route shows on the map, and the guest can download it.",
   "host.trails.link": "Route page (optional)",
   "host.trails.link.hint": "Visorando, IGN, the tourist office: this is the guest's “Open the route” button.",
   "host.trails.link.placeholder": "https://www.visorando.com/walk-…",

@@ -60,6 +60,8 @@
   "host.trails.elevation": "登り（m）",
   "host.trails.emptyDescription": "いちばんよくおすすめするコースを追加してください。",
   "host.trails.emptyTitle": "コースがありません",
+  "host.trails.gpx": "GPX トラック",
+  "host.trails.gpx.hint": "登山アプリのファイルです。ルートが地図に表示され、宿泊者がダウンロードできます。",
   "host.trails.link": "コースのページ（任意）",
   "host.trails.link.hint": "ヤマレコ、観光案内所、登山地図サイトなど。ゲストの「コースを開く」ボタンになります。",
   "host.trails.link.placeholder": "https://www.yamareco.com/…",

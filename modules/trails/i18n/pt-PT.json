@@ -60,6 +60,8 @@
   "host.trails.elevation": "Desnível positivo (m)",
   "host.trails.emptyDescription": "Adicione a caminhada que recomenda mais vezes.",
   "host.trails.emptyTitle": "Nenhuma caminhada",
+  "host.trails.gpx": "Trilho GPX",
+  "host.trails.gpx.hint": "O ficheiro da sua aplicação de caminhadas. O percurso aparece no mapa e o viajante pode descarregá-lo.",
   "host.trails.link": "Ficha do percurso (opcional)",
   "host.trails.link.hint": "Wikiloc, o posto de turismo, um site de caminhadas: é o botão «Abrir o percurso» do hóspede.",
   "host.trails.link.placeholder": "https://pt.wikiloc.com/trilhas-…",

@@ -60,6 +60,8 @@
   "host.trails.elevation": "Aufstieg (m)",
   "host.trails.emptyDescription": "Fügen Sie die Wanderung hinzu, die Sie am häufigsten empfehlen.",
   "host.trails.emptyTitle": "Keine Wanderung",
+  "host.trails.gpx": "GPX-Track",
+  "host.trails.gpx.hint": "Die Datei aus Ihrer Wander-App. Die Route erscheint auf der Karte, und Gäste können sie herunterladen.",
   "host.trails.link": "Seite der Route (optional)",
   "host.trails.link.hint": "Komoot, Outdooractive, die Tourist-Info: das ist der Knopf „Route öffnen“ für Gäste.",
   "host.trails.link.placeholder": "https://www.komoot.com/tour/…",

@@ -60,6 +60,8 @@
   "host.trails.elevation": "Dislivello positivo (m)",
   "host.trails.emptyDescription": "Aggiungi l’escursione che consigli più spesso.",
   "host.trails.emptyTitle": "Nessuna escursione",
+  "host.trails.gpx": "Traccia GPX",
+  "host.trails.gpx.hint": "Il file della sua app di escursionismo. Il percorso appare sulla mappa e il viaggiatore può scaricarlo.",
   "host.trails.link": "Scheda del percorso (facoltativa)",
   "host.trails.link.hint": "Komoot, l’ufficio turistico, un sito di escursionismo: è il pulsante «Apri il percorso» dell’ospite.",
   "host.trails.link.placeholder": "https://www.komoot.com/tour/…",
