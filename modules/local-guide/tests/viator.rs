@@ -121,7 +121,7 @@ fn the_detail_lists_the_recorded_products_with_their_affiliate_links() {
 
 #[test]
 #[serial]
-fn the_home_card_is_a_preview_of_three_without_images() {
+fn the_home_card_is_a_preview_of_three_with_thumbnails() {
     guest()
         .with_config(&enabled())
         .with_connector_response("viator", "search_products", RECORDED)
@@ -131,7 +131,10 @@ fn the_home_card_is_a_preview_of_three_without_images() {
             assert!(json.contains(AFFILIATE_URL));
             // Le quatrième produit reste pour le détail.
             assert!(!json.contains("Excursion en voilier"), "{json}");
-            assert!(!json.contains("tripadvisor.com/media"), "{json}");
+            // La photo est une vignette dans l'emplacement `leading` de la tuile (§2.13), pas
+            // un bandeau plein format : celui-là reste dans la feuille.
+            assert!(json.contains("\"leading\":{\"image\""), "{json}");
+            assert!(!json.contains("\"type\":\"Image\""), "{json}");
         });
 }
 

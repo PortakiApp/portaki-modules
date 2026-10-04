@@ -3,11 +3,10 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::{
-    BadgeSpec, ListItemLayout, StackDirection, Tone, Trailing, TrailingVisual,
+    BadgeSpec, GeoPoint, Leading, LeadingVisual, ListItemLayout, StackDirection, Tone, Trailing,
+    TrailingVisual,
 };
-use portaki_sdk::sdui::primitives::{
-    Image, InfoBanner, Link, ListItem, Map, Pill, Pressable, Stack, Text,
-};
+use portaki_sdk::sdui::primitives::{Image, InfoBanner, Link, ListItem, Map, Pill, Stack, Text};
 
 use crate::activities::ActivitiesView;
 use crate::tiqets::{format_price, format_rating, TiqetsView, HOME_PRODUCTS};
@@ -49,6 +48,14 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         let mut item = ListItem::new().title(title);
         if !subtitle.is_empty() {
             item = item.subtitle(subtitle);
+        }
+        // La vignette de plan, centrée sur l'adresse : la maquette la met devant chaque tuile, et
+        // `LeadingVisual::map` l'attend — on sait où est le lieu dès que l'hôte l'a posé.
+        if let (Some(lat), Some(lng)) = (spot.lat, spot.lng) {
+            item = item.leading(Leading::Visual(Box::new(LeadingVisual {
+                map: Some(GeoPoint { lat, lng }),
+                ..LeadingVisual::default()
+            })));
         }
         if let Some(tag) = spot.tag.as_deref().filter(|t| !t.trim().is_empty()) {
             // L'avantage va en fin de ligne, pas dans son corps : c'est ce que la maquette
@@ -139,8 +146,9 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
 /// Section Tiqets : les billets à proximité, mention de la source et de l'affiliation dessous.
 ///
 /// Le détail montre image, crédit, accroche, prix et note ; la carte d'accueil n'en garde que
-/// [`HOME_PRODUCTS`], sans image, pour rester un aperçu. Chaque lien est le `product_url` de
-/// Tiqets tel quel : c'est lui qui porte le code d'affiliation.
+/// [`HOME_PRODUCTS`], en tuiles à vignette — la photo dans l'emplacement `leading`, pas en
+/// bandeau plein format. Chaque lien est le `product_url` de Tiqets tel quel : c'est lui qui
+/// porte le code d'affiliation.
 fn build_tiqets(view: &TiqetsView, enriched: bool, locale: &str) -> Vec<Component> {
     let mut children: Vec<Component> = vec![Text::new()
         .text("i18n:guest.tiqets.title")
@@ -152,6 +160,7 @@ fn build_tiqets(view: &TiqetsView, enriched: bool, locale: &str) -> Vec<Componen
     } else {
         HOME_PRODUCTS
     };
+    let mut tiles: Vec<Component> = Vec::new();
     for product in view.products.iter().take(shown) {
         let action = Action::External {
             url: product.product_url.clone(),
@@ -163,8 +172,14 @@ fn build_tiqets(view: &TiqetsView, enriched: bool, locale: &str) -> Vec<Componen
         }
 
         if !enriched {
-            children.push(Component::Pressable(
-                Pressable::new().action(action).child(item),
+            tiles.push(partner_tile(
+                item,
+                product.image.as_ref().map(|image| image.url.clone()),
+                product
+                    .price
+                    .zip(product.currency.as_deref())
+                    .map(|(price, currency)| format_price(price, currency, locale)),
+                action,
             ));
             continue;
         }
@@ -198,6 +213,7 @@ fn build_tiqets(view: &TiqetsView, enriched: bool, locale: &str) -> Vec<Componen
         children.push(Component::ListItem(item));
     }
 
+    children.extend(scrolling_tiles(tiles));
     // Toujours sous la liste, dans toutes les langues : d'où viennent billets et notes, et
     // que ces liens rapportent une commission.
     children.push(
@@ -213,6 +229,43 @@ fn build_tiqets(view: &TiqetsView, enriched: bool, locale: &str) -> Vec<Componen
             .into(),
     );
     children
+}
+
+/// Une tuile de produit partenaire : la photo en tête, le prix en bout, la page au bout du doigt.
+///
+/// Ce que la maquette montre du §2.13 : sur la carte d'accueil, les activités défilent en tuiles
+/// illustrées. En rangées sans image, elles se lisaient comme une liste de liens, et la photo —
+/// la seule chose qui fait choisir une visite — n'apparaissait qu'une fois la feuille ouverte.
+fn partner_tile(
+    item: ListItem,
+    image_url: Option<String>,
+    price: Option<String>,
+    action: Action,
+) -> Component {
+    let mut tile = item.layout(ListItemLayout::Tile).action(action);
+    if let Some(url) = image_url {
+        tile = tile.leading(Leading::Visual(Box::new(LeadingVisual {
+            image: Some(url),
+            ..LeadingVisual::default()
+        })));
+    }
+    if let Some(price) = price {
+        tile = tile.meta(price);
+    }
+    Component::ListItem(tile)
+}
+
+/// Les tuiles dans un défilement horizontal, ou rien quand il n'y en a pas.
+fn scrolling_tiles(tiles: Vec<Component>) -> Option<Component> {
+    (!tiles.is_empty()).then(|| {
+        Component::Stack(
+            Stack::new()
+                .direction(StackDirection::Horizontal)
+                .scroll(true)
+                .gap(8.0)
+                .children(tiles),
+        )
+    })
 }
 
 /// « Dès 22 € · ★ 4,6 (18 234) » — ce qui est connu, dans cet ordre.
@@ -236,8 +289,8 @@ fn product_subtitle(product: &portaki_connectors::tiqets::TiqetsProduct, locale:
 /// Section Viator : les activités de la ville, mention de la source et de l'affiliation dessous.
 ///
 /// Le détail montre image, prix, note, durée, annulation gratuite et traduction automatique ;
-/// la carte d'accueil n'en garde que [`viator::HOME_PRODUCTS`], sans image. Chaque lien est le
-/// `product_url` de Viator tel quel : c'est lui qui porte les paramètres d'affiliation.
+/// la carte d'accueil n'en garde que [`viator::HOME_PRODUCTS`], en tuiles à vignette. Chaque lien
+/// est le `product_url` de Viator tel quel : c'est lui qui porte les paramètres d'affiliation.
 fn build_viator(view: &ViatorView, enriched: bool, locale: &str) -> Vec<Component> {
     let mut children: Vec<Component> = vec![Text::new()
         .text("i18n:guest.viator.title")
@@ -249,6 +302,7 @@ fn build_viator(view: &ViatorView, enriched: bool, locale: &str) -> Vec<Componen
     } else {
         viator::HOME_PRODUCTS
     };
+    let mut tiles: Vec<Component> = Vec::new();
     for product in view.products.iter().take(shown) {
         let action = Action::External {
             url: product.product_url.clone(),
@@ -260,8 +314,14 @@ fn build_viator(view: &ViatorView, enriched: bool, locale: &str) -> Vec<Componen
         }
 
         if !enriched {
-            children.push(Component::Pressable(
-                Pressable::new().action(action).child(item),
+            tiles.push(partner_tile(
+                item,
+                product.image_url.clone(),
+                product
+                    .price
+                    .zip(product.currency.as_deref())
+                    .map(|(price, currency)| format_price(price, currency, locale)),
+                action,
             ));
             continue;
         }
@@ -295,6 +355,7 @@ fn build_viator(view: &ViatorView, enriched: bool, locale: &str) -> Vec<Componen
         children.push(Component::ListItem(item));
     }
 
+    children.extend(scrolling_tiles(tiles));
     children.push(
         Text::new()
             .text("i18n:guest.viator.attribution")

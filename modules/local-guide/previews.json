@@ -77,6 +77,12 @@
                     "variant": "body"
                   }
                 ],
+                "leading": {
+                  "map": {
+                    "lat": 43.5531,
+                    "lng": 7.0152
+                  }
+                },
                 "subtitle": "Boulangerie · 350 m",
                 "title": "La boulangerie du village",
                 "type": "ListItem"
@@ -94,6 +100,12 @@
                     "variant": "body"
                   }
                 ],
+                "leading": {
+                  "map": {
+                    "lat": 43.5552,
+                    "lng": 7.0214
+                  }
+                },
                 "subtitle": "Marché · 1,2 km",
                 "title": "Marché provençal",
                 "trailing": {
@@ -117,6 +129,12 @@
                     "variant": "body"
                   }
                 ],
+                "leading": {
+                  "map": {
+                    "lat": 43.5663,
+                    "lng": 6.8511
+                  }
+                },
                 "subtitle": "Baignade · 9 km",
                 "title": "Lac de Saint-Cassien",
                 "type": "ListItem"
