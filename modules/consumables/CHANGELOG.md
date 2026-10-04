@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.4.1...consumables-v2.5.0) (2026-10-04)
+
+
+### Features
+
+* **consumables:** an emoji per product, and the host's restocking time ([e237c48](https://github.com/PortakiApp/portaki-modules/commit/e237c48c85d2f5cd00d6f30e4c14ba092aec0e58))
+
 ## [2.4.1](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.4.0...consumables-v2.4.1) (2026-10-04)
 
 

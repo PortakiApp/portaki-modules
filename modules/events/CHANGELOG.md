@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/events-v1.4.1...events-v1.5.0) (2026-10-04)
+
+
+### Features
+
+* **events:** ask the host how to get in, and whether one can ([abc1ae5](https://github.com/PortakiApp/portaki-modules/commit/abc1ae505d7895be6a366b44471ff7ef03402844))
+
 ## [1.4.1](https://github.com/PortakiApp/portaki-modules/compare/events-v1.4.0...events-v1.4.1) (2026-10-04)
 
 
