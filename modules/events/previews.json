@@ -39,9 +39,14 @@
             "type": "InfoBanner"
           },
           {
+            "action": {
+              "to": "events/detail/marche-nocturne",
+              "type": "navigate"
+            },
+            "chevron": true,
             "children": [
               {
-                "text": "Entrée libre",
+                "text": "Une trentaine d'artisans, de la poterie au miel du pays.",
                 "type": "Text",
                 "variant": "caption"
               }
@@ -58,6 +63,11 @@
             "type": "Eyebrow"
           },
           {
+            "action": {
+              "to": "events/detail/concert",
+              "type": "navigate"
+            },
+            "chevron": true,
             "children": [
               {
                 "action": {
@@ -77,6 +87,11 @@
             "type": "ListItem"
           },
           {
+            "action": {
+              "to": "events/detail/vide-grenier",
+              "type": "navigate"
+            },
+            "chevron": true,
             "leading": {
               "time": "08:00"
             },
@@ -86,6 +101,145 @@
           }
         ],
         "gap": 12.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.addToCalendar": "Ajouter à mon agenda",
+        "guest.goodToKnow": "Bon à savoir",
+        "guest.map.label": "Plan : le logement et l’événement",
+        "guest.map.property": "Le logement",
+        "guest.route": "Itinéraire",
+        "guest.tile.duration": "Durée",
+        "guest.tile.price": "Prix",
+        "guest.tile.walk": "À pied",
+        "nav.event": "Événement"
+      },
+      "surfaceId": "explore.item",
+      "title": "Événement",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "label": "à 18:00",
+                "type": "Badge"
+              },
+              {
+                "text": "Marché nocturne des artisans",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "Place du village",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "text": "Une trentaine d'artisans, de la poterie au miel du pays.",
+            "type": "Text",
+            "variant": "body"
+          },
+          {
+            "children": [
+              {
+                "icon": "clock",
+                "key": "i18n:guest.tile.duration",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "4 h"
+              },
+              {
+                "icon": "star",
+                "key": "i18n:guest.tile.price",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "Entrée libre"
+              },
+              {
+                "icon": "users",
+                "key": "i18n:guest.tile.walk",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "environ 5 min"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "interactionMode": "none",
+            "isStatic": true,
+            "label": "i18n:guest.map.label",
+            "markers": [
+              {
+                "id": "event",
+                "kind": "poi",
+                "label": "Marché nocturne des artisans",
+                "lat": 43.5528,
+                "lng": 7.0171
+              },
+              {
+                "id": "property",
+                "kind": "property",
+                "label": "i18n:guest.map.property",
+                "lat": 43.5513,
+                "lng": 7.0128
+              }
+            ],
+            "type": "Map",
+            "viewport": {
+              "center": {
+                "lat": 43.5528,
+                "lng": 7.0171
+              },
+              "zoom": 14.0
+            }
+          },
+          {
+            "children": [
+              {
+                "leading": "info-circle",
+                "title": "Venez avant 19 h, la place se remplit vite.",
+                "type": "ListItem"
+              },
+              {
+                "leading": "info-circle",
+                "title": "Le stand de socca est au fond, côté fontaine.",
+                "type": "ListItem"
+              }
+            ],
+            "icon": "info-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.goodToKnow",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.google.com/maps/search/?api=1&query=43.5528,7.0171"
+            },
+            "label": "i18n:guest.route",
+            "type": "Button"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260602T180000Z/20260602T220000Z&text=March%C3%A9+nocturne+des+artisans&location=Place+du+village"
+            },
+            "label": "i18n:guest.addToCalendar",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "gap": 14.0,
         "type": "Stack"
       }
     },

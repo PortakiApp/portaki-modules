@@ -130,6 +130,12 @@ fn fetch_from_api(lat: f64, lng: f64, radius_km: u32, locale: &str) -> Result<Ve
             lat: event.lat,
             lng: event.lng,
             note: None,
+            // Un événement trouvé à proximité n'a ni photo, ni prix, ni conseil : le fournisseur
+            // n'en donne pas, et les inventer les ferait passer pour ceux de l'hôte.
+            address: None,
+            price: None,
+            photo: String::new(),
+            tips: I18nText::default(),
         })
         .collect())
 }
@@ -209,6 +215,7 @@ mod tests {
             lat: None,
             lng: None,
             note: None,
+            ..Default::default()
         }];
         let nearby = vec![EventRow {
             id: "oa-1".into(),
@@ -220,6 +227,7 @@ mod tests {
             lat: Some(1.0),
             lng: Some(2.0),
             note: None,
+            ..Default::default()
         }];
         let merged = merge_manual_and_nearby(manual, nearby);
         assert_eq!(merged.len(), 1);

@@ -10,6 +10,8 @@ pub struct GuestData {
     pub disclaimer: String,
     pub locale: String,
     pub show_map: bool,
+    /// Le repère du logement, pour la marche et le plan de la fiche.
+    pub property_coords: Option<(f64, f64)>,
 }
 
 /// The events to show, or `None` when there is nothing: no event from the host, and no nearby
@@ -34,5 +36,11 @@ pub fn load_guest_data(ctx: &GuestContext, surface_id: SurfaceId) -> Result<Opti
         disclaimer: config.disclaimer.get(&ctx.locale).to_string(),
         locale: ctx.locale.clone(),
         show_map,
+        property_coords: ctx
+            .property
+            .coordinates
+            .as_ref()
+            .map(|point| (point.lat, point.lng))
+            .filter(|(lat, lng)| *lat != 0.0 || *lng != 0.0),
     }))
 }

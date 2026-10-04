@@ -2,9 +2,9 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::common::{Leading, LeadingVisual};
+use portaki_sdk::sdui::common::{Emphasis, Leading, LeadingVisual};
 use portaki_sdk::sdui::primitives::{
-    Eyebrow, InfoBanner, Link, ListItem, Map, Pill, Pressable, Text,
+    Badge, Button, Eyebrow, InfoBanner, Link, ListItem, Map, Pill, Stack, Text,
 };
 
 use crate::time_format::{format_starts_at_display, parse_starts_at};
@@ -28,7 +28,30 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         ));
     }
 
+    // Sur la carte d'accueil, le prochain événement est mis en vedette : son heure en pastille,
+    // son titre en grand, son lieu dessous (§2.11). En ligne comme les autres, il se lisait comme
+    // le premier d'une liste alors que c'est celui qui arrive.
+    let featured = (!enriched).then(|| data.events.first()).flatten();
+    if let Some(event) = featured {
+        children.push(headline(data, event));
+        children.push(Component::Button(
+            Button::new()
+                .label("i18n:guest.seeAll")
+                .variant(ButtonVariant::Outline)
+                .action(Action::open_overlay(
+                    OverlayPresentation::BottomSheet,
+                    crate::guest::EXPLORE_DETAIL,
+                    OverlayArgs::new()
+                        .icon(IconName::Calendar)
+                        .title("i18n:home.card.title"),
+                )),
+        ));
+    }
+
     for (rank, event) in data.events.iter().enumerate() {
+        if featured.is_some() && rank == 0 {
+            continue;
+        }
         // « Ensuite » sépare le premier événement des suivants (§2.11) : sur la carte, le premier
         // est mis en avant et les autres se lisent comme une suite. Pas d'intertitre s'il n'y a
         // qu'un événement — il annoncerait une suite qui n'existe pas.
@@ -64,6 +87,13 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
             item = item.child(Pill::new().label("i18n:guest.event.dateTbd"));
         }
 
+        // La fiche, pas le lien tiers : la maquette donne à chaque ligne `action: detail`, et la
+        // page de l'organisateur se rejoint depuis la fiche, après l'heure et le plan.
+        item = item.chevron(true).action(Action::navigate(
+            NavigateTarget::path(format!("events/detail/{}", event.route_id(rank))),
+            None,
+        ));
+
         if enriched {
             if let Some(note) = event.note.as_ref() {
                 let text = note.get(&data.locale);
@@ -85,23 +115,39 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
                         .action(action),
                 );
             }
-            children.push(Component::ListItem(item));
-        } else if let Some(url) = event
-            .url
-            .as_deref()
-            .map(str::trim)
-            .filter(|u| !u.is_empty())
-        {
-            let action = Action::external(url);
-            children.push(Component::Pressable(
-                Pressable::new().action(action).child(item),
-            ));
-        } else {
-            children.push(Component::ListItem(item));
         }
+        children.push(Component::ListItem(item));
     }
 
     children
+}
+
+/// L'événement qui arrive, en vedette : son heure, son titre, son lieu.
+fn headline(data: &GuestData, event: &crate::config::EventRow) -> Component {
+    let mut children: Vec<Component> = Vec::new();
+    let when = format_starts_at_display(&event.starts_at);
+    if when.trim().is_empty() {
+        children.push(Component::Pill(
+            Pill::new().label("i18n:guest.event.dateTbd"),
+        ));
+    } else {
+        children.push(Component::Badge(Badge::new().label(when)));
+    }
+    children.push(Component::Text(
+        Text::new()
+            .text(event.title.get(&data.locale))
+            .variant(TextVariant::Title),
+    ));
+    let place = event.place.get(&data.locale).trim().to_string();
+    if !place.is_empty() {
+        children.push(Component::Text(
+            Text::new()
+                .text(place)
+                .variant(TextVariant::Caption)
+                .emphasis(Emphasis::Subtle),
+        ));
+    }
+    Component::Stack(Stack::new().gap(4.0).children(children))
 }
 
 fn events_map(events: &[crate::config::EventRow]) -> Option<Component> {

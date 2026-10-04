@@ -3,6 +3,7 @@
 mod body;
 mod detail;
 mod home;
+mod item;
 mod load;
 
 use portaki_sdk::prelude::*;
@@ -11,6 +12,7 @@ use portaki_sdk::sdui::surface::Surface;
 
 use detail::build_detail_surface;
 use home::{build_home_card, build_upcoming_card};
+use item::build_event_item;
 use load::load_guest_data;
 
 #[portaki_sdk::surface(guest, id = "home.card")]
@@ -60,4 +62,33 @@ fn nothing_planned(surface_id: SurfaceId) -> Surface {
             .icon(IconName::Calendar),
     )
     .with_id(surface_id)
+}
+
+/// La fiche d'un événement. `eventId` arrive par les paramètres de route du livret.
+#[portaki_sdk::surface(
+    guest,
+    id = "explore.item",
+    path = "events/detail/:eventId",
+    label_key = "nav.event"
+)]
+pub fn render_explore_item(ctx: GuestContext) -> Result<Surface> {
+    let wanted = ctx
+        .input
+        .get("eventId")
+        .and_then(|value| value.as_str())
+        .unwrap_or_default()
+        .to_string();
+    let Some(data) = load_guest_data(&ctx, EXPLORE_DETAIL)? else {
+        return Ok(nothing_planned(EXPLORE_ITEM));
+    };
+    let found = data
+        .events
+        .iter()
+        .enumerate()
+        .find(|(index, event)| event.route_id(*index) == wanted)
+        .map(|(_, event)| event.clone());
+    match found {
+        Some(event) => Ok(build_event_item(&data, &event)),
+        None => Ok(nothing_planned(EXPLORE_ITEM)),
+    }
 }

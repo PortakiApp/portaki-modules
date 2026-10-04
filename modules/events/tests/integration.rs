@@ -65,16 +65,22 @@ fn home_card_empty_without_config() {
 
 #[test]
 #[serial]
-fn home_card_renders_events_with_pressable_link() {
+fn home_card_headlines_the_next_event() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_home_card(ctx).expect("surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("Pressable"));
+            // L'événement qui arrive est en vedette, pas en ligne : heure en pastille, titre en
+            // grand, lieu dessous (§2.11).
+            assert!(SurfaceAssertions::new(&surface).contains_type("Badge"));
             let json = serde_json::to_string(&surface).expect("json");
+            assert!(json.contains("Concert jazz"));
+            assert!(json.contains("Th\u{e9}\u{e2}tre de la Mer"));
+            // Un seul événement : pas de ligne sous la vedette, et pas d'intertitre « Ensuite ».
+            assert!(!SurfaceAssertions::new(&surface).contains_type("ListItem"));
+            assert!(!SurfaceAssertions::new(&surface).contains_type("Eyebrow"));
             assert!(json.contains("bottomSheet"));
         });
 }
@@ -142,9 +148,9 @@ fn home_card_renders_openagenda_nearby() {
         .run(|ctx| {
             let surface = render_home_card(ctx).expect("surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Badge"));
             let json = serde_json::to_string(&surface).expect("json");
-            assert!(json.contains("Festival du port") || json.contains("Pressable"));
+            assert!(json.contains("Festival du port"));
         });
 }
 
@@ -225,14 +231,20 @@ fn the_form_draws_the_rows_the_host_has() {
         });
 }
 
-/// A host writing in English: the French texts stay, and so do the end, the note and the id the
-/// form does not carry; rows keep their place.
+/// A host writing in English: the French texts stay, and so does the id the form does not carry;
+/// rows keep their place.
 #[test]
 #[serial]
 fn a_save_in_english_keeps_the_french() {
     assert_eq!(
         config_save::localized_paths(EMISSIONS),
-        ["disclaimer", "events.note", "events.place", "events.title"]
+        [
+            "disclaimer",
+            "events.note",
+            "events.place",
+            "events.tips",
+            "events.title"
+        ]
     );
     let stored = json!({
         "events": [
@@ -274,7 +286,10 @@ fn a_save_in_english_keeps_the_french() {
             assert_eq!(first["note"], stored["events"][0]["note"]);
             assert_eq!(saved["events"][2]["title"]["fr"], "Brocante");
             assert_eq!(saved["events"][2]["place"]["fr"], "Port");
-            assert_eq!(saved["events"][2]["note"], stored["events"][2]["note"]);
+            // La description est désormais dans le formulaire : un enregistrement en anglais y
+            // écrit l'anglais, et le français reste. Avant, elle n'était portée par aucun champ
+            // et traversait les sauvegardes sans changer.
+            assert_eq!(saved["events"][2]["note"]["fr"], "Gratuit");
             assert_eq!(saved["disclaimer"], stored["disclaimer"]);
         });
 }
