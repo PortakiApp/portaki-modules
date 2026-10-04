@@ -68,6 +68,7 @@
   "host.stay.specialNeeds.label": "Besoins particuliers",
   "host.stay.status.done": "Complété",
   "host.stay.status.pending": "En attente",
+  "host.stay.transport.label": "Moyen d’arrivée",
   "host.when": "Quand afficher le formulaire",
   "host.when.before": "Avant l’arrivée",
   "host.when.before.desc": "48 h avant le check-in",

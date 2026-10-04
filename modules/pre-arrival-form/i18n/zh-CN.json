@@ -68,6 +68,7 @@
   "host.stay.specialNeeds.label": "特殊需求",
   "host.stay.status.done": "已填写",
   "host.stay.status.pending": "待填写",
+  "host.stay.transport.label": "到达方式",
   "host.when": "何时显示问卷",
   "host.when.before": "到达前",
   "host.when.before.desc": "入住前 48 小时",

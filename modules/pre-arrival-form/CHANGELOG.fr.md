@@ -7,6 +7,7 @@ Des choix, pas des champs libres.
 * L'occasion se choisit dans une liste : « anniversaire » vous dit quoi faire, une phrase libre non.
 * Nouvelle question : « Vous arrivez en ? » — voiture, train, avion. À activer dans vos réglages.
 * Le besoin à signaler s'écrit sur plusieurs lignes.
+* L'occasion et le moyen d'arrivée s'affichent traduits sur la fiche du séjour.
 
 ## 1.3.0
 

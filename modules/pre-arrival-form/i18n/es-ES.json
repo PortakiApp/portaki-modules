@@ -68,6 +68,7 @@
   "host.stay.specialNeeds.label": "Necesidades especiales",
   "host.stay.status.done": "Completado",
   "host.stay.status.pending": "Pendiente",
+  "host.stay.transport.label": "Medio de llegada",
   "host.when": "Cuándo mostrar el formulario",
   "host.when.before": "Antes de la llegada",
   "host.when.before.desc": "48 h antes de la entrada",

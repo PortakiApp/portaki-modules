@@ -7,6 +7,7 @@ Le formulaire complet.
 * La catégorie d'objet se choisit en tuiles, la pièce en un geste, et une photo peut être jointe.
 * Vous proposez le renvoi, la récupération ou le don : le voyageur dit enfin lequel il veut.
 * Le délai s'affiche en date, à l'heure du logement.
+* La pièce et le souhait du voyageur s'écrivent en clair dans votre e-mail, pas en valeurs de liste.
 
 ## 1.3.0
 

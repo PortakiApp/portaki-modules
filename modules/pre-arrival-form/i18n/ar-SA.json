@@ -68,6 +68,7 @@
   "host.stay.specialNeeds.label": "احتياجات خاصة",
   "host.stay.status.done": "مكتملة",
   "host.stay.status.pending": "بالانتظار",
+  "host.stay.transport.label": "وسيلة الوصول",
   "host.when": "موعد عرض الاستمارة",
   "host.when.before": "قبل الوصول",
   "host.when.before.desc": "48 ساعة قبل تسجيل الوصول",

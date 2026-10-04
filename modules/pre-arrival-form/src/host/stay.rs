@@ -88,7 +88,22 @@ fn completed_card(row: &PreArrivalResponse, questions: &ModuleConfig) -> Compone
         rows.push(detail_row(
             "star",
             "i18n:host.stay.occasion.label",
-            display_or_dash(row.occasion.as_deref()),
+            // La valeur stockée est une clé de liste depuis que l'occasion se choisit : l'hôte
+            // doit lire « Anniversaire », pas `birthday`. Une réponse d'avant la liste est du
+            // texte libre et s'affiche telle quelle.
+            from_choice(row.occasion.as_deref(), &crate::OCCASIONS, "form.occasion"),
+            None,
+        ));
+    }
+    if questions.ask_transport {
+        rows.push(detail_row(
+            "car",
+            "i18n:host.stay.transport.label",
+            from_choice(
+                row.transport.as_deref(),
+                &crate::TRANSPORTS,
+                "form.transport",
+            ),
             None,
         ));
     }
@@ -167,6 +182,20 @@ fn detail_row(leading: &str, label_i18n: &str, value: String, tone: Option<Tone>
         item = item.tone(tone);
     }
     Component::ListItem(item)
+}
+
+/// Une valeur de liste, rendue dans la langue de l'hôte.
+///
+/// Hors liste — une réponse écrite avant que la question devienne un choix —, la valeur s'affiche
+/// telle quelle : c'est ce que le voyageur avait écrit, et le perdre serait pire que l'afficher.
+fn from_choice(value: Option<&str>, choices: &[&str], prefix: &str) -> String {
+    let Some(value) = value.map(str::trim).filter(|value| !value.is_empty()) else {
+        return "—".to_string();
+    };
+    if !choices.contains(&value) {
+        return value.to_string();
+    }
+    t!(&format!("{prefix}.{value}")).unwrap_or_else(|_| value.to_string())
 }
 
 fn display_or_dash(value: Option<&str>) -> String {
