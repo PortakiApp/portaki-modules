@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.0
+
+Les deux codes en premier.
+
+* Le code du parking et le PIN de la borne côte à côte, en grille : le second ne descend plus sous le pli.
+* Un code encore fermé dit quand il s'ouvre.
+* L'emplacement ne se répète plus sous le sous-titre de la carte ; le plan vient après les codes.
+
 ## 1.4.0
 
 Montée technique.

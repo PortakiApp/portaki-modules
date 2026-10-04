@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.0
+
+La carte d'accueil, à l'essentiel.
+
+* L'heure d'arrivée en tuile à côté du code : les deux choses qu'on vérifie avant de sonner.
+* Le code de secours d'une serrure connectée passe en tuile, avec les autres codes.
+* Un code encore fermé dit qu'il s'ouvrira, et quand, au lieu de n'afficher que des points.
+* Le moyen d'accès, l'immeuble et le parking quittent la carte pour la sous-page : les étapes d'arrivée ne descendent plus sous le pli.
+
 ## 1.4.0
 
 Montée technique.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0
+
+La photo du robinet.
+
+* Chaque coupure peut porter une photo, entre l'endroit et la consigne.
+* Une photo du robinet ou du disjoncteur se reconnaît plus vite qu'une description, et c'est ce qui compte en urgence.
+
 ## 0.3.0
 
 L'extincteur et le détecteur sortent du lot « autre ».

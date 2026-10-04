@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.0
+
+Une fiche par événement.
+
+* La fiche montre la photo, l'heure, le lieu, la durée, le prix, la marche, le plan et vos conseils.
+* « Ajouter à mon agenda » et « Itinéraire » au bas de la fiche.
+* Le prochain événement passe en vedette sur la carte d'accueil, les suivants sous « Ensuite ».
+* Côté hôte : fin, prix, description, conseils, photo, et le lieu posé sur la carte.
+
 ## 1.3.0
 
 Le formulaire dessine les événements saisis.

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.0
+
+Un groupe et une icône par ligne.
+
+* La liste complète se range en cartes — séjour, équipements, services — au lieu de huit lignes d'affilée.
+* Chaque ligne porte l'icône que vous choisissez, et son état en fin de ligne.
+* Les tuiles d'arrivée et de départ viennent des dates du séjour.
+
 ## 1.6.0
 
 Le formulaire dessine les équipements saisis.

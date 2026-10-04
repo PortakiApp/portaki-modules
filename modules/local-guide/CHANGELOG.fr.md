@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.0
+
+Une fiche par adresse.
+
+* La fiche montre la photo, l'avantage en entier, les trajets, le plan, les horaires et votre conseil.
+* « Itinéraire » et « Appeler » au bas de la fiche.
+* Les adresses défilent en tuiles avec une vignette de plan ; activités et billets aussi, avec leur photo.
+* Côté hôte : avantage, conseil, prix, horaires, ouverture, parking, téléphone, site et photo.
+
 ## 1.3.0
 
 Le formulaire dessine les lieux saisis.

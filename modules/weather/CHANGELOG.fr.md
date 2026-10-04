@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0
+
+Jour par jour.
+
+* Les prévisions se lisent en lignes : l'icône, le jour, le temps, les deux températures en fin de ligne.
+* Vent, pluie et humidité passent en sous-titre, avec leur mot — la grille à sept colonnes les réduisait à trois caractères.
+* La bande de la carte d'accueil met chaque jour en boîte, aujourd'hui en couleur.
+
 ## 1.3.0
 
 Montée technique.

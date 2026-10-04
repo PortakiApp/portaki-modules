@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.0
+
+Le mot de passe sur sa ligne.
+
+* Le mot de passe se révèle et se copie depuis sa ligne, sans bouton sous le QR.
+* Encore fermé, il dit quand il s'ouvrira.
+
 ## 1.5.0
 
 Montée technique.

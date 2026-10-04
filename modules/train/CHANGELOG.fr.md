@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0
+
+Le sens, la gare, la fiche.
+
+* Le sens se choisit d'un doigt : depuis la gare du logement, ou vers elle.
+* La gare d'arrivée se cherche en la tapant, au lieu de se trouver dans une barre de pastilles.
+* Chaque départ porte sa correspondance en fin de ligne et ouvre sa fiche.
+
 ## 1.3.0
 
 Montée technique.

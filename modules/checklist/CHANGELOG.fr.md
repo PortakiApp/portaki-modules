@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0
+
+Mise à jour technique.
+
+* Aucun changement visible : le module suit la version du socle commun aux modules.
+
 ## 1.3.0
 
 Montée technique.
