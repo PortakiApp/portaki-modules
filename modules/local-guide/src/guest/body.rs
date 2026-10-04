@@ -14,6 +14,14 @@ use crate::viator::{self, format_duration, ViatorView};
 
 use super::load::GuestData;
 
+/// « Fermé aujourd'hui », quand on sait quel jour il est et que l'adresse ferme ce jour-là.
+pub fn closed_today_label(data: &GuestData, spot: &crate::config::SpotRow) -> Option<String> {
+    let today = data.today?;
+    spot.closed_on(today).then(|| {
+        t!("guest.spot.closedToday").unwrap_or_else(|_| "i18n:guest.spot.closedToday".into())
+    })
+}
+
 pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
     let mut children = Vec::new();
 
@@ -42,6 +50,11 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         }
         if let Some(dist) = spot.distance.as_deref().filter(|d| !d.trim().is_empty()) {
             subtitle_parts.push(dist.to_string());
+        }
+        // Fermé aujourd'hui, dans le sous-titre et non dans la pastille de fin : celle-ci porte
+        // déjà l'avantage, et c'est le genre de chose qui se lit avant de s'y rendre (§2.12).
+        if let Some(closed) = closed_today_label(data, spot) {
+            subtitle_parts.push(closed);
         }
         let subtitle = subtitle_parts.join(" · ");
 

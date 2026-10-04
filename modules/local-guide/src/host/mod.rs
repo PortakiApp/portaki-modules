@@ -12,7 +12,7 @@ use portaki_sdk::sdui::surface::Surface;
 use crate::affiliate::{looks_like_url, normalize_curated_url, CuratedUrlError, MAX_CURATED_LINKS};
 use crate::config::{
     ActivityRow, HostActivityRow, ModuleConfig, SpotRow, MAX_HOST_ACTIVITIES,
-    TIQETS_RADIUS_CHOICES_KM,
+    TIQETS_RADIUS_CHOICES_KM, WEEKDAYS,
 };
 use crate::tiqets::TiqetsStatus;
 use crate::viator::ViatorStatus;
@@ -668,6 +668,17 @@ fn text_field(index: usize, name: &str, label: &str, value: &str) -> Component {
         .into()
 }
 
+/// « Ouvert tous les jours », puis les sept jours : la valeur vide est une réponse, pas un trou.
+fn closed_day_options() -> Vec<ChoiceOption> {
+    let mut options = vec![ChoiceOption::new("", "i18n:host.spot.closedDay.none")];
+    options.extend(
+        WEEKDAYS
+            .iter()
+            .map(|(token, _)| ChoiceOption::new(*token, format!("i18n:host.day.{token}"))),
+    );
+    options
+}
+
 fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Component {
     let title = spot.map(|s| s.title.host_value(ctx)).unwrap_or_default();
     let category = spot.and_then(|s| s.category.as_deref()).unwrap_or("");
@@ -682,6 +693,7 @@ fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Componen
         .unwrap_or_default();
     let price = spot.and_then(|s| s.price.as_deref()).unwrap_or("");
     let hours = spot.and_then(|s| s.hours.as_deref()).unwrap_or("");
+    let closed_day = spot.and_then(|s| s.closed_day.as_deref()).unwrap_or("");
     let opening = spot.and_then(|s| s.opening.as_deref()).unwrap_or("");
     let parking = spot.and_then(|s| s.parking.as_deref()).unwrap_or("");
     let phone = spot.and_then(|s| s.phone.as_deref()).unwrap_or("");
@@ -778,6 +790,19 @@ fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Componen
         FieldHint::new().text("i18n:host.spot.note.hint").into(),
         text_field(index, "price", "i18n:host.spot.price", price),
         text_field(index, "hours", "i18n:host.spot.hours", hours),
+        // Le jour de fermeture en liste fermée, à côté de la phrase libre : c'est ce qui permet au
+        // livret de dire « fermé aujourd'hui » plutôt que de laisser le voyageur lire « Fermé le
+        // lundi » et compter les jours (§2.12).
+        Field::new()
+            .name(format!("spots.{index}.closed_day"))
+            .label("i18n:host.spot.closedDay")
+            .child(
+                Select::new()
+                    .name(format!("spots.{index}.closed_day"))
+                    .options(closed_day_options())
+                    .value(closed_day),
+            )
+            .into(),
         text_field(index, "opening", "i18n:host.spot.opening", opening),
         text_field(index, "parking", "i18n:host.spot.parking", parking),
         text_field(index, "phone", "i18n:host.spot.phone", phone),

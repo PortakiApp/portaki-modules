@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.0
+
+« Fermé aujourd'hui » plutôt qu'un jour à compter.
+
+* Nouveau champ par adresse : le jour de fermeture hebdomadaire, dans une liste.
+* Le voyageur lit « Fermé aujourd'hui » sur la tuile et en haut de la fiche, le jour venu.
+* Le jour est celui du logement, pas celui du téléphone du voyageur.
+
 ## 1.6.0
 
 Les liens Viator que vous collez.
