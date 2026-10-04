@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0
+
+Des étoiles.
+
+* La note se donne en touchant une étoile, au lieu d'ouvrir une liste déroulante.
+* Chaque étoile porte un libellé écrit, lu à voix haute par les lecteurs d'écran.
+* Le QR passe sous le formulaire : il sert à finir l'avis, pas à le commencer.
+
 ## 1.2.1
 
 Correctif.

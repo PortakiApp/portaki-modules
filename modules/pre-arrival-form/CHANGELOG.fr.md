@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0
+
+Des choix, pas des champs libres.
+
+* L'occasion se choisit dans une liste : « anniversaire » vous dit quoi faire, une phrase libre non.
+* Nouvelle question : « Vous arrivez en ? » — voiture, train, avion. À activer dans vos réglages.
+* Le besoin à signaler s'écrit sur plusieurs lignes.
+
 ## 1.3.0
 
 Montée technique.

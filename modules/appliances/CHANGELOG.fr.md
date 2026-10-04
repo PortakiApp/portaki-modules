@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.0
+
+Une carte par pièce.
+
+* La liste complète range les appareils en une carte par pièce, au lieu d'une colonne où la cuisine et la salle de bain se touchent.
+* Les appareils mis en avant s'affichent en tuiles, et le bouton dit combien il y en a en tout.
+
 ## 1.5.0
 
 Montée technique.

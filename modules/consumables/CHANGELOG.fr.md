@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.4.0
+
+Un formulaire plus clair.
+
+* « Plusieurs choix possibles » est écrit : un voyageur à qui il manquait deux produits envoyait deux signalements.
+* « Il n'y en a plus » porte un signe d'alerte : les deux niveaux ne demandent pas la même chose.
+* Une ligne de clôture dit que vous êtes averti dès l'envoi.
+
 ## 2.3.0
 
 La grille de l'hôte dépasse ses huit cases.

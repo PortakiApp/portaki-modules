@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0
+
+La pharmacie et l'hôpital.
+
+* Deux lignes à vous : la pharmacie de garde et l'hôpital le plus proche, en fin de carte.
+* Les numéros du pays s'affichent en tuiles, le premier en rouge — celui qu'on compose sans réfléchir.
+* Chaque ligne appelle d'un doigt, sans enveloppe autour.
+
 ## 1.3.0
 
 Les contacts saisis, et le numéro de l'hôte déjà connu.

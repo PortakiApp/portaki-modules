@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.0
+
+Où sont les poubelles.
+
+* « Dans le logement » dit où chaque bac se trouve — sous l'évier, dans le placard de l'entrée.
+* « Le local poubelles » donne le chemin, numéroté.
+* Les deux viennent avant les bacs : on cherche la poubelle avant d'apprendre ce qui va dedans.
+
 ## 1.5.0
 
 Le formulaire dessine les bacs saisis.

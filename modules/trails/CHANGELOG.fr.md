@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0
+
+Le tracé, et la photo.
+
+* Le tracé du GPX que vous déposez se dessine sur le plan de la fiche.
+* Le voyageur télécharge la trace pour l'ouvrir dans son application de randonnée.
+* Chaque itinéraire peut porter une photo, en tête de sa fiche.
+
 ## 0.3.0
 
 Trois mesures, trois repères.
