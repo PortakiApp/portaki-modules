@@ -66,6 +66,7 @@
   "host.trails.link": "Scheda del percorso (facoltativa)",
   "host.trails.link.hint": "Komoot, l’ufficio turistico, un sito di escursionismo: è il pulsante «Apri il percorso» dell’ospite.",
   "host.trails.link.placeholder": "https://www.komoot.com/tour/…",
+  "host.trails.photo": "Foto",
   "host.trails.remove": "Rimuovi",
   "host.trails.rowTitle": "Nome",
   "host.trails.rowTitle.placeholder": "Faro della Garoupe",

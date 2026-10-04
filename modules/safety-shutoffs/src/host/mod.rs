@@ -3,7 +3,8 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
-    Card, Field, FieldHint, Form, Page, Select, Stack, StepList, Text, TextArea, TextInput,
+    Card, Field, FieldHint, Form, ImageUpload, Page, Select, Stack, StepList, Text, TextArea,
+    TextInput,
 };
 use portaki_sdk::sdui::surface::Surface;
 use serde::Serialize;
@@ -89,6 +90,7 @@ fn shutoff_row(index: usize, row: Option<&ShutoffRow>, ctx: &HostContext) -> Com
     let instruction = row
         .map(|r| r.instruction.host_value(ctx))
         .unwrap_or_default();
+    let photo = row.map(|r| r.photo.clone()).unwrap_or_default();
     let id = row
         .filter(|r| !r.is_blank())
         .map(|r| sdui::row_id("shutoffs", index, Some(&r.id)));
@@ -153,6 +155,23 @@ fn shutoff_row(index: usize, row: Option<&ShutoffRow>, ctx: &HostContext) -> Com
                     .rows(2)
                     .placeholder("i18n:host.shutoffs.instruction.placeholder"),
             )
+            .into(),
+    );
+
+    children.push(
+        Field::new()
+            .name(format!("shutoffs.{index}.photo"))
+            .label("i18n:host.shutoffs.photo")
+            .child(
+                ImageUpload::new()
+                    .name(format!("shutoffs.{index}.photo"))
+                    .value(photo),
+            )
+            .into(),
+    );
+    children.push(
+        FieldHint::new()
+            .text("i18n:host.shutoffs.photo.hint")
             .into(),
     );
 

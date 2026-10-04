@@ -83,9 +83,21 @@ pub struct ShutoffRow {
     pub title: I18nText,
     pub location: I18nText,
     pub instruction: I18nText,
+    /// La photo du robinet ou du disjoncteur, en référence `portaki-file:`.
+    ///
+    /// Une consigne écrite — « le robinet rouge, à droite du ballon » — demande de chercher ;
+    /// une photo se reconnaît. En urgence, c'est la différence qui compte (§2.22).
+    #[serde(default)]
+    pub photo: String,
 }
 
 impl ShutoffRow {
+    /// La photo déposée, en référence, ou `None` quand il n'y en a pas.
+    pub fn photo_ref(&self) -> Option<&str> {
+        let photo = self.photo.trim();
+        (!photo.is_empty()).then_some(photo)
+    }
+
     /// Rien que le formulaire montre : une ligne que l'hôte a laissée (ou vidée).
     pub fn is_blank(&self) -> bool {
         self.title.is_blank() && self.location.is_blank() && self.instruction.is_blank()

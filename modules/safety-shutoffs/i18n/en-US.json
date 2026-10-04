@@ -33,6 +33,8 @@
   "host.shutoffs.location": "Location",
   "host.shutoffs.location.hint": "Write it as you would explain it on the phone: that is what guests look for first.",
   "host.shutoffs.location.placeholder": "Cupboard to the right of the entrance",
+  "host.shutoffs.photo": "Photo",
+  "host.shutoffs.photo.hint": "A photo of the valve or breaker is recognised faster than a description.",
   "host.shutoffs.remove": "Remove",
   "host.shutoffs.rowTitle": "Title",
   "host.shutoffs.rowTitle.placeholder": "Fuse box",

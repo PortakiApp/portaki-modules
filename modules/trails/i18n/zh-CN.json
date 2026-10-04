@@ -66,6 +66,7 @@
   "host.trails.link": "路线页面（可选）",
   "host.trails.link.hint": "两步路、旅游局或任何徒步网站：这就是房客看到的“打开路线”按钮。",
   "host.trails.link.placeholder": "https://www.example-hiking.com/…",
+  "host.trails.photo": "照片",
   "host.trails.remove": "删除",
   "host.trails.rowTitle": "名称",
   "host.trails.rowTitle.placeholder": "加鲁普灯塔",

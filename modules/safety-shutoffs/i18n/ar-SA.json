@@ -33,6 +33,8 @@
   "host.shutoffs.location": "الموضع",
   "host.shutoffs.location.hint": "اكتبه كما تشرحه على الهاتف: هذا أول ما يبحث عنه الضيف.",
   "host.shutoffs.location.placeholder": "الخزانة على يمين المدخل",
+  "host.shutoffs.photo": "صورة",
+  "host.shutoffs.photo.hint": "صورة الصنبور أو القاطع يُتعرَّف عليها أسرع من الوصف.",
   "host.shutoffs.remove": "إزالة",
   "host.shutoffs.rowTitle": "العنوان",
   "host.shutoffs.rowTitle.placeholder": "لوحة الكهرباء",

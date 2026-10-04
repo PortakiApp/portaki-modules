@@ -66,6 +66,7 @@
   "host.trails.link": "コースのページ（任意）",
   "host.trails.link.hint": "ヤマレコ、観光案内所、登山地図サイトなど。ゲストの「コースを開く」ボタンになります。",
   "host.trails.link.placeholder": "https://www.yamareco.com/…",
+  "host.trails.photo": "写真",
   "host.trails.remove": "削除",
   "host.trails.rowTitle": "名称",
   "host.trails.rowTitle.placeholder": "ガルップ灯台",

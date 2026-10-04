@@ -124,6 +124,9 @@ pub struct TrailRow {
     /// son application de randonnée — donc le fichier d'origine, pas une version recalculée.
     #[serde(skip_serializing_if = "String::is_empty")]
     pub gpx_file: String,
+    /// La photo du sentier, en référence `portaki-file:` — ce qu'on voit avant de partir.
+    #[serde(default)]
+    pub photo: String,
 }
 
 /// Une mesure utilisable : finie et strictement positive.
@@ -135,6 +138,12 @@ impl TrailRow {
     /// La référence de la trace, si elle en est bien une — une URL externe n'en est pas une.
     pub fn gpx_ref(&self) -> Option<portaki_sdk::files::FileRef> {
         portaki_sdk::files::FileRef::parse(&self.gpx_file)
+    }
+
+    /// La photo déposée, en référence, ou `None` quand il n'y en a pas.
+    pub fn photo_ref(&self) -> Option<&str> {
+        let photo = self.photo.trim();
+        (!photo.is_empty()).then_some(photo)
     }
 
     /// Rien que le formulaire montre : une ligne que l'hôte a laissée (ou vidée).

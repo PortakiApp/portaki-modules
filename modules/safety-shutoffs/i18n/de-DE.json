@@ -33,6 +33,8 @@
   "host.shutoffs.location": "Ort",
   "host.shutoffs.location.hint": "Schreiben Sie es, wie Sie es am Telefon erklären würden: danach suchen Gäste zuerst.",
   "host.shutoffs.location.placeholder": "Schrank rechts neben dem Eingang",
+  "host.shutoffs.photo": "Foto",
+  "host.shutoffs.photo.hint": "Ein Foto des Ventils oder Sicherungsschalters erkennt man schneller als eine Beschreibung.",
   "host.shutoffs.remove": "Entfernen",
   "host.shutoffs.rowTitle": "Titel",
   "host.shutoffs.rowTitle.placeholder": "Sicherungskasten",

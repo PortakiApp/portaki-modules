@@ -6,7 +6,7 @@ use portaki_sdk::sdui::common::{
     SurfaceLevel,
 };
 use portaki_sdk::sdui::primitives::{
-    Badge, Button, Card, Grid, KeyValue, Link, ListItem, Map, Stack, Text,
+    Badge, Button, Card, Grid, Image, KeyValue, Link, ListItem, Map, Stack, Text,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -59,7 +59,21 @@ pub fn build_trails_page(data: &GuestData) -> Surface {
 
 /// La fiche : niveau, titre, départ, quatre tuiles, description, plan, « Avant de partir », actions.
 pub fn build_trail_detail(data: &GuestData, trail: &TrailRow) -> Surface {
-    let mut children: Vec<Component> = vec![trail_header(data, trail)];
+    let mut children: Vec<Component> = Vec::new();
+
+    // La photo en tête, quand l'hôte en a déposé une : un sentier se choisit sur ce qu'on voit
+    // avant de lire son dénivelé (§2.23).
+    if let Some(reference) = trail.photo_ref() {
+        children.push(
+            Image::new()
+                .url(reference.to_string())
+                .alt(data.title(trail))
+                .aspectRatio("16 / 9")
+                .into(),
+        );
+    }
+
+    children.push(trail_header(data, trail));
 
     if let Some(tiles) = measures(trail) {
         children.push(tiles);

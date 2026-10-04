@@ -66,6 +66,7 @@
   "host.trails.link": "Seite der Route (optional)",
   "host.trails.link.hint": "Komoot, Outdooractive, die Tourist-Info: das ist der Knopf „Route öffnen“ für Gäste.",
   "host.trails.link.placeholder": "https://www.komoot.com/tour/…",
+  "host.trails.photo": "Foto",
   "host.trails.remove": "Entfernen",
   "host.trails.rowTitle": "Name",
   "host.trails.rowTitle.placeholder": "Leuchtturm von La Garoupe",
