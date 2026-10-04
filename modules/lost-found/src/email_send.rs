@@ -22,17 +22,21 @@ use crate::storage;
 const JOINED_DESCRIPTIONS_MAX_CHARS: usize = 3000;
 
 /// Guest self-report → notify workspace owner (host audience — FR/EN).
+///
+/// Prend le signalement enregistré plutôt que ses huit champs : la liste s'allonge à chaque
+/// champ du formulaire, et deux arguments de même type côte à côte finissent par s'échanger.
 pub fn notify_host_submitted(
     property_id: Uuid,
-    stay_id: Uuid,
-    kind: &str,
-    item_description: &str,
-    contact_hint: Option<&str>,
-    details: Option<&str>,
+    report: &crate::entities::LostFoundReport,
 ) -> Result<()> {
-    let description = email_text::quote_guest_text(item_description);
-    let hint = contact_hint.map(email_text::quote_guest_text);
-    let extra = details.map(email_text::quote_guest_text);
+    let stay_id = report.stay_id;
+    let kind = report.kind.as_str();
+    let description = email_text::quote_guest_text(&report.item_description);
+    let hint = report
+        .contact_hint
+        .as_deref()
+        .map(email_text::quote_guest_text);
+    let extra = report.details.as_deref().map(email_text::quote_guest_text);
     let truncated = description.truncated
         || [&hint, &extra]
             .into_iter()
@@ -50,6 +54,20 @@ pub fn notify_host_submitted(
     if let Some(extra) = &extra {
         body.push_str("\n\nDétails : ");
         body.push_str(&extra.text);
+    }
+    // La pièce, le souhait du voyageur et la photo : pas des détails de formulaire, mais ce qui
+    // décide où chercher et quoi faire ensuite. Les clés vont telles quelles — ce sont des
+    // valeurs de liste, pas du texte écrit par le voyageur.
+    if let Some(room) = report.room.as_deref() {
+        body.push_str("\n\nPièce indiquée : ");
+        body.push_str(room);
+    }
+    if let Some(choice) = report.return_choice.as_deref() {
+        body.push_str("\n\nCe que le voyageur souhaite : ");
+        body.push_str(choice);
+    }
+    if report.photo.is_some() {
+        body.push_str("\n\nUne photo est jointe — visible dans le tableau de bord.");
     }
 
     email::send(&SendEmailArgs {

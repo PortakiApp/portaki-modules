@@ -96,6 +96,10 @@ pub struct ReportDraft {
     pub contact_hint: Option<String>,
     pub details: Option<String>,
     pub return_address: Option<String>,
+    pub category: Option<String>,
+    pub room: Option<String>,
+    pub photo: Option<String>,
+    pub return_choice: Option<String>,
     pub status: String,
 }
 
@@ -110,6 +114,10 @@ pub fn create(draft: ReportDraft) -> Result<LostFoundReport> {
         contact_hint: draft.contact_hint,
         details: draft.details,
         return_address: draft.return_address,
+        category: draft.category,
+        room: draft.room,
+        photo: draft.photo,
+        return_choice: draft.return_choice,
         status: if draft.status.trim().is_empty() {
             status::DEFAULT.to_string()
         } else {

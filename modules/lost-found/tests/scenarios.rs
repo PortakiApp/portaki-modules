@@ -22,6 +22,7 @@ fn setup(builder: MockContextBuilder) -> MockContextBuilder {
                     contact_hint: None,
                     details: Some("Sans doute branché près du lit de la chambre 2.".into()),
                     return_address: None,
+                    ..Default::default()
                 },
             )
         } else {

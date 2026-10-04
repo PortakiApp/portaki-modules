@@ -1,5 +1,6 @@
 //! Module commands — guest submit, host submitFound / updateStatus.
 
+use portaki_sdk::files::FileRef;
 use portaki_sdk::host::events;
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
@@ -12,8 +13,13 @@ use crate::status;
 use crate::storage;
 
 /// Arguments for guest `submit`.
+///
+/// `Default` pour que les tests n'aient à nommer que les champs du cas qu'ils décrivent : la
+/// grille d'objets, la pièce, la photo et le choix de restitution sont facultatifs, et les
+/// épeler en `None` partout rendrait chaque cas illisible.
 #[portaki_sdk::wire]
 #[portaki_sdk::params]
+#[derive(Default)]
 pub struct SubmitArgs {
     pub kind: String,
     pub item_description: String,
@@ -24,6 +30,18 @@ pub struct SubmitArgs {
     /// L'adresse de renvoi — présente seulement quand le formulaire l'a demandée.
     #[serde(default)]
     pub return_address: Option<String>,
+    /// La catégorie touchée dans la grille — `phone`, `clothing`, … `other`.
+    #[serde(default)]
+    pub category: Option<String>,
+    /// La pièce, ou `unknown`.
+    #[serde(default)]
+    pub room: Option<String>,
+    /// La photo jointe : la valeur d'`ImageUpload`, `portaki-file:<uuid>`.
+    #[serde(default)]
+    pub photo: Option<String>,
+    /// Ce que le voyageur voudrait qu'on en fasse, parmi ce que l'hôte propose.
+    #[serde(default)]
+    pub return_choice: Option<String>,
 }
 
 #[portaki_sdk::command(
@@ -46,7 +64,13 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     let details = normalize_optional(args.details);
     let config = crate::config::ModuleConfig::load(&ctx)?;
 
-    let _ = storage::create(storage::ReportDraft {
+    let room = normalize_optional(args.room.clone());
+    let return_choice = normalize_optional(args.return_choice.clone())
+        .filter(|choice| config.return_options().contains(&choice.as_str()));
+    let photo =
+        normalize_optional(args.photo.clone()).filter(|value| FileRef::parse(value).is_some());
+
+    let report = storage::create(storage::ReportDraft {
         stay_id,
         kind: kind.clone(),
         item_description: item_description.clone(),
@@ -58,18 +82,17 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
             .offers_shipping()
             .then(|| normalize_optional(args.return_address.clone()))
             .flatten(),
+        category: normalize_optional(args.category.clone()),
+        // La pièce, la photo et le souhait sont résolus au-dessus : l'e-mail les reprend, et
+        // les recalculer donnerait deux vérités pour un seul signalement.
+        room: room.clone(),
+        photo: photo.clone(),
+        return_choice: return_choice.clone(),
         status: status::DEFAULT.to_string(),
     })?;
 
     // The report is saved: a refused email is logged, it does not fail the guest's submit.
-    if let Err(error) = email_send::notify_host_submitted(
-        ctx.property_id,
-        stay_id,
-        &kind,
-        &item_description,
-        contact_hint.as_deref(),
-        details.as_deref(),
-    ) {
+    if let Err(error) = email_send::notify_host_submitted(ctx.property_id, &report) {
         email_text::log_send_failure("lost_found_host_email_failed", &error);
     }
     Ok(())
