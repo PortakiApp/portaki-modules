@@ -1,7 +1,7 @@
 //! La fiche d'une adresse — la sous-page du §2.12.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::common::{Emphasis, KeyValueLayout, SurfaceLevel, Tone};
+use portaki_sdk::sdui::common::{Emphasis, KeyValueLayout, StackDirection, SurfaceLevel, Tone};
 use portaki_sdk::sdui::primitives::{
     Button, Card, Grid, Image, InfoBanner, KeyValue, Map, Stack, Text,
 };
@@ -25,15 +25,9 @@ const DRIVE_KMH: f64 = 30.0;
 pub fn build_spot_item(data: &GuestData, spot: &SpotRow) -> Surface {
     let mut children: Vec<Component> = Vec::new();
 
-    // La photo d'abord : on choisit un restaurant sur ce qu'on voit avant de lire ses horaires.
-    if let Some(reference) = spot.photo_ref() {
-        children.push(
-            Image::new()
-                .url(reference.to_string())
-                .alt(spot.title.get(&data.locale))
-                .aspectRatio("4 / 3")
-                .into(),
-        );
+    // Les photos d'abord : on choisit un restaurant sur ce qu'on voit avant de lire ses horaires.
+    if let Some(gallery) = gallery(data, spot) {
+        children.push(gallery);
     }
 
     children.push(header(data, spot));
@@ -185,6 +179,44 @@ fn spot_map(data: &GuestData, spot: &SpotRow) -> Option<Component> {
             .interactionMode(MapInteractionMode::None)
             .into(),
     )
+}
+
+/// La galerie : une image seule en tête, plusieurs qui défilent (§2.12).
+///
+/// Le même geste que la fiche d'une activité : une photo remplit la largeur, deux ou plus se
+/// touchent du pouce sans quitter la page.
+fn gallery(data: &GuestData, spot: &SpotRow) -> Option<Component> {
+    let alt = spot.title.get(&data.locale);
+    let refs = spot.photo_refs();
+    match refs.as_slice() {
+        [] => None,
+        [only] => Some(
+            Image::new()
+                .url((*only).to_string())
+                .alt(alt)
+                .aspectRatio("4 / 3")
+                .into(),
+        ),
+        many => Some(
+            Stack::new()
+                .direction(StackDirection::Horizontal)
+                .scroll(true)
+                .gap(8.0)
+                .itemWidth("78%")
+                .children(
+                    many.iter()
+                        .map(|reference| {
+                            Image::new()
+                                .url((*reference).to_string())
+                                .alt(alt)
+                                .aspectRatio("4 / 3")
+                                .into()
+                        })
+                        .collect(),
+                )
+                .into(),
+        ),
+    }
 }
 
 /// « Infos pratiques » : horaires, ouverture, parking, téléphone. Seules les lignes que l'hôte a

@@ -11,7 +11,7 @@ use portaki_sdk::sdui::surface::Surface;
 
 use crate::affiliate::{looks_like_url, normalize_curated_url, CuratedUrlError, MAX_CURATED_LINKS};
 use crate::config::{
-    ActivityRow, HostActivityRow, ModuleConfig, SpotRow, MAX_HOST_ACTIVITIES,
+    ActivityRow, HostActivityRow, ModuleConfig, SpotRow, MAX_GALLERY, MAX_HOST_ACTIVITIES,
     TIQETS_RADIUS_CHOICES_KM, WEEKDAYS,
 };
 use crate::tiqets::TiqetsStatus;
@@ -679,6 +679,41 @@ fn closed_day_options() -> Vec<ChoiceOption> {
     options
 }
 
+/// Les dépôts de photos d'une adresse : celles déjà là, plus une case libre (§2.12).
+///
+/// Une case de plus et non cinq : une rangée de cinq champs vides sur douze adresses serait un
+/// formulaire qu'on ne lit plus. C'est le même procédé que les créneaux d'activités.
+fn photo_fields(index: usize, spot: Option<&SpotRow>) -> Vec<Component> {
+    let stored: Vec<String> = spot
+        .map(|s| {
+            s.photo_refs()
+                .into_iter()
+                .map(str::to_string)
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    let slots = (stored.len() + 1).clamp(1, MAX_GALLERY).max(stored.len());
+    (0..slots)
+        .map(|slot| {
+            let label = if slot == 0 {
+                "i18n:host.spot.photo".to_string()
+            } else {
+                t!("host.spot.photo.more", rank = &(slot + 1).to_string())
+                    .unwrap_or_else(|_| "i18n:host.spot.photo".into())
+            };
+            Field::new()
+                .name(format!("spots.{index}.photos.{slot}"))
+                .label(label)
+                .child(
+                    ImageUpload::new()
+                        .name(format!("spots.{index}.photos.{slot}"))
+                        .value(stored.get(slot).cloned().unwrap_or_default()),
+                )
+                .into()
+        })
+        .collect()
+}
+
 fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Component {
     let title = spot.map(|s| s.title.host_value(ctx)).unwrap_or_default();
     let category = spot.and_then(|s| s.category.as_deref()).unwrap_or("");
@@ -698,7 +733,7 @@ fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Componen
     let parking = spot.and_then(|s| s.parking.as_deref()).unwrap_or("");
     let phone = spot.and_then(|s| s.phone.as_deref()).unwrap_or("");
     let url = spot.and_then(|s| s.url.as_deref()).unwrap_or("");
-    let photo = spot.map(|s| s.photo.clone()).unwrap_or_default();
+
     // Sans position, le sélecteur ne reçoit ni latitude ni longitude : il part vide.
     let mut picker = AddressMapPicker::new()
         .addressName(format!("spots.{index}.address"))
@@ -717,7 +752,7 @@ fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Componen
         .filter(|s| !s.is_blank())
         .map(|s| sdui::row_id("spots", index, Some(&s.id)));
 
-    let fields: Vec<Component> = vec![
+    let mut fields: Vec<Component> = vec![
         Field::new()
             .name(format!("spots.{index}.title"))
             .label("i18n:host.spot.name")
@@ -808,16 +843,8 @@ fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Componen
         text_field(index, "phone", "i18n:host.spot.phone", phone),
         text_field(index, "url", "i18n:host.spot.url", url),
         picker.into(),
-        Field::new()
-            .name(format!("spots.{index}.photo"))
-            .label("i18n:host.spot.photo")
-            .child(
-                ImageUpload::new()
-                    .name(format!("spots.{index}.photo"))
-                    .value(photo),
-            )
-            .into(),
     ];
+    fields.extend(photo_fields(index, spot));
 
     Stack::new()
         .id(format!("spot-{index}"))

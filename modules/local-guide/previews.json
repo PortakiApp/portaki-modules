@@ -414,6 +414,27 @@
           {
             "children": [
               {
+                "alt": "La boulangerie du village",
+                "aspectRatio": "4 / 3",
+                "type": "Image",
+                "url": "portaki-file:boulangerie-1"
+              },
+              {
+                "alt": "La boulangerie du village",
+                "aspectRatio": "4 / 3",
+                "type": "Image",
+                "url": "portaki-file:boulangerie-2"
+              }
+            ],
+            "direction": "horizontal",
+            "gap": 8.0,
+            "itemWidth": "78%",
+            "scroll": true,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
                 "text": "La boulangerie du village",
                 "type": "Text",
                 "variant": "display"

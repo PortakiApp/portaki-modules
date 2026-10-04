@@ -16,6 +16,7 @@ use portaki_sdk::sdui::primitives::{
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::activities::ActivityLink;
+use crate::config::MAX_GALLERY;
 use crate::tiqets::{format_price, format_rating};
 use crate::viator::format_duration;
 use crate::viator_api::ViatorProduct;
@@ -24,9 +25,6 @@ use super::load::GuestData;
 
 /// La largeur d'une tuile de mesure (§2.13) : deux tiennent côte à côte sur un téléphone.
 const TILE_WIDTH: f64 = 96.0;
-
-/// Images de la galerie. Au-delà, on fait défiler un album plutôt que de choisir une activité.
-const MAX_GALLERY: usize = 5;
 
 pub fn build_link_item(data: &GuestData, link: &ActivityLink, product: &ViatorProduct) -> Surface {
     let mut children: Vec<Component> = Vec::new();

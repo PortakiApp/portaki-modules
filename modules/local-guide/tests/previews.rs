@@ -25,6 +25,7 @@ fn sample_config() -> serde_json::Value {
                 "perk": { "fr": "Un café offert avec deux croissants, sur présentation de cette page.", "en": "A free coffee with two croissants, on showing this page." },
                 "price": "€",
                 "hours": "07:00 – 13:00 · 16:00 – 19:00",
+                "photos": ["portaki-file:boulangerie-1", "portaki-file:boulangerie-2"],
                 "opening": "Fermée le lundi",
                 "parking": "Place de l'église, en face",
                 "phone": "+33 4 93 00 00 01",
