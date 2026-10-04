@@ -174,6 +174,7 @@ fn event_row(index: usize, event: Option<&EventRow>, ctx: &HostContext) -> Compo
         .map(|note| note.host_value(ctx))
         .unwrap_or_default()
         .to_string();
+    let access = event.map(|e| e.access.host_value(ctx)).unwrap_or_default();
     let tips = event
         .map(|e| e.tips.host_value(ctx))
         .unwrap_or_default()
@@ -270,6 +271,20 @@ fn event_row(index: usize, event: Option<&EventRow>, ctx: &HostContext) -> Compo
                     .placeholder("i18n:host.event.note.placeholder"),
             )
             .into(),
+        // L'accès avant les conseils : c'est la question qu'on se pose avant d'y aller, et un
+        // voyageur en fauteuil ne doit pas la chercher au milieu des bons plans de parking.
+        Field::new()
+            .name(format!("events.{index}.access"))
+            .label("i18n:host.event.access")
+            .child(
+                TextArea::new()
+                    .name(format!("events.{index}.access"))
+                    .value(access)
+                    .rows(2)
+                    .placeholder("i18n:host.event.access.placeholder"),
+            )
+            .into(),
+        FieldHint::new().text("i18n:host.event.access.hint").into(),
         Field::new()
             .name(format!("events.{index}.tips"))
             .label("i18n:host.event.tips")

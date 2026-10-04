@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0
+
+L'accès, dit avant d'y aller.
+
+* Nouveau champ par événement : l'accès et l'accessibilité du lieu.
+* Le voyageur le lit sur sa propre carte, avant « Bon à savoir » — et pas au milieu des conseils.
+
 ## 1.4.1
 
 Montée technique.

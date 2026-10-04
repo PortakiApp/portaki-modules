@@ -106,6 +106,7 @@
     },
     {
       "i18n": {
+        "guest.access": "Accès",
         "guest.addToCalendar": "Ajouter à mon agenda",
         "guest.goodToKnow": "Bon à savoir",
         "guest.map.label": "Plan : le logement et l’événement",
@@ -202,6 +203,24 @@
               },
               "zoom": 14.0
             }
+          },
+          {
+            "children": [
+              {
+                "leading": "compass",
+                "title": "Place piétonne, accès de plain-pied",
+                "type": "ListItem"
+              },
+              {
+                "leading": "compass",
+                "title": "Parking de l'église à 200 m",
+                "type": "ListItem"
+              }
+            ],
+            "icon": "compass",
+            "surface": "elevated",
+            "title": "i18n:guest.access",
+            "type": "Card"
           },
           {
             "children": [

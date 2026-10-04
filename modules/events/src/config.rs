@@ -115,6 +115,14 @@ pub struct EventRow {
     /// sur son titre.
     #[serde(default)]
     pub photo: String,
+    /// Comment on y entre, et si on y entre : « Entrée côté rue, rampe d'accès », « Tram T2
+    /// arrêt Palais », « Pas d'ascenseur » (§2.11).
+    ///
+    /// Une ligne par information, comme les conseils, mais séparé d'eux : un conseil se lit si on
+    /// a le temps, l'accès se lit avant de partir — et un voyageur en fauteuil le cherche en
+    /// premier, pas au milieu des bons plans de parking.
+    #[serde(default)]
+    pub access: I18nText,
     /// « Bon à savoir » : une ligne par conseil, écrites par l'hôte.
     #[serde(default)]
     pub tips: I18nText,

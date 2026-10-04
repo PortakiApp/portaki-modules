@@ -3,8 +3,11 @@
 use portaki_sdk::capability;
 use serial_test::serial;
 
-use events::{render_explore_detail, render_home_card, render_host_main, render_upcoming_card};
-use portaki_test_utils::{MockContext, SurfaceAssertions};
+use events::{
+    render_explore_detail, render_explore_item, render_home_card, render_host_main,
+    render_upcoming_card,
+};
+use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use serde_json::{json, Value};
 
 #[path = "../../../support/config_form.rs"]
@@ -231,6 +234,62 @@ fn the_form_draws_the_rows_the_host_has() {
         });
 }
 
+/// « Accès » est sa propre carte, et elle passe avant « Bon à savoir » (§2.11).
+///
+/// Sa propre carte parce qu'un conseil se lit s'il reste du temps et l'accès se lit avant de
+/// partir ; avant, parce qu'un voyageur en fauteuil ne doit pas la chercher au milieu des bons
+/// plans de parking. Sans accès saisi, pas de carte vide.
+#[test]
+#[serial]
+fn access_is_its_own_card_before_the_tips() {
+    let event = |extra: serde_json::Value| {
+        let mut row = json!({
+            "id": "marche",
+            "title": { "fr": "Marché nocturne" },
+            "place": { "fr": "Place du village" },
+            "starts_at": "2026-06-02T18:00:00",
+            "tips": { "fr": "Venez avant 19 h." }
+        });
+        if let (Some(row), Some(extra)) = (row.as_object_mut(), extra.as_object()) {
+            for (key, value) in extra {
+                row.insert(key.clone(), value.clone());
+            }
+        }
+        json!({ "events": [row] })
+    };
+
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_property(Property::default())
+        .with_config(&event(json!({
+            "access": { "fr": "Place piétonne, accès de plain-pied" }
+        })))
+        .run(|mut ctx| {
+            ctx.input = json!({ "eventId": "marche" });
+            let json_text =
+                serde_json::to_string(&render_explore_item(ctx).expect("fiche")).unwrap();
+            assert!(json_text.contains("i18n:guest.access"), "{json_text}");
+            assert!(json_text.contains("Place piétonne, accès de plain-pied"));
+            // L'accès avant les conseils, pas après.
+            let access = json_text.find("i18n:guest.access").expect("accès");
+            let tips = json_text.find("i18n:guest.goodToKnow").expect("conseils");
+            assert!(access < tips, "l'accès passe avant « Bon à savoir »");
+        });
+
+    // Sans accès saisi, aucune carte : une carte vide promettrait une information qui n'existe pas.
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_property(Property::default())
+        .with_config(&event(json!({})))
+        .run(|mut ctx| {
+            ctx.input = json!({ "eventId": "marche" });
+            let json_text =
+                serde_json::to_string(&render_explore_item(ctx).expect("fiche")).unwrap();
+            assert!(!json_text.contains("i18n:guest.access"), "{json_text}");
+            assert!(json_text.contains("i18n:guest.goodToKnow"));
+        });
+}
+
 /// A host writing in English: the French texts stay, and so does the id the form does not carry;
 /// rows keep their place.
 #[test]
@@ -240,6 +299,7 @@ fn a_save_in_english_keeps_the_french() {
         config_save::localized_paths(EMISSIONS),
         [
             "disclaimer",
+            "events.access",
             "events.note",
             "events.place",
             "events.tips",

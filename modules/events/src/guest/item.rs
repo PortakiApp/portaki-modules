@@ -54,6 +54,9 @@ pub fn build_event_item(data: &GuestData, event: &EventRow) -> Surface {
         children.push(map);
     }
 
+    if let Some(card) = access(data, event) {
+        children.push(card);
+    }
     if let Some(card) = good_to_know(data, event) {
         children.push(card);
     }
@@ -218,28 +221,49 @@ fn event_map(data: &GuestData, event: &EventRow) -> Option<Component> {
     )
 }
 
+/// « Accès » : comment on y entre, et si on y entre (§2.11).
+///
+/// Sa propre carte, et avant « Bon à savoir » : c'est ce qu'on lit en partant, pas un conseil
+/// qu'on lit s'il reste du temps.
+fn access(data: &GuestData, event: &EventRow) -> Option<Component> {
+    lines_card(
+        event.access.get(&data.locale),
+        "i18n:guest.access",
+        // Pas d'icône d'accessibilité au vocabulaire : la boussole est ce qui s'en approche le
+        // plus honnêtement — « comment on y arrive » — plutôt qu'une clé ou un bonhomme détourné.
+        IconName::Compass,
+    )
+}
+
 /// « Bon à savoir » : une ligne par conseil de l'hôte. Rien quand il n'en a écrit aucun — une
 /// carte vide promettrait un conseil qui n'existe pas.
 fn good_to_know(data: &GuestData, event: &EventRow) -> Option<Component> {
-    let tips: Vec<Component> = event
-        .tips
-        .get(&data.locale)
+    lines_card(
+        event.tips.get(&data.locale),
+        "i18n:guest.goodToKnow",
+        IconName::InfoCircle,
+    )
+}
+
+/// Une carte dont chaque ligne du texte devient une rangée. `None` quand il n'y a pas de ligne.
+fn lines_card(raw: &str, title: &str, icon: IconName) -> Option<Component> {
+    let rows: Vec<Component> = raw
         .lines()
         .map(str::trim)
         .filter(|line| !line.is_empty())
         .map(|line| {
             ListItem::new()
                 .title(line.to_string())
-                .leading(Leading::Icon("info-circle".into()))
+                .leading(Leading::Icon(icon.to_string()))
                 .into()
         })
         .collect();
-    (!tips.is_empty()).then(|| {
+    (!rows.is_empty()).then(|| {
         Card::new()
             .surface(SurfaceLevel::Elevated)
-            .icon(IconName::InfoCircle)
-            .title("i18n:guest.goodToKnow")
-            .children(tips)
+            .icon(icon)
+            .title(title.to_string())
+            .children(rows)
             .into()
     })
 }
