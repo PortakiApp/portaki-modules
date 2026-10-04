@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.8.0...local-guide-v1.9.0) (2026-10-04)
+
+
+### Features
+
+* **local-guide:** up to five photos per spot ([369e6df](https://github.com/PortakiApp/portaki-modules/commit/369e6df4c97bb051545e37c03c5a2af0cdc6b4a2))
+
 ## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.7.0...local-guide-v1.8.0) (2026-10-04)
 
 

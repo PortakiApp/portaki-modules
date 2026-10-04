@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.6.0...lost-found-v1.7.0) (2026-10-04)
+
+
+### Features
+
+* **lost-found:** the host's response time ([17c3d9f](https://github.com/PortakiApp/portaki-modules/commit/17c3d9f5e6649b62c0e2e2a9a3e7b188b19b7642))
+
 ## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.5.1...lost-found-v1.6.0) (2026-10-04)
 
 
