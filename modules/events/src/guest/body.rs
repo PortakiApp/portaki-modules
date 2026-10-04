@@ -2,10 +2,10 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::common::Leading;
+use portaki_sdk::sdui::common::{Leading, LeadingVisual};
 use portaki_sdk::sdui::primitives::{InfoBanner, Link, ListItem, Map, Pill, Pressable, Text};
 
-use crate::time_format::{day_badge_label, format_starts_at_display, parse_starts_at};
+use crate::time_format::{format_starts_at_display, parse_starts_at};
 
 use super::load::GuestData;
 
@@ -46,7 +46,12 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         }
 
         if let Some(at) = parse_starts_at(&event.starts_at) {
-            item = item.leading(Leading::Icon(day_badge_label(at)));
+            // L'heure a son emplacement dans un ListItem : `Leading::Icon` est la forme d'avant,
+            // où un libellé passait pour un nom d'icône. La maquette montre bien une heure.
+            item = item.leading(Leading::Visual(Box::new(LeadingVisual {
+                time: Some(at.format("%H:%M").to_string()),
+                ..LeadingVisual::default()
+            })));
         } else if !enriched {
             item = item.child(Pill::new().label("i18n:guest.event.dateTbd"));
         }

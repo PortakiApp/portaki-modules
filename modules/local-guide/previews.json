@@ -72,10 +72,6 @@
           {
             "children": [
               {
-                "label": "Samedi matin",
-                "type": "Pill"
-              },
-              {
                 "text": "Fruits, fromages et fleurs, le samedi matin.",
                 "type": "Text",
                 "variant": "body"
@@ -83,6 +79,12 @@
             ],
             "subtitle": "Marché · 1,2 km",
             "title": "Marché provençal",
+            "trailing": {
+              "badge": {
+                "label": "Samedi matin",
+                "tone": "primary"
+              }
+            },
             "type": "ListItem"
           },
           {

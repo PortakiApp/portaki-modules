@@ -85,14 +85,20 @@ fn home_card_empty_without_config_or_address() {
 
 #[test]
 #[serial]
-fn home_card_renders_spots_with_pill() {
+fn home_card_renders_spots_with_a_trailing_badge() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_home_card(ctx).expect("surface");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("Pill"));
+            // L'avantage va en fin de ligne, là où l'œil le cherche — pas dans le corps du
+            // texte, où un badge enfant se dessinait.
+            let json = serde_json::to_string(&surface).expect("json");
+            assert!(
+                json.contains(r#""trailing":{"badge":"#),
+                "l'avantage est un badge de fin"
+            );
             let json = surface_json(&surface);
             assert!(json.contains("bottomSheet"));
         });
