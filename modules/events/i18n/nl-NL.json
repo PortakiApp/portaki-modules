@@ -15,6 +15,7 @@
   "guest.event.dateTbd": "Datum nog te bevestigen",
   "guest.event.dayBadge": "{weekday} {day}",
   "guest.event.startsAt": "om {time}",
+  "guest.next": "Daarna",
   "guest.openLink": "Link openen",
   "guest.teaser": "Wat er in de buurt te doen is",
   "guest.weekday.fri": "vr",

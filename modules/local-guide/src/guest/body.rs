@@ -2,7 +2,9 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::common::{BadgeSpec, Tone, Trailing, TrailingVisual};
+use portaki_sdk::sdui::common::{
+    BadgeSpec, ListItemLayout, StackDirection, Tone, Trailing, TrailingVisual,
+};
 use portaki_sdk::sdui::primitives::{
     Image, InfoBanner, Link, ListItem, Map, Pill, Pressable, Stack, Text,
 };
@@ -30,6 +32,9 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         ));
     }
 
+    // Sur la carte d'accueil, les adresses défilent en tuiles ; dans la sous-page, elles se
+    // déroulent en lignes avec leur note et leur lien. Même contenu, deux lectures (§2.12).
+    let mut spots: Vec<Component> = Vec::new();
     for spot in &data.spots {
         let title = spot.title.get(&data.locale);
         let mut subtitle_parts = Vec::new();
@@ -79,17 +84,32 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
                         .action(action),
                 );
             }
-            children.push(Component::ListItem(item));
+            spots.push(Component::ListItem(item));
         } else if let Some(url) = spot.url.as_deref().map(str::trim).filter(|u| !u.is_empty()) {
-            let action = Action::External {
-                url: url.to_string(),
-            };
-            children.push(Component::Pressable(
-                Pressable::new().action(action).child(item),
+            spots.push(Component::Pressable(
+                Pressable::new()
+                    .action(Action::External {
+                        url: url.to_string(),
+                    })
+                    .child(item.layout(ListItemLayout::Tile)),
             ));
         } else {
-            children.push(Component::ListItem(item));
+            spots.push(Component::ListItem(item.layout(ListItemLayout::Tile)));
         }
+    }
+
+    if !spots.is_empty() {
+        children.push(if enriched {
+            Component::Stack(Stack::new().gap(8.0).children(spots))
+        } else {
+            Component::Stack(
+                Stack::new()
+                    .direction(StackDirection::Horizontal)
+                    .scroll(true)
+                    .gap(8.0)
+                    .children(spots),
+            )
+        });
     }
 
     if let Some(view) = data.activities.as_ref() {

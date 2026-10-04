@@ -15,6 +15,7 @@
   "guest.event.dateTbd": "Date TBC",
   "guest.event.dayBadge": "{weekday} {day}",
   "guest.event.startsAt": "at {time}",
+  "guest.next": "Next",
   "guest.openLink": "Open link",
   "guest.teaser": "What's on around you",
   "guest.weekday.fri": "Fri",

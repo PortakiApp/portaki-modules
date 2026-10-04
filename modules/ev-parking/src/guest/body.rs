@@ -3,7 +3,7 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::KeyValueLayout;
-use portaki_sdk::sdui::primitives::{InfoBanner, KeyValue, Link, Text};
+use portaki_sdk::sdui::primitives::{Grid, InfoBanner, KeyValue, Link, Text};
 
 use super::load::{has_any_secret, secret_display, GuestData};
 
@@ -89,23 +89,33 @@ pub fn build_ev_parking_body(data: &GuestData) -> Vec<Component> {
         ));
     }
 
+    // Les deux codes côte à côte, en grille : ce sont les deux choses qu'on cherche en arrivant
+    // au parking, et une tuile sous l'autre fait descendre la seconde sous le pli.
+    let mut tiles = Vec::new();
     push_secret_tile(
-        &mut children,
+        &mut tiles,
         data,
         "i18n:guest.parkingCode",
         "i18n:guest.copyParkingCode",
         IconName::Lock,
         &data.config.parking_code,
     );
-
     push_secret_tile(
-        &mut children,
+        &mut tiles,
         data,
         "i18n:guest.chargerPin",
         "i18n:guest.copyChargerPin",
         IconName::Zap,
         &data.config.charger_pin,
     );
+    if !tiles.is_empty() {
+        children.push(Component::Grid(
+            Grid::new()
+                .minColumnWidth(130.0)
+                .plain(true)
+                .children(tiles),
+        ));
+    }
 
     if let Some(instructions) = data.config.instructions_text(&data.locale) {
         children.push(

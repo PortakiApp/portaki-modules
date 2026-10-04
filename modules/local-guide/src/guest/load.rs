@@ -20,6 +20,8 @@ pub struct GuestData {
     /// Repère du logement sur la carte, quand il est géocodé.
     pub property_coords: Option<(f64, f64)>,
     pub property_name: String,
+    /// Le prénom de l'hôte, pour « Les adresses de Claire ». Vide quand il n'est pas connu.
+    pub host_name: String,
 }
 
 /// Ce qu'il y a à montrer, ou `None` quand il n'y a rien : ni lieu, ni mention, ni section
@@ -55,5 +57,10 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<Box<GuestData>>> {
             .as_ref()
             .and_then(|point| valid_coords(point.lat, point.lng)),
         property_name: ctx.property.name.clone(),
+        host_name: ctx
+            .host
+            .as_ref()
+            .map(|host| host.name.trim().to_string())
+            .unwrap_or_default(),
     })))
 }
