@@ -10,7 +10,10 @@ use portaki_sdk::sdui::primitives::{
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::affiliate::{looks_like_url, normalize_curated_url, CuratedUrlError, MAX_CURATED_LINKS};
-use crate::config::{ActivityRow, ModuleConfig, SpotRow, TIQETS_RADIUS_CHOICES_KM};
+use crate::config::{
+    ActivityRow, HostActivityRow, ModuleConfig, SpotRow, MAX_HOST_ACTIVITIES,
+    TIQETS_RADIUS_CHOICES_KM,
+};
 use crate::tiqets::TiqetsStatus;
 use crate::viator::ViatorStatus;
 
@@ -87,6 +90,9 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     );
 
     let mut cards: Vec<Component> = vec![spots_card(&config, &ctx)];
+    // Les activités que l'hôte propose lui-même, avant les sections partenaires : ce sont les
+    // seules dont il se porte garant (§2.13).
+    cards.push(host_activities_card(&config, &ctx));
     cards.push(activities_card(
         &ctx,
         activities_enabled,
@@ -444,6 +450,171 @@ fn spots_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         .into()
 }
 
+/// Les activités de l'hôte, en lignes dynamiques bornées — le motif de `spots`.
+fn host_activities_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let rows_count = draft_activity_rows(ctx, config.host_activities.len());
+    let rows: Vec<Component> = (0..rows_count)
+        .map(|index| host_activity_row(index, config.host_activities.get(index), ctx))
+        .collect();
+
+    Card::new()
+        .title("i18n:host.hostActivities.title")
+        .subtitle("i18n:host.hostActivities.subtitle")
+        .icon(IconName::Sparkles)
+        .child(
+            StepList::new()
+                .addLabel("i18n:host.hostActivities.add")
+                .removeLabel("i18n:host.hostActivities.remove")
+                .emptyTitle("i18n:host.hostActivities.emptyTitle")
+                .emptyDescription("i18n:host.hostActivities.emptyDescription")
+                .itemKeyPrefix("host_activities")
+                .addAction(emit_input(ActivityCount {
+                    host_activities_count: (rows_count + 1).min(MAX_HOST_ACTIVITIES),
+                }))
+                .children(rows),
+        )
+        .into()
+}
+
+fn draft_activity_rows(ctx: &HostContext, stored: usize) -> usize {
+    match ctx.input_u64("host_activities_count") {
+        Some(asked) => (asked as usize).clamp(1, MAX_HOST_ACTIVITIES),
+        None => stored.clamp(1, MAX_HOST_ACTIVITIES),
+    }
+}
+
+/// Une activité : le nom, le prestataire, ce qu'elle coûte et dure, et comment on la réserve.
+fn host_activity_row(
+    index: usize,
+    activity: Option<&HostActivityRow>,
+    ctx: &HostContext,
+) -> Component {
+    let id = activity
+        .filter(|row| !row.is_blank())
+        .map(|row| sdui::row_id("host_activities", index, Some(&row.id)));
+
+    let text = |name: &str, label: &str, value: &str| -> Component {
+        let field = format!("host_activities.{index}.{name}");
+        Field::new()
+            .name(field.clone())
+            .label(label)
+            .child(TextInput::new().name(field).value(value))
+            .into()
+    };
+    let area = |name: &str, label: &str, value: &str, placeholder: &str| -> Component {
+        let field = format!("host_activities.{index}.{name}");
+        Field::new()
+            .name(field.clone())
+            .label(label)
+            .child(
+                TextArea::new()
+                    .name(field)
+                    .value(value)
+                    .rows(2)
+                    .placeholder(placeholder),
+            )
+            .into()
+    };
+
+    let mut children: Vec<Component> = id.into_iter().collect();
+    children.push(text(
+        "title",
+        "i18n:host.hostActivities.name",
+        activity
+            .map(|a| a.title.host_value(ctx))
+            .unwrap_or_default(),
+    ));
+    children.push(text(
+        "provider",
+        "i18n:host.hostActivities.provider",
+        activity.and_then(|a| a.provider.as_deref()).unwrap_or(""),
+    ));
+    children.push(
+        FieldHint::new()
+            .text("i18n:host.hostActivities.provider.hint")
+            .into(),
+    );
+    children.push(text(
+        "price",
+        "i18n:host.hostActivities.price",
+        activity.and_then(|a| a.price.as_deref()).unwrap_or(""),
+    ));
+    children.push(text(
+        "duration",
+        "i18n:host.hostActivities.duration",
+        activity.and_then(|a| a.duration.as_deref()).unwrap_or(""),
+    ));
+    children.push(text(
+        "meet",
+        "i18n:host.hostActivities.meet",
+        activity.and_then(|a| a.meet.as_deref()).unwrap_or(""),
+    ));
+    children.push(text(
+        "languages",
+        "i18n:host.hostActivities.languages",
+        activity.and_then(|a| a.languages.as_deref()).unwrap_or(""),
+    ));
+    children.push(area(
+        "cancel",
+        "i18n:host.hostActivities.cancel",
+        activity
+            .map(|a| a.cancel.host_value(ctx))
+            .unwrap_or_default(),
+        "i18n:host.hostActivities.cancel.placeholder",
+    ));
+    children.push(area(
+        "included",
+        "i18n:host.hostActivities.included",
+        activity
+            .map(|a| a.included.host_value(ctx))
+            .unwrap_or_default(),
+        "i18n:host.hostActivities.included.placeholder",
+    ));
+    children.push(
+        FieldHint::new()
+            .text("i18n:host.hostActivities.included.hint")
+            .into(),
+    );
+    children.push(area(
+        "tip",
+        "i18n:host.hostActivities.tip",
+        activity.map(|a| a.tip.host_value(ctx)).unwrap_or_default(),
+        "i18n:host.hostActivities.tip.placeholder",
+    ));
+    children.push(text(
+        "phone",
+        "i18n:host.hostActivities.phone",
+        activity.and_then(|a| a.phone.as_deref()).unwrap_or(""),
+    ));
+    children.push(
+        FieldHint::new()
+            .text("i18n:host.hostActivities.phone.hint")
+            .into(),
+    );
+    children.push(text(
+        "url",
+        "i18n:host.hostActivities.url",
+        activity.and_then(|a| a.url.as_deref()).unwrap_or(""),
+    ));
+    children.push(
+        Field::new()
+            .name(format!("host_activities.{index}.photo"))
+            .label("i18n:host.hostActivities.photo")
+            .child(
+                ImageUpload::new()
+                    .name(format!("host_activities.{index}.photo"))
+                    .value(activity.map(|a| a.photo.clone()).unwrap_or_default()),
+            )
+            .into(),
+    );
+
+    Stack::new()
+        .id(format!("host-activity-{index}"))
+        .gap(10.0)
+        .children(children)
+        .into()
+}
+
 /// Combien de lignes dessiner : ce que « Ajouter » a demandé, sinon ce qui est stocké, borné.
 fn draft_rows(ctx: &HostContext, stored: usize) -> usize {
     match ctx.input_u64("spots_count") {
@@ -456,6 +627,12 @@ fn draft_rows(ctx: &HostContext, stored: usize) -> usize {
 #[serde(rename_all = "snake_case")]
 struct RowCount {
     spots_count: usize,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+struct ActivityCount {
+    host_activities_count: usize,
 }
 
 fn emit_input(payload: impl serde::Serialize) -> Action {

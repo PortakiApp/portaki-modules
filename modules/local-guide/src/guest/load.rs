@@ -3,12 +3,14 @@
 use portaki_sdk::prelude::*;
 
 use crate::activities::{self, ActivitiesView};
-use crate::config::{valid_coords, ModuleConfig, SpotRow};
+use crate::config::{valid_coords, HostActivityRow, ModuleConfig, SpotRow};
 use crate::tiqets::{self, TiqetsView};
 use crate::viator::{self, ViatorView};
 
 pub struct GuestData {
     pub spots: Vec<SpotRow>,
+    /// Les activités que l'hôte propose lui-même (§2.13) — celles qu'on réserve avec lui.
+    pub host_activities: Vec<HostActivityRow>,
     pub disclaimer: String,
     pub locale: String,
     /// Section « Activités & billets », quand elle a une destination à proposer.
@@ -40,12 +42,28 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<Box<GuestData>>> {
     // La section activités se suffit à elle-même : elle sort de l'adresse du logement,
     // donc un hôte qui n'a saisi aucune adresse a tout de même quelque chose à montrer.
     // Tiqets de même, depuis la position du logement, et Viator depuis sa ville.
-    if config.is_empty() && activities.is_none() && tiqets.is_none() && viator.is_none() {
+    // Une activité de l'hôte suffit à faire exister la carte : elle ne dépend d'aucune adresse
+    // géocodée ni d'aucun fournisseur.
+    let host_activities: Vec<HostActivityRow> = config
+        .host_activities
+        .iter()
+        .filter(|row| row.is_complete(&ctx.locale))
+        .take(crate::config::MAX_HOST_ACTIVITIES)
+        .cloned()
+        .collect();
+
+    if config.is_empty()
+        && host_activities.is_empty()
+        && activities.is_none()
+        && tiqets.is_none()
+        && viator.is_none()
+    {
         return Ok(None);
     }
 
     Ok(Some(Box::new(GuestData {
         spots: config.parse_spots(),
+        host_activities,
         disclaimer: config.disclaimer.get(&ctx.locale).to_string(),
         locale: ctx.locale.clone(),
         activities,

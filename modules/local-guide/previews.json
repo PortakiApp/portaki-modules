@@ -3,7 +3,147 @@
   "surfaces": [
     {
       "i18n": {
+        "guest.activity.duration": "Durée",
+        "guest.activity.included": "Inclus",
+        "guest.activity.languages": "Langues",
+        "guest.activity.meet": "Rendez-vous",
+        "guest.activity.phone": "Téléphone",
+        "guest.activity.price": "Prix",
+        "guest.hostActivities.choice": "Choix de votre hôte",
+        "guest.hostActivities.disclosure": "Activité proposée par votre hôte, sans commission. La réservation se fait directement avec le prestataire.",
+        "guest.practical.title": "Infos pratiques",
+        "nav.activity": "Activité"
+      },
+      "surfaceId": "explore.activity",
+      "title": "Activité",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "label": "i18n:guest.hostActivities.choice",
+                "type": "Badge"
+              },
+              {
+                "text": "Sortie voilier au coucher du soleil",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "Proposé par votre hôte · Marc, skipper au port",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "icon": "star",
+                "key": "i18n:guest.activity.price",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "60 € / pers."
+              },
+              {
+                "icon": "clock",
+                "key": "i18n:guest.activity.duration",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "3 h"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "title": "Annulation à voir directement avec Marc.",
+            "tone": "success",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "leading": "check",
+                "title": "Boissons à bord",
+                "type": "ListItem"
+              },
+              {
+                "leading": "check",
+                "title": "Arrêt baignade à la Garoupe",
+                "type": "ListItem"
+              }
+            ],
+            "icon": "check-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.activity.included",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "key": "i18n:guest.activity.meet",
+                "type": "KeyValue",
+                "value": "Port Vauban, ponton C"
+              },
+              {
+                "key": "i18n:guest.activity.languages",
+                "type": "KeyValue",
+                "value": "Français, anglais"
+              },
+              {
+                "key": "i18n:guest.activity.phone",
+                "mono": true,
+                "type": "KeyValue",
+                "value": "+33 6 22 33 44 55"
+              }
+            ],
+            "icon": "info-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.practical.title",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "text": "Dites-lui que vous venez d'ici : il vous garde le coucher de soleil.",
+                "type": "Text",
+                "variant": "body"
+              }
+            ],
+            "icon": "message",
+            "surface": "elevated",
+            "title": "Le conseil de votre hôte",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:+33622334455"
+            },
+            "label": "Réserver auprès de Marc, skipper au port",
+            "type": "Button"
+          },
+          {
+            "text": "i18n:guest.hostActivities.disclosure",
+            "type": "Text",
+            "variant": "caption"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
         "guest.disclaimer.title": "Info",
+        "guest.hostActivities.choice": "Choix de votre hôte",
+        "guest.hostActivities.disclosure": "Activité proposée par votre hôte, sans commission. La réservation se fait directement avec le prestataire.",
+        "guest.hostActivities.title": "Vos activités",
         "nav.local-guide": "Bons plans"
       },
       "surfaceId": "explore.detail",
@@ -138,6 +278,48 @@
                 "subtitle": "Baignade · 9 km",
                 "title": "Lac de Saint-Cassien",
                 "type": "ListItem"
+              }
+            ],
+            "gap": 8.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "text": "i18n:guest.hostActivities.title",
+                "type": "Text",
+                "variant": "title"
+              },
+              {
+                "children": [
+                  {
+                    "action": {
+                      "to": "local-guide/activity/voilier",
+                      "type": "navigate"
+                    },
+                    "chevron": true,
+                    "layout": "tile",
+                    "meta": "60 € / pers.",
+                    "subtitle": "Marc, skipper au port · 3 h",
+                    "title": "Sortie voilier au coucher du soleil",
+                    "trailing": {
+                      "badge": {
+                        "label": "i18n:guest.hostActivities.choice",
+                        "tone": "primary"
+                      }
+                    },
+                    "type": "ListItem"
+                  }
+                ],
+                "direction": "horizontal",
+                "gap": 8.0,
+                "scroll": true,
+                "type": "Stack"
+              },
+              {
+                "text": "i18n:guest.hostActivities.disclosure",
+                "type": "Text",
+                "variant": "caption"
               }
             ],
             "gap": 8.0,

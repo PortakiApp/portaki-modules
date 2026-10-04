@@ -1,5 +1,6 @@
 //! Guest booklet surfaces.
 
+mod activity;
 mod body;
 mod detail;
 mod home;
@@ -11,6 +12,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::EmptyState;
 use portaki_sdk::sdui::surface::Surface;
 
+use activity::build_activity_item;
 use detail::build_detail_surface;
 use home::build_home_card;
 use item::build_spot_item;
@@ -91,5 +93,34 @@ pub fn render_explore_item(ctx: GuestContext) -> Result<Surface> {
     match found {
         Some(spot) => Ok(build_spot_item(&data, &spot)),
         None => Ok(nothing_to_share(EXPLORE_ITEM)),
+    }
+}
+
+/// La fiche d'une activité de l'hôte. `activityId` arrive par les paramètres de route.
+#[portaki_sdk::surface(
+    guest,
+    id = "explore.activity",
+    path = "local-guide/activity/:activityId",
+    label_key = "nav.activity"
+)]
+pub fn render_explore_activity(ctx: GuestContext) -> Result<Surface> {
+    let wanted = ctx
+        .input
+        .get("activityId")
+        .and_then(|value| value.as_str())
+        .unwrap_or_default()
+        .to_string();
+    let Some(data) = load_guest_data(&ctx)? else {
+        return Ok(nothing_to_share(EXPLORE_ACTIVITY));
+    };
+    let found = data
+        .host_activities
+        .iter()
+        .enumerate()
+        .find(|(index, activity)| activity.route_id(*index) == wanted)
+        .map(|(_, activity)| activity.clone());
+    match found {
+        Some(activity) => Ok(build_activity_item(&data, &activity)),
+        None => Ok(nothing_to_share(EXPLORE_ACTIVITY)),
     }
 }
