@@ -4,6 +4,7 @@
 //! décrits dans une phrase de l'interface hôte sans exister nulle part. Deux cas de la maquette
 //! étaient donc inatteignables — *délai dépassé* et *renvoi aux frais du voyageur*.
 
+use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Serialize};
 
 /// Le délai par défaut, quand l'hôte n'a rien choisi.
@@ -53,6 +54,12 @@ pub struct ModuleConfig {
         label = "host.shipping.label"
     )]
     pub shipping_paid_by: String,
+    /// Le délai sous lequel l'hôte répond à une déclaration : « sous 48 h » (§2.18).
+    ///
+    /// Du texte et non un nombre d'heures : « le lendemain matin » n'en est pas un, et c'est ce
+    /// qu'un hôte écrit. Vide, le formulaire ne promet rien à sa place.
+    #[field(label = "host.responseDelay.label")]
+    pub response_delay: I18nText,
 }
 
 /// Un délai utilisable : fini et strictement positif.

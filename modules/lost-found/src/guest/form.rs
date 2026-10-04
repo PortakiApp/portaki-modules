@@ -40,6 +40,7 @@ pub fn render_guest_form(ctx: GuestContext) -> Result<Surface> {
         config.offers_shipping(),
         config.return_options(),
         deadline_label(&ctx, config.window_days()),
+        response_promise(&config, &ctx),
         ctx.host
             .as_ref()
             .map(|host| host.name.trim().to_string())
@@ -51,9 +52,37 @@ pub fn build_form_surface(
     ask_address: bool,
     return_options: Vec<&'static str>,
     deadline: Option<String>,
+    response: Option<String>,
     host_name: Option<String>,
 ) -> Surface {
-    Surface::new(build_form(ask_address, return_options, deadline, host_name)).with_id(GUEST_FORM)
+    Surface::new(build_form(
+        ask_address,
+        return_options,
+        deadline,
+        response,
+        host_name,
+    ))
+    .with_id(GUEST_FORM)
+}
+
+/// « Claire répond sous 48 h », quand l'hôte l'a promis (§2.18).
+///
+/// Rien quand il n'a rien écrit : le module ne promet pas un délai à sa place — c'est lui qui
+/// devrait le tenir.
+fn response_promise(config: &crate::config::ModuleConfig, ctx: &GuestContext) -> Option<String> {
+    let delay = config.response_delay.get(&ctx.locale).trim().to_string();
+    if delay.is_empty() {
+        return None;
+    }
+    let host = ctx
+        .host
+        .as_ref()
+        .map(|host| host.name.trim().to_string())
+        .filter(|name| !name.is_empty());
+    match host {
+        Some(host) => t!("form.response.named", host = host, delay = &delay).ok(),
+        None => t!("form.response", delay = &delay).ok(),
+    }
 }
 
 /// Le formulaire en trois étapes du §2.18.
@@ -68,6 +97,7 @@ fn build_form(
     ask_address: bool,
     return_options: Vec<&'static str>,
     deadline: Option<String>,
+    response: Option<String>,
     host_name: Option<String>,
 ) -> Form {
     let submit_action = crate::ids::module_id().command_empty(crate::commands::SUBMIT);
@@ -149,7 +179,9 @@ fn build_form(
                 .into(),
         );
     }
-    // Le délai en dernier : il ne presse pas celui qui remplit, il rassure celui qui hésite.
+    // Le délai en dernier : il ne presse pas celui qui remplit, il rassure celui qui hésite. La
+    // promesse de l'hôte juste après, pour la même raison — ce qu'il reste à faire, puis qui s'en
+    // occupe et sous combien de temps.
     if let Some(deadline) = deadline {
         return_step.push(
             InfoBanner::new()
@@ -158,6 +190,9 @@ fn build_form(
                 .message("i18n:form.deadline.message")
                 .into(),
         );
+    }
+    if let Some(response) = response {
+        return_step.push(InfoBanner::new().tone(Tone::Success).title(response).into());
     }
 
     Form::new()

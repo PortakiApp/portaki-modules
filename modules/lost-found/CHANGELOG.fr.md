@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.0
+
+Dites sous combien de temps vous répondez.
+
+* Nouveau réglage : votre délai de réponse à une déclaration.
+* Le voyageur le lit sur la dernière étape, avant d'envoyer.
+* Sans réglage, le formulaire ne promet rien à votre place.
+
 ## 1.6.0
 
 L'adresse de renvoi au bon moment.
