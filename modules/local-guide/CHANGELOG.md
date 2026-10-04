@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.5.0...local-guide-v1.6.0) (2026-10-04)
+
+
+### Features
+
+* **local-guide:** les liens Viator collés, enrichis ([a0ecae9](https://github.com/PortakiApp/portaki-modules/commit/a0ecae9be13f217c3df27585cfac8c2a703ed82a))
+
 ## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.4.0...local-guide-v1.5.0) (2026-10-04)
 
 
