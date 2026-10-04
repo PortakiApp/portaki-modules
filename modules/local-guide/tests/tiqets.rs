@@ -126,7 +126,7 @@ fn price_and_rating_read_in_the_guest_language() {
 
 #[test]
 #[serial]
-fn the_home_card_is_a_preview_without_images() {
+fn the_home_card_shows_tiles_with_a_thumbnail_not_a_hero() {
     guest(&pool())
         .with_config(&enabled())
         .with_connector_response("tiqets", "nearby_products", RECORDED)
@@ -134,7 +134,12 @@ fn the_home_card_is_a_preview_without_images() {
             let json = surface_json(&render_home_card(ctx).expect("surface"));
             assert!(json.contains("Musée Van Gogh"), "{json}");
             assert!(json.contains(AFFILIATE_URL));
-            assert!(!json.contains("fixture-medium.jpg"), "{json}");
+            // La photo est dans l'emplacement `leading` de la tuile — une vignette, comme la
+            // maquette la dessine (§2.13). Pas un composant `Image` : le bandeau plein format
+            // reste dans la feuille, où on lit la fiche.
+            assert!(json.contains("\"leading\":{\"image\""), "{json}");
+            assert!(!json.contains("\"type\":\"Image\""), "{json}");
+            assert!(json.contains("\"layout\":\"tile\""), "{json}");
         });
 }
 
