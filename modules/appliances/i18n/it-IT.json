@@ -22,6 +22,7 @@
   "home.card.safety": "Sicurezza",
   "home.card.seeAll": "Vedi i {count} elettrodomestici",
   "home.card.seeAllPlain": "Vedi tutti gli elettrodomestici",
+  "home.card.subtitle": "I più utili · {count} in tutto",
   "home.card.title": "Elettrodomestici",
   "host.detail.card.title": "Elettrodomestico",
   "host.detail.edit.title": "Modifica l'elettrodomestico",

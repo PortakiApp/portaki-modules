@@ -1,9 +1,12 @@
 //! Shared guest SDUI body for facility hours.
 
+use portaki_sdk::host::i18n::{translate, Vars};
 use portaki_sdk::host::time::{self, PropertyTz};
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::common::{BadgeSpec, DetailRow, Tone, Trailing, TrailingVisual};
-use portaki_sdk::sdui::primitives::{Button, InfoBanner, KeyValue, ListItem, Text};
+use portaki_sdk::sdui::common::{
+    BadgeSpec, DetailRow, KeyValueLayout, Tone, Trailing, TrailingVisual,
+};
+use portaki_sdk::sdui::primitives::{Button, Grid, InfoBanner, KeyValue, ListItem, Text};
 
 use chrono::Datelike;
 
@@ -164,4 +167,64 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
     }
 
     children
+}
+
+/// Les tuiles « Arrivée » et « Départ », tirées des dates du séjour (§2.6).
+///
+/// L'hôte ne les saisit pas : ce sont des données de séjour, et les redemander donnerait deux
+/// vérités pour la même heure. Sans séjour — un aperçu, une consultation hors réservation — la
+/// grille disparaît plutôt que d'afficher des tirets.
+pub fn stay_tiles(data: &GuestData) -> Option<Component> {
+    let tz = PropertyTz::parse(&data.timezone);
+    let at = |instant: Option<portaki_sdk::prelude::DateTime<portaki_sdk::prelude::Utc>>| {
+        instant.map(|instant| match tz.as_ref() {
+            Some(tz) => tz.to_local(instant).format("%H:%M").to_string(),
+            None => instant.format("%H:%M").to_string(),
+        })
+    };
+
+    let mut tiles = Vec::new();
+    if let Some(hour) = at(data.checkin_at) {
+        tiles.push(stay_tile(
+            "i18n:guest.stay.checkin",
+            IconName::Key,
+            "i18n:guest.stay.from",
+            hour,
+        ));
+    }
+    if let Some(hour) = at(data.checkout_at) {
+        tiles.push(stay_tile(
+            "i18n:guest.stay.checkout",
+            IconName::Clock,
+            "i18n:guest.stay.before",
+            hour,
+        ));
+    }
+    if tiles.is_empty() {
+        return None;
+    }
+    Some(Component::Grid(
+        Grid::new()
+            .minColumnWidth(120.0)
+            .plain(true)
+            .children(tiles),
+    ))
+}
+
+/// « dès 16:00 », « avant 10:00 » — le qualificatif est traduit, l'heure ne l'est pas.
+fn stay_tile(label: &str, icon: IconName, qualifier_key: &str, hour: String) -> Component {
+    let qualifier =
+        translate(qualifier_key.trim_start_matches("i18n:"), &Vars::new()).unwrap_or_default();
+    Component::KeyValue(
+        KeyValue::new()
+            .key(label)
+            .value(if qualifier.is_empty() {
+                hour.clone()
+            } else {
+                format!("{qualifier} {hour}")
+            })
+            .layout(KeyValueLayout::Tile)
+            .icon(icon)
+            .mono(true),
+    )
 }

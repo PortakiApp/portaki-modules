@@ -22,6 +22,7 @@
   "home.card.safety": "السلامة",
   "home.card.seeAll": "عرض الأجهزة الـ {count}",
   "home.card.seeAllPlain": "عرض جميع الأجهزة",
+  "home.card.subtitle": "الأكثر فائدة · {count} في المجموع",
   "home.card.title": "الأجهزة",
   "host.detail.card.title": "جهاز",
   "host.detail.edit.title": "تعديل الجهاز",

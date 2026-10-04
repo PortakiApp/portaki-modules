@@ -22,6 +22,7 @@
   "home.card.safety": "安全",
   "home.card.seeAll": "{count} 台の家電をすべて見る",
   "home.card.seeAllPlain": "すべての家電を見る",
+  "home.card.subtitle": "よく使うもの · 全 {count} 点",
   "home.card.title": "設備・家電",
   "host.detail.card.title": "家電",
   "host.detail.edit.title": "家電を編集",

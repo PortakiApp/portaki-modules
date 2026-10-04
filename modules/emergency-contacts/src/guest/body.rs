@@ -2,8 +2,8 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::common::{Leading, Trailing};
-use portaki_sdk::sdui::primitives::{InfoBanner, Link, ListItem, Pressable, Text};
+use portaki_sdk::sdui::common::{Leading, LeadingVisual, ListItemLayout, Trailing};
+use portaki_sdk::sdui::primitives::{Grid, InfoBanner, ListItem, Pressable, Text};
 
 use super::load::GuestData;
 
@@ -55,14 +55,37 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
         ));
     }
 
-    if show_emergency_banner {
-        children.push(Component::Link(
-            Link::new()
-                .label("i18n:guest.dial112")
-                .href("tel:112")
-                .action(tel_action("112")),
-        ));
-    }
-
     children
+}
+
+/// Les tuiles des numéros du pays, en tête de carte (§2.16).
+///
+/// Elles passent avant les contacts de l'hôte : en urgence, on compose avant de lire. Le premier
+/// porte le ton danger — c'est celui qu'on fait sans savoir lequel faire.
+pub fn country_numbers(locale: &str) -> Component {
+    let tiles: Vec<Component> = crate::numbers::for_locale(locale)
+        .iter()
+        .map(|number| {
+            let mut tile = ListItem::new()
+                .layout(ListItemLayout::Tile)
+                .leading(Leading::Visual(Box::new(LeadingVisual {
+                    icon: Some(IconName::Phone),
+                    ..LeadingVisual::default()
+                })))
+                .title(number.number)
+                .subtitle(format!("i18n:{}", number.label_key));
+            if number.primary {
+                // La maquette teinte l'icône seule ; `LeadingVisual` ne porte pas de ton, donc
+                // c'est la tuile entière qui le prend. Plus appuyé que le dessin, jamais faux.
+                tile = tile.tone(Tone::Danger);
+            }
+            Component::Pressable(
+                Pressable::new()
+                    .action(tel_action(number.number))
+                    .child(tile),
+            )
+        })
+        .collect();
+
+    Component::Grid(Grid::new().minColumnWidth(90.0).plain(true).children(tiles))
 }

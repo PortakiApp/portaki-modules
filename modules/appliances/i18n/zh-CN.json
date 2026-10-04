@@ -22,6 +22,7 @@
   "home.card.safety": "安全",
   "home.card.seeAll": "查看全部 {count} 台家电",
   "home.card.seeAllPlain": "查看所有家电",
+  "home.card.subtitle": "最常用 · 共 {count} 件",
   "home.card.title": "家电",
   "host.detail.card.title": "家电",
   "host.detail.edit.title": "编辑家电",

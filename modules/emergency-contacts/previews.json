@@ -4,16 +4,80 @@
     {
       "i18n": {
         "guest.call": "Appeler",
-        "guest.dial112": "Composer le 112",
         "guest.emergency.message": "En cas d’urgence vitale, composez le 112 ou le 15 (SAMU) selon les consignes locales.",
         "guest.emergency.title": "Urgence vitale",
         "guest.host.label": "Votre hôte",
+        "guest.numbers.fire": "Pompiers",
+        "guest.numbers.general": "Urgences",
+        "guest.numbers.medical": "SAMU",
         "nav.emergency-contacts": "Urgences & utiles"
       },
       "surfaceId": "explore.detail",
       "title": "Urgences & utiles",
       "tree": {
         "children": [
+          {
+            "children": [
+              {
+                "action": {
+                  "type": "external",
+                  "url": "tel:112"
+                },
+                "children": [
+                  {
+                    "layout": "tile",
+                    "leading": {
+                      "icon": "phone"
+                    },
+                    "subtitle": "i18n:guest.numbers.general",
+                    "title": "112",
+                    "tone": "danger",
+                    "type": "ListItem"
+                  }
+                ],
+                "type": "Pressable"
+              },
+              {
+                "action": {
+                  "type": "external",
+                  "url": "tel:15"
+                },
+                "children": [
+                  {
+                    "layout": "tile",
+                    "leading": {
+                      "icon": "phone"
+                    },
+                    "subtitle": "i18n:guest.numbers.medical",
+                    "title": "15",
+                    "type": "ListItem"
+                  }
+                ],
+                "type": "Pressable"
+              },
+              {
+                "action": {
+                  "type": "external",
+                  "url": "tel:18"
+                },
+                "children": [
+                  {
+                    "layout": "tile",
+                    "leading": {
+                      "icon": "phone"
+                    },
+                    "subtitle": "i18n:guest.numbers.fire",
+                    "title": "18",
+                    "type": "ListItem"
+                  }
+                ],
+                "type": "Pressable"
+              }
+            ],
+            "minColumnWidth": 90.0,
+            "plain": true,
+            "type": "Grid"
+          },
           {
             "message": "i18n:guest.emergency.message",
             "title": "i18n:guest.emergency.title",
@@ -92,15 +156,6 @@
               }
             ],
             "type": "Pressable"
-          },
-          {
-            "action": {
-              "type": "external",
-              "url": "tel:112"
-            },
-            "href": "tel:112",
-            "label": "i18n:guest.dial112",
-            "type": "Link"
           }
         ],
         "gap": 12.0,
