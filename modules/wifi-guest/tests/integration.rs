@@ -235,3 +235,20 @@ fn the_host_note_is_said_once_on_the_card_and_once_in_the_sheet() {
             assert_eq!(sheet.matches("5 GHz conseillé").count(), 1, "{sheet}");
         });
 }
+
+/// Une configuration enregistrée avant le champ `hidden` se relit sans lui.
+///
+/// Les hôtes qui ont déjà rempli leur Wi-Fi ont un blob sans cette clé : s'il fallait qu'elle y
+/// soit, leur module cesserait de se charger du jour où on la déclare.
+#[test]
+fn a_config_saved_before_the_hidden_field_still_loads() {
+    let stored = serde_json::json!({
+        "ssid": "Islette_Guest",
+        "password": "soleil2026",
+        "security": "wpa",
+        "reveal_policy": "always"
+    });
+    let config: ModuleConfig = serde_json::from_value(stored).expect("relecture");
+    assert_eq!(config.ssid, "Islette_Guest");
+    assert!(!config.hidden, "un réseau d'avant le champ s'annonce");
+}
