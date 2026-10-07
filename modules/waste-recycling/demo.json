@@ -119,6 +119,7 @@
     },
     {
       "i18n": {
+        "guest.dropoff.cta": "Où déposer mes déchets ?",
         "home.card.title": "Tri & déchets"
       },
       "surfaceId": "home.card",
@@ -164,12 +165,18 @@
             "type": "ListItem"
           },
           {
-            "leading": {
-              "swatch": "grey"
+            "action": {
+              "args": {
+                "icon": "recycle",
+                "title": "i18n:home.card.title"
+              },
+              "presentation": "bottomSheet",
+              "surface_render": "explore.detail",
+              "type": "openOverlay"
             },
-            "subtitle": "Tout le reste, en sac fermé",
-            "title": "Ordures ménagères",
-            "type": "ListItem"
+            "label": "i18n:guest.dropoff.cta",
+            "type": "Button",
+            "variant": "outline"
           }
         ],
         "icon": "recycle",

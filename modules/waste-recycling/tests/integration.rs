@@ -571,3 +571,44 @@ fn only_located_points_reach_the_booklet_map() {
             );
         });
 }
+
+/// Trois bacs sur la carte, le reste derrière « Où déposer mes déchets ? » (§1.9, §2.7).
+///
+/// Un logement qui trie le verre, le papier, les emballages, les biodéchets et le tout-venant en
+/// a cinq : les empiler poussait le bouton — donc le local et le plan — sous le pli.
+#[test]
+#[serial]
+fn the_card_shows_three_bins_and_a_way_to_the_rest() {
+    let five = json!({
+        "bins": (0..5)
+            .map(|index| json!({
+                "id": format!("bin{index}"),
+                "title": {"fr": format!("Bac {index}"), "en": format!("Bin {index}")},
+                "items": {"fr": "Contenu", "en": "Contents"},
+                "color": "#888888"
+            }))
+            .collect::<Vec<_>>(),
+        "collection_schedule": "Mardi matin"
+    });
+
+    MockContext::guest().with_config(&five).run(|ctx| {
+        let card = serde_json::to_string(&render_home_card(ctx).expect("carte")).expect("json");
+        assert_eq!(card.matches("\"type\":\"ListItem\"").count(), 3, "{card}");
+        assert!(card.contains("guest.dropoff.cta"), "{card}");
+    });
+}
+
+/// Deux bacs, aucun local, aucun point d'apport : rien derrière, donc pas de bouton.
+///
+/// Un bouton vers une section vide promet un local que l'hôte n'a pas renseigné.
+#[test]
+#[serial]
+fn no_button_when_the_sheet_has_nothing_more_to_show() {
+    MockContext::guest()
+        .with_config(&sample_config())
+        .run(|ctx| {
+            let card = serde_json::to_string(&render_home_card(ctx).expect("carte")).expect("json");
+            assert_eq!(card.matches("\"type\":\"ListItem\"").count(), 2, "{card}");
+            assert!(!card.contains("guest.dropoff.cta"), "{card}");
+        });
+}
