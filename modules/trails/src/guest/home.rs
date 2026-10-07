@@ -22,11 +22,17 @@ pub fn build_home_card(data: &GuestData) -> Surface {
         })
         .collect();
 
-    let mut children: Vec<Component> = vec![Stack::new()
-        .direction(StackDirection::Horizontal)
-        .gap(8.0)
-        .children(badges)
-        .into()];
+    // Une seule pastille ne trie rien : elle répète ce que chaque rangée dit déjà en fin de
+    // ligne, et la rangée de filtres annonce un choix qui n'existe pas (§2.23).
+    let mut children: Vec<Component> = if levels.len() > 1 {
+        vec![Stack::new()
+            .direction(StackDirection::Horizontal)
+            .gap(8.0)
+            .children(badges)
+            .into()]
+    } else {
+        Vec::new()
+    };
     children.extend(
         data.trails
             .iter()
