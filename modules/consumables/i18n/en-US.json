@@ -2,6 +2,8 @@
   "catalog.host.main": "Consumables",
   "catalog.host.stay": "Consumables",
   "catalog.host.stock": "Consumables",
+  "form.head.lead": "Tell your host — they'll restock it.",
+  "form.head.title": "Something missing?",
   "form.item.hint": "You can pick several.",
   "form.item.label": "Consumable",
   "form.level.label": "Status",

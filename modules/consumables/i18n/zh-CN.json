@@ -2,6 +2,8 @@
   "catalog.host.main": "易耗品",
   "catalog.host.stay": "易耗品",
   "catalog.host.stock": "易耗品",
+  "form.head.lead": "告诉房东，他会补上。",
+  "form.head.title": "缺什么了吗？",
   "form.item.hint": "可以多选。",
   "form.item.label": "易耗品",
   "form.level.label": "情况",

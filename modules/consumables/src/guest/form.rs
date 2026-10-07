@@ -3,7 +3,7 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
-    Button, ChoiceList, Field, FieldHint, Form, InfoBanner, TextArea,
+    Button, ChoiceList, Field, FieldHint, Form, Icon, InfoBanner, Stack, Text, TextArea,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -29,9 +29,44 @@ pub fn build_form_surface(data: &GuestConsumablesData) -> Surface {
     Surface::new(build_form(data)).with_id(GUEST_FORM)
 }
 
+/// L'en-tête de la feuille (§5) : une question au voyageur, et ce que l'hôte en fera.
+///
+/// Le livret le sort du formulaire pour le poser dans la chrome du panneau. Il reste dans
+/// l'arbre parce que c'est le module qui l'écrit — la coquille ne connaît que le libellé de
+/// navigation, « Consommables », qui n'est pas une question.
+fn sheet_header() -> Component {
+    Component::Stack(
+        Stack::new()
+            .direction(StackDirection::Horizontal)
+            .gap(12.0)
+            .child(
+                Icon::new()
+                    .name(IconName::Package)
+                    .size(24.0)
+                    .tone(Tone::Primary),
+            )
+            .child(
+                Stack::new()
+                    .gap(4.0)
+                    .child(
+                        Text::new()
+                            .text("i18n:form.head.title")
+                            .variant(TextVariant::Title),
+                    )
+                    .child(
+                        Text::new()
+                            .text("i18n:form.head.lead")
+                            .variant(TextVariant::Caption)
+                            .emphasis(Emphasis::Subtle),
+                    ),
+            ),
+    )
+}
+
 fn build_form(data: &GuestConsumablesData) -> Form {
     let submit_action = crate::ids::module_id().command_empty(crate::commands::SUBMIT);
     Form::new()
+        .child(sheet_header())
         .child(
             Field::new()
                 .name("itemIds")

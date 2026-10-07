@@ -2,6 +2,8 @@
   "catalog.host.main": "Verbrauchsmaterial",
   "catalog.host.stay": "Verbrauchsmaterial",
   "catalog.host.stock": "Verbrauchsmaterial",
+  "form.head.lead": "Sagen Sie es Ihren Gastgebern, sie füllen auf.",
+  "form.head.title": "Fehlt etwas?",
   "form.item.hint": "Mehrfachauswahl möglich.",
   "form.item.label": "Verbrauchsmaterial",
   "form.level.label": "Lage",

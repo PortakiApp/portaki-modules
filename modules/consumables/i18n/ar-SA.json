@@ -2,6 +2,8 @@
   "catalog.host.main": "المستلزمات",
   "catalog.host.stay": "المستلزمات",
   "catalog.host.stock": "المستلزمات",
+  "form.head.lead": "أخبر مضيفك، وسيوفّره لك.",
+  "form.head.title": "هل ينقصك شيء؟",
   "form.item.hint": "يمكن اختيار أكثر من عنصر.",
   "form.item.label": "المستلزم",
   "form.level.label": "الحالة",

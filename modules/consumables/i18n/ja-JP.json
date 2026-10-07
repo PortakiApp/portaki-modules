@@ -2,6 +2,8 @@
   "catalog.host.main": "消耗品",
   "catalog.host.stay": "消耗品",
   "catalog.host.stock": "消耗品",
+  "form.head.lead": "ホストにお知らせください。補充します。",
+  "form.head.title": "足りないものはありますか？",
   "form.item.hint": "複数選べます。",
   "form.item.label": "消耗品",
   "form.level.label": "状況",
