@@ -166,7 +166,7 @@
             "variant": "body"
           }
         ],
-        "icon": "car",
+        "icon": "key",
         "title": "i18n:nav.access-guide",
         "type": "Card"
       }

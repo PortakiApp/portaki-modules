@@ -15,7 +15,7 @@ use super::load::GuestData;
 pub fn build_upcoming_card(data: &GuestData) -> Surface {
     Surface::new(
         Card::new()
-            .icon(IconName::Car)
+            .icon(super::status_cell::method_icon(&data.config.method))
             .title("i18n:nav.access-guide")
             .child(
                 Text::new()

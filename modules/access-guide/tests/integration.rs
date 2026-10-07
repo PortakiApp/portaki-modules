@@ -104,12 +104,51 @@ fn upcoming_card_renders_compact_method_summary() {
             let json = serde_json::to_string(&surface).expect("json");
             assert!(json.contains("upcoming.card"));
             assert!(json.contains("i18n:nav.access-guide"));
-            // Legacy keybox config → keybox method label.
+            // Legacy keybox config → keybox method label, and the icon that names it.
             assert!(json.contains("i18n:guest.method.keybox"));
+            // The icon follows the method: a keybox is a key, never the generic car.
+            assert!(json.contains("\"icon\":\"key\""));
+            assert!(!json.contains("\"car\""));
             // Never leak secrets on the compact card.
             assert!(!json.contains("4821"));
             assert!(!json.contains("A17B"));
         });
+}
+
+/// The icon names the way in: a meeting is an hour, a reception desk is a handover. Same mapping
+/// as the status cell — one method, one icon, wherever the method is announced.
+#[test]
+#[serial]
+fn upcoming_card_icon_follows_the_method() {
+    for (method, icon) in [
+        ("keybox", "key"),
+        ("door_code", "key"),
+        ("smart_lock", "key"),
+        ("in_person", "clock"),
+        ("building_staff", "handshake"),
+        ("host_greets", "user"),
+        ("other", "key"),
+    ] {
+        let config = HostConfig {
+            primary_method: method.into(),
+            reveal_policy: "always".into(),
+            // `other` with nothing else written is host silence, and silence draws an empty
+            // state rather than a card: one field is enough to make the config real.
+            address: "Ch. des Douaniers".into(),
+            ..HostConfig::default()
+        };
+        MockContext::guest()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&config)
+            .run(|ctx| {
+                let json =
+                    serde_json::to_string(&render_upcoming_card(ctx).expect("surface")).unwrap();
+                assert!(
+                    json.contains(&format!("\"icon\":\"{icon}\"")),
+                    "{method} should be announced with {icon} — {json}"
+                );
+            });
+    }
 }
 
 #[test]

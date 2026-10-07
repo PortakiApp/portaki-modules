@@ -114,7 +114,7 @@ fn secret_cell(data: &GuestData) -> Option<Cell> {
         label,
         value: code.to_string(),
         mono: true,
-        icon: IconName::Key,
+        icon: method_icon(&data.config.method),
     })
 }
 
@@ -131,13 +131,13 @@ fn open_cell(data: &GuestData) -> Cell {
             value: first_filled(&[time_hint.as_deref(), Some(meeting_place)])
                 .unwrap_or_else(|| "i18n:guest.status.inPerson.toAgree".into()),
             mono: false,
-            icon: IconName::Clock,
+            icon: method_icon(&data.config.method),
         },
         MethodFields::BuildingStaff { staff_kind, .. } => Cell {
             label: "i18n:guest.status.keys",
             value: staff_label(*staff_kind).into(),
             mono: false,
-            icon: IconName::Handshake,
+            icon: method_icon(&data.config.method),
         },
         MethodFields::HostGreets { eta_hint, .. } => Cell {
             label: "i18n:guest.status.welcome",
@@ -146,7 +146,7 @@ fn open_cell(data: &GuestData) -> Cell {
             value: first_filled(&[eta_hint.as_deref()])
                 .unwrap_or_else(|| "i18n:guest.status.welcome.host".into()),
             mono: false,
-            icon: IconName::User,
+            icon: method_icon(&data.config.method),
         },
         // A code-bearing method with no code written, or `Other`: the cell points at the page
         // rather than claiming a value it does not have.
@@ -157,8 +157,26 @@ fn open_cell(data: &GuestData) -> Cell {
             label: "i18n:guest.status.access",
             value: "i18n:guest.status.access.instructions".into(),
             mono: false,
-            icon: IconName::Key,
+            icon: method_icon(&data.config.method),
         },
+    }
+}
+
+/// The icon that names the way in, for any surface that announces the method.
+///
+/// One mapping, because the strip cell and the pre-arrival card name the same thing: a keybox is
+/// a key, a meeting is an hour, a reception desk is a handover. The `Lock` of a masked cell is
+/// not here — that one follows the reveal schedule, not the method.
+pub(super) fn method_icon(method: &MethodFields) -> IconName {
+    match method {
+        // A code to type, whatever it opens — and `Other`, where the page holds the instructions.
+        MethodFields::Keybox { .. }
+        | MethodFields::DoorCode { .. }
+        | MethodFields::SmartLock { .. }
+        | MethodFields::Other {} => IconName::Key,
+        MethodFields::InPerson { .. } => IconName::Clock,
+        MethodFields::BuildingStaff { .. } => IconName::Handshake,
+        MethodFields::HostGreets { .. } => IconName::User,
     }
 }
 
