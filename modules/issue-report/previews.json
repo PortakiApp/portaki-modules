@@ -3,70 +3,6 @@
   "surfaces": [
     {
       "i18n": {
-        "form.category.appliance": "Appareil ou équipement",
-        "home.card.openForm": "Nouveau signalement",
-        "home.card.thanks": "Merci — votre hôte a été prévenu.",
-        "home.card.title": "Signaler un problème",
-        "home.card.yourReports": "Vos signalements ce séjour",
-        "nav.issue-report": "Signaler un problème"
-      },
-      "surfaceId": "home.card",
-      "title": "Signaler un problème",
-      "tree": {
-        "action": {
-          "args": {
-            "icon": "danger-triangle",
-            "title": "i18n:home.card.title"
-          },
-          "presentation": "bottomSheet",
-          "surface_render": "guest.form",
-          "type": "openOverlay"
-        },
-        "children": [
-          {
-            "children": [
-              {
-                "text": "i18n:home.card.thanks",
-                "type": "Text",
-                "variant": "body"
-              },
-              {
-                "text": "i18n:home.card.yourReports",
-                "type": "Text",
-                "variant": "caption"
-              },
-              {
-                "subtitle": "i18n:form.category.appliance",
-                "title": "Le four ne chauffe plus",
-                "type": "ListItem"
-              },
-              {
-                "action": {
-                  "args": {
-                    "icon": "danger-triangle",
-                    "title": "i18n:home.card.title"
-                  },
-                  "presentation": "bottomSheet",
-                  "surface_render": "guest.form",
-                  "type": "openOverlay"
-                },
-                "chevron": true,
-                "leading": "danger-triangle",
-                "title": "i18n:home.card.openForm",
-                "type": "ListItem"
-              }
-            ],
-            "gap": 12.0,
-            "type": "Stack"
-          }
-        ],
-        "icon": "danger-triangle",
-        "title": "i18n:home.card.title",
-        "type": "Card"
-      }
-    },
-    {
-      "i18n": {
         "form.category.access": "Accès ou clés",
         "form.category.appliance": "Appareil ou équipement",
         "form.category.cleanliness": "Propreté",
@@ -190,6 +126,70 @@
           }
         ],
         "type": "Form"
+      }
+    },
+    {
+      "i18n": {
+        "form.category.appliance": "Appareil ou équipement",
+        "home.card.openForm": "Nouveau signalement",
+        "home.card.thanks": "Merci — votre hôte a été prévenu.",
+        "home.card.title": "Signaler un problème",
+        "home.card.yourReports": "Vos signalements ce séjour",
+        "nav.issue-report": "Signaler un problème"
+      },
+      "surfaceId": "home.card",
+      "title": "Signaler un problème",
+      "tree": {
+        "action": {
+          "args": {
+            "icon": "danger-triangle",
+            "title": "i18n:home.card.title"
+          },
+          "presentation": "bottomSheet",
+          "surface_render": "guest.form",
+          "type": "openOverlay"
+        },
+        "children": [
+          {
+            "children": [
+              {
+                "text": "i18n:home.card.thanks",
+                "type": "Text",
+                "variant": "body"
+              },
+              {
+                "text": "i18n:home.card.yourReports",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "subtitle": "i18n:form.category.appliance",
+                "title": "Le four ne chauffe plus",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "args": {
+                    "icon": "danger-triangle",
+                    "title": "i18n:home.card.title"
+                  },
+                  "presentation": "bottomSheet",
+                  "surface_render": "guest.form",
+                  "type": "openOverlay"
+                },
+                "chevron": true,
+                "leading": "danger-triangle",
+                "title": "i18n:home.card.openForm",
+                "type": "ListItem"
+              }
+            ],
+            "gap": 12.0,
+            "type": "Stack"
+          }
+        ],
+        "icon": "danger-triangle",
+        "title": "i18n:home.card.title",
+        "type": "Card"
       }
     }
   ]

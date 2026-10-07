@@ -170,7 +170,11 @@ pub fn check_all_phased(
     check_previews(module_root, emissions, rendered);
 }
 
-fn check_previews(module_root: &str, emissions: &str, rendered: Vec<(&str, Surface)>) {
+fn check_previews(module_root: &str, emissions: &str, mut rendered: Vec<(&str, Surface)>) {
+    // Trié avant de construire le document, comme `check_demo` le fait pour `demo.json` : sans ça
+    // l'ordre des surfaces du fichier suit celui du `vec!` du test, et `stable_uuids` numérotant
+    // dans l'ordre d'apparition, réordonner l'appel renumérotait tous les identifiants.
+    rendered.sort_by_key(|(id, _)| *id);
     let root = Path::new(module_root);
     let bundle = fr_bundle(module_root);
     let declared = guest_routes(Path::new(emissions));
