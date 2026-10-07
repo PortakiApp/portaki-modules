@@ -24,6 +24,7 @@ fn sample_config() -> ModuleConfig {
         hint: Some(I18nText::new("5 GHz conseillé", "Prefer 5 GHz")),
         connection_steps: None,
         security: WifiSecurity::Wpa,
+        hidden: false,
         reveal_policy: RevealPolicy::DayBefore16h,
     }
 }
@@ -213,5 +214,24 @@ fn a_save_in_english_keeps_the_french() {
             let json = serde_json::to_string(&render_explore_detail(ctx).expect("detail")).unwrap();
             assert!(json.contains("Prefer 5 GHz"));
             assert!(!json.contains("5 GHz conseillé"));
+        });
+}
+
+/// La note de l'hôte est le sous-titre de la carte : la redire dans le corps l'affichait deux fois
+/// sur le même écran. Dans la feuille, où il n'y a pas de sous-titre, elle reste.
+#[test]
+#[serial]
+fn the_host_note_is_said_once_on_the_card_and_once_in_the_sheet() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&sample_config())
+        .run(|ctx| {
+            let card = serde_json::to_string(&render_home_card(ctx.clone()).expect("carte"))
+                .expect("json");
+            assert_eq!(card.matches("5 GHz conseillé").count(), 1, "{card}");
+
+            let sheet =
+                serde_json::to_string(&render_explore_detail(ctx).expect("feuille")).expect("json");
+            assert_eq!(sheet.matches("5 GHz conseillé").count(), 1, "{sheet}");
         });
 }

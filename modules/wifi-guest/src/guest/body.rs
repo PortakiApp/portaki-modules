@@ -41,16 +41,34 @@ fn push_qr_code(children: &mut Vec<Component>, data: &GuestData) {
     if !password.is_empty() && !data.password_revealed {
         return;
     }
-    let Some(payload) = wifi_payload(&data.config.ssid, password, data.config.security) else {
+    let Some(payload) = wifi_payload(
+        &data.config.ssid,
+        password,
+        data.config.security,
+        data.config.hidden,
+    ) else {
         return;
     };
     children.push(Component::QRCode(QRCode::new().value(payload)));
 }
 
-pub fn build_wifi_body(data: &GuestData, show_security_banner: bool) -> Vec<Component> {
+/// Où ce corps est dessiné — la carte d'accueil, ou la feuille qu'elle ouvre.
+///
+/// Les deux ne portent pas la même chose : la carte a un sous-titre, la feuille non ; la feuille a
+/// la place du rappel de sécurité, la carte non. Un seul paramètre le dit, plutôt que deux
+/// booléens qu'on finit par passer à l'envers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Placement {
+    /// Carte d'accueil : la note de l'hôte est déjà son sous-titre.
+    Card,
+    /// Feuille de détail : rien au-dessus, tout se dit ici.
+    Sheet,
+}
+
+pub fn build_wifi_body(data: &GuestData, placement: Placement) -> Vec<Component> {
     let mut children = Vec::new();
 
-    if show_security_banner {
+    if placement == Placement::Sheet {
         children.push(Component::InfoBanner(
             InfoBanner::new()
                 .title("i18n:guest.security.title")
@@ -86,8 +104,12 @@ pub fn build_wifi_body(data: &GuestData, show_security_banner: bool) -> Vec<Comp
 
     push_qr_code(&mut children, data);
 
-    if let Some(hint) = data.config.hint_text(&data.locale) {
-        children.push(Text::new().text(hint).variant(TextVariant::Caption).into());
+    // La note de l'hôte est le sous-titre de la carte : la redire dans le corps l'affichait deux
+    // fois sur le même écran. Dans la feuille, où il n'y a pas de sous-titre, elle reste.
+    if placement == Placement::Sheet {
+        if let Some(hint) = data.config.hint_text(&data.locale) {
+            children.push(Text::new().text(hint).variant(TextVariant::Caption).into());
+        }
     }
 
     if let Some(steps) = data.config.connection_steps_text(&data.locale) {

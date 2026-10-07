@@ -90,11 +90,6 @@
             "value": "WIFI:T:WPA;S:Maison-Invites;P:soleil-2026;;"
           },
           {
-            "text": "Le réseau 5 GHz est plus rapide dans le salon.",
-            "type": "Text",
-            "variant": "caption"
-          },
-          {
             "text": "Choisissez « Maison-Invites » dans les réglages Wi-Fi, puis saisissez le mot de passe.",
             "type": "Text",
             "variant": "body"

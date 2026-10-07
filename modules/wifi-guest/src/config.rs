@@ -95,6 +95,12 @@ pub struct ModuleConfig {
         label = "config.security"
     )]
     pub security: WifiSecurity,
+    /// Réseau masqué : le téléphone ne le trouve pas en scannant les alentours.
+    ///
+    /// Sans le `H:true` du code QR, le téléphone cherche un réseau qui ne s'annonce pas et
+    /// n'arrive à rien — le code échoue en silence, et le voyageur croit le mot de passe faux.
+    #[field(label = "host.hidden.label")]
+    pub hidden: bool,
     #[field(label = "host.hint.label")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hint: Option<I18nText>,
