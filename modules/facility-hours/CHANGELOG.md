@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.2](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.8.1...facility-hours-v1.8.2) (2026-10-07)
+
+
+### Bug Fixes
+
+* **facility-hours:** stay tiles name existing keys ([3e7303b](https://github.com/PortakiApp/portaki-modules/commit/3e7303b514202bc14f9dfbe0c3952c077ebaf430))
+
 ## [1.8.1](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.8.0...facility-hours-v1.8.1) (2026-10-04)
 
 

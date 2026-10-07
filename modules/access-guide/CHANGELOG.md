@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.5.2](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.5.1...access-guide-v1.5.2) (2026-10-07)
+
+
+### Bug Fixes
+
+* **access-guide:** name the property on the access map ([4b57647](https://github.com/PortakiApp/portaki-modules/commit/4b57647039b040f372bae5cf4a40200b4deea0c7))
+* **access-guide:** upcoming icon follows method ([b8fc00d](https://github.com/PortakiApp/portaki-modules/commit/b8fc00d03a7c2d23dd627915d5f7e842f7d2be96))
+* **guest:** scope the prep-card routes per module ([09bb90c](https://github.com/PortakiApp/portaki-modules/commit/09bb90c6f71a7f1529ea9104609915b4d32d0f24))
+* **previews:** keep the sample property where its places are ([df21bf9](https://github.com/PortakiApp/portaki-modules/commit/df21bf91149411c1730b6af10979caffc2ed2e63))
+
 ## [1.5.1](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.5.0...access-guide-v1.5.1) (2026-10-04)
 
 

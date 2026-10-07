@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.1](https://github.com/PortakiApp/portaki-modules/compare/events-v1.5.0...events-v1.5.1) (2026-10-07)
+
+
+### Bug Fixes
+
+* **access-guide:** name the property on the access map ([4b57647](https://github.com/PortakiApp/portaki-modules/commit/4b57647039b040f372bae5cf4a40200b4deea0c7))
+* **guest:** scope the prep-card routes per module ([09bb90c](https://github.com/PortakiApp/portaki-modules/commit/09bb90c6f71a7f1529ea9104609915b4d32d0f24))
+* **previews:** keep the sample property where its places are ([df21bf9](https://github.com/PortakiApp/portaki-modules/commit/df21bf91149411c1730b6af10979caffc2ed2e63))
+
 ## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/events-v1.4.1...events-v1.5.0) (2026-10-04)
 
 

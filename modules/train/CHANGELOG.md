@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.1](https://github.com/PortakiApp/portaki-modules/compare/train-v2.0.0...train-v2.0.1) (2026-10-07)
+
+
+### Bug Fixes
+
+* **guest:** scope the prep-card routes per module ([09bb90c](https://github.com/PortakiApp/portaki-modules/commit/09bb90c6f71a7f1529ea9104609915b4d32d0f24))
+* **train:** say the day in words, not in ISO ([d79482d](https://github.com/PortakiApp/portaki-modules/commit/d79482dd4b7431164f9ccffdb09fcf1c8d150d03))
+
 ## [2.0.0](https://github.com/PortakiApp/portaki-modules/compare/train-v1.4.0...train-v2.0.0) (2026-10-04)
 
 

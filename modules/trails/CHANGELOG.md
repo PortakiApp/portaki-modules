@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.2](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.5.1...trails-v0.5.2) (2026-10-07)
+
+
+### Bug Fixes
+
+* **access-guide:** name the property on the access map ([4b57647](https://github.com/PortakiApp/portaki-modules/commit/4b57647039b040f372bae5cf4a40200b4deea0c7))
+* **previews:** keep the sample property where its places are ([df21bf9](https://github.com/PortakiApp/portaki-modules/commit/df21bf91149411c1730b6af10979caffc2ed2e63))
+
 ## [0.5.1](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.5.0...trails-v0.5.1) (2026-10-04)
 
 
