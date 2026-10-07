@@ -264,7 +264,39 @@
             "type": "InfoBanner"
           },
           {
+            "details": [
+              {
+                "label": "lundi",
+                "value": "09:00 – 20:00"
+              },
+              {
+                "label": "mardi",
+                "value": "09:00 – 20:00"
+              },
+              {
+                "label": "mercredi",
+                "value": "09:00 – 20:00"
+              },
+              {
+                "label": "jeudi",
+                "value": "09:00 – 20:00"
+              },
+              {
+                "label": "vendredi",
+                "value": "09:00 – 20:00"
+              },
+              {
+                "label": "samedi",
+                "value": "09:00 – 20:00"
+              },
+              {
+                "current": true,
+                "label": "dimanche",
+                "value": "09:00 – 20:00"
+              }
+            ],
             "leading": "sun",
+            "subtitle": "9 h – 20 h",
             "title": "Piscine",
             "trailing": {
               "badge": {
@@ -275,7 +307,39 @@
             "type": "ListItem"
           },
           {
+            "details": [
+              {
+                "label": "lundi",
+                "value": "07:00 – 22:00"
+              },
+              {
+                "label": "mardi",
+                "value": "07:00 – 22:00"
+              },
+              {
+                "label": "mercredi",
+                "value": "07:00 – 22:00"
+              },
+              {
+                "label": "jeudi",
+                "value": "07:00 – 22:00"
+              },
+              {
+                "label": "vendredi",
+                "value": "07:00 – 22:00"
+              },
+              {
+                "label": "samedi",
+                "value": "07:00 – 22:00"
+              },
+              {
+                "current": true,
+                "label": "dimanche",
+                "value": "07:00 – 22:00"
+              }
+            ],
             "leading": "droplet",
+            "subtitle": "7 h – 22 h",
             "title": "Laverie",
             "trailing": {
               "badge": {
@@ -286,7 +350,39 @@
             "type": "ListItem"
           },
           {
+            "details": [
+              {
+                "label": "lundi",
+                "value": "08:30 – 18:00"
+              },
+              {
+                "label": "mardi",
+                "value": "08:30 – 18:00"
+              },
+              {
+                "label": "mercredi",
+                "value": "08:30 – 18:00"
+              },
+              {
+                "label": "jeudi",
+                "value": "08:30 – 18:00"
+              },
+              {
+                "label": "vendredi",
+                "value": "08:30 – 18:00"
+              },
+              {
+                "label": "samedi",
+                "value": "08:30 – 18:00"
+              },
+              {
+                "current": true,
+                "label": "dimanche",
+                "value": "08:30 – 18:00"
+              }
+            ],
             "leading": "building",
+            "subtitle": "8 h 30 – 12 h · 14 h – 18 h",
             "title": "Accueil de la résidence",
             "trailing": {
               "badge": {

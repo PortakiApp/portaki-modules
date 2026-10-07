@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.0
+
+Les horaires complets, sans quitter la carte.
+
+* Chaque équipement dit jusqu'à quand il est ouvert, et plus seulement qu'il l'est.
+* La semaine se déplie sur la carte d'accueil : il fallait ouvrir la feuille pour la voir.
+
 ## 1.8.2
 
 Les heures du séjour se lisent en français.

@@ -151,12 +151,27 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         } else {
             let schedule = facility.schedule();
             let row = match now.and_then(|now| schedule.state_at(now, tz.as_ref())) {
-                // Sur la carte, l'état remplace l'horaire : c'est ce qu'on lit d'un coup d'œil.
+                /*
+                 * Sur la carte aussi : l'horaire, l'état, et la semaine dépliable.
+                 *
+                 * <p>L'état remplaçait l'horaire, « ce qu'on lit d'un coup d'œil ». Mais
+                 * « Ouvert » ne dit pas jusqu'à quand, et c'est la question suivante — il
+                 * fallait ouvrir la feuille pour la poser. La maquette (§2.6) montre les trois
+                 * sur la carte, et la semaine ne coûte rien tant qu'elle est repliée.
+                 */
                 Some(state) => {
-                    let mut item = ListItem::new().title(title).trailing(state_badge(&state));
+                    let mut item = ListItem::new().title(title);
                     if let Some(icon) = facility.icon_name() {
                         item = item.leading(Leading::Icon(icon.to_string()));
                     }
+                    if !hours.is_empty() {
+                        item = item.subtitle(hours.clone());
+                    }
+                    item = item.trailing(state_badge(&state)).details(week_rows(
+                        facility,
+                        &data.locale,
+                        today,
+                    ));
                     Component::ListItem(item)
                 }
                 None => Component::KeyValue(KeyValue::new().key(title).value(hours)),
