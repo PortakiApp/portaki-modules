@@ -935,7 +935,7 @@
         "nav.local-guide": "Bons plans"
       },
       "labelKey": "nav.local-guide",
-      "path": "upcoming",
+      "path": "local-guide/upcoming",
       "role": "upcoming",
       "surfaceId": "upcoming.card",
       "tree": {

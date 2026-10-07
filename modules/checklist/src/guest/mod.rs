@@ -26,7 +26,7 @@ pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
 #[portaki_sdk::surface(
     guest,
     id = "post-stay.card",
-    path = "post-stay",
+    path = "checklist/post-stay",
     label_key = "home.card.title",
     role = GuestRole::PostStay
 )]

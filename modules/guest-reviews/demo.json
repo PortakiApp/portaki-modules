@@ -34,7 +34,7 @@
         "home.card.title": "Votre avis"
       },
       "labelKey": "nav.guest-reviews",
-      "path": "post-stay",
+      "path": "guest-reviews/post-stay",
       "role": "post-stay",
       "surfaceId": "post-stay.card",
       "tree": {

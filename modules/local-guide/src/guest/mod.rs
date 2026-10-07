@@ -29,7 +29,7 @@ pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
 #[portaki_sdk::surface(
     guest,
     id = "upcoming.card",
-    path = "upcoming",
+    path = "local-guide/upcoming",
     label_key = "nav.local-guide",
     role = GuestRole::Upcoming
 )]

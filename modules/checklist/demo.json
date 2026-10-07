@@ -28,7 +28,7 @@
         "home.card.title": "Checklists"
       },
       "labelKey": "home.card.title",
-      "path": "post-stay",
+      "path": "checklist/post-stay",
       "role": "post-stay",
       "surfaceId": "post-stay.card",
       "tree": {

@@ -6,6 +6,7 @@ L'icône dit le moyen d'accès.
 
 * La carte « Ce qui vous attend » annonce une boîte à clés avec une clé, et non plus avec une voiture.
 * L'icône suit le moyen d'accès : une clé pour un code, une heure pour un rendez-vous, une poignée de main pour une réception.
+* La tuile avant l'arrivée a maintenant sa propre adresse : elle ne partage plus celle des autres modules.
 
 ## 1.5.1
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.2
+
+Correctif interne.
+
+* La tuile après le séjour a maintenant sa propre adresse : elle ne partage plus celle des autres modules.
+
 ## 1.4.1
 
 Montée technique.
