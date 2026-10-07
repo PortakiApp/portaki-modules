@@ -6,11 +6,11 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::{
-    BadgeSpec, Emphasis, KeyValueLayout, Leading, LeadingVisual, ListItemLayout, StackDirection,
-    SurfaceLevel, Tone, Trailing, TrailingVisual,
+    Author, BadgeSpec, Emphasis, KeyValueLayout, Leading, LeadingVisual, ListItemLayout,
+    RichTextVariant, StackDirection, SurfaceLevel, Tone, Trailing, TrailingVisual,
 };
 use portaki_sdk::sdui::primitives::{
-    Badge, Button, Card, Grid, Image, InfoBanner, KeyValue, ListItem, Stack, Text,
+    Badge, Button, Card, Grid, Image, InfoBanner, KeyValue, ListItem, RichText, Stack, Text,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -263,6 +263,9 @@ fn row(key: &str, value: &str, mono: bool) -> Component {
 }
 
 /// « Le conseil de Claire » : ce qu'aucun fournisseur n'écrira.
+///
+/// Citation signée de §8 : le module marque le bloc avec `author`, la coquille y met l'hôte du
+/// profil. Rien ici ne nomme le prestataire de l'activité — le conseil est de l'hôte, pas de lui.
 fn host_tip(data: &GuestData, activity: &HostActivityRow) -> Option<Component> {
     let tip = activity.tip.get(&data.locale).trim().to_string();
     if tip.is_empty() {
@@ -273,7 +276,12 @@ fn host_tip(data: &GuestData, activity: &HostActivityRow) -> Option<Component> {
             .surface(SurfaceLevel::Elevated)
             .icon(IconName::Message)
             .title(tip_title(&data.host_name))
-            .child(Text::new().text(tip).variant(TextVariant::Body)),
+            .child(
+                RichText::new()
+                    .content(tip)
+                    .variant(RichTextVariant::Lead)
+                    .author(Author::default()),
+            ),
     ))
 }
 

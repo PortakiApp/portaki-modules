@@ -9,9 +9,11 @@
 //! Le conseil de l'hôte reste la seule chose qu'aucun fournisseur n'écrira.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::common::{Emphasis, KeyValueLayout, StackDirection, SurfaceLevel, Tone};
+use portaki_sdk::sdui::common::{
+    Author, Emphasis, KeyValueLayout, RichTextVariant, StackDirection, SurfaceLevel, Tone,
+};
 use portaki_sdk::sdui::primitives::{
-    Badge, Button, Card, Grid, Image, InfoBanner, KeyValue, Stack, Text,
+    Badge, Button, Card, Grid, Image, InfoBanner, KeyValue, RichText, Stack, Text,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -250,14 +252,24 @@ fn row(key: &str, value: &str) -> Component {
 }
 
 /// « Le conseil de Claire » : la seule chose qu'aucun fournisseur n'écrira.
+///
+/// Citation signée de §8, comme les deux autres conseils du module : le bloc porte `author`, la
+/// coquille y met le nom, le rôle, les initiales et la photo de l'hôte. L'encart prend le glyphe
+/// `message` des deux autres — `sparkles` est celui de la carte d'accueil des activités, pas
+/// celui d'une citation.
 fn host_tip(data: &GuestData, link: &ActivityLink) -> Option<Component> {
     let tip = link.tip.trim();
     (!tip.is_empty()).then(|| {
         Card::new()
             .surface(SurfaceLevel::Elevated)
-            .icon(IconName::Sparkles)
+            .icon(IconName::Message)
             .title(tip_title(&data.host_name))
-            .child(Text::new().text(tip.to_string()))
+            .child(
+                RichText::new()
+                    .content(tip.to_string())
+                    .variant(RichTextVariant::Lead)
+                    .author(Author::default()),
+            )
             .into()
     })
 }
