@@ -512,3 +512,50 @@ fn a_step_reads_its_text_not_its_number() {
             assert!(!out.contains("\"title\":\"1\""), "{out}");
         });
 }
+
+/// Trente appareils : le cas de la maquette, que la borne de dix rendait inatteignable.
+///
+/// Une villa avec sa cuisine, ses trois salles de bain et sa buanderie dépassait dix sans effort,
+/// et le onzième était refusé. Le contrat en annonce soixante (§2.4). La carte ne bouge pas —
+/// quatre tuiles et « Voir les N » — et la liste reste groupée par pièce.
+#[test]
+#[serial]
+fn thirty_appliances_fit_and_the_card_stays_short() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            for index in 0..30 {
+                save_appliance(
+                    ctx.clone(),
+                    SaveApplianceArgs {
+                        id: None,
+                        name: format!("Appareil {index}"),
+                        emoji: "🔌".into(),
+                        description: String::new(),
+                        featured: index < 4,
+                        order: Some(index),
+                        location: format!("Pièce {}", index % 5),
+                        manual_url: String::new(),
+                        safety_note: String::new(),
+                        status: ApplianceStatus::Active,
+                    },
+                )
+                .unwrap_or_else(|e| panic!("appareil {index} refusé : {e:?}"));
+            }
+
+            let content = get_content(ctx.clone(), GetContentArgs::default()).expect("contenu");
+            assert_eq!(content.devices.len(), 30);
+
+            // Quatre tuiles mises en avant, pas trente : la carte donne un aperçu (§2.4).
+            let card = serde_json::to_string(&render_home_card(ctx.clone()).expect("carte"))
+                .expect("json");
+            assert_eq!(card.matches("\"layout\":\"tile\"").count(), 4, "{card}");
+
+            // La liste complète groupe par pièce : cinq pièces, cinq cartes.
+            let list = render_explore_detail(ctx).expect("liste");
+            let json = serde_json::to_string(&list).expect("json");
+            assert_eq!(json.matches("\"type\":\"Card\"").count(), 5, "{json}");
+        });
+}
