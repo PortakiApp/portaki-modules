@@ -3,6 +3,8 @@
   "surfaces": [
     {
       "i18n": {
+        "form.head.lead": "Dites-le à votre hôte, il réapprovisionne.",
+        "form.head.title": "Il manque quelque chose ?",
         "form.item.hint": "Plusieurs choix possibles.",
         "form.item.label": "Consommable",
         "form.level.label": "Situation",
@@ -18,6 +20,36 @@
       "surfaceId": "guest.form",
       "tree": {
         "children": [
+          {
+            "children": [
+              {
+                "name": "package",
+                "size": 24.0,
+                "tone": "primary",
+                "type": "Icon"
+              },
+              {
+                "children": [
+                  {
+                    "text": "i18n:form.head.title",
+                    "type": "Text",
+                    "variant": "title"
+                  },
+                  {
+                    "emphasis": "subtle",
+                    "text": "i18n:form.head.lead",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 4.0,
+                "type": "Stack"
+              }
+            ],
+            "direction": "horizontal",
+            "gap": 12.0,
+            "type": "Stack"
+          },
           {
             "children": [
               {

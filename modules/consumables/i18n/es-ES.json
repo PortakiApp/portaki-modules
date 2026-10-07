@@ -2,6 +2,8 @@
   "catalog.host.main": "Consumibles",
   "catalog.host.stay": "Consumibles",
   "catalog.host.stock": "Consumibles",
+  "form.head.lead": "Dígaselo a su anfitrión, él lo repone.",
+  "form.head.title": "¿Falta algo?",
   "form.item.hint": "Puedes elegir varios.",
   "form.item.label": "Consumible",
   "form.level.label": "Situación",

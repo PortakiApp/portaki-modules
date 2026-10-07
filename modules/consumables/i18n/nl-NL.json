@@ -2,6 +2,8 @@
   "catalog.host.main": "Verbruiksartikelen",
   "catalog.host.stay": "Verbruiksartikelen",
   "catalog.host.stock": "Verbruiksartikelen",
+  "form.head.lead": "Laat het uw gastheer weten, hij vult aan.",
+  "form.head.title": "Ontbreekt er iets?",
   "form.item.hint": "Je kunt er meerdere kiezen.",
   "form.item.label": "Verbruiksartikel",
   "form.level.label": "Situatie",

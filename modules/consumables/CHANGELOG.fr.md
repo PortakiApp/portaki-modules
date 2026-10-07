@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.6.0
+
+Un en-tête sur la feuille.
+
+* La feuille s'ouvre sur « Il manque quelque chose ? » et dit ce que l'hôte en fera, au lieu du seul mot « Consommables ».
+
 ## 2.5.0
 
 Un emoji par produit, et votre délai annoncé.
