@@ -69,32 +69,85 @@ fn meeting_coords(data: &GuestData) -> Option<(f64, f64)> {
     }
 }
 
-/// Le plan de la carte d'accès, le logement nommé dessus.
+/// Le plan de la carte d'accès : le logement, et le lieu de rendez-vous quand il y en a un.
 ///
 /// <p>Le repère portait `"Logement"` — une chaîne française **écrite dans le Rust du module**, que
 /// l'anglophone lisait telle quelle, et qui nommait autrement ce que la Carte du livret appelle
 /// par son nom. Le nom du logement vient de la plateforme : il n'a pas à être traduit, et il est
 /// le même partout.
-fn map_at(name: &str, lat: f64, lng: f64) -> Component {
-    let mut marker = MapMarker::new("property", lat, lng).kind(MapMarkerKind::Property);
-    if !name.is_empty() {
-        marker = marker.label(name);
+///
+/// <p>Il était aussi planté **aux coordonnées du rendez-vous** dès que l'hôte en posait un : le
+/// livret annonçait « L'Islette » dans une rue où le logement n'est pas, à vingt-cinq kilomètres
+/// de son adresse. Deux lieux, deux repères — et c'est ce que la maquette montre (§2.1), qui en
+/// pose trois.
+fn property_map(data: &GuestData) -> Option<Component> {
+    let home = data.coordinates.map(|point| (point.lat, point.lng));
+    let meeting = meeting_coords(data);
+
+    let mut markers: Vec<MapMarker> = Vec::new();
+    if let Some((lat, lng)) = home {
+        let mut marker = MapMarker::new("property", lat, lng).kind(MapMarkerKind::Property);
+        if !data.property_name.is_empty() {
+            marker = marker.label(data.property_name.clone());
+        }
+        markers.push(marker);
     }
-    Component::Map(
+    if let Some((lat, lng)) = meeting {
+        markers.push(
+            MapMarker::new("meeting", lat, lng)
+                .kind(MapMarkerKind::Poi)
+                .icon(IconName::Users)
+                .label("i18n:guest.inPerson.meetingPlace"),
+        );
+    }
+    if markers.is_empty() {
+        return None;
+    }
+
+    let (lat, lng, zoom) = frame(home, meeting);
+    Some(Component::Map(
         Map::new()
-            .viewport(MapViewport::new(lat, lng, Some(15.0)))
-            .markers(vec![marker])
+            .viewport(MapViewport::new(lat, lng, Some(zoom)))
+            .markers(markers)
             .isStatic(true)
             .interactionMode(MapInteractionMode::None),
-    )
+    ))
 }
 
-fn property_map(data: &GuestData) -> Option<Component> {
-    if let Some((lat, lng)) = meeting_coords(data) {
-        return Some(map_at(&data.property_name, lat, lng));
+/// Où centrer la vignette, et d'assez loin pour que les deux lieux y tiennent.
+///
+/// `MapViewport` ne prend qu'un centre et un zoom — pas de cadre à ajuster. Avec deux lieux, on
+/// vise le milieu et on recule par paliers : un rendez-vous au bout de la rue et un rendez-vous à
+/// l'autre bout de la baie ne demandent pas la même échelle, et un zoom unique laissait le second
+/// hors champ.
+fn frame(home: Option<(f64, f64)>, meeting: Option<(f64, f64)>) -> (f64, f64, f64) {
+    match (home, meeting) {
+        (Some(a), Some(b)) => {
+            let metres = haversine_metres(a, b);
+            let zoom = match metres {
+                m if m < 400.0 => 15.0,
+                m if m < 1_500.0 => 14.0,
+                m if m < 5_000.0 => 12.0,
+                m if m < 20_000.0 => 10.0,
+                _ => 9.0,
+            };
+            ((a.0 + b.0) / 2.0, (a.1 + b.1) / 2.0, zoom)
+        }
+        (Some((lat, lng)), None) | (None, Some((lat, lng))) => (lat, lng, 15.0),
+        (None, None) => (0.0, 0.0, 15.0),
     }
-    data.coordinates
-        .map(|point| map_at(&data.property_name, point.lat, point.lng))
+}
+
+/// Haversine, rayon moyen de la Terre. Dupliqué de `waste-recycling` : vingt lignes dans deux
+/// modules coûtent moins qu'un champ de plus au SDK, qui se paie en release et en épinglage.
+fn haversine_metres((lat1, lng1): (f64, f64), (lat2, lng2): (f64, f64)) -> f64 {
+    const EARTH_RADIUS_M: f64 = 6_371_000.0;
+    let (phi1, phi2) = (lat1.to_radians(), lat2.to_radians());
+    let delta_phi = phi2 - phi1;
+    let delta_lambda = (lng2 - lng1).to_radians();
+    let a = (delta_phi / 2.0).sin().powi(2)
+        + phi1.cos() * phi2.cos() * (delta_lambda / 2.0).sin().powi(2);
+    2.0 * EARTH_RADIUS_M * a.sqrt().asin()
 }
 
 fn kv_row(key_i18n: &str, value: &str, mono: bool) -> Component {
@@ -185,7 +238,61 @@ fn secret_tiles(data: &GuestData) -> Vec<Component> {
             code,
         ));
     }
+    if tiles.is_empty() {
+        tiles.extend(plain_method_tile(data));
+    }
     tiles
+}
+
+/// La même valeur, en rangée plutôt qu'en tuile — rien d'autre ne change.
+fn as_row(component: Component) -> Component {
+    match component {
+        Component::KeyValue(value) => Component::KeyValue(KeyValue {
+            layout: None,
+            ..value
+        }),
+        other => other,
+    }
+}
+
+/// La tuile des moyens **sans code** : « Remise des clés · 16–19 h », « Réception · 24 h/24 ».
+///
+/// <p>La maquette donne une paire (libellé, valeur) à chacun des sept moyens, et la pose à côté
+/// de l'heure d'arrivée. Le module ne le faisait que pour les trois à code : avec une remise en
+/// main propre, la grille n'avait plus qu'une case — l'heure d'arrivée, étirée sur toute la
+/// largeur — et ce que l'hôte avait écrit du rendez-vous tombait en rangées grises plus bas.
+///
+/// <p>Ni `mono`, ni copie, ni masque : « 16–19 h » n'est pas un code.
+fn plain_method_tile(data: &GuestData) -> Option<Component> {
+    let (key, icon, value) = match &data.config.method {
+        MethodFields::InPerson { time_hint, .. } => (
+            "i18n:guest.inPerson.handover",
+            IconName::Users,
+            time_hint.clone()?,
+        ),
+        MethodFields::BuildingStaff { hours, .. } => (
+            "i18n:guest.buildingStaff.desk",
+            IconName::Building,
+            hours.clone()?,
+        ),
+        MethodFields::HostGreets { eta_hint, .. } => (
+            "i18n:guest.hostGreets.welcome",
+            IconName::Users,
+            eta_hint.clone()?,
+        ),
+        _ => return None,
+    };
+    let value = value.trim().to_string();
+    if value.is_empty() {
+        return None;
+    }
+    Some(Component::KeyValue(
+        KeyValue::new()
+            .key(key)
+            .value(value)
+            .layout(KeyValueLayout::Tile)
+            .icon(icon),
+    ))
 }
 
 fn push_text_row(children: &mut Vec<Component>, key_i18n: &str, value: &str) {
@@ -363,17 +470,12 @@ fn push_primary_method(children: &mut Vec<Component>, data: &GuestData, detailed
                 false,
             ));
             push_text_row(children, "i18n:guest.inPerson.meetingPlace", meeting_place);
-            // Map + Open Maps use meeting GPS via property_map / maps_url when set.
-            if let (Some(lat), Some(lng)) = (lat, lng) {
-                children.push(kv_row(
-                    "i18n:guest.inPerson.coords",
-                    &format!("{lat:.5}, {lng:.5}"),
-                    true,
-                ));
-            }
-            if let Some(time_hint) = time_hint {
-                push_text_row(children, "i18n:guest.inPerson.timeHint", time_hint);
-            }
+            // Les coordonnées décimales ne sortent plus en rangée : « 43.57712, 7.12044 » ne
+            // se lit pas, ne se compose pas, et le plan juste au-dessus montre le point. Le
+            // bouton « Ouvrir dans Maps » s'en sert toujours.
+            let _ = (lat, lng);
+            // L'heure du rendez-vous est passée en tuile, à côté de l'arrivée.
+            let _ = time_hint;
             if let Some(contact) = contact {
                 push_text_row(children, "i18n:guest.inPerson.contact", contact);
             }
@@ -557,13 +659,18 @@ pub fn build_access_glance(data: &GuestData) -> Vec<Component> {
     // la carte pour trouver (§2.1).
     let mut tiles = secret_tiles(data);
     tiles.extend(arrival_tile(data));
-    if !tiles.is_empty() {
-        children.push(Component::Grid(
+    match tiles.len() {
+        0 => {}
+        // Ce que disait déjà le commentaire de `secret_tiles`, et que la grille ne tenait pas :
+        // une case seule s'étire sur toute la largeur et sonne creux. La maquette n'en montre
+        // jamais une — elle met toujours la valeur du moyen à côté de l'heure d'arrivée.
+        1 => children.push(as_row(tiles.remove(0))),
+        _ => children.push(Component::Grid(
             Grid::new()
                 .minColumnWidth(130.0)
                 .plain(true)
                 .children(tiles),
-        ));
+        )),
     }
 
     // L'adresse reste : c'est la ligne qu'on lit à un chauffeur, et elle ne tient pas dans un
@@ -607,8 +714,23 @@ fn push_method_location(children: &mut Vec<Component>, data: &GuestData) {
         MethodFields::Keybox { location, .. } => {
             push_text_row(children, "i18n:guest.keybox.location", location)
         }
+        /*
+         * Le rendez-vous se dit en bandeau, pas en rangée.
+         *
+         * <p>C'est la seule chose que le voyageur doit avoir lue avant d'arriver — quelqu'un
+         * l'attend quelque part, à une heure. Entre l'adresse et le chemin, en gris, elle se lit
+         * comme un détail de plus ; la maquette la pose en `info`, au-dessus du reste.
+         */
         MethodFields::InPerson { meeting_place, .. } => {
-            push_text_row(children, "i18n:guest.inPerson.meetingPlace", meeting_place)
+            let place = meeting_place.trim();
+            if !place.is_empty() {
+                children.push(Component::InfoBanner(
+                    InfoBanner::new()
+                        .tone(Tone::Info)
+                        .title(place)
+                        .message("i18n:guest.inPerson.notify"),
+                ));
+            }
         }
         MethodFields::BuildingStaff { desk_location, .. } => push_text_row(
             children,

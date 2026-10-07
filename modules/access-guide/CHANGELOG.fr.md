@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.0
+
+La carte d'accès, quand il n'y a pas de code.
+
+* Corrigé : le plan plantait le logement aux coordonnées du rendez-vous, donc là où il n'est pas. Deux lieux, deux repères.
+* Une remise en main propre affiche « Remise des clés · 16–19 h » à côté de l'heure d'arrivée, au lieu d'une seule case étirée.
+* Le lieu du rendez-vous passe en bandeau d'information, au-dessus du reste : c'est ce qu'il faut avoir lu avant d'arriver.
+* Les coordonnées décimales ne s'affichent plus en clair : elles ne se lisent pas, et le plan montre le point.
+* Même tuile pour une réception d'immeuble et pour un accueil par l'hôte.
+
 ## 1.5.2
 
 L'icône dit le moyen d'accès.
