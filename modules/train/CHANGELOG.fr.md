@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.1
+
+Correctif interne.
+
+* La tuile avant l'arrivée a maintenant sa propre adresse : elle ne partage plus celle des autres modules.
+
 ## 2.0.0
 
 Les vrais horaires de votre gare.

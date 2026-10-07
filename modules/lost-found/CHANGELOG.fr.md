@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.1
+
+Correctif interne.
+
+* La tuile après le séjour a maintenant sa propre adresse : elle ne partage plus celle des autres modules.
+
 ## 1.7.0
 
 Dites sous combien de temps vous répondez.

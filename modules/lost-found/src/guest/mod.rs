@@ -34,7 +34,7 @@ pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
 #[portaki_sdk::surface(
     guest,
     id = "post-stay.card",
-    path = "post-stay",
+    path = "lost-found/post-stay",
     label_key = "nav.lost-found",
     role = GuestRole::PostStay
 )]

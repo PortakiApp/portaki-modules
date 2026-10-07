@@ -425,7 +425,7 @@
         "nav.weather": "Météo"
       },
       "labelKey": "nav.weather",
-      "path": "upcoming",
+      "path": "weather/upcoming",
       "role": "upcoming",
       "surfaceId": "upcoming.card",
       "tree": {

@@ -8,6 +8,7 @@ Vos conseils sont signés.
 * Même présentation partout : vos bons plans, vos activités et les liens d'activité que vous collez.
 * La signature vient de votre profil : rien de plus à renseigner, et elle suit la fiche du logement si elle change.
 * Le bouton de réservation de vos liens d'activité annonce à nouveau « Réserver auprès de Viator ».
+* La tuile avant l'arrivée a maintenant sa propre adresse : elle ne partage plus celle des autres modules.
 
 ## 1.9.0
 

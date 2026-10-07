@@ -392,7 +392,7 @@
         "home.card.yourReports": "Vos signalements ce séjour"
       },
       "labelKey": "nav.lost-found",
-      "path": "post-stay",
+      "path": "lost-found/post-stay",
       "role": "post-stay",
       "surfaceId": "post-stay.card",
       "tree": {

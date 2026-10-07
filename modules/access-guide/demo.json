@@ -297,7 +297,7 @@
         "nav.access-guide": "Accès & parking"
       },
       "labelKey": "nav.access-guide",
-      "path": "upcoming",
+      "path": "access-guide/upcoming",
       "role": "upcoming",
       "surfaceId": "upcoming.card",
       "tree": {

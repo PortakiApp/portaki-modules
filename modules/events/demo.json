@@ -364,7 +364,7 @@
         "home.card.title": "Événements"
       },
       "labelKey": "nav.events",
-      "path": "upcoming",
+      "path": "events/upcoming",
       "role": "upcoming",
       "surfaceId": "upcoming.card",
       "tree": {

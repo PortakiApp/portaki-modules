@@ -28,7 +28,7 @@ pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
 #[portaki_sdk::surface(
     guest,
     id = "upcoming.card",
-    path = "upcoming",
+    path = "weather/upcoming",
     label_key = "nav.weather",
     role = GuestRole::Upcoming
 )]

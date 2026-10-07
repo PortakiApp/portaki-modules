@@ -355,7 +355,7 @@
         "home.card.title": "Horaires trains"
       },
       "labelKey": "nav.train",
-      "path": "upcoming",
+      "path": "train/upcoming",
       "role": "upcoming",
       "surfaceId": "upcoming.card",
       "tree": {
