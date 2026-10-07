@@ -63,7 +63,7 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
 name = "appliances"
-version = "1.7.1"
+version = "1.8.0"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -190,7 +190,7 @@ dependencies = [
 
 [[package]]
 name = "consumables"
-version = "2.5.0"
+version = "2.6.0"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -232,7 +232,7 @@ dependencies = [
 
 [[package]]
 name = "emergency-contacts"
-version = "1.4.1"
+version = "1.5.0"
 dependencies = [
  "extism-pdk",
  "portaki-sdk",
@@ -347,7 +347,7 @@ dependencies = [
 
 [[package]]
 name = "facility-hours"
-version = "1.8.2"
+version = "1.9.0"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -553,7 +553,7 @@ dependencies = [
 
 [[package]]
 name = "issue-report"
-version = "1.4.1"
+version = "1.4.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -682,7 +682,7 @@ checksum = "0ceec5bc11778974d1bcb055b18002eba7f4b3518b6a0081b3af5f21666da9ad"
 
 [[package]]
 name = "lost-found"
-version = "1.7.1"
+version = "1.8.0"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -927,7 +927,7 @@ dependencies = [
 
 [[package]]
 name = "pre-arrival-form"
-version = "1.5.1"
+version = "1.5.2"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -1479,7 +1479,7 @@ dependencies = [
 
 [[package]]
 name = "waste-recycling"
-version = "1.7.0"
+version = "1.7.1"
 dependencies = [
  "chrono",
  "extism-pdk",

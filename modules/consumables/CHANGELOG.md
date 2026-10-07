@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.6.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.5.0...consumables-v2.6.0) (2026-10-07)
+
+
+### Features
+
+* **consumables:** open the sheet on a question ([a78ecff](https://github.com/PortakiApp/portaki-modules/commit/a78ecff1f203195f4469050d98b0dca995d5710b))
+
+
+### Bug Fixes
+
+* **previews:** trier les surfaces avant d'écrire previews.json ([95ba59b](https://github.com/PortakiApp/portaki-modules/commit/95ba59b8c79d20733b0633a670eb4734890e48cb))
+
 ## [2.5.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.4.1...consumables-v2.5.0) (2026-10-04)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.4.1...emergency-contacts-v1.5.0) (2026-10-07)
+
+
+### Features
+
+* **emergency-contacts:** give every row its glyph ([f9c0f04](https://github.com/PortakiApp/portaki-modules/commit/f9c0f04292b7e04f9e26c4b78b4dab7343146e02))
+
 ## [1.4.1](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.4.0...emergency-contacts-v1.4.1) (2026-10-04)
 
 
