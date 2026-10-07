@@ -4,7 +4,13 @@ use portaki_sdk::sdui::common::RichTextDoc;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-pub const MAX_APPLIANCES: usize = 10;
+/// Le nombre d'appareils qu'un hôte peut décrire (§2.4 : `devices`, 0 → 60).
+///
+/// Dix était un chiffre en dur qui refusait le onzième : une villa avec sa cuisine, ses trois
+/// salles de bain et sa buanderie y arrivait sans effort, et le cas « 30 appareils » de la
+/// maquette était tout simplement inatteignable. La borne reste — soixante tient dans une liste
+/// groupée par pièce — mais c'est celle du contrat.
+pub const MAX_APPLIANCES: usize = 60;
 /// Quatre tuiles en avant sur la carte d'accueil (§2.4), pas cinq.
 ///
 /// La carte d'accueil n'est pas la liste : elle donne un aperçu et renvoie au reste. Une cinquième
