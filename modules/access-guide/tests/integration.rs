@@ -975,3 +975,92 @@ fn find_map(node: &serde_json::Value) -> Option<&serde_json::Value> {
         _ => None,
     }
 }
+
+/// Les trois codes sortent en tuiles, dans l'ordre qu'on franchit : porte, immeuble, parking.
+///
+/// Le code du parking ne vivait qu'en rangée dans la sous-page, alors que les deux autres
+/// étaient en tuile avec Copier sur la carte : devant une barrière fermée, on le cherchait.
+#[test]
+#[serial]
+fn home_card_tiles_the_three_codes_in_the_order_one_crosses_them() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&HostConfig {
+            parking_code: "P7788".into(),
+            ..always_reveal_config()
+        })
+        .run(|ctx| {
+            let surface = render_home_card(ctx).expect("surface");
+            let json = serde_json::to_string(&surface).expect("json");
+
+            let door = json.find("4821").expect("le code de la boîte à clés");
+            let building = json.find("A17B").expect("le digicode de l'immeuble");
+            let parking = json.find("P7788").expect("le code de la barrière");
+            assert!(door < building, "la porte avant l'immeuble");
+            assert!(building < parking, "l'immeuble avant le parking");
+
+            // En tuile, pas en rangée : le code du parking porte sa clé comme les autres.
+            assert!(json.contains("i18n:guest.parking.code"));
+        });
+}
+
+/// Un code reste un code : celui du parking se masque avec les autres tant que la révélation
+/// n'a pas eu lieu, et ne s'offre pas à la copie.
+#[test]
+#[serial]
+fn home_card_masks_the_parking_code_like_the_others() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&HostConfig {
+            parking_code: "P7788".into(),
+            reveal_policy: "day_before16h".into(),
+            ..always_reveal_config()
+        })
+        .run(|ctx| {
+            let surface = render_home_card(ctx).expect("surface");
+            let json = serde_json::to_string(&surface).expect("json");
+            assert!(
+                !json.contains("P7788"),
+                "le code ne part pas avant son heure"
+            );
+            assert!(json.contains("••••••"));
+        });
+}
+
+/// Les sept moyens d'accès rendent chacun leur carte, sans trou.
+///
+/// Cinq d'entre eux n'avaient aucun test de surface voyageur : un moyen sans code doit tout de
+/// même porter sa tuile — le créneau de remise, les horaires de la réception, le nom de l'hôte —
+/// sinon la carte s'ouvre sur une grille vide.
+#[test]
+#[serial]
+fn every_access_method_draws_its_card() {
+    for method in [
+        "keybox",
+        "door_code",
+        "smart_lock",
+        "in_person",
+        "building_staff",
+        "host_greets",
+        "other",
+    ] {
+        MockContext::guest()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&HostConfig {
+                primary_method: method.into(),
+                ..always_reveal_config()
+            })
+            .run(|ctx| {
+                let surface = render_home_card(ctx).expect("surface");
+                let json = serde_json::to_string(&surface).expect("json");
+                assert!(
+                    SurfaceAssertions::new(&surface).contains_type("KeyValue"),
+                    "{method} : aucune tuile"
+                );
+                assert!(
+                    !json.contains("\"children\":[]"),
+                    "{method} : une grille vide"
+                );
+            });
+    }
+}
