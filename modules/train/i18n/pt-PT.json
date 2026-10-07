@@ -29,6 +29,7 @@
   "explore.item.scheduled": "Horário teórico, não em tempo real",
   "explore.item.station": "Ir à estação",
   "explore.item.stationName": "Estação",
+  "explore.item.today": "Hoje",
   "guest.teaser": "Próximas partidas da estação",
   "home.card.title": "Horários dos comboios",
   "host.key.missing.message": "A Portaki ainda não tem chave para os horários da SNCF. A sua estação está guardada: o painel aparecerá assim que a chave estiver pronta.",

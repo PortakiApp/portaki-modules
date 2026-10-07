@@ -29,6 +29,7 @@
   "explore.item.scheduled": "Scheduled time, not live",
   "explore.item.station": "Getting to the station",
   "explore.item.stationName": "Station",
+  "explore.item.today": "Today",
   "guest.teaser": "Next departures from the station",
   "home.card.title": "Train times",
   "host.key.missing.message": "Portaki does not have an SNCF timetable key yet. Your station is saved: the board will appear as soon as the key is in place.",

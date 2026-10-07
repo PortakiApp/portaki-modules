@@ -29,6 +29,7 @@
   "explore.item.scheduled": "Orario teorico, non in tempo reale",
   "explore.item.station": "Andare in stazione",
   "explore.item.stationName": "Stazione",
+  "explore.item.today": "Oggi",
   "guest.teaser": "Prossime partenze dalla stazione",
   "home.card.title": "Orari dei treni",
   "host.key.missing.message": "Portaki non ha ancora una chiave per gli orari SNCF. La tua stazione è salvata: il tabellone apparirà appena la chiave sarà attiva.",

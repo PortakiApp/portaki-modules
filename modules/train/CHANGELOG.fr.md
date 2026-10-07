@@ -2,8 +2,9 @@
 
 ## 2.0.1
 
-Correctif interne.
+La fiche d'un train dit le jour en toutes lettres.
 
+* La tuile « Jour » affichait la date brute de l'API (« 2026-10-04 »). Elle dit « Aujourd'hui » ou « Demain », dans la langue du voyageur.
 * La tuile avant l'arrivée a maintenant sa propre adresse : elle ne partage plus celle des autres modules.
 
 ## 2.0.0

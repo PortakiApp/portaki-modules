@@ -29,6 +29,7 @@
   "explore.item.scheduled": "Geplande tijd, niet live",
   "explore.item.station": "Naar het station",
   "explore.item.stationName": "Station",
+  "explore.item.today": "Vandaag",
   "guest.teaser": "Eerstvolgende vertrektijden vanaf het station",
   "home.card.title": "Treintijden",
   "host.key.missing.message": "Portaki heeft nog geen sleutel voor de SNCF-reisinformatie. Je station is opgeslagen: het bord verschijnt zodra de sleutel er is.",

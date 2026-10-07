@@ -29,6 +29,7 @@
   "explore.item.scheduled": "موعد الجدول، وليس الوقت الفعلي",
   "explore.item.station": "الوصول إلى المحطة",
   "explore.item.stationName": "المحطة",
+  "explore.item.today": "اليوم",
   "guest.teaser": "الرحلات المقبلة من المحطة",
   "home.card.title": "مواعيد القطارات",
   "host.key.missing.message": "لا تملك Portaki بعد مفتاحًا لمواعيد SNCF. محطتك محفوظة: ستظهر اللوحة بمجرد توفر المفتاح.",

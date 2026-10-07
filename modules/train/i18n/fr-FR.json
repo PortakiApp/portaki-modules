@@ -29,6 +29,7 @@
   "explore.item.scheduled": "Horaire théorique, pas du temps réel",
   "explore.item.station": "Aller à la gare",
   "explore.item.stationName": "Gare",
+  "explore.item.today": "Aujourd'hui",
   "guest.teaser": "Prochains départs depuis la gare",
   "home.card.title": "Horaires trains",
   "host.key.missing.message": "Portaki n’a pas encore de clé pour les horaires SNCF. Votre gare est bien enregistrée : le tableau s’affichera dès que la clé sera en place.",
