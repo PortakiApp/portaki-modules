@@ -280,3 +280,33 @@ fn publication_needs_one_complete_shutoff() {
     assert_eq!(half.items[1].id, "incomplete");
     assert!(!half.items[1].ok);
 }
+
+/// Avec un numéro au profil, « Appeler Claire » passe devant les numéros d'urgence (§2.22).
+///
+/// C'est l'action principale d'un écran qu'on lit sous le stress, et elle n'avait jamais été
+/// exercée : seul le cas sans numéro l'était, à l'époque où le runtime ne servait pas encore
+/// `context.host`.
+#[test]
+#[serial]
+fn with_a_host_phone_the_call_button_comes_first() {
+    guest().with_config(&sample_config()).run(|ctx| {
+        let mut ctx = ctx;
+        ctx.host = Some(portaki_sdk::context::HostProfile {
+            name: "Claire".into(),
+            phone: Some("+33612345678".into()),
+            ..portaki_sdk::context::HostProfile::default()
+        });
+        let json =
+            serde_json::to_string(&render_explore_detail(ctx).expect("detail")).expect("json");
+
+        assert!(json.contains("tel:+33612345678"), "{json}");
+        // Le libellé nommé, pas le repli sans nom : `t!` rend la clé telle quelle sous un bundle
+        // de test vide, mais c'est bien la branche « avec nom » qui a été prise.
+        assert!(json.contains("guest.call\""), "{json}");
+        assert!(!json.contains("guest.call.plain"), "{json}");
+        // L'appel d'abord, les numéros d'urgence ensuite : on compose avant de chercher.
+        let call = json.find("tel:+33612345678").expect("appel");
+        let emergency = json.find("guest.emergency").expect("urgences");
+        assert!(call < emergency, "{json}");
+    });
+}

@@ -110,8 +110,9 @@ fn shutoff_card(row: &ShutoffRow, ctx: &GuestContext) -> Component {
 ///
 /// Le téléphone vient du profil de l'hôte, jamais d'un champ de ce module : un numéro saisi deux
 /// fois finit par différer, et le livret en a déjà un (`emergency-contacts`, le socle du livret).
-/// Sans numéro, pas de bouton — c'est ce que le SDK prescrit pour `HostProfile::phone`, et c'est
-/// l'état d'aujourd'hui : le runtime ne sert pas encore `context.host`.
+/// Sans numéro, pas de bouton — « plutôt aucun bouton qu'un bouton qui échoue », ce que le SDK
+/// prescrit pour `HostProfile::phone`. Le runtime sert `context.host` depuis octobre 2026 : le
+/// bouton n'attend plus rien, il attend seulement que l'hôte ait donné un numéro.
 fn bottom_bar(ctx: &GuestContext) -> Vec<Component> {
     let mut bar: Vec<Component> = Vec::new();
     if let Some(phone) = ctx
