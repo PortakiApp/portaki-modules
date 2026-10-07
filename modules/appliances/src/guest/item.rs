@@ -8,7 +8,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::{Leading, LeadingVisual, SurfaceLevel};
 use portaki_sdk::sdui::primitives::{
-    Button, Card, EmptyState, Eyebrow, Image, InfoBanner, ListItem, RichText, Stack, Text,
+    Button, Card, EmptyState, Eyebrow, Icon, Image, InfoBanner, ListItem, RichText, Stack, Text,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -184,10 +184,10 @@ fn header_row(device: &Appliance) -> Component {
 
     let mut header_children = Vec::new();
     if !device.emoji.trim().is_empty() {
-        header_children.push(Component::Text(
-            Text::new()
-                .text(device.emoji.clone())
-                .variant(TextVariant::Display),
+        // L'emoji est un pictogramme, pas un titre : `Icon` le porte, `display` reste au nom.
+        // 64 px, la taille « lg » de la maquette pour une tête de fiche (§2.4, planche app-0).
+        header_children.push(Component::Icon(
+            Icon::new().emoji(device.emoji.clone()).size(64.0),
         ));
     }
     header_children.push(Component::Stack(title_stack));

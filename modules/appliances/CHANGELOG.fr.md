@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.0
+
+L'emoji de l'appareil, à sa place.
+
+* L'emoji d'un appareil s'affiche en pastille à côté de son nom, à sa taille : il était composé comme un titre, aussi grand que le nom.
+
 ## 1.7.1
 
 Montée technique.

@@ -85,9 +85,9 @@
           {
             "children": [
               {
-                "text": "🍳",
-                "type": "Text",
-                "variant": "display"
+                "emoji": "🍳",
+                "size": 64.0,
+                "type": "Icon"
               },
               {
                 "children": [
