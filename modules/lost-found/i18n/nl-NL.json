@@ -20,6 +20,8 @@
   "form.deadline.title": "Tot {date}",
   "form.details.label": "Details",
   "form.details.placeholder": "Optioneel — waar, wanneer, kleur, merk…",
+  "form.head.lead": "Beschrijf het: uw gastheer kijkt na en laat het u weten.",
+  "form.head.title": "Iets laten liggen?",
   "form.itemDescription.hint": "Kleur, merk, maat: alles wat je host helpt het te herkennen.",
   "form.itemDescription.label": "Waar gaat het om?",
   "form.itemDescription.placeholder": "Bijv. blauwe sjaal, kamersleutel",

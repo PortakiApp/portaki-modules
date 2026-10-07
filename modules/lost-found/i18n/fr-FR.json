@@ -20,6 +20,8 @@
   "form.deadline.title": "Jusqu’au {date}",
   "form.details.label": "Détails",
   "form.details.placeholder": "Optionnel — où, quand, couleur, marque…",
+  "form.head.lead": "Décrivez-le : votre hôte vérifie le logement et vous répond.",
+  "form.head.title": "Un objet oublié ?",
   "form.itemDescription.hint": "Couleur, marque, taille : tout ce qui aide votre hôte à le reconnaître.",
   "form.itemDescription.label": "De quoi s'agit-il ?",
   "form.itemDescription.placeholder": "ex. Écharpe bleue, clé de chambre",

@@ -20,6 +20,8 @@
   "form.deadline.title": "Until {date}",
   "form.details.label": "Details",
   "form.details.placeholder": "Optional — where, when, color, brand…",
+  "form.head.lead": "Describe it — your host will check the place and get back to you.",
+  "form.head.title": "Left something behind?",
   "form.itemDescription.hint": "Colour, brand, size: anything that helps your host recognise it.",
   "form.itemDescription.label": "What is it?",
   "form.itemDescription.placeholder": "e.g. Blue scarf, room key",

@@ -95,6 +95,8 @@
         "form.deadline.message": "Vous avez quelques jours après votre départ pour déclarer un objet.",
         "form.details.label": "Détails",
         "form.details.placeholder": "Optionnel — où, quand, couleur, marque…",
+        "form.head.lead": "Décrivez-le : votre hôte vérifie le logement et vous répond.",
+        "form.head.title": "Un objet oublié ?",
         "form.itemDescription.hint": "Couleur, marque, taille : tout ce qui aide votre hôte à le reconnaître.",
         "form.itemDescription.label": "De quoi s'agit-il ?",
         "form.itemDescription.placeholder": "ex. Écharpe bleue, clé de chambre",
@@ -127,6 +129,36 @@
       "title": "Objets trouvés",
       "tree": {
         "children": [
+          {
+            "children": [
+              {
+                "name": "search",
+                "size": 24.0,
+                "tone": "primary",
+                "type": "Icon"
+              },
+              {
+                "children": [
+                  {
+                    "text": "i18n:form.head.title",
+                    "type": "Text",
+                    "variant": "title"
+                  },
+                  {
+                    "emphasis": "subtle",
+                    "text": "i18n:form.head.lead",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 4.0,
+                "type": "Stack"
+              }
+            ],
+            "direction": "horizontal",
+            "gap": 12.0,
+            "type": "Stack"
+          },
           {
             "children": [
               {

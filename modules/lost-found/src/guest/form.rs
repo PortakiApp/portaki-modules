@@ -1,9 +1,10 @@
 //! Guest bottom-sheet form surface opened from the home card.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::common::Tone;
+use portaki_sdk::sdui::common::{Emphasis, Tone};
 use portaki_sdk::sdui::primitives::{
-    ChoiceList, Field, FieldHint, Form, ImageUpload, InfoBanner, Stack, TextArea, TextInput,
+    ChoiceList, Field, FieldHint, Form, Icon, ImageUpload, InfoBanner, Stack, Text, TextArea,
+    TextInput,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -93,6 +94,41 @@ fn response_promise(config: &crate::config::ModuleConfig, ctx: &GuestContext) ->
 ///
 /// Trois questions, trois écrans : quel objet, où il est resté, ce qu'on en fait. En une seule
 /// page, le choix de restitution — la question qui engage — se lisait après dix champs.
+/// L'en-tête de la feuille (§5) : une question au voyageur, et ce que l'hôte en fera.
+///
+/// Le livret le sort du formulaire pour le poser dans la chrome du panneau — il n'est donc
+/// jamais une étape de l'assistant, qui ne compte que les `Stack` portant un `step`. Il reste
+/// dans l'arbre parce que c'est le module qui l'écrit : la coquille ne connaît que le libellé de
+/// navigation, « Objet oublié », qui n'est pas une question.
+fn sheet_header() -> Component {
+    Component::Stack(
+        Stack::new()
+            .direction(StackDirection::Horizontal)
+            .gap(12.0)
+            .child(
+                Icon::new()
+                    .name(IconName::Search)
+                    .size(24.0)
+                    .tone(Tone::Primary),
+            )
+            .child(
+                Stack::new()
+                    .gap(4.0)
+                    .child(
+                        Text::new()
+                            .text("i18n:form.head.title")
+                            .variant(TextVariant::Title),
+                    )
+                    .child(
+                        Text::new()
+                            .text("i18n:form.head.lead")
+                            .variant(TextVariant::Caption)
+                            .emphasis(Emphasis::Subtle),
+                    ),
+            ),
+    )
+}
+
 fn build_form(
     ask_address: bool,
     return_options: Vec<&'static str>,
@@ -200,6 +236,7 @@ fn build_form(
         .submitLabel("i18n:form.submit")
         .onSubmit(submit_action)
         .children(vec![
+            sheet_header(),
             Component::Stack(
                 Stack::new()
                     .step("i18n:form.step.object")

@@ -20,6 +20,8 @@
   "form.deadline.title": "Até {date}",
   "form.details.label": "Detalhes",
   "form.details.placeholder": "Opcional — onde, quando, cor, marca…",
+  "form.head.lead": "Descreva-a: o seu anfitrião verifica o alojamento e responde-lhe.",
+  "form.head.title": "Esqueceu-se de alguma coisa?",
   "form.itemDescription.hint": "Cor, marca, tamanho: tudo o que ajude o seu anfitrião a reconhecê-lo.",
   "form.itemDescription.label": "De que se trata?",
   "form.itemDescription.placeholder": "Ex. écharpe azul, chave do quarto",
