@@ -97,6 +97,10 @@ pub fn guest_at(module_root: &str, instant: &str) -> portaki_test_utils::MockCon
 ///
 /// Ici et pas dans le SDK, pour la même raison que le logement : `HostProfile::default()` sert
 /// les tests des vingt-trois modules.
+/// `allow(dead_code)` : ce fichier est inclus par les vingt-trois modules, et un seul appelle
+/// cette fonction. Sans ça, `clippy -D warnings` — donc `portaki check` — échoue chez les
+/// vingt-deux autres. Même raison que `AFTER` et `guest_at` plus haut.
+#[allow(dead_code)]
 pub fn host() -> portaki_sdk::context::HostProfile {
     portaki_sdk::context::HostProfile {
         name: "Claire".to_string(),
