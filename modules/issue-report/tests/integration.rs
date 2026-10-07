@@ -444,3 +444,42 @@ fn the_form_says_not_to_wait_in_an_emergency() {
         assert!(json.contains(r#""type":"navigate","to":"aide""#), "{json}");
     });
 }
+
+/// Une seule catégorie offerte : pas de pastilles, pas de question (§2.17).
+///
+/// Choisir dans une liste d'un seul élément n'est pas un choix — c'est une ligne de plus à lire
+/// dans une feuille qu'on ouvre parce que quelque chose ne va pas. La catégorie part quand même
+/// au signalement : le formulaire la porte en valeur.
+#[test]
+#[serial]
+fn one_category_asks_no_question() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_config(&json!({ "category_appliance": true }))
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_guest_form(ctx).expect("form")).unwrap();
+            assert!(!json.contains("form.category.label"), "{json}");
+            assert!(!json.contains("\"ChoiceList\""), "{json}");
+            assert!(json.contains("\"value\":\"appliance\""), "{json}");
+        });
+}
+
+/// La feuille dit ce qu'on y fait avant de demander quoi que ce soit.
+///
+/// Le livret hisse l'en-tête d'un formulaire dans la barre du panneau : sans lui, la feuille
+/// s'ouvrait sur « Catégorie », sans dire ce qu'on est en train de faire ni ce qui arrive après.
+#[test]
+#[serial]
+fn the_sheet_says_what_it_is_before_asking() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_guest_form(ctx).expect("form")).unwrap();
+            let title = json.find("form.head.title").expect("titre");
+            let first_field = json.find("form.category.label").expect("premier champ");
+            assert!(title < first_field, "{json}");
+            assert!(json.contains("form.head.lead"), "{json}");
+        });
+}

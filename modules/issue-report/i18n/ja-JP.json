@@ -9,6 +9,8 @@
   "form.category.other": "その他",
   "form.details.label": "詳しく",
   "form.details.placeholder": "任意 — 何が、いつ、どこで",
+  "form.head.lead": "ホストにすぐ通知されます。",
+  "form.head.title": "問題を知らせる",
   "form.photo.label": "写真",
   "form.submit": "送信",
   "form.summary.label": "ひとことで",

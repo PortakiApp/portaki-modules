@@ -9,6 +9,8 @@
   "form.category.other": "Other",
   "form.details.label": "Details",
   "form.details.placeholder": "Optional — what happened, when, where",
+  "form.head.lead": "Your host is told right away.",
+  "form.head.title": "Report a problem",
   "form.photo.label": "Photo",
   "form.submit": "Send report",
   "form.summary.label": "Short summary",

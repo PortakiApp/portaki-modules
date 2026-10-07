@@ -11,6 +11,8 @@
         "form.category.other": "Autre",
         "form.details.label": "Détails",
         "form.details.placeholder": "Optionnel — quoi, quand, où",
+        "form.head.lead": "Votre hôte est prévenu aussitôt.",
+        "form.head.title": "Signaler un problème",
         "form.photo.label": "Photo",
         "form.submit": "Envoyer",
         "form.summary.label": "Résumé court",
@@ -23,6 +25,36 @@
       "title": "Signaler un problème",
       "tree": {
         "children": [
+          {
+            "children": [
+              {
+                "name": "danger-triangle",
+                "size": 24.0,
+                "tone": "primary",
+                "type": "Icon"
+              },
+              {
+                "children": [
+                  {
+                    "text": "i18n:form.head.title",
+                    "type": "Text",
+                    "variant": "title"
+                  },
+                  {
+                    "emphasis": "subtle",
+                    "text": "i18n:form.head.lead",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 4.0,
+                "type": "Stack"
+              }
+            ],
+            "direction": "horizontal",
+            "gap": 12.0,
+            "type": "Stack"
+          },
           {
             "children": [
               {
