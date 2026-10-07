@@ -387,3 +387,32 @@ fn only_positioned_trails_reach_the_map() {
             assert_eq!(markers[0].label.as_deref(), Some("Baou de Saint-Jeannet"));
         });
 }
+
+/// Un seul niveau : pas de pastilles (§2.23).
+///
+/// Une pastille unique ne trie rien — elle répète ce que chaque rangée dit déjà en fin de ligne,
+/// et annonce un choix qui n'existe pas. Les itinéraires, eux, restent là.
+#[test]
+#[serial]
+fn one_level_wears_no_pill() {
+    guest()
+        .with_config(&json!({
+            "trails": [
+                { "id": "a", "title": "Phare", "level": "easy", "shape": "loop",
+                  "duration_min": 60, "distance_km": 2.6, "elevation_m": 80 },
+                { "id": "b", "title": "Littoral", "level": "easy", "shape": "loop",
+                  "duration_min": 150, "distance_km": 8, "elevation_m": 60 }
+            ]
+        }))
+        .run(|ctx| {
+            let surface = render_home_card(ctx).expect("home card");
+            let json = tree(&surface);
+            assert!(
+                !SurfaceAssertions::new(&surface).contains_type("Badge"),
+                "{json}"
+            );
+            assert_eq!(json.matches(r#""type":"ListItem""#).count(), 2, "{json}");
+            // Le niveau reste en fin de rangée : c'est là qu'il se lit.
+            assert!(json.contains("▲ Facile"), "{json}");
+        });
+}
