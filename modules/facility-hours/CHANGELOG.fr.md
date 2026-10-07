@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.2
+
+Les heures du séjour se lisent en français.
+
+* Les tuiles « Arrivée » et « Départ » de la carte annoncent de nouveau « dès » et « avant » devant l'heure, et non plus un code technique.
+
 ## 1.8.1
 
 Montée technique.
