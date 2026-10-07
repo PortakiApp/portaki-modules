@@ -39,6 +39,12 @@ pub fn load_guest_weather(ctx: &GuestContext, surface_id: SurfaceId) -> Result<G
     }
 
     let config = ModuleConfig::load(ctx)?;
+    // La fenêtre du séjour plutôt que cinq jours en dur (§0.7, §2.14) : une semaine à la mer
+    // s'arrêtait le mercredi, et avant l'arrivée on lisait surtout des journées qui ne
+    // concernaient personne.
+    let now = portaki_sdk::host::time::now()?;
+    let window = super::window::window(ctx.stay.as_ref(), now, &ctx.timezone);
+    let days = super::window::days_to_fetch(window, now, &ctx.timezone);
     // The queries answer `None` when they have no weather to give — the same empty state.
     let (Some(current), Some(forecast)) = (
         get_current(
@@ -53,7 +59,7 @@ pub fn load_guest_weather(ctx: &GuestContext, surface_id: SurfaceId) -> Result<G
             GetForecastArgs {
                 lat: None,
                 lng: None,
-                days: Some(5),
+                days: Some(days),
             },
         )?,
     ) else {
@@ -69,6 +75,11 @@ pub fn load_guest_weather(ctx: &GuestContext, surface_id: SurfaceId) -> Result<G
             .or(forecast.city_name.as_deref()),
         ctx.property.address.as_deref(),
     );
+
+    let forecast = WeatherForecast {
+        days: super::window::keep_window(forecast.days, window, |day| day.date.as_str()),
+        ..forecast
+    };
 
     Ok(GuestLoad::Ready(Box::new(GuestWeatherData {
         current,

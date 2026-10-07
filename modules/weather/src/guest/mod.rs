@@ -9,6 +9,7 @@ mod load;
 mod sheet;
 mod table;
 mod upcoming;
+mod window;
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::surface::Surface;
