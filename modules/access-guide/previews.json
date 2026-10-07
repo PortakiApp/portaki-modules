@@ -35,15 +35,15 @@
                 "id": "property",
                 "kind": "property",
                 "label": "L'Islette",
-                "lat": 43.5509,
-                "lng": 7.1266
+                "lat": 43.5513,
+                "lng": 7.0128
               }
             ],
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.5509,
-                "lng": 7.1266
+                "lat": 43.5513,
+                "lng": 7.0128
               },
               "zoom": 15.0
             }
