@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.1
+
+Les bacs, comme la maquette les dessine.
+
+* Chaque bac est une rangée : son nom en titre, ce qui y va en dessous. Les deux tenaient sur une seule ligne, du même poids.
+* Les bacs sont groupés dans leur bloc « Les bacs », au lieu de flotter entre deux blocs encadrés.
+* Le bandeau de collecte retrouve son bleu d'information : il sortait en gris.
+* La carte renvoie à « Où déposer mes déchets ? » plutôt que de recopier les points d'apport sous les bacs.
+* Sans bacs, elle garde les points et le composteur — un bouton seul n'aurait rien dit.
+
 ## 1.7.0
 
 Le local poubelles, en entier.

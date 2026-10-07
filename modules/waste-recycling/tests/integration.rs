@@ -60,7 +60,7 @@ fn home_card_renders_bins_with_config() {
         .run(|ctx| {
             let surface = render_home_card(ctx).expect("home card");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("ColorDotItem"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
             assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("bottomSheet"));
@@ -135,7 +135,10 @@ fn detail_renders_enriched_bins() {
         .run(|ctx| {
             let surface = render_explore_detail(ctx).expect("detail");
             assert!(SurfaceAssertions::new(&surface).contains_type("Stack"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("ColorDotItem"));
+            // Les bacs dans leur carte, comme les deux blocs qui les précèdent (§2.7).
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(json.contains("guest.bins.title"), "{json}");
+            assert!(json.contains(r#""swatch":"yellow""#), "{json}");
         });
 }
 
@@ -282,7 +285,7 @@ fn leaving_the_day_before_pushes_the_takeout_note_up() {
             let highlight = json.find("Highlight").expect("la consigne mise en avant");
             // Mise en avant veut dire lue avant les bacs, pas rangée à la fin de la carte.
             assert!(
-                highlight < json.find("ColorDotItem").expect("des bacs"),
+                highlight < json.find(r#""swatch""#).expect("des bacs"),
                 "{json}"
             );
         });
@@ -430,6 +433,9 @@ fn the_rural_case_shows_points_and_compost_without_a_collection_banner() {
             assert!(card.contains("guest.compost.title"), "{card}");
             // Aucun jour, aucune phrase : pas de bandeau, et surtout pas un bandeau vide.
             assert!(!card.contains("InfoBanner"), "{card}");
+            // Et pas de bouton « où déposer » : sans bacs, les rangées *sont* la carte, et le
+            // bouton n'enverrait voir que ce qu'elle montre déjà.
+            assert!(!card.contains("guest.dropoff.cta"), "{card}");
 
             let detail =
                 serde_json::to_string(&render_explore_detail(ctx).expect("detail")).unwrap();
@@ -454,9 +460,17 @@ fn collection_days_and_dropoff_points_live_together() {
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&config)
         .run(|ctx| {
-            let card = serde_json::to_string(&render_home_card(ctx).expect("card")).unwrap();
+            let card =
+                serde_json::to_string(&render_home_card(ctx.clone()).expect("card")).unwrap();
             assert!(card.contains("Bac jaune"), "{card}");
-            assert!(card.contains("Parking du cimetière"), "{card}");
+            // Les points ne sont plus recopiés sous les bacs : un bouton y mène, et la feuille
+            // les montre avec leur plan et leurs distances.
+            assert!(!card.contains("Parking du cimetière"), "{card}");
+            assert!(card.contains("guest.dropoff.cta"), "{card}");
+
+            let detail =
+                serde_json::to_string(&render_explore_detail(ctx).expect("detail")).unwrap();
+            assert!(detail.contains("Parking du cimetière"), "{detail}");
         });
 }
 

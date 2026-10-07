@@ -7,6 +7,7 @@
     {
       "i18n": {
         "guest.binRoom.title": "Le local poubelles",
+        "guest.bins.title": "Les bacs",
         "guest.inside.title": "Dans le logement"
       },
       "labelKey": "nav.waste-recycling",
@@ -17,6 +18,7 @@
           {
             "message": "Mardi pour le bac jaune, vendredi pour les ordures ménagères.",
             "title": "Prochaine collecte mardi",
+            "tone": "info",
             "type": "InfoBanner"
           },
           {
@@ -67,24 +69,43 @@
             "type": "Card"
           },
           {
-            "label": "Bac jaune — Emballages plastique et métal, Cartons et papiers",
-            "swatch": "yellow",
-            "type": "ColorDotItem"
-          },
-          {
-            "label": "Colonne à verre — Bouteilles et bocaux, sans bouchon",
-            "swatch": "green",
-            "type": "ColorDotItem"
-          },
-          {
-            "label": "Bac à biodéchets — Épluchures, marc de café, restes de repas",
-            "swatch": "brown",
-            "type": "ColorDotItem"
-          },
-          {
-            "label": "Ordures ménagères — Tout le reste, en sac fermé",
-            "swatch": "grey",
-            "type": "ColorDotItem"
+            "children": [
+              {
+                "leading": {
+                  "swatch": "yellow"
+                },
+                "subtitle": "Emballages plastique et métal, Cartons et papiers",
+                "title": "Bac jaune",
+                "type": "ListItem"
+              },
+              {
+                "leading": {
+                  "swatch": "green"
+                },
+                "subtitle": "Bouteilles et bocaux, sans bouchon",
+                "title": "Colonne à verre",
+                "type": "ListItem"
+              },
+              {
+                "leading": {
+                  "swatch": "brown"
+                },
+                "subtitle": "Épluchures, marc de café, restes de repas",
+                "title": "Bac à biodéchets",
+                "type": "ListItem"
+              },
+              {
+                "leading": {
+                  "swatch": "grey"
+                },
+                "subtitle": "Tout le reste, en sac fermé",
+                "title": "Ordures ménagères",
+                "type": "ListItem"
+              }
+            ],
+            "icon": "recycle",
+            "title": "i18n:guest.bins.title",
+            "type": "Card"
           },
           {
             "text": "Sortez les bacs devant le portail la veille au soir, après 19 h.",
@@ -115,27 +136,40 @@
           {
             "message": "Mardi pour le bac jaune, vendredi pour les ordures ménagères.",
             "title": "Prochaine collecte mardi",
+            "tone": "info",
             "type": "InfoBanner"
           },
           {
-            "label": "Bac jaune — Emballages plastique et métal, Cartons et papiers",
-            "swatch": "yellow",
-            "type": "ColorDotItem"
+            "leading": {
+              "swatch": "yellow"
+            },
+            "subtitle": "Emballages plastique et métal, Cartons et papiers",
+            "title": "Bac jaune",
+            "type": "ListItem"
           },
           {
-            "label": "Colonne à verre — Bouteilles et bocaux, sans bouchon",
-            "swatch": "green",
-            "type": "ColorDotItem"
+            "leading": {
+              "swatch": "green"
+            },
+            "subtitle": "Bouteilles et bocaux, sans bouchon",
+            "title": "Colonne à verre",
+            "type": "ListItem"
           },
           {
-            "label": "Bac à biodéchets — Épluchures, marc de café, restes de repas",
-            "swatch": "brown",
-            "type": "ColorDotItem"
+            "leading": {
+              "swatch": "brown"
+            },
+            "subtitle": "Épluchures, marc de café, restes de repas",
+            "title": "Bac à biodéchets",
+            "type": "ListItem"
           },
           {
-            "label": "Ordures ménagères — Tout le reste, en sac fermé",
-            "swatch": "grey",
-            "type": "ColorDotItem"
+            "leading": {
+              "swatch": "grey"
+            },
+            "subtitle": "Tout le reste, en sac fermé",
+            "title": "Ordures ménagères",
+            "type": "ListItem"
           }
         ],
         "icon": "recycle",
