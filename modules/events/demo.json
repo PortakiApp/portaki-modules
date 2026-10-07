@@ -1,5 +1,16 @@
 {
   "locale": "fr-FR",
+  "markers": {
+    "markers": [
+      {
+        "id": "marche-nocturne",
+        "kind": "poi",
+        "label": "Marché nocturne des artisans",
+        "lat": 43.5528,
+        "lng": 7.0171
+      }
+    ]
+  },
   "surfaces": [
     {
       "i18n": {

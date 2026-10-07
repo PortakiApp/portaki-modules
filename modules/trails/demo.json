@@ -1,5 +1,45 @@
 {
   "locale": "fr-FR",
+  "markers": {
+    "markers": [
+      {
+        "category": "hiking",
+        "icon": "mountain",
+        "id": "trail-garoupe",
+        "kind": "poi",
+        "label": "Phare de la Garoupe",
+        "lat": 43.5612,
+        "lng": 7.1298
+      },
+      {
+        "category": "hiking",
+        "icon": "mountain",
+        "id": "trail-littoral",
+        "kind": "poi",
+        "label": "Sentier du littoral du Cap",
+        "lat": 43.5585,
+        "lng": 7.1322
+      },
+      {
+        "category": "hiking",
+        "icon": "mountain",
+        "id": "trail-brague",
+        "kind": "poi",
+        "label": "Vallée de la Brague",
+        "lat": 43.628,
+        "lng": 7.098
+      },
+      {
+        "category": "hiking",
+        "icon": "mountain",
+        "id": "trail-baou",
+        "kind": "poi",
+        "label": "Baou de Saint-Jeannet",
+        "lat": 43.757,
+        "lng": 7.148
+      }
+    ]
+  },
   "surfaces": [
     {
       "i18n": {

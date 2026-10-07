@@ -1,5 +1,33 @@
 {
   "locale": "fr-FR",
+  "markers": {
+    "markers": [
+      {
+        "category": "Boulangerie",
+        "id": "boulangerie",
+        "kind": "poi",
+        "label": "La boulangerie du village",
+        "lat": 43.5531,
+        "lng": 7.0152
+      },
+      {
+        "category": "Marché",
+        "id": "marche",
+        "kind": "poi",
+        "label": "Marché provençal",
+        "lat": 43.5552,
+        "lng": 7.0214
+      },
+      {
+        "category": "Baignade",
+        "id": "lac",
+        "kind": "poi",
+        "label": "Lac de Saint-Cassien",
+        "lat": 43.5663,
+        "lng": 6.8511
+      }
+    ]
+  },
   "surfaces": [
     {
       "i18n": {

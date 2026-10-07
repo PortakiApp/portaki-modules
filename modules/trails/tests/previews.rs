@@ -4,7 +4,7 @@
 mod previews;
 
 use serde_json::json;
-use trails::{render_explore_detail, render_explore_item, render_home_card};
+use trails::{map_markers, render_explore_detail, render_explore_item, render_home_card};
 
 /// Quatre randonnées autour du Cap d'Antibes : les trois niveaux, avec et sans fiche tierce.
 fn sample_config() -> serde_json::Value {
@@ -107,10 +107,15 @@ fn previews_match_the_rendered_surfaces() {
                 render_home_card(ctx).expect("home"),
             )
         });
+    // Les points que ce module pose sur la carte du livret (§3). La démo les servait vides.
+    let markers = previews::guest(root)
+        .with_config(&sample_config())
+        .run(|ctx| map_markers(ctx).expect("repères"));
     previews::check_all(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![("explore.detail", list), ("explore.item", item)],
         vec![("home.card", home)],
+        Some(serde_json::to_value(markers).expect("repères")),
     );
 }

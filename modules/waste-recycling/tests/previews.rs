@@ -4,7 +4,7 @@
 mod previews;
 
 use serde_json::json;
-use waste_recycling::{render_explore_detail, render_home_card};
+use waste_recycling::{map_markers, render_explore_detail, render_home_card};
 
 /// Les bacs d'une commune française type et leurs jours de collecte.
 fn sample_config() -> serde_json::Value {
@@ -66,11 +66,14 @@ fn previews_match_the_rendered_surfaces() {
     let detail = context.clone().run(render_explore_detail).expect("detail");
     // La carte d'accueil n'a pas de chemin : hors de `previews.json`, mais c'est elle
     // que la démo du livret montre en premier.
+    // Les points que ce module pose sur la carte du livret (§3). La démo les servait vides.
+    let markers = context.clone().run(|ctx| map_markers(ctx).expect("repères"));
     let home = context.run(render_home_card).expect("home");
     previews::check_all(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![("explore.detail", detail)],
         vec![("home.card", home)],
+        Some(serde_json::to_value(markers).expect("repères")),
     );
 }

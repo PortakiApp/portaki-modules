@@ -40,5 +40,6 @@ fn previews_match_the_rendered_surfaces() {
         vec![("home.card", card), ("post-stay.card", post_stay)],
         // Les deux surfaces ont un chemin : rien à ajouter pour la démo.
         Vec::new(),
+        None,
     );
 }
