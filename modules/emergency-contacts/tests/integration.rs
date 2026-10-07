@@ -25,6 +25,30 @@ fn sample_config() -> Value {
     })
 }
 
+/// Chaque rangée mène par un pictogramme (§2.11).
+///
+/// L'hôte n'en avait pas — la ligne qu'on cherche en premier était la seule sans repère — et un
+/// contact sans catégorie non plus, ce qui donnait une liste en dents de scie.
+#[test]
+#[serial]
+fn every_row_leads_with_a_glyph() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({
+            "contacts": [{ "label": "Pharmacie de garde", "phone": "3237" }]
+        }))
+        .run(|mut ctx| {
+            ctx.host = Some(portaki_sdk::context::HostProfile {
+                name: "Claire".into(),
+                phone: Some("+33612345678".into()),
+                ..portaki_sdk::context::HostProfile::default()
+            });
+            let json = serde_json::to_string(&render_home_card(ctx).expect("card")).unwrap();
+            assert!(json.contains("\"leading\":\"users\""), "{json}");
+            assert!(json.contains("\"leading\":\"phone\""), "{json}");
+        });
+}
+
 #[test]
 #[serial]
 fn home_card_renders_empty_without_config() {

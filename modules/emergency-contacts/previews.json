@@ -73,6 +73,7 @@
               "type": "external",
               "url": "tel:0639981234"
             },
+            "leading": "users",
             "subtitle": "06 39 98 12 34",
             "title": "i18n:guest.host.label",
             "trailing": "i18n:guest.call",
@@ -90,6 +91,7 @@
                 "variant": "caption"
               }
             ],
+            "leading": "phone",
             "subtitle": "3237",
             "title": "Pharmacie de garde",
             "trailing": "i18n:guest.call",
@@ -107,6 +109,7 @@
                 "variant": "caption"
               }
             ],
+            "leading": "phone",
             "subtitle": "01 99 00 12 34",
             "title": "Médecin généraliste",
             "trailing": "i18n:guest.call",
@@ -117,6 +120,7 @@
               "type": "external",
               "url": "tel:15"
             },
+            "leading": "phone",
             "subtitle": "15",
             "title": "SAMU",
             "trailing": "i18n:guest.call",
