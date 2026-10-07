@@ -69,6 +69,15 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
                 map: Some(GeoPoint { lat, lng }),
                 ..LeadingVisual::default()
             })));
+        } else {
+            // Une adresse que l'hôte n'a pas posée sur la carte reste une adresse : sans vignette,
+            // sa tuile sortait nue au milieu d'un carrousel de plans, décalée de toutes les
+            // autres. Un repère neutre tient la ligne ; la Carte, elle, ne la montre toujours pas,
+            // faute de position (§2.12).
+            item = item.leading(Leading::Visual(Box::new(LeadingVisual {
+                icon: Some(IconName::MapPin),
+                ..LeadingVisual::default()
+            })));
         }
         if let Some(tag) = spot.tag.as_deref().filter(|t| !t.trim().is_empty()) {
             // L'avantage va en fin de ligne, pas dans son corps : c'est ce que la maquette
