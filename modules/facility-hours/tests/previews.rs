@@ -41,6 +41,8 @@ fn sample_config() -> serde_json::Value {
                 "icon": "building",
                 "opens_at": "08:30",
                 "closes_at": "18:00",
+                "break_from": "12:00",
+                "break_to": "14:00",
                 "lines": { "fr": "Du lundi au samedi", "en": "Monday to Saturday" },
                 "hours": "8 h 30 – 12 h · 14 h – 18 h"
             }

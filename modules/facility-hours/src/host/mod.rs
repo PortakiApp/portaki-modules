@@ -113,6 +113,8 @@ fn facility_row(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext)
     let icon = facility.and_then(FacilityRow::icon_name).unwrap_or("");
     let opens_at = facility.map(|f| f.opens_at.as_str()).unwrap_or("");
     let closes_at = facility.map(|f| f.closes_at.as_str()).unwrap_or("");
+    let break_from = facility.map(|f| f.break_from.as_str()).unwrap_or("");
+    let break_to = facility.map(|f| f.break_to.as_str()).unwrap_or("");
     let all_day = facility.is_some_and(|f| f.all_day);
     let lines = facility
         .map(|f| f.lines.host_value(ctx))
@@ -228,6 +230,33 @@ fn facility_row(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext)
                                 .name(format!("facilities.{index}.closes_at"))
                                 .value(closes_at)
                                 .placeholder("20:00"),
+                        )
+                        .into(),
+                    // La coupure du midi : la deuxième plage de loin la plus courante, et la
+                    // seule que l'hôte écrivait jusqu'ici dans sa phrase libre pendant que les
+                    // heures structurées l'ignoraient.
+                    Field::new()
+                        .name(format!("facilities.{index}.break_from"))
+                        .label("i18n:host.facility.breakFrom")
+                        .children(vec![
+                            FieldHint::new()
+                                .text("i18n:host.facility.break.desc")
+                                .into(),
+                            TextInput::new()
+                                .name(format!("facilities.{index}.break_from"))
+                                .value(break_from)
+                                .placeholder("12:00")
+                                .into(),
+                        ])
+                        .into(),
+                    Field::new()
+                        .name(format!("facilities.{index}.break_to"))
+                        .label("i18n:host.facility.breakTo")
+                        .child(
+                            TextInput::new()
+                                .name(format!("facilities.{index}.break_to"))
+                                .value(break_to)
+                                .placeholder("14:00"),
                         )
                         .into(),
                     Field::new()
