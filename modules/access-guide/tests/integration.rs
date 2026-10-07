@@ -11,6 +11,7 @@ use access_guide::{
 use portaki_sdk::context::StayContext;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::host::with_host;
+use portaki_sdk::sdui::GeoPoint;
 use portaki_test_utils::{MockContext, SurfaceAssertions};
 use serde_json::json;
 use uuid::Uuid;
@@ -893,5 +894,84 @@ fn no_email_without_a_code_change() {
             config_updated(&config, payload.clone()).is_empty(),
             "{payload}"
         );
+    }
+}
+
+/// La carte d'une remise en main propre (§2.1).
+///
+/// <p>Elle n'avait qu'une tuile — l'heure d'arrivée, étirée sur toute la largeur — et ce que
+/// l'hôte avait écrit du rendez-vous tombait en rangées grises sous l'adresse. La maquette donne
+/// à chaque moyen d'accès une paire (libellé, valeur) à côté de l'arrivée, et pose le rendez-vous
+/// en bandeau d'information.
+#[test]
+#[serial]
+fn an_in_person_handover_reads_like_the_design() {
+    let stored = json!({
+        "primary_method": "in_person",
+        "in_person_meeting_place": { "fr": "Devant le portail bleu" },
+        "in_person_time_hint": { "fr": "16–19 h" },
+        "in_person_contact": "+33 6 12 34 56 78",
+        "in_person_meeting_lat": 43.70,
+        "in_person_meeting_lng": 7.26,
+        "address": "12 chemin de la Garoupe, Antibes"
+    });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&stored)
+        .with_coordinates(Some(GeoPoint::new(43.55, 7.12)))
+        .run(|ctx| {
+            let surface = render_home_card(ctx).expect("card");
+            let text = serde_json::to_string(&surface).expect("json");
+
+            // Deux tuiles : le rendez-vous et l'arrivée. Plus jamais une case seule.
+            assert!(text.contains("guest.inPerson.handover"), "{text}");
+            assert!(text.contains("16–19 h"), "{text}");
+            // Le rendez-vous en bandeau, pas en rangée grise.
+            assert!(text.contains("InfoBanner"), "{text}");
+            assert!(text.contains("Devant le portail bleu"), "{text}");
+            // Les coordonnées décimales ne se lisent pas : le plan montre le point.
+            assert!(!text.contains("guest.inPerson.coords"), "{text}");
+        });
+}
+
+/// Deux lieux, deux repères — et le logement sur **ses** coordonnées.
+///
+/// <p>Le repère portait le nom du logement aux coordonnées du rendez-vous dès que l'hôte en
+/// posait un : le livret annonçait le logement dans une rue où il n'est pas.
+#[test]
+#[serial]
+fn the_map_puts_the_property_where_the_property_is() {
+    let stored = json!({
+        "primary_method": "in_person",
+        "in_person_meeting_place": { "fr": "Gare" },
+        "in_person_meeting_lat": 43.70,
+        "in_person_meeting_lng": 7.26
+    });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&stored)
+        .with_coordinates(Some(GeoPoint::new(43.55, 7.12)))
+        .run(|ctx| {
+            let json = serde_json::to_value(render_home_card(ctx).expect("card")).unwrap();
+            let map = find_map(&json).expect("un plan");
+            let markers = map["markers"].as_array().expect("des repères");
+            assert_eq!(markers.len(), 2, "{map}");
+            let property = markers
+                .iter()
+                .find(|m| m["kind"] == "property")
+                .expect("le repère du logement");
+            assert_eq!(property["lat"], 43.55, "{map}");
+            assert_eq!(property["lng"], 7.12, "{map}");
+        });
+}
+
+fn find_map(node: &serde_json::Value) -> Option<&serde_json::Value> {
+    if node.get("type").and_then(|t| t.as_str()) == Some("Map") {
+        return Some(node);
+    }
+    match node {
+        serde_json::Value::Object(map) => map.values().find_map(find_map),
+        serde_json::Value::Array(items) => items.iter().find_map(find_map),
+        _ => None,
     }
 }
