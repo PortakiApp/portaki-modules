@@ -34,16 +34,16 @@
               {
                 "id": "property",
                 "kind": "property",
-                "label": "Logement",
-                "lat": 43.5513,
-                "lng": 7.0128
+                "label": "L'Islette",
+                "lat": 43.5509,
+                "lng": 7.1266
               }
             ],
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.5513,
-                "lng": 7.0128
+                "lat": 43.5509,
+                "lng": 7.1266
               },
               "zoom": 15.0
             }
@@ -166,16 +166,16 @@
               {
                 "id": "property",
                 "kind": "property",
-                "label": "Logement",
-                "lat": 43.5513,
-                "lng": 7.0128
+                "label": "L'Islette",
+                "lat": 43.5509,
+                "lng": 7.1266
               }
             ],
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.5513,
-                "lng": 7.0128
+                "lat": 43.5509,
+                "lng": 7.1266
               },
               "zoom": 15.0
             }

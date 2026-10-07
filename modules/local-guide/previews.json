@@ -184,16 +184,16 @@
               {
                 "id": "property",
                 "kind": "property",
-                "label": "Villa Azur",
-                "lat": 43.5513,
-                "lng": 7.0128
+                "label": "L'Islette",
+                "lat": 43.5509,
+                "lng": 7.1266
               }
             ],
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.556475,
-                "lng": 6.975125
+                "lat": 43.556375,
+                "lng": 7.003575
               },
               "zoom": 13.0
             }
@@ -407,6 +407,7 @@
         "guest.practical.phone": "Téléphone",
         "guest.practical.title": "Infos pratiques",
         "guest.route": "Itinéraire",
+        "guest.tile.drive": "En voiture",
         "guest.tile.walk": "À pied",
         "nav.spot": "Adresse"
       },
@@ -470,7 +471,14 @@
                 "key": "i18n:guest.tile.walk",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "environ 4 min"
+                "value": "environ 108 min"
+              },
+              {
+                "icon": "car",
+                "key": "i18n:guest.tile.drive",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "environ 18 min"
               }
             ],
             "minColumnWidth": 96.0,
@@ -492,9 +500,9 @@
               {
                 "id": "property",
                 "kind": "property",
-                "label": "Villa Azur",
-                "lat": 43.5513,
-                "lng": 7.0128
+                "label": "L'Islette",
+                "lat": 43.5509,
+                "lng": 7.1266
               }
             ],
             "type": "Map",

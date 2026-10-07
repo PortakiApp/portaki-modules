@@ -249,8 +249,8 @@
                 "id": "property",
                 "kind": "property",
                 "label": "i18n:guest.map.property",
-                "lat": 43.5513,
-                "lng": 7.0128
+                "lat": 43.5509,
+                "lng": 7.1266
               },
               {
                 "icon": "mountain",

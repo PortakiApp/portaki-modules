@@ -45,7 +45,22 @@ pub fn guest(module_root: &str) -> portaki_test_utils::MockContextBuilder {
         .fold(MockContext::guest(), |builder, (key, value)| {
             builder.with_translation(key, value.as_str().unwrap_or_default())
         })
-        .with_property(Property::default())
+        .with_property(Property {
+            // Le logement de la démo du livret, et non le « Villa Azur » du SDK.
+            //
+            // Les aperçus sont servis par `/p/demo-guest`, dont le manifeste dit « L'Islette,
+            // Cap d'Antibes ». Les modules y rendaient le nom et les coordonnées de la fixture du
+            // SDK : la carte d'accès nommait son repère « Villa Azur » au milieu du livret de
+            // L'Islette, l'avis demandait « votre séjour à Villa Azur », et le plan montrait
+            // Cannes là où le bandeau annonçait Antibes.
+            //
+            // Ici et pas dans le SDK : `Property::default()` sert tous les tests des vingt-trois
+            // modules, et le changer demanderait une release pour un nom de vitrine.
+            name: "L'Islette".to_string(),
+            lat: 43.5509,
+            lng: 7.1266,
+            ..Property::default()
+        })
         .with_stay(stay)
         .with_now(at(NOW))
 }
