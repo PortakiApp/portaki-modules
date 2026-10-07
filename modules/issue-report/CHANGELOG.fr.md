@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.2
+
+Correctif interne.
+
+* Les aperçus de la vitrine du module sont régénérés dans un ordre stable, sans changer leur contenu ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 1.4.1
 
 Montée technique.
