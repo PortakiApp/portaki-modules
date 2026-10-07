@@ -882,9 +882,9 @@ dependencies = [
 
 [[package]]
 name = "portaki-sdk"
-version = "9.8.0"
+version = "9.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "716877a5844fdf5375c66bcb445fae8cc90468063322d69cc6a5c010dc22d74c"
+checksum = "9ab3266df1e20c0f402bfe2eed296f18a1d7f4c8a633d043c3ad6cffa8de55ea"
 dependencies = [
  "base64 0.23.1",
  "chrono",
@@ -900,9 +900,9 @@ dependencies = [
 
 [[package]]
 name = "portaki-sdk-macros"
-version = "9.8.0"
+version = "9.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b79bf5b6c10195e7c6a704da1173b2efc756b5876e250950cbaebb2f70a5bee5"
+checksum = "31567465bab41e9fc9123dd968b7d97f194458169b5380a91665b37cdf69ff45"
 dependencies = [
  "proc-macro2",
  "quote",
