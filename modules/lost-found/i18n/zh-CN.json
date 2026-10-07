@@ -20,6 +20,8 @@
   "form.deadline.title": "截至 {date}",
   "form.details.label": "详情",
   "form.details.placeholder": "选填 — 地点、时间、颜色、品牌……",
+  "form.head.lead": "请描述一下，房东会查看房间并回复您。",
+  "form.head.title": "落下了东西？",
   "form.itemDescription.hint": "颜色、品牌、大小：任何能帮房东认出它的信息。",
   "form.itemDescription.label": "是什么物品？",
   "form.itemDescription.placeholder": "例如：蓝色围巾、房间钥匙",

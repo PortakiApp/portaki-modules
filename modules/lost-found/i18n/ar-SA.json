@@ -20,6 +20,8 @@
   "form.deadline.title": "حتى {date}",
   "form.details.label": "التفاصيل",
   "form.details.placeholder": "اختياري — أين، متى، اللون، الماركة…",
+  "form.head.lead": "صِف الغرض: سيتحقّق مضيفك من المكان ويردّ عليك.",
+  "form.head.title": "هل نسيت شيئًا؟",
   "form.itemDescription.hint": "اللون والعلامة والمقاس: كل ما يساعد مُضيفك على التعرف عليه.",
   "form.itemDescription.label": "ما هو؟",
   "form.itemDescription.placeholder": "مثال: وشاح أزرق، مفتاح الغرفة",

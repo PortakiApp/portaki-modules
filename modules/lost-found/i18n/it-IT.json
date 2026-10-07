@@ -20,6 +20,8 @@
   "form.deadline.title": "Fino al {date}",
   "form.details.label": "Dettagli",
   "form.details.placeholder": "Facoltativo — dove, quando, colore, marca…",
+  "form.head.lead": "Descrivetelo: il vostro host controlla l'alloggio e vi risponde.",
+  "form.head.title": "Avete dimenticato qualcosa?",
   "form.itemDescription.hint": "Colore, marca, taglia: tutto ciò che aiuta il tuo host a riconoscerlo.",
   "form.itemDescription.label": "Di cosa si tratta?",
   "form.itemDescription.placeholder": "Es. sciarpa blu, chiave della camera",

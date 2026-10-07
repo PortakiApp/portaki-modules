@@ -20,6 +20,8 @@
   "form.deadline.title": "Bis {date}",
   "form.details.label": "Details",
   "form.details.placeholder": "Optional — wo, wann, Farbe, Marke…",
+  "form.head.lead": "Beschreiben Sie es: Ihre Gastgeber sehen nach und melden sich.",
+  "form.head.title": "Etwas vergessen?",
   "form.itemDescription.hint": "Farbe, Marke, Größe: alles, was Ihrem Gastgeber beim Erkennen hilft.",
   "form.itemDescription.label": "Worum geht es?",
   "form.itemDescription.placeholder": "Z. B. blauer Schal, Zimmerschlüssel",

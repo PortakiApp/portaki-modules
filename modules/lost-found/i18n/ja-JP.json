@@ -20,6 +20,8 @@
   "form.deadline.title": "{date} まで",
   "form.details.label": "詳細",
   "form.details.placeholder": "任意 — どこで、いつ、色、ブランドなど",
+  "form.head.lead": "特徴をお書きください。ホストが室内を確認してご連絡します。",
+  "form.head.title": "お忘れ物はありませんか？",
   "form.itemDescription.hint": "色・ブランド・大きさ。ホストが見分けられる手がかりを。",
   "form.itemDescription.label": "どんな物ですか",
   "form.itemDescription.placeholder": "例：青いマフラー、部屋の鍵",

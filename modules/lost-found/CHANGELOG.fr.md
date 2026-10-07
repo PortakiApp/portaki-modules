@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.0
+
+Un en-tête sur la feuille.
+
+* La déclaration s'ouvre sur « Un objet oublié ? » et dit ce que l'hôte en fera, au lieu du seul mot « Objet oublié ».
+
 ## 1.7.1
 
 Correctif interne.
