@@ -122,6 +122,13 @@ pub struct FacilityRow {
     pub opens_at: String,
     #[serde(skip_serializing_if = "String::is_empty")]
     pub closes_at: String,
+    /// La coupure du midi, quand l'équipement ferme entre deux services.
+    ///
+    /// Les deux bornes ou aucune : une seule ne dit pas quand la porte rouvre.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub break_from: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub break_to: String,
     /// Ouvert en continu : il n'y a alors pas d'heures à comparer.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub all_day: bool,
@@ -183,6 +190,8 @@ impl FacilityRow {
             opens_at: parse_hm(&self.opens_at),
             closes_at: parse_hm(&self.closes_at),
             exceptions: self.exceptions.clone(),
+            // Les deux bornes, ou aucune : une coupure sans fin laisserait la porte close.
+            break_at: parse_hm(&self.break_from).zip(parse_hm(&self.break_to)),
             // Les deux bornes, ou aucune : une saison à une seule date ne dit pas quand elle
             // s'arrête, et la deviner fermerait la ligne à une date inventée.
             season: crate::schedule::parse_month_day(&self.season_from)

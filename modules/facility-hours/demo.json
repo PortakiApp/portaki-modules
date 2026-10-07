@@ -160,32 +160,32 @@
                     "details": [
                       {
                         "label": "lundi",
-                        "value": "08:30 – 18:00"
+                        "value": "08:30 – 12:00 · 14:00 – 18:00"
                       },
                       {
                         "label": "mardi",
-                        "value": "08:30 – 18:00"
+                        "value": "08:30 – 12:00 · 14:00 – 18:00"
                       },
                       {
                         "label": "mercredi",
-                        "value": "08:30 – 18:00"
+                        "value": "08:30 – 12:00 · 14:00 – 18:00"
                       },
                       {
                         "label": "jeudi",
-                        "value": "08:30 – 18:00"
+                        "value": "08:30 – 12:00 · 14:00 – 18:00"
                       },
                       {
                         "label": "vendredi",
-                        "value": "08:30 – 18:00"
+                        "value": "08:30 – 12:00 · 14:00 – 18:00"
                       },
                       {
                         "label": "samedi",
-                        "value": "08:30 – 18:00"
+                        "value": "08:30 – 12:00 · 14:00 – 18:00"
                       },
                       {
                         "current": true,
                         "label": "dimanche",
-                        "value": "08:30 – 18:00"
+                        "value": "08:30 – 12:00 · 14:00 – 18:00"
                       }
                     ],
                     "leading": "building",
@@ -193,8 +193,8 @@
                     "title": "Accueil de la résidence",
                     "trailing": {
                       "badge": {
-                        "label": "i18n:guest.state.open",
-                        "tone": "success"
+                        "label": "Ouvre à 14:00",
+                        "tone": "neutral"
                       }
                     },
                     "type": "ListItem"
@@ -353,32 +353,32 @@
             "details": [
               {
                 "label": "lundi",
-                "value": "08:30 – 18:00"
+                "value": "08:30 – 12:00 · 14:00 – 18:00"
               },
               {
                 "label": "mardi",
-                "value": "08:30 – 18:00"
+                "value": "08:30 – 12:00 · 14:00 – 18:00"
               },
               {
                 "label": "mercredi",
-                "value": "08:30 – 18:00"
+                "value": "08:30 – 12:00 · 14:00 – 18:00"
               },
               {
                 "label": "jeudi",
-                "value": "08:30 – 18:00"
+                "value": "08:30 – 12:00 · 14:00 – 18:00"
               },
               {
                 "label": "vendredi",
-                "value": "08:30 – 18:00"
+                "value": "08:30 – 12:00 · 14:00 – 18:00"
               },
               {
                 "label": "samedi",
-                "value": "08:30 – 18:00"
+                "value": "08:30 – 12:00 · 14:00 – 18:00"
               },
               {
                 "current": true,
                 "label": "dimanche",
-                "value": "08:30 – 18:00"
+                "value": "08:30 – 12:00 · 14:00 – 18:00"
               }
             ],
             "leading": "building",
@@ -386,8 +386,8 @@
             "title": "Accueil de la résidence",
             "trailing": {
               "badge": {
-                "label": "i18n:guest.state.open",
-                "tone": "success"
+                "label": "Ouvre à 14:00",
+                "tone": "neutral"
               }
             },
             "type": "ListItem"

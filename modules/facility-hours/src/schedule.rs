@@ -118,6 +118,13 @@ pub struct Schedule {
     pub opens_at: Option<u32>,
     pub closes_at: Option<u32>,
     pub exceptions: Vec<DayHours>,
+    /// La coupure du midi, quand l'équipement en a une : `12:00` → `14:00`.
+    ///
+    /// Une réception qui ferme pour déjeuner est la deuxième plage de loin la plus courante, et la
+    /// seule que l'hôte écrivait jusqu'ici dans sa phrase libre — « 8 h 30 – 12 h · 14 h – 18 h » —
+    /// pendant que les heures structurées disaient 08:30 – 18:00. La semaine dépliable contredisait
+    /// donc la ligne juste au-dessus, et le badge annonçait « Ouvert » à 13 h.
+    pub break_at: Option<(u32, u32)>,
     /// La saison, en `MM-JJ` : hors de ces dates, la ligne est fermée quoi que disent ses heures.
     ///
     /// Sans année : une piscine ouvre « d'avril à octobre » chaque année, et demander les dates à
@@ -130,6 +137,33 @@ impl Schedule {
     /// Whether anything here can be computed. A row without times keeps its sentence.
     pub fn is_structured(&self) -> bool {
         self.all_day || (self.opens_at.is_some() && self.closes_at.is_some())
+    }
+
+    /// Les plages d'un jour : une, ou deux quand l'équipement coupe à midi.
+    ///
+    /// Vide quand le jour est fermé. La coupure ne s'applique pas à une plage qui passe minuit —
+    /// un bar ouvert de 22 h à 2 h ne déjeune pas.
+    pub fn spans_on(&self, day: Weekday) -> Vec<DaySpan> {
+        let Some(span) = self.span_on(day) else {
+            return Vec::new();
+        };
+        match self.break_at {
+            Some((from, to))
+                if !span.overnight() && span.opens < from && from < to && to < span.closes =>
+            {
+                vec![
+                    DaySpan {
+                        opens: span.opens,
+                        closes: from,
+                    },
+                    DaySpan {
+                        opens: to,
+                        closes: span.closes,
+                    },
+                ]
+            }
+            _ => vec![span],
+        }
     }
 
     /// The span for one weekday, or `None` when that day is closed.
@@ -190,14 +224,17 @@ impl Schedule {
             }
         }
 
-        let Some(span) = self.span_on(today) else {
+        let spans = self.spans_on(today);
+        if spans.is_empty() {
             return Some(State::Closed);
-        };
-        if span.covers(minutes) {
+        }
+        if spans.iter().any(|span| span.covers(minutes)) {
             return Some(State::Open);
         }
-        if minutes < span.opens {
-            return Some(State::OpensAt(span.opens));
+        // La prochaine ouverture du jour : après le déjeuner, c'est la seconde plage qu'on
+        // annonce, pas celle du matin qui vient de fermer.
+        if let Some(next) = spans.iter().map(|span| span.opens).find(|&o| minutes < o) {
+            return Some(State::OpensAt(next));
         }
         Some(State::Closed)
     }
@@ -284,7 +321,16 @@ mod tests {
             opens_at: parse_hm(opens),
             closes_at: parse_hm(closes),
             exceptions: Vec::new(),
+            break_at: None,
             season: None,
+        }
+    }
+
+    /// La même journée, avec une coupure.
+    fn day_with_break(opens: &str, closes: &str, from: &str, to: &str) -> Schedule {
+        Schedule {
+            break_at: parse_hm(from).zip(parse_hm(to)),
+            ..day(opens, closes)
         }
     }
 
@@ -363,5 +409,44 @@ mod tests {
         };
         assert!(parking.is_structured());
         assert_eq!(parking.state_at(at(3, 0), None), Some(State::AlwaysOpen));
+    }
+
+    /// Une réception qui ferme pour déjeuner : deux plages, et « Ouvert » ne ment plus à 13 h.
+    #[test]
+    fn a_lunch_break_closes_the_door_and_says_when_it_reopens() {
+        let schedule = day_with_break("08:30", "18:00", "12:00", "14:00");
+        let spans = schedule.spans_on(Weekday::Mon);
+        assert_eq!(spans.len(), 2);
+        assert_eq!(spans[0].closes, 12 * 60);
+        assert_eq!(spans[1].opens, 14 * 60);
+
+        let at = |h: u32, m: u32| {
+            schedule.state_at(
+                chrono::Utc
+                    .with_ymd_and_hms(2026, 6, 15, h, m, 0)
+                    .single()
+                    .expect("date"),
+                None,
+            )
+        };
+        assert_eq!(at(10, 0), Some(State::Open));
+        assert_eq!(at(13, 0), Some(State::OpensAt(14 * 60)));
+        assert_eq!(at(15, 0), Some(State::Open));
+        assert_eq!(at(19, 0), Some(State::Closed));
+        assert_eq!(at(7, 0), Some(State::OpensAt(8 * 60 + 30)));
+    }
+
+    /// Une coupure qui ne tient pas dans la journée est ignorée plutôt que d'inventer un trou :
+    /// bornes à l'envers, hors des heures, ou sur une plage qui passe minuit.
+    #[test]
+    fn a_break_that_makes_no_sense_is_ignored() {
+        for (opens, closes, from, to) in [
+            ("08:30", "18:00", "14:00", "12:00"),
+            ("08:30", "18:00", "19:00", "20:00"),
+            ("22:00", "02:00", "23:00", "23:30"),
+        ] {
+            let schedule = day_with_break(opens, closes, from, to);
+            assert_eq!(schedule.spans_on(Weekday::Mon).len(), 1, "{from} – {to}");
+        }
     }
 }

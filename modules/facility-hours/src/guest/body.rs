@@ -62,13 +62,22 @@ fn week_rows(
             let value = if schedule.all_day {
                 "i18n:guest.state.open".to_string()
             } else {
-                match schedule.span_on(*day) {
-                    Some(span) => format!(
-                        "{} – {}",
-                        format_minutes(span.opens),
-                        format_minutes(span.closes)
-                    ),
-                    None => "i18n:guest.state.closed".to_string(),
+                let spans = schedule.spans_on(*day);
+                if spans.is_empty() {
+                    "i18n:guest.state.closed".to_string()
+                } else {
+                    // Deux plages se lisent comme l'hôte les écrit : « 08:30 – 12:00 · 14:00 – 18:00 ».
+                    spans
+                        .iter()
+                        .map(|span| {
+                            format!(
+                                "{} – {}",
+                                format_minutes(span.opens),
+                                format_minutes(span.closes)
+                            )
+                        })
+                        .collect::<Vec<_>>()
+                        .join(" · ")
                 }
             };
             DetailRow {
