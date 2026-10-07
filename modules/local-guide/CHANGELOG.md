@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.10.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.9.0...local-guide-v1.10.0) (2026-10-07)
+
+
+### Features
+
+* **local-guide:** sign the host's tips ([8fb643a](https://github.com/PortakiApp/portaki-modules/commit/8fb643af1b2a8958a6c02404eb2a88a2428fc58e))
+
+
+### Bug Fixes
+
+* **access-guide:** name the property on the access map ([4b57647](https://github.com/PortakiApp/portaki-modules/commit/4b57647039b040f372bae5cf4a40200b4deea0c7))
+* **guest:** scope the prep-card routes per module ([09bb90c](https://github.com/PortakiApp/portaki-modules/commit/09bb90c6f71a7f1529ea9104609915b4d32d0f24))
+* **local-guide:** book label names an existing key ([f728724](https://github.com/PortakiApp/portaki-modules/commit/f728724a0ca6d757a438d8b22cbc1996bd9d3b24))
+* **previews:** keep the sample property where its places are ([df21bf9](https://github.com/PortakiApp/portaki-modules/commit/df21bf91149411c1730b6af10979caffc2ed2e63))
+
 ## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.8.0...local-guide-v1.9.0) (2026-10-04)
 
 

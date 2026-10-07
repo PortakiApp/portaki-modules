@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.7.0...lost-found-v1.7.1) (2026-10-07)
+
+
+### Bug Fixes
+
+* **guest:** scope the prep-card routes per module ([09bb90c](https://github.com/PortakiApp/portaki-modules/commit/09bb90c6f71a7f1529ea9104609915b4d32d0f24))
+
 ## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.6.0...lost-found-v1.7.0) (2026-10-04)
 
 
