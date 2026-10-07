@@ -282,10 +282,10 @@ fn tip_title(host_name: &str) -> String {
         .unwrap_or_else(|_| "i18n:guest.activity.tip".into())
 }
 
-/// « Réserver sur Viator ».
+/// « Réserver auprès de Viator ».
 fn book_label() -> String {
     t!(
-        "guest.activity.bookOn",
+        "guest.activity.book",
         provider = &t!("guest.viator.providerName").unwrap_or_else(|_| "Viator".to_string())
     )
     .unwrap_or_else(|_| "i18n:guest.viator.book".into())

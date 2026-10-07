@@ -14,8 +14,8 @@ use serde_json::{json, Value};
 use serial_test::serial;
 
 use local_guide::{
-    render_explore_detail, render_home_card, render_host_main, VIATOR_FRESH_SECS,
-    VIATOR_STALE_MAX_SECS,
+    render_explore_detail, render_explore_link, render_home_card, render_host_main,
+    VIATOR_FRESH_SECS, VIATOR_STALE_MAX_SECS,
 };
 
 const RECORDED: &str = include_str!("fixtures/viator-freetext.json");
@@ -393,6 +393,86 @@ fn every_viator_key_exists_in_both_bundles() {
     for raw in [FR_BUNDLE, EN_BUNDLE] {
         let bundle: Value = serde_json::from_str(raw).expect("bundle");
         for key in refs.iter().map(String::as_str).chain(runtime_keys) {
+            assert!(bundle.get(key).is_some(), "clé manquante — {key}");
+        }
+    }
+}
+
+/// Le lien du fixture, celui des aperçus : le petit train d'Antibes.
+const LITTLE_TRAIN: &str =
+    "https://www.viator.com/fr-FR/tours/Antibes/The-Little-Train-of-Antibes-Juan-les-Pins/d21941-273628P2";
+
+/// Un libellé rendu : du texte, ou une clé que la coquille traduira — jamais une clé nue.
+fn is_a_bare_key(label: &str) -> bool {
+    !label.contains(char::is_whitespace) && label.contains('.')
+}
+
+/// Les libellés des `Button` de l'arbre, où qu'ils soient.
+fn button_labels(value: &Value, into: &mut Vec<String>) {
+    match value {
+        Value::Object(fields) => {
+            if fields.get("type").and_then(Value::as_str) == Some("Button") {
+                if let Some(label) = fields.get("label").and_then(Value::as_str) {
+                    into.push(label.to_string());
+                }
+            }
+            fields.values().for_each(|field| button_labels(field, into));
+        }
+        Value::Array(items) => items.iter().for_each(|item| button_labels(item, into)),
+        _ => {}
+    }
+}
+
+/// Le bouton de réservation porte un texte, jamais la clé qui le désigne.
+///
+/// `t!` ne rend pas d'`Err` sur une clé absente : l'hôte — et le mock — répondent la clé
+/// elle-même. Le repli de `book_label` ne se déclenchait donc jamais, et le voyageur lisait
+/// « guest.activity.bookOn » sur le bouton. Les traductions sont chargées ici comme dans les
+/// aperçus : sans elles, une clé présente et une clé absente se rendent pareil.
+#[test]
+#[serial]
+fn the_booking_button_never_shows_an_i18n_key() {
+    let fr: Value = serde_json::from_str(FR_BUNDLE).expect("bundle");
+    let context = fr
+        .as_object()
+        .expect("bundle object")
+        .iter()
+        .fold(guest(), |builder, (key, text)| {
+            builder.with_translation(key, text.as_str().unwrap_or_default())
+        })
+        .with_config(&json!({
+            "activities_enabled": true,
+            "activities": [{ "id": "petit-train", "url": LITTLE_TRAIN }]
+        }))
+        .with_connector_response("viator", "search_products", RECORDED);
+
+    let (surface, asked) = context.run_with(|mut ctx, host| {
+        ctx.input = json!({ "productCode": "273628P2" });
+        let surface = render_explore_link(ctx).expect("surface");
+        (surface, host.translated_keys())
+    });
+
+    let mut labels = Vec::new();
+    button_labels(
+        &serde_json::to_value(&surface).expect("surface value"),
+        &mut labels,
+    );
+    assert!(!labels.is_empty(), "la fiche du lien n'a pas de bouton");
+    for label in &labels {
+        match label.strip_prefix("i18n:") {
+            // Une clé laissée à la coquille : elle doit exister partout, sinon elle fuit aussi.
+            Some(key) => assert!(
+                fr.get(key).is_some(),
+                "le bouton renvoie à une clé absente — {key}"
+            ),
+            None => assert!(!is_a_bare_key(label), "le bouton porte une clé — {label}"),
+        }
+    }
+
+    // Et toute clé que la fiche a fait traduire existe en fr comme en en.
+    for raw in [FR_BUNDLE, EN_BUNDLE] {
+        let bundle: Value = serde_json::from_str(raw).expect("bundle");
+        for key in &asked {
             assert!(bundle.get(key).is_some(), "clé manquante — {key}");
         }
     }

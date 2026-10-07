@@ -701,7 +701,7 @@
               "type": "external",
               "url": "https://shop.live.rc.viator.com/fr-FR/tours/Antibes/The-Little-Train-of-Antibes-Juan-les-Pins/d21941-273628P2?mcid=42383&pid=P00322642&medium=api&api_version=2.0"
             },
-            "label": "guest.activity.bookOn",
+            "label": "Réserver auprès de Viator",
             "type": "Button"
           },
           {
