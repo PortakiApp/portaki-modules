@@ -14,7 +14,7 @@
 //! Le test doit nommer la crate du module (`use my_module as _;` au moins) : une crate que le
 //! binaire ne nomme pas n'est pas liée, et ses déclarations n'existent pas.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::Path;
@@ -41,27 +41,31 @@ pub fn check_surfaces(module_root: &str, setup: Setup) {
         !surfaces.is_empty(),
         "aucune surface déclarée : le test nomme-t-il la crate du module ?"
     );
+    let fr = bundles.get("fr-FR").cloned().unwrap_or_default();
     scenarios::check_each(|scenario| {
         let failures: Vec<String> = surfaces
             .iter()
             .filter_map(|surface| {
-                context_for(scenario, surface.context == "guest", setup)
-                    .run_with(|ctx, host| {
-                        let tree = (surface.dispatch)(ctx, json!({}));
-                        // Le shell voyageur rend l'état d'erreur sur un `Err` : il ne reste
-                        // que son journal pour le dire.
-                        match host
-                            .logs()
-                            .into_iter()
-                            .find(|l| l.message.ends_with("_render_failed"))
-                        {
-                            Some(line) => Err(line.fields["error"].to_string()),
-                            None => tree.map_err(|error| error.to_string()),
-                        }
-                    })
-                    .and_then(|tree| sound(&bundles, &tree))
-                    .err()
-                    .map(|error| format!("{} {}: {error}", surface.context, surface.name))
+                seed(
+                    context_for(scenario, surface.context == "guest", setup),
+                    &fr,
+                )
+                .run_with(|ctx, host| {
+                    let tree = (surface.dispatch)(ctx, json!({}));
+                    // Le shell voyageur rend l'état d'erreur sur un `Err` : il ne reste
+                    // que son journal pour le dire.
+                    match host
+                        .logs()
+                        .into_iter()
+                        .find(|l| l.message.ends_with("_render_failed"))
+                    {
+                        Some(line) => Err(line.fields["error"].to_string()),
+                        None => tree.map_err(|error| error.to_string()),
+                    }
+                })
+                .and_then(|tree| sound(&bundles, &tree))
+                .err()
+                .map(|error| format!("{} {}: {error}", surface.context, surface.name))
             })
             .collect();
         if failures.is_empty() {
@@ -70,6 +74,16 @@ pub fn check_surfaces(module_root: &str, setup: Setup) {
             Err(failures.join("; "))
         }
     });
+}
+
+/// Charge les textes français dans le mock, comme les aperçus le font.
+///
+/// Sans eux `t!` rend la clé pour *toute* clé : une clé présente et une clé absente se rendent
+/// pareil, et le contrôle ne distingue plus rien.
+fn seed(builder: MockContextBuilder, fr: &Map<String, Value>) -> MockContextBuilder {
+    fr.iter().fold(builder, |builder, (key, text)| {
+        builder.with_translation(key, text.as_str().unwrap_or_default())
+    })
 }
 
 /// Le contexte d'un cas, voyageur ou hôte, préparé par `setup`.
@@ -196,9 +210,30 @@ fn operations(emissions: &Path) -> Vec<Value> {
 
 /// Le rendu ne montre ni texte cassé ni clé i18n absente d'une langue du module.
 fn sound(bundles: &BTreeMap<String, Map<String, Value>>, tree: &Value) -> Result<(), String> {
+    const TEXT: &[&str] = &[
+        "label",
+        "title",
+        "subtitle",
+        "value",
+        "text",
+        "key",
+        "description",
+        "caption",
+        "eyebrow",
+        "hint",
+        "placeholder",
+        "message",
+        "tag",
+        "name",
+    ];
+    let namespaces: BTreeSet<&str> = bundles
+        .values()
+        .flat_map(|texts| texts.keys())
+        .filter_map(|key| key.split_once('.').map(|(head, _)| head))
+        .collect();
     let mut problems = Vec::new();
-    let mut stack = vec![tree];
-    while let Some(value) = stack.pop() {
+    let mut stack = vec![("", tree)];
+    while let Some((field, value)) = stack.pop() {
         match value {
             Value::String(text) => {
                 if let Some(key) = text.strip_prefix("i18n:") {
@@ -209,10 +244,18 @@ fn sound(bundles: &BTreeMap<String, Map<String, Value>>, tree: &Value) -> Result
                     }
                 } else if let Some(reason) = broken(text) {
                     problems.push(format!("{reason} in {text:?}"));
+                } else if let Some(key) = TEXT
+                    .contains(&field)
+                    .then(|| leaked_key(bundles, &namespaces, text))
+                    .flatten()
+                {
+                    problems.push(format!("unresolved i18n key `{key}` in {text:?}"));
                 }
             }
-            Value::Array(items) => stack.extend(items),
-            Value::Object(fields) => stack.extend(fields.values()),
+            Value::Array(items) => stack.extend(items.iter().map(|item| (field, item))),
+            Value::Object(fields) => {
+                stack.extend(fields.iter().map(|(name, value)| (name.as_str(), value)))
+            }
             _ => {}
         }
     }
@@ -221,6 +264,40 @@ fn sound(bundles: &BTreeMap<String, Map<String, Value>>, tree: &Value) -> Result
     } else {
         Err(problems.join(", "))
     }
+}
+
+/// Une clé que le module a résolue lui-même, et qui n'existait pas.
+///
+/// `sound` contrôle déjà les `i18n:` — ceux que la coquille traduit. Mais `t!` ne rend pas `Err`
+/// sur une clé absente : l'hôte répond *la clé elle-même*, qui atterrit dans l'arbre sans
+/// préfixe. C'est la forme des deux bogues connus (`guest.activity.bookOn`,
+/// `guest.stay.from`), et `broken` ne la voyait pas.
+///
+/// On ne juge pas sur la forme seule — « booking.com », « 3.5 km », « www.exemple.fr » en ont
+/// aussi. Un mot n'est une clé que si son premier segment est l'un des espaces de noms que le
+/// bundle du module déclare lui-même.
+fn leaked_key<'a>(
+    bundles: &BTreeMap<String, Map<String, Value>>,
+    namespaces: &BTreeSet<&str>,
+    text: &'a str,
+) -> Option<&'a str> {
+    text.split(|c: char| c.is_whitespace())
+        .map(|word| word.trim_matches(|c: char| !c.is_alphanumeric()))
+        .find(|word| {
+            if bundles.values().any(|texts| texts.contains_key(*word)) {
+                return false;
+            }
+            let mut segments = word.split('.');
+            let Some(head) = segments.next() else {
+                return false;
+            };
+            let rest: Vec<&str> = segments.collect();
+            !rest.is_empty()
+                && namespaces.contains(head)
+                && rest
+                    .iter()
+                    .all(|s| !s.is_empty() && s.chars().all(|c| c.is_ascii_alphanumeric()))
+        })
 }
 
 /// Ce qu'un voyageur ne doit jamais lire : une valeur absente formatée telle quelle, ou un
