@@ -243,7 +243,7 @@
                 "layout": "tile",
                 "mono": true,
                 "type": "KeyValue",
-                "value": "guest.stay.from 17:00"
+                "value": "dès 17:00"
               },
               {
                 "icon": "clock",
@@ -251,7 +251,7 @@
                 "layout": "tile",
                 "mono": true,
                 "type": "KeyValue",
-                "value": "guest.stay.before 12:00"
+                "value": "avant 12:00"
               }
             ],
             "minColumnWidth": 120.0,

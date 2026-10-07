@@ -1,6 +1,5 @@
 //! Shared guest SDUI body for facility hours.
 
-use portaki_sdk::host::i18n::{translate, Vars};
 use portaki_sdk::host::time::{self, PropertyTz};
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::{
@@ -251,7 +250,7 @@ pub fn stay_tiles(data: &GuestData) -> Option<Component> {
         tiles.push(stay_tile(
             "i18n:guest.stay.checkin",
             IconName::Key,
-            "i18n:guest.stay.from",
+            "guest.stay.fromHour",
             hour,
         ));
     }
@@ -259,7 +258,7 @@ pub fn stay_tiles(data: &GuestData) -> Option<Component> {
         tiles.push(stay_tile(
             "i18n:guest.stay.checkout",
             IconName::Clock,
-            "i18n:guest.stay.before",
+            "guest.stay.beforeHour",
             hour,
         ));
     }
@@ -274,18 +273,16 @@ pub fn stay_tiles(data: &GuestData) -> Option<Component> {
     ))
 }
 
-/// « dès 16:00 », « avant 10:00 » — le qualificatif est traduit, l'heure ne l'est pas.
+/// « dès 16:00 », « avant 10:00 » — et c'est la langue qui place l'heure.
+///
+/// Le qualificatif ne se colle pas devant l'heure : `{hour} から` en japonais, `{hour} 前` en
+/// chinois la veulent en tête. L'heure est donc passée à la clé paramétrée, et chaque bundle
+/// décide de l'ordre. Sans hôte pour traduire, la tuile garde l'heure seule.
 fn stay_tile(label: &str, icon: IconName, qualifier_key: &str, hour: String) -> Component {
-    let qualifier =
-        translate(qualifier_key.trim_start_matches("i18n:"), &Vars::new()).unwrap_or_default();
     Component::KeyValue(
         KeyValue::new()
             .key(label)
-            .value(if qualifier.is_empty() {
-                hour.clone()
-            } else {
-                format!("{qualifier} {hour}")
-            })
+            .value(t!(qualifier_key, hour = &hour).unwrap_or(hour))
             .layout(KeyValueLayout::Tile)
             .icon(icon)
             .mono(true),

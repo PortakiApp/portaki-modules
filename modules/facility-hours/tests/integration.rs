@@ -4,8 +4,10 @@ use portaki_sdk::capability;
 use serial_test::serial;
 
 use facility_hours::{render_explore_detail, render_home_card, render_host_main};
+use portaki_sdk::context::StayContext;
 use portaki_sdk::host::module::ModuleStatus;
-use portaki_test_utils::{MockContext, SurfaceAssertions};
+use portaki_sdk::prelude::{DateTime, Utc, Uuid};
+use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use serde_json::{json, Value};
 
 #[path = "../../../support/config_form.rs"]
@@ -14,6 +16,13 @@ mod config_form;
 mod config_save;
 
 const EMISSIONS: &str = concat!(env!("OUT_DIR"), "/portaki-emissions");
+
+/// Un instant RFC 3339, en UTC.
+fn at(rfc3339: &str) -> DateTime<Utc> {
+    DateTime::parse_from_rfc3339(rfc3339)
+        .expect("date")
+        .with_timezone(&Utc)
+}
 
 fn sample_config() -> Value {
     json!({
@@ -335,4 +344,112 @@ fn a_save_in_english_keeps_the_french() {
             assert_eq!(saved["facilities"][2]["title"]["fr"], "Spa");
             assert_eq!(saved["general_note"], stored["general_note"]);
         });
+}
+
+const FR_BUNDLE: &str = include_str!("../i18n/fr-FR.json");
+const EN_BUNDLE: &str = include_str!("../i18n/en-US.json");
+
+/// Un mot rendu qui ressemble à une clé : un point au milieu, et des lettres autour.
+///
+/// Le test frère de `local-guide` cherchait la clé dans le libellé entier ; ici elle est collée à
+/// l'heure — « guest.stay.from 17:00 » — et l'espace suffisait à la faire passer. On regarde donc
+/// chaque mot. « 17:00 » n'a pas de point, « 9 h – 20 h » non plus.
+fn looks_like_a_key(word: &str) -> bool {
+    // Le point final d'une phrase n'en fait pas une clé : « Bonnet de bain non obligatoire. »
+    word.trim_end_matches('.').contains('.') && word.contains(char::is_alphabetic)
+}
+
+/// Les `key` et `value` des `KeyValue` de l'arbre, où qu'ils soient.
+fn key_value_texts(value: &Value, into: &mut Vec<String>) {
+    match value {
+        Value::Object(fields) => {
+            if fields.get("type").and_then(Value::as_str) == Some("KeyValue") {
+                for field in ["key", "value"] {
+                    if let Some(text) = fields.get(field).and_then(Value::as_str) {
+                        into.push(text.to_string());
+                    }
+                }
+            }
+            fields
+                .values()
+                .for_each(|field| key_value_texts(field, into));
+        }
+        Value::Array(items) => items.iter().for_each(|item| key_value_texts(item, into)),
+        _ => {}
+    }
+}
+
+/// Les tuiles du séjour portent un texte, jamais la clé qui le désigne.
+///
+/// La batterie de conformité rend chaque surface sur un mock vide : sans séjour, la grille
+/// disparaît et ses clés ne sont jamais demandées. Et `t!` ne rend pas d'`Err` sur une clé
+/// absente — l'hôte comme le mock répondent la clé elle-même, si bien que le repli de
+/// `stay_tile` ne se déclenchait pas et que le voyageur lisait « guest.stay.from 17:00 ».
+/// Les traductions sont chargées comme dans les aperçus : sans elles, une clé présente et une
+/// clé absente se rendent pareil.
+#[test]
+#[serial]
+fn the_stay_tiles_never_show_an_i18n_key() {
+    let fr: Value = serde_json::from_str(FR_BUNDLE).expect("bundle");
+    let stay = StayContext {
+        stay_id: Uuid::from_u128(0x3333_3333_3333_3333_3333_3333_3333_3333),
+        checkin_at: Some(at("2026-06-01T15:00:00Z")),
+        checkout_at: Some(at("2026-06-08T10:00:00Z")),
+        ..StayContext::default()
+    };
+    let context = fr
+        .as_object()
+        .expect("bundle object")
+        .iter()
+        .fold(MockContext::guest(), |builder, (key, text)| {
+            builder.with_translation(key, text.as_str().unwrap_or_default())
+        })
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_property(Property::default())
+        .with_stay(stay)
+        .with_config(&sample_config());
+
+    let (surface, asked) = context.run_with(|ctx, host| {
+        let surface = render_home_card(ctx).expect("home card");
+        (surface, host.translated_keys())
+    });
+
+    let mut texts = Vec::new();
+    key_value_texts(
+        &serde_json::to_value(&surface.root).expect("arbre SDUI"),
+        &mut texts,
+    );
+    // Les deux tuiles du séjour, et leur heure : sans elles le test ne garde rien.
+    assert!(
+        texts.iter().any(|text| text.contains("17:00")),
+        "la carte n'a pas la tuile d'arrivée — {texts:?}"
+    );
+    assert!(
+        texts.iter().any(|text| text.contains("12:00")),
+        "la carte n'a pas la tuile de départ — {texts:?}"
+    );
+
+    for text in &texts {
+        match text.strip_prefix("i18n:") {
+            // Une clé laissée à la coquille : elle doit exister partout, sinon elle fuit aussi.
+            Some(key) => assert!(
+                fr.get(key).is_some(),
+                "la tuile renvoie à une clé absente — {key}"
+            ),
+            None => {
+                for word in text.split_whitespace() {
+                    assert!(!looks_like_a_key(word), "la tuile porte une clé — {text}");
+                }
+            }
+        }
+    }
+
+    // Et toute clé que la carte a fait traduire existe en fr comme en en.
+    assert!(!asked.is_empty(), "la carte n'a fait traduire aucune clé");
+    for raw in [FR_BUNDLE, EN_BUNDLE] {
+        let bundle: Value = serde_json::from_str(raw).expect("bundle");
+        for key in &asked {
+            assert!(bundle.get(key).is_some(), "clé manquante — {key}");
+        }
+    }
 }
