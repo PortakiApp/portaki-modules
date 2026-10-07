@@ -39,6 +39,10 @@ const FRANCE: &[EmergencyNumber] = &[
 
 /// Le pays, lu dans le sous-tag de région de la locale du logement (`fr-FR` → `FR`).
 ///
+/// **La locale du logement, jamais celle du lecteur.** Les surfaces passaient `ctx.locale`, qui est
+/// celle du voyageur quand il en a choisi une : un francophone en Espagne recevait le 15 et le 18,
+/// qui ne sonnent nulle part là-bas, et un anglophone en France perdait les deux.
+///
 /// ponytail: la locale est ce que le contexte donne ; un vrai code pays sur la propriété serait
 /// plus sûr — un hôte belge qui garde `fr-FR` reçoit les numéros français. Le 112 reste juste
 /// dans les deux cas, et c'est lui qu'on affiche en premier.

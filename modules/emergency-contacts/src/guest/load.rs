@@ -8,23 +8,31 @@ pub struct GuestData {
     pub contacts: Vec<ContactRow>,
     pub host_phone: String,
     pub locale: String,
+    /// La locale du **logement**, d'où se tirent les numéros d'urgence du pays.
+    ///
+    /// Pas celle du lecteur : un voyageur francophone en Espagne verrait sinon le 15 et le 18,
+    /// qui ne sonnent nulle part là-bas. Les libellés, eux, restent dans sa langue — ce sont des
+    /// clés que le livret résout.
+    pub property_locale: String,
     /// « Pharmacie de garde : 3237 · Hôpital d'Antibes à 3,1 km » — vide quand l'hôte n'a rien
     /// donné, et la carte se termine alors sur ses contacts.
     pub useful_line: String,
 }
 
-/// The config to show, or `None` when there is nothing to show at all.
+/// Ce qu'il y a à montrer — et il y a **toujours** quelque chose (§2.16).
+///
+/// Ce module ne se tait jamais : « aucun contact hôte → tuiles pays seules, jamais d'état vide,
+/// "composez le 112" minimum ». Les numéros d'urgence ne viennent pas de l'hôte, ils se calculent
+/// du pays du logement — un hôte qui n'a rien rempli n'est pas une raison de laisser un voyageur
+/// sans numéro devant une porte.
 pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
     let config = ModuleConfig::load(ctx)?;
     let host_phone = host_phone(&config, ctx);
-    if config.parse_contacts().is_empty() && host_phone.is_empty() {
-        return Ok(None);
-    }
-
     Ok(Some(GuestData {
         contacts: config.parse_contacts(),
         host_phone,
         locale: ctx.locale.clone(),
+        property_locale: ctx.property.locale.clone(),
         useful_line: useful_line(&config),
     }))
 }
