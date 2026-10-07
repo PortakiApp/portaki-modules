@@ -13,7 +13,7 @@ use super::load::GuestData;
 /// En une fois, parce que `children` remplace la liste là où `child` l'allonge — un `child`
 /// suivi d'un `children` perdrait silencieusement les tuiles.
 fn card_body(data: &GuestData) -> Vec<Component> {
-    let mut body = vec![country_numbers(&data.locale)];
+    let mut body = vec![country_numbers(&data.property_locale)];
     body.extend(build_contacts_body(data, false));
     body
 }
