@@ -57,8 +57,10 @@ pub fn guest(module_root: &str) -> portaki_test_utils::MockContextBuilder {
             // Ici et pas dans le SDK : `Property::default()` sert tous les tests des vingt-trois
             // modules, et le changer demanderait une release pour un nom de vitrine.
             name: "L'Islette".to_string(),
-            lat: 43.5509,
-            lng: 7.1266,
+            // Le **nom** du livret, pas sa position. Les lieux d'exemple des modules sont posés
+            // autour des coordonnées du SDK ; déplacer le logement sans eux mettait neuf
+            // kilomètres entre les deux, et la fiche d'une boulangerie « du village » annonçait
+            // « environ 108 min » à pied. Les distances se calculent, elles ne se déclarent pas.
             ..Property::default()
         })
         .with_stay(stay)

@@ -168,7 +168,7 @@
                 "key": "i18n:guest.tile.walk",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "environ 106 min"
+                "value": "environ 5 min"
               }
             ],
             "minColumnWidth": 96.0,
@@ -191,8 +191,8 @@
                 "id": "property",
                 "kind": "property",
                 "label": "i18n:guest.map.property",
-                "lat": 43.5509,
-                "lng": 7.1266
+                "lat": 43.5513,
+                "lng": 7.0128
               }
             ],
             "type": "Map",
