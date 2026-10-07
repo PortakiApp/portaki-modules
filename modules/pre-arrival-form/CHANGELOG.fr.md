@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.2
+
+Rien de visible.
+
+* Un rangement interne des aperçus du catalogue ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 1.5.1
 
 Montée technique.
