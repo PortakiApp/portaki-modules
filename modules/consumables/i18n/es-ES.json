@@ -6,6 +6,8 @@
   "form.head.title": "¿Falta algo?",
   "form.item.hint": "Puedes elegir varios.",
   "form.item.label": "Consumible",
+  "form.item.reported.low": "Señalado · casi agotado",
+  "form.item.reported.missing": "Señalado · no queda",
   "form.level.label": "Situación",
   "form.level.low": "Casi agotado",
   "form.level.missing": "Ya no queda",

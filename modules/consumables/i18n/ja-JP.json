@@ -6,6 +6,8 @@
   "form.head.title": "足りないものはありますか？",
   "form.item.hint": "複数選べます。",
   "form.item.label": "消耗品",
+  "form.item.reported.low": "報告済み · 残りわずか",
+  "form.item.reported.missing": "報告済み · 在庫なし",
   "form.level.label": "状況",
   "form.level.low": "残り少ない",
   "form.level.missing": "もうありません",

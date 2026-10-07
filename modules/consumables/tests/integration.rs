@@ -688,3 +688,54 @@ fn the_catalog_grid_grows_past_its_eight_tiles() {
         assert!(json.contains(r#""items_count":9"#), "{json}");
     });
 }
+
+/// Un produit déjà signalé pendant ce séjour le dit sur sa tuile (§2.5).
+///
+/// Sans cela, le voyageur qui rouvre le formulaire ne voit aucune différence, resignale le même
+/// paquet de café, et l'hôte se déplace deux fois. Une fois le produit réapprovisionné, la mention
+/// disparaît : le redemander redevient légitime.
+#[test]
+#[serial]
+fn an_already_reported_product_says_so_until_it_is_restocked() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            replace_items(
+                ctx.clone(),
+                ReplaceItemsArgs {
+                    items: vec![ConsumableItemInput {
+                        emoji: String::new(),
+                        label: String::new(),
+                        label_fr: "Café".into(),
+                        label_en: "Coffee".into(),
+                        sort_order: 0,
+                        low_threshold: 0,
+                    }],
+                    items_json: None,
+                },
+            )
+            .expect("replace");
+            let item_id = list_items(ctx.clone()).expect("items")[0].id;
+
+            let before = serde_json::to_string(&render_guest_form(ctx.clone()).expect("form"))
+                .expect("json");
+            assert!(!before.contains("form.item.reported"), "{before}");
+
+            submit(
+                ctx.clone(),
+                SubmitArgs {
+                    item_ids: vec![item_id],
+                    item_id: None,
+                    level: "low".into(),
+                    note: None,
+                },
+            )
+            .expect("submit");
+
+            let after = serde_json::to_string(&render_guest_form(ctx.clone()).expect("form"))
+                .expect("json");
+            assert!(after.contains("form.item.reported.low"), "{after}");
+            assert!(!after.contains("form.item.reported.missing"), "{after}");
+        });
+}

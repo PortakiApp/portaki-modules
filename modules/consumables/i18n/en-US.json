@@ -6,6 +6,8 @@
   "form.head.title": "Something missing?",
   "form.item.hint": "You can pick several.",
   "form.item.label": "Consumable",
+  "form.item.reported.low": "Reported · running low",
+  "form.item.reported.missing": "Reported · none left",
   "form.level.label": "Status",
   "form.level.low": "Running low",
   "form.level.missing": "All out",

@@ -6,6 +6,8 @@
   "form.head.title": "Ontbreekt er iets?",
   "form.item.hint": "Je kunt er meerdere kiezen.",
   "form.item.label": "Verbruiksartikel",
+  "form.item.reported.low": "Gemeld · bijna op",
+  "form.item.reported.missing": "Gemeld · op",
   "form.level.label": "Situatie",
   "form.level.low": "Bijna op",
   "form.level.missing": "Helemaal op",
