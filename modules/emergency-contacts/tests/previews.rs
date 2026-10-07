@@ -32,5 +32,6 @@ fn previews_match_the_rendered_surfaces() {
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![("explore.detail", detail)],
         vec![("home.card", home)],
+        None,
     );
 }

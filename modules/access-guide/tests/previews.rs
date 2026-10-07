@@ -59,5 +59,6 @@ fn previews_match_the_rendered_surfaces() {
             ("upcoming.card", upcoming),
         ],
         vec![("home.card", home)],
+        None,
     );
 }

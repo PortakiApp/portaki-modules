@@ -52,5 +52,6 @@ fn previews_match_the_rendered_surfaces() {
         ],
         // Toutes les surfaces ont un chemin : rien à ajouter pour la démo.
         Vec::new(),
+        None,
     );
 }

@@ -73,11 +73,18 @@ pub fn at(rfc3339: &str) -> DateTime<Utc> {
 /// `emissions` est le dossier où les macros du module ont écrit ses déclarations en compilant :
 /// `concat!(env!("OUT_DIR"), "/portaki-emissions")` depuis le test. Le manifeste n'est écrit que
 /// par `portaki build`, qui ne tourne pas avant `cargo test`.
+///
+/// `markers` porte les points que le module pose sur la carte du livret (§3) — la réponse de sa
+/// requête `mapMarkers`, rendue sous la même fixture que ses surfaces. `None` pour un module qui
+/// n'en pose pas. La carte de la démo était vide : sa route renvoie une liste vide pour une clé
+/// `demo-`, et le mécanisme central de §3 — « les modules poussent leurs lieux » — n'était exercé
+/// nulle part dans la vitrine.
 pub fn check_all(
     module_root: &str,
     emissions: &str,
     rendered: Vec<(&str, Surface)>,
     extra: Vec<(&str, Surface)>,
+    markers: Option<Value>,
 ) {
     let demo: Vec<(&str, Value)> = rendered
         .iter()
@@ -89,7 +96,7 @@ pub fn check_all(
             )
         })
         .collect();
-    check_demo(module_root, guest_routes(Path::new(emissions)), demo);
+    check_demo(module_root, guest_routes(Path::new(emissions)), demo, markers);
     check_previews(module_root, emissions, rendered);
 }
 
@@ -172,6 +179,7 @@ fn check_demo(
     module_root: &str,
     routes: std::collections::BTreeMap<String, Value>,
     rendered: Vec<(&str, Value)>,
+    markers: Option<Value>,
 ) {
     let root = Path::new(module_root);
     let bundle = fr_bundle(module_root);
@@ -208,9 +216,11 @@ fn check_demo(
     // Trié : le fichier ne doit pas bouger parce que le test a listé ses surfaces autrement.
     surfaces.sort_by(|a, b| a["surfaceId"].as_str().cmp(&b["surfaceId"].as_str()));
 
-    let expected = serde_json::to_string_pretty(&json!({ "locale": LOCALE, "surfaces": surfaces }))
-        .expect("json")
-        + "\n";
+    let mut document = json!({ "locale": LOCALE, "surfaces": surfaces });
+    if let Some(markers) = markers {
+        document["markers"] = markers;
+    }
+    let expected = serde_json::to_string_pretty(&document).expect("json") + "\n";
     let path = root.join(DEMO_FILE);
     if std::env::var_os("PORTAKI_UPDATE_DEMO").is_some() {
         fs::write(&path, &expected).expect("écrire demo.json");

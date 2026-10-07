@@ -62,5 +62,6 @@ fn previews_match_the_rendered_surfaces() {
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![("explore.forecast", forecast), ("upcoming.card", upcoming)],
         vec![("home.card", home)],
+        None,
     );
 }

@@ -19,5 +19,6 @@ fn previews_match_the_rendered_surfaces() {
         vec![("home.card", card), ("guest.form", form)],
         // Toutes les surfaces ont un chemin : rien à ajouter pour la démo.
         Vec::new(),
+        None,
     );
 }

@@ -57,5 +57,6 @@ fn previews_match_the_rendered_surfaces() {
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         Vec::new(),
         vec![("home.card", card), ("explore.sheet", sheet)],
+        None,
     );
 }

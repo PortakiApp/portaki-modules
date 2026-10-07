@@ -3,7 +3,7 @@
 #[path = "../../../support/previews.rs"]
 mod previews;
 
-use events::{render_explore_detail, render_explore_item, render_home_card, render_upcoming_card};
+use events::{map_markers, render_explore_detail, render_explore_item, render_home_card, render_upcoming_card};
 use serde_json::json;
 
 /// Trois rendez-vous saisis par l'hôte pendant le séjour d'exemple. L'agenda OpenAgenda reste
@@ -65,6 +65,8 @@ fn previews_match_the_rendered_surfaces() {
         .run(|ctx| render_upcoming_card(ctx).expect("surface"));
     // La carte d'accueil n'a pas de chemin : hors de `previews.json`, mais c'est elle
     // que la démo du livret montre en premier.
+    // Les points que ce module pose sur la carte du livret (§3). La démo les servait vides.
+    let markers = context.clone().run(|ctx| map_markers(ctx).expect("repères"));
     let home = context.run(render_home_card).expect("home");
     previews::check_all(
         root,
@@ -75,5 +77,6 @@ fn previews_match_the_rendered_surfaces() {
             ("upcoming.card", upcoming),
         ],
         vec![("home.card", home)],
+        Some(serde_json::to_value(markers).expect("repères")),
     );
 }
