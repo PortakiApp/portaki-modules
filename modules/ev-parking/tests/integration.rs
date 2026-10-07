@@ -219,3 +219,68 @@ fn email_context_picks_the_email_locale() {
             assert_eq!(response.ev_parking_spot.as_deref(), Some("Spot 14"));
         });
 }
+
+/// Un seul code : une seule tuile, et elle tient toute la largeur (§2.3).
+///
+/// La grille est en `auto-fit / minmax(min(100%, 130px), 1fr)` : à un enfant, la colonne unique
+/// prend la ligne entière. Rien à calculer côté module — mais rien ne le disait non plus.
+#[test]
+#[serial]
+fn one_code_draws_one_tile() {
+    for (config, expected, absent) in [
+        (
+            json!({ "spot_label": "P2", "parking_code": "1234", "reveal_policy": "always" }),
+            "i18n:guest.parkingCode",
+            "i18n:guest.chargerPin",
+        ),
+        (
+            json!({ "spot_label": "P2", "charger_pin": "4821", "reveal_policy": "always" }),
+            "i18n:guest.chargerPin",
+            "i18n:guest.parkingCode",
+        ),
+    ] {
+        MockContext::guest()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&config)
+            .run(|ctx| {
+                let json =
+                    serde_json::to_string(&render_home_card(ctx).expect("carte")).expect("json");
+                assert!(json.contains(expected), "{json}");
+                assert!(!json.contains(absent), "{json}");
+                assert_eq!(json.matches("\"layout\":\"tile\"").count(), 1, "{json}");
+            });
+    }
+}
+
+/// Une place sans code : la place suffit, et aucune grille vide ne s'ouvre sous elle (§2.3).
+#[test]
+#[serial]
+fn a_spot_without_a_code_draws_no_grid() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({
+            "spot_label": "Place 14, niveau -1",
+            "instructions": "Rampe à droite",
+            "reveal_policy": "always"
+        }))
+        .run(|ctx| {
+            let surface = render_home_card(ctx).expect("carte");
+            let json = serde_json::to_string(&surface).expect("json");
+            assert!(json.contains("Place 14, niveau -1"));
+            assert!(!json.contains("\"Grid\""), "{json}");
+            assert!(!json.contains("\"layout\":\"tile\""), "{json}");
+        });
+}
+
+/// La barrière porte l'icône de la maquette — une voiture, pas un cadenas.
+#[test]
+#[serial]
+fn the_barrier_tile_carries_the_car_glyph() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&always_reveal_config())
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_home_card(ctx).expect("carte")).expect("json");
+            assert!(json.contains("\"icon\":\"car\""), "{json}");
+        });
+}

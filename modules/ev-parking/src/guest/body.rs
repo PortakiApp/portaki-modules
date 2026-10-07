@@ -98,7 +98,9 @@ pub fn build_ev_parking_body(data: &GuestData, enriched: bool) -> Vec<Component>
         data,
         "i18n:guest.parkingCode",
         "i18n:guest.copyParkingCode",
-        IconName::Lock,
+        // Une barrière est une affaire de voiture, pas de cadenas : c'est l'icône de la maquette,
+        // et elle se distingue de l'éclair de la borne à côté.
+        IconName::Car,
         &data.config.parking_code,
     );
     push_secret_tile(
