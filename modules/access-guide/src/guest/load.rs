@@ -14,6 +14,8 @@ pub struct GuestData {
     pub address: String,
     /// The property on a map; `None` while it is not geocoded — no map then.
     pub coordinates: Option<GeoPoint>,
+    /// Le nom du logement, pour nommer son repère sur le plan de la carte d'accès.
+    pub property_name: String,
     pub secrets_revealed: bool,
     /// Preformatted guest message when secrets are locked (dated when possible).
     pub reveal_locked_message: Option<String>,
@@ -68,6 +70,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestLoad> {
         texts,
         address,
         coordinates: ctx.property.coordinates,
+        property_name: ctx.property.name.trim().to_string(),
         secrets_revealed: decision.revealed,
         reveal_locked_message: locked_banner(&decision, &property_timezone),
         reveal_ended: decision.ended,

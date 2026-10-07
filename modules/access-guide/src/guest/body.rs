@@ -69,13 +69,21 @@ fn meeting_coords(data: &GuestData) -> Option<(f64, f64)> {
     }
 }
 
-fn map_at(lat: f64, lng: f64) -> Component {
+/// Le plan de la carte d'accès, le logement nommé dessus.
+///
+/// <p>Le repère portait `"Logement"` — une chaîne française **écrite dans le Rust du module**, que
+/// l'anglophone lisait telle quelle, et qui nommait autrement ce que la Carte du livret appelle
+/// par son nom. Le nom du logement vient de la plateforme : il n'a pas à être traduit, et il est
+/// le même partout.
+fn map_at(name: &str, lat: f64, lng: f64) -> Component {
+    let mut marker = MapMarker::new("property", lat, lng).kind(MapMarkerKind::Property);
+    if !name.is_empty() {
+        marker = marker.label(name);
+    }
     Component::Map(
         Map::new()
             .viewport(MapViewport::new(lat, lng, Some(15.0)))
-            .markers(vec![MapMarker::new("property", lat, lng)
-                .label("Logement")
-                .kind(MapMarkerKind::Property)])
+            .markers(vec![marker])
             .isStatic(true)
             .interactionMode(MapInteractionMode::None),
     )
@@ -83,9 +91,10 @@ fn map_at(lat: f64, lng: f64) -> Component {
 
 fn property_map(data: &GuestData) -> Option<Component> {
     if let Some((lat, lng)) = meeting_coords(data) {
-        return Some(map_at(lat, lng));
+        return Some(map_at(&data.property_name, lat, lng));
     }
-    data.coordinates.map(|point| map_at(point.lat, point.lng))
+    data.coordinates
+        .map(|point| map_at(&data.property_name, point.lat, point.lng))
 }
 
 fn kv_row(key_i18n: &str, value: &str, mono: bool) -> Component {
