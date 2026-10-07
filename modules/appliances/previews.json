@@ -119,7 +119,7 @@
                 "type": "Eyebrow"
               },
               {
-                "content": "<p>Appuyez 2 secondes sur la touche marche, puis choisissez le foyer.</p><p>Seules les casseroles à fond aimanté chauffent.</p>",
+                "content": "{\"content\":[{\"content\":[{\"text\":\"Appuyez 2 secondes sur la touche marche, puis choisissez le foyer.\",\"type\":\"text\"}],\"type\":\"paragraph\"},{\"content\":[{\"text\":\"Seules les casseroles à fond aimanté chauffent.\",\"type\":\"text\"}],\"type\":\"paragraph\"}],\"type\":\"doc\"}",
                 "type": "RichText"
               }
             ],

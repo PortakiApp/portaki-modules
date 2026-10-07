@@ -1,8 +1,7 @@
 //! Guest explore item — appliance how-to detail (Portaki Guest design).
 
 use crate::content::{
-    description_plain_text, description_to_html, extract_howto_steps, Appliance, ApplianceStatus,
-    AppliancesPayload,
+    description_plain_text, extract_howto_steps, Appliance, ApplianceStatus, AppliancesPayload,
 };
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
@@ -126,16 +125,23 @@ fn device_detail_children(device: &Appliance, paper_manuals_location: &str) -> V
                 .surface(SurfaceLevel::Elevated)
                 .children(howto_children),
         ));
-    } else {
-        let html = description_to_html(&device.description);
-        if !html.trim().is_empty() {
-            children.push(Component::Card(
-                Card::new().surface(SurfaceLevel::Elevated).children(vec![
-                    Component::Eyebrow(Eyebrow::new().text("i18n:explore.item.howto")),
-                    Component::RichText(RichText::new().content(html)),
-                ]),
-            ));
-        }
+    } else if !description_plain_text(&device.description)
+        .trim()
+        .is_empty()
+    {
+        // Le document TipTap part tel quel : `RichText.content` est un champ TipTap, et le livret
+        // le convertit lui-même. Le module pré-rendait du HTML dedans ; depuis que le livret
+        // refuse d'injecter ce qui n'est pas du TipTap (une faille XSS fermée côté voyageur), ce
+        // HTML s'affichait littéralement, balises comprises, dans la carte « Mode d'emploi ».
+        //
+        // Le vide se mesure sur le texte, pas sur la chaîne : un document TipTap vide est une
+        // chaîne non vide, et laissait une carte qui ne portait que son chapeau.
+        children.push(Component::Card(
+            Card::new().surface(SurfaceLevel::Elevated).children(vec![
+                Component::Eyebrow(Eyebrow::new().text("i18n:explore.item.howto")),
+                Component::RichText(RichText::new().content(device.description.trim().to_string())),
+            ]),
+        ));
     }
 
     if !device.safety_note.trim().is_empty() {
