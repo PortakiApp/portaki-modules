@@ -210,21 +210,44 @@ fn operations(emissions: &Path) -> Vec<Value> {
 
 /// Le rendu ne montre ni texte cassé ni clé i18n absente d'une langue du module.
 fn sound(bundles: &BTreeMap<String, Map<String, Value>>, tree: &Value) -> Result<(), String> {
-    const TEXT: &[&str] = &[
-        "label",
-        "title",
-        "subtitle",
-        "value",
-        "text",
-        "key",
-        "description",
-        "caption",
-        "eyebrow",
-        "hint",
-        "placeholder",
-        "message",
-        "tag",
+    // Une liste de ce qui n'est PAS du texte, et non l'inverse : un champ inconnu est donc lu
+    // comme du texte, et un composant qui en ajoute un fait rougir le garde plutôt que de passer
+    // dessous. Ceux-ci portent un identifiant, une route ou une énumération — et plusieurs ont
+    // des points (`explore.detail`, `nav.appliances`) qui les feraient passer pour des clés.
+    const NOT_TEXT: &[&str] = &[
+        "direction",
+        "doc_type",
+        "emoji",
+        "event",
+        "fragmentId",
+        "href",
+        "icon",
+        "id",
+        "image",
+        "interactionMode",
+        "kind",
+        "labelKey",
+        "layout",
+        "leading",
+        "locale",
+        "mode",
+        "module_id",
         "name",
+        "path",
+        "photo",
+        "presentation",
+        "reveal_at",
+        "role",
+        "surface",
+        "surfaceId",
+        "surface_render",
+        "swatch",
+        "to",
+        "tone",
+        "type",
+        "url",
+        "variant",
+        "visibleWhen",
     ];
     let namespaces: BTreeSet<&str> = bundles
         .values()
@@ -244,8 +267,7 @@ fn sound(bundles: &BTreeMap<String, Map<String, Value>>, tree: &Value) -> Result
                     }
                 } else if let Some(reason) = broken(text) {
                     problems.push(format!("{reason} in {text:?}"));
-                } else if let Some(key) = TEXT
-                    .contains(&field)
+                } else if let Some(key) = (!NOT_TEXT.contains(&field))
                     .then(|| leaked_key(bundles, &namespaces, text))
                     .flatten()
                 {
