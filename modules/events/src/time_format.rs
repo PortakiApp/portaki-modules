@@ -1,7 +1,9 @@
 //! Event datetime parsing and guest display labels.
 
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use portaki_sdk::prelude::*;
+
+use portaki_sdk::context::StayContext;
 
 use crate::config::EventRow;
 
@@ -23,6 +25,43 @@ pub fn parse_starts_at(raw: &str) -> Option<DateTime<Utc>> {
         return Some(naive.and_utc());
     }
     None
+}
+
+/// La fenêtre du séjour, élargie d'un jour de chaque côté (§0.7).
+///
+/// « Rien avant, rien après » : un séjour de trois nuits n'a pas à montrer le festival du mois
+/// prochain, et la liste se remplissait pourtant de tout ce que l'agenda avait à dire. La veille
+/// de l'arrivée et le lendemain du départ restent dedans — on prépare la veille, et on part après
+/// le petit-déjeuner.
+///
+/// Sans dates de séjour — un aperçu, une surface hors séjour — rien n'est écarté : mieux vaut la
+/// liste entière qu'une fenêtre inventée autour d'une date qu'on n'a pas.
+pub fn stay_window(stay: Option<&StayContext>) -> Option<(DateTime<Utc>, DateTime<Utc>)> {
+    let stay = stay?;
+    let from = stay.checkin_at? - Duration::days(1);
+    let to = stay.checkout_at? + Duration::days(1);
+    (from <= to).then_some((from, to))
+}
+
+/// Les événements qui tombent dans cette fenêtre, dans l'ordre reçu.
+///
+/// Un événement sans date lisible est gardé : il vient de l'hôte, qui a écrit quelque chose, et
+/// l'écarter sur une date qu'on n'a pas su lire effacerait son travail.
+pub fn events_within(
+    events: &[EventRow],
+    window: Option<(DateTime<Utc>, DateTime<Utc>)>,
+) -> Vec<EventRow> {
+    let Some((from, to)) = window else {
+        return events.to_vec();
+    };
+    events
+        .iter()
+        .filter(|event| match parse_starts_at(&event.starts_at) {
+            Some(at) => at >= from && at <= to,
+            None => true,
+        })
+        .cloned()
+        .collect()
 }
 
 /// Filters out past events for the home card.
@@ -116,5 +155,53 @@ mod tests {
         let filtered = events_for_home_card(&events, now);
         assert_eq!(filtered.len(), 1);
         assert_eq!(filtered[0].id, "b");
+    }
+
+    /// §0.7 : de la veille de l'arrivée au lendemain du départ, et rien au-delà.
+    #[test]
+    fn the_window_opens_the_day_before_and_closes_the_day_after() {
+        let stay = StayContext {
+            checkin_at: Some(at("2026-08-10T15:00:00Z")),
+            checkout_at: Some(at("2026-08-13T10:00:00Z")),
+            ..StayContext::default()
+        };
+        let (from, to) = stay_window(Some(&stay)).expect("fenêtre");
+        assert_eq!(from, at("2026-08-09T15:00:00Z"));
+        assert_eq!(to, at("2026-08-14T10:00:00Z"));
+
+        let events = [
+            row("avant", "2026-08-01T20:00:00Z"),
+            row("la veille", "2026-08-09T20:00:00Z"),
+            row("pendant", "2026-08-11T20:00:00Z"),
+            row("le lendemain", "2026-08-14T09:00:00Z"),
+            row("le mois prochain", "2026-09-15T20:00:00Z"),
+            row("sans date", ""),
+        ];
+        let kept: Vec<String> = events_within(&events, Some((from, to)))
+            .into_iter()
+            .map(|e| e.title.get("fr").to_string())
+            .collect();
+        assert_eq!(kept, ["la veille", "pendant", "le lendemain", "sans date"]);
+    }
+
+    /// Sans dates de séjour, rien n'est écarté : mieux vaut la liste entière qu'une fenêtre
+    /// inventée autour d'une date qu'on n'a pas.
+    #[test]
+    fn no_stay_no_window() {
+        assert_eq!(stay_window(None), None);
+        let events = [row("un jour", "2027-01-01T20:00:00Z")];
+        assert_eq!(events_within(&events, None).len(), 1);
+    }
+
+    fn at(raw: &str) -> DateTime<Utc> {
+        parse_starts_at(raw).expect("date")
+    }
+
+    fn row(title: &str, starts_at: &str) -> EventRow {
+        EventRow {
+            title: portaki_sdk::contracts::i18n::I18nText::new(title, title),
+            starts_at: starts_at.to_string(),
+            ..EventRow::default()
+        }
     }
 }

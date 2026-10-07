@@ -49,7 +49,11 @@ pub fn resolve_events(
     for_home_card: bool,
 ) -> Result<Vec<EventRow>> {
     let now = host_now();
+    // §0.7 : de la veille de l'arrivée au lendemain du départ, et rien au-delà. Sans la borne
+    // haute, un séjour de trois nuits affichait le festival du mois prochain.
+    let window = crate::time_format::stay_window(ctx.stay.as_ref());
     let mut manual = crate::time_format::sort_events_by_start(config.parse_events());
+    manual = crate::time_format::events_within(&manual, window);
     if for_home_card {
         manual = crate::time_format::events_for_home_card(&manual, now);
     }
@@ -65,6 +69,7 @@ pub fn resolve_events(
 
     let nearby = load_nearby(ctx, config, point.lat, point.lng).unwrap_or_else(|_| Vec::new());
     let mut nearby = crate::time_format::sort_events_by_start(nearby);
+    nearby = crate::time_format::events_within(&nearby, window);
     if for_home_card {
         nearby = crate::time_format::events_for_home_card(&nearby, now);
         nearby.truncate(HOME_NEARBY_CAP);
