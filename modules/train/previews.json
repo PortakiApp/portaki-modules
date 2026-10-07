@@ -178,6 +178,7 @@
     },
     {
       "i18n": {
+        "explore.detail.laterDay": "Demain",
         "explore.item.day": "Jour",
         "explore.item.departure": "Départ",
         "explore.item.network": "Réseau",
@@ -225,7 +226,7 @@
                 "key": "i18n:explore.item.day",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "2026-10-04"
+                "value": "i18n:explore.detail.laterDay"
               },
               {
                 "icon": "train",

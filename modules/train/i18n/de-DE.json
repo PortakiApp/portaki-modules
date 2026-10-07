@@ -29,6 +29,7 @@
   "explore.item.scheduled": "Fahrplanzeit, nicht in Echtzeit",
   "explore.item.station": "Zum Bahnhof",
   "explore.item.stationName": "Bahnhof",
+  "explore.item.today": "Heute",
   "guest.teaser": "Nächste Abfahrten vom Bahnhof",
   "home.card.title": "Zugzeiten",
   "host.key.missing.message": "Portaki hat noch keinen Schlüssel für die SNCF-Fahrpläne. Ihr Bahnhof ist gespeichert: die Tafel erscheint, sobald der Schlüssel vorliegt.",

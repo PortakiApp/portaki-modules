@@ -12,7 +12,8 @@ use crate::sncf::Stop;
 const TILE_WIDTH: f64 = 96.0;
 
 pub fn build_item_page(view: &BoardView, stop: &Stop) -> Surface {
-    let mut children: Vec<Component> = vec![header(view, stop), measures(stop), station_card(view)];
+    let mut children: Vec<Component> =
+        vec![header(view, stop), measures(view, stop), station_card(view)];
     children.push(Component::Button(
         Button::new()
             .label("i18n:explore.item.route")
@@ -54,16 +55,24 @@ fn header(view: &BoardView, stop: &Stop) -> Component {
 
 /// Les tuiles : l'heure, le jour, le réseau. Pas de quai : l'API n'en donne pas, et l'inventer
 /// enverrait le voyageur sur le mauvais.
-fn measures(stop: &Stop) -> Component {
+fn measures(view: &BoardView, stop: &Stop) -> Component {
     let mut tiles: Vec<Component> = vec![tile(
         IconName::ClockCircle,
         "i18n:explore.item.departure",
         stop.time.clone(),
     )];
+    // « Aujourd'hui » ou « Demain », pas `2026-10-04`. La tuile servait la date de l'API telle
+    // quelle, au format ISO, à un voyageur qui lit dix langues. Le tableau ne couvre que ces deux
+    // jours — §0.7 borne les données à la veille et au lendemain du séjour — donc deux mots
+    // suffisent, et la liste disait déjà « Demain » un peu plus haut.
     tiles.push(tile(
         IconName::Calendar,
         "i18n:explore.item.day",
-        stop.date.clone(),
+        if view.is_later_day(stop) {
+            "i18n:explore.detail.laterDay".to_string()
+        } else {
+            "i18n:explore.item.today".to_string()
+        },
     ));
     if let Some(network) = stop.network.as_deref().or(stop.mode.as_deref()) {
         tiles.push(tile(

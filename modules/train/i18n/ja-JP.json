@@ -29,6 +29,7 @@
   "explore.item.scheduled": "計画時刻で、リアルタイムではありません",
   "explore.item.station": "駅へ行く",
   "explore.item.stationName": "駅",
+  "explore.item.today": "今日",
   "guest.teaser": "駅からの次の発車時刻",
   "home.card.title": "列車の時刻",
   "host.key.missing.message": "Portaki は SNCF 時刻表の鍵をまだ持っていません。駅は保存済みです。鍵が用意されればすぐに表示されます。",

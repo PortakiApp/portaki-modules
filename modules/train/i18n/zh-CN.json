@@ -29,6 +29,7 @@
   "explore.item.scheduled": "计划时刻，非实时",
   "explore.item.station": "前往车站",
   "explore.item.stationName": "车站",
+  "explore.item.today": "今天",
   "guest.teaser": "车站的下几班列车",
   "home.card.title": "列车时刻",
   "host.key.missing.message": "Portaki 还没有 SNCF 时刻表的密钥。您的车站已保存：密钥就绪后时刻表会立即显示。",
