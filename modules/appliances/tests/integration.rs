@@ -193,6 +193,130 @@ fn explore_item_uses_device_id_and_howto_steps() {
         });
 }
 
+/// Une description sans liste part dans `RichText` **telle quelle** : `content` est un champ
+/// TipTap, et c'est le livret qui convertit.
+///
+/// Le module y posait du HTML pré-rendu. Depuis que le livret refuse d'injecter ce qui n'est pas du
+/// TipTap, ce HTML s'affichait littéralement — « <p>Appuyez… </p> », balises comprises, dans la
+/// carte « Mode d'emploi ».
+#[test]
+#[serial]
+fn explore_item_sends_tiptap_not_html_to_rich_text() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            let description = json!({
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [{ "type": "text", "text": "Appuyez 2 secondes." }]
+                    },
+                    {
+                        "type": "paragraph",
+                        "content": [{
+                            "type": "text",
+                            "text": "Fond aimanté.",
+                            "marks": [{ "type": "bold" }]
+                        }]
+                    }
+                ]
+            })
+            .to_string();
+            save_appliance(
+                ctx.clone(),
+                SaveApplianceArgs {
+                    id: Some("plaques".into()),
+                    name: "Plaques à induction".into(),
+                    emoji: String::new(),
+                    description: description.clone(),
+                    featured: false,
+                    order: None,
+                    location: String::new(),
+                    manual_url: String::new(),
+                    safety_note: String::new(),
+                    status: ApplianceStatus::Active,
+                },
+            )
+            .expect("save");
+
+            let mut item_ctx = ctx.clone();
+            item_ctx.input = json!({ "deviceId": "plaques" });
+            let item = render_explore_item(item_ctx).expect("render");
+            let content =
+                rich_text_content(&item).expect("un RichText dans la carte mode d'emploi");
+
+            assert_eq!(content, description);
+            assert!(!content.contains("<p>"), "{content}");
+            assert_eq!(
+                serde_json::from_str::<serde_json::Value>(&content)
+                    .expect("TipTap")
+                    .get("type")
+                    .and_then(|t| t.as_str()),
+                Some("doc"),
+                "{content}"
+            );
+        });
+}
+
+/// Une description vide ne laisse pas une carte qui ne porte que son chapeau.
+#[test]
+#[serial]
+fn explore_item_hides_howto_card_for_an_empty_description() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            save_appliance(
+                ctx.clone(),
+                SaveApplianceArgs {
+                    id: Some("vide".into()),
+                    name: "Grille-pain".into(),
+                    emoji: String::new(),
+                    description: json!({ "type": "doc", "content": [{ "type": "paragraph" }] })
+                        .to_string(),
+                    featured: false,
+                    order: None,
+                    location: String::new(),
+                    manual_url: String::new(),
+                    safety_note: String::new(),
+                    status: ApplianceStatus::Active,
+                },
+            )
+            .expect("save");
+
+            let mut item_ctx = ctx.clone();
+            item_ctx.input = json!({ "deviceId": "vide" });
+            let item = render_explore_item(item_ctx).expect("render");
+            assert!(
+                !SurfaceAssertions::new(&item).contains_type("Eyebrow"),
+                "{}",
+                serde_json::to_string(&item).expect("json")
+            );
+        });
+}
+
+/// Le `content` du premier `RichText` de l'arbre.
+fn rich_text_content(surface: &impl serde::Serialize) -> Option<String> {
+    fn walk(node: &serde_json::Value) -> Option<String> {
+        if node.get("type").and_then(|t| t.as_str()) == Some("RichText") {
+            return node
+                .get("content")
+                .and_then(|c| c.as_str())
+                .map(str::to_string);
+        }
+        match node {
+            serde_json::Value::Object(map) => map.values().find_map(walk),
+            serde_json::Value::Array(items) => items.iter().find_map(walk),
+            _ => None,
+        }
+    }
+    walk(&serde_json::to_value(surface).expect("json"))
+}
+
 #[test]
 #[serial]
 fn explore_item_missing_device_id_is_not_found() {

@@ -2,9 +2,11 @@
 
 ## 1.8.0
 
-L'emoji de l'appareil, à sa place.
+La fiche d'un appareil, relue.
 
 * L'emoji d'un appareil s'affiche en pastille à côté de son nom, à sa taille : il était composé comme un titre, aussi grand que le nom.
+* Le mode d'emploi d'un appareil s'affiche en paragraphes : il montrait ses balises HTML en clair.
+* Une description vide ne laisse plus une carte « Mode d'emploi » qui ne porte que son titre.
 
 ## 1.7.1
 

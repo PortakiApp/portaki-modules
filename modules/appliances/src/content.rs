@@ -426,27 +426,6 @@ pub fn description_plain_text(description: &str) -> String {
     out.join("\n")
 }
 
-/// TipTap JSON → HTML for guest [`RichText`] (bullet lists → numbered steps).
-pub fn description_to_html(description: &str) -> String {
-    let trimmed = description.trim();
-    if trimmed.is_empty() {
-        return String::new();
-    }
-    let Ok(value) = serde_json::from_str::<Value>(trimmed) else {
-        return wrap_paragraph(trimmed);
-    };
-    if value.get("type").and_then(|t| t.as_str()) != Some("doc") {
-        return wrap_paragraph(trimmed);
-    }
-    let mut out = String::new();
-    if let Some(children) = value.get("content").and_then(|c| c.as_array()) {
-        for child in children {
-            render_block(child, &mut out);
-        }
-    }
-    out
-}
-
 /// Une étape du mode d'emploi : sa consigne, et le schéma que l'hôte a glissé dedans.
 ///
 /// Le schéma est facultatif, et c'est l'extension « étapes illustrées » du §2.4 : une poignée de
@@ -520,146 +499,6 @@ fn first_image(node: &Value) -> Option<String> {
         .find_map(first_image)
 }
 
-fn wrap_paragraph(text: &str) -> String {
-    format!("<p>{}</p>", escape_html(text))
-}
-
-fn render_block(node: &Value, out: &mut String) {
-    let node_type = node.get("type").and_then(|t| t.as_str()).unwrap_or("");
-    match node_type {
-        "paragraph" => {
-            out.push_str("<p>");
-            render_inline_children(node, out);
-            out.push_str("</p>");
-        }
-        // Une image hors liste : sans ce cas, un schéma posé entre deux paragraphes disparaissait
-        // du repli texte riche, et l'hôte ne voyait jamais pourquoi.
-        "image" => {
-            if let Some(src) = node
-                .get("attrs")
-                .and_then(|attrs| attrs.get("src"))
-                .and_then(|src| src.as_str())
-                .map(str::trim)
-                .filter(|src| !src.is_empty())
-            {
-                out.push_str("<img src=\"");
-                out.push_str(&escape_html(src));
-                out.push_str("\" alt=\"\">");
-            }
-        }
-        "heading" => {
-            let level = node
-                .get("attrs")
-                .and_then(|a| a.get("level"))
-                .and_then(|l| l.as_u64())
-                .unwrap_or(2)
-                .clamp(1, 3);
-            out.push_str(&format!("<h{level}>"));
-            render_inline_children(node, out);
-            out.push_str(&format!("</h{level}>"));
-        }
-        "bulletList" | "orderedList" => {
-            // Guest styles `.appliance-steps` as numbered how-to steps.
-            out.push_str("<ol class=\"appliance-steps\">");
-            if let Some(items) = node.get("content").and_then(|c| c.as_array()) {
-                for item in items {
-                    out.push_str("<li>");
-                    render_list_item_body(item, out);
-                    out.push_str("</li>");
-                }
-            }
-            out.push_str("</ol>");
-        }
-        "blockquote" => {
-            out.push_str("<blockquote>");
-            if let Some(children) = node.get("content").and_then(|c| c.as_array()) {
-                for child in children {
-                    render_block(child, out);
-                }
-            }
-            out.push_str("</blockquote>");
-        }
-        "codeBlock" => {
-            out.push_str("<pre><code>");
-            render_inline_children(node, out);
-            out.push_str("</code></pre>");
-        }
-        "hardBreak" => out.push_str("<br/>"),
-        "horizontalRule" => out.push_str("<hr/>"),
-        _ => {
-            if let Some(children) = node.get("content").and_then(|c| c.as_array()) {
-                for child in children {
-                    render_block(child, out);
-                }
-            } else if let Some(text) = node.get("text").and_then(|t| t.as_str()) {
-                out.push_str(&escape_html(text));
-            }
-        }
-    }
-}
-
-fn render_list_item_body(item: &Value, out: &mut String) {
-    let Some(children) = item.get("content").and_then(|c| c.as_array()) else {
-        return;
-    };
-    for (index, child) in children.iter().enumerate() {
-        let child_type = child.get("type").and_then(|t| t.as_str()).unwrap_or("");
-        if child_type == "paragraph" {
-            if index > 0 {
-                out.push_str("<br/>");
-            }
-            render_inline_children(child, out);
-        } else {
-            render_block(child, out);
-        }
-    }
-}
-
-fn render_inline_children(node: &Value, out: &mut String) {
-    let Some(children) = node.get("content").and_then(|c| c.as_array()) else {
-        return;
-    };
-    for child in children {
-        render_inline(child, out);
-    }
-}
-
-fn render_inline(node: &Value, out: &mut String) {
-    let node_type = node.get("type").and_then(|t| t.as_str()).unwrap_or("");
-    match node_type {
-        "text" => {
-            let text = node.get("text").and_then(|t| t.as_str()).unwrap_or("");
-            let mut html = escape_html(text);
-            if let Some(marks) = node.get("marks").and_then(|m| m.as_array()) {
-                for mark in marks {
-                    let mark_type = mark.get("type").and_then(|t| t.as_str()).unwrap_or("");
-                    html = match mark_type {
-                        "bold" | "strong" => format!("<strong>{html}</strong>"),
-                        "italic" | "em" => format!("<em>{html}</em>"),
-                        "underline" => format!("<u>{html}</u>"),
-                        "code" => format!("<code>{html}</code>"),
-                        "link" => {
-                            let href = mark
-                                .get("attrs")
-                                .and_then(|a| a.get("href"))
-                                .and_then(|h| h.as_str())
-                                .unwrap_or("#");
-                            format!(
-                                "<a href=\"{}\" rel=\"noopener noreferrer\" target=\"_blank\">{html}</a>",
-                                escape_attr(href)
-                            )
-                        }
-                        _ => html,
-                    };
-                }
-            }
-            out.push_str(&html);
-        }
-        "hardBreak" => out.push_str("<br/>"),
-        _ => render_inline_children(node, out),
-    }
-}
-
 fn collect_text(node: &Value, out: &mut Vec<String>) {
     if let Some(text) = node.get("text").and_then(|t| t.as_str()) {
         if !text.is_empty() {
@@ -671,25 +510,6 @@ fn collect_text(node: &Value, out: &mut Vec<String>) {
             collect_text(child, out);
         }
     }
-}
-
-fn escape_html(input: &str) -> String {
-    let mut out = String::with_capacity(input.len());
-    for ch in input.chars() {
-        match ch {
-            '&' => out.push_str("&amp;"),
-            '<' => out.push_str("&lt;"),
-            '>' => out.push_str("&gt;"),
-            '"' => out.push_str("&quot;"),
-            '\'' => out.push_str("&#39;"),
-            _ => out.push(ch),
-        }
-    }
-    out
-}
-
-fn escape_attr(input: &str) -> String {
-    escape_html(input)
 }
 
 #[cfg(test)]
@@ -736,7 +556,6 @@ mod tests {
     }
 
     use super::*;
-    use serde_json::json;
 
     #[test]
     fn migrates_legacy_fr_slots() {
@@ -826,37 +645,5 @@ mod tests {
         assert_eq!(guest.len(), 1);
         assert_eq!(guest[0].id, "1");
         assert_eq!(payload.featured_guest_devices().len(), 1);
-    }
-
-    #[test]
-    fn description_to_html_renders_steps_and_marks() {
-        let doc = json!({
-            "type": "doc",
-            "content": [
-                {
-                    "type": "paragraph",
-                    "content": [{
-                        "type": "text",
-                        "text": "Avant",
-                        "marks": [{ "type": "bold" }]
-                    }]
-                },
-                {
-                    "type": "bulletList",
-                    "content": [{
-                        "type": "listItem",
-                        "content": [{
-                            "type": "paragraph",
-                            "content": [{ "type": "text", "text": "Allumez" }]
-                        }]
-                    }]
-                }
-            ]
-        })
-        .to_string();
-        let html = description_to_html(&doc);
-        assert!(html.contains("<strong>Avant</strong>"));
-        assert!(html.contains("class=\"appliance-steps\""));
-        assert!(html.contains("<li>Allumez</li>"));
     }
 }
