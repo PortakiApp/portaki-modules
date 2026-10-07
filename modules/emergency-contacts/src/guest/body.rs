@@ -30,6 +30,9 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
             ListItem::new()
                 .title("i18n:guest.host.label")
                 .subtitle(data.host_phone.clone())
+                // L'hôte mène par son pictogramme, comme chaque rangée de la maquette : c'est la
+                // ligne qu'on cherche en premier, et c'était la seule sans repère.
+                .leading(Leading::Icon("users".into()))
                 .trailing(Trailing::Text("i18n:guest.call".into()))
                 .action(tel_action(&data.host_phone)),
         ));
@@ -41,9 +44,15 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
             .title(label)
             .subtitle(contact.phone.clone())
             .trailing(Trailing::Text("i18n:guest.call".into()));
-        if let Some(cat) = contact.category.as_deref().filter(|c| !c.trim().is_empty()) {
-            item = item.leading(Leading::Icon(cat.into()));
-        }
+        // Sans catégorie, le combiné : une liste où une rangée sur deux porte un repère se lit
+        // de travers, et un numéro de téléphone sous une icône de téléphone ne dit rien de faux.
+        let icon = contact
+            .category
+            .as_deref()
+            .map(str::trim)
+            .filter(|c| !c.is_empty())
+            .unwrap_or("phone");
+        item = item.leading(Leading::Icon(icon.into()));
         let note = contact.note.get(&data.locale);
         if !note.trim().is_empty() {
             item = item.child(Text::new().text(note).variant(TextVariant::Caption));

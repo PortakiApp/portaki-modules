@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0
+
+Chaque numéro a son pictogramme.
+
+* La ligne de l'hôte mène par le sien : c'est celle qu'on cherche en premier, et c'était la seule sans repère.
+* Un contact sans catégorie prend le combiné, au lieu de laisser la liste en dents de scie.
+
 ## 1.4.1
 
 Montée technique.
