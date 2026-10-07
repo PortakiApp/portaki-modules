@@ -1,5 +1,65 @@
 {
   "locale": "fr-FR",
+  "phases": {
+    "post-stay": [
+      {
+        "i18n": {},
+        "surfaceId": "post-stay.card",
+        "tree": {
+          "children": [
+            {
+              "action": {
+                "args": {},
+                "module_id": "checklist",
+                "name": "setCompleted",
+                "type": "command"
+              },
+              "choices": [
+                {
+                  "group": "Dans le logement",
+                  "label": "Fermer les volets et fenêtres",
+                  "value": "00000000-0000-0000-0000-000000000001"
+                },
+                {
+                  "group": "Dans le logement",
+                  "label": "Éteindre le chauffe-eau",
+                  "value": "00000000-0000-0000-0000-000000000002"
+                },
+                {
+                  "group": "En partant",
+                  "label": "Sortir les poubelles",
+                  "value": "00000000-0000-0000-0000-000000000003"
+                },
+                {
+                  "group": "En partant",
+                  "label": "Laisser les clés sur la table",
+                  "value": "00000000-0000-0000-0000-000000000004"
+                },
+                {
+                  "group": "Dans le logement",
+                  "label": "Démarrer le lave-vaisselle si besoin",
+                  "value": "00000000-0000-0000-0000-000000000005"
+                }
+              ],
+              "doneMessage": "Votre hôte vous remercie. Bon retour.",
+              "doneTitle": "Tout est prêt",
+              "emitOnChange": true,
+              "layout": "checklist",
+              "limit": 5,
+              "multi": true,
+              "name": "item_ids",
+              "type": "ChoiceList",
+              "value": ""
+            }
+          ],
+          "icon": "list-checks",
+          "subtitle": "Départ lundi à 12:00 · cochez au fur et à mesure",
+          "title": "Avant de partir",
+          "type": "Card"
+        }
+      }
+    ]
+  },
   "surfaces": [
     {
       "i18n": {

@@ -53,6 +53,25 @@ pub fn guest(module_root: &str) -> portaki_test_utils::MockContextBuilder {
 /// L'instant des aperçus : la veille de l'arrivée.
 pub const NOW: &str = "2026-05-31T10:00:00Z";
 
+/// Le lendemain du départ — pour ce qu'un module ne montre qu'après.
+///
+/// `allow(dead_code)` parce que ce fichier est inclus par `#[path]` dans chaque module : ce dont
+/// un seul se sert est mort pour les vingt autres. Pas d'équivalent « pendant le séjour » : le cas
+/// qu'on croyait en avoir besoin, la checklist, ouvre à 48 h du départ, et « pas encore » est la
+/// bonne réponse à mi-séjour.
+#[allow(dead_code)]
+pub const AFTER: &str = "2026-06-09T10:00:00Z";
+
+/// Un contexte voyageur à une autre heure que celle des aperçus.
+///
+/// <p>La démo du livret sert un rendu figé, pris à [`NOW`], qui est d'avant une arrivée. Un module
+/// dont le contenu dépend du moment — la checklist de départ — y disait donc « pas encore » quelle
+/// que soit la phase demandée. Il publie désormais un rendu par phase, et le livret choisit.
+#[allow(dead_code)]
+pub fn guest_at(module_root: &str, instant: &str) -> portaki_test_utils::MockContextBuilder {
+    guest(module_root).with_now(at(instant))
+}
+
 /// Un instant RFC 3339, en UTC.
 pub fn at(rfc3339: &str) -> DateTime<Utc> {
     DateTime::parse_from_rfc3339(rfc3339)
@@ -79,12 +98,30 @@ pub fn at(rfc3339: &str) -> DateTime<Utc> {
 /// n'en pose pas. La carte de la démo était vide : sa route renvoie une liste vide pour une clé
 /// `demo-`, et le mécanisme central de §3 — « les modules poussent leurs lieux » — n'était exercé
 /// nulle part dans la vitrine.
+#[allow(dead_code)]
 pub fn check_all(
     module_root: &str,
     emissions: &str,
     rendered: Vec<(&str, Surface)>,
     extra: Vec<(&str, Surface)>,
     markers: Option<Value>,
+) {
+    check_all_phased(module_root, emissions, rendered, extra, markers, Vec::new());
+}
+
+/// Comme [`check_all`], plus un jeu de surfaces par phase du séjour.
+///
+/// <p>`phases` nomme chaque jeu — `"stay"`, `"post-stay"` — et porte les mêmes surfaces rendues à
+/// une autre heure (voir [`guest_at`]). Le livret de démonstration les sert quand sa clé demande
+/// cette phase ; sans elles il montre le rendu de [`NOW`], d'avant l'arrivée.
+#[allow(dead_code)]
+pub fn check_all_phased(
+    module_root: &str,
+    emissions: &str,
+    rendered: Vec<(&str, Surface)>,
+    extra: Vec<(&str, Surface)>,
+    markers: Option<Value>,
+    phases: Vec<(&str, Vec<(&str, Surface)>)>,
 ) {
     let demo: Vec<(&str, Value)> = rendered
         .iter()
@@ -96,11 +133,22 @@ pub fn check_all(
             )
         })
         .collect();
+    let phased: Vec<(&str, Vec<(&str, Value)>)> = phases
+        .into_iter()
+        .map(|(name, surfaces)| {
+            let trees = surfaces
+                .into_iter()
+                .map(|(id, surface)| (id, serde_json::to_value(&surface.root).expect("arbre SDUI")))
+                .collect();
+            (name, trees)
+        })
+        .collect();
     check_demo(
         module_root,
         guest_routes(Path::new(emissions)),
         demo,
         markers,
+        phased,
     );
     check_previews(module_root, emissions, rendered);
 }
@@ -185,6 +233,7 @@ fn check_demo(
     routes: std::collections::BTreeMap<String, Value>,
     rendered: Vec<(&str, Value)>,
     markers: Option<Value>,
+    phases: Vec<(&str, Vec<(&str, Value)>)>,
 ) {
     let root = Path::new(module_root);
     let bundle = fr_bundle(module_root);
@@ -224,6 +273,26 @@ fn check_demo(
     let mut document = json!({ "locale": LOCALE, "surfaces": surfaces });
     if let Some(markers) = markers {
         document["markers"] = markers;
+    }
+    if !phases.is_empty() {
+        let mut by_phase = Map::new();
+        for (name, trees) in phases {
+            let mut ids = Vec::new();
+            let mut list: Vec<Value> = trees
+                .into_iter()
+                .map(|(surface_id, mut tree)| {
+                    stable_uuids(&mut tree, &mut ids);
+                    let i18n: Map<String, Value> = i18n_refs(&tree)
+                        .into_iter()
+                        .filter_map(|key| bundle.get(&key).map(|value| (key, value.clone())))
+                        .collect();
+                    json!({ "surfaceId": surface_id, "tree": tree, "i18n": i18n })
+                })
+                .collect();
+            list.sort_by(|a, b| a["surfaceId"].as_str().cmp(&b["surfaceId"].as_str()));
+            by_phase.insert(name.to_string(), Value::Array(list));
+        }
+        document["phases"] = Value::Object(by_phase);
     }
     let expected = serde_json::to_string_pretty(&document).expect("json") + "\n";
     let path = root.join(DEMO_FILE);
