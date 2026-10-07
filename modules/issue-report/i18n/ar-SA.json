@@ -9,6 +9,8 @@
   "form.category.other": "أخرى",
   "form.details.label": "التفاصيل",
   "form.details.placeholder": "اختياري — ماذا ومتى وأين",
+  "form.head.lead": "يُبلَّغ مضيفك على الفور.",
+  "form.head.title": "الإبلاغ عن مشكلة",
   "form.photo.label": "صورة",
   "form.submit": "إرسال",
   "form.summary.label": "ملخّص قصير",

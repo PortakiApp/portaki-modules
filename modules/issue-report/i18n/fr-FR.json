@@ -9,6 +9,8 @@
   "form.category.other": "Autre",
   "form.details.label": "Détails",
   "form.details.placeholder": "Optionnel — quoi, quand, où",
+  "form.head.lead": "Votre hôte est prévenu aussitôt.",
+  "form.head.title": "Signaler un problème",
   "form.photo.label": "Photo",
   "form.submit": "Envoyer",
   "form.summary.label": "Résumé court",

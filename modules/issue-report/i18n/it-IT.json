@@ -9,6 +9,8 @@
   "form.category.other": "Altro",
   "form.details.label": "Dettagli",
   "form.details.placeholder": "Facoltativo — cosa, quando, dove",
+  "form.head.lead": "Il suo host è avvisato subito.",
+  "form.head.title": "Segnalare un problema",
   "form.photo.label": "Foto",
   "form.submit": "Invia",
   "form.summary.label": "Riassunto breve",
