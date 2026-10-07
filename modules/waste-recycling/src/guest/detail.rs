@@ -5,7 +5,7 @@ use portaki_sdk::sdui::common::{Leading, LeadingVisual};
 use portaki_sdk::sdui::primitives::{Card, Eyebrow, KeyValue, ListItem, Map, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
-use super::body::{build_bins_body, build_collection_banner, dropoff_row};
+use super::body::{bin_rows, build_collection_banner, dropoff_row, takeout_note};
 use super::load::GuestData;
 
 /// Body-only tree for the bottom sheet (shell supplies header chrome).
@@ -20,7 +20,9 @@ pub fn build_detail_surface(data: &GuestData) -> Surface {
     if let Some(card) = bin_room_card(data) {
         children.push(card);
     }
-    children.extend(build_bins_body(data, true, false));
+    if let Some(card) = bins_card(data) {
+        children.push(card);
+    }
     if let Some(map) = dropoff_map(data) {
         children.push(map);
     }
@@ -30,7 +32,24 @@ pub fn build_detail_surface(data: &GuestData) -> Surface {
     if let Some(card) = compost_card(data) {
         children.push(card);
     }
+    children.extend(takeout_note(data));
     Surface::new(Stack::new().gap(12.0).children(children)).with_id(crate::guest::EXPLORE_DETAIL)
+}
+
+/// « Les bacs » : les rangées groupées, comme les deux cartes qui les précèdent.
+///
+/// En vrac sous la feuille, elles flottaient entre deux cartes encadrées — la maquette les range
+/// dans la leur.
+fn bins_card(data: &GuestData) -> Option<Component> {
+    let rows = bin_rows(data);
+    (!rows.is_empty()).then(|| {
+        Component::Card(
+            Card::new()
+                .icon(IconName::Recycle)
+                .title("i18n:guest.bins.title")
+                .children(rows),
+        )
+    })
 }
 
 /// « Dans le logement » : où chaque bac se trouve, pour les bacs dont l'hôte l'a dit.

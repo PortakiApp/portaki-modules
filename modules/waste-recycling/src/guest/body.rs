@@ -2,8 +2,8 @@
 
 use portaki_sdk::host::time::{self, PropertyTz};
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::common::Leading;
-use portaki_sdk::sdui::primitives::{ColorDotItem, Highlight, InfoBanner, ListItem, Text};
+use portaki_sdk::sdui::common::{Leading, LeadingVisual};
+use portaki_sdk::sdui::primitives::{Highlight, InfoBanner, ListItem, Text};
 
 use crate::collection::{next_collection, Departure, NextCollection};
 use crate::config::{bin_swatch, DropoffRow};
@@ -19,63 +19,42 @@ pub fn build_collection_banner(data: &GuestData) -> Vec<Component> {
     collection_banner(data, next_up(data))
 }
 
-/// Glance / detail shared body: bin rows, takeout note. `with_banner` pose le bandeau en tête —
-/// la feuille le pose elle-même, plus haut.
-pub fn build_bins_body(data: &GuestData, enriched: bool, with_banner: bool) -> Vec<Component> {
-    let next = next_up(data);
-    let mut children = if with_banner {
-        collection_banner(data, next)
-    } else {
-        Vec::new()
-    };
-
-    for bin in &data.bins {
-        let title = bin.title.get(&data.locale);
-        let items = bin.items(&data.locale);
-        let subtitle = items.join(", ");
-
-        if let Some(swatch) = bin_swatch(bin.color.as_deref()) {
-            children.push(Component::ColorDotItem(
-                ColorDotItem::new()
-                    .label(format!("{title} — {subtitle}"))
-                    .swatch(swatch),
-            ));
-        } else {
-            let mut item = ListItem::new().title(title);
+/// Les bacs, une rangée par bac : le nom en titre, ce qui y va en sous-titre, et la pastille de
+/// couleur en tête quand l'hôte a choisi une teinte que le livret connaît.
+///
+/// Une rangée et non un `ColorDotItem` : la maquette donne `ListItem leading:{swatch}`, et le
+/// titre y reste un titre. Le point de couleur mettait « Bac jaune — emballages, plastique,
+/// carton » sur une seule ligne, en un seul poids.
+pub fn bin_rows(data: &GuestData) -> Vec<Component> {
+    data.bins
+        .iter()
+        .map(|bin| {
+            let mut item = ListItem::new().title(bin.title.get(&data.locale));
+            let subtitle = bin.items(&data.locale).join(", ");
             if !subtitle.is_empty() {
                 item = item.subtitle(subtitle);
             }
-            if enriched {
-                for line in items {
-                    item = item.child(Text::new().text(line).variant(TextVariant::Caption));
-                }
+            if let Some(swatch) = bin_swatch(bin.color.as_deref()) {
+                item = item.leading(Leading::Visual(Box::new(LeadingVisual {
+                    swatch: Some(swatch),
+                    ..LeadingVisual::default()
+                })));
             }
-            children.push(Component::ListItem(item));
-        }
-    }
+            Component::ListItem(item)
+        })
+        .collect()
+}
 
-    // Les points d'apport viennent après les bacs : on trie chez soi avant d'aller déposer. Sur la
-    // carte seulement — le détail a son plan et ses deux blocs, et répéter les rangées au-dessus
-    // ferait lire la même chose deux fois.
-    if !enriched {
-        for point in &data.dropoff_points {
-            children.push(dropoff_row(data, point));
-        }
-        if let Some(row) = compost_row(data) {
-            children.push(row);
-        }
-    }
-
-    // La consigne de sortie, en clair dans la feuille — sauf le jour où elle est déjà remontée en
-    // tête, où la répéter la banaliserait.
+/// La consigne de sortie, en clair dans la feuille — sauf le jour où elle est déjà remontée en
+/// tête du bandeau, où la répéter la banaliserait.
+pub fn takeout_note(data: &GuestData) -> Option<Component> {
     let takeout = data.takeout_note.trim();
-    if enriched && !takeout.is_empty() && !highlighted(next) {
-        children.push(Component::Text(
-            Text::new().text(takeout).variant(TextVariant::Caption),
-        ));
+    if takeout.is_empty() || highlighted(next_up(data)) {
+        return None;
     }
-
-    children
+    Some(Component::Text(
+        Text::new().text(takeout).variant(TextVariant::Caption),
+    ))
 }
 
 /// Une rangée de point d'apport : ce qu'il accepte, puis la distance quand on sait la mesurer.
@@ -179,6 +158,7 @@ fn collection_banner(data: &GuestData, next: Option<NextCollection>) -> Vec<Comp
         }
         return vec![Component::InfoBanner(
             InfoBanner::new()
+                .tone(Tone::Info)
                 .title("i18n:guest.collection.title")
                 .message(schedule),
         )];
@@ -206,7 +186,9 @@ fn collection_banner(data: &GuestData, next: Option<NextCollection>) -> Vec<Comp
         None => schedule,
     };
 
-    let mut banner = InfoBanner::new().title(title);
+    // `info` et non le neutre par défaut : la maquette dessine ce bandeau en bleu, et un gris
+    // le rangerait avec les fonds de carte.
+    let mut banner = InfoBanner::new().tone(Tone::Info).title(title);
     if !message.is_empty() {
         banner = banner.message(message);
     }
