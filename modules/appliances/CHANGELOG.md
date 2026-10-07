@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.7.1...appliances-v1.8.0) (2026-10-07)
+
+
+### Features
+
+* **appliances:** porter l'emoji en pictogramme, pas en titre ([7986b7f](https://github.com/PortakiApp/portaki-modules/commit/7986b7ffebc17e638bbaa52be704d03ccd5c7665))
+
+
+### Bug Fixes
+
+* **appliances:** send TipTap, not HTML, to RichText ([bde262d](https://github.com/PortakiApp/portaki-modules/commit/bde262d3b20b6fc00557da5782adf492bc10e164))
+
 ## [1.7.1](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.7.0...appliances-v1.7.1) (2026-10-04)
 
 

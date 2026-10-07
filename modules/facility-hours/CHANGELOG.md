@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.8.2...facility-hours-v1.9.0) (2026-10-07)
+
+
+### Features
+
+* **facility-hours:** say until when, on the card ([94f1476](https://github.com/PortakiApp/portaki-modules/commit/94f147610a3c95eca0511962f783c05cf9d3716d))
+
 ## [1.8.2](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.8.1...facility-hours-v1.8.2) (2026-10-07)
 
 

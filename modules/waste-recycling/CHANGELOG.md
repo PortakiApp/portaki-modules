@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.7.0...waste-recycling-v1.7.1) (2026-10-07)
+
+
+### Bug Fixes
+
+* **waste-recycling:** bacs en rangées, pas en pastilles ([efd40ad](https://github.com/PortakiApp/portaki-modules/commit/efd40adb2dd8bf9aa48e91b753aaf00eb2ad8883))
+
 ## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.6.1...waste-recycling-v1.7.0) (2026-10-04)
 
 

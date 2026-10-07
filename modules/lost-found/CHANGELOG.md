@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.7.1...lost-found-v1.8.0) (2026-10-07)
+
+
+### Features
+
+* **lost-found:** open the sheet on a question ([8778ebb](https://github.com/PortakiApp/portaki-modules/commit/8778ebbf404c082f10d7feee0ac65167fa7f9492))
+
+
+### Bug Fixes
+
+* **previews:** trier les surfaces avant d'écrire previews.json ([95ba59b](https://github.com/PortakiApp/portaki-modules/commit/95ba59b8c79d20733b0633a670eb4734890e48cb))
+
 ## [1.7.1](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.7.0...lost-found-v1.7.1) (2026-10-07)
 
 

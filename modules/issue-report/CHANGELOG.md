@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.4.1...issue-report-v1.4.2) (2026-10-07)
+
+
+### Bug Fixes
+
+* **previews:** trier les surfaces avant d'écrire previews.json ([95ba59b](https://github.com/PortakiApp/portaki-modules/commit/95ba59b8c79d20733b0633a670eb4734890e48cb))
+
 ## [1.4.1](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.4.0...issue-report-v1.4.1) (2026-10-04)
 
 
