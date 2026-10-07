@@ -8,6 +8,9 @@ use portaki_sdk::sdui::surface::Surface;
 use super::body::{bin_rows, build_collection_banner, compost_row, dropoff_row};
 use super::load::GuestData;
 
+/// Le nombre de bacs que la carte montre avant de renvoyer à la feuille (§2.7).
+const CARD_BIN_LIMIT: usize = 3;
+
 pub fn build_home_card(data: &GuestData) -> Surface {
     let open = || {
         Action::open_overlay(
@@ -21,7 +24,18 @@ pub fn build_home_card(data: &GuestData) -> Surface {
 
     let mut children = build_collection_banner(data);
     let bins = bin_rows(data);
-    let elsewhere = !data.dropoff_points.is_empty() || !data.compost_location.trim().is_empty();
+    // Trois bacs sur la carte, le reste dans la feuille (§1.9, §2.7). Un logement qui trie le
+    // verre, le papier, les emballages, les biodéchets et le tout-venant en a cinq, et les
+    // empiler poussait le bouton — donc le local et le plan — sous le pli.
+    let shown = bins.len().min(CARD_BIN_LIMIT);
+    let hidden_bins = bins.len() - shown;
+    // Quelque chose à voir dans la feuille : un point d'apport, un composteur, le local, ou
+    // simplement les bacs que la carte n'a pas montrés. Un bouton vers une section vide
+    // promettrait un local que l'hôte n'a pas renseigné.
+    let elsewhere = !data.dropoff_points.is_empty()
+        || !data.compost_location.trim().is_empty()
+        || !data.bin_room_steps.is_empty()
+        || hidden_bins > 0;
 
     if bins.is_empty() {
         // Le cas rural du §9 : pas de bacs, deux points d'apport et un composteur. Sans les
@@ -34,7 +48,7 @@ pub fn build_home_card(data: &GuestData) -> Surface {
         );
         children.extend(compost_row(data));
     } else {
-        children.extend(bins);
+        children.extend(bins.into_iter().take(shown));
         // « Où déposer mes déchets ? » plutôt que les points recopiés sous les bacs : la maquette
         // garde la carte courte et renvoie à la feuille, qui a le plan et les distances.
         //
