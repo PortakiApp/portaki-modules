@@ -89,6 +89,22 @@ pub fn guest_at(module_root: &str, instant: &str) -> portaki_test_utils::MockCon
     guest(module_root).with_now(at(instant))
 }
 
+/// L'hôte de la démo du livret — « Claire », et son téléphone.
+///
+/// Sans lui, `ctx.host` est vide dans les aperçus, et tout ce qu'un module en tire disparaît :
+/// la fiche des coupures d'urgence perdait son bouton « Appeler Claire », celui qu'on cherche
+/// quand on sent le gaz. La démo du livret, elle, a un hôte — et elle sert ces aperçus.
+///
+/// Ici et pas dans le SDK, pour la même raison que le logement : `HostProfile::default()` sert
+/// les tests des vingt-trois modules.
+pub fn host() -> portaki_sdk::context::HostProfile {
+    portaki_sdk::context::HostProfile {
+        name: "Claire".to_string(),
+        phone: Some("+33612345678".to_string()),
+        ..portaki_sdk::context::HostProfile::default()
+    }
+}
+
 /// Un instant RFC 3339, en UTC.
 pub fn at(rfc3339: &str) -> DateTime<Utc> {
     DateTime::parse_from_rfc3339(rfc3339)

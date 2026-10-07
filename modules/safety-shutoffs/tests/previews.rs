@@ -58,10 +58,23 @@ fn sample_config() -> serde_json::Value {
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
     let context = previews::guest(root).with_config(&sample_config());
-    let detail = context.clone().run(render_explore_detail).expect("detail");
+    // L'hôte de la démo : sans lui, `ctx.host` est vide et la fiche perd son bouton
+    // « Appeler Claire » — celui qu'on cherche quand on sent le gaz.
+    let detail = context
+        .clone()
+        .run(|mut ctx| {
+            ctx.host = Some(previews::host());
+            render_explore_detail(ctx)
+        })
+        .expect("detail");
     // La carte d'accueil n'a pas de chemin : hors de `previews.json`, mais c'est elle
     // que la démo du livret montre en premier.
-    let home = context.run(render_home_card).expect("home");
+    let home = context
+        .run(|mut ctx| {
+            ctx.host = Some(previews::host());
+            render_home_card(ctx)
+        })
+        .expect("home");
     previews::check_all(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
