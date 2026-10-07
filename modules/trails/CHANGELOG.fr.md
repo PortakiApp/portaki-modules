@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.2
+
+Correction de la vitrine.
+
+* L'exemple montré dans la vitrine du module nomme et situe correctement le logement ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 0.5.1
 
 Montée technique.
