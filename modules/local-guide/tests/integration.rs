@@ -815,3 +815,24 @@ fn every_i18n_key_a_surface_uses_exists_in_every_locale() {
         "clés présentes en en-US seulement"
     );
 }
+
+/// Une adresse sans position garde une vignette : un repère, à défaut d'un plan (§2.12).
+///
+/// Sans elle, sa tuile sortait nue au milieu d'un carrousel de plans, décalée de toutes les
+/// autres. Elle reste absente de la Carte, qui a besoin d'une position — c'est le cas du prompt.
+#[test]
+#[serial]
+fn a_spot_without_a_position_still_leads_with_something() {
+    MockContext::guest()
+        .with_config(&json!({
+            "spots": [
+                { "id": "a", "title": { "fr": "Avec plan" }, "lat": 43.55, "lng": 7.01 },
+                { "id": "b", "title": { "fr": "Sans plan" } }
+            ]
+        }))
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_home_card(ctx).expect("carte")).expect("json");
+            assert!(json.contains("\"map\""), "{json}");
+            assert!(json.contains("\"icon\":\"map-pin\""), "{json}");
+        });
+}
