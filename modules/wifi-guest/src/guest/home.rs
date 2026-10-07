@@ -4,7 +4,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::Card;
 use portaki_sdk::sdui::surface::Surface;
 
-use super::body::build_wifi_body;
+use super::body::{build_wifi_body, Placement};
 use super::load::GuestData;
 
 pub fn build_home_card(data: &GuestData) -> Surface {
@@ -29,7 +29,7 @@ pub fn build_home_card(data: &GuestData) -> Surface {
                     .icon(IconName::Wifi)
                     .title("i18n:nav.wifi-guest"),
             ))
-            .children(build_wifi_body(data, false)),
+            .children(build_wifi_body(data, Placement::Card)),
     )
     .with_id(crate::guest::HOME_CARD)
 }

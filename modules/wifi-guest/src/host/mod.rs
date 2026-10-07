@@ -9,6 +9,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
     ChoiceList, Field, FieldHint, Form, InfoBanner, Page, SecretInput, Stack, TextArea, TextInput,
+    Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -86,6 +87,18 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
             .children(vec![
                 FieldHint::new().text("i18n:config.security.desc").into(),
                 security_choice_list(config.security).into(),
+            ])
+            .into(),
+        Field::new()
+            .name("hidden")
+            .label("i18n:host.hidden.label")
+            .children(vec![
+                FieldHint::new().text("i18n:host.hidden.help").into(),
+                Toggle::new()
+                    .name("hidden")
+                    .checked(config.hidden)
+                    .label("i18n:host.hidden.toggle")
+                    .into(),
             ])
             .into(),
         Field::new()
