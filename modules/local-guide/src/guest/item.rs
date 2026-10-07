@@ -1,9 +1,11 @@
 //! La fiche d'une adresse — la sous-page du §2.12.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::common::{Emphasis, KeyValueLayout, StackDirection, SurfaceLevel, Tone};
+use portaki_sdk::sdui::common::{
+    Author, Emphasis, KeyValueLayout, RichTextVariant, StackDirection, SurfaceLevel, Tone,
+};
 use portaki_sdk::sdui::primitives::{
-    Button, Card, Grid, Image, InfoBanner, KeyValue, Map, Stack, Text,
+    Button, Card, Grid, Image, InfoBanner, KeyValue, Map, RichText, Stack, Text,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -255,6 +257,12 @@ fn row(key: &str, value: &str, mono: bool) -> Component {
 }
 
 /// « Le conseil de votre hôte » : la note qu'il a écrite, et seulement si elle existe.
+///
+/// Citation signée de §8 : `author` pose la ligne au bas d'un encart teinté, ce que veut un
+/// conseil — là où `signature` la pose sous un filet, au bout d'un texte long comme le mot de
+/// bienvenue. Le module **marque** le bloc et rien de plus : nom, rôle, initiales et photo
+/// viennent du profil de l'hôte, et c'est la coquille qui les remplit. Un module qui les
+/// redériverait afficherait un hôte différent du bandeau d'état, qui lit la même source.
 fn host_tip(data: &GuestData, spot: &SpotRow) -> Option<Component> {
     let tip = spot.note.as_ref()?.get(&data.locale).trim().to_string();
     if tip.is_empty() {
@@ -265,7 +273,12 @@ fn host_tip(data: &GuestData, spot: &SpotRow) -> Option<Component> {
             .surface(SurfaceLevel::Elevated)
             .icon(IconName::Message)
             .title(tip_title(&data.host_name))
-            .child(Text::new().text(tip).variant(TextVariant::Body))
+            .child(
+                RichText::new()
+                    .content(tip)
+                    .variant(RichTextVariant::Lead)
+                    .author(Author::default()),
+            )
             .into(),
     )
 }

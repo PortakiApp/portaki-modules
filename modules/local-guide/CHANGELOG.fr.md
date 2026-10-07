@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.10.0
+
+Vos conseils sont signés.
+
+* Votre conseil s'affiche comme une citation : votre photo ou vos initiales, votre nom et votre rôle, sous le texte.
+* Même présentation partout : vos bons plans, vos activités et les liens d'activité que vous collez.
+* La signature vient de votre profil : rien de plus à renseigner, et elle suit la fiche du logement si elle change.
+
 ## 1.9.0
 
 Jusqu'à cinq photos par bon plan.

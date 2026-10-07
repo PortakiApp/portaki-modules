@@ -110,9 +110,12 @@
           {
             "children": [
               {
-                "text": "Dites-lui que vous venez d'ici : il vous garde le coucher de soleil.",
-                "type": "Text",
-                "variant": "body"
+                "author": {
+                  "name": ""
+                },
+                "content": "Dites-lui que vous venez d'ici : il vous garde le coucher de soleil.",
+                "type": "RichText",
+                "variant": "lead"
               }
             ],
             "icon": "message",
@@ -536,9 +539,12 @@
           {
             "children": [
               {
-                "text": "Venez avant 9 h : les croissants partent vite le dimanche.",
-                "type": "Text",
-                "variant": "body"
+                "author": {
+                  "name": ""
+                },
+                "content": "Venez avant 9 h : les croissants partent vite le dimanche.",
+                "type": "RichText",
+                "variant": "lead"
               }
             ],
             "icon": "message",
@@ -642,11 +648,15 @@
           {
             "children": [
               {
-                "text": "Asseyez-vous à droite : c'est le côté qui longe les remparts.",
-                "type": "Text"
+                "author": {
+                  "name": ""
+                },
+                "content": "Asseyez-vous à droite : c'est le côté qui longe les remparts.",
+                "type": "RichText",
+                "variant": "lead"
               }
             ],
-            "icon": "sparkles",
+            "icon": "message",
             "surface": "elevated",
             "title": "i18n:guest.activity.tip",
             "type": "Card"

@@ -7,8 +7,8 @@ use portaki_sdk::host::with_host;
 use serial_test::serial;
 
 use local_guide::{
-    render_explore_detail, render_home_card, render_host_main, render_upcoming_card,
-    MAX_CURATED_LINKS, PARTNER_ID, PARTNER_QUERY_PARAM,
+    render_explore_activity, render_explore_detail, render_explore_item, render_home_card,
+    render_host_main, render_upcoming_card, MAX_CURATED_LINKS, PARTNER_ID, PARTNER_QUERY_PARAM,
 };
 use portaki_sdk::sdui::surface::Surface;
 use portaki_test_utils::{MockContext, SurfaceAssertions};
@@ -147,6 +147,59 @@ fn detail_includes_link() {
             assert!(SurfaceAssertions::new(&surface).contains_type("Link"));
             assert!(SurfaceAssertions::new(&surface).contains_type("InfoBanner"));
         });
+}
+
+/// §8 : partout où le livret cite l'hôte, la citation est signée.
+///
+/// Les deux choses à tenir ensemble, et que le test sépare :
+///
+/// 1. **Le conseil est un `RichText` marqué `author`**, pas un `Text`. C'est le seul chemin qui
+///    atteint `AuthorLine` dans le livret ; un `Text` rendait la citation muette.
+/// 2. **Le module ne compose pas la signature.** Il pose un auteur vide — nom, rôle, initiales et
+///    photo viennent du profil de l'hôte, rempli par la coquille. Un module qui écrirait un nom
+///    ici afficherait un hôte différent du bandeau d'état, qui lit la même source.
+///
+/// Le titre de l'encart (« Le conseil de Claire ») reste au module : c'est un intitulé, pas la
+/// ligne d'identité de §8.
+#[test]
+#[serial]
+fn every_host_tip_is_a_signed_quote_the_module_does_not_compose() {
+    let config = json!({
+        "spots": [{
+            "id": "bike", "title": { "fr": "Holiday Bikes" },
+            "note": { "fr": "Les vélos électriques partent vite en août." }
+        }],
+        "host_activities": [{
+            "id": "voilier", "title": { "fr": "Sortie voilier" },
+            "provider": "Marc, skipper au port", "phone": "+33 6 22 33 44 55",
+            "tip": { "fr": "Dites-lui que vous venez d'ici." }
+        }]
+    });
+    for (input, render) in [
+        (json!({ "spotId": "bike" }), 0),
+        (json!({ "activityId": "voilier" }), 1),
+    ] {
+        let (mut ctx, host) = MockContext::guest()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&config)
+            .build();
+        ctx.input = input.clone();
+        with_host(host, ctx.clone(), || {
+            let surface = if render == 0 {
+                render_explore_item(ctx.clone()).expect("surface")
+            } else {
+                render_explore_activity(ctx.clone()).expect("surface")
+            };
+            let json = surface_json(&surface);
+            assert!(
+                SurfaceAssertions::new(&surface).contains_type("RichText"),
+                "le conseil porte la citation, pas un Text — {input}\n{json}"
+            );
+            assert!(json.contains(r#""variant":"lead""#), "{json}");
+            // Un auteur présent mais vide : le marquage, et rien de l'identité.
+            assert!(json.contains(r#""author":{"name":""}"#), "{json}");
+        });
+    }
 }
 
 // --- Carte -------------------------------------------------------------------------------
