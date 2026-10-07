@@ -335,6 +335,18 @@ impl ModuleConfig {
         }
     }
 
+    /// Le code de la barrière du parking, s'il y en a un.
+    ///
+    /// C'est un secret comme les autres — il suit donc le même calendrier de révélation, et se
+    /// montre en tuile avec son bouton Copier plutôt qu'en rangée perdue dans la sous-page.
+    pub fn parking_code(&self) -> Option<&str> {
+        self.parking
+            .as_ref()
+            .and_then(|p| p.code.as_deref())
+            .map(str::trim)
+            .filter(|c| !c.is_empty())
+    }
+
     pub fn keybox_code(&self) -> Option<&str> {
         match &self.method {
             MethodFields::Keybox { code: Some(c), .. } if !c.trim().is_empty() => Some(c.as_str()),

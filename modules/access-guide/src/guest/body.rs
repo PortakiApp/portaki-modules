@@ -238,6 +238,18 @@ fn secret_tiles(data: &GuestData) -> Vec<Component> {
             code,
         ));
     }
+    // Et la barrière du parking en dernier : l'ordre est celui qu'on franchit — porte, puis
+    // immeuble, puis parking. Ce code ne sortait que dans la sous-page, en rangée, alors que les
+    // deux autres étaient en tuile avec Copier sur la carte. On le cherchait une main sur la
+    // valise, devant une barrière fermée.
+    if let Some(code) = data.config.parking_code() {
+        tiles.push(secret_tile(
+            data,
+            "i18n:guest.parking.code",
+            IconName::Car,
+            code,
+        ));
+    }
     if tiles.is_empty() {
         tiles.extend(plain_method_tile(data));
     }
