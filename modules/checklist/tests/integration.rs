@@ -15,7 +15,7 @@ use uuid::Uuid;
 
 use checklist::{
     complete_item, create_checklist, items_of, list_checklists, list_completions, list_items,
-    publish_readiness, render_home_card, render_host_main, render_post_stay_card,
+    list_name, publish_readiness, render_home_card, render_host_main, render_post_stay_card,
     render_stats_checklist, render_stats_cleaning, reset_test_store, set_completed, stats_summary,
     task_complete, task_toggle, timeline_tasks, uncomplete_item, update_config,
     CreateChecklistArgs, ItemIdArgs, SetCompletedArgs, UpdateConfigArgs,
@@ -186,7 +186,9 @@ fn update_config_saves_the_selected_list() {
         .expect("updateConfig");
 
         let list = list_checklists().expect("lists").remove(0);
-        assert_eq!(list.name_fr, "Ménage express");
+        // Renommée en français : les neuf autres langues du modèle gardent leur traduction.
+        assert_eq!(list_name(&list, "fr-FR", "fr-FR"), "Ménage express");
+        assert_eq!(list_name(&list, "ja-JP", "fr-FR"), "清掃");
         assert_eq!(list.trigger, "onlyIfNextArrival");
         assert_eq!(list.assignee_name.as_deref(), Some("Julie Martin"));
         assert_eq!(list.assignee_role.as_deref(), Some("Ménage"));

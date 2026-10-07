@@ -53,16 +53,38 @@ pub fn labels_from_item(item: &ChecklistItem) -> Labels {
     out
 }
 
-/// Le nom d'une liste par langue. `name_fr` et `name_en` sont deux colonnes, pas une carte.
+/// Le nom d'une liste par langue, comme [`labels_from_item`] : `name_fr` porte la carte de
+/// toutes les langues, `name_en` n'est plus que le repli des listes nommées avant ce changement.
+///
+/// Ce nom sert de titre de groupe au voyageur quand le logement a plusieurs listes
+/// (`guest/home.rs`) : le borner à deux langues lui donnait un titre français en japonais.
 pub fn labels_from_list(list: &Checklist) -> Labels {
-    let mut out = Labels::new();
-    if !list.name_fr.trim().is_empty() {
-        out.insert("fr".into(), list.name_fr.trim().to_string());
+    let mut out = decode_map(&list.name_fr);
+    if !out.is_empty() {
+        if !list.name_en.trim().is_empty() {
+            out.entry("en".into())
+                .or_insert_with(|| list.name_en.trim().to_string());
+        }
+        return out;
     }
     if !list.name_en.trim().is_empty() {
         out.insert("en".into(), list.name_en.trim().to_string());
     }
     out
+}
+
+/// Le nom d'une liste dans la langue du lecteur, avec les replis de [`pick_label`].
+///
+/// Le seul chemin vers le nom d'une liste : lire `name_fr` directement rendrait la carte JSON.
+pub fn list_name(list: &Checklist, locale: &str, property_locale: &str) -> String {
+    pick_label(&labels_from_list(list), locale, property_locale)
+}
+
+/// Repose le nom d'une liste dans une langue, en gardant les autres.
+pub fn with_list_name(list: &Checklist, lang: &str, name: &str) -> (String, String) {
+    let mut labels = labels_from_list(list);
+    labels.insert(lang_code(lang), name.trim().to_string());
+    encode_labels(&labels)
 }
 
 pub fn encode_labels(labels: &Labels) -> (String, String) {

@@ -40,7 +40,6 @@ const SELECT_NEW: &str = "__new__";
     icon = IconName::CheckCircle
 )]
 pub fn render_host_main(ctx: HostContext) -> Surface {
-    let fr = labels::lang_code(&ctx.locale) == "fr";
     let checklists = storage::list_checklists().unwrap_or_default();
     let items = storage::list_items().unwrap_or_default();
     let selected = ctx
@@ -57,7 +56,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         column.push(
             SelectableCard::new()
                 .value(list.id.to_string())
-                .label(name(list, fr))
+                .label(name(list, &ctx.locale))
                 .description(meta)
                 .icon(stored_icon(&list.icon))
                 .selected(list.id.to_string() == selected)
@@ -77,7 +76,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         .iter()
         .find(|list| list.id.to_string() == selected)
     {
-        Some(list) => edit_panel(list, &items_of(&items, list), fr),
+        Some(list) => edit_panel(list, &items_of(&items, list), &ctx.locale),
         None => new_panel(),
     };
 
@@ -111,8 +110,8 @@ fn items_of<'a>(items: &'a [ChecklistItem], list: &Checklist) -> Vec<&'a Checkli
         .collect()
 }
 
-fn name(list: &Checklist, fr: bool) -> String {
-    if fr { &list.name_fr } else { &list.name_en }.clone()
+fn name(list: &Checklist, locale: &str) -> String {
+    labels::list_name(list, locale, locale)
 }
 
 fn select_field(label: &str, name: &str, values: &[&str], value: &str) -> Component {
@@ -127,7 +126,8 @@ fn select_field(label: &str, name: &str, values: &[&str], value: &str) -> Compon
         .into()
 }
 
-fn edit_panel(list: &Checklist, items: &[&ChecklistItem], fr: bool) -> Component {
+fn edit_panel(list: &Checklist, items: &[&ChecklistItem], locale: &str) -> Component {
+    let fr = labels::lang_code(locale) == "fr";
     let host = list.audience == lists::HOST;
     let settings: Vec<Component> = if host {
         let assignee = match (&list.assignee_name, &list.assignee_role) {
@@ -203,7 +203,10 @@ fn edit_panel(list: &Checklist, items: &[&ChecklistItem], fr: bool) -> Component
             .name("id")
             .value(list.id.to_string())
             .into(),
-        TextInput::new().name("name").value(name(list, fr)).into(),
+        TextInput::new()
+            .name("name")
+            .value(name(list, locale))
+            .into(),
         Pill::new()
             .label(format!("i18n:host.audience.{audience}"))
             .tone(if host { Tone::Warning } else { Tone::Info })

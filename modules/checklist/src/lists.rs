@@ -1,6 +1,7 @@
 //! Checklist wire values and the four templates a new list starts from.
 
 use crate::i18n;
+use crate::labels::Labels;
 
 pub const GUEST: &str = "guest";
 pub const HOST: &str = "host";
@@ -123,18 +124,19 @@ pub fn template(id: &str) -> Option<&'static Template> {
 }
 
 impl Template {
-    /// `(fr, en)` of the list name.
-    pub fn name(&self) -> (String, String) {
-        let text = i18n::text(&format!("template.{}.name", self.id), &[]);
-        (text.fr, text.en)
+    /// Le nom de la liste, dans toutes les langues du bundle.
+    pub fn name(&self) -> Labels {
+        i18n::labels(&format!("template.{}.name", self.id), &[])
     }
 
-    /// `(fr, en, photo required)` of each item.
-    pub fn item_labels(&self) -> Vec<(String, String, bool)> {
+    /// Le libellé de chaque étape, dans toutes les langues, et s'il réclame une photo.
+    pub fn item_labels(&self) -> Vec<(Labels, bool)> {
         (0..self.items)
             .map(|index| {
-                let text = i18n::text(&format!("template.{}.item.{index}", self.id), &[]);
-                (text.fr, text.en, self.photo == Some(index))
+                (
+                    i18n::labels(&format!("template.{}.item.{index}", self.id), &[]),
+                    self.photo == Some(index),
+                )
             })
             .collect()
     }
@@ -144,14 +146,11 @@ impl Template {
     /// Seule la liste de départ en pose : c'est celle que le voyageur lit, et le groupement n'a de
     /// sens que là. Deux rubriques pour cinq étapes — ce qu'on fait dans le logement, puis ce qu'on
     /// fait en partant — plutôt qu'une par étape, qui n'aurait rien regroupé.
-    pub fn item_groups(&self) -> Vec<(String, String)> {
+    pub fn item_groups(&self) -> Vec<Labels> {
         (0..self.items)
             .map(|index| match self.group_key(index) {
-                Some(key) => {
-                    let text = i18n::text(key, &[]);
-                    (text.fr, text.en)
-                }
-                None => (String::new(), String::new()),
+                Some(key) => i18n::labels(key, &[]),
+                None => Labels::new(),
             })
             .collect()
     }
@@ -177,19 +176,38 @@ pub fn is_restock_label(fr: &str, en: &str) -> bool {
 mod tests {
     use super::*;
 
+    /// Les dix langues du sélecteur, pas deux : le nom d'un modèle devient le nom d'une liste,
+    /// et le nom d'une liste est un titre de groupe que lit le voyageur.
     #[test]
-    fn templates_have_every_label_in_both_languages() {
+    fn templates_have_every_label_in_all_ten_languages() {
+        const LANGS: [&str; 10] = ["fr", "en", "es", "de", "it", "pt", "nl", "ja", "zh", "ar"];
         for template in TEMPLATES {
-            let (fr, en) = template.name();
-            assert!(!fr.is_empty() && !en.is_empty(), "{}", template.id);
-            for (fr, en, _) in template.item_labels() {
-                assert!(!fr.is_empty() && !en.is_empty(), "{}", template.id);
+            let name = template.name();
+            for lang in LANGS {
+                assert!(
+                    name.get(lang).is_some_and(|text| !text.trim().is_empty()),
+                    "{} name misses {lang}",
+                    template.id
+                );
+            }
+            for (labels, _) in template.item_labels() {
+                for lang in LANGS {
+                    assert!(
+                        labels.get(lang).is_some_and(|text| !text.trim().is_empty()),
+                        "{} item misses {lang}",
+                        template.id
+                    );
+                }
             }
         }
         let cleaning = template("cleaning").unwrap().item_labels();
         assert_eq!(cleaning.len(), 7);
-        assert!(cleaning[6].2);
-        assert!(is_restock_label(&cleaning[5].0, ""));
+        assert!(cleaning[6].1);
+        let restock = &cleaning[5].0;
+        assert!(is_restock_label(
+            restock.get("fr").map(String::as_str).unwrap_or_default(),
+            ""
+        ));
     }
 
     #[test]

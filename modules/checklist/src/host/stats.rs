@@ -582,11 +582,7 @@ pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
                     Timing::Late => ("i18n:stats.cleaning.status.late", Tone::Danger),
                     Timing::Open => ("i18n:stats.cleaning.status.open", Tone::Warning),
                 };
-                let name = if fr {
-                    &task.list.name_fr
-                } else {
-                    &task.list.name_en
-                };
+                let name = &labels::list_name(task.list, &ctx.locale, &ctx.locale);
                 let mut meta = t!(
                     "stats.cleaning.row.meta",
                     done = task.done.len(),

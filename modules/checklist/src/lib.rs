@@ -23,6 +23,8 @@ pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use entities::{Checklist, ChecklistCompletion, ChecklistItem, TaskItemState};
 pub use guest::{render_home_card, render_post_stay_card};
 pub use host::{render_host_main, render_stats_checklist, render_stats_cleaning, stats_summary};
+/// Le nom d'une liste se lit par ici : `Checklist.name_fr` porte la carte des langues.
+pub use labels::list_name;
 pub use queries::{list_completions, list_items, publish_readiness, ChecklistItemDto};
 pub use storage::{items_of, list_checklists, reset_test_store};
 pub use tasks::{task_complete, task_id, task_toggle, timeline_tasks};

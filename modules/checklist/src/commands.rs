@@ -81,10 +81,13 @@ pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
     };
     let host = list.audience == lists::HOST;
     let name = args.name.trim();
-    // A renamed list is named in one language; an untouched one keeps its translation.
-    if !name.is_empty() && name != list.name_fr && name != list.name_en {
-        list.name_fr = name.to_string();
-        list.name_en = name.to_string();
+    // Un renommage ne nomme que la langue éditée : les autres gardent leur traduction. La
+    // comparaison porte sur cette langue, pas sur la colonne — `name_fr` est une carte JSON.
+    let lang = labels::lang_code(&ctx.locale);
+    if !name.is_empty() && name != labels::list_name(&list, &ctx.locale, &ctx.locale) {
+        let (name_fr, name_en) = labels::with_list_name(&list, &lang, name);
+        list.name_fr = name_fr;
+        list.name_en = name_en;
     }
     if host {
         list.trigger = lists::pick(&args.trigger, lists::HOST_TRIGGERS).to_string();

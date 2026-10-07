@@ -138,6 +138,21 @@ fn evening_of(at: DateTime<Utc>, timezone: &str) -> DateTime<Utc> {
         .map_or(at, |local| local.with_timezone(&Utc))
 }
 
+/// Le nom d'une liste dans toutes les langues, pour la tâche que lit la plateforme.
+fn list_name_i18n(list: &Checklist) -> I18nText {
+    let labels = labels::labels_from_list(list);
+    let mut out = I18nText::new(
+        labels.get("fr").cloned().unwrap_or_default(),
+        labels.get("en").cloned().unwrap_or_default(),
+    );
+    for (lang, value) in &labels {
+        if lang != "fr" && lang != "en" {
+            out.others.insert(lang.clone(), value.clone());
+        }
+    }
+    out
+}
+
 fn build_task(
     property_id: Uuid,
     list: &Checklist,
@@ -150,7 +165,7 @@ fn build_task(
         task_id.clone(),
         plan.at,
         property_id,
-        I18nText::new(list.name_fr.clone(), list.name_en.clone()),
+        list_name_i18n(list),
         plan.context,
     )
     .stay(plan.stay_id)
@@ -314,7 +329,7 @@ fn after_change(
             "propertyId": ctx.property_id,
             "payload": { "taskId": task_id, "stayId": stay_id, "done": done, "total": total },
             "display": { "chips": [
-                { "label": list.name_fr, "value": progress },
+                { "label": labels::list_name(list, &ctx.locale, &ctx.locale), "value": progress },
             ] },
         }),
     )?;

@@ -111,7 +111,7 @@ pub fn delete_checklist(id: Uuid) -> Result<()> {
 
 /// Creates a list from `template`, placed after the existing ones.
 pub fn create_from_template(template: &Template) -> Result<Checklist> {
-    let (name_fr, name_en) = template.name();
+    let (name_fr, name_en) = labels::encode_labels(&template.name());
     let host = template.audience == lists::HOST;
     let list = Checklist {
         id: Uuid::new_v4(),
@@ -135,15 +135,8 @@ pub fn create_from_template(template: &Template) -> Result<Checklist> {
         .item_labels()
         .into_iter()
         .enumerate()
-        .map(|(index, (fr, en, photo))| {
-            let labels = Labels::from([("fr".to_string(), fr), ("en".to_string(), en)]);
-            let group = match groups.get(index) {
-                Some((fr, en)) if !fr.trim().is_empty() => Labels::from([
-                    ("fr".to_string(), fr.clone()),
-                    ("en".to_string(), en.clone()),
-                ]),
-                _ => Labels::new(),
-            };
+        .map(|(index, (labels, photo))| {
+            let group = groups.get(index).cloned().unwrap_or_default();
             ItemDraft {
                 id: None,
                 labels,
