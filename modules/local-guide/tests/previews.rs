@@ -3,9 +3,9 @@
 #[path = "../../../support/previews.rs"]
 mod previews;
 
-use local_guide::{map_markers, 
-    render_explore_activity, render_explore_detail, render_explore_item, render_explore_link,
-    render_home_card, render_upcoming_card,
+use local_guide::{
+    map_markers, render_explore_activity, render_explore_detail, render_explore_item,
+    render_explore_link, render_home_card, render_upcoming_card,
 };
 
 use serde_json::json;
@@ -122,7 +122,9 @@ fn previews_match_the_rendered_surfaces() {
     // La carte d'accueil n'a pas de chemin : hors de `previews.json`, mais c'est elle
     // que la démo du livret montre en premier.
     // Les points que ce module pose sur la carte du livret (§3). La démo les servait vides.
-    let markers = context.clone().run(|ctx| map_markers(ctx).expect("repères"));
+    let markers = context
+        .clone()
+        .run(|ctx| map_markers(ctx).expect("repères"));
     let home = context.run(render_home_card).expect("home");
     previews::check_all(
         root,

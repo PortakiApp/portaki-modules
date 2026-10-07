@@ -96,7 +96,12 @@ pub fn check_all(
             )
         })
         .collect();
-    check_demo(module_root, guest_routes(Path::new(emissions)), demo, markers);
+    check_demo(
+        module_root,
+        guest_routes(Path::new(emissions)),
+        demo,
+        markers,
+    );
     check_previews(module_root, emissions, rendered);
 }
 
