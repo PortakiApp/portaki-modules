@@ -117,6 +117,14 @@
           },
           {
             "action": {
+              "type": "external",
+              "url": "tel:+33612345678"
+            },
+            "label": "Appeler Claire",
+            "type": "Button"
+          },
+          {
+            "action": {
               "to": "aide",
               "type": "navigate"
             },
