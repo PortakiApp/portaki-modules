@@ -123,6 +123,20 @@ fn notice(data: &GuestConsumablesData) -> String {
     }
 }
 
+/// Le niveau d'un signalement encore ouvert pour ce produit, s'il y en a un.
+///
+/// Seuls les signalements `open` comptent : une fois l'hôte passé, le produit redevient un produit
+/// comme un autre, et le redemander est légitime.
+fn open_report_level(data: &GuestConsumablesData, item_id: uuid::Uuid) -> Option<&'static str> {
+    data.reports
+        .iter()
+        .find(|report| report.item_id == item_id && report.status == crate::status::DEFAULT)
+        .map(|report| match report.level.as_str() {
+            "missing" => "i18n:form.item.reported.missing",
+            _ => "i18n:form.item.reported.low",
+        })
+}
+
 /// Rien n'est présélectionné : en choix multiple, une case déjà cochée part au signalement sans
 /// que le voyageur l'ait voulu, et c'est l'hôte qui se déplace pour rien.
 fn item_choice_list(data: &GuestConsumablesData) -> ChoiceList {
@@ -135,7 +149,13 @@ fn item_choice_list(data: &GuestConsumablesData) -> ChoiceList {
                 &data.locale,
                 &data.property_locale,
             );
-            let option = ChoiceOption::new(item.id.to_string(), label);
+            let mut option = ChoiceOption::new(item.id.to_string(), label);
+            // Déjà signalé pendant ce séjour : la tuile le dit (§2.5). Sans cela, le voyageur
+            // qui rouvre le formulaire ne voit aucune différence, le resignale, et l'hôte se
+            // déplace deux fois pour le même paquet de café.
+            if let Some(level) = open_report_level(data, item.id) {
+                option = option.description(level);
+            }
             // L'emoji de l'hôte quand il en a choisi un, le colis du vocabulaire sinon : une
             // grille de huit colis identiques ne se lit pas d'un coup d'œil (§2.5).
             let emoji = item.emoji.trim();

@@ -6,6 +6,8 @@
   "form.head.title": "Il manque quelque chose ?",
   "form.item.hint": "Plusieurs choix possibles.",
   "form.item.label": "Consommable",
+  "form.item.reported.low": "Signalé · bientôt vide",
+  "form.item.reported.missing": "Signalé · il n'y en a plus",
   "form.level.label": "Situation",
   "form.level.low": "Bientôt vide",
   "form.level.missing": "Il n'y en a plus",

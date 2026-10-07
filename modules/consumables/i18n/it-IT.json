@@ -6,6 +6,8 @@
   "form.head.title": "Manca qualcosa?",
   "form.item.hint": "Puoi scegliere più voci.",
   "form.item.label": "Consumabile",
+  "form.item.reported.low": "Segnalato · quasi finito",
+  "form.item.reported.missing": "Segnalato · finito",
   "form.level.label": "Situazione",
   "form.level.low": "Quasi finito",
   "form.level.missing": "È finito",

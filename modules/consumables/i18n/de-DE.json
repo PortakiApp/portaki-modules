@@ -6,6 +6,8 @@
   "form.head.title": "Fehlt etwas?",
   "form.item.hint": "Mehrfachauswahl möglich.",
   "form.item.label": "Verbrauchsmaterial",
+  "form.item.reported.low": "Gemeldet · geht zur Neige",
+  "form.item.reported.missing": "Gemeldet · nichts mehr da",
   "form.level.label": "Lage",
   "form.level.low": "Fast leer",
   "form.level.missing": "Ist aufgebraucht",

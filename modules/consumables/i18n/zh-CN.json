@@ -6,6 +6,8 @@
   "form.head.title": "缺什么了吗？",
   "form.item.hint": "可以多选。",
   "form.item.label": "易耗品",
+  "form.item.reported.low": "已反馈 · 快用完",
+  "form.item.reported.missing": "已反馈 · 已用完",
   "form.level.label": "情况",
   "form.level.low": "快用完",
   "form.level.missing": "已经没有了",

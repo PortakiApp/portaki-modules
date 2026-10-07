@@ -6,6 +6,8 @@
   "form.head.title": "هل ينقصك شيء؟",
   "form.item.hint": "يمكن اختيار أكثر من عنصر.",
   "form.item.label": "المستلزم",
+  "form.item.reported.low": "مُبلَّغ عنه · أوشك على النفاد",
+  "form.item.reported.missing": "مُبلَّغ عنه · لم يعد متوفرًا",
   "form.level.label": "الحالة",
   "form.level.low": "يكاد ينفد",
   "form.level.missing": "لم يبقَ منه شيء",
