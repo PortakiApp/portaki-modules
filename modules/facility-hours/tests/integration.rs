@@ -162,6 +162,29 @@ fn structured_hours_carry_a_state_and_the_week() {
         });
 }
 
+/// La carte d'accueil dit aussi jusqu'à quand, et déplie la semaine (§2.6).
+///
+/// L'état remplaçait l'horaire sur la carte. Mais « Ouvert » ne dit pas jusqu'à quand, et c'est
+/// la question suivante : il fallait ouvrir la feuille pour la poser.
+#[test]
+#[serial]
+fn the_card_says_until_when_and_unfolds_the_week() {
+    let structured = json!({
+        "facilities": [
+            { "title": "Piscine", "opens_at": "08:00", "closes_at": "20:00" }
+        ]
+    });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&structured)
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_home_card(ctx).expect("card")).unwrap();
+            assert!(json.contains("08:00"), "{json}");
+            assert!(json.contains("\"details\""), "{json}");
+            assert!(json.contains("\"current\":true"), "{json}");
+        });
+}
+
 /// La prose d'un hôte n'est pas touchée : pas d'état deviné, pas de semaine inventée.
 #[test]
 #[serial]
