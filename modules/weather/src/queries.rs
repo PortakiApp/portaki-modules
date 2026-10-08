@@ -56,19 +56,19 @@ fn resolve_coords(
     if !has_open_weather(ctx) {
         return Ok(None);
     }
+    let config = ModuleConfig::load(ctx)?;
     let point = match (lat, lng) {
         (Some(lat), Some(lng)) => GeoPoint { lat, lng },
-        // Never a default position: a property that is not geocoded has no weather.
-        _ => ctx
-            .property
-            .coordinates
+        // La position corrigée par l'hôte, sinon celle du logement ; jamais une position par
+        // défaut : un logement non géocodé n'a pas de météo.
+        _ => config
+            .point(ctx.property.coordinates)
             .ok_or_else(|| PortakiError::Host("property_not_geocoded".into()))?,
     };
-    let config = ModuleConfig::load(ctx)?;
     Ok(Some(QueryCoords {
         lat: point.lat,
         lng: point.lng,
-        units: config.units,
+        units: WeatherUnits::for_locale(&ctx.locale),
         now: time::now()?,
     }))
 }

@@ -31,14 +31,14 @@ pub fn load_guest_weather(ctx: &GuestContext, surface_id: SurfaceId) -> Result<G
             "i18n:guest.unavailable.description",
         ))));
     }
-    if ctx.property.coordinates.is_none() {
+    let config = ModuleConfig::load(ctx)?;
+    if config.point(ctx.property.coordinates).is_none() {
         return Ok(GuestLoad::Empty(Box::new(no_weather(
             surface_id,
             "i18n:guest.noLocation.description",
         ))));
     }
 
-    let config = ModuleConfig::load(ctx)?;
     // La fenêtre du séjour plutôt que cinq jours en dur (§0.7, §2.14) : une semaine à la mer
     // s'arrêtait le mercredi, et avant l'arrivée on lisait surtout des journées qui ne
     // concernaient personne.
@@ -68,13 +68,17 @@ pub fn load_guest_weather(ctx: &GuestContext, surface_id: SurfaceId) -> Result<G
             "i18n:guest.unavailable.description",
         ))));
     };
-    let city = resolve_city_label(
-        current
-            .city_name
-            .as_deref()
-            .or(forecast.city_name.as_deref()),
-        ctx.property.address.as_deref(),
-    );
+    // Le nom que l'hôte a donné d'abord (« Chamrousse 1750 ») : la commune du fournisseur dit
+    // « Chamrousse » pour toute la station.
+    let city = config.label().map(str::to_string).or_else(|| {
+        resolve_city_label(
+            current
+                .city_name
+                .as_deref()
+                .or(forecast.city_name.as_deref()),
+            ctx.property.address.as_deref(),
+        )
+    });
 
     let forecast = WeatherForecast {
         days: super::window::keep_window(forecast.days, window, |day| day.date.as_str()),
@@ -84,7 +88,7 @@ pub fn load_guest_weather(ctx: &GuestContext, surface_id: SurfaceId) -> Result<G
     Ok(GuestLoad::Ready(Box::new(GuestWeatherData {
         current,
         forecast,
-        units: config.units,
+        units: WeatherUnits::for_locale(&ctx.locale),
         city,
     })))
 }

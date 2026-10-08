@@ -14,17 +14,21 @@
     "en": "Current temperature and conditions, with the UV index when available, and a 5-day forecast. A summary also appears in the arrival-day email."
   },
   "hostSurface": {
-    "fr": "Une fiche Météo pour choisir les unités et la fréquence de mise à jour. Les prévisions suivent l’adresse du logement.",
-    "en": "A Weather sheet to choose units and refresh frequency. Forecasts follow the property's address."
+    "fr": "Une fiche Météo : le nom affiché sous les prévisions, une autre position si l’adresse est imprécise, et la carte avant l’arrivée. Les unités suivent la langue du voyageur.",
+    "en": "A Weather sheet: the name shown under the forecast, another position when the address is imprecise, and the card before arrival. Units follow the guest's language."
   },
   "configItems": [
     {
-      "fr": "Unités de température",
-      "en": "Temperature units"
+      "fr": "Nom affiché sous les prévisions (facultatif)",
+      "en": "Name shown under the forecast (optional)"
     },
     {
-      "fr": "Fréquence de mise à jour",
-      "en": "Refresh frequency"
+      "fr": "Autre position que l’adresse du logement (montagne, île)",
+      "en": "Another position than the property address (mountain, island)"
+    },
+    {
+      "fr": "Carte météo avant l’arrivée, à partir de J-5",
+      "en": "Weather card before arrival, from 5 days before"
     }
   ],
   "capabilities": [

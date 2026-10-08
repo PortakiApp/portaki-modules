@@ -16,6 +16,19 @@ pub enum WeatherUnits {
 }
 
 impl WeatherUnits {
+    /// L'unité du lecteur, pas un réglage de l'hôte (spec Météo §3) : °F en `en-US`, °C ailleurs.
+    pub fn for_locale(locale: &str) -> Self {
+        if locale
+            .trim()
+            .replace('_', "-")
+            .eq_ignore_ascii_case("en-US")
+        {
+            WeatherUnits::Fahrenheit
+        } else {
+            WeatherUnits::Celsius
+        }
+    }
+
     /// OpenWeather temperature unit label for SDUI.
     pub fn sdui_unit(&self) -> &'static str {
         match self {
