@@ -3,12 +3,8 @@
   "surfaces": [
     {
       "i18n": {
-        "explore.detail.direction.from": "Depuis la gare",
-        "explore.detail.direction.to": "Vers la gare",
-        "explore.detail.disclaimer": "Horaires SNCF · temps réel quand il est disponible",
         "explore.detail.station.all": "Toutes les gares",
-        "explore.detail.station.hint.from": "Départ : la gare du logement.",
-        "explore.detail.station.label": "Gare d’arrivée",
+        "explore.detail.station.label.from": "Gare d’arrivée",
         "explore.detail.upcoming": "Prochains départs"
       },
       "labelKey": "nav.train",
@@ -34,12 +30,12 @@
             "choices": [
               {
                 "icon": "train",
-                "label": "i18n:explore.detail.direction.from",
+                "label": "Depuis Gare d'Antibes",
                 "value": "from"
               },
               {
                 "icon": "home",
-                "label": "i18n:explore.detail.direction.to",
+                "label": "Vers Gare d'Antibes",
                 "value": "to"
               }
             ],
@@ -85,12 +81,12 @@
                     "value": "all"
                   }
                 ],
-                "label": "i18n:explore.detail.station.label",
+                "label": "i18n:explore.detail.station.label.from",
                 "name": "dest",
                 "type": "Field"
               },
               {
-                "text": "i18n:explore.detail.station.hint.from",
+                "text": "Départ : Gare d'Antibes, la gare du logement.",
                 "type": "FieldHint"
               }
             ],
@@ -117,8 +113,8 @@
                 "title": "Nice-Ville (Nice)",
                 "trailing": {
                   "badge": {
-                    "label": "TER",
-                    "tone": "success"
+                    "label": "+2 min",
+                    "tone": "warning"
                   }
                 },
                 "type": "ListItem"
@@ -167,7 +163,7 @@
           },
           {
             "emphasis": "subtle",
-            "text": "i18n:explore.detail.disclaimer",
+            "text": "Horaires temps réel · à l’instant",
             "type": "Text",
             "variant": "caption"
           }
@@ -184,7 +180,8 @@
         "explore.item.network": "Réseau",
         "explore.item.route": "Itinéraire vers la gare",
         "explore.item.station": "Aller à la gare",
-        "explore.item.stationName": "Gare"
+        "explore.item.stationName": "Gare",
+        "explore.item.ticket": "Acheter un billet"
       },
       "labelKey": "nav.departure",
       "path": "train/:departureId",
@@ -194,7 +191,8 @@
           {
             "children": [
               {
-                "label": "TER",
+                "label": "+2 min",
+                "tone": "warning",
                 "type": "Badge"
               },
               {
@@ -211,6 +209,12 @@
             ],
             "gap": 6.0,
             "type": "Stack"
+          },
+          {
+            "message": "L’heure affichée, 08:12, tient déjà compte du retard.",
+            "title": "Retard estimé de 2 min",
+            "tone": "warning",
+            "type": "InfoBanner"
           },
           {
             "children": [
@@ -258,8 +262,18 @@
               "type": "external",
               "url": "https://www.google.com/maps/search/?api=1&query=Gare+d'Antibes"
             },
+            "icon": "map-pin",
             "label": "i18n:explore.item.route",
             "type": "Button"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.sncf-connect.com"
+            },
+            "label": "i18n:explore.item.ticket",
+            "type": "Button",
+            "variant": "outline"
           }
         ],
         "gap": 14.0,
@@ -301,8 +315,8 @@
             "title": "Nice-Ville (Nice)",
             "trailing": {
               "badge": {
-                "label": "TER",
-                "tone": "success"
+                "label": "+2 min",
+                "tone": "warning"
               }
             },
             "type": "ListItem"
@@ -372,7 +386,7 @@
         "children": [
           {
             "emphasis": "subtle",
-            "text": "Gare d'Antibes → Nice-Ville (Nice) · 08:12",
+            "text": "Gare d'Antibes",
             "type": "Text",
             "variant": "caption"
           }
