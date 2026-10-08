@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.8.0...lost-found-v1.9.0) (2026-10-08)
+
+
+### Features
+
+* **lost-found:** qui paie le renvoi, et la déclaration partie ([649d33e](https://github.com/PortakiApp/portaki-modules/commit/649d33e6dc1af868ee9aaa4404b8172835385fd5))
+
 ## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.7.1...lost-found-v1.8.0) (2026-10-07)
 
 

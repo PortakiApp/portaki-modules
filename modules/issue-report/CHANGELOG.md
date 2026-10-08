@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.4.2...issue-report-v1.5.0) (2026-10-08)
+
+
+### Features
+
+* **issue-report:** dire ce qu'on fait, et ne pas faire choisir pour rien ([f97f9aa](https://github.com/PortakiApp/portaki-modules/commit/f97f9aad4f361229ad1f21bd623264860c2724a9))
+
 ## [1.4.2](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.4.1...issue-report-v1.4.2) (2026-10-07)
 
 

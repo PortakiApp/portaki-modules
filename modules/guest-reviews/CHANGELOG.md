@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.3](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v1.3.2...guest-reviews-v1.3.3) (2026-10-08)
+
+
+### Bug Fixes
+
+* **guest-reviews:** aucune étoile d'avance, et un seul avis ([0d4c395](https://github.com/PortakiApp/portaki-modules/commit/0d4c395667e393549e6a77f1861063ba44b77a2a))
+
 ## [1.3.2](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v1.3.1...guest-reviews-v1.3.2) (2026-10-07)
 
 

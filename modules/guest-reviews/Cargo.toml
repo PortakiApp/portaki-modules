@@ -1,6 +1,6 @@
 [package]
 name = "guest-reviews"
-version = "1.3.2"
+version = "1.3.3"
 edition.workspace = true
 license.workspace = true
 description = "Portaki guest reviews module — post-stay thank-you and review CTAs"

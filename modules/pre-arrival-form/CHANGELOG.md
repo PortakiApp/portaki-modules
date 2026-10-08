@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.5.2...pre-arrival-form-v1.6.0) (2026-10-08)
+
+
+### Features
+
+* **pre-arrival-form:** des créneaux d'arrivée, et la confirmation ([70c8ff1](https://github.com/PortakiApp/portaki-modules/commit/70c8ff1419697772a25b19dc2e66a149dff89bce))
+
+
+### Bug Fixes
+
+* **pre-arrival-form:** l'hôte lit un plancher, pas une heure pile ([ece7b31](https://github.com/PortakiApp/portaki-modules/commit/ece7b31e611db7cd4867fdbdf265524372633f86))
+
 ## [1.5.2](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.5.1...pre-arrival-form-v1.5.2) (2026-10-07)
 
 
