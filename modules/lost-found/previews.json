@@ -17,8 +17,6 @@
         "form.deadline.message": "Vous avez quelques jours après votre départ pour déclarer un objet.",
         "form.details.label": "Détails",
         "form.details.placeholder": "Optionnel — où, quand, couleur, marque…",
-        "form.head.lead": "Décrivez-le : votre hôte vérifie le logement et vous répond.",
-        "form.head.title": "Un objet oublié ?",
         "form.itemDescription.hint": "Couleur, marque, taille : tout ce qui aide votre hôte à le reconnaître.",
         "form.itemDescription.label": "De quoi s'agit-il ?",
         "form.itemDescription.placeholder": "ex. Écharpe bleue, clé de chambre",
@@ -41,6 +39,8 @@
         "form.room.living": "Salon",
         "form.room.outside": "Terrasse, extérieur",
         "form.room.unknown": "Je ne sais pas",
+        "form.sent.message": "Votre hôte cherche votre objet et vous écrit dès qu’il l’a retrouvé.",
+        "form.sent.title": "Votre déclaration est partie",
         "form.step.found": "Si votre hôte le retrouve",
         "form.step.object": "L’objet",
         "form.step.where": "Où l’avez-vous laissé ?",
@@ -52,34 +52,10 @@
       "tree": {
         "children": [
           {
-            "children": [
-              {
-                "name": "search",
-                "size": 24.0,
-                "tone": "primary",
-                "type": "Icon"
-              },
-              {
-                "children": [
-                  {
-                    "text": "i18n:form.head.title",
-                    "type": "Text",
-                    "variant": "title"
-                  },
-                  {
-                    "emphasis": "subtle",
-                    "text": "i18n:form.head.lead",
-                    "type": "Text",
-                    "variant": "caption"
-                  }
-                ],
-                "gap": 4.0,
-                "type": "Stack"
-              }
-            ],
-            "direction": "horizontal",
-            "gap": 12.0,
-            "type": "Stack"
+            "emoji": "🔎",
+            "message": "i18n:form.sent.message",
+            "title": "i18n:form.sent.title",
+            "type": "Celebration"
           },
           {
             "children": [
@@ -339,7 +315,7 @@
         "form.kind.lost": "J'ai perdu quelque chose",
         "guest.return.pickup": "Récupération sur place",
         "guest.return.ship": "Renvoi postal",
-        "guest.return.ship.paidByGuest": "À vos frais, à arranger avec votre hôte",
+        "guest.return.ship.paidByGuest": "À vos frais, à convenir avec votre hôte",
         "home.card.sent": "Déclaration envoyée",
         "home.card.thanks": "Merci — votre hôte a été prévenu.",
         "home.card.title": "Objets perdus ou trouvés",
@@ -417,7 +393,7 @@
         "form.kind.lost": "J'ai perdu quelque chose",
         "guest.return.pickup": "Récupération sur place",
         "guest.return.ship": "Renvoi postal",
-        "guest.return.ship.paidByGuest": "À vos frais, à arranger avec votre hôte",
+        "guest.return.ship.paidByGuest": "À vos frais, à convenir avec votre hôte",
         "home.card.sent": "Déclaration envoyée",
         "home.card.thanks": "Merci — votre hôte a été prévenu.",
         "home.card.title": "Objets perdus ou trouvés",

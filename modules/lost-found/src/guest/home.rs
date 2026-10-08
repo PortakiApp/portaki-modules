@@ -72,8 +72,14 @@ pub fn build_home_card(data: &GuestData) -> Surface {
         let mut row = ListItem::new()
             .title(format!("i18n:guest.return.{option}"))
             .leading(Leading::Icon(return_icon(option).into()));
-        if *option == "ship" && data.shipping_paid_by_guest {
-            row = row.subtitle("i18n:guest.return.ship.paidByGuest");
+        if *option == "ship" {
+            // Qui paie, dès la carte : un hôte qui prend les frais à sa charge fait un geste que
+            // le voyageur ne voyait pas.
+            row = row.subtitle(if data.shipping_paid_by_guest {
+                "i18n:guest.return.ship.paidByGuest"
+            } else {
+                "i18n:guest.return.ship.paidByHost"
+            });
         }
         children.push(row.into());
     }

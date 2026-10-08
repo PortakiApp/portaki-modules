@@ -3,8 +3,8 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::{Emphasis, Tone};
 use portaki_sdk::sdui::primitives::{
-    ChoiceList, Field, FieldHint, Form, Icon, ImageUpload, InfoBanner, Stack, Text, TextArea,
-    TextInput,
+    Celebration, ChoiceList, Field, FieldHint, Form, Icon, ImageUpload, InfoBanner, Stack, Text,
+    TextArea, TextInput,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -37,33 +37,38 @@ const ROOMS: [&str; 6] = [
 )]
 pub fn render_guest_form(ctx: GuestContext) -> Result<Surface> {
     let config = crate::config::ModuleConfig::load(&ctx)?;
-    Ok(build_form_surface(
-        config.offers_shipping(),
-        config.return_options(),
-        deadline_label(&ctx, config.window_days()),
-        response_promise(&config, &ctx),
-        ctx.host
-            .as_ref()
-            .map(|host| host.name.trim().to_string())
-            .filter(|name| !name.is_empty()),
-    ))
+    let host_name = ctx
+        .host
+        .as_ref()
+        .map(|host| host.name.trim().to_string())
+        .filter(|name| !name.is_empty());
+    Ok(build_form_surface(&FormInputs {
+        ask_address: config.offers_shipping(),
+        shipping_paid_by_guest: config.shipping_paid_by_guest(),
+        return_options: config.return_options(),
+        deadline: deadline_label(&ctx, config.window_days()),
+        response: response_promise(&config, &ctx),
+        // Une déclaration déjà partie : la feuille s'ouvre sur sa confirmation, pas sur un
+        // formulaire vierge qui laisse croire que rien n'a été envoyé (§2.18).
+        already_sent: !super::load::load_guest_reports(&ctx)?.is_empty(),
+        host_name,
+    }))
 }
 
-pub fn build_form_surface(
-    ask_address: bool,
-    return_options: Vec<&'static str>,
-    deadline: Option<String>,
-    response: Option<String>,
-    host_name: Option<String>,
-) -> Surface {
-    Surface::new(build_form(
-        ask_address,
-        return_options,
-        deadline,
-        response,
-        host_name,
-    ))
-    .with_id(GUEST_FORM)
+/// Ce que la feuille a besoin de savoir.
+pub struct FormInputs {
+    pub ask_address: bool,
+    /// Le renvoi est proposé et c'est le voyageur qui en paie les frais.
+    pub shipping_paid_by_guest: bool,
+    pub return_options: Vec<&'static str>,
+    pub deadline: Option<String>,
+    pub response: Option<String>,
+    pub already_sent: bool,
+    pub host_name: Option<String>,
+}
+
+pub fn build_form_surface(inputs: &FormInputs) -> Surface {
+    Surface::new(build_form(inputs)).with_id(GUEST_FORM)
 }
 
 /// « Claire répond sous 48 h », quand l'hôte l'a promis (§2.18).
@@ -129,13 +134,17 @@ fn sheet_header() -> Component {
     )
 }
 
-fn build_form(
-    ask_address: bool,
-    return_options: Vec<&'static str>,
-    deadline: Option<String>,
-    response: Option<String>,
-    host_name: Option<String>,
-) -> Form {
+fn build_form(inputs: &FormInputs) -> Form {
+    let FormInputs {
+        ask_address,
+        shipping_paid_by_guest,
+        return_options,
+        deadline,
+        response,
+        already_sent,
+        host_name,
+    } = inputs;
+    let ask_address = *ask_address;
     let submit_action = crate::ids::module_id().command_empty(crate::commands::SUBMIT);
 
     // Les enfants sont assemblés puis posés d'un coup : `children` remplace la liste, il ne
@@ -203,7 +212,11 @@ fn build_form(
     ];
 
     let mut return_step: Vec<Component> = Vec::new();
-    return_step.extend(return_choice_field(&return_options));
+    return_step.extend(return_choice_field(
+        return_options,
+        *shipping_paid_by_guest,
+        host_name.as_deref(),
+    ));
     return_step.extend(address_field(ask_address));
     // Sans renvoi, le dire : un voyageur qui attend un colis et n'en reçoit pas se demande ce
     // qu'il a mal rempli (§2.18).
@@ -222,21 +235,35 @@ fn build_form(
         return_step.push(
             InfoBanner::new()
                 .tone(Tone::Neutral)
-                .title(deadline)
+                .title(deadline.clone())
                 .message("i18n:form.deadline.message")
                 .into(),
         );
     }
     if let Some(response) = response {
-        return_step.push(InfoBanner::new().tone(Tone::Success).title(response).into());
+        return_step.push(
+            InfoBanner::new()
+                .tone(Tone::Success)
+                .title(response.clone())
+                .into(),
+        );
     }
+
+    // L'en-tête, ou la confirmation quand une déclaration est déjà partie. Elle prend sa place :
+    // la question « Un objet oublié ? » a déjà reçu sa réponse, et le formulaire reste dessous
+    // pour un deuxième objet.
+    let head = if *already_sent {
+        sent_celebration(host_name.as_deref())
+    } else {
+        sheet_header()
+    };
 
     Form::new()
         .wizard(true)
         .submitLabel("i18n:form.submit")
         .onSubmit(submit_action)
         .children(vec![
-            sheet_header(),
+            head,
             Component::Stack(
                 Stack::new()
                     .step("i18n:form.step.object")
@@ -256,6 +283,30 @@ fn build_form(
                     .children(return_step),
             ),
         ])
+}
+
+/// « Claire est prévenue · Elle cherche votre objet » (§2.18).
+///
+/// Le livret tire sa salve au montage de la primitive : rouvrir la feuille la rejoue. C'est ce que
+/// la maquette fait après l'envoi, et le voyageur qui revient veut d'abord savoir que c'est parti.
+fn sent_celebration(host_name: Option<&str>) -> Component {
+    let (title, message) = match host_name {
+        Some(host) => (
+            t!("form.sent.title.named", host = host.to_string())
+                .unwrap_or_else(|_| "i18n:form.sent.title".into()),
+            t!("form.sent.message.named", host = host.to_string())
+                .unwrap_or_else(|_| "i18n:form.sent.message".into()),
+        ),
+        None => (
+            "i18n:form.sent.title".to_string(),
+            "i18n:form.sent.message".to_string(),
+        ),
+    };
+    Celebration::new()
+        .emoji("🔎")
+        .title(title)
+        .message(message)
+        .into()
 }
 
 /// « Si Claire le retrouve », ou « Si votre hôte le retrouve » sans prénom servi.
@@ -280,15 +331,23 @@ fn no_shipping_message(host_name: Option<&str>) -> String {
 ///
 /// Rien à choisir quand l'hôte ne propose qu'une option : la question aurait une seule réponse,
 /// et un choix à un terme se lit comme une case à cocher obligatoire.
-fn return_choice_field(return_options: &[&'static str]) -> Vec<Component> {
+fn return_choice_field(
+    return_options: &[&'static str],
+    shipping_paid_by_guest: bool,
+    host_name: Option<&str>,
+) -> Vec<Component> {
     if return_options.len() < 2 {
         return Vec::new();
     }
     let choices: Vec<ChoiceOption> = return_options
         .iter()
         .map(|option| {
+            let description = match *option {
+                "ship" => shipping_fees(shipping_paid_by_guest, host_name),
+                other => format!("i18n:form.return.{other}.description"),
+            };
             ChoiceOption::new(*option, format!("i18n:form.return.{option}"))
-                .description(format!("i18n:form.return.{option}.description"))
+                .description(description)
                 .icon(return_icon(option))
         })
         .collect();
@@ -308,6 +367,27 @@ fn return_choice_field(return_options: &[&'static str]) -> Vec<Component> {
             .into(),
         FieldHint::new().text("i18n:form.return.hint").into(),
     ]
+}
+
+/// Qui paie le renvoi, sous « Me le renvoyer ».
+///
+/// Un hôte qui prend les frais à sa charge fait un geste que le voyageur ne voyait pas : le
+/// réglage existait, rien ne le lisait côté formulaire.
+///
+/// ponytail: pas de « réglés en ligne ». La maquette l'écrit, mais le lien de paiement des frais
+/// de port est hors périmètre de son propre §2.18 — l'annoncer promettrait une page qui n'existe
+/// pas. « À convenir avec l'hôte » est ce que Portaki sait tenir aujourd'hui.
+fn shipping_fees(paid_by_guest: bool, host_name: Option<&str>) -> String {
+    let key = if paid_by_guest {
+        "form.return.ship.description"
+    } else {
+        "form.return.ship.hostPaid"
+    };
+    match host_name {
+        Some(host) => t!(&format!("{key}.named"), host = host.to_string())
+            .unwrap_or_else(|_| format!("i18n:{key}")),
+        None => format!("i18n:{key}"),
+    }
 }
 
 fn return_icon(option: &str) -> IconName {
