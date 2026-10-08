@@ -501,7 +501,7 @@ fn chrono_like_days_ago(days: i64) -> String {
 
 /// La note que le formulaire envoie doit arriver au module.
 ///
-/// Tout ce qui sort d'un formulaire HTML est une chaîne : le `Select` de la note envoie `"5"`,
+/// Tout ce qui sort d'un formulaire HTML est une chaîne : l'étoile touchée envoie `"5"`,
 /// `collectFormValues` rend un `Record<string, string>`, et la plateforme passe les arguments
 /// tels quels — rien ne les convertit d'après le type déclaré. Un `u8` nu les faisait refuser
 /// par serde, et le voyageur n'enregistrait jamais sa note.
@@ -515,7 +515,9 @@ fn the_rating_the_form_sends_reaches_the_command() {
         .run(|ctx| {
             let tree = serde_json::to_value(render_home_card(ctx.clone()).expect("home card"))
                 .expect("tree");
-            let sent = form_value(&tree, "rating").expect("le Select de la note");
+            // La valeur de la cinquième étoile : rien n'est coché d'avance, c'est le doigt du
+            // voyageur qui la pose.
+            let sent = star_choice(&tree, 5).expect("la cinquième étoile");
 
             // Ce que le navigateur poste : la valeur du champ, en chaîne.
             let args: SubmitReviewArgs =
@@ -530,6 +532,29 @@ fn the_rating_the_form_sends_reaches_the_command() {
             let stored: serde_json::Value = serde_json::from_slice(&stored).expect("json");
             assert_eq!(stored["rating"], 5);
         });
+}
+
+/// La valeur de la n-ième étoile, telle que le livret la posterait.
+fn star_choice(tree: &serde_json::Value, nth: usize) -> Option<String> {
+    fn walk(node: &serde_json::Value, nth: usize) -> Option<String> {
+        if let serde_json::Value::Object(object) = node {
+            if object.get("layout").and_then(serde_json::Value::as_str) == Some("stars") {
+                return object
+                    .get("choices")?
+                    .as_array()?
+                    .get(nth - 1)?
+                    .get("value")?
+                    .as_str()
+                    .map(str::to_string);
+            }
+        }
+        match node {
+            serde_json::Value::Object(object) => object.values().find_map(|child| walk(child, nth)),
+            serde_json::Value::Array(items) => items.iter().find_map(|item| walk(item, nth)),
+            _ => None,
+        }
+    }
+    walk(tree, nth)
 }
 
 /// La valeur d'un champ du formulaire, en chaîne — ce que `FormData` en fait côté navigateur.
@@ -553,4 +578,62 @@ fn form_value(tree: &serde_json::Value, name: &str) -> Option<String> {
 
 fn uuid_for(days: i64) -> String {
     format!("00000000-0000-4000-8000-{days:012}")
+}
+
+/// Déjà noté : le remerciement prend la place du formulaire (§2.19).
+///
+/// L'envoi refusait bien un second avis (`review_already_submitted`), mais la carte proposait
+/// quand même les étoiles : le voyageur remplissait sa note et son mot pour recevoir une erreur.
+#[test]
+#[serial]
+fn a_stay_already_rated_is_thanked_not_asked_again() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({ "platform_airbnb": false, "platform_portaki": true }))
+        .with_stay(Booking::default())
+        .with_translation("guest.given.title", "Merci pour votre avis")
+        .run(|ctx| {
+            let before = render_home_card(ctx.clone()).expect("home card");
+            assert!(SurfaceAssertions::new(&before).contains_type("Form"));
+
+            submit_review(
+                ctx.clone(),
+                SubmitReviewArgs {
+                    rating: 4,
+                    comment: "Très bien".into(),
+                },
+            )
+            .expect("submit");
+
+            let after = render_home_card(ctx).expect("home card");
+            assert!(SurfaceAssertions::new(&after).contains_type("Celebration"));
+            // Plus de formulaire, plus d'étoiles : la question a reçu sa réponse.
+            assert!(!SurfaceAssertions::new(&after).contains_type("Form"));
+            assert!(!SurfaceAssertions::new(&after).contains_type("ChoiceList"));
+            let json = serde_json::to_string(&after).expect("json");
+            assert!(json.contains("Merci pour votre avis"), "{json}");
+            assert!(json.contains("💛"), "{json}");
+        });
+}
+
+/// Aucune étoile n'est servie d'avance, et la note est obligatoire (§2.19).
+///
+/// Cinq étoiles préchoisies partaient telles quelles chez qui touchait « Envoyer » sans rien
+/// noter : le module fabriquait des avis cinq étoiles que personne n'avait donnés.
+#[test]
+#[serial]
+fn no_star_is_given_in_advance() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({ "platform_airbnb": false, "platform_portaki": true }))
+        .with_stay(Booking::default())
+        .run(|ctx| {
+            let tree = serde_json::to_value(render_home_card(ctx).expect("home card")).unwrap();
+            assert_eq!(form_value(&tree, "rating"), None, "{tree}");
+            // Les cinq étoiles sont bien là, et le champ est obligatoire : le livret retient
+            // l'envoi tant que rien n'est choisi.
+            assert_eq!(star_choice(&tree, 5).as_deref(), Some("5"), "{tree}");
+            let json = tree.to_string();
+            assert!(json.contains(r#""required":true"#), "{json}");
+        });
 }

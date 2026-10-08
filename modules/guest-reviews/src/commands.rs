@@ -70,6 +70,17 @@ pub struct StoredReview {
     pub guest_name: Option<String>,
 }
 
+/// L'avis déjà laissé pour ce séjour, s'il y en a un.
+///
+/// Les deux emplacements, comme le fait l'envoi : un avis d'avant la clé par séjour vit encore
+/// sous l'ancien préfixe, et son auteur ne doit pas se voir proposer de noter une seconde fois.
+pub(crate) fn review_for_stay(stay_id: Uuid) -> Result<Option<StoredReview>> {
+    if let Some(review) = read_json::<StoredReview>(&review_key(stay_id))? {
+        return Ok(Some(review));
+    }
+    read_json(&format!("{LEGACY_REVIEW_KEY_PREFIX}{stay_id}"))
+}
+
 /// Every review of the property, oldest first.
 pub fn load_reviews() -> Result<Vec<StoredReview>> {
     let mut reviews: Vec<StoredReview> = read_json(LEGACY_REVIEWS_KEY)?.unwrap_or_default();
