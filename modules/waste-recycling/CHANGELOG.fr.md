@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.2
+
+Trois bacs sur la carte, et le chemin vers le reste.
+
+* La carte d'accueil montre trois bacs et renvoie vers la liste complète : elle les déroulait tous, jusqu'à huit rangées.
+* Le bouton apparaît aussi quand il reste un local à poubelles ou des bacs masqués à voir.
+
 ## 1.7.1
 
 Les bacs, comme la maquette les dessine.

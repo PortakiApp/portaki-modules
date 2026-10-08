@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.3
+
+La météo du séjour, pas cinq jours en dur.
+
+* Les prévisions couvrent le séjour, de la veille de l'arrivée au lendemain du départ : une semaine à la mer s'arrêtait le mercredi.
+* Aucune journée passée n'est montrée pendant le séjour.
+
 ## 1.4.2
 
 Correctif interne.

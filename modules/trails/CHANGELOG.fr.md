@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.3
+
+Pas de filtre quand il n'y a qu'un niveau.
+
+* La carte d'accueil posait une pastille de niveau même quand tous les itinéraires partagent le même : elle répétait ce que chaque rangée dit déjà.
+* Le niveau reste en fin de rangée, là où il se lit.
+
 ## 0.5.2
 
 Correction de la vitrine.

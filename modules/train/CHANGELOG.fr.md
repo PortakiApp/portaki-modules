@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.1.0
+
+Le retard, la fenêtre du séjour, et le bon sens de la flèche.
+
+* Un train en retard le dit : la pastille de fin de rangée porte l'état, et la fiche explique que l'heure affichée tient déjà compte du retard.
+* Le tableau est borné au séjour : il ne s'affiche qu'à partir de la veille de l'arrivée.
+* La fiche d'un train écrivait le trajet à l'envers au retour, et la carte d'avant l'arrivée montrait les départs au lieu des arrivées.
+* Un filtre qui ne laisse aucun train le dit autrement qu'une gare sans train, et la carte d'accueil ne reste plus muette.
+* Le tableau dit de quand il date, et un bouton ouvre la billetterie de l'opérateur.
+
 ## 2.0.1
 
 La fiche d'un train dit le jour en toutes lettres.

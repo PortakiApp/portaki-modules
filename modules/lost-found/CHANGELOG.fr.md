@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.0
+
+Qui paie le renvoi, et la déclaration partie.
+
+* La description sous « Me le renvoyer » suit votre réglage : frais à la charge du voyageur, ou pris en charge par l'hôte.
+* Un hôte qui prend l'envoi à sa charge le dit enfin au voyageur, au moment précis où celui-ci choisit.
+* Une déclaration déjà envoyée ouvre la feuille sur sa confirmation, plus sur un formulaire vierge.
+* Le formulaire reste accessible dessous, pour déclarer un deuxième objet.
+
 ## 1.8.0
 
 Un en-tête sur la feuille.

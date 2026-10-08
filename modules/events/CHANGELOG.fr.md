@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.2
+
+Les événements du séjour, et rien d'autre.
+
+* Les événements sont bornés au séjour, de la veille de l'arrivée au lendemain du départ : la liste proposait des dates où personne n'est là.
+* Un voyageur qui prépare sa valise trois semaines avant ne lit plus l'agenda d'une semaine qui ne le concerne pas.
+
 ## 1.5.1
 
 Correctif interne.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.7.0
+
+Un produit déjà signalé le dit.
+
+* Une tuile dont le produit a déjà été signalé porte « Signalé », avec le niveau annoncé : on ne redemande pas deux fois la même chose.
+* Le voyageur voit ce que l'hôte a déjà reçu, et l'hôte ne reçoit plus le même signalement en double.
+
 ## 2.6.0
 
 Un en-tête sur la feuille.

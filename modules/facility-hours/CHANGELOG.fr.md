@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.10.0
+
+La coupure du midi, et un badge qui ne se contredit plus.
+
+* Un horaire peut porter sa coupure du midi : « 08:30 – 12:00 · 14:00 – 18:00 » au lieu d'une seule plage qui avalait la pause.
+* Le badge d'état disait « Ouvert » à 13 h pendant que la semaine juste en dessous affichait la fermeture.
+* « Ouvre à » annonce maintenant la réouverture de l'après-midi, pas celle du lendemain matin.
+
 ## 1.9.0
 
 Les horaires complets, sans quitter la carte.

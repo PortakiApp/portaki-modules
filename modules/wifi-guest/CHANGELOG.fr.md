@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.2
+
+La note dite une fois, et le réseau masqué.
+
+* Votre note sous le réseau était affichée deux fois sur la carte : en sous-titre et en légende.
+* Un réseau masqué peut se déclarer comme tel : sans cela le téléphone ne le trouvait pas, et le voyageur croyait le mot de passe faux.
+
 ## 1.6.1
 
 Montée technique.
