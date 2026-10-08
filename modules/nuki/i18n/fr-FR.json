@@ -22,5 +22,9 @@
   "feeds.access-guide": "le code clavier",
   "catalog.host.main": "Nuki",
   "publish.access.label": "Code clavier ou déverrouillage à distance",
-  "publish.access.hint": "Ajoutez un code clavier, ou l’identifiant de la serrure avec la clé de votre compte Nuki Web dans Intégrations."
+  "publish.access.hint": "Ajoutez un code clavier, ou l’identifiant de la serrure avec la clé de votre compte Nuki Web dans Intégrations.",
+  "guest.unlock.opened": "La porte est ouverte.",
+  "guest.unlock.offline": "La serrure n’a pas répondu. Tapez le code {code} sur le clavier.",
+  "guest.unlock.keypad": "Tapez le code {code} sur le clavier.",
+  "guest.credential.keypad": "Code du clavier : {code}"
 }

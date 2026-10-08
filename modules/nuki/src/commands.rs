@@ -19,6 +19,9 @@ pub struct GuestCredentialResponse {
     pub credential_type: &'static str,
     pub code: String,
     pub smartlock_id: String,
+    /// La phrase que le livret montre au voyageur, déjà traduite — voir `#[command]` du SDK.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub guest_notice: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -27,6 +30,10 @@ pub struct UnlockResponse {
     pub mode: &'static str,
     #[serde(skip_serializing_if = "String::is_empty")]
     pub code: String,
+    /// Ce que le voyageur lit : la porte s'est ouverte, ou la serrure n'a pas répondu et voici le
+    /// code du clavier. Sans elle, le bouton semble ne rien faire.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub guest_notice: String,
 }
 
 #[portaki_sdk::wire(serialize)]
@@ -41,6 +48,7 @@ pub fn get_guest_credential(ctx: Context, _args: StayArgs) -> Result<GuestCreden
     let code = require_keypad_code(&config)?;
     Ok(GuestCredentialResponse {
         credential_type: "keypad",
+        guest_notice: t!("guest.credential.keypad", code = &code)?,
         code,
         smartlock_id: config.smartlock_id_trimmed().to_string(),
     })
@@ -53,6 +61,7 @@ pub fn unlock(ctx: Context, _args: StayArgs) -> Result<UnlockResponse> {
     let keypad = config.keypad_code_trimmed().to_string();
     let smartlock_id = config.smartlock_id_trimmed().to_string();
 
+    let mut remote_failed = false;
     if has_nuki_byok(&ctx) && !smartlock_id.is_empty() {
         match try_remote_unlock(&smartlock_id) {
             Ok(()) => {
@@ -60,9 +69,11 @@ pub fn unlock(ctx: Context, _args: StayArgs) -> Result<UnlockResponse> {
                     ok: true,
                     mode: "remote",
                     code: String::new(),
+                    guest_notice: t!("guest.unlock.opened")?,
                 });
             }
             Err(error) => {
+                remote_failed = true;
                 let mut fields = host::log::Fields::new();
                 fields.insert("error", &error.to_string());
                 fields.insert("smartlockId", &smartlock_id);
@@ -77,10 +88,18 @@ pub fn unlock(ctx: Context, _args: StayArgs) -> Result<UnlockResponse> {
         ));
     }
 
+    // Une serrure qui n'a pas répondu se dit ; une serrure qu'on n'a jamais appelée se tait et
+    // donne le code. Le voyageur est devant la porte : les deux ont besoin du code.
+    let notice = if remote_failed {
+        t!("guest.unlock.offline", code = &keypad)?
+    } else {
+        t!("guest.unlock.keypad", code = &keypad)?
+    };
     Ok(UnlockResponse {
         ok: true,
         mode: "credential_fallback",
         code: keypad,
+        guest_notice: notice,
     })
 }
 

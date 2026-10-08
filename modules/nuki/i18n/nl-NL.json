@@ -22,5 +22,9 @@
   "module.description": "Nuki slim slot — toetscodes voor toegang van de gast",
   "module.displayName": "Nuki",
   "publish.access.hint": "Voeg een toetscode toe, of het slot-ID samen met de sleutel van je Nuki Web-account bij Integraties.",
-  "publish.access.label": "Toetscode of openen op afstand"
+  "publish.access.label": "Toetscode of openen op afstand",
+  "guest.unlock.opened": "De deur is open.",
+  "guest.unlock.offline": "Het slot gaf geen antwoord. Voer code {code} in op het toetsenblok.",
+  "guest.unlock.keypad": "Voer code {code} in op het toetsenblok.",
+  "guest.credential.keypad": "Toetsenblokcode: {code}"
 }

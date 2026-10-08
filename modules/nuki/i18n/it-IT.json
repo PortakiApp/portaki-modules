@@ -22,5 +22,9 @@
   "module.description": "Serratura smart Nuki — codici tastierino per l'accesso dell'ospite",
   "module.displayName": "Nuki",
   "publish.access.hint": "Aggiungi un codice tastierino, oppure l'identificativo della serratura insieme alla chiave del tuo account Nuki Web in Integrazioni.",
-  "publish.access.label": "Codice tastierino o apertura da remoto"
+  "publish.access.label": "Codice tastierino o apertura da remoto",
+  "guest.unlock.opened": "La porta è aperta.",
+  "guest.unlock.offline": "La serratura non ha risposto. Digiti il codice {code} sulla tastiera.",
+  "guest.unlock.keypad": "Digiti il codice {code} sulla tastiera.",
+  "guest.credential.keypad": "Codice della tastiera: {code}"
 }

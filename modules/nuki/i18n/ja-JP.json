@@ -22,5 +22,9 @@
   "module.description": "Nuki スマートロック — ゲストのアクセス用キーパッドコード",
   "module.displayName": "Nuki",
   "publish.access.hint": "キーパッドコードを追加するか、ロックの識別子と Nuki Web アカウントのキーを「連携」に追加してください。",
-  "publish.access.label": "キーパッドコードまたは遠隔解錠"
+  "publish.access.label": "キーパッドコードまたは遠隔解錠",
+  "guest.unlock.opened": "ドアが開きました。",
+  "guest.unlock.offline": "スマートロックから応答がありませんでした。キーパッドに {code} を入力してください。",
+  "guest.unlock.keypad": "キーパッドに {code} を入力してください。",
+  "guest.credential.keypad": "キーパッドの暗証番号：{code}"
 }

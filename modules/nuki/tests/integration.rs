@@ -136,6 +136,58 @@ fn without_the_nuki_key_the_keypad_answers_and_a_dead_door_errors() {
         });
 }
 
+/* Le voyageur est devant la porte : ce qu'il lit doit lui dire quoi faire. Une serrure qui n'a
+pas répondu le dit et donne le code ; une serrure qu'on n'a jamais appelée donne le code ; une
+porte qui s'ouvre le dit. Sans cette phrase, le bouton semblait ne rien faire. */
+#[test]
+#[serial]
+fn an_offline_lock_says_so_and_hands_the_keypad_code() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE, capability::external::NUKI_BYOK])
+        .with_config(&sample_config())
+        .with_stay(Booking::default())
+        .with_now(at("2026-06-02T12:00:00Z"))
+        .with_connector_error("nuki", "remote_unlock", "lock_offline")
+        .with_translation(
+            "guest.unlock.offline",
+            "La serrure n’a pas répondu. Tapez le code {code} sur le clavier.",
+        )
+        .run(|ctx| {
+            let result = unlock(ctx, StayArgs::default()).expect("unlock");
+            assert_eq!(result.mode, "credential_fallback");
+            assert_eq!(
+                result.guest_notice,
+                "La serrure n’a pas répondu. Tapez le code 482910 sur le clavier."
+            );
+        });
+}
+
+#[test]
+#[serial]
+fn each_outcome_names_its_own_sentence() {
+    // Jamais appelée : le code, sans parler d'un échec qui n'a pas eu lieu.
+    guest_at("2026-06-02T12:00:00Z").run(|ctx| {
+        let result = unlock(ctx, StayArgs::default()).expect("unlock");
+        assert_eq!(result.guest_notice, "guest.unlock.keypad");
+    });
+    // Ouverte à distance : rien à taper.
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE, capability::external::NUKI_BYOK])
+        .with_config(&sample_config())
+        .with_stay(Booking::default())
+        .with_now(at("2026-06-02T12:00:00Z"))
+        .with_connector_response("nuki", "remote_unlock", "{}")
+        .run(|ctx| {
+            let result = unlock(ctx, StayArgs::default()).expect("unlock");
+            assert_eq!(result.guest_notice, "guest.unlock.opened");
+        });
+    // Et le code du clavier se lit aussi quand le voyageur le demande.
+    guest_at("2026-06-02T12:00:00Z").run(|ctx| {
+        let cred = get_guest_credential(ctx, StayArgs::default()).expect("credential");
+        assert_eq!(cred.guest_notice, "guest.credential.keypad");
+    });
+}
+
 #[test]
 #[serial]
 fn the_lock_answers_from_8h_before_checkin_until_checkout() {
