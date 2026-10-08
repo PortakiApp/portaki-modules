@@ -526,6 +526,13 @@ pub struct HostConfig {
     pub parking_info: I18nText,
     #[field(label = "config.globalNote")]
     pub global_note: I18nText,
+    /// Ce qu'il faut savoir en arrivant tard : le code du coffre qui change après 22 h, la porte
+    /// cochère fermée, le voisin à ne pas réveiller (§2.1).
+    ///
+    /// Montrée seulement au voyageur qui a **annoncé** une arrivée tardive en pré-arrivée : un
+    /// hôte écrit ici une consigne qui ne concerne pas celui qui arrive à 17 h.
+    #[field(label = "config.lateArrivalNote")]
+    pub late_arrival_note: I18nText,
 }
 
 impl HostConfig {
@@ -643,6 +650,7 @@ impl HostConfig {
                 String::new()
             },
             global_note: text(&self.global_note),
+            late_arrival_note: text(&self.late_arrival_note),
             steps: self
                 .live_steps()
                 .map(|row| StepText {

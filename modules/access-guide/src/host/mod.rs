@@ -581,6 +581,11 @@ fn arrival_children(config: &HostConfig, ctx: &HostContext, steps_count: usize) 
         "i18n:host.note.label",
         config.global_note.host_value(ctx),
     ));
+    children.push(rich_text_field(
+        "late_arrival_note",
+        "i18n:host.lateArrival.label",
+        config.late_arrival_note.host_value(ctx),
+    ));
     children
 }
 

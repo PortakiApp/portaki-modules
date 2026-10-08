@@ -21,6 +21,9 @@ pub struct ModuleTexts {
     pub parking_info: String,
     #[serde(default)]
     pub global_note: String,
+    /// La consigne d'arrivée tardive, vide quand l'hôte n'en a pas écrit.
+    #[serde(default)]
+    pub late_arrival_note: String,
     #[serde(default)]
     pub steps: Vec<StepText>,
 }
@@ -31,6 +34,7 @@ impl ModuleTexts {
             && opt_empty(&self.building_note)
             && self.parking_info.trim().is_empty()
             && self.global_note.trim().is_empty()
+            && self.late_arrival_note.trim().is_empty()
             && self.steps.iter().all(|s| s.is_empty())
     }
 

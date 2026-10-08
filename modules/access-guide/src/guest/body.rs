@@ -593,6 +593,22 @@ fn push_parking(
     }
 }
 
+/// La consigne d'arrivée tardive, en tête (§2.1).
+///
+/// En tête, et avant le bandeau des codes : c'est ce qu'il faut avoir lu avant de partir, pas ce
+/// qu'on découvre devant la porte à 23 h.
+fn push_late_arrival_banner(children: &mut Vec<Component>, data: &GuestData) {
+    let Some(note) = data.late_arrival_note.as_ref() else {
+        return;
+    };
+    children.push(Component::InfoBanner(
+        InfoBanner::new()
+            .tone(Tone::Warning)
+            .title("i18n:guest.lateArrival.title")
+            .message(note.clone()),
+    ));
+}
+
 fn push_reveal_banner(children: &mut Vec<Component>, data: &GuestData) {
     if data.secrets_revealed || !has_any_secret(data) {
         return;
@@ -661,6 +677,7 @@ fn push_arrival_extras(children: &mut Vec<Component>, data: &GuestData) {
 pub fn build_access_glance(data: &GuestData) -> Vec<Component> {
     let mut children = Vec::new();
 
+    push_late_arrival_banner(&mut children, data);
     push_reveal_banner(&mut children, data);
 
     if let Some(map) = property_map(data) {
@@ -786,6 +803,7 @@ pub fn build_access_detail(data: &GuestData) -> Vec<Component> {
         ));
     }
 
+    push_late_arrival_banner(&mut children, data);
     push_reveal_banner(&mut children, data);
 
     if let Some(map) = property_map(data) {
