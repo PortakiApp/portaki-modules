@@ -22,5 +22,9 @@
   "feeds.access-guide": "the keypad code",
   "catalog.host.main": "Nuki",
   "publish.access.label": "Keypad code or remote unlock",
-  "publish.access.hint": "Add a keypad code, or the lock ID together with your Nuki Web account key in Integrations."
+  "publish.access.hint": "Add a keypad code, or the lock ID together with your Nuki Web account key in Integrations.",
+  "guest.unlock.opened": "The door is open.",
+  "guest.unlock.offline": "The lock did not answer. Enter code {code} on the keypad.",
+  "guest.unlock.keypad": "Enter code {code} on the keypad.",
+  "guest.credential.keypad": "Keypad code: {code}"
 }

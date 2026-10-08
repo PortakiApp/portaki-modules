@@ -22,5 +22,9 @@
   "module.description": "Nuki 智能锁 — 供房客进入使用的键盘密码",
   "module.displayName": "Nuki",
   "publish.access.hint": "添加键盘密码，或同时填写锁的标识并在「集成」中添加您 Nuki Web 账户的密钥。",
-  "publish.access.label": "键盘密码或远程开锁"
+  "publish.access.label": "键盘密码或远程开锁",
+  "guest.unlock.opened": "门已打开。",
+  "guest.unlock.offline": "智能锁没有响应。请在键盘上输入密码 {code}。",
+  "guest.unlock.keypad": "请在键盘上输入密码 {code}。",
+  "guest.credential.keypad": "键盘密码：{code}"
 }

@@ -22,5 +22,9 @@
   "module.description": "Nuki Smart Lock — Tastencodes für den Gastzugang",
   "module.displayName": "Nuki",
   "publish.access.hint": "Hinterlegen Sie einen Tastencode oder die Kennung des Schlosses zusammen mit dem Schlüssel Ihres Nuki-Web-Kontos unter Integrationen.",
-  "publish.access.label": "Tastencode oder Öffnen aus der Ferne"
+  "publish.access.label": "Tastencode oder Öffnen aus der Ferne",
+  "guest.unlock.opened": "Die Tür ist offen.",
+  "guest.unlock.offline": "Das Schloss hat nicht geantwortet. Geben Sie den Code {code} auf dem Tastenfeld ein.",
+  "guest.unlock.keypad": "Geben Sie den Code {code} auf dem Tastenfeld ein.",
+  "guest.credential.keypad": "Tastenfeld-Code: {code}"
 }

@@ -22,5 +22,9 @@
   "module.description": "قفل Nuki الذكي — رموز لوحة المفاتيح لدخول الضيف",
   "module.displayName": "Nuki",
   "publish.access.hint": "أضف رمز لوحة مفاتيح، أو معرّف القفل مع مفتاح حساب Nuki Web في «التكاملات».",
-  "publish.access.label": "رمز لوحة المفاتيح أو الفتح عن بُعد"
+  "publish.access.label": "رمز لوحة المفاتيح أو الفتح عن بُعد",
+  "guest.unlock.opened": "الباب مفتوح.",
+  "guest.unlock.offline": "لم يستجب القفل. أدخل الرمز {code} على لوحة الأرقام.",
+  "guest.unlock.keypad": "أدخل الرمز {code} على لوحة الأرقام.",
+  "guest.credential.keypad": "رمز لوحة الأرقام: {code}"
 }

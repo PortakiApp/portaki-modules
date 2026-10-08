@@ -22,5 +22,9 @@
   "module.description": "Fechadura inteligente Nuki — códigos de teclado para o acesso do hóspede",
   "module.displayName": "Nuki",
   "publish.access.hint": "Adicione um código de teclado, ou o identificador da fechadura juntamente com a chave da sua conta Nuki Web em Integrações.",
-  "publish.access.label": "Código de teclado ou abertura à distância"
+  "publish.access.label": "Código de teclado ou abertura à distância",
+  "guest.unlock.opened": "A porta está aberta.",
+  "guest.unlock.offline": "A fechadura não respondeu. Introduza o código {code} no teclado.",
+  "guest.unlock.keypad": "Introduza o código {code} no teclado.",
+  "guest.credential.keypad": "Código do teclado: {code}"
 }
