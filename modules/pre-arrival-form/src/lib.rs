@@ -11,6 +11,7 @@ mod i18n;
 mod ids;
 mod queries;
 mod show_when;
+mod slots;
 mod storage;
 
 pub use commands::{send_form_available, submit, SubmitArgs};

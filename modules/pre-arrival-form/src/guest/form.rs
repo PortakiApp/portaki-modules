@@ -4,7 +4,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::EmptyState;
 use portaki_sdk::sdui::surface::Surface;
 
-use super::home::{build_form_surface, build_readonly_surface};
+use super::home::{build_form_surface, build_readonly_surface, FormInputs};
 use super::load::{load_guest_pre_arrival, GuestLoad};
 use crate::config::ModuleConfig;
 
@@ -27,7 +27,25 @@ pub fn render_guest_form(ctx: GuestContext) -> Result<Surface> {
             existing,
         } => {
             let config = ModuleConfig::load(&ctx)?;
-            Ok(build_form_surface(&config, existing.as_ref(), completed))
+            let stay = ctx.stay.as_ref();
+            let slots = crate::slots::checkin_hour(
+                stay.and_then(|stay| stay.checkin_at),
+                &ctx.property.timezone,
+            )
+            .map(crate::slots::slots)
+            .unwrap_or_default();
+            Ok(build_form_surface(&FormInputs {
+                questions: &config,
+                existing: existing.as_ref(),
+                completed,
+                slots,
+                host_name: ctx
+                    .host
+                    .as_ref()
+                    .map(|host| host.name.trim().to_string())
+                    .unwrap_or_default(),
+                party_size: stay.and_then(|stay| stay.party_size),
+            }))
         }
     }
 }

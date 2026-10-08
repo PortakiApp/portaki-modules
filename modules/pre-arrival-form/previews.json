@@ -32,14 +32,33 @@
           {
             "children": [
               {
+                "choices": [
+                  {
+                    "label": "17–18 h",
+                    "value": "17:00"
+                  },
+                  {
+                    "label": "18–20 h",
+                    "value": "18:00"
+                  },
+                  {
+                    "label": "Après 20 h",
+                    "value": "20:00"
+                  }
+                ],
+                "layout": "segmented",
                 "name": "arrivalTimeEstimated",
-                "type": "TimePicker"
+                "type": "ChoiceList"
               }
             ],
             "label": "i18n:form.arrival.label",
             "name": "arrivalTimeEstimated",
             "required": true,
             "type": "Field"
+          },
+          {
+            "text": "dès 17:00",
+            "type": "FieldHint"
           },
           {
             "children": [
