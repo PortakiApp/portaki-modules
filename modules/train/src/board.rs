@@ -1,6 +1,6 @@
 //! Ce que le livret a besoin de savoir : le tableau, les destinations qu'il contient, et le jour.
 
-use chrono::Datelike;
+use chrono::{DateTime, Duration, Utc};
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 
@@ -25,6 +25,8 @@ pub struct BoardView {
     pub today: Option<String>,
     /// La phrase que l'hôte a écrite sous le tableau.
     pub note: String,
+    /// Les minutes écoulées depuis la lecture du tableau — `0` quand il vient d'être lu.
+    pub read_min_ago: i64,
 }
 
 impl BoardView {
@@ -44,7 +46,11 @@ pub fn load(
 ) -> std::result::Result<BoardView, BoardError> {
     let config = ModuleConfig::load(ctx).map_err(|_| BoardError::NoStation)?;
     let station_name = config.station_name().ok_or(BoardError::NoStation)?;
-    let (station, all) = sncf::board(station_name, way)?;
+    let now = time::now().map_err(|_| BoardError::Unavailable)?;
+    if !within_stay(ctx, now) {
+        return Err(BoardError::OutsideStay);
+    }
+    let (station, all, read_at) = sncf::board(station_name, way)?;
 
     let destinations = distinct_destinations(&all);
     let stops = match destination {
@@ -59,8 +65,9 @@ pub fn load(
         station,
         stops,
         destinations,
-        today: today_at_property(ctx),
+        today: Some(local_date(ctx, now).to_string()),
         note: config.note.get(&ctx.locale).trim().to_string(),
+        read_min_ago: ((now.timestamp() - read_at).max(0)) / 60,
     })
 }
 
@@ -82,22 +89,35 @@ fn distinct_destinations(stops: &[Stop]) -> Vec<String> {
     seen
 }
 
-/// Le jour qu'il est dans le fuseau du logement.
+/// Un instant dans le fuseau du logement, ramené à son jour.
 ///
 /// Dans son fuseau, pas dans celui du téléphone : un voyageur qui regarde ses trains depuis Tokyo
 /// ne doit pas lire « demain » devant le prochain train de ce matin.
-fn today_at_property(ctx: &GuestContext) -> Option<String> {
-    let now = time::now().ok()?;
-    let local = match time::PropertyTz::parse(&ctx.timezone) {
-        Some(tz) => tz.to_local(now).date_naive(),
-        None => now.date_naive(),
+fn local_date(ctx: &GuestContext, instant: DateTime<Utc>) -> chrono::NaiveDate {
+    match time::PropertyTz::parse(&ctx.timezone) {
+        Some(tz) => tz.to_local(instant).date_naive(),
+        None => instant.date_naive(),
+    }
+}
+
+/// Le voyageur est-il dans la fenêtre du séjour — de la veille de l'arrivée au lendemain du
+/// départ (§0.7) ?
+///
+/// Un tableau d'affichage ne vaut que pour les 24 h qui suivent : montré trois semaines avant
+/// l'arrivée, il donne les trains d'un jour où personne n'est là. Sans séjour ni dates — un
+/// aperçu, le catalogue — rien n'est borné : il n'y a pas de fenêtre à tenir.
+fn within_stay(ctx: &GuestContext, now: DateTime<Utc>) -> bool {
+    let Some(stay) = ctx.stay.as_ref() else {
+        return true;
     };
-    Some(format!(
-        "{:04}-{:02}-{:02}",
-        local.year(),
-        local.month(),
-        local.day()
-    ))
+    let today = local_date(ctx, now);
+    let after_opening = stay
+        .checkin_at
+        .is_none_or(|checkin| today >= local_date(ctx, checkin) - Duration::days(1));
+    let before_closing = stay
+        .checkout_at
+        .is_none_or(|checkout| today <= local_date(ctx, checkout) + Duration::days(1));
+    after_opening && before_closing
 }
 
 /// La ligne demandée par l'adresse, parmi celles du tableau.
@@ -121,6 +141,7 @@ mod tests {
             mode: Some("TER".to_string()),
             network: None,
             realtime: true,
+            delay_min: None,
         }
     }
 
@@ -150,6 +171,7 @@ mod tests {
             destinations: Vec::new(),
             today: Some("2026-10-04".to_string()),
             note: String::new(),
+            read_min_ago: 0,
         };
         assert!(!view.is_later_day(&stop("Nice-Ville", "23:48", "2026-10-04")));
         // La nuit sans train : le premier résultat des 24 h suivantes est celui du matin (§2.17).
@@ -177,6 +199,7 @@ mod tests {
             destinations: Vec::new(),
             today: None,
             note: String::new(),
+            read_min_ago: 0,
         };
         assert_eq!(stop_by_route_id(&view, &id), Some(one));
         assert_eq!(stop_by_route_id(&view, "20261004-2359-ter-2359"), None);

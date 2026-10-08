@@ -3,7 +3,7 @@
 //! Le module n'a plus aucun horaire écrit en dur : tout ce qui est vérifié ici sort des réponses
 //! de `tests/fixtures/`, de la forme que Navitia documente.
 
-use portaki_test_utils::{MockContext, MockContextBuilder, Property, SurfaceAssertions};
+use portaki_test_utils::{Booking, MockContext, MockContextBuilder, Property, SurfaceAssertions};
 use serde_json::json;
 
 use train::{render_explore_detail, render_explore_item, render_home_card, render_upcoming_card};
@@ -136,7 +136,12 @@ fn the_compact_card_stays_a_single_line() {
 
         let json = serde_json::to_string(&card).expect("json");
         assert!(json.contains("upcoming.card"));
-        assert!(json.contains("Gare d'Antibes → Nice-Ville (Nice) · 08:12"));
+        // Avant l'arrivée, le train qui amène : la gare du logement est au bout de la flèche, et
+        // l'heure est celle de l'arrivée (08:11), pas celle du départ.
+        assert!(
+            json.contains("Nice-Ville (Nice) → Gare d'Antibes · 08:11"),
+            "{json}"
+        );
     });
 }
 
@@ -216,4 +221,158 @@ fn a_body_nobody_can_read_is_not_a_board() {
             let json = serde_json::to_string(&detail).expect("json");
             assert!(!json.contains("08:12"));
         });
+}
+
+/// Le retard sort de l'écart entre la fiche horaire et le temps réel — Navitia n'a pas de champ
+/// « retard ». Le premier départ de la réponse est prévu à 08:10 et annoncé à 08:12.
+#[test]
+fn a_late_train_wears_its_delay() {
+    wired()
+        .with_translation("explore.detail.status.delayed", "+{minutes} min")
+        .with_translation("explore.detail.status.onTime", "À l'heure")
+        .run(|ctx| {
+            let detail = render_explore_detail(ctx).expect("render");
+            let json = serde_json::to_string(&detail).expect("json");
+            assert!(json.contains("+2 min"), "{json}");
+            assert!(json.contains("\"tone\":\"warning\""), "{json}");
+        });
+}
+
+/// La fiche d'un train en retard dit quoi faire de l'heure affichée : rien. Elle tient déjà
+/// compte du retard, et l'ajouter une seconde fois fait arriver trop tard.
+#[test]
+fn the_sheet_of_a_late_train_says_the_time_already_counts_it() {
+    wired()
+        .with_translation(
+            "explore.item.delayed.title",
+            "Retard estimé de {minutes} min",
+        )
+        .with_translation(
+            "explore.item.delayed.message",
+            "L'heure affichée, {time}, tient déjà compte du retard.",
+        )
+        .run(|mut ctx| {
+            ctx.input = json!({ "departureId": "20261004-0812-17654" });
+            let item = render_explore_item(ctx).expect("render");
+            assert!(SurfaceAssertions::new(&item).contains_type("InfoBanner"));
+            let json = serde_json::to_string(&item).expect("json");
+            assert!(json.contains("Retard estimé de 2 min"), "{json}");
+            assert!(json.contains("L'heure affichée, 08:12,"), "{json}");
+        });
+}
+
+/// Sans temps réel, aucun état n'est annoncé : « à l'heure » serait une vérification que
+/// personne n'a faite. Le mode reprend la place de la pastille.
+#[test]
+fn a_scheduled_time_claims_no_status() {
+    wired()
+        .with_translation("explore.detail.status.onTime", "À l'heure")
+        .run(|mut ctx| {
+            ctx.input = json!({ "dest": "Cannes (Cannes)" });
+            let detail = render_explore_detail(ctx).expect("render");
+            let json = serde_json::to_string(&detail).expect("json");
+            assert!(json.contains("08:42"), "la ligne est bien là : {json}");
+            assert!(!json.contains("À l'heure"), "{json}");
+            assert!(json.contains("TGV INOUI"), "{json}");
+        });
+}
+
+/// §0.7 : un tableau des 24 h qui viennent ne dit rien d'utile trois semaines avant l'arrivée.
+/// Rien n'est demandé au fournisseur — la surface dit quand les horaires arriveront.
+#[test]
+fn nothing_is_fetched_before_the_eve_of_arrival() {
+    wired()
+        .with_now(
+            "2026-09-10T09:00:00Z"
+                .parse()
+                .expect("trois semaines avant"),
+        )
+        .with_stay(Booking {
+            check_in: "2026-10-04T14:00:00Z".parse().expect("arrivée"),
+            check_out: "2026-10-11T09:00:00Z".parse().expect("départ"),
+            ..Booking::default()
+        })
+        .run(|ctx| {
+            let detail = render_explore_detail(ctx).expect("render");
+            assert!(SurfaceAssertions::new(&detail).contains_type("EmptyState"));
+            let json = serde_json::to_string(&detail).expect("json");
+            assert!(json.contains("outsideStay.title"), "{json}");
+            assert!(!json.contains("08:12"), "{json}");
+        });
+}
+
+/// La veille de l'arrivée, le tableau s'ouvre : c'est le jour où on cherche son train.
+#[test]
+fn the_eve_of_arrival_opens_the_board() {
+    wired()
+        .with_now("2026-10-03T09:00:00Z".parse().expect("la veille"))
+        .with_stay(Booking {
+            check_in: "2026-10-04T14:00:00Z".parse().expect("arrivée"),
+            check_out: "2026-10-11T09:00:00Z".parse().expect("départ"),
+            ..Booking::default()
+        })
+        .run(|ctx| {
+            let detail = render_explore_detail(ctx).expect("render");
+            let json = serde_json::to_string(&detail).expect("json");
+            assert!(json.contains("08:12"), "{json}");
+        });
+}
+
+/// Un filtre qui ne laisse rien ne dit pas « rien ne part de cette gare » : des trains partent,
+/// mais pas vers celle qu'on a demandée.
+#[test]
+fn an_empty_filter_and_an_empty_station_do_not_say_the_same_thing() {
+    wired()
+        .with_translation("explore.detail.empty.title", "Aucun train d'ici demain")
+        .with_translation("explore.detail.filtered.title", "Aucun train direct")
+        .run(|mut ctx| {
+            ctx.input = json!({ "dest": "Marseille" });
+            let detail = render_explore_detail(ctx).expect("render");
+            let json = serde_json::to_string(&detail).expect("json");
+            assert!(json.contains("filtered.title"), "{json}");
+            assert!(!json.contains("detail.empty.title"), "{json}");
+        });
+}
+
+/// En « vers la gare », le train vient de la destination et arrive au logement. La flèche le dit.
+#[test]
+fn the_sheet_arrow_follows_the_way() {
+    wired().run(|mut ctx| {
+        // Le sens « vers la gare » lit les arrivées : ce train-là arrive à 08:11.
+        ctx.input = json!({ "departureId": "20261004-0811-17654", "dir": "to" });
+        let item = render_explore_item(ctx).expect("render");
+        let json = serde_json::to_string(&item).expect("json");
+        assert!(
+            json.contains("Nice-Ville (Nice) → Gare d'Antibes"),
+            "{json}"
+        );
+    });
+}
+
+/// La fraîcheur remplace la mention de source : ce qu'on veut savoir d'un tableau d'affichage,
+/// c'est s'il vaut encore.
+#[test]
+fn the_board_says_when_it_was_read() {
+    wired()
+        .with_translation(
+            "explore.detail.updated.now",
+            "Horaires temps réel · à l'instant",
+        )
+        .run(|ctx| {
+            let detail = render_explore_detail(ctx).expect("render");
+            let json = serde_json::to_string(&detail).expect("json");
+            assert!(json.contains("à l'instant"), "{json}");
+        });
+}
+
+/// Le billet s'achète chez l'opérateur qui sert ce tableau.
+#[test]
+fn the_sheet_opens_the_operator_to_buy_a_ticket() {
+    wired().run(|mut ctx| {
+        ctx.input = json!({ "departureId": "20261004-0812-17654" });
+        let item = render_explore_item(ctx).expect("render");
+        let json = serde_json::to_string(&item).expect("json");
+        assert!(json.contains("sncf-connect.com"), "{json}");
+        assert!(json.contains("explore.item.ticket"), "{json}");
+    });
 }

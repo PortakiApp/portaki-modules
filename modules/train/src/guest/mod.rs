@@ -1,6 +1,6 @@
 //! Les surfaces du livret. Le SDK rend les états inactif / incomplet / erreur.
 
-mod detail;
+pub(crate) mod detail;
 mod home;
 mod item;
 
@@ -61,12 +61,9 @@ pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
     role = GuestRole::Upcoming
 )]
 pub fn render_upcoming_card(ctx: GuestContext) -> Result<Surface> {
-    Ok(with_board(
-        &ctx,
-        Way::From,
-        ALL_STATIONS,
-        build_upcoming_card,
-    ))
+    // Les arrivées, pas les départs : avant son arrivée, le voyageur cherche le train qui l'amène
+    // à la gare du logement. Les départs sont la question d'après, et la carte d'accueil l'a.
+    Ok(with_board(&ctx, Way::To, ALL_STATIONS, build_upcoming_card))
 }
 
 /// La page complète. `dir` et `dest` arrivent des paramètres de route ou des contrôles de la page.
@@ -96,7 +93,7 @@ pub fn render_explore_item(ctx: GuestContext) -> Result<Surface> {
     let way = wanted_way(&ctx);
     Ok(with_board(&ctx, way, ALL_STATIONS, |view| {
         match board::stop_by_route_id(view, &wanted) {
-            Some(stop) => build_item_page(view, &stop),
+            Some(stop) => build_item_page(view, &stop, way),
             // Un horaire passé, un lien gardé en favori : la fiche le dit, elle ne montre pas le
             // train suivant comme si c'était celui qu'on cherchait.
             None => Surface::new(

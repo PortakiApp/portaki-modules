@@ -152,6 +152,12 @@ struct StopDateTime {
     departure_date_time: Option<String>,
     #[serde(default)]
     arrival_date_time: Option<String>,
+    /// L'horaire de la fiche horaire, quand le temps réel s'en écarte. C'est l'écart entre les
+    /// deux qui fait le retard — Navitia ne sert aucun champ « retard ».
+    #[serde(default)]
+    base_departure_date_time: Option<String>,
+    #[serde(default)]
+    base_arrival_date_time: Option<String>,
     #[serde(default)]
     data_freshness: Option<String>,
 }
@@ -193,6 +199,12 @@ pub struct Stop {
     pub network: Option<String>,
     /// L'horaire est celui du temps réel, pas celui de la fiche horaire.
     pub realtime: bool,
+    /// Les minutes de retard, quand le temps réel s'écarte de la fiche horaire.
+    ///
+    /// `None` sur un horaire théorique : sans temps réel, personne ne sait si le train est en
+    /// retard, et `Some(0)` dirait « à l'heure » sans l'avoir vérifié.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delay_min: Option<i64>,
 }
 
 impl Stop {
@@ -229,6 +241,8 @@ fn slug(raw: &str) -> String {
 pub enum BoardError {
     /// L'hôte n'a pas donné sa gare.
     NoStation,
+    /// Le séjour n'a pas commencé, ou il est fini depuis plus d'un jour (§0.7).
+    OutsideStay,
     /// La clé éditeur de Portaki manque.
     MissingKey,
     /// Le nom de gare ne correspond à aucune gare.
@@ -273,10 +287,13 @@ struct BoardCache {
 }
 
 /// Le tableau d'une gare dans un sens, ou pourquoi il n'y en a pas.
+///
+/// Le troisième membre est l'heure de lecture du tableau, en secondes Unix : c'est elle qui permet
+/// de dire au voyageur de quand datent ces horaires.
 pub fn board(
     station_name: &str,
     way: Way,
-) -> std::result::Result<(Station, Vec<Stop>), BoardError> {
+) -> std::result::Result<(Station, Vec<Stop>, i64), BoardError> {
     let now = time::now()
         .map_err(|_| BoardError::Unavailable)?
         .timestamp();
@@ -286,7 +303,7 @@ pub fn board(
     let cached: Option<BoardCache> = read(&key);
     if let Some(cache) = cached.as_ref() {
         if now - cache.fetched_at >= 0 && now - cache.fetched_at < BOARD_TTL_SECS {
-            return Ok((cache.station.clone(), cache.stops.clone()));
+            return Ok((cache.station.clone(), cache.stops.clone(), cache.fetched_at));
         }
     }
 
@@ -314,7 +331,7 @@ pub fn board(
                 },
                 BOARD_TTL_SECS,
             );
-            Ok((station, stops))
+            Ok((station, stops, now))
         }
         Err(error) => Err(fetch_error(error, "train_board_fetch_failed")),
     }
@@ -352,6 +369,20 @@ fn map_stop(row: &BoardStop, way: Way) -> Option<Stop> {
             .or(times.departure_date_time.as_deref()),
     }?;
     let (date, time) = split_navitia_datetime(raw)?;
+    let realtime = times
+        .data_freshness
+        .as_deref()
+        .is_some_and(|value| value.eq_ignore_ascii_case("realtime"));
+    let base = match way {
+        Way::From => times
+            .base_departure_date_time
+            .as_deref()
+            .or(times.base_arrival_date_time.as_deref()),
+        Way::To => times
+            .base_arrival_date_time
+            .as_deref()
+            .or(times.base_departure_date_time.as_deref()),
+    };
     let info = row.display_informations.as_ref();
     let direction = info
         .and_then(|i| i.direction.as_deref())
@@ -364,11 +395,32 @@ fn map_stop(row: &BoardStop, way: Way) -> Option<Stop> {
         headsign: text(info.and_then(|i| i.headsign.as_deref())),
         mode: text(info.and_then(|i| i.commercial_mode.as_deref())),
         network: text(info.and_then(|i| i.network.as_deref())),
-        realtime: times
-            .data_freshness
-            .as_deref()
-            .is_some_and(|value| value.eq_ignore_ascii_case("realtime")),
+        realtime,
+        delay_min: realtime
+            .then_some(base)
+            .flatten()
+            .and_then(|base| delay_minutes(base, raw)),
     })
+}
+
+/// Les minutes de retard entre la fiche horaire et le temps réel.
+///
+/// Rien quand le train est à l'heure ou en avance : « +0 min » n'est pas une information, et une
+/// avance n'en est pas une non plus sur un quai — on attend le train, il ne partira pas plus tôt.
+fn delay_minutes(base: &str, realtime: &str) -> Option<i64> {
+    let minutes = |raw: &str| {
+        let (date, time) = split_navitia_datetime(raw)?;
+        let day = chrono::NaiveDate::parse_from_str(&date, "%Y-%m-%d").ok()?;
+        let (hours, mins) = time.split_once(':')?;
+        Some(
+            day.and_hms_opt(hours.parse().ok()?, mins.parse().ok()?, 0)?
+                .and_utc()
+                .timestamp()
+                / 60,
+        )
+    };
+    let late = minutes(realtime)? - minutes(base)?;
+    (late > 0).then_some(late)
 }
 
 fn text(raw: Option<&str>) -> Option<String> {
