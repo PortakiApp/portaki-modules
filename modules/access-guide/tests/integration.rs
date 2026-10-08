@@ -1073,6 +1073,11 @@ fn every_access_method_draws_its_card() {
 /// créneau choisi — un plancher — donc « après 19 h » sur une entrée à 16 h est bien une arrivée
 /// tardive, et c'est le seul créneau tardif que le formulaire propose.
 fn late_arrival_card(note: Option<&str>, announced: Option<(u32, u32)>) -> String {
+    late_arrival_surfaces(note, announced).0
+}
+
+/// La carte d'accueil et la sous-page : la consigne est en tête des deux.
+fn late_arrival_surfaces(note: Option<&str>, announced: Option<(u32, u32)>) -> (String, String) {
     let (mut ctx, host) = MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&HostConfig {
@@ -1097,7 +1102,10 @@ fn late_arrival_card(note: Option<&str>, announced: Option<(u32, u32)>) -> Strin
         ..StayContext::default()
     });
     with_host(host, ctx.clone(), || {
-        serde_json::to_string(&render_home_card(ctx).expect("surface")).expect("json")
+        (
+            serde_json::to_string(&render_home_card(ctx.clone()).expect("carte")).expect("json"),
+            serde_json::to_string(&render_explore_detail(ctx).expect("sous-page")).expect("json"),
+        )
     })
 }
 
