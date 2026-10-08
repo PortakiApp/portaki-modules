@@ -80,7 +80,13 @@ fn completed_card(row: &PreArrivalResponse, questions: &ModuleConfig) -> Compone
         rows.push(detail_row(
             "clock-circle",
             "i18n:host.stay.arrival.label",
-            display_or_dash(row.arrival_time.as_deref()),
+            // « dès 17 h », pas « 17:00 ». Le voyageur choisit un créneau et le formulaire en
+            // envoie le début : lu comme une heure exacte, l'hôte attend à 17 h pile quelqu'un
+            // qui a annoncé 17–19 h.
+            match row.arrival_time.as_deref() {
+                Some(time) => crate::slots::floor_label(time),
+                None => display_or_dash(None),
+            },
             None,
         ));
     }

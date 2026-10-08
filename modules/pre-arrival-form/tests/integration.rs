@@ -408,6 +408,7 @@ fn host_stay_surface_shows_completed_response() {
 
     MockContext::host()
         .with_property(Property::default())
+        .with_translation("form.arrival.from", "dès {time}")
         .run(|mut ctx| {
             ctx.input = serde_json::json!({ "stayId": stay_id.to_string() });
             let surface = render_host_stay(ctx).expect("host stay");
@@ -423,7 +424,9 @@ fn host_stay_surface_shows_completed_response() {
             assert!(json.contains("host.stay.occasion.label"));
             assert!(json.contains("host.stay.allergies.label"));
             assert!(json.contains("clock-circle"));
-            assert!(json.contains("17:30"));
+            // « dès 17:30 » : le voyageur annonce un plancher, pas un rendez-vous. Lu comme une
+            // heure exacte, l'hôte attend à l'heure pile quelqu'un qui a annoncé un créneau.
+            assert!(json.contains("dès 17:30"), "{json}");
             assert!(json.contains("Lune de miel"));
             assert!(json.contains("Fruits à coque"));
             assert!(json.contains("Champagne au frais"));
