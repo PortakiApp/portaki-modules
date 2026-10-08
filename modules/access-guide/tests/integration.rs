@@ -555,6 +555,7 @@ fn a_save_in_english_keeps_the_french() {
             "in_person_meeting_place",
             "in_person_time_hint",
             "keybox_location",
+            "late_arrival_note",
             "method_instructions",
             "parking_info",
             "steps.detail",
@@ -1063,4 +1064,78 @@ fn every_access_method_draws_its_card() {
                 );
             });
     }
+}
+
+/// La consigne d'arrivée tardive, montrée à qui en a annoncé une (§2.1).
+///
+/// Trois conditions, et le silence de l'une suffit : l'hôte a écrit la consigne, le voyageur a
+/// annoncé une heure en pré-arrivée, et cette heure est tardive. L'heure annoncée est le début du
+/// créneau choisi — un plancher — donc « après 19 h » sur une entrée à 16 h est bien une arrivée
+/// tardive, et c'est le seul créneau tardif que le formulaire propose.
+fn late_arrival_card(note: Option<&str>, announced: Option<(u32, u32)>) -> String {
+    let (mut ctx, host) = MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&HostConfig {
+            late_arrival_note: note.map(|text| I18nText::new(text, "")).unwrap_or_default(),
+            ..always_reveal_config()
+        })
+        .build();
+    ctx.timezone = "Europe/Paris".into();
+    ctx.property.timezone = "Europe/Paris".into();
+    ctx.stay = Some(StayContext {
+        stay_id: Uuid::nil(),
+        // 14 h UTC, 16 h à Paris : l'entrée du logement.
+        checkin_at: Some(
+            Utc.with_ymd_and_hms(2099, 7, 1, 14, 0, 0)
+                .single()
+                .expect("dt"),
+        ),
+        checkout_at: None,
+        booking_channel: None,
+        arrival_time_estimated: announced
+            .map(|(h, m)| chrono::NaiveTime::from_hms_opt(h, m, 0).expect("heure")),
+        ..StayContext::default()
+    });
+    with_host(host, ctx.clone(), || {
+        serde_json::to_string(&render_home_card(ctx).expect("surface")).expect("json")
+    })
+}
+
+#[test]
+#[serial]
+fn the_late_arrival_note_reaches_the_guest_who_announced_one() {
+    // « Après 19 h » sur une entrée à 16 h : le dernier créneau du formulaire, donc une arrivée
+    // tardive — sans cette borne la consigne serait morte dans presque tous les logements.
+    let late = late_arrival_card(Some("Le coffre change de code après 22 h"), Some((19, 0)));
+    assert!(
+        late.contains("Le coffre change de code après 22 h"),
+        "{late}"
+    );
+    assert!(late.contains("guest.lateArrival.title"), "{late}");
+
+    // 23 h 30 saisi à la main, sans créneau : tardif aussi.
+    let very_late = late_arrival_card(Some("Le coffre change de code après 22 h"), Some((23, 30)));
+    assert!(
+        very_late.contains("Le coffre change de code"),
+        "{very_late}"
+    );
+}
+
+#[test]
+#[serial]
+fn no_late_arrival_note_without_a_late_arrival() {
+    let note = Some("Le coffre change de code après 22 h");
+
+    // Une arrivée dans l'heure de l'entrée : la consigne ne le concerne pas.
+    let on_time = late_arrival_card(note, Some((16, 0)));
+    assert!(!on_time.contains("Le coffre change de code"), "{on_time}");
+    assert!(!on_time.contains("guest.lateArrival.title"), "{on_time}");
+
+    // Rien d'annoncé : rien à dire. Le module ne devine pas une heure d'arrivée.
+    let silent = late_arrival_card(note, None);
+    assert!(!silent.contains("Le coffre change de code"), "{silent}");
+
+    // Et l'hôte qui n'a rien écrit ne laisse pas un bandeau vide (§0.5).
+    let no_note = late_arrival_card(None, Some((23, 0)));
+    assert!(!no_note.contains("guest.lateArrival.title"), "{no_note}");
 }

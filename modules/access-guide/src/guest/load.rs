@@ -1,5 +1,6 @@
 //! Load config for guest surfaces.
 
+use chrono::Timelike;
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::GeoPoint;
@@ -29,6 +30,11 @@ pub struct GuestData {
     /// L'heure d'arrivée, à l'heure du logement — « 16:00 ». `None` sans séjour ou sans fuseau
     /// lisible : une heure dans le mauvais fuseau fait sonner à la porte trop tôt.
     pub checkin_hour: Option<String>,
+    /// La consigne d'arrivée tardive de l'hôte, quand le voyageur en a annoncé une.
+    ///
+    /// `None` quand l'hôte n'a rien écrit — son silence ne se montre pas (§0.5) — ou quand
+    /// l'arrivée annoncée n'est pas tardive : la consigne ne concerne alors personne.
+    pub late_arrival_note: Option<String>,
 }
 
 pub enum GuestLoad {
@@ -65,6 +71,8 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestLoad> {
         &property_timezone,
     );
 
+    let late_arrival_note = late_arrival_note(ctx, &texts, &property_timezone);
+
     Ok(GuestLoad::Ready(Box::new(GuestData {
         config,
         texts,
@@ -77,6 +85,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestLoad> {
         reveal_at_label: reveal_at_label(&decision, &property_timezone),
         stay_id,
         checkin_hour: checkin_hour(ctx, &property_timezone),
+        late_arrival_note,
     })))
 }
 
@@ -116,6 +125,47 @@ fn reveal_at_label(decision: &RevealDecision, property_timezone: &str) -> Option
 }
 
 /// « 16:00 », à l'heure du logement.
+/// Après cette heure, une arrivée est tardive où que soit le logement (§2.1).
+const LATE_HOUR: u32 = 22;
+
+/// Les heures après l'entrée au bout desquelles une arrivée est tardive.
+///
+/// C'est la borne du dernier créneau que `pre-arrival-form` propose — « après 19 h » pour une
+/// entrée à 16 h. Sans elle, la consigne serait morte dans presque tous les logements : l'heure
+/// annoncée est le **début** du créneau choisi, donc elle n'atteint jamais 22 h quand l'entrée
+/// est à 16 h.
+const LATE_AFTER_CHECKIN_HOURS: u32 = 3;
+
+/// La consigne d'arrivée tardive, quand elle a un destinataire.
+///
+/// Trois conditions, et le silence de l'une suffit : l'hôte a écrit quelque chose, le voyageur a
+/// annoncé une heure en pré-arrivée (la plateforme la recopie sur le séjour), et cette heure est
+/// tardive.
+fn late_arrival_note(
+    ctx: &GuestContext,
+    texts: &ModuleTexts,
+    property_timezone: &str,
+) -> Option<String> {
+    let note = texts.late_arrival_note.trim();
+    if note.is_empty() {
+        return None;
+    }
+    let stay = ctx.stay.as_ref()?;
+    let announced = stay.arrival_time_estimated?.hour();
+    let after_checkin = checkin_local_hour(ctx, property_timezone)
+        .map(|hour| hour + LATE_AFTER_CHECKIN_HOURS)
+        // Une entrée du soir fait déborder la borne sur le lendemain : seule l'heure fixe vaut.
+        .filter(|hour| *hour <= 23);
+    let late = announced >= LATE_HOUR || after_checkin.is_some_and(|hour| announced >= hour);
+    late.then(|| note.to_string())
+}
+
+fn checkin_local_hour(ctx: &GuestContext, property_timezone: &str) -> Option<u32> {
+    let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at)?;
+    let tz = portaki_sdk::host::time::PropertyTz::parse(property_timezone)?;
+    Some(tz.to_local(checkin_at).hour())
+}
+
 fn checkin_hour(ctx: &GuestContext, property_timezone: &str) -> Option<String> {
     let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at)?;
     let tz = portaki_sdk::host::time::PropertyTz::parse(property_timezone)?;
