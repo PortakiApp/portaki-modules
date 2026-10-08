@@ -7,6 +7,7 @@ use serial_test::serial;
 use uuid::Uuid;
 
 use chrono::{Duration, Utc};
+use portaki_sdk::context::HostProfile;
 use portaki_sdk::prelude::StayContext;
 use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use pre_arrival_form::{
@@ -49,6 +50,7 @@ fn home_card_renders_form_when_incomplete() {
             assert!(json.contains("guest.form"));
             assert!(!json.contains("TimePicker"));
 
+            // Sans date d'arrivée, aucune borne de créneau : le sélecteur libre reste.
             let form = render_guest_form(ctx).expect("guest surface");
             assert!(SurfaceAssertions::new(&form).contains_type("Form"));
             assert!(SurfaceAssertions::new(&form).contains_type("TimePicker"));
@@ -108,7 +110,13 @@ fn submit_then_status_and_thanks_card() {
             assert!(SurfaceAssertions::new(&form).contains_type("Button"));
             let form_json = serde_json::to_string(&form).expect("form json");
             assert!(form_json.contains("form.submitUpdate"));
-            assert!(form_json.contains("17:30"));
+            // L'heure se choisit en créneaux depuis que le logement en donne les bornes : la
+            // réponse libre « 17:30 » revient cochée sur le créneau qui la contient.
+            assert!(SurfaceAssertions::new(&form).contains_type("ChoiceList"));
+            assert!(!SurfaceAssertions::new(&form).contains_type("TimePicker"));
+            assert!(form_json.contains("\"segmented\""), "{form_json}");
+            // Et le formulaire déjà envoyé s'ouvre sur la confirmation (§2.20).
+            assert!(SurfaceAssertions::new(&form).contains_type("Celebration"));
             // L'occasion est désormais une valeur de liste, présélectionnée dans le choix : le
             // libellé affiché est traduit par le livret, le formulaire porte la valeur.
             assert!(form_json.contains("\"value\":\"birthday\""));
@@ -122,6 +130,7 @@ fn completed_form_locks_after_checkin() {
     reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
+        .with_translation("form.arrival.from", "dès {time}")
         .run(|mut ctx| {
             let stay_id = ctx
                 .guest
@@ -151,7 +160,8 @@ fn completed_form_locks_after_checkin() {
             let form_json = serde_json::to_string(&form).expect("form json");
             assert!(form_json.contains("home.card.thanks"));
             assert!(form_json.contains("home.card.lockedHint"));
-            assert!(form_json.contains("17:30"));
+            // « dès 17:30 » : l'heure annoncée est un plancher, pas un rendez-vous.
+            assert!(form_json.contains("dès 17:30"), "{form_json}");
 
             let err = submit(
                 ctx,
@@ -454,5 +464,168 @@ fn publish_readiness_recommends_one_question() {
         .with_property(Property::default())
         .run(|ctx| {
             assert!(publish_readiness(ctx).expect("publishReadiness").items[0].ok);
+        });
+}
+
+/// Un séjour dont l'entrée est à 16 h (Paris), pour que les créneaux soient les mêmes à chaque
+/// exécution — ils sortent de l'heure d'arrivée, donc d'une date fixe.
+fn stay_opening_at_four(stay_id: Uuid, party_size: Option<u32>) -> StayContext {
+    StayContext {
+        stay_id,
+        checkin_at: Some("2026-10-04T14:00:00Z".parse().expect("arrivée")),
+        checkout_at: Some("2026-10-11T09:00:00Z".parse().expect("départ")),
+        party_size,
+        ..StayContext::default()
+    }
+}
+
+/// Les créneaux sont bornés par l'heure d'entrée du logement, pas écrits dans le module (§2.20).
+///
+/// Un sélecteur d'heure libre laissait annoncer 11 h 15 à un logement qui ouvre à 16 h.
+#[test]
+#[serial]
+fn the_arrival_slots_are_bounded_by_the_check_in_hour() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_now(
+            "2026-10-03T09:00:00Z"
+                .parse()
+                .expect("la veille, formulaire ouvert"),
+        )
+        .with_translation("form.arrival.slot.range", "{from}–{to} h")
+        .with_translation("form.arrival.slot.late", "Après {from} h")
+        .with_translation("form.arrival.from", "dès {time}")
+        .run(|mut ctx| {
+            let stay_id = ctx.guest.as_ref().expect("guest").session_id;
+            ctx.stay = Some(stay_opening_at_four(stay_id, None));
+
+            let form = render_guest_form(ctx).expect("guest surface");
+            assert!(!SurfaceAssertions::new(&form).contains_type("TimePicker"));
+            let json = serde_json::to_string(&form).expect("json");
+            // 14 h UTC, 16 h à Paris : les bornes sont celles du logement.
+            assert!(json.contains("16–17 h"), "{json}");
+            assert!(json.contains("17–19 h"), "{json}");
+            assert!(json.contains("Après 19 h"), "{json}");
+            // La valeur envoyée reste une heure : la plateforme la recopie sur le séjour.
+            assert!(json.contains(r#""value":"17:00""#), "{json}");
+            // Rien n'est coché d'avance sur une question obligatoire : la liste se ferme sur
+            // son nom, sans `value`. Un créneau préchoisi part tel quel si personne ne le
+            // regarde.
+            assert!(
+                json.contains(r#""layout":"segmented","name":"arrivalTimeEstimated"}"#),
+                "{json}"
+            );
+            assert!(json.contains("dès 16:00"), "{json}");
+        });
+}
+
+/// Le nombre de voyageurs ne se demande pas quand la réservation le dit (§2.20).
+#[test]
+#[serial]
+fn the_party_size_is_read_from_the_booking_not_asked() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_now(
+            "2026-10-03T09:00:00Z"
+                .parse()
+                .expect("la veille, formulaire ouvert"),
+        )
+        .with_translation(
+            "form.guestCount.fromBooking",
+            "{count}, repris de votre réservation",
+        )
+        .run(|mut ctx| {
+            let stay_id = ctx.guest.as_ref().expect("guest").session_id;
+            ctx.stay = Some(stay_opening_at_four(stay_id, Some(3)));
+
+            let form = render_guest_form(ctx).expect("guest surface");
+            assert!(SurfaceAssertions::new(&form).contains_type("KeyValue"));
+            let json = serde_json::to_string(&form).expect("json");
+            assert!(json.contains("3, repris de votre réservation"), "{json}");
+            // Et plus de champ de saisie pour ce nombre.
+            assert!(!json.contains(r#""name":"guestCount""#), "{json}");
+        });
+}
+
+/// Sans nombre de voyageurs côté plateforme, la question revient : c'est la seule façon de le
+/// savoir.
+#[test]
+#[serial]
+fn without_a_party_size_the_question_comes_back() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_now(
+            "2026-10-03T09:00:00Z"
+                .parse()
+                .expect("la veille, formulaire ouvert"),
+        )
+        .run(|mut ctx| {
+            let stay_id = ctx.guest.as_ref().expect("guest").session_id;
+            ctx.stay = Some(stay_opening_at_four(stay_id, None));
+
+            let form = render_guest_form(ctx).expect("guest surface");
+            let json = serde_json::to_string(&form).expect("json");
+            assert!(json.contains(r#""name":"guestCount""#), "{json}");
+        });
+}
+
+/// « Envoyer à Claire », et la confirmation qui la nomme (§2.20). Sans prénom servi par la
+/// plateforme, les deux retombent sur leur forme impersonnelle.
+#[test]
+#[serial]
+fn the_host_is_named_on_the_button_and_in_the_confirmation() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_now(
+            "2026-10-03T09:00:00Z"
+                .parse()
+                .expect("la veille, formulaire ouvert"),
+        )
+        .with_translation("form.submit.named", "Envoyer à {host}")
+        .with_translation("form.submitUpdate.named", "Mettre à jour pour {host}")
+        .with_translation(
+            "form.received.title.named",
+            "{host} a bien reçu vos informations",
+        )
+        .with_translation("form.received.message.slot", "Vous êtes attendus {slot}.")
+        .with_translation("form.arrival.slot.range", "{from}–{to} h")
+        .with_translation("form.arrival.slot.late", "Après {from} h")
+        .run(|mut ctx| {
+            let stay_id = ctx.guest.as_ref().expect("guest").session_id;
+            ctx.stay = Some(stay_opening_at_four(stay_id, Some(2)));
+            ctx.host = Some(HostProfile {
+                name: "Claire".to_string(),
+                ..HostProfile::default()
+            });
+
+            let fresh = render_guest_form(ctx.clone()).expect("guest surface");
+            let json = serde_json::to_string(&fresh).expect("json");
+            assert!(json.contains("Envoyer à Claire"), "{json}");
+            assert!(!SurfaceAssertions::new(&fresh).contains_type("Celebration"));
+
+            submit(
+                ctx.clone(),
+                SubmitArgs {
+                    arrival_time_estimated: Some("17:00".into()),
+                    ..Default::default()
+                },
+            )
+            .expect("submit");
+
+            let done = render_guest_form(ctx).expect("guest surface");
+            assert!(SurfaceAssertions::new(&done).contains_type("Celebration"));
+            let json = serde_json::to_string(&done).expect("json");
+            assert!(
+                json.contains("Claire a bien reçu vos informations"),
+                "{json}"
+            );
+            // Le créneau annoncé est la seule chose que l'hôte ait reçue de précis.
+            assert!(json.contains("Vous êtes attendus 17–19 h."), "{json}");
+            assert!(json.contains("🗝️"), "{json}");
+            assert!(json.contains("Mettre à jour pour Claire"), "{json}");
         });
 }
