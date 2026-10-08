@@ -434,13 +434,20 @@ fn wasm_render_home_card_end_to_end() {
 #[test]
 #[serial]
 fn the_host_form_sends_the_declared_keys() {
+    // Le repli ouvert : chaque clé déclarée a son champ dans le formulaire.
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&json!({ "units": "fahrenheit" }))
+        .with_config(&json!({
+            "location_label": "Chamrousse 1750",
+            "location_override": true,
+            "location_address": "Chamrousse",
+            "location_lat": 45.12,
+            "location_lng": 5.88,
+            "show_upcoming": false
+        }))
         .run(|ctx| {
             let config = weather::ModuleConfig::load(&ctx).expect("config");
-            assert_eq!(config.units, weather::WeatherUnits::Fahrenheit);
-            assert_eq!(config.refresh_interval, "1h");
+            assert!(!config.show_upcoming);
             let surface = weather::render_host_main(ctx).expect("host main");
             config_form::assert_form_matches_config(
                 concat!(env!("OUT_DIR"), "/portaki-emissions"),
@@ -448,7 +455,24 @@ fn the_host_form_sends_the_declared_keys() {
                 &[],
             );
             let json = serde_json::to_string(&surface).expect("surface json");
-            assert!(json.contains(r#""value":"fahrenheit""#), "{json}");
+            assert!(json.contains(r#""value":"Chamrousse 1750""#), "{json}");
+        });
+}
+
+/// §2.3 : l'erreur sous le champ, celle-là même qui bloque « Publier ».
+#[test]
+#[serial]
+fn a_label_too_long_shows_its_error_under_the_field() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({ "location_label": "x".repeat(41) }))
+        .run(|ctx| {
+            let surface = weather::render_host_main(ctx).expect("host main");
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(
+                json.contains(r#""error":"40 caractères au maximum.""#),
+                "{json}"
+            );
         });
 }
 

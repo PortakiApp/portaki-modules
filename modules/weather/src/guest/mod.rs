@@ -34,6 +34,10 @@ pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
     role = GuestRole::Upcoming
 )]
 pub fn render_upcoming_card(ctx: GuestContext) -> Result<Surface> {
+    // « Montrer avant l'arrivée » coupé : le livret masque un état vide qui n'est pas une erreur.
+    if !crate::config::ModuleConfig::load(&ctx)?.show_upcoming {
+        return Ok(empty::not_shown(UPCOMING_CARD));
+    }
     render_with_data(&ctx, UPCOMING_CARD, build_upcoming_card)
 }
 

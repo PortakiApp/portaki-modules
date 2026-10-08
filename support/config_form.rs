@@ -42,10 +42,13 @@ pub fn form_keys(surface: &Surface) -> BTreeSet<String> {
     fn walk(value: &Value, out: &mut BTreeSet<String>) {
         match value {
             Value::Object(object) => {
-                if let (Some(_), Some(Value::String(name))) =
-                    (object.get("type"), object.get("name"))
-                {
-                    out.insert(name.split('.').next().unwrap_or(name).to_string());
+                if object.contains_key("type") {
+                    // `AddressMapPicker` envoie trois champs, nommés à part.
+                    for key in ["name", "addressName", "latName", "lngName"] {
+                        if let Some(Value::String(name)) = object.get(key) {
+                            out.insert(name.split('.').next().unwrap_or(name).to_string());
+                        }
+                    }
                 }
                 object.values().for_each(|v| walk(v, out));
             }
