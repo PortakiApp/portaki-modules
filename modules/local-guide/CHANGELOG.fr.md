@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.10.1
+
+Une adresse sans plan garde son repère.
+
+* Une tuile d'adresse sans coordonnées portait un espace vide à la place de son plan : elle affiche un repère.
+* Les adresses que l'hôte saisit à la main se lisent comme les autres.
+
 ## 1.10.0
 
 Vos conseils sont signés.

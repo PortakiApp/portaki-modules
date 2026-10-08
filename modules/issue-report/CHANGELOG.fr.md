@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.0
+
+La feuille dit ce qu'elle fait, et ne fait plus choisir pour rien.
+
+* La feuille de signalement porte son en-tête : ce qu'on demande au voyageur, et ce que l'hôte en fera.
+* Avec une seule catégorie de problème, la question disparaît : elle n'avait qu'une réponse possible.
+* La catégorie unique part quand même avec le signalement — l'hôte reçoit la même information.
+
 ## 1.4.2
 
 Rien de visible.

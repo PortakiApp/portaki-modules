@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.1
+
+Jusqu'à soixante appareils, comme annoncé.
+
+* La liste s'arrêtait à dix appareils : au-delà, les suivants disparaissaient du livret sans un mot, alors que le contrat en annonce soixante.
+* Un hôte qui équipe une grande maison voit maintenant tous ses appareils chez le voyageur.
+
 ## 1.8.0
 
 La fiche d'un appareil, relue.

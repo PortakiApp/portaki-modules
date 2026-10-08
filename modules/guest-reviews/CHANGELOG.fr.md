@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.3
+
+Aucune étoile d'avance, et un seul avis par séjour.
+
+* Cinq étoiles arrivaient préchoisies : qui touchait « Envoyer » sans rien noter envoyait un avis cinq étoiles qu'il n'avait pas donné.
+* La note est obligatoire, et aucune étoile n'est servie d'avance.
+* Un séjour déjà noté est remercié au lieu d'être interrogé : le second envoi était refusé après coup.
+* Le lien de la plateforme d'avis et son code QR restent : noter ici n'est pas publier ailleurs.
+
 ## 1.3.2
 
 Correctif interne.

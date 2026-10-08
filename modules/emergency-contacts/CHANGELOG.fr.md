@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.1
+
+Les numéros du pays du logement, et jamais de silence.
+
+* Les numéros d'urgence suivent le pays du logement : un voyageur en Espagne lisait le 15 et le 18 français.
+* Le 112 s'affiche toujours, même quand l'hôte n'a saisi aucun contact — la carte rendait un état vide.
+* Le 112 vaut dans toute l'Union européenne : c'est le seul numéro qu'on peut donner sans rien savoir du pays.
+
 ## 1.5.0
 
 Chaque numéro a son pictogramme.

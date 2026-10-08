@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.0
+
+Des créneaux d'arrivée, et la confirmation de l'envoi.
+
+* L'heure d'arrivée se choisit en trois créneaux, bornés par l'heure d'entrée du logement : on pouvait annoncer 11 h 15 là où l'entrée est à 16 h.
+* Aucun créneau n'est coché d'avance : la question est obligatoire, et un choix préchoisi partait tel quel.
+* Le formulaire envoyé s'ouvre sur sa confirmation, avec le créneau annoncé, et reste modifiable jusqu'à l'arrivée.
+* Le nombre de voyageurs ne se demande plus quand la réservation le dit : il s'affiche, avec sa source.
+* Le bouton d'envoi nomme l'hôte quand la plateforme donne son prénom.
+
 ## 1.5.2
 
 Rien de visible.

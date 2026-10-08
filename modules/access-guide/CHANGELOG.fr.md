@@ -8,7 +8,7 @@ La carte d'accès, quand il n'y a pas de code.
 * Une remise en main propre affiche « Remise des clés · 16–19 h » à côté de l'heure d'arrivée, au lieu d'une seule case étirée.
 * Le lieu du rendez-vous passe en bandeau d'information, au-dessus du reste : c'est ce qu'il faut avoir lu avant d'arriver.
 * Les coordonnées décimales ne s'affichent plus en clair : elles ne se lisent pas, et le plan montre le point.
-* Même tuile pour une réception d'immeuble et pour un accueil par l'hôte.
+* Le code de la barrière du parking rejoint les autres codes en tuile, avec son bouton Copier : il ne sortait qu'en rangée, dans la sous-page.
 
 ## 1.5.2
 
