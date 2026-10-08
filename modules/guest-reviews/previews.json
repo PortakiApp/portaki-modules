@@ -60,12 +60,12 @@
                         ],
                         "layout": "stars",
                         "name": "rating",
-                        "type": "ChoiceList",
-                        "value": "5"
+                        "type": "ChoiceList"
                       }
                     ],
                     "label": "i18n:guest.rating",
                     "name": "rating",
+                    "required": true,
                     "type": "Field"
                   },
                   {
@@ -84,7 +84,7 @@
                     "action": {
                       "args": {
                         "comment": "",
-                        "rating": 5
+                        "rating": 0
                       },
                       "module_id": "guest-reviews",
                       "name": "submitReview",

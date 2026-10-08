@@ -7,7 +7,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::ChoiceListLayout;
 use portaki_sdk::sdui::primitives::{
-    Button, Card, ChoiceList, Divider, Field, Form, QRCode, Stack, Text, TextArea,
+    Button, Card, Celebration, ChoiceList, Divider, Field, Form, QRCode, Stack, Text, TextArea,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -45,7 +45,12 @@ pub fn build_home_card(data: &GuestData) -> Surface {
         ));
     }
 
-    if data.show_portaki {
+    // Déjà noté : le remerciement prend la place du formulaire. L'envoi refuse un second avis
+    // (`review_already_submitted`) — le proposer quand même faisait remplir cinq étoiles et un
+    // mot pour recevoir une erreur (§2.19).
+    if let Some(rating) = data.rating_given {
+        children.push(review_thanks(rating, &data.host_name));
+    } else if data.show_portaki {
         if data.show_airbnb {
             children.push(Component::Text(
                 Text::new()
@@ -56,8 +61,11 @@ pub fn build_home_card(data: &GuestData) -> Surface {
 
         let submit_action = crate::ids::module_id().command(
             crate::commands::SUBMIT_REVIEW,
+            // Le livret remplace ces valeurs par celles du formulaire à l'envoi
+            // (`mergeCommandFormValues`) ; `0` ne passe pas la validation de `submit_review`,
+            // ce qui est exactement ce qu'il faut si le formulaire n'envoyait rien.
             crate::commands::SubmitReviewArgs {
-                rating: 5,
+                rating: 0,
                 comment: String::new(),
             },
         );
@@ -68,6 +76,10 @@ pub fn build_home_card(data: &GuestData) -> Surface {
                     Field::new()
                         .name("rating")
                         .label("i18n:guest.rating")
+                        // Obligatoire, et aucune étoile préchoisie : cinq étoiles servies
+                        // d'avance partaient telles quelles chez qui touchait « Envoyer » sans
+                        // rien noter. Le livret retient l'envoi tant que rien n'est choisi.
+                        .required(true)
                         // Des étoiles, pas une liste déroulante : une note se donne d'un doigt.
                         // `Stars` dessine les cinq, et porte les flèches du clavier.
                         .child(
@@ -80,8 +92,7 @@ pub fn build_home_card(data: &GuestData) -> Surface {
                                     ChoiceOption::new("3", "i18n:guest.rating.3"),
                                     ChoiceOption::new("4", "i18n:guest.rating.4"),
                                     ChoiceOption::new("5", "i18n:guest.rating.5"),
-                                ])
-                                .value("5"),
+                                ]),
                         ),
                 )
                 .child(
@@ -126,6 +137,29 @@ pub fn build_home_card(data: &GuestData) -> Surface {
             .child(Stack::new().gap(12.0).children(children)),
     )
     .with_id(crate::guest::HOME_CARD)
+}
+
+/// « Merci pour votre avis · Claire le lira avec attention » (§2.19).
+fn review_thanks(rating: u8, host_name: &str) -> Component {
+    let message = if host_name.is_empty() {
+        "i18n:guest.given.message".to_string()
+    } else {
+        let mut vars = Vars::new();
+        vars.set("host", host_name);
+        translate("guest.given.message.named", &vars)
+            .unwrap_or_else(|_| "i18n:guest.given.message".to_string())
+    };
+    let mut vars = Vars::new();
+    vars.set("rating", rating);
+    Component::Celebration(
+        Celebration::new()
+            .emoji("💛")
+            .title(
+                translate("guest.given.title", &vars)
+                    .unwrap_or_else(|_| "i18n:guest.given.title".to_string()),
+            )
+            .message(message),
+    )
 }
 
 /// « Deux minutes, et Claire vous en remercie » — le nom de l'hôte vient de la plateforme.
