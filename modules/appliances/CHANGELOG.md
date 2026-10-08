@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.8.0...appliances-v1.8.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* **appliances:** la borne du contrat, pas dix appareils ([bc3cea4](https://github.com/PortakiApp/portaki-modules/commit/bc3cea450104483aa1bf66916f61f57979afbe28))
+
 ## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.7.1...appliances-v1.8.0) (2026-10-07)
 
 

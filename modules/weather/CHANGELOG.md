@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.3](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.4.2...weather-v1.4.3) (2026-10-08)
+
+
+### Bug Fixes
+
+* **weather:** la fenêtre du séjour, pas cinq jours en dur ([0b4bbf6](https://github.com/PortakiApp/portaki-modules/commit/0b4bbf64e32c27f0b1a04641ecee0f889f0face9))
+
 ## [1.4.2](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.4.1...weather-v1.4.2) (2026-10-07)
 
 

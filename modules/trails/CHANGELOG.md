@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.3](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.5.2...trails-v0.5.3) (2026-10-08)
+
+
+### Bug Fixes
+
+* **trails:** pas de pastille quand il n'y a qu'un niveau ([7725a61](https://github.com/PortakiApp/portaki-modules/commit/7725a615b58cc711a56b3eb3bf201170f11aa963))
+
 ## [0.5.2](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.5.1...trails-v0.5.2) (2026-10-07)
 
 

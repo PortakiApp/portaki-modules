@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.9.0...facility-hours-v1.10.0) (2026-10-08)
+
+
+### Features
+
+* **facility-hours:** la coupure du midi, et un badge qui ne ment plus ([ffba68e](https://github.com/PortakiApp/portaki-modules/commit/ffba68e3d6dc83985281977b003a4a36fb7c441b))
+
 ## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.8.2...facility-hours-v1.9.0) (2026-10-07)
 
 

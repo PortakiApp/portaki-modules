@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.5.2...access-guide-v1.6.0) (2026-10-08)
+
+
+### Features
+
+* **access-guide:** la consigne d'arrivée tardive ([960525d](https://github.com/PortakiApp/portaki-modules/commit/960525d653f2a054d6332fc3891bba32a8b252ef))
+* **access-guide:** le code du parking en tuile, avec les autres ([478f801](https://github.com/PortakiApp/portaki-modules/commit/478f8010d0783510d127c2b4fd1f6338d5438c7c))
+
+
+### Bug Fixes
+
+* **access-guide:** the card of a handover in person ([0664c81](https://github.com/PortakiApp/portaki-modules/commit/0664c813b510e773ebe370345d5cac32b00dfde5))
+
 ## [1.5.2](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.5.1...access-guide-v1.5.2) (2026-10-07)
 
 

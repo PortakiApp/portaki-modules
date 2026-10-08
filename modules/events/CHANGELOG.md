@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.2](https://github.com/PortakiApp/portaki-modules/compare/events-v1.5.1...events-v1.5.2) (2026-10-08)
+
+
+### Bug Fixes
+
+* **events:** borner les événements au séjour, J-1 → J+1 ([e3c967d](https://github.com/PortakiApp/portaki-modules/commit/e3c967ded07c17f8e3418f3d624571c8a493e085))
+
 ## [1.5.1](https://github.com/PortakiApp/portaki-modules/compare/events-v1.5.0...events-v1.5.1) (2026-10-07)
 
 

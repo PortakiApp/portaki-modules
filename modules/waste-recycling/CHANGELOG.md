@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.2](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.7.1...waste-recycling-v1.7.2) (2026-10-08)
+
+
+### Bug Fixes
+
+* **waste-recycling:** trois bacs sur la carte, et le chemin vers le reste ([0ab4c92](https://github.com/PortakiApp/portaki-modules/commit/0ab4c92f39990f15cffff2b91a5fe4ad062d12e3))
+
 ## [1.7.1](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.7.0...waste-recycling-v1.7.1) (2026-10-07)
 
 

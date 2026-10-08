@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.2](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.6.1...wifi-guest-v1.6.2) (2026-10-08)
+
+
+### Bug Fixes
+
+* **wifi-guest:** la note de l'hôte dite une fois, et le réseau masqué ([9a04f8f](https://github.com/PortakiApp/portaki-modules/commit/9a04f8f39a8c2075b68efdaf482796ff195126f0))
+
 ## [1.6.1](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.6.0...wifi-guest-v1.6.1) (2026-10-04)
 
 

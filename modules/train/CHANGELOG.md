@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/PortakiApp/portaki-modules/compare/train-v2.0.1...train-v2.1.0) (2026-10-08)
+
+
+### Features
+
+* **train:** l'état du train, et la fenêtre du séjour ([1df602b](https://github.com/PortakiApp/portaki-modules/commit/1df602bd9d01f0968a7350107fb8c12314a82eeb))
+
 ## [2.0.1](https://github.com/PortakiApp/portaki-modules/compare/train-v2.0.0...train-v2.0.1) (2026-10-07)
 
 

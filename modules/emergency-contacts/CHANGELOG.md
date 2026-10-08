@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.5.0...emergency-contacts-v1.5.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* **emergency-contacts:** le pays du logement, et jamais de silence ([2ac34b1](https://github.com/PortakiApp/portaki-modules/commit/2ac34b1f01cca0eebfb85f523c2bd2389f890723))
+
 ## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.4.1...emergency-contacts-v1.5.0) (2026-10-07)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.1](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.10.0...local-guide-v1.10.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* **local-guide:** une tuile sans plan garde un repère ([be62060](https://github.com/PortakiApp/portaki-modules/commit/be620600dacfc3ae49b73e7fd22c3a18973e2073))
+
 ## [1.10.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.9.0...local-guide-v1.10.0) (2026-10-07)
 
 

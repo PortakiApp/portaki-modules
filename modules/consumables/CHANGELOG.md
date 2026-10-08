@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.6.0...consumables-v2.7.0) (2026-10-08)
+
+
+### Features
+
+* **consumables:** dire qu'un produit est déjà signalé ([a650876](https://github.com/PortakiApp/portaki-modules/commit/a650876f50c55649c5cda4969e57eedfb488f225))
+
 ## [2.6.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.5.0...consumables-v2.6.0) (2026-10-07)
 
 
