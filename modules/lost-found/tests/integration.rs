@@ -883,3 +883,89 @@ fn saving_the_window_keeps_it_readable() {
             assert_eq!(reread.window_days(), 45);
         });
 }
+
+/// Qui paie le renvoi, sous « Me le renvoyer » (§2.18).
+///
+/// Le réglage `shipping_paid_by` existait et rien ne le lisait côté formulaire : un hôte qui
+/// prend les frais à sa charge faisait un geste que le voyageur ne voyait pas.
+#[test]
+#[serial]
+fn who_pays_the_return_is_written_under_the_option() {
+    for (paid_by, expected, absent) in [
+        (
+            "guest",
+            "à convenir directement avec Claire",
+            "pris en charge",
+        ),
+        ("host", "pris en charge par Claire", "à convenir"),
+    ] {
+        reset_test_store();
+        MockContext::guest()
+            .with_property(Property::default())
+            .with_config(&json!({
+                "return_ship": true,
+                "return_pickup": true,
+                "shipping_paid_by": paid_by
+            }))
+            .with_translation(
+                "form.return.ship.description.named",
+                "Frais d'envoi à convenir directement avec {host}",
+            )
+            .with_translation(
+                "form.return.ship.hostPaid.named",
+                "Frais d'envoi pris en charge par {host}",
+            )
+            .run(|mut ctx| {
+                ctx.host = Some(portaki_sdk::context::HostProfile {
+                    name: "Claire".to_string(),
+                    ..portaki_sdk::context::HostProfile::default()
+                });
+                let form = serde_json::to_string(&render_guest_form(ctx).expect("form")).unwrap();
+                assert!(form.contains(expected), "{paid_by} : {form}");
+                assert!(!form.contains(absent), "{paid_by} : {form}");
+            });
+    }
+}
+
+/// Une déclaration déjà partie : la feuille s'ouvre sur sa confirmation (§2.18).
+///
+/// Sans elle, le voyageur qui rouvrait la feuille retrouvait un formulaire vierge et pouvait
+/// croire que rien n'était parti.
+#[test]
+#[serial]
+fn a_sent_report_opens_the_sheet_on_its_confirmation() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_stay(Booking::default())
+        .with_translation("form.sent.title.named", "{host} est prévenue")
+        .with_translation("form.sent.message.named", "{host} cherche votre objet.")
+        .run(|mut ctx| {
+            ctx.host = Some(portaki_sdk::context::HostProfile {
+                name: "Claire".to_string(),
+                ..portaki_sdk::context::HostProfile::default()
+            });
+
+            let fresh = render_guest_form(ctx.clone()).expect("form");
+            assert!(!SurfaceAssertions::new(&fresh).contains_type("Celebration"));
+
+            submit(
+                ctx.clone(),
+                SubmitArgs {
+                    kind: "lost".into(),
+                    item_description: "Une écharpe bleue".into(),
+                    ..Default::default()
+                },
+            )
+            .expect("submit");
+
+            let sent = render_guest_form(ctx).expect("form");
+            assert!(SurfaceAssertions::new(&sent).contains_type("Celebration"));
+            let json = serde_json::to_string(&sent).expect("json");
+            assert!(json.contains("Claire est prévenue"), "{json}");
+            assert!(json.contains("🔎"), "{json}");
+            // Le formulaire reste ouvert dessous : on peut déclarer un deuxième objet.
+            assert!(SurfaceAssertions::new(&sent).contains_type("Form"));
+            assert!(json.contains("form.step.object"), "{json}");
+        });
+}
