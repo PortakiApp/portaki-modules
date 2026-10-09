@@ -9,10 +9,13 @@ use wifi_guest::{render_explore_detail, render_home_card};
 /// Un réseau d'exemple, mot de passe visible tout de suite pour montrer ce que lira le voyageur.
 fn sample_config() -> serde_json::Value {
     json!({
-        "ssid": "Maison-Invites",
-        "password": "soleil-2026",
-        "hint": "Le réseau 5 GHz est plus rapide dans le salon.",
-        "connection_steps": "Choisissez « Maison-Invites » dans les réglages Wi-Fi, puis saisissez le mot de passe.",
+        "networks": [
+            { "id": "main", "ssid": "Maison-Invites", "password": "soleil-2026", "security": "wpa",
+              "label": "Principal" },
+            { "id": "fast", "ssid": "Maison-Invites-5G", "password": "soleil-2026", "security": "wpa",
+              "label": "5 GHz, plus rapide dans le salon" }
+        ],
+        "note": "La box est dans le meuble TV si besoin de la redémarrer.",
         "reveal_policy": "always"
     })
 }

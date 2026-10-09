@@ -4,12 +4,15 @@ mod config;
 mod email_context;
 mod guest;
 mod host;
+mod i18n;
+mod readiness;
 mod reveal;
 
-pub use config::{ModuleConfig, RevealPolicy, WifiSecurity};
+pub use config::{ModuleConfig, Network, RevealPolicy, WifiSecurity};
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use guest::{render_explore_detail, render_home_card};
-pub use host::render_host_main;
+pub use host::{render_host_main, render_host_stay};
+pub use readiness::publish_readiness;
 
 portaki_sdk::portaki_module!(
     id = "wifi-guest",

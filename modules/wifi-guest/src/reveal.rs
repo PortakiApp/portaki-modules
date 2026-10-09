@@ -117,7 +117,7 @@ fn local_naive_to_utc(tz_name: &str, naive: NaiveDateTime) -> Option<DateTime<Ut
     }
 }
 
-fn offset_for_iana(tz_name: &str, at: DateTime<Utc>) -> FixedOffset {
+pub(crate) fn offset_for_iana(tz_name: &str, at: DateTime<Utc>) -> FixedOffset {
     let name = tz_name.trim();
     if name.is_empty()
         || name.eq_ignore_ascii_case("UTC")

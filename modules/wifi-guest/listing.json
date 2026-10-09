@@ -14,17 +14,17 @@
     "en": "The network name, the password revealed on the host's schedule, a tip and the steps to connect."
   },
   "hostSurface": {
-    "fr": "Une fiche Wi-Fi : nom du réseau, mot de passe, astuce, étapes de connexion et moment d’affichage du mot de passe.",
-    "en": "A Wi-Fi sheet: network name, password, tip, connection steps and when the password is shown."
+    "fr": "Une fiche Wi-Fi : jusqu’à trois réseaux (nom, libellé, sécurité, mot de passe, réseau masqué), le QR code, un message et le moment où le mot de passe s’affiche. Sur la fiche séjour, quand le voyageur le voit.",
+    "en": "A Wi-Fi sheet: up to three networks (name, label, security, password, hidden network), the QR code, a message and when the password appears. On the stay page, when the guest sees it."
   },
   "configItems": [
     {
-      "fr": "Nom du réseau et mot de passe",
-      "en": "Network name and password"
+      "fr": "Un à trois réseaux : nom, libellé, sécurité, mot de passe, réseau masqué",
+      "en": "One to three networks: name, label, security, password, hidden network"
     },
     {
-      "fr": "Astuce et étapes de connexion (facultatif)",
-      "en": "Tip and connection steps (optional)"
+      "fr": "QR code de connexion et message pour le voyageur",
+      "en": "Connection QR code and a message for the guest"
     },
     {
       "fr": "Moment d’affichage du mot de passe (dès la réservation, 24 h avant, la veille à 16 h ou à l’arrivée)",

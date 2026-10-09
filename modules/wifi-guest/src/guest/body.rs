@@ -2,10 +2,11 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::SecretState;
-use portaki_sdk::sdui::primitives::{InfoBanner, KeyValue, QRCode, Text};
+use portaki_sdk::sdui::primitives::{Eyebrow, InfoBanner, KeyValue, QRCode, Text};
 
 use super::load::{password_display, GuestData};
 use super::qr::wifi_payload;
+use crate::config::Network;
 
 fn kv_row(key_i18n: &str, value: &str, mono: bool) -> Component {
     let mut row = KeyValue::new().key(key_i18n).value(value);
@@ -16,7 +17,11 @@ fn kv_row(key_i18n: &str, value: &str, mono: bool) -> Component {
 }
 
 fn push_reveal_banner(children: &mut Vec<Component>, data: &GuestData) {
-    if data.password_revealed || data.config.password.trim().is_empty() {
+    let any_secret = data
+        .networks
+        .iter()
+        .any(|n| !password_display(data, n).is_empty());
+    if data.password_revealed || !any_secret {
         return;
     }
     let Some(message) = data.reveal_locked_message.as_ref() else {
@@ -35,17 +40,21 @@ fn push_reveal_banner(children: &mut Vec<Component>, data: &GuestData) {
 /// its pixels, so showing one before the reveal date would hand over exactly what the masked row
 /// above it refuses — and a phone would join the network, which no mask could then undo.
 ///
-/// An open network has no secret to hold back, so its code shows at any time.
-fn push_qr_code(children: &mut Vec<Component>, data: &GuestData) {
-    let password = data.config.password.trim();
+/// An open network has no secret to hold back, so its code shows at any time. The host may also
+/// turn the codes off (`show_qr`).
+fn push_qr_code(children: &mut Vec<Component>, data: &GuestData, network: &Network) {
+    if !data.config.show_qr {
+        return;
+    }
+    let password = password_display(data, network);
     if !password.is_empty() && !data.password_revealed {
         return;
     }
     let Some(payload) = wifi_payload(
-        &data.config.ssid,
-        password,
-        data.config.security,
-        data.config.hidden,
+        &network.ssid,
+        &network.password,
+        network.security,
+        network.hidden,
     ) else {
         return;
     };
@@ -54,14 +63,12 @@ fn push_qr_code(children: &mut Vec<Component>, data: &GuestData) {
 
 /// Où ce corps est dessiné — la carte d'accueil, ou la feuille qu'elle ouvre.
 ///
-/// Les deux ne portent pas la même chose : la carte a un sous-titre, la feuille non ; la feuille a
-/// la place du rappel de sécurité, la carte non. Un seul paramètre le dit, plutôt que deux
-/// booléens qu'on finit par passer à l'envers.
+/// La carte montre le premier réseau et a le message de l'hôte en sous-titre ; la feuille montre
+/// tous les réseaux, le message en tête (un portail captif se dit avant tout), et le rappel de
+/// sécurité. Un seul paramètre le dit, plutôt que deux booléens qu'on finit par passer à l'envers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Placement {
-    /// Carte d'accueil : la note de l'hôte est déjà son sous-titre.
     Card,
-    /// Feuille de détail : rien au-dessus, tout se dit ici.
     Sheet,
 }
 
@@ -69,6 +76,9 @@ pub fn build_wifi_body(data: &GuestData, placement: Placement) -> Vec<Component>
     let mut children = Vec::new();
 
     if placement == Placement::Sheet {
+        if let Some(note) = data.config.note_text(&data.locale) {
+            children.push(Text::new().text(note).variant(TextVariant::Body).into());
+        }
         children.push(Component::InfoBanner(
             InfoBanner::new()
                 .title("i18n:guest.security.title")
@@ -78,42 +88,50 @@ pub fn build_wifi_body(data: &GuestData, placement: Placement) -> Vec<Component>
 
     push_reveal_banner(&mut children, data);
 
-    let ssid = data.config.ssid.trim();
-    if !ssid.is_empty() {
+    let shown: &[Network] = match placement {
+        Placement::Card => &data.networks[..data.networks.len().min(1)],
+        Placement::Sheet => &data.networks,
+    };
+    let several = shown.len() > 1;
+    for network in shown {
+        if several {
+            let label = network
+                .label
+                .as_ref()
+                .map(|label| label.get(&data.locale).trim().to_string())
+                .filter(|label| !label.is_empty())
+                .unwrap_or_else(|| network.ssid.trim().to_string());
+            children.push(Eyebrow::new().text(label).into());
+        }
         // En mono comme le mot de passe : c'est ce qu'on recopie à la main quand le code échoue,
         // et une proportionnelle y confond l avec I, 0 avec O.
-        children.push(kv_row("i18n:guest.ssid", ssid, true));
-    }
+        children.push(kv_row("i18n:guest.ssid", network.ssid.trim(), true));
 
-    let password = data.config.password.trim();
-    if !password.is_empty() {
-        // La révélation et la copie tiennent dans la ligne, comme la maquette les dessine (§2.2).
-        // Un bouton « Copier le mot de passe » dessous répétait une action que la ligne porte
-        // déjà, et le posait sous le QR qu'il faut regarder.
-        let mut row = KeyValue::new()
-            .key("i18n:guest.password")
-            .value(password_display(data))
-            .mono(true);
-        if data.password_revealed {
-            row = row.copy(true).copyLabel("i18n:guest.copyPassword");
-        } else {
-            row = row.secret(SecretState::hidden(data.reveal_at_label.clone()));
+        let password = password_display(data, network);
+        if !password.is_empty() {
+            // La révélation et la copie tiennent dans la ligne, comme la maquette les dessine.
+            let mut row = KeyValue::new()
+                .key("i18n:guest.password")
+                .value(password)
+                .mono(true);
+            if data.password_revealed {
+                row = row.copy(true).copyLabel("i18n:guest.copyPassword");
+            } else {
+                row = row.secret(SecretState::hidden(data.reveal_at_label.clone()));
+            }
+            children.push(Component::KeyValue(row));
         }
-        children.push(Component::KeyValue(row));
-    }
 
-    push_qr_code(&mut children, data);
+        push_qr_code(&mut children, data, network);
 
-    // La note de l'hôte est le sous-titre de la carte : la redire dans le corps l'affichait deux
-    // fois sur le même écran. Dans la feuille, où il n'y a pas de sous-titre, elle reste.
-    if placement == Placement::Sheet {
-        if let Some(hint) = data.config.hint_text(&data.locale) {
-            children.push(Text::new().text(hint).variant(TextVariant::Caption).into());
+        if network.hidden {
+            children.push(
+                Text::new()
+                    .text("i18n:guest.hidden.help")
+                    .variant(TextVariant::Caption)
+                    .into(),
+            );
         }
-    }
-
-    if let Some(steps) = data.config.connection_steps_text(&data.locale) {
-        children.push(Text::new().text(steps).variant(TextVariant::Body).into());
     }
 
     children

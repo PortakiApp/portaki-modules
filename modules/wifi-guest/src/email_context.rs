@@ -35,15 +35,14 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
         return Ok(EmailContextResponse { wifi_name: None });
     }
 
+    // Le premier réseau, celui de la carte : l'e-mail n'en nomme qu'un.
     let config = ModuleConfig::load(&ctx)?;
-    let ssid = config.ssid.trim();
-    Ok(EmailContextResponse {
-        wifi_name: if ssid.is_empty() {
-            None
-        } else {
-            Some(ssid.to_string())
-        },
-    })
+    let ssid = config
+        .networks()
+        .into_iter()
+        .map(|network| network.ssid.trim().to_string())
+        .find(|ssid| !ssid.is_empty());
+    Ok(EmailContextResponse { wifi_name: ssid })
 }
 
 #[cfg(test)]
