@@ -353,7 +353,10 @@ impl ModuleConfig {
     }
 
     /// Les jours cochés, `mon` … `sun`, dans l'ordre de la semaine.
+    /// Les jours de collecte : ceux du logement et ceux de chaque bac, dans l'ordre de la
+    /// semaine — le bandeau annonce la prochaine collecte, quel que soit le bac.
     pub fn collection_days(&self) -> Vec<String> {
+        let bins = self.parse_bins();
         [
             ("mon", self.collects_mon),
             ("tue", self.collects_tue),
@@ -364,9 +367,34 @@ impl ModuleConfig {
             ("sun", self.collects_sun),
         ]
         .into_iter()
-        .filter(|(_, ticked)| *ticked)
+        .filter(|(day, ticked)| {
+            *ticked
+                || bins
+                    .iter()
+                    .any(|bin| bin.days.iter().any(|d| d.trim() == *day))
+        })
         .map(|(day, _)| day.to_string())
         .collect()
+    }
+
+    /// Le premier bac sans jour de collecte quand le logement n'en a pas non plus, pour
+    /// l'avertissement « Le bac jaune n'a pas de jour de collecte. » (§3).
+    pub fn bin_without_days(&self) -> Option<BinRow> {
+        let global = [
+            self.collects_mon,
+            self.collects_tue,
+            self.collects_wed,
+            self.collects_thu,
+            self.collects_fri,
+            self.collects_sat,
+            self.collects_sun,
+        ];
+        if !self.has_collection() || global.contains(&true) {
+            return None;
+        }
+        self.parse_bins()
+            .into_iter()
+            .find(|bin| bin.days.is_empty())
     }
 
     /// The named rows, for the guest: the form sends its slots, blank ones included.
@@ -398,6 +426,35 @@ pub struct BinRow {
     pub location: I18nText,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub color: Option<String>,
+    /// Les jours de collecte de ce bac, `mon` … `sun` (spec Tri §2.2) : un choix multiple.
+    #[serde(
+        default,
+        skip_serializing_if = "Vec::is_empty",
+        deserialize_with = "days_list"
+    )]
+    pub days: Vec<String>,
+}
+
+/// Une liste de jours, en tableau ou en texte : un dashboard d'avant le choix multiple envoie
+/// la valeur cochée seule (`"tue"`), ou du JSON en chaîne. Refuser la chaîne ferait refuser toute
+/// la configuration, et le module rendrait son état d'erreur partout.
+fn days_list<'de, D>(deserializer: D) -> std::result::Result<Vec<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Ok(match Value::deserialize(deserializer)? {
+        Value::Array(items) => items
+            .into_iter()
+            .filter_map(|item| item.as_str().map(str::to_string))
+            .collect(),
+        Value::String(text) => serde_json::from_str::<Vec<String>>(&text).unwrap_or_else(|_| {
+            text.split(',')
+                .map(|day| day.trim().to_string())
+                .filter(|day| !day.is_empty())
+                .collect()
+        }),
+        _ => Vec::new(),
+    })
 }
 
 impl BinRow {
@@ -721,5 +778,37 @@ mod tests {
             ]
         );
         assert!(ModuleConfig::default().problems().is_empty());
+    }
+
+    /// Les jours d'un bac comptent pour la prochaine collecte ; un bac sans jour avertit, sauf si
+    /// le logement en a ou n'a pas de ramassage.
+    #[test]
+    fn bin_days_feed_the_collection() {
+        let config: ModuleConfig = serde_json::from_value(json!({
+            "bins": [
+                { "title": "Jaune", "items": "Emballages", "days": ["fri", "tue"] },
+                { "title": "Vert", "items": "Verre", "days": "mon" },
+                { "title": "Gris", "items": "Ordures" }
+            ]
+        }))
+        .unwrap();
+        assert_eq!(config.collection_days(), ["mon", "tue", "fri"]);
+        assert_eq!(config.bins[1].days, ["mon"]);
+        assert_eq!(
+            config
+                .bin_without_days()
+                .map(|bin| bin.title.get("fr").to_string()),
+            Some("Gris".to_string())
+        );
+        let rural = ModuleConfig {
+            has_collection: Some(false),
+            ..config.clone()
+        };
+        assert!(rural.bin_without_days().is_none());
+        let global = ModuleConfig {
+            collects_wed: true,
+            ..config
+        };
+        assert!(global.bin_without_days().is_none());
     }
 }

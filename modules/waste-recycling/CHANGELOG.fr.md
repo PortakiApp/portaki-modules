@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.10.0
+
+Les jours de collecte par bac.
+
+* Cochez les jours de collecte de chaque bac : le livret les affiche sous le bac et annonce la prochaine collecte.
+* Un bac sans jour de collecte déclenche un avertissement à la publication.
+
 ## 1.9.0
 
 Collecte, local et points d'apport.

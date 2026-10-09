@@ -31,17 +31,22 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         hint: crate::i18n::text("publish.where.hint"),
     }];
 
-    // Des bacs ramassés devant la porte, mais aucun jour : le bandeau ne peut rien calculer.
-    if config.has_collection()
-        && !config.parse_bins().is_empty()
-        && config.collection_days().is_empty()
-    {
+    // Un bac ramassé devant la porte, mais sans jour : le bandeau ne peut rien en dire (§3).
+    if let Some(bin) = config.bin_without_days() {
+        let name = bin.title.get("fr").trim().to_string();
+        let index = config
+            .bins
+            .iter()
+            .position(|row| row.id == bin.id && row.title == bin.title);
         items.push(PublishCheck {
-            id: "collectionDays".into(),
+            id: match index {
+                Some(index) => format!("config.bins.{index}.days"),
+                None => "collectionDays".into(),
+            },
             level: PublishLevel::Recommended,
             ok: false,
             label: crate::i18n::text("host.collection.days"),
-            hint: crate::i18n::text("publish.days.hint"),
+            hint: crate::i18n::text_with("publish.days.bin", &[("bin", name.as_str())]),
         });
     }
 
