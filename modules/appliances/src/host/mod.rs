@@ -6,7 +6,7 @@ use portaki_sdk::sdui::common::Leading;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
     Accordion, Button, Card, EditableList, EmptyState, Field, FieldHint, Form, List, ListItem,
-    NumberInput, Page, RichTextEditor, Select, Stack, Text, TextInput, Toggle,
+    NumberInput, Page, RichTextEditor, Select, Stack, Text, TextArea, TextInput, Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
 use portaki_sdk::sdui::EditableListItem;
@@ -157,6 +157,7 @@ fn build_detail_panel(
     let location = device.map(|d| d.location.as_str()).unwrap_or("");
     let manual_url = device.map(|d| d.manual_url.as_str()).unwrap_or("");
     let model = device.map(|d| d.model.as_str()).unwrap_or("");
+    let safety_note = device.map(|d| d.safety_note.as_str()).unwrap_or("");
     let video_url = device.map(|d| d.video_url.as_str()).unwrap_or("");
     let steps: Vec<EditableListItem> = device
         .map(|d| {
@@ -217,6 +218,10 @@ fn build_detail_panel(
         field("description")
             .label("i18n:host.device.description")
             .child(RichTextEditor::new().name("description").value(description))
+            .into(),
+        field("safetyNote")
+            .label("i18n:host.device.safetyNote")
+            .child(TextArea::new().name("safetyNote").value(safety_note))
             .into(),
         field("manualUrl")
             .label("i18n:host.device.manualUrl")
