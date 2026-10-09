@@ -5,6 +5,7 @@ use portaki_sdk::prelude::*;
 use serde::Serialize;
 
 use crate::config::ModuleConfig;
+use crate::stay_code;
 
 #[portaki_sdk::wire]
 #[portaki_sdk::params]
@@ -45,7 +46,7 @@ struct UnlockConnectorArgs {
 pub fn get_guest_credential(ctx: Context, _args: StayArgs) -> Result<GuestCredentialResponse> {
     require_stay_window(&ctx)?;
     let config = ModuleConfig::load(&ctx)?;
-    let code = require_keypad_code(&config)?;
+    let code = guest_code(&ctx, &config)?;
     Ok(GuestCredentialResponse {
         credential_type: "keypad",
         guest_notice: t!("guest.credential.keypad", code = &code)?,
@@ -82,11 +83,17 @@ pub fn unlock(ctx: Context, _args: StayArgs) -> Result<UnlockResponse> {
         }
     }
 
-    if keypad.is_empty() {
+    // Une serrure qui n'a pas répondu ne recevra pas de nouveau code : le code de secours d'abord.
+    let code = if remote_failed && !keypad.is_empty() {
+        Ok(keypad)
+    } else {
+        guest_code(&ctx, &config)
+    };
+    let Ok(keypad) = code else {
         return Err(PortakiError::Host(
             "unlock unavailable: configure keypad_code or Nuki BYOK + smartlock_id".into(),
         ));
-    }
+    };
 
     // Une serrure qui n'a pas répondu se dit ; une serrure qu'on n'a jamais appelée se tait et
     // donne le code. Le voyageur est devant la porte : les deux ont besoin du code.
@@ -140,6 +147,36 @@ fn try_remote_unlock(smartlock_id: &str) -> Result<()> {
         },
     )?;
     Ok(())
+}
+
+/// The code the guest types: the stay's own when the host asked for one and Nuki answers, the
+/// shared keypad code otherwise — the fallback of spec §9 #1.
+fn guest_code(ctx: &Context, config: &ModuleConfig) -> Result<String> {
+    if let Some(code) = stay_code(ctx, config) {
+        return Ok(code);
+    }
+    require_keypad_code(config)
+}
+
+fn stay_code(ctx: &Context, config: &ModuleConfig) -> Option<String> {
+    if !stay_code::wanted(ctx, config) {
+        return None;
+    }
+    let stay = ctx.stay.as_ref()?;
+    let (checkin, checkout) = (stay.checkin_at?, stay.checkout_at?);
+    let smartlock_id = config.smartlock_id_trimmed();
+    let created = host::time::now()
+        .and_then(|now| stay_code::ensure(smartlock_id, &stay.stay_id, checkin, checkout, now));
+    match created {
+        Ok(code) => Some(code),
+        Err(error) => {
+            let mut fields = host::log::Fields::new();
+            fields.insert("error", &error.to_string());
+            fields.insert("smartlockId", &smartlock_id);
+            let _ = host::log::warn("nuki_stay_code_failed", &fields);
+            None
+        }
+    }
 }
 
 fn require_keypad_code(config: &ModuleConfig) -> Result<String> {

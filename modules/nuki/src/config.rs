@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 /// spans the connector, so `publishReadiness` carries it. The platform does not trim: read
 /// through the `*_trimmed` accessors.
 #[portaki_sdk::config]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ModuleConfig {
     #[field(label = "host.smartlockId.label")]
     pub smartlock_id: String,
@@ -15,6 +15,21 @@ pub struct ModuleConfig {
     pub keypad_code: String,
     #[field(label = "host.deviceName.label")]
     pub device_name: String,
+    /// Un code clavier par séjour, créé sur la serrure via Nuki Web (spec Nuki §2.2, défaut oui).
+    /// Sans clé Nuki Web, le code clavier commun reste celui du voyageur.
+    #[field(label = "host.codePerStay.label")]
+    pub code_per_stay: bool,
+}
+
+impl Default for ModuleConfig {
+    fn default() -> Self {
+        Self {
+            smartlock_id: String::new(),
+            keypad_code: String::new(),
+            device_name: String::new(),
+            code_per_stay: true,
+        }
+    }
 }
 
 impl ModuleConfig {
@@ -65,9 +80,21 @@ mod tests {
             ..ModuleConfig::default()
         };
         assert!(with("").problems().is_empty());
+        assert!(
+            ModuleConfig::default().code_per_stay,
+            "spec §2.2 : oui par défaut"
+        );
         assert!(with("482913").problems().is_empty());
         for refused in ["048291", "4829", "48291a", "4829131"] {
             assert_eq!(with(refused).problems().len(), 1, "{refused}");
         }
+    }
+
+    /// A config saved before the field existed reads the spec default: one code per stay.
+    #[test]
+    fn a_config_saved_before_code_per_stay_reads_yes() {
+        let old: ModuleConfig =
+            serde_json::from_str(r#"{"smartlock_id":"1","keypad_code":"482913"}"#).unwrap();
+        assert!(old.code_per_stay);
     }
 }
