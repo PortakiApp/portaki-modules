@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.10.0
+
+Les réglages d'accès, bloc par bloc.
+
+* Les réglages suivent l'ordre du livret, un bloc par étape, et chaque champ dit ce qui ne va pas sous lui-même.
+* Les codes s'affichent aussi un nombre d'heures choisi avant l'arrivée ; une serrure connectée peut générer les siens.
+* Un rappel « Changer le code de la boîte à clés » s'ajoute dans À venir après chaque départ.
+* La réception a ses horaires jour par jour et le livret dit si elle est ouverte ; le créneau de remise se choisit en une plage.
+* Chaque étape du chemin jusqu'à la porte peut avoir sa photo ; « Autre » se précise en une phrase.
+
 ## 1.9.1
 
 Montée technique.

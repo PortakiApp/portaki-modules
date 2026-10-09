@@ -55,7 +55,9 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
 
     let config = ModuleConfig::read(&ctx)?;
     // Une serrure sans code de secours, hors ligne : le voyageur n'a plus qu'à appeler (§9 cas 8).
-    if let MethodFields::SmartLock { manual_code: None } = &config.method {
+    if let (MethodFields::SmartLock { manual_code: None }, true) =
+        (&config.method, config.code_by_lock)
+    {
         items.push(PublishCheck {
             id: "config.smart_lock_manual_code".into(),
             level: PublishLevel::Recommended,
@@ -73,6 +75,12 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         return Ok(PublishReadiness { items });
     }
     let ok = !config.entry_code_missing();
+    // Généré par la serrure : ce qui manque, c'est la serrure, pas un code (§2.4).
+    let hint = if config.code_by_lock {
+        "publish.lock.missing"
+    } else {
+        "publish.entry-code.hint"
+    };
     items.insert(
         0,
         PublishCheck {
@@ -80,7 +88,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             level: PublishLevel::Required,
             ok,
             label: text("publish.entry-code.label"),
-            hint: text("publish.entry-code.hint"),
+            hint: text(hint),
         },
     );
     Ok(PublishReadiness { items })
@@ -90,6 +98,10 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
 fn field_label(field: &str) -> &'static str {
     match field.rsplit('.').next().unwrap_or_default() {
         "method_instructions" => "config.methodInstructions",
+        "method_other" => "host.methodOther",
+        "reveal_hours" => "host.reveal.hours",
+        "handover_slot" => "host.handover.slot",
+        "desk_hours" => "host.desk.hours",
         "keybox_location" => "host.keybox.location",
         "global_note" => "config.globalNote",
         "late_arrival_note" => "config.lateArrivalNote",
@@ -102,7 +114,6 @@ fn field_label(field: &str) -> &'static str {
         "arrival_video_url" => "host.video.label",
         "in_person_contact" => "host.inPerson.contact",
         "building_staff_contact" => "host.buildingStaff.contact",
-        "handover_slot_from" => "host.handover.slot",
         "handover_name" => "host.handover.name",
         "handover_phone" => "host.handover.phone",
         "desk_phone" => "host.desk.phone",

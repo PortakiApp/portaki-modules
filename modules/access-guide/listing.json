@@ -31,8 +31,8 @@
       "en": "Address and arrival route steps"
     },
     {
-      "fr": "Moment d’affichage des codes (dès la réservation, 24 h avant, la veille à 16 h ou à l’arrivée)",
-      "en": "When codes appear (from booking, 24 h before, the day before at 4 pm, or at check-in)"
+      "fr": "Moment d’affichage des codes (dès la réservation, la veille à 16 h, 24 h avant, à l’arrivée ou un nombre d’heures choisi) et rappel de changer le code après chaque départ",
+      "en": "When codes appear (from booking, the day before at 4 pm, 24 h before, at check-in, or a chosen number of hours) and a reminder to change the code after each departure"
     }
   ],
   "capabilities": [

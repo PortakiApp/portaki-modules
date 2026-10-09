@@ -6,8 +6,9 @@ use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::{
     BadgeSpec, KeyValueLayout, Leading, LeadingVisual, SecretState, Trailing, TrailingVisual,
 };
+use portaki_sdk::sdui::hours;
 use portaki_sdk::sdui::primitives::{
-    Button, Eyebrow, Grid, InfoBanner, KeyValue, Link, ListItem, Map,
+    Button, Eyebrow, Grid, Image, InfoBanner, KeyValue, Link, ListItem, Map,
 };
 
 use crate::config::{
@@ -255,7 +256,7 @@ fn secret_tiles(data: &GuestData) -> Vec<Component> {
     if let Some(code) = data.config.smart_lock_manual_code() {
         tiles.push(secret_tile(
             data,
-            "i18n:guest.smartLock.manualCode",
+            smart_lock_code_key(data),
             IconName::Lock,
             code,
         ));
@@ -284,6 +285,16 @@ fn secret_tiles(data: &GuestData) -> Vec<Component> {
         tiles.extend(plain_method_tile(data));
     }
     tiles
+}
+
+/// Le code d'une serrure : « Code » quand c'est le même pour tous les séjours, « Code de
+/// secours » quand la serrure génère les siens (§2.2).
+fn smart_lock_code_key(data: &GuestData) -> &'static str {
+    if data.config.code_by_lock {
+        "i18n:guest.smartLock.manualCode"
+    } else {
+        "i18n:guest.doorCode.code"
+    }
 }
 
 /// La même valeur, en rangée plutôt qu'en tuile — rien d'autre ne change.
@@ -316,10 +327,20 @@ fn plain_method_tile(data: &GuestData) -> Option<Component> {
                 .clone()
                 .or_else(|| time_hint.clone())?,
         ),
+        // Les plages du jour et « Ouvert maintenant » (§2.6) ; l'ancien texte libre à défaut.
         MethodFields::BuildingStaff { hours, .. } => (
             "i18n:guest.buildingStaff.desk",
             IconName::Building,
-            hours.clone()?,
+            match &data.desk_today {
+                Some(today) => desk_state(today),
+                None => hours.clone()?,
+            },
+        ),
+        // « Autre » : la précision de l'hôte remplace la tuile du code (§2.1).
+        MethodFields::Other {} => (
+            "i18n:guest.method.other",
+            IconName::Key,
+            data.config.method_other.clone()?,
         ),
         MethodFields::HostGreets { eta_hint, .. } => (
             "i18n:guest.hostGreets.welcome",
@@ -339,6 +360,21 @@ fn plain_method_tile(data: &GuestData) -> Option<Component> {
             .layout(KeyValueLayout::Tile)
             .icon(icon),
     ))
+}
+
+/// « Ouvert maintenant · 07:00 – 22:00 », « Fermé · 07:00 – 22:00 », « Fermé aujourd'hui ».
+fn desk_state(today: &super::load::DeskToday) -> String {
+    let key = match (today.open_now, today.ranges.is_empty()) {
+        (true, _) => "guest.desk.openNow",
+        (false, false) => "guest.desk.closedNow",
+        (false, true) => "guest.desk.closedToday",
+    };
+    let state = translate(key, &Vars::new()).unwrap_or_else(|_| key.to_string());
+    if today.ranges.is_empty() {
+        state
+    } else {
+        format!("{state} · {}", today.ranges)
+    }
 }
 
 fn push_text_row(children: &mut Vec<Component>, key_i18n: &str, value: &str) {
@@ -467,16 +503,10 @@ fn push_primary_method(children: &mut Vec<Component>, data: &GuestData, detailed
             if let Some(code) = code {
                 push_secret_row(children, data, "i18n:guest.keybox.code", code);
             }
-            if detailed {
-                push_method_instructions(children, data);
-            }
         }
         MethodFields::DoorCode { target, code } => {
             children.push(kv_row("i18n:guest.method", door_target_key(*target), false));
             push_secret_row(children, data, "i18n:guest.doorCode.code", code);
-            if detailed {
-                push_method_instructions(children, data);
-            }
         }
         MethodFields::SmartLock { manual_code } => {
             children.push(kv_row(
@@ -495,15 +525,7 @@ fn push_primary_method(children: &mut Vec<Component>, data: &GuestData, detailed
                 push_smart_lock_ctas(children, data);
             }
             if let Some(manual_code) = manual_code {
-                push_secret_row(
-                    children,
-                    data,
-                    "i18n:guest.smartLock.manualCode",
-                    manual_code,
-                );
-            }
-            if detailed || !has_provider {
-                push_method_instructions(children, data);
+                push_secret_row(children, data, smart_lock_code_key(data), manual_code);
             }
         }
         MethodFields::InPerson {
@@ -554,7 +576,18 @@ fn push_primary_method(children: &mut Vec<Component>, data: &GuestData, detailed
                 "i18n:guest.buildingStaff.deskLocation",
                 desk_location,
             );
-            if let Some(hours) = hours {
+            // La semaine, jour par jour (§2.6) ; l'ancien texte libre à défaut.
+            let week = hours::parse_week(&data.config.desk_hours);
+            if week.iter().any(|day| !day.is_empty()) {
+                for (day, ranges) in hours::DAYS.iter().zip(&week) {
+                    let value = if ranges.is_empty() {
+                        "i18n:guest.desk.closed".to_string()
+                    } else {
+                        super::load::format_ranges(ranges)
+                    };
+                    children.push(kv_row(&format!("i18n:day.{day}"), &value, false));
+                }
+            } else if let Some(hours) = hours {
                 push_text_row(children, "i18n:guest.buildingStaff.hours", hours);
             }
             if let Some(contact) = contact {
@@ -589,8 +622,14 @@ fn push_primary_method(children: &mut Vec<Component>, data: &GuestData, detailed
                 "i18n:guest.method.other",
                 false,
             ));
-            push_method_instructions(children, data);
+            if let Some(other) = data.config.method_other.as_deref() {
+                push_text_row(children, "i18n:guest.method.otherHow", other);
+            }
         }
+    }
+    // Les instructions détaillées valent pour toutes les méthodes (§2.10).
+    if detailed {
+        push_method_instructions(children, data);
     }
 }
 
@@ -740,15 +779,29 @@ fn push_arrival_extras(children: &mut Vec<Component>, data: &GuestData) {
         ));
     }
 
+    children.extend(arrival_steps(data));
+}
+
+/// Les étapes numérotées, chacune suivie de sa photo 4/3 quand l'hôte en a mis une (§2.9).
+fn arrival_steps(data: &GuestData) -> Vec<Component> {
+    let mut steps = Vec::new();
     let mut rank = 1;
     for step in &data.texts.steps {
-        let title = step.title.trim();
-        if title.is_empty() {
+        if step.title.trim().is_empty() {
             continue;
         }
-        children.push(Component::ListItem(arrival_step(step, rank)));
+        steps.push(Component::ListItem(arrival_step(step, rank)));
+        if let Some(photo) = step.photo.as_deref() {
+            steps.push(Component::Image(
+                Image::new()
+                    .url(photo)
+                    .alt(step.title.trim())
+                    .aspectRatio("4/3"),
+            ));
+        }
         rank += 1;
     }
+    steps
 }
 
 pub fn build_access_glance(data: &GuestData) -> Vec<Component> {
@@ -853,15 +906,7 @@ fn push_method_location(children: &mut Vec<Component>, data: &GuestData) {
 /// Les étapes d'arrivée, précédées de leur intertitre. Rien du tout quand l'hôte n'en a saisi
 /// aucune — un intertitre seul annoncerait un chemin qui n'existe pas.
 fn push_arrival_path(children: &mut Vec<Component>, data: &GuestData) {
-    let mut steps = Vec::new();
-    let mut rank = 1;
-    for step in &data.texts.steps {
-        if step.title.trim().is_empty() {
-            continue;
-        }
-        steps.push(Component::ListItem(arrival_step(step, rank)));
-        rank += 1;
-    }
+    let steps = arrival_steps(data);
     if steps.is_empty() {
         return;
     }
