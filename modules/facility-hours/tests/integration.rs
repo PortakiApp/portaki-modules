@@ -299,8 +299,20 @@ fn the_form_draws_the_facilities_the_host_has() {
         .run(|ctx| {
             let json =
                 serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
-            assert!(json.contains("facilities.11.title"), "{json}");
-            assert!(!json.contains("facilities.12.title"), "{json}");
+            assert!(
+                json.contains(&format!(
+                    "facilities.{}.title",
+                    facility_hours::MAX_FACILITIES - 1
+                )),
+                "{json}"
+            );
+            assert!(
+                !json.contains(&format!(
+                    "facilities.{}.title",
+                    facility_hours::MAX_FACILITIES
+                )),
+                "{json}"
+            );
             assert!(
                 json.contains(&format!(
                     r#""facilities_count":{}"#,

@@ -6,6 +6,8 @@ use crate::config::{FacilityRow, ModuleConfig};
 
 pub struct GuestData {
     pub facilities: Vec<FacilityRow>,
+    /// Combien de lignes la carte d'accueil montre.
+    pub card_limit: usize,
     pub general_note: String,
     pub locale: String,
     /// Le fuseau du logement : un horaire se lit à l'heure du lieu, pas à celle du serveur.
@@ -24,6 +26,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
 
     Ok(Some(GuestData {
         facilities: config.parse_facilities(),
+        card_limit: config.card_limit(),
         general_note: config.general_note.get(&ctx.locale).to_string(),
         locale: ctx.locale.clone(),
         timezone: ctx.timezone.clone(),

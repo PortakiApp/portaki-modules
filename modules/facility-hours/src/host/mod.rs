@@ -3,18 +3,15 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
-    Card, Field, FieldHint, Form, Page, Select, Stack, StepList, Text, TextArea, TextInput, Toggle,
+    Card, Field, FieldHint, Form, NumberInput, Page, Select, Stack, StepList, Text, TextArea,
+    TextInput,
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{FacilityRow, ModuleConfig, ICONS};
-
-/// Combien d'équipements le formulaire accepte.
-///
-/// Une capacité, pas un nombre de lignes dessinées : six emplacements figés gelaient la liste à
-/// six — l'hôte ne pouvait pas en saisir un septième parce que le formulaire ne le dessinait
-/// jamais, et voyait quatre cartes vides quand il en avait saisi deux.
-pub const MAX_FACILITIES: usize = 12;
+pub use crate::config::MAX_FACILITIES;
+use crate::config::{
+    FacilityRow, ModuleConfig, GROUPS, ICONS, MAX_CARD_LIMIT, MIN_CARD_LIMIT, MODES, MODE_SAME,
+};
 
 #[portaki_sdk::surface(
     host,
@@ -27,7 +24,8 @@ pub const MAX_FACILITIES: usize = 12;
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let config = ModuleConfig::load(&ctx)?;
 
-    let mut cards: Vec<Component> = vec![facilities_card(&config, &ctx)];
+    let mut cards: Vec<Component> =
+        vec![display_card(&config, &ctx), facilities_card(&config, &ctx)];
     cards.push(
         Card::new()
             .title("i18n:host.section.note")
@@ -58,11 +56,46 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     .with_id(MAIN))
 }
 
+/// §2.1 Affichage : combien de lignes sur la carte d'accueil.
+fn display_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let shown = if config.card_limit.is_finite() && config.card_limit != 0.0 {
+        config.card_limit
+    } else {
+        config.card_limit() as f64
+    };
+    Card::new()
+        .title("i18n:host.display.title")
+        .icon(IconName::Home)
+        .child(
+            named(config, ctx, "card_limit")
+                .label("i18n:host.cardLimit.label")
+                .child(
+                    NumberInput::new()
+                        .name("card_limit")
+                        .min(MIN_CARD_LIMIT as f64)
+                        .max(MAX_CARD_LIMIT as f64)
+                        .value(shown),
+                ),
+        )
+        .child(FieldHint::new().text("i18n:host.cardLimit.hint"))
+        .into()
+}
+
+/// Le champ `name`, avec le message de [`ModuleConfig::error_of`] sous lui s'il y en a un.
+fn named(config: &ModuleConfig, ctx: &HostContext, name: impl Into<String>) -> Field {
+    let name = name.into();
+    let field = Field::new().name(name.clone());
+    match config.error_of(&name) {
+        Some(error) => field.error(error.get(&ctx.locale).to_string()),
+        None => field,
+    }
+}
+
 /// Les équipements, en lignes dynamiques bornées.
 fn facilities_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
     let rows_count = draft_rows(ctx, config.facilities.len());
     let rows: Vec<Component> = (0..rows_count)
-        .map(|index| facility_row(index, config.facilities.get(index), ctx))
+        .map(|index| facility_row(index, config, ctx))
         .collect();
 
     Card::new()
@@ -102,12 +135,14 @@ fn emit_input(payload: impl serde::Serialize) -> Action {
     Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
 }
 
-fn facility_row(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext) -> Component {
+fn facility_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let facility = config.facilities.get(index);
     let title = facility
         .map(|f| f.title.host_value(ctx))
         .unwrap_or_default();
     let hours = facility.and_then(|f| f.hours.as_deref()).unwrap_or("");
-    let group = facility.and_then(FacilityRow::group_label).unwrap_or("");
+    let group = facility.map_or(crate::config::DEFAULT_GROUP, FacilityRow::group_key);
+    let mode = facility.map_or(MODE_SAME, FacilityRow::mode);
     let season_from = facility.map(|f| f.season_from.as_str()).unwrap_or("");
     let season_to = facility.map(|f| f.season_to.as_str()).unwrap_or("");
     let icon = facility.and_then(FacilityRow::icon_name).unwrap_or("");
@@ -115,7 +150,6 @@ fn facility_row(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext)
     let closes_at = facility.map(|f| f.closes_at.as_str()).unwrap_or("");
     let break_from = facility.map(|f| f.break_from.as_str()).unwrap_or("");
     let break_to = facility.map(|f| f.break_to.as_str()).unwrap_or("");
-    let all_day = facility.is_some_and(|f| f.all_day);
     let lines = facility
         .map(|f| f.lines.host_value(ctx))
         .unwrap_or_default();
@@ -125,14 +159,72 @@ fn facility_row(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext)
         .filter(|f| !f.is_blank())
         .map(|f| sdui::row_id("facilities", index, Some(&f.id)));
 
+    // Les heures ne se demandent que pour « Même horaire tous les jours » : 24 h/24 et sur
+    // demande n'en ont pas (règles communes : masqué, pas grisé).
+    let times: Vec<Component> = if mode == MODE_SAME {
+        vec![
+            // Les heures structurées, à côté de la phrase et non à sa place : un hôte qui
+            // les remplit gagne l'état en direct, un hôte qui ne les remplit pas garde
+            // exactement ce qu'il avait écrit.
+            named(config, ctx, format!("facilities.{index}.opens_at"))
+                .label("i18n:host.facility.opensAt")
+                .children(vec![
+                    FieldHint::new()
+                        .text("i18n:host.facility.opensAt.desc")
+                        .into(),
+                    TextInput::new()
+                        .name(format!("facilities.{index}.opens_at"))
+                        .value(opens_at)
+                        .placeholder("08:00")
+                        .into(),
+                ])
+                .into(),
+            named(config, ctx, format!("facilities.{index}.closes_at"))
+                .label("i18n:host.facility.closesAt")
+                .child(
+                    TextInput::new()
+                        .name(format!("facilities.{index}.closes_at"))
+                        .value(closes_at)
+                        .placeholder("20:00"),
+                )
+                .into(),
+            // La coupure du midi : la deuxième plage de loin la plus courante, et la
+            // seule que l'hôte écrivait jusqu'ici dans sa phrase libre pendant que les
+            // heures structurées l'ignoraient.
+            named(config, ctx, format!("facilities.{index}.break_from"))
+                .label("i18n:host.facility.breakFrom")
+                .children(vec![
+                    FieldHint::new()
+                        .text("i18n:host.facility.break.desc")
+                        .into(),
+                    TextInput::new()
+                        .name(format!("facilities.{index}.break_from"))
+                        .value(break_from)
+                        .placeholder("12:00")
+                        .into(),
+                ])
+                .into(),
+            named(config, ctx, format!("facilities.{index}.break_to"))
+                .label("i18n:host.facility.breakTo")
+                .child(
+                    TextInput::new()
+                        .name(format!("facilities.{index}.break_to"))
+                        .value(break_to)
+                        .placeholder("14:00"),
+                )
+                .into(),
+        ]
+    } else {
+        Vec::new()
+    };
+
     Stack::new()
         .id(format!("facility-{index}"))
         .gap(10.0)
         .children(
             id.into_iter()
                 .chain([
-                    Field::new()
-                        .name(format!("facilities.{index}.title"))
+                    named(config, ctx, format!("facilities.{index}.title"))
                         .label("i18n:host.facility.name")
                         .child(
                             TextInput::new()
@@ -140,21 +232,45 @@ fn facility_row(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext)
                                 .value(title),
                         )
                         .into(),
-                    Field::new()
-                        .name(format!("facilities.{index}.group"))
+                    named(config, ctx, format!("facilities.{index}.group"))
                         .label("i18n:host.facility.group")
                         .child(
-                            TextInput::new()
+                            Select::new()
                                 .name(format!("facilities.{index}.group"))
-                                .value(group)
-                                .placeholder("i18n:host.facility.group.placeholder"),
+                                .options(
+                                    GROUPS
+                                        .iter()
+                                        .map(|key| {
+                                            ChoiceOption::new(
+                                                *key,
+                                                format!("i18n:host.facility.group.{key}"),
+                                            )
+                                        })
+                                        .collect(),
+                                )
+                                .value(group.to_string()),
                         )
                         .into(),
-                    FieldHint::new()
-                        .text("i18n:host.facility.group.hint")
+                    named(config, ctx, format!("facilities.{index}.mode"))
+                        .label("i18n:host.facility.mode")
+                        .child(
+                            Select::new()
+                                .name(format!("facilities.{index}.mode"))
+                                .options(
+                                    MODES
+                                        .iter()
+                                        .map(|key| {
+                                            ChoiceOption::new(
+                                                *key,
+                                                format!("i18n:host.facility.mode.{key}"),
+                                            )
+                                        })
+                                        .collect(),
+                                )
+                                .value(mode.to_string()),
+                        )
                         .into(),
-                    Field::new()
-                        .name(format!("facilities.{index}.icon"))
+                    named(config, ctx, format!("facilities.{index}.icon"))
                         .label("i18n:host.facility.icon")
                         .child(
                             Select::new()
@@ -172,8 +288,7 @@ fn facility_row(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext)
                                 .value(icon.to_string()),
                         )
                         .into(),
-                    Field::new()
-                        .name(format!("facilities.{index}.season_from"))
+                    named(config, ctx, format!("facilities.{index}.season_from"))
                         .label("i18n:host.facility.season.from")
                         .child(
                             TextInput::new()
@@ -182,8 +297,7 @@ fn facility_row(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext)
                                 .placeholder("04-01"),
                         )
                         .into(),
-                    Field::new()
-                        .name(format!("facilities.{index}.season_to"))
+                    named(config, ctx, format!("facilities.{index}.season_to"))
                         .label("i18n:host.facility.season.to")
                         .child(
                             TextInput::new()
@@ -195,8 +309,7 @@ fn facility_row(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext)
                     FieldHint::new()
                         .text("i18n:host.facility.season.hint")
                         .into(),
-                    Field::new()
-                        .name(format!("facilities.{index}.hours"))
+                    named(config, ctx, format!("facilities.{index}.hours"))
                         .label("i18n:host.facility.hours")
                         .child(
                             TextInput::new()
@@ -205,72 +318,11 @@ fn facility_row(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext)
                                 .placeholder("i18n:host.facility.hours.placeholder"),
                         )
                         .into(),
-                    // Les heures structurées, à côté de la phrase et non à sa place : un hôte qui
-                    // les remplit gagne l'état en direct, un hôte qui ne les remplit pas garde
-                    // exactement ce qu'il avait écrit.
-                    Field::new()
-                        .name(format!("facilities.{index}.opens_at"))
-                        .label("i18n:host.facility.opensAt")
-                        .children(vec![
-                            FieldHint::new()
-                                .text("i18n:host.facility.opensAt.desc")
-                                .into(),
-                            TextInput::new()
-                                .name(format!("facilities.{index}.opens_at"))
-                                .value(opens_at)
-                                .placeholder("08:00")
-                                .into(),
-                        ])
-                        .into(),
-                    Field::new()
-                        .name(format!("facilities.{index}.closes_at"))
-                        .label("i18n:host.facility.closesAt")
-                        .child(
-                            TextInput::new()
-                                .name(format!("facilities.{index}.closes_at"))
-                                .value(closes_at)
-                                .placeholder("20:00"),
-                        )
-                        .into(),
-                    // La coupure du midi : la deuxième plage de loin la plus courante, et la
-                    // seule que l'hôte écrivait jusqu'ici dans sa phrase libre pendant que les
-                    // heures structurées l'ignoraient.
-                    Field::new()
-                        .name(format!("facilities.{index}.break_from"))
-                        .label("i18n:host.facility.breakFrom")
-                        .children(vec![
-                            FieldHint::new()
-                                .text("i18n:host.facility.break.desc")
-                                .into(),
-                            TextInput::new()
-                                .name(format!("facilities.{index}.break_from"))
-                                .value(break_from)
-                                .placeholder("12:00")
-                                .into(),
-                        ])
-                        .into(),
-                    Field::new()
-                        .name(format!("facilities.{index}.break_to"))
-                        .label("i18n:host.facility.breakTo")
-                        .child(
-                            TextInput::new()
-                                .name(format!("facilities.{index}.break_to"))
-                                .value(break_to)
-                                .placeholder("14:00"),
-                        )
-                        .into(),
-                    Field::new()
-                        .name(format!("facilities.{index}.all_day"))
-                        .label("i18n:host.facility.allDay")
-                        .child(
-                            Toggle::new()
-                                .name(format!("facilities.{index}.all_day"))
-                                .checked(all_day),
-                        )
-                        .into(),
+                ])
+                .chain(times)
+                .chain([
                     // One schedule per line.
-                    Field::new()
-                        .name(format!("facilities.{index}.lines"))
+                    named(config, ctx, format!("facilities.{index}.lines"))
                         .label("i18n:host.facility.lines")
                         .child(
                             TextArea::new()
@@ -279,8 +331,7 @@ fn facility_row(index: usize, facility: Option<&FacilityRow>, ctx: &HostContext)
                                 .placeholder("i18n:host.facility.lines.placeholder"),
                         )
                         .into(),
-                    Field::new()
-                        .name(format!("facilities.{index}.note"))
+                    named(config, ctx, format!("facilities.{index}.note"))
                         .label("i18n:host.facility.note")
                         .child(
                             TextInput::new()

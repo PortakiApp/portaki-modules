@@ -15,9 +15,6 @@ use crate::schedule::{State, WEEK};
 
 use super::load::GuestData;
 
-/// Le nombre de lignes que la carte d'accueil montre avant de renvoyer à la liste (§2.6).
-const HOME_ROWS: usize = 3;
-
 /// L'état d'une ligne, dit comme le §2.6 le demande : « Ouvert », « Ouvre à HH:MM », « Fermé ».
 ///
 /// Rien n'est rendu sans horaires structurés : une ligne qui n'a qu'une phrase garde sa phrase, et
@@ -115,7 +112,7 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
     let shown: Vec<&crate::config::FacilityRow> = if enriched {
         data.facilities.iter().collect()
     } else {
-        data.facilities.iter().take(HOME_ROWS).collect()
+        data.facilities.iter().take(data.card_limit).collect()
     };
     let hidden = data.facilities.len().saturating_sub(shown.len());
 
@@ -130,6 +127,10 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
             .filter(|s| !s.is_empty())
             .map(|s| s.to_string())
             .or_else(|| (!lines.is_empty()).then(|| lines.join(" · ")))
+            .or_else(|| {
+                (facility.mode() == crate::config::MODE_ON_REQUEST)
+                    .then(|| "i18n:guest.onRequest".to_string())
+            })
             .unwrap_or_default();
 
         if enriched {
@@ -153,10 +154,7 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
             if !note.trim().is_empty() {
                 item = item.child(Text::new().text(note).variant(TextVariant::Caption));
             }
-            rows.push((
-                facility.group_label().map(str::to_string),
-                Component::ListItem(item),
-            ));
+            rows.push((group_title(facility), Component::ListItem(item)));
         } else {
             let schedule = facility.schedule();
             let row = match now.and_then(|now| schedule.state_at(now, tz.as_ref())) {
@@ -311,4 +309,15 @@ fn stay_tile(label: &str, icon: IconName, qualifier_key: &str, hour: String) -> 
             .icon(icon)
             .mono(true),
     )
+}
+
+/// Le titre du groupe : traduit pour une clé de la liste fermée, tel quel pour un ancien texte
+/// libre qu'aucun enregistrement n'a encore rangé.
+fn group_title(facility: &crate::config::FacilityRow) -> Option<String> {
+    let group = facility.group_label()?;
+    Some(if crate::config::GROUPS.contains(&group) {
+        format!("i18n:guest.group.{group}")
+    } else {
+        group.to_string()
+    })
 }
