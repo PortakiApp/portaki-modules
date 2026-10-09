@@ -31,13 +31,13 @@ pub fn labels_from_item(item: &ConsumableItem) -> BTreeMap<String, String> {
                 }
             }
         }
-        if !out.is_empty() {
-            if !item.label_en.trim().is_empty() {
-                out.entry("en".into())
-                    .or_insert_with(|| item.label_en.trim().to_string());
-            }
-            return out;
+        // Une carte, même vide, est la carte : un produit sans nom s'enregistre `{}`, et ce `{}`
+        // n'est pas un libellé français.
+        if !item.label_en.trim().is_empty() {
+            out.entry("en".into())
+                .or_insert_with(|| item.label_en.trim().to_string());
         }
+        return out;
     }
     let mut out = BTreeMap::new();
     if !trimmed.is_empty() {

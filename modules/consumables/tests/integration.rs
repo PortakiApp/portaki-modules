@@ -666,20 +666,175 @@ fn long_note_is_stored_whole_and_quoted_in_the_host_email() {
         });
 }
 
+/// Un catalogue vide ne bloque pas la publication (spec §9 n° 1) : le livret montre son état vide.
 #[test]
 #[serial]
-fn publish_readiness_requires_a_catalog() {
+fn an_empty_catalog_does_not_block_publication() {
     reset_test_store();
     MockContext::host()
         .with_property(Property::default())
         .run(|ctx| {
-            let ok = |ctx: &portaki_sdk::prelude::Context| {
-                publish_readiness(ctx.clone()).expect("readiness").items[0].ok
-            };
-            assert!(!ok(&ctx));
+            assert!(publish_readiness(ctx.clone())
+                .expect("readiness")
+                .items
+                .is_empty());
             seed_defaults(ctx.clone(), EmptyArgs {}).expect("seed");
-            assert!(ok(&ctx));
+            assert!(publish_readiness(ctx).expect("readiness").items.is_empty());
         });
+}
+
+fn named_item(emoji: &str, label: &str) -> ConsumableItemInput {
+    ConsumableItemInput {
+        emoji: emoji.into(),
+        label: label.into(),
+        label_fr: String::new(),
+        label_en: String::new(),
+        sort_order: 0,
+        low_threshold: 0,
+    }
+}
+
+fn save(
+    ctx: &portaki_sdk::prelude::Context,
+    items: Vec<ConsumableItemInput>,
+    restock_delay: &str,
+    max_requests: Option<f64>,
+) {
+    update_config(
+        ctx.clone(),
+        UpdateConfigArgs {
+            requests_enabled: None,
+            max_requests,
+            restock_delay: serde_json::from_value(json!({ "fr": restock_delay })).expect("délai"),
+            items,
+        },
+    )
+    .expect("enregistrement");
+}
+
+/// Le message français de `config.<field>`, et la même erreur sous le champ du formulaire.
+fn blocking(ctx: &portaki_sdk::prelude::Context, field: &str) -> Option<String> {
+    let readiness = publish_readiness(ctx.clone()).expect("readiness");
+    let check = readiness
+        .items
+        .into_iter()
+        .find(|check| check.id == format!("config.{field}"))?;
+    assert!(!check.ok);
+    assert_eq!(
+        check.level,
+        portaki_sdk::contracts::publish::PublishLevel::Required
+    );
+    let fr = check.hint.get("fr").to_string();
+    let host = serde_json::to_string(&render_host_main(ctx.clone())).expect("json");
+    assert!(host.contains(&format!("\"error\":\"{fr}\"")), "{host}");
+    Some(fr)
+}
+
+#[test]
+#[serial]
+fn more_than_thirty_products_blocks_publication() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let items = (1..=31)
+                .map(|n| named_item("", &format!("Produit {n}")))
+                .collect();
+            replace_items(
+                ctx.clone(),
+                ReplaceItemsArgs {
+                    items,
+                    items_json: None,
+                },
+            )
+            .expect("replace");
+            let readiness = publish_readiness(ctx).expect("readiness");
+            let check = readiness
+                .items
+                .iter()
+                .find(|check| check.id == "config.items")
+                .expect("config.items");
+            assert_eq!(check.hint.get("fr"), "30 produits au maximum.");
+        });
+}
+
+/// Un emoji sans nom reste enregistré et dit « Donnez un nom au produit. » ; le voyageur ne voit
+/// pas de tuile vide.
+#[test]
+#[serial]
+fn a_product_without_a_name_is_flagged_and_hidden_from_the_guest() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            save(
+                &ctx,
+                vec![named_item("☕", ""), named_item("🧻", "Papier")],
+                "",
+                None,
+            );
+            assert_eq!(
+                blocking(&ctx, "items.0.label").as_deref(),
+                Some("Donnez un nom au produit.")
+            );
+        });
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_guest_form(ctx).expect("render")).unwrap();
+            assert!(json.contains("🧻"), "{json}");
+            assert!(!json.contains("☕"), "{json}");
+        });
+}
+
+#[test]
+#[serial]
+fn a_product_name_past_forty_characters_is_flagged() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            save(&ctx, vec![named_item("", &"c".repeat(41))], "", None);
+            assert_eq!(
+                blocking(&ctx, "items.0.label").as_deref(),
+                Some("40 caractères au maximum.")
+            );
+        });
+}
+
+#[test]
+#[serial]
+fn a_restock_delay_past_forty_characters_is_flagged() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            save(&ctx, vec![named_item("", "Café")], &"d".repeat(41), None);
+            assert_eq!(
+                blocking(&ctx, "restock_delay").as_deref(),
+                Some("40 caractères au maximum.")
+            );
+        });
+}
+
+/// Hors de 1 à 20, la valeur est gardée et l'erreur affichée — plus de bornage silencieux.
+#[test]
+#[serial]
+fn max_requests_out_of_range_is_reported_not_clamped() {
+    for typed in [0.0, 25.0] {
+        reset_test_store();
+        MockContext::host()
+            .with_property(Property::default())
+            .run(|ctx| {
+                save(&ctx, vec![named_item("", "Café")], "", Some(typed));
+                assert_eq!(
+                    blocking(&ctx, "max_requests").as_deref(),
+                    Some("Entre 1 et 20.")
+                );
+                save(&ctx, vec![named_item("", "Café")], "", Some(5.0));
+                assert_eq!(blocking(&ctx, "max_requests"), None);
+            });
+    }
 }
 
 /// La grille s'ouvre d'une case quand les huit sont prises, et un neuvième produit déjà stocké

@@ -5,6 +5,7 @@ use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadine
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
+use crate::config::{field_label, Stored};
 use crate::entities::{ConsumableItem, ConsumableReport};
 use crate::i18n::text;
 use crate::storage;
@@ -125,17 +126,30 @@ fn resolve_list_stay_id(ctx: &Context, stay_id: Option<Uuid>) -> Result<Uuid> {
     stay_id.ok_or_else(|| PortakiError::Host("stay_id_required".to_string()))
 }
 
-/// Blocks publication until the catalog lists something the guest can report.
+/// Ce qui bloque la publication : les réglages en défaut, champ par champ (`config.<champ>`).
+///
+/// Un catalogue vide ne bloque pas (spec §9 n° 1) : le livret montre alors son état vide.
 #[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
 pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
-    let ok = !storage::list_items()?.is_empty();
+    let items = storage::list_items()?;
+    let restock_delay = storage::restock_delay::read();
+    let settings = storage::settings::read();
+    let stored = Stored {
+        items: &items,
+        restock_delay: restock_delay.as_ref(),
+        settings: &settings,
+    };
     Ok(PublishReadiness {
-        items: vec![PublishCheck {
-            id: "catalog".into(),
-            level: PublishLevel::Required,
-            ok,
-            label: text("publish.catalog.label", &[]),
-            hint: text("publish.catalog.hint", &[]),
-        }],
+        items: stored
+            .problems()
+            .into_iter()
+            .map(|(field, error)| PublishCheck {
+                label: text(field_label(&field), &[]),
+                id: format!("config.{field}"),
+                level: PublishLevel::Required,
+                ok: false,
+                hint: error,
+            })
+            .collect(),
     })
 }
