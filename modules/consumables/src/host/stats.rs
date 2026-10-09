@@ -32,7 +32,7 @@ enum Stock {
 fn stock(item: &ConsumableItem, reports: &[ConsumableReport]) -> Stock {
     let open: Vec<&ConsumableReport> = reports
         .iter()
-        .filter(|r| r.item_id == item.id && r.status == status::DEFAULT)
+        .filter(|r| r.item_id == item.id && status::is_pending(&r.status))
         .collect();
     if open.iter().any(|r| r.level == "missing") {
         Stock::Out
@@ -84,7 +84,7 @@ fn label(item: &ConsumableItem, locale: &str) -> String {
     pick_label(&labels_from_item(item), locale, "fr")
 }
 
-/// Tile: items to buy again; a stock-out as attention.
+/// Tile (spec §1) : « Demandes de réassort · 6 » over the period, « Café en tête » as its note.
 #[portaki_sdk::query(
     name = "statsSummary",
     example(
@@ -92,31 +92,42 @@ fn label(item: &ConsumableItem, locale: &str) -> String {
         input = r#"{"propertyId":"8c0e6f2a-1d3b-4a7e-b5c9-0f4e2d1a6b38","period":30,"key":"stock"}"#
     )
 )]
-pub fn stats_summary(_ctx: Context, _args: StatsSummaryArgs) -> Result<StatsSummary> {
-    let items = storage::list_items()?;
-    let reports = storage::list_all()?;
-    let to_buy = items
-        .iter()
-        .filter(|item| stock(item, &reports) != Stock::Ok)
-        .count();
-    let tile = stats::summary(to_buy.to_string(), i18n::text("stats.tile", &[]));
-    let out: Vec<&ConsumableItem> = items
-        .iter()
-        .filter(|item| stock(item, &reports) == Stock::Out)
+pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummary> {
+    let since = args.period().since(time::now()?);
+    let period: Vec<ConsumableReport> = storage::list_all()?
+        .into_iter()
+        .filter(|r| r.created_at >= since)
         .collect();
-    let text = match out.as_slice() {
-        [] => return Ok(tile),
-        [item] => {
-            // One text per language: the item is named in each.
-            let labels = labels_from_item(item);
-            let mut text = i18n::text("stats.tile.out", &[]);
-            text.fr = text.fr.replace("{item}", &pick_label(&labels, "fr", "en"));
-            text.en = text.en.replace("{item}", &pick_label(&labels, "en", "fr"));
-            text
-        }
-        many => i18n::text("stats.tile.outMany", &[("count", &many.len().to_string())]),
+    let tile = stats::summary(period.len().to_string(), i18n::text("stats.tile", &[]));
+    let Some(top) = top_item(&period) else {
+        return Ok(tile);
     };
-    Ok(tile.attention(AttentionLevel::Action, text))
+    // One text per language: the item is named in each — the catalog's names, or the snapshot
+    // the guest saw when the item has left the catalog since.
+    let (fr, en) = match storage::find_item(top.item_id)? {
+        Some(item) => {
+            let labels = labels_from_item(&item);
+            (
+                pick_label(&labels, "fr", "en"),
+                pick_label(&labels, "en", "fr"),
+            )
+        }
+        None => (top.item_label.clone(), top.item_label.clone()),
+    };
+    let mut text = i18n::text("stats.tile.top", &[]);
+    text.fr = text.fr.replace("{item}", &fr);
+    text.en = text.en.replace("{item}", &en);
+    Ok(tile.attention(AttentionLevel::Warning, text))
+}
+
+/// The most requested item of the period (the most recent request breaks a tie).
+fn top_item(period: &[ConsumableReport]) -> Option<&ConsumableReport> {
+    let count = |id: Uuid| period.iter().filter(|r| r.item_id == id).count();
+    period.iter().max_by(|a, b| {
+        count(a.item_id)
+            .cmp(&count(b.item_id))
+            .then(a.created_at.cmp(&b.created_at))
+    })
 }
 
 #[portaki_sdk::surface(
@@ -353,7 +364,7 @@ fn stock_row(
         Stock::Ok => ("i18n:stats.stock.ok", Tone::Success),
     };
     let mine = || reports.iter().filter(|r| r.item_id == item.id);
-    let open = mine().find(|r| r.status == status::DEFAULT);
+    let open = mine().find(|r| status::is_pending(&r.status));
     let date = match (open, mine().filter_map(|r| r.restocked_at).max()) {
         (Some(report), _) => t!(
             "stats.row.reportedAt",
@@ -407,6 +418,7 @@ mod tests {
             status: status::DEFAULT.into(),
             created_at: day(created),
             restocked_at: restocked.map(day),
+            host_reply: None,
         }
     }
 

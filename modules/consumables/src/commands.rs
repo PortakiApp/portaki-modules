@@ -343,6 +343,9 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
 pub struct UpdateStatusArgs {
     pub report_id: Uuid,
     pub status: String,
+    /// La réponse au voyageur, du champ du formulaire : vide l'efface, absente la garde.
+    #[serde(default, alias = "host_reply", skip_serializing_if = "Option::is_none")]
+    pub host_reply: Option<String>,
 }
 
 #[portaki_sdk::command(
@@ -350,6 +353,10 @@ pub struct UpdateStatusArgs {
     example(
         label = "Réassort fait",
         input = r#"{"reportId":"9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a","status":"restocked"}"#
+    ),
+    example(
+        label = "Prévu, avec une réponse",
+        input = r#"{"reportId":"9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a","status":"planned","hostReply":"Je passe ce soir vers 18 h."}"#
     )
 )]
 pub fn update_status(ctx: Context, args: UpdateStatusArgs) -> Result<()> {
@@ -358,7 +365,7 @@ pub fn update_status(ctx: Context, args: UpdateStatusArgs) -> Result<()> {
     }
 
     let status = status::parse_status(&args.status)?;
-    let _ = storage::update_status(args.report_id, status)?;
+    let _ = storage::update_status(args.report_id, status, args.host_reply)?;
     Ok(())
 }
 

@@ -125,12 +125,12 @@ fn notice(data: &GuestConsumablesData) -> String {
 
 /// Le niveau d'un signalement encore ouvert pour ce produit, s'il y en a un.
 ///
-/// Seuls les signalements `open` comptent : une fois l'hôte passé, le produit redevient un produit
+/// Seuls les signalements pas encore livrés (à traiter ou prévus) comptent : une fois l'hôte passé, le produit redevient un produit
 /// comme un autre, et le redemander est légitime.
 fn open_report_level(data: &GuestConsumablesData, item_id: uuid::Uuid) -> Option<&'static str> {
     data.reports
         .iter()
-        .find(|report| report.item_id == item_id && report.status == crate::status::DEFAULT)
+        .find(|report| report.item_id == item_id && crate::status::is_pending(&report.status))
         .map(|report| match report.level.as_str() {
             "missing" => "i18n:form.item.reported.missing",
             _ => "i18n:form.item.reported.low",

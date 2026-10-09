@@ -98,13 +98,12 @@ pub fn list_all() -> Result<Vec<ConsumableReport>> {
     Ok(rows)
 }
 
-/// Open (not restocked) reports, newest first, max 40.
+/// Pending (to handle or planned, not yet restocked) reports, newest first, max 40.
 pub fn list_open() -> Result<Vec<ConsumableReport>> {
-    let mut rows = list_recent()?
+    let mut rows = list_all()?
         .into_iter()
-        .filter(|row| row.status == status::DEFAULT)
+        .filter(|row| status::is_pending(&row.status))
         .collect::<Vec<_>>();
-    sort_newest_first(&mut rows);
     rows.truncate(40);
     Ok(rows)
 }
@@ -133,6 +132,7 @@ pub fn create_report(
         status: status::DEFAULT.to_string(),
         created_at: now,
         restocked_at: None,
+        host_reply: None,
     };
     persist_report(row.clone())?;
     Ok(row)
@@ -148,19 +148,29 @@ pub fn find_report(id: Uuid) -> Result<Option<ConsumableReport>> {
     repo::find_by_id::<ConsumableReport, ConsumableReport>(id)
 }
 
-/// Updates the workflow status of an existing report (host).
-pub fn update_status(id: Uuid, status: String) -> Result<ConsumableReport> {
+/// Updates the workflow status of an existing report (host), and its reply when one is given
+/// (`Some("")` clears it, `None` keeps it).
+pub fn update_status(
+    id: Uuid,
+    status: String,
+    host_reply: Option<String>,
+) -> Result<ConsumableReport> {
     let mut row = find_report(id)?.ok_or_else(|| PortakiError::Host("report_not_found".into()))?;
     row.status = if status.trim().is_empty() {
         status::DEFAULT.to_string()
     } else {
         status
     };
-    row.restocked_at = if row.status == status::DEFAULT {
-        None
-    } else {
+    // Seul « Livré » date un réassort : « Prévu » n'a encore rien remis dans le placard.
+    row.restocked_at = if row.status == status::RESTOCKED {
         row.restocked_at.or(Some(time::now()?))
+    } else {
+        None
     };
+    if let Some(reply) = host_reply {
+        let reply = reply.trim();
+        row.host_reply = (!reply.is_empty()).then(|| reply.to_string());
+    }
     persist_report(row.clone())?;
     Ok(row)
 }
