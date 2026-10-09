@@ -40,6 +40,12 @@ pub fn build_spot_item(data: &GuestData, spot: &SpotRow) -> Surface {
         children.push(InfoBanner::new().tone(Tone::Warning).title(closed).into());
     }
 
+    // « Réservation indispensable en août » : ce que l'hôte veut qu'on lise avant d'y aller.
+    let warning = spot.warning.get(&data.locale).trim().to_string();
+    if !warning.is_empty() {
+        children.push(InfoBanner::new().tone(Tone::Warning).title(warning).into());
+    }
+
     // L'avantage en bandeau de marque : c'est la raison d'être d'un bon plan, et une ligne de
     // texte parmi d'autres le faisait passer pour un détail d'horaires.
     let perk = spot.perk.get(&data.locale).trim().to_string();

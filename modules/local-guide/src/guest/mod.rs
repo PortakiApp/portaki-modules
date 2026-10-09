@@ -20,6 +20,7 @@ use home::build_home_card;
 use item::build_spot_item;
 use link::build_link_item;
 use load::load_guest_data;
+pub(crate) use load::today_at_property;
 use upcoming::build_upcoming_card;
 
 #[portaki_sdk::surface(guest, id = "home.card")]

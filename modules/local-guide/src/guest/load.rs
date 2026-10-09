@@ -1,6 +1,6 @@
 //! Load config for guest surfaces.
 
-use chrono::{Datelike, Weekday};
+use chrono::NaiveDate;
 use portaki_sdk::prelude::*;
 
 use crate::activities::{self, ActivitiesView};
@@ -27,20 +27,19 @@ pub struct GuestData {
     pub host_name: String,
     /// Le jour qu'il est chez le logement, pour dire « fermé aujourd'hui » (§2.12). `None` sans
     /// horloge : mieux vaut ne rien dire que fermer une adresse un jour deviné.
-    pub today: Option<Weekday>,
+    pub today: Option<NaiveDate>,
 }
 
 /// Le jour qu'il est dans le fuseau du logement.
 ///
 /// Dans son fuseau, pas dans celui du téléphone : un voyageur qui prépare sa journée depuis Tokyo
 /// ne doit pas lire que le restaurant est fermé parce qu'il y est déjà demain.
-fn today_at_property(ctx: &GuestContext) -> Option<Weekday> {
+pub fn today_at_property(timezone: &str) -> Option<NaiveDate> {
     let now = portaki_sdk::host::time::now().ok()?;
-    let local = match portaki_sdk::host::time::PropertyTz::parse(&ctx.timezone) {
+    Some(match portaki_sdk::host::time::PropertyTz::parse(timezone) {
         Some(tz) => tz.to_local(now).date_naive(),
         None => now.date_naive(),
-    };
-    Some(local.weekday())
+    })
 }
 
 /// Ce qu'il y a à montrer, ou `None` quand il n'y a rien : ni lieu, ni mention, ni section
@@ -70,7 +69,11 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<Box<GuestData>>> {
         .cloned()
         .collect();
 
-    if config.is_empty()
+    // Hors saison, une adresse disparaît du livret (§3) ; toutes hors saison, la carte aussi.
+    let today = today_at_property(&ctx.timezone);
+    let spots = config.guest_spots(today);
+    if spots.is_empty()
+        && config.disclaimer.is_blank()
         && host_activities.is_empty()
         && activities.is_none()
         && tiqets.is_none()
@@ -80,7 +83,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<Box<GuestData>>> {
     }
 
     Ok(Some(Box::new(GuestData {
-        spots: config.parse_spots(),
+        spots,
         host_activities,
         disclaimer: config.disclaimer.get(&ctx.locale).to_string(),
         locale: ctx.locale.clone(),
@@ -93,7 +96,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<Box<GuestData>>> {
             .as_ref()
             .and_then(|point| valid_coords(point.lat, point.lng)),
         property_name: ctx.property.name.clone(),
-        today: today_at_property(ctx),
+        today,
         host_name: ctx
             .host
             .as_ref()

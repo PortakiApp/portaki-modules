@@ -5,7 +5,7 @@
 //! the map picker's coordinates as text (`"20"`, `spots.0.lat: "43.5"`); the readers below accept
 //! that and numbers alike. The old KV blob went through [`legacy`].
 
-use chrono::Weekday;
+use chrono::{Datelike, NaiveDate, Weekday};
 use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -309,12 +309,10 @@ impl ModuleConfig {
             if spot.is_blank() {
                 continue;
             }
-            let phone = spot.phone.as_deref().map(|phone| {
-                phone
-                    .chars()
-                    .filter(|c| !c.is_whitespace() && !matches!(c, '.' | '-'))
-                    .collect::<String>()
-            });
+            let season = [&spot.season_from, &spot.season_to]
+                .into_iter()
+                .any(|day| day.as_deref().is_some_and(|d| day_of_year(d).is_none()))
+                .then(|| crate::i18n::text("host.spot.season.invalid"));
             for (key, error) in [
                 (
                     "title",
@@ -324,15 +322,49 @@ impl ModuleConfig {
                         too_long(&spot.title, 60)
                     },
                 ),
+                (
+                    "category",
+                    spot.category
+                        .is_none()
+                        .then(|| crate::i18n::text("host.spot.category.required")),
+                ),
                 ("perk", too_long(&spot.perk, 120)),
+                ("warning", too_long(&spot.warning, 120)),
+                ("season_from", season),
                 ("detail", too_long(&spot.detail, 280)),
                 ("price", plain(&spot.price, 30)),
                 ("parking", plain(&spot.parking, 80)),
-                ("phone", phone.as_deref().and_then(check::phone)),
+                ("phone", spot.phone.as_deref().and_then(phone_error)),
                 ("url", spot.url.as_deref().and_then(check::https_url)),
             ] {
                 if let Some(error) = error {
                     problems.push((format!("spots.{index}.{key}"), error));
+                }
+            }
+        }
+        let activities = self
+            .host_activities
+            .iter()
+            .filter(|a| !a.is_blank())
+            .count();
+        if activities > MAX_HOST_ACTIVITIES {
+            problems.push((
+                "host_activities".into(),
+                crate::i18n::text("host.hostActivities.tooMany"),
+            ));
+        }
+        for (index, activity) in self.host_activities.iter().enumerate() {
+            if activity.is_blank() {
+                continue;
+            }
+            for (key, error) in [
+                ("provider", plain(&activity.provider, 60)),
+                ("duration", plain(&activity.duration, 30)),
+                ("phone", activity.phone.as_deref().and_then(phone_error)),
+                ("url", activity.url.as_deref().and_then(check::https_url)),
+            ] {
+                if let Some(error) = error {
+                    problems.push((format!("host_activities.{index}.{key}"), error));
                 }
             }
         }
@@ -362,6 +394,17 @@ impl ModuleConfig {
                 s
             })
             .collect()
+    }
+
+    /// Les adresses que le livret montre le jour `today` : celles de [`Self::parse_spots`], moins
+    /// celles hors saison (§3). Sans date, toutes : mieux vaut montrer une plage en hiver que de
+    /// masquer un restaurant un jour deviné.
+    pub fn guest_spots(&self, today: Option<NaiveDate>) -> Vec<SpotRow> {
+        let mut spots = self.parse_spots();
+        if let Some(today) = today {
+            spots.retain(|spot| spot.in_season(today));
+        }
+        spots
     }
 
     /// Les adresses publiées choisies pour la page publique, dans l'ordre du choix. Un id qui
@@ -604,9 +647,72 @@ pub struct SpotRow {
     /// champs vides par adresse, sur douze adresses, serait un formulaire qu'on ne lit plus.
     #[serde(default)]
     pub photos: Vec<String>,
+    /// L'emoji de la tuile et du repère ; vide, celui de la catégorie ([`SpotRow::emoji`]).
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub emoji: Option<String>,
+    /// Le début de la saison, `JJ/MM`. Vide, avec [`SpotRow::season_to`] : toute l'année.
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub season_from: Option<String>,
+    /// La fin de la saison, `JJ/MM`, incluse. Avant le début : la saison passe le nouvel an.
+    #[serde(default, deserialize_with = "deserialize_nonempty")]
+    pub season_to: Option<String>,
+    /// « Réservation indispensable en août » : le bandeau d'avertissement de la fiche.
+    #[serde(default)]
+    pub warning: I18nText,
+}
+
+/// L'emoji d'une catégorie de la spec (§2.1), quand l'hôte n'en a pas choisi. Comparé sans
+/// casse : la catégorie est encore une saisie libre.
+const CATEGORY_EMOJIS: [(&str, &str); 9] = [
+    ("restaurant", "🍽️"),
+    ("café", "☕"),
+    ("commerce", "🛍️"),
+    ("marché", "🧺"),
+    ("plage", "🏖️"),
+    ("culture", "🏛️"),
+    ("sport", "⚽"),
+    ("bien-être", "🧘"),
+    ("autre", "📍"),
+];
+
+/// `JJ/MM` en rang dans une année bissextile (le 29/02 existe), ou `None` si la date ne se lit pas.
+fn day_of_year(day: &str) -> Option<u32> {
+    NaiveDate::parse_from_str(&format!("{}/2000", day.trim()), "%d/%m/%Y")
+        .ok()
+        .map(|date| date.ordinal())
 }
 
 impl SpotRow {
+    /// L'emoji choisi, sinon celui de la catégorie, sinon rien.
+    pub fn emoji(&self) -> Option<String> {
+        if let Some(emoji) = &self.emoji {
+            return Some(emoji.clone());
+        }
+        let category = self.category.as_deref()?.trim().to_lowercase();
+        CATEGORY_EMOJIS
+            .iter()
+            .find(|(name, _)| *name == category)
+            .map(|(_, emoji)| emoji.to_string())
+    }
+
+    /// Ouverte ce jour-là. Toute l'année quand une borne manque ou ne se lit pas : une saison
+    /// mal saisie ne doit pas faire disparaître l'adresse (l'erreur est sous le champ).
+    pub fn in_season(&self, today: NaiveDate) -> bool {
+        let bound = |day: &Option<String>| day.as_deref().and_then(day_of_year);
+        let (Some(from), Some(to)) = (bound(&self.season_from), bound(&self.season_to)) else {
+            return true;
+        };
+        // Le même rang bissextile pour aujourd'hui, pour comparer des jours et non des années.
+        let Some(today) = day_of_year(&format!("{:02}/{:02}", today.day(), today.month())) else {
+            return true;
+        };
+        if from <= to {
+            (from..=to).contains(&today)
+        } else {
+            today >= from || today <= to
+        }
+    }
+
     /// L'identifiant de route de cette adresse, pour `local-guide/:spotId`.
     pub fn route_id(&self, index: usize) -> String {
         let id = self.id.trim();
@@ -666,6 +772,7 @@ impl SpotRow {
     pub fn is_blank(&self) -> bool {
         self.title.is_blank()
             && self.detail.is_blank()
+            && self.warning.is_blank()
             && self.note.as_ref().is_none_or(I18nText::is_blank)
             && self.photo_refs().is_empty()
             && [
@@ -696,6 +803,17 @@ pub fn valid_coords(lat: f64, lng: f64) -> Option<(f64, f64)> {
         return None;
     }
     Some((lat, lng))
+}
+
+/// Un téléphone en E.164, une fois retirés les espaces, points, tirets et parenthèses que l'hôte
+/// tape — la règle d'`emergency-contacts`, sans ses numéros courts (15, 112) : on ne réserve pas
+/// une sortie en mer au 15.
+fn phone_error(phone: &str) -> Option<I18nText> {
+    let compact: String = phone
+        .chars()
+        .filter(|c| !c.is_whitespace() && !matches!(c, '.' | '-' | '(' | ')'))
+        .collect();
+    check::phone(&compact)
 }
 
 /// A blank text input is no value.
@@ -1145,6 +1263,145 @@ mod tests {
         }))
         .unwrap();
         let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
-        assert_eq!(fields, ["spots.1.title", "spots.2.phone", "spots.2.url"]);
+        assert_eq!(
+            fields,
+            [
+                "spots.1.title",
+                "spots.1.category",
+                "spots.2.category",
+                "spots.2.phone",
+                "spots.2.url"
+            ]
+        );
+    }
+
+    fn message(config: &ModuleConfig, field: &str) -> Option<String> {
+        config.error_of(field).map(|e| e.get("fr").to_string())
+    }
+
+    /// La catégorie est obligatoire, l'avertissement borné à 120, la saison lisible.
+    #[test]
+    fn spot_category_warning_and_season_are_checked() {
+        let config: ModuleConfig = serde_json::from_value(json!({
+            "spots": [
+                { "title": "Le Bacon" },
+                { "title": "Plage", "category": "Plage", "warning": "x".repeat(121),
+                  "season_from": "31/02", "season_to": "30/09" },
+                { "title": "Plage", "category": "Plage", "warning": "Réservation indispensable",
+                  "season_from": "01/06", "season_to": "30/09" }
+            ]
+        }))
+        .unwrap();
+        assert_eq!(
+            message(&config, "spots.0.category").as_deref(),
+            Some("Choisissez une catégorie.")
+        );
+        assert_eq!(
+            message(&config, "spots.1.warning").as_deref(),
+            Some("120 caractères au maximum.")
+        );
+        assert_eq!(
+            message(&config, "spots.1.season_from").as_deref(),
+            Some("Date au format 23/08.")
+        );
+        assert!(config
+            .problems()
+            .iter()
+            .all(|(field, _)| !field.starts_with("spots.2")));
+    }
+
+    /// Les activités de l'hôte : bornes, téléphone, lien, et six au plus.
+    #[test]
+    fn host_activity_rows_are_checked() {
+        let config: ModuleConfig = serde_json::from_value(json!({
+            "host_activities": [
+                { "title": "Voilier", "provider": "p".repeat(61), "duration": "d".repeat(31),
+                  "phone": "06 12 34 56 78", "url": "http://marc.fr" },
+                { "title": "Kayak", "provider": "Marc", "duration": "3 h",
+                  "phone": "+33 (6) 12 34 56 78", "url": "https://marc.fr" }
+            ]
+        }))
+        .unwrap();
+        assert_eq!(
+            message(&config, "host_activities.0.provider").as_deref(),
+            Some("60 caractères au maximum.")
+        );
+        assert_eq!(
+            message(&config, "host_activities.0.duration").as_deref(),
+            Some("30 caractères au maximum.")
+        );
+        assert_eq!(
+            message(&config, "host_activities.0.phone").as_deref(),
+            Some("Ce numéro n'est pas valide. Vérifiez l'indicatif.")
+        );
+        assert_eq!(
+            message(&config, "host_activities.0.url").as_deref(),
+            Some("L'adresse doit commencer par https://")
+        );
+        assert!(config
+            .problems()
+            .iter()
+            .all(|(field, _)| !field.starts_with("host_activities.1")));
+
+        let seven: Vec<Value> = (0..7)
+            .map(|n| json!({ "title": format!("A{n}"), "provider": "Marc" }))
+            .collect();
+        let config: ModuleConfig =
+            serde_json::from_value(json!({ "host_activities": seven })).unwrap();
+        assert_eq!(
+            message(&config, "host_activities").as_deref(),
+            Some("6 activités au maximum.")
+        );
+    }
+
+    /// L'emoji choisi, sinon celui de la catégorie, sans casse ; une catégorie libre n'en a pas.
+    #[test]
+    fn a_spot_emoji_falls_back_on_its_category() {
+        let row = |emoji: Option<&str>, category: Option<&str>| SpotRow {
+            emoji: emoji.map(String::from),
+            category: category.map(String::from),
+            ..SpotRow::default()
+        };
+        assert_eq!(
+            row(Some("🦞"), Some("Restaurant")).emoji().as_deref(),
+            Some("🦞")
+        );
+        assert_eq!(row(None, Some(" plage ")).emoji().as_deref(), Some("🏖️"));
+        assert_eq!(row(None, Some("Bien-être")).emoji().as_deref(), Some("🧘"));
+        assert_eq!(row(None, Some("Coup de cœur")).emoji(), None);
+        assert_eq!(row(None, None).emoji(), None);
+    }
+
+    /// La saison : bornes incluses, passage du nouvel an, et toute l'année sans les deux bornes.
+    #[test]
+    fn a_season_hides_a_spot_outside_it() {
+        let day = |d: u32, m: u32| NaiveDate::from_ymd_opt(2026, m, d).unwrap();
+        let row = |from: &str, to: &str| SpotRow {
+            title: I18nText::from("Plage"),
+            season_from: Some(from.into()),
+            season_to: Some(to.into()),
+            ..SpotRow::default()
+        };
+        let summer = row("01/06", "30/09");
+        assert!(summer.in_season(day(1, 6)));
+        assert!(summer.in_season(day(30, 9)));
+        assert!(!summer.in_season(day(1, 10)));
+        assert!(!summer.in_season(day(31, 5)));
+        let winter = row("01/11", "31/03");
+        assert!(winter.in_season(day(1, 1)));
+        assert!(winter.in_season(day(15, 11)));
+        assert!(!winter.in_season(day(1, 7)));
+        // Une borne seule, ou illisible : toute l'année.
+        assert!(row("01/06", "").in_season(day(1, 1)));
+        assert!(row("31/02", "30/09").in_season(day(1, 1)));
+        assert!(SpotRow::default().in_season(day(1, 1)));
+
+        let config = ModuleConfig {
+            spots: vec![summer, row("01/01", "31/12")],
+            ..ModuleConfig::default()
+        };
+        assert_eq!(config.guest_spots(Some(day(1, 1))).len(), 1);
+        assert_eq!(config.guest_spots(Some(day(1, 7))).len(), 2);
+        assert_eq!(config.guest_spots(None).len(), 2);
     }
 }

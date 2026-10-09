@@ -525,7 +525,7 @@ fn public_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
 fn host_activities_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
     let rows_count = draft_activity_rows(ctx, config.host_activities.len());
     let rows: Vec<Component> = (0..rows_count)
-        .map(|index| host_activity_row(index, config.host_activities.get(index), ctx))
+        .map(|index| host_activity_row(index, config, ctx))
         .collect();
 
     Card::new()
@@ -555,19 +555,15 @@ fn draft_activity_rows(ctx: &HostContext, stored: usize) -> usize {
 }
 
 /// Une activité : le nom, le prestataire, ce qu'elle coûte et dure, et comment on la réserve.
-fn host_activity_row(
-    index: usize,
-    activity: Option<&HostActivityRow>,
-    ctx: &HostContext,
-) -> Component {
+fn host_activity_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let activity: Option<&HostActivityRow> = config.host_activities.get(index);
     let id = activity
         .filter(|row| !row.is_blank())
         .map(|row| sdui::row_id("host_activities", index, Some(&row.id)));
 
     let text = |name: &str, label: &str, value: &str| -> Component {
         let field = format!("host_activities.{index}.{name}");
-        Field::new()
-            .name(field.clone())
+        named(config, ctx, field.clone())
             .label(label)
             .child(TextInput::new().name(field).value(value))
             .into()
@@ -792,6 +788,14 @@ fn spot_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component
     let parking = spot.and_then(|s| s.parking.as_deref()).unwrap_or("");
     let phone = spot.and_then(|s| s.phone.as_deref()).unwrap_or("");
     let url = spot.and_then(|s| s.url.as_deref()).unwrap_or("");
+    let emoji = spot.and_then(|s| s.emoji.as_deref()).unwrap_or("");
+    let season_from = spot.and_then(|s| s.season_from.as_deref()).unwrap_or("");
+    let season_to = spot.and_then(|s| s.season_to.as_deref()).unwrap_or("");
+    let warning = spot.map(|s| s.warning.host_value(ctx)).unwrap_or_default();
+    // « Hors saison » sous la saison, le jour où le livret la masque — le tiroir la montre encore.
+    let off_season = spot.is_some_and(|s| {
+        portaki_sdk::host::time::now().is_ok_and(|now| !s.in_season(now.date_naive()))
+    });
 
     // Sans position, le sélecteur ne reçoit ni latitude ni longitude : il part vide.
     let mut picker = AddressMapPicker::new()
@@ -820,8 +824,7 @@ fn spot_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component
                     .value(title),
             )
             .into(),
-        Field::new()
-            .name(format!("spots.{index}.category"))
+        named(config, ctx, format!("spots.{index}.category"))
             .label("i18n:host.spot.category")
             .child(
                 TextInput::new()
@@ -912,6 +915,44 @@ fn spot_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component
         ),
         text_field(config, ctx, index, "phone", "i18n:host.spot.phone", phone),
         text_field(config, ctx, index, "url", "i18n:host.spot.url", url),
+        text_field(config, ctx, index, "emoji", "i18n:host.spot.emoji", emoji),
+        FieldHint::new().text("i18n:host.spot.emoji.hint").into(),
+        named(config, ctx, format!("spots.{index}.season_from"))
+            .label("i18n:host.spot.seasonFrom")
+            .child(
+                TextInput::new()
+                    .name(format!("spots.{index}.season_from"))
+                    .value(season_from)
+                    .placeholder("01/04"),
+            )
+            .into(),
+        Field::new()
+            .name(format!("spots.{index}.season_to"))
+            .label("i18n:host.spot.seasonTo")
+            .child(
+                TextInput::new()
+                    .name(format!("spots.{index}.season_to"))
+                    .value(season_to)
+                    .placeholder("30/09"),
+            )
+            .into(),
+        FieldHint::new()
+            .text(if off_season {
+                "i18n:host.spot.offSeason"
+            } else {
+                "i18n:host.spot.season.hint"
+            })
+            .into(),
+        named(config, ctx, format!("spots.{index}.warning"))
+            .label("i18n:host.spot.warning")
+            .child(
+                TextArea::new()
+                    .name(format!("spots.{index}.warning"))
+                    .value(warning)
+                    .rows(2)
+                    .placeholder("i18n:host.spot.warning.placeholder"),
+            )
+            .into(),
         picker.into(),
     ];
     fields.extend(photo_fields(index, spot));

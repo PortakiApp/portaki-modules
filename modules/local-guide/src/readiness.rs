@@ -54,8 +54,21 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
 
 /// Le libellé du champ en défaut : celui du formulaire, sans l'index de la ligne.
 fn field_label(field: &str) -> &'static str {
-    match field.rsplit('.').next().unwrap_or_default() {
+    let last = field.rsplit('.').next().unwrap_or_default();
+    if field.starts_with("host_activities") {
+        return match last {
+            "provider" => "host.hostActivities.provider",
+            "duration" => "host.hostActivities.duration",
+            "phone" => "host.hostActivities.phone",
+            "url" => "host.hostActivities.url",
+            _ => "host.hostActivities.title",
+        };
+    }
+    match last {
         "title" => "host.spot.name",
+        "category" => "host.spot.category",
+        "warning" => "host.spot.warning",
+        "season_from" => "host.spot.seasonFrom",
         "perk" => "host.spot.perk",
         "detail" => "host.spot.description",
         "price" => "host.spot.price",

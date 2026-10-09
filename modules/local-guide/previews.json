@@ -168,6 +168,7 @@
                 "lng": 7.0152
               },
               {
+                "emoji": "🧺",
                 "id": "marche",
                 "kind": "poi",
                 "label": "Marché provençal",
@@ -247,6 +248,7 @@
                   }
                 ],
                 "leading": {
+                  "emoji": "🧺",
                   "map": {
                     "lat": 43.5552,
                     "lng": 7.0214
