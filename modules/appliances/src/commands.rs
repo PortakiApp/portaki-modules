@@ -72,8 +72,9 @@ pub struct SaveSafetyNoticeArgs {
 #[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReplaceDevicesArgs {
+    /// Absente = laissée telle quelle, comme `paperManualsLocation`.
     #[serde(default, rename = "safetyNotice", alias = "safety_notice")]
-    pub safety_notice: String,
+    pub safety_notice: Option<String>,
     /// Absent = laissée telle quelle. Un formulaire qui n'envoie que les appareils ne doit pas
     /// effacer l'emplacement des notices papier au passage.
     #[serde(
@@ -86,6 +87,8 @@ pub struct ReplaceDevicesArgs {
     pub devices: Vec<ReplaceDeviceSlot>,
 }
 
+/// Une ligne de `replaceDevices`. Un champ absent garde la valeur enregistrée de l'appareil de
+/// même `id` ; une valeur vide l'efface.
 #[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ReplaceDeviceSlot {
@@ -94,24 +97,27 @@ pub struct ReplaceDeviceSlot {
     #[serde(default)]
     pub name: String,
     #[serde(default)]
-    pub emoji: String,
+    pub emoji: Option<String>,
     #[serde(default)]
-    pub description: String,
+    pub description: Option<String>,
+    /// Absent ou `null` : gardé.
     #[serde(default)]
     pub featured: serde_json::Value,
     #[serde(default)]
-    pub location: String,
+    pub location: Option<String>,
     #[serde(default, rename = "manualUrl", alias = "manual_url")]
-    pub manual_url: String,
+    pub manual_url: Option<String>,
+    #[serde(default, rename = "safetyNote", alias = "safety_note")]
+    pub safety_note: Option<String>,
     #[serde(default)]
-    pub status: String,
+    pub status: Option<String>,
     /// « Marque et modèle », non traduit.
     #[serde(default)]
-    pub model: String,
+    pub model: Option<String>,
     #[serde(default, rename = "videoUrl", alias = "video_url")]
-    pub video_url: String,
+    pub video_url: Option<String>,
     /// La valeur de l'`EditableList` « Étapes » : `[{ label }]`, en JSON ou en tableau, ou une
-    /// liste de textes. Absente : les étapes restent telles quelles.
+    /// liste de textes.
     #[serde(default)]
     pub steps: Option<serde_json::Value>,
 }
@@ -299,32 +305,43 @@ pub fn replace_devices(ctx: Context, args: ReplaceDevicesArgs) -> Result<()> {
             }
         };
 
-        let featured = parse_boolish(&slot.featured);
-        let status = if slot.status.trim().eq_ignore_ascii_case("hidden") {
-            ApplianceStatus::Hidden
-        } else {
-            ApplianceStatus::Active
+        // Ce que la ligne n'envoie pas reste tel qu'enregistré : un formulaire sans champ
+        // « Sécurité » effaçait la consigne de chaque appareil à chaque enregistrement.
+        let stored = payload.find_device(&id);
+        let text = |sent: &Option<String>, kept: fn(&Appliance) -> &String| {
+            sent.as_deref()
+                .map(|value| value.trim().to_string())
+                .or_else(|| stored.map(|d| kept(d).clone()))
+                .unwrap_or_default()
+        };
+        let featured = match &slot.featured {
+            serde_json::Value::Null => stored.is_some_and(|d| d.featured),
+            value => parse_boolish(value),
+        };
+        let status = match slot.status.as_deref() {
+            Some(status) if status.trim().eq_ignore_ascii_case("hidden") => ApplianceStatus::Hidden,
+            Some(_) => ApplianceStatus::Active,
+            None => stored.map(|d| d.status).unwrap_or_default(),
+        };
+        let description = match (slot.description.as_deref(), stored) {
+            (None, Some(d)) => d.description.clone(),
+            (sent, _) => normalize_description(sent.unwrap_or_default()),
         };
 
         next_devices.push(Appliance {
             name,
-            emoji: slot.emoji.trim().to_string(),
-            description: normalize_description(&slot.description),
+            emoji: text(&slot.emoji, |d| &d.emoji),
+            description,
             featured,
             order: index as i32,
-            location: slot.location.trim().to_string(),
-            manual_url: slot.manual_url.trim().to_string(),
-            safety_note: String::new(),
+            location: text(&slot.location, |d| &d.location),
+            manual_url: text(&slot.manual_url, |d| &d.manual_url),
+            safety_note: text(&slot.safety_note, |d| &d.safety_note),
             status,
-            model: slot.model.trim().to_string(),
-            video_url: slot.video_url.trim().to_string(),
-            // Un formulaire sans étapes ne les efface pas.
-            steps: parse_steps(slot.steps.as_ref()).unwrap_or_else(|| {
-                payload
-                    .find_device(&id)
-                    .map(|d| d.steps.clone())
-                    .unwrap_or_default()
-            }),
+            model: text(&slot.model, |d| &d.model),
+            video_url: text(&slot.video_url, |d| &d.video_url),
+            steps: parse_steps(slot.steps.as_ref())
+                .unwrap_or_else(|| stored.map(|d| d.steps.clone()).unwrap_or_default()),
             id,
         });
     }
@@ -339,7 +356,9 @@ pub fn replace_devices(ctx: Context, args: ReplaceDevicesArgs) -> Result<()> {
         return Err(refusal(&ctx, "host.featured.tooMany", &[("count", &count)]));
     }
 
-    payload.safety_notice = normalize_description(&args.safety_notice);
+    if let Some(notice) = args.safety_notice.as_deref() {
+        payload.safety_notice = normalize_description(notice);
+    }
     if let Some(location) = args.paper_manuals_location.as_deref() {
         payload.paper_manuals_location = location.trim().to_string();
     }

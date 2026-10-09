@@ -432,12 +432,12 @@ fn the_manuals_card_appears_only_when_there_is_a_manual() {
                 replace_devices(
                     ctx.clone(),
                     ReplaceDevicesArgs {
-                        safety_notice: String::new(),
+                        safety_notice: None,
                         paper_manuals_location: Some(paper.to_string()),
                         devices: vec![ReplaceDeviceSlot {
                             id: "tv".into(),
                             name: "Télévision".into(),
-                            manual_url: manual_url.to_string(),
+                            manual_url: Some(manual_url.to_string()),
                             ..ReplaceDeviceSlot::default()
                         }],
                     },
@@ -474,7 +474,7 @@ fn the_paper_location_is_shared_by_every_appliance() {
             replace_devices(
                 ctx.clone(),
                 ReplaceDevicesArgs {
-                    safety_notice: String::new(),
+                    safety_notice: None,
                     paper_manuals_location: Some("Boîte rouge".into()),
                     devices: vec![
                         ReplaceDeviceSlot {
@@ -714,7 +714,7 @@ fn saving_without_steps_keeps_them() {
             replace_devices(
                 ctx.clone(),
                 ReplaceDevicesArgs {
-                    safety_notice: String::new(),
+                    safety_notice: None,
                     paper_manuals_location: None,
                     devices: vec![ReplaceDeviceSlot {
                         id: "washer".into(),
@@ -757,5 +757,57 @@ fn a_bad_video_warns_and_stays_off_the_booklet() {
             assert!(host.contains("i18n:host.device.steps"), "{host}");
 
             assert!(!render_washer(&ctx).contains("example.com/video"));
+        });
+}
+
+/// `replaceDevices` sans `safetyNote` garde la consigne enregistrée (et tout autre champ
+/// absent) ; une valeur vide l'efface.
+#[test]
+#[serial]
+fn replace_devices_keeps_what_the_row_does_not_send() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            let mut args = washer_with_steps(None);
+            args.safety_note = "Pas de machine après 21 h.".into();
+            args.manual_url = "https://example.com/m.pdf".into();
+            save_appliance(ctx.clone(), args).expect("save");
+
+            let replace = |slot: ReplaceDeviceSlot| {
+                replace_devices(
+                    ctx.clone(),
+                    ReplaceDevicesArgs {
+                        safety_notice: None,
+                        paper_manuals_location: None,
+                        devices: vec![slot],
+                    },
+                )
+                .expect("replace")
+            };
+            replace(ReplaceDeviceSlot {
+                id: "washer".into(),
+                name: "Lave-linge".into(),
+                ..ReplaceDeviceSlot::default()
+            });
+            let out = render_washer(&ctx);
+            for kept in [
+                "Pas de machine après 21 h.",
+                "https://example.com/m.pdf",
+                "https://youtu.be/abc",
+                "Bosch Serie 6 WAU28 · Salle de bain",
+                "Lessive dans le placard.",
+            ] {
+                assert!(out.contains(kept), "{kept}: {out}");
+            }
+
+            replace(ReplaceDeviceSlot {
+                id: "washer".into(),
+                name: "Lave-linge".into(),
+                safety_note: Some(String::new()),
+                ..ReplaceDeviceSlot::default()
+            });
+            assert!(!render_washer(&ctx).contains("Pas de machine après 21 h."));
         });
 }

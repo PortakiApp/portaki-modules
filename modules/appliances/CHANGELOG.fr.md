@@ -9,6 +9,7 @@
 * Sans appareil mis en avant, la carte d'accueil montre les premiers appareils actifs au lieu de rester vide.
 * Un nombre d'appareils en avant hors de 2 à 6 n'est plus corrigé en silence : « Entre 2 et 6. » s'affiche sous le champ.
 * Un texte trop long est signalé avant la publication, et les refus (appareil sans nom, 61e appareil) s'affichent en clair, dans votre langue.
+* Enregistrer la liste complète des appareils n'efface plus la consigne de sécurité de chacun, ni aucun champ que le formulaire n'envoie pas.
 
 ## 1.10.0
 
