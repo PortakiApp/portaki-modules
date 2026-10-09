@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
-  "category": "stay",
+  "category": "help",
   "tagline": {
     "fr": "Où couper l’électricité, l’eau et le gaz, le jour où il faut le savoir.",
     "en": "Where to shut off the power, the water and the gas, the day it matters."

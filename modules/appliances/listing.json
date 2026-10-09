@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
-  "category": "stay",
+  "category": "house",
   "tagline": {
     "fr": "Des modes d’emploi courts pour chaque appareil du logement.",
     "en": "Short how-to guides for every appliance in your rental."

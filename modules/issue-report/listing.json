@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
-  "category": "stay",
+  "category": "help",
   "tagline": {
     "fr": "Les voyageurs signalent un souci pendant le séjour, vous êtes prévenu aussitôt.",
     "en": "Guests report a problem during their stay and you hear about it right away."

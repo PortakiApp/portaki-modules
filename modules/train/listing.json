@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
+  "category": "around",
+  "tagline": {
+    "fr": "Les prochains trains de la gare la plus proche, dans le livret.",
+    "en": "The next trains from the nearest station, in the booklet."
+  },
+  "description": {
+    "fr": "Le livret affiche les prochains départs ou arrivées de la gare que l’hôte a choisie, avec les retards annoncés par la SNCF. La veille de l’arrivée, un voyageur qui vient en train retrouve la carte en tête du livret.",
+    "en": "The booklet shows the next departures or arrivals at the station the host picked, with delays announced by SNCF. The day before arrival, a guest coming by train finds the card at the top of the booklet."
+  },
+  "guestSurface": {
+    "fr": "Les prochains trains de la gare, vers les destinations choisies, avec leurs retards.",
+    "en": "The next trains at the station, towards the chosen destinations, with their delays."
+  },
+  "hostSurface": {
+    "fr": "Une fiche Trains : la gare, les destinations à suivre, le sens (départs ou arrivées) et une note pour les voyageurs.",
+    "en": "A Trains sheet: the station, the destinations to follow, the direction (departures or arrivals) and a note for guests."
+  },
+  "configItems": [
+    { "fr": "Gare", "en": "Station" },
+    { "fr": "Destinations à suivre (facultatif)", "en": "Destinations to follow (optional)" },
+    { "fr": "Départs ou arrivées", "en": "Departures or arrivals" },
+    { "fr": "Note pour les voyageurs (facultatif)", "en": "Note for guests (optional)" }
+  ],
+  "publishedLangs": ["fr", "en"]
+}
