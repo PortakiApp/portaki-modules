@@ -21,6 +21,28 @@ pub struct SubmitReviewArgs {
     pub rating: u8,
     #[serde(default)]
     pub comment: String,
+    /// « Votre avis peut apparaître sur la page du logement » : décochée par défaut.
+    #[serde(default, deserialize_with = "deserialize_consent")]
+    pub public_consent: bool,
+}
+
+/// La case du formulaire : une case HTML cochée envoie `"on"`, décochée n'envoie rien (le
+/// `#[serde(default)]` la lit alors `false`). Un booléen se lit aussi. Le reste vaut `false` : on
+/// ne publie jamais un avis sur un doute.
+fn deserialize_consent<'de, D>(deserializer: D) -> std::result::Result<bool, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Ok(match serde_json::Value::deserialize(deserializer)? {
+        serde_json::Value::Bool(checked) => checked,
+        serde_json::Value::String(text) => {
+            matches!(
+                text.trim().to_ascii_lowercase().as_str(),
+                "on" | "true" | "1"
+            )
+        }
+        _ => false,
+    })
 }
 
 /// La note, telle que le formulaire l'envoie : un nombre, ou le `Select` en texte (`"5"`).
@@ -67,6 +89,10 @@ pub struct StoredReview {
     pub at: Option<DateTime<Utc>>,
     #[serde(default)]
     pub guest_name: Option<String>,
+    /// Le voyageur accepte que l'avis paraisse sur la page publique du logement. Absent sur les
+    /// avis d'avant la case : jamais publiés.
+    #[serde(default)]
+    pub public_consent: bool,
 }
 
 /// L'avis déjà laissé pour ce séjour, s'il y en a un.
@@ -78,6 +104,26 @@ pub(crate) fn review_for_stay(stay_id: Uuid) -> Result<Option<StoredReview>> {
         return Ok(Some(review));
     }
     read_json(&format!("{LEGACY_REVIEW_KEY_PREFIX}{stay_id}"))
+}
+
+/// Les avis que leur voyageur a laissés publier, avec leur séjour (l'identifiant que l'hôte
+/// choisit), du plus ancien au plus récent. Seule la clé par séjour peut porter le
+/// consentement : le blob `reviews` et les clés `review:` datent d'avant la case.
+pub(crate) fn consented_reviews() -> Result<Vec<(String, StoredReview)>> {
+    let mut reviews = Vec::new();
+    for key in host::kv::list("stay:")? {
+        let Some(stay_id) = key
+            .strip_prefix("stay:")
+            .and_then(|rest| rest.strip_suffix(":review"))
+        else {
+            continue;
+        };
+        if let Some(review) = read_json::<StoredReview>(&key)?.filter(|r| r.public_consent) {
+            reviews.push((stay_id.to_string(), review));
+        }
+    }
+    reviews.sort_by_key(|(_, review)| review.at);
+    Ok(reviews)
 }
 
 /// Every review of the property, oldest first.
@@ -151,6 +197,7 @@ pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
         comment: comment.clone(),
         at: Some(host::time::now()?),
         guest_name: guest_name.clone(),
+        public_consent: args.public_consent,
     };
     let bytes = serde_json::to_vec(&review)
         .map_err(|error| PortakiError::Storage(format!("review serialize: {error}")))?;
@@ -241,6 +288,31 @@ mod tests {
         assert_eq!(parsed(json!({ "rating": " 3 " })).rating, 3);
         // Un nombre reste lisible : les exemples du manifeste en envoient.
         assert_eq!(parsed(json!({ "rating": 4 })).rating, 4);
+    }
+
+    /// La case décochée n'envoie rien, cochée elle envoie `"on"`.
+    #[test]
+    fn the_consent_box_reads_as_html_sends_it() {
+        let consent = |value| {
+            serde_json::from_value::<SubmitReviewArgs>(value)
+                .expect("args")
+                .public_consent
+        };
+        assert!(!consent(json!({ "rating": 5 })));
+        assert!(consent(json!({ "rating": 5, "public_consent": "on" })));
+        assert!(consent(json!({ "rating": 5, "public_consent": true })));
+        assert!(!consent(json!({ "rating": 5, "public_consent": "off" })));
+        assert!(!consent(json!({ "rating": 5, "public_consent": false })));
+    }
+
+    /// Un avis d'avant la case n'a pas le champ : il n'est pas consenti.
+    #[test]
+    fn an_old_review_is_not_consented() {
+        let old: StoredReview = serde_json::from_value(
+            json!({ "rating": 5, "comment": "Super", "guest_name": "Claire Martin" }),
+        )
+        .expect("old review");
+        assert!(!old.public_consent);
     }
 
     /// Ce qui n'est pas une note est refusé à la lecture, et non lu comme zéro : un champ vide

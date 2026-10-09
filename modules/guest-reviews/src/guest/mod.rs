@@ -3,6 +3,10 @@
 
 mod home;
 mod load;
+mod public;
+
+pub use public::render_property_public;
+pub(crate) use public::{chosen, first_name};
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{Card, EmptyState, Text};

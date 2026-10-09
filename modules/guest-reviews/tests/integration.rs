@@ -7,8 +7,8 @@ use serial_test::serial;
 
 use guest_reviews::{
     publish_readiness, render_home_card, render_host_main, render_host_stats, render_host_stay,
-    render_post_stay_card, stats_summary, submit_review, AskFrom, ModuleConfig, SubmitReviewArgs,
-    GUEST_TEXT_EMAIL_MAX_CHARS,
+    render_post_stay_card, render_property_public, stats_summary, submit_review, AskFrom,
+    ModuleConfig, SubmitReviewArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
 };
 use portaki_sdk::context::StayContext;
 use portaki_sdk::contracts::i18n::I18nText;
@@ -203,6 +203,7 @@ fn a_low_rating_still_gets_the_public_link() {
                 SubmitReviewArgs {
                     rating: 1,
                     comment: "Décevant".into(),
+                    public_consent: false,
                 },
             )
             .expect("submit");
@@ -294,6 +295,7 @@ fn submit_review_validates_rating() {
                     SubmitReviewArgs {
                         rating,
                         comment: "".into(),
+                        public_consent: false,
                     },
                 );
                 assert!(err.is_err(), "{rating}");
@@ -315,6 +317,7 @@ fn submit_review_is_taken_alongside_a_public_link() {
                 SubmitReviewArgs {
                     rating: 5,
                     comment: "Great".into(),
+                    public_consent: false,
                 },
             )
             .expect("submit");
@@ -332,6 +335,7 @@ fn submit_review_stores_one_review_per_stay() {
             let review = || SubmitReviewArgs {
                 rating: 5,
                 comment: "Great".into(),
+                public_consent: false,
             };
             submit_review(ctx.clone(), review()).expect("submit");
             let stay_id = ctx.stay.as_ref().expect("stay").stay_id;
@@ -369,6 +373,7 @@ fn a_review_under_the_first_per_stay_key_still_counts() {
                 SubmitReviewArgs {
                     rating: 5,
                     comment: "Great".into(),
+                    public_consent: false,
                 },
             )
             .expect_err("already reviewed");
@@ -389,6 +394,7 @@ fn submit_review_needs_a_stay() {
                 SubmitReviewArgs {
                     rating: 5,
                     comment: "Great".into(),
+                    public_consent: false,
                 },
             )
             .expect_err("no stay");
@@ -610,6 +616,7 @@ fn long_comment_is_stored_whole_and_quoted_in_the_host_email() {
                 SubmitReviewArgs {
                     rating: 5,
                     comment: comment.clone(),
+                    public_consent: false,
                 },
             )
             .expect("submit");
@@ -657,6 +664,7 @@ fn stored_reviews_feed_the_stats() {
                     SubmitReviewArgs {
                         rating,
                         comment: comment.into(),
+                        public_consent: false,
                     },
                 )
                 .expect("submit");
@@ -816,6 +824,7 @@ fn a_stay_already_rated_is_thanked_not_asked_again() {
                 SubmitReviewArgs {
                     rating: 4,
                     comment: "Très bien".into(),
+                    public_consent: false,
                 },
             )
             .expect("submit");
@@ -850,5 +859,165 @@ fn no_star_is_given_in_advance() {
             assert_eq!(star_choice(&tree, 5).as_deref(), Some("5"), "{tree}");
             let json = tree.to_string();
             assert!(json.contains(r#""required":true"#), "{json}");
+        });
+}
+
+const STAY_A: &str = "00000000-0000-4000-8000-00000000000a";
+const STAY_B: &str = "00000000-0000-4000-8000-00000000000b";
+const STAY_C: &str = "00000000-0000-4000-8000-00000000000c";
+const STAY_OLD: &str = "00000000-0000-4000-8000-00000000000d";
+
+/// Trois avis par séjour : deux consentis, un refusé ; et un avis d'avant la case.
+fn with_public_reviews(builder: MockContext) -> MockContext {
+    let review = |rating: u8, comment: &str, name: &str, consent: Option<bool>| {
+        let mut value = json!({
+            "rating": rating, "comment": comment, "guest_name": name,
+            "at": "2026-07-14T10:00:00Z",
+        });
+        if let Some(consent) = consent {
+            value["public_consent"] = json!(consent);
+        }
+        serde_json::to_vec(&value).unwrap()
+    };
+    builder
+        .with_kv(
+            format!("stay:{STAY_A}:review"),
+            review(5, "Maison superbe", "Sophie Lambert", Some(true)),
+        )
+        .with_kv(
+            format!("stay:{STAY_B}:review"),
+            review(4, "Plage à pied", "Thomas Girard", Some(true)),
+        )
+        .with_kv(
+            format!("stay:{STAY_C}:review"),
+            review(1, "Ne pas publier", "Zoé Dupont", Some(false)),
+        )
+        .with_kv(
+            format!("stay:{STAY_OLD}:review"),
+            review(2, "Avis ancien", "Marc Petit", None),
+        )
+}
+
+fn render_public(config: serde_json::Value) -> serde_json::Value {
+    with_public_reviews(MockContext::public_visitor())
+        .with_config(&config)
+        .with_translation("public.count", "{count} séjours notés")
+        .with_translation("public.month.7", "juillet")
+        .run(|ctx| {
+            assert!(ctx.is_public_visitor());
+            serde_json::to_value(render_property_public(ctx).expect("public")).unwrap()
+        })
+}
+
+/// Le bloc public : note et nombre sur les seuls consentis, avis choisis au prénom, rien de ce
+/// qui n'est pas consenti — même choisi —, ni nom de famille, ni séjour.
+#[test]
+#[serial]
+fn the_public_block_shows_only_consented_reviews_by_first_name() {
+    let json = render_public(json!({
+        "public_enabled": true,
+        "public_reviews": format!("[\"{STAY_A}\",\"{STAY_C}\",\"{STAY_OLD}\",\"{STAY_B}\"]"),
+    }));
+    assert!(portaki_sdk::surfaces::check_property_public_tree(&json["root"]).is_empty());
+    assert_eq!(json["root"]["type"], "Section");
+    let text = json.to_string();
+    assert!(
+        text.contains("\"Maison superbe\"") && text.contains("\"Plage à pied\""),
+        "{text}"
+    );
+    assert!(text.contains("Sophie · juillet 2026"), "{text}");
+    assert!(text.contains("Thomas · juillet 2026"), "{text}");
+    assert!(text.contains("4,5 / 5"), "{text}");
+    assert!(text.contains("2 séjours notés"), "{text}");
+    for hidden in [
+        "Ne pas publier",
+        "Zoé",
+        "Avis ancien",
+        "Marc",
+        "Lambert",
+        "Girard",
+        "00000000-",
+    ] {
+        assert!(!text.contains(hidden), "{hidden} leaked: {text}");
+    }
+}
+
+/// Désactivé, ou moins de deux avis choisis encore consentis : une Section sans enfant.
+#[test]
+#[serial]
+fn the_public_block_is_empty_when_disabled_or_short() {
+    let empty = |json: serde_json::Value| {
+        assert_eq!(json["root"]["type"], "Section", "{json}");
+        assert!(
+            json["root"]["children"]
+                .as_array()
+                .is_none_or(Vec::is_empty),
+            "{json}"
+        );
+    };
+    let both = format!("[\"{STAY_A}\",\"{STAY_B}\"]");
+    empty(render_public(json!({ "public_reviews": both })));
+    empty(render_public(
+        json!({ "public_enabled": false, "public_reviews": both }),
+    ));
+    // Le refusé et l'ancien ne comptent pas : il reste un seul avis.
+    empty(render_public(json!({
+        "public_enabled": true,
+        "public_reviews": format!("[\"{STAY_A}\",\"{STAY_C}\",\"{STAY_OLD}\"]"),
+    })));
+}
+
+/// La case cochée (`"on"`) est enregistrée avec l'avis ; décochée, l'avis reste privé.
+#[test]
+#[serial]
+fn the_consent_box_is_stored_with_the_review() {
+    for (sent, consented) in [(json!("on"), true), (json!(null), false)] {
+        MockContext::guest()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_stay(Booking::default())
+            .run(|ctx| {
+                let mut args = json!({ "rating": "5", "comment": "Top" });
+                if !sent.is_null() {
+                    args["public_consent"] = sent.clone();
+                }
+                submit_review(ctx.clone(), serde_json::from_value(args).unwrap()).expect("submit");
+                let stay_id = ctx.stay.as_ref().expect("stay").stay_id;
+                let stored: serde_json::Value = serde_json::from_slice(
+                    &portaki_sdk::host::kv::get(&format!("stay:{stay_id}:review"))
+                        .unwrap()
+                        .expect("stored"),
+                )
+                .unwrap();
+                assert_eq!(stored["public_consent"], json!(consented), "{stored}");
+            });
+    }
+}
+
+/// La carte « Page publique » ne propose que les avis consentis, au prénom ; moins de deux
+/// choisis : l'erreur sous le champ et un avertissement de publication, qui ne bloque pas.
+#[test]
+#[serial]
+fn the_public_card_picks_among_consented_reviews() {
+    let config = json!({ "public_enabled": true, "public_reviews": format!("[\"{STAY_A}\"]") });
+    with_public_reviews(MockContext::host())
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&config)
+        .run(|ctx| {
+            let surface = render_host_main(ctx.clone()).expect("host main");
+            config_form::assert_form_matches_config(EMISSIONS, &surface, &[]);
+            let text = to_json(&surface);
+            assert!(text.contains(STAY_A) && text.contains(STAY_B), "{text}");
+            assert!(!text.contains(STAY_C) && !text.contains(STAY_OLD), "{text}");
+            assert!(
+                text.contains("Sophie") && !text.contains("Lambert"),
+                "{text}"
+            );
+            assert!(text.contains("Choisissez au moins 2 avis."), "{text}");
+
+            let items = publish_readiness(ctx).expect("readiness").items;
+            assert_eq!(items.len(), 1);
+            assert_eq!(items[0].id, "config.public_reviews");
+            assert_eq!(items[0].level, PublishLevel::Recommended);
+            assert_eq!(items[0].hint.fr, "Choisissez au moins 2 avis.");
         });
 }

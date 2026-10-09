@@ -68,7 +68,7 @@ fn period_key(days: i64) -> i64 {
 }
 
 /// « 4,8 » (French) or « 4.8 ».
-fn average(reviews: &[StoredReview], fr: bool) -> Option<String> {
+pub(crate) fn average(reviews: &[StoredReview], fr: bool) -> Option<String> {
     if reviews.is_empty() {
         return None;
     }

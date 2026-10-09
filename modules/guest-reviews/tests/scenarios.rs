@@ -45,6 +45,7 @@ fn a_review_waits_for_the_arrival() {
                     SubmitReviewArgs {
                         rating: 5,
                         comment: String::new(),
+                        public_consent: false,
                     },
                 )
             })
