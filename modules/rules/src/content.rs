@@ -301,7 +301,7 @@ impl RulesBundle {
     /// anglais. Le thème n'est pas ici : c'est un texte, il reste dans sa langue.
     ///
     /// ponytail: l'alignement se fait par index, après que `build_payload_for_lang` ait écarté les
-    /// lignes sans titre — vider la règle 2 en français décale donc l'anglais. Défaut antérieur, à
+    /// lignes vides — vider la règle 2 en français décale donc l'anglais. Défaut antérieur, à
     /// corriger en donnant un identifiant stable à chaque règle.
     pub fn sync_shared_from(&mut self, source: &RulesPayload) {
         for payload in self.by_lang.values_mut() {
