@@ -16,12 +16,25 @@ use load::load_guest_data;
 /// Both surfaces show the same review content; the home card waits for the arrival, the
 /// post-stay screen needs no such check.
 fn render_card(ctx: &GuestContext, surface_id: SurfaceId, post_stay: bool) -> Result<Surface> {
-    Ok(match load_guest_data(ctx)? {
-        None => no_review_channel(surface_id),
-        // The post-stay screen only opens once the stay is over.
-        Some(_) if !post_stay && !crate::commands::has_arrived(ctx)? => not_yet(surface_id),
-        Some(data) => build_home_card(&data),
-    })
+    if post_stay && !asks_now(ctx)? {
+        // « Demander à partir de » (spec §2.1) : pas encore ; un état vide, que le livret masque.
+        return Ok(Surface::new(EmptyState::new().icon(IconName::Star)).with_id(surface_id));
+    }
+    if !post_stay && !crate::commands::has_arrived(ctx)? {
+        return Ok(not_yet(surface_id));
+    }
+    Ok(build_home_card(&load_guest_data(ctx)?))
+}
+
+/// L'heure de « Demander à partir de » est-elle passée ?
+fn asks_now(ctx: &GuestContext) -> Result<bool> {
+    let config = crate::config::ModuleConfig::load(ctx)?;
+    let checkout = ctx.stay.as_ref().and_then(|stay| stay.checkout_at);
+    Ok(config.asks_now(
+        portaki_sdk::host::time::now()?,
+        checkout,
+        &ctx.property.timezone,
+    ))
 }
 
 /// Before arrival there is no stay to review yet: the card says when it opens.
@@ -35,18 +48,6 @@ fn not_yet(surface_id: SurfaceId) -> Surface {
                     .text("i18n:guest.notYet")
                     .variant(TextVariant::Body),
             ),
-    )
-    .with_id(surface_id)
-}
-
-/// No platform the guest can use for this stay (none selected, or Airbnb without its link or
-/// not the booking channel).
-fn no_review_channel(surface_id: SurfaceId) -> Surface {
-    Surface::new(
-        EmptyState::new()
-            .title("i18n:guest.empty.title")
-            .description("i18n:guest.empty.description")
-            .icon(IconName::Star),
     )
     .with_id(surface_id)
 }

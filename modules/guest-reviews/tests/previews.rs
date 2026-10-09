@@ -6,12 +6,10 @@ mod previews;
 use guest_reviews::{render_home_card, render_post_stay_card};
 use serde_json::json;
 
-/// L'avis déposé sur Portaki seulement : un lien de plateforme d'exemple pointerait vers une
-/// annonce qui n'existe pas.
+/// La note, et un lien d'avis Airbnb d'exemple : le bouton et le QR que voit le voyageur.
 fn sample_config() -> serde_json::Value {
     json!({
-        "platform_airbnb": false,
-        "platform_portaki": true,
+        "review_url": "https://www.airbnb.fr/users/show/12345678",
         "thank_you_message": {
             "fr": "Merci pour votre séjour ! Votre avis aide les prochains voyageurs à nous choisir.",
             "en": "Thank you for staying with us! Your review helps future guests choose us."

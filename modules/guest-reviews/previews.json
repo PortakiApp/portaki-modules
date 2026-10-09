@@ -5,12 +5,15 @@
       "i18n": {
         "guest.comment": "Un mot sur votre séjour",
         "guest.commentPlaceholder": "Un mot sur votre séjour…",
+        "guest.cta.airbnb": "Laisser un avis sur Airbnb",
+        "guest.orPortaki": "Ou sur Portaki",
         "guest.rating": "Votre note",
         "guest.rating.1": "Très décevant",
         "guest.rating.2": "Décevant",
         "guest.rating.3": "Correct",
         "guest.rating.4": "Très bien",
         "guest.rating.5": "Parfait",
+        "guest.scanQr": "Ou scannez le QR code vers la page d'avis",
         "guest.submit": "Envoyer mon avis",
         "home.card.title": "Votre avis",
         "nav.guest-reviews": "Votre avis"
@@ -30,6 +33,19 @@
                 "text": "Merci pour votre séjour ! Votre avis aide les prochains voyageurs à nous choisir.",
                 "type": "Text",
                 "variant": "body"
+              },
+              {
+                "action": {
+                  "type": "external",
+                  "url": "https://www.airbnb.fr/users/show/12345678"
+                },
+                "label": "i18n:guest.cta.airbnb",
+                "type": "Button"
+              },
+              {
+                "text": "i18n:guest.orPortaki",
+                "type": "Text",
+                "variant": "caption"
               },
               {
                 "children": [
@@ -95,6 +111,19 @@
                   }
                 ],
                 "type": "Form"
+              },
+              {
+                "type": "Divider"
+              },
+              {
+                "size": 144.0,
+                "type": "QRCode",
+                "value": "https://www.airbnb.fr/users/show/12345678"
+              },
+              {
+                "text": "i18n:guest.scanQr",
+                "type": "Text",
+                "variant": "caption"
               }
             ],
             "gap": 12.0,

@@ -12,6 +12,7 @@ publish = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+chrono = { workspace = true }
 portaki-sdk = { version = "10.1.1", features = ["email", "kv", "platform"] }
 portaki-sdk-macros = { workspace = true }
 serde = { workspace = true }

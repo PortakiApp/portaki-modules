@@ -11,10 +11,10 @@ mod ids;
 mod queries;
 
 pub use commands::{submit_review, StoredReview, SubmitReviewArgs};
-pub use config::{ChannelMode, ModuleConfig};
+pub use config::{AskFrom, ChannelMode, ModuleConfig, ReviewPlatform};
 pub use email_text::GUEST_TEXT_EMAIL_MAX_CHARS;
 pub use guest::{render_home_card, render_post_stay_card};
-pub use host::{render_host_main, render_host_stats, stats_summary};
+pub use host::{render_host_main, render_host_stats, render_host_stay, stats_summary};
 pub use queries::publish_readiness;
 
 portaki_sdk::portaki_module!(

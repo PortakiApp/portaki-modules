@@ -14,21 +14,21 @@
     "en": "After the stay, a thank-you message, a button and QR code to the Airbnb review page, and/or a star rating with a comment right in the booklet."
   },
   "hostSurface": {
-    "fr": "Un onglet Merci & avis pour choisir où collecter les avis et rédiger le remerciement ; un e-mail vous prévient à chaque note laissée dans le livret.",
-    "en": "A Thanks & reviews tab to choose where reviews are collected and write the thank-you message; an email lets you know about every rating left in the booklet."
+    "fr": "Une fiche Avis : quand demander l’avis, le lien vers votre page d’avis sur n’importe quelle plateforme (Airbnb, Booking, Google…), le commentaire privé et un message de remerciement. Sur la fiche séjour, la note laissée.",
+    "en": "A Reviews sheet: when to ask, the link to your review page on any platform (Airbnb, Booking, Google…), the private comment and a thank-you message. On the stay page, the rating given."
   },
   "configItems": [
     {
-      "fr": "Où collecter les avis : Airbnb, le livret ou les deux",
-      "en": "Where to collect reviews: Airbnb, the booklet, or both"
+      "fr": "Quand demander l’avis : à l’heure du départ ou le lendemain à 10 h",
+      "en": "When to ask: at check-out time or the next day at 10 am"
     },
     {
-      "fr": "Lien d’avis Airbnb et QR code",
-      "en": "Airbnb review link and QR code"
+      "fr": "Lien vers votre page d’avis publique, plateforme détectée",
+      "en": "Link to your public review page, platform detected"
     },
     {
-      "fr": "Message de remerciement (facultatif)",
-      "en": "Thank-you message (optional)"
+      "fr": "Commentaire privé du voyageur et message de remerciement",
+      "en": "Guest private comment and thank-you message"
     }
   ],
   "capabilities": [],
