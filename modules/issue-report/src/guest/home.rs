@@ -2,7 +2,7 @@
 
 use portaki_sdk::prelude::*;
 
-use portaki_sdk::sdui::common::Leading;
+use portaki_sdk::sdui::common::{BadgeSpec, Leading, Tone, Trailing, TrailingVisual};
 use portaki_sdk::sdui::primitives::{Card, ListItem, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
@@ -83,9 +83,21 @@ pub fn build_home_card(reports: &[IssueReport], open: bool, auto_reply: Option<S
     .with_id(crate::guest::HOME_CARD)
 }
 
+/// Une ligne de l'historique, marquée « Résolu » dès que l'hôte l'a clos (§9 #5).
 fn report_list_item(report: &IssueReport) -> ListItem {
     let subtitle = category::category_label_key(report.category.as_str());
-    ListItem::new()
+    let item = ListItem::new()
         .title(report.summary.clone())
-        .subtitle(format!("i18n:{subtitle}"))
+        .subtitle(format!("i18n:{subtitle}"));
+    if report.resolved_at.is_none() {
+        return item;
+    }
+    item.trailing(Trailing::Visual(Box::new(TrailingVisual {
+        badge: Some(BadgeSpec {
+            label: "i18n:home.card.resolved".to_string(),
+            tone: Tone::Success,
+            dot: false,
+        }),
+        ..TrailingVisual::default()
+    })))
 }

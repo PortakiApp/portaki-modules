@@ -33,17 +33,24 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
 
 /// §2.1 Le formulaire : catégories, photo, urgence, périodes.
 fn form_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let offered = config.categories();
     let mut card = Card::new()
         .title("i18n:host.category.title")
         .subtitle("i18n:host.category.subtitle")
         .icon(IconName::MessageCircle);
-    for wire in crate::category::WIRE_VALUES {
-        card = card.child(toggle(
+    // Les cases telles qu'enregistrées, pas l'ensemble de repli : tout décoché reste décoché,
+    // avec « Choisissez au moins une catégorie. » sous la dernière.
+    let ticks = config.category_ticks();
+    for (index, wire) in crate::category::WIRE_VALUES.iter().enumerate() {
+        let field = toggle(
             &format!("category_{wire}"),
             &format!("i18n:host.category.{wire}"),
-            offered.contains(wire),
-        ));
+            ticks[index],
+        );
+        card = card.child(if index + 1 == ticks.len() {
+            with_error(field, config, ctx, "categories")
+        } else {
+            field
+        });
     }
     card = card
         .child(FieldHint::new().text("i18n:host.category.hint"))
@@ -73,13 +80,18 @@ fn form_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
             )
             .child(FieldHint::new().text("i18n:host.urgentNumber.hint"));
     }
-    let phases = config.phases();
-    for phase in PHASES {
-        card = card.child(toggle(
+    let ticks = config.phase_ticks();
+    for (index, phase) in PHASES.iter().enumerate() {
+        let field = toggle(
             &format!("phase_{phase}"),
             &format!("i18n:host.phase.{phase}"),
-            phases.contains(&phase),
-        ));
+            ticks[index],
+        );
+        card = card.child(if index + 1 == PHASES.len() {
+            with_error(field, config, ctx, "phases")
+        } else {
+            field
+        });
     }
     card.child(FieldHint::new().text("i18n:host.phase.hint"))
         .into()
@@ -133,8 +145,12 @@ fn toggle(name: &str, label: &str, checked: bool) -> Field {
 
 /// Le champ `name`, avec le message de [`ModuleConfig::error_of`] sous lui s'il y en a un.
 fn named(config: &ModuleConfig, ctx: &HostContext, name: &str) -> Field {
-    let field = Field::new().name(name);
-    match config.error_of(name) {
+    with_error(Field::new().name(name), config, ctx, name)
+}
+
+/// `field`, avec le message de [`ModuleConfig::error_of`] pour `problem` sous lui s'il y en a un.
+fn with_error(field: Field, config: &ModuleConfig, ctx: &HostContext, problem: &str) -> Field {
+    match config.error_of(problem) {
         Some(error) => field.error(error.get(&ctx.locale).to_string()),
         None => field,
     }

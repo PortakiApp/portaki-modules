@@ -9,7 +9,9 @@ use portaki_test_utils::MockContextBuilder;
 
 /// Un signalement déjà envoyé, pour que la carte et la tuile hôte montrent son suivi. Seul un
 /// voyageur signale : côté hôte, celui du cas normal. Le magasin en mémoire est par fil :
-/// repartir de zéro à chaque contexte évite d'empiler les signalements.
+/// repartir de zéro à chaque contexte évite d'empiler les signalements. Le signaleur ouvre le
+/// formulaire à toutes les périodes : les cas ne sont pas tous datés pendant un séjour, et le
+/// défaut (« pendant le séjour ») refuserait l'envoi.
 fn setup(builder: MockContextBuilder) -> MockContextBuilder {
     reset_test_store();
     let reporter = if builder.context().guest.is_some() {
@@ -18,6 +20,9 @@ fn setup(builder: MockContextBuilder) -> MockContextBuilder {
         get("normal").guest()
     };
     reporter
+        .with_config(&serde_json::json!({
+            "phase_before": true, "phase_during": true, "phase_after": true
+        }))
         .run(|ctx| {
             submit(
                 ctx,

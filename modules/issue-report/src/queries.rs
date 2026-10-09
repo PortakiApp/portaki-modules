@@ -79,6 +79,8 @@ pub fn publish_readiness(
             ok: false,
             label: crate::i18n::text(
                 match field {
+                    "categories" => "host.category.title",
+                    "phases" => "host.phase.title",
                     "urgent_number" => "host.urgentNumber.label",
                     _ => "host.autoReply.label",
                 },
@@ -88,4 +90,31 @@ pub fn publish_readiness(
         })
         .collect();
     Ok(PublishReadiness { items })
+}
+
+#[cfg(test)]
+mod tests {
+    use portaki_test_utils::{MockContext, Property};
+
+    /// Tout décoché : chaque ensemble bloque la publication en désignant son champ.
+    #[test]
+    fn unticked_sets_block_publication() {
+        MockContext::host()
+            .with_property(Property::default())
+            .with_config(&serde_json::json!({
+                "category_appliance": false, "phase_during": false
+            }))
+            .run(|ctx| {
+                let ids: Vec<String> = super::publish_readiness(ctx)
+                    .expect("readiness")
+                    .items
+                    .into_iter()
+                    .map(|item| item.id)
+                    .collect();
+                assert_eq!(ids, ["config.categories", "config.phases"]);
+            });
+        MockContext::host()
+            .with_property(Property::default())
+            .run(|ctx| assert!(super::publish_readiness(ctx).unwrap().items.is_empty()));
+    }
 }
