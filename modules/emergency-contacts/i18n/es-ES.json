@@ -3,6 +3,8 @@
   "config.contacts": "Números útiles",
   "guest.call": "Llamar",
   "guest.dial112": "Marcar el 112",
+  "guest.distance.km": "{value} km",
+  "guest.distance.metres": "{value} m",
   "guest.emergency.message": "En caso de urgencia vital, marque el 112 o el número de emergencias local.",
   "guest.emergency.title": "Urgencia vital",
   "guest.empty.description": "En caso de urgencia vital, marque el 112.",

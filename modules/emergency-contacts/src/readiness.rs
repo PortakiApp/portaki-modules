@@ -119,6 +119,8 @@ pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
         } else {
             name.to_string()
         });
+        // La catégorie range le repère dans le pratique et lui donne son pictogramme santé.
+        marker.category = Some(id.into());
         Some(marker)
     })
     .collect();

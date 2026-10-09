@@ -6,6 +6,7 @@ La pharmacie et l'hôpital sur la carte.
 
 * Placez la pharmacie et l'hôpital sur la carte : ils apparaissent sur la Carte du livret.
 * Une épingle à plus de 30 km (pharmacie) ou 50 km (hôpital) du logement déclenche un avertissement.
+* Le voyageur voit à quelle distance du logement se trouvent la pharmacie et l'hôpital.
 
 ## 1.7.0
 

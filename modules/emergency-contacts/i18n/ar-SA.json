@@ -3,6 +3,8 @@
   "config.contacts": "أرقام مفيدة",
   "guest.call": "اتصال",
   "guest.dial112": "الاتصال بـ 112",
+  "guest.distance.km": "{value} كم",
+  "guest.distance.metres": "{value} م",
   "guest.emergency.message": "في الحالات التي تهدد الحياة، اتصل بالرقم 112 أو برقم الطوارئ المحلي.",
   "guest.emergency.title": "حالة طارئة تهدد الحياة",
   "guest.empty.description": "في الحالات التي تهدد الحياة، اتصل بالرقم 112.",

@@ -5,6 +5,7 @@ use serial_test::serial;
 
 use emergency_contacts::{render_explore_detail, render_home_card, render_host_main};
 use portaki_sdk::host::module::ModuleStatus;
+use portaki_sdk::sdui::GeoPoint;
 use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use serde_json::{json, Value};
 
@@ -364,5 +365,49 @@ fn placed_health_places_reach_the_booklet_map() {
             let json = serde_json::to_string(&markers).unwrap();
             assert_eq!(markers.len(), 1, "{json}");
             assert!(json.contains("Pharmacie du port"), "{json}");
+            // La catégorie range le repère dans le pratique, avec le pictogramme santé.
+            assert_eq!(markers[0].category.as_deref(), Some("pharmacy"), "{json}");
         });
+}
+
+/// La distance du logement suit chaque place placée (§2.3 : « Rangée + distance ») : sur la
+/// rangée qu'on appelle, et dans la phrase quand la place n'a pas de numéro. Sans position — de la
+/// place ou du logement — pas de distance.
+#[test]
+#[serial]
+fn placed_places_show_their_distance_from_the_property() {
+    let config = json!({
+        "pharmacy": "Pharmacie du port",
+        "pharmacy_phone": "+33 4 93 34 00 00",
+        "pharmacy_lat": 43.58,
+        "pharmacy_lng": 7.12,
+        "hospital": "Hôpital d'Antibes",
+        "hospital_lat": 43.60,
+        "hospital_lng": 7.11,
+        "doctor": "Dr Martin",
+        "doctor_phone": "+33 4 93 00 00 00"
+    });
+    let render = |home: Option<GeoPoint>| {
+        let mut json = String::new();
+        MockContext::guest()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&config)
+            .with_coordinates(home)
+            .run(|ctx| {
+                json = serde_json::to_string(&render_explore_detail(ctx).expect("detail"))
+                    .expect("json");
+            });
+        json
+    };
+    let placed = render(Some(GeoPoint::new(43.58, 7.12)));
+    // La pharmacie est sur le logement : 50 m, jamais « 0 m ». Le médecin n'a pas de position.
+    // (La phrase de l'hôpital, sans numéro, ne se lit pas ici : le `t!` du mock rend la clé seule.)
+    assert!(
+        placed.contains("+33 4 93 34 00 00 · guest.distance.metres"),
+        "{placed}"
+    );
+    assert_eq!(placed.matches("guest.distance").count(), 1, "{placed}");
+    let unplaced = render(None);
+    assert!(!unplaced.contains("guest.distance"), "{unplaced}");
+    assert!(!unplaced.contains(" · "), "{unplaced}");
 }

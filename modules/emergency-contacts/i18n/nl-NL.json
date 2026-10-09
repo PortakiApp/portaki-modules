@@ -3,6 +3,8 @@
   "config.contacts": "Handige nummers",
   "guest.call": "Bellen",
   "guest.dial112": "112 bellen",
+  "guest.distance.km": "{value} km",
+  "guest.distance.metres": "{value} m",
   "guest.emergency.message": "Bel bij een levensbedreigend noodgeval 112 of het plaatselijke alarmnummer.",
   "guest.emergency.title": "Levensbedreigend noodgeval",
   "guest.empty.description": "Bel bij een levensbedreigend noodgeval 112.",

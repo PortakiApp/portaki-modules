@@ -19,8 +19,10 @@ pub struct GuestData {
     pub useful_line: String,
     /// La plage où l'hôte répond, quand il n'est pas joignable 24 h/24.
     pub host_hours: Option<(String, String)>,
-    /// Pharmacie, hôpital, médecin avec un numéro : `(clé du libellé, nom, téléphone)`.
-    pub health: Vec<(&'static str, String, String)>,
+    /// Pharmacie, hôpital, médecin avec un numéro : `(clé du libellé, nom, téléphone, distance)`.
+    /// La distance quand la place et le logement sont tous deux placés (§2.3 : « Rangée +
+    /// distance »).
+    pub health: Vec<(&'static str, String, String, Option<String>)>,
 }
 
 /// Ce qu'il y a à montrer — et il y a **toujours** quelque chose (§2.16).
@@ -31,6 +33,12 @@ pub struct GuestData {
 /// sans numéro devant une porte.
 pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
     let config = ModuleConfig::load(ctx)?;
+    let home = ctx.property.coordinates.map(|home| (home.lat, home.lng));
+    let away = |lat: Option<f64>, lng: Option<f64>| {
+        Some((lat?, lng?))
+            .zip(home)
+            .map(|(place, home)| distance(home, place))
+    };
     // « Afficher mon numéro » décoché : pas de rangée hôte, les tuiles et les contacts restent.
     let host_phone = if config.show_host() {
         host_phone(&config, ctx)
@@ -42,7 +50,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         host_phone,
         locale: ctx.locale.clone(),
         property_locale: ctx.property.locale.clone(),
-        useful_line: useful_line(&config),
+        useful_line: useful_line(&config, &away),
         host_hours: config
             .host_hours()
             .map(|(from, to)| (from.to_string(), to.to_string())),
@@ -51,17 +59,31 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
                 "guest.health.pharmacy",
                 &config.pharmacy,
                 &config.pharmacy_phone,
+                away(config.pharmacy_lat, config.pharmacy_lng),
             ),
             (
                 "guest.health.hospital",
                 &config.hospital,
                 &config.hospital_phone,
+                away(config.hospital_lat, config.hospital_lng),
             ),
-            ("guest.health.doctor", &config.doctor, &config.doctor_phone),
+            (
+                "guest.health.doctor",
+                &config.doctor,
+                &config.doctor_phone,
+                None,
+            ),
         ]
         .into_iter()
-        .filter(|(_, _, phone)| !phone.trim().is_empty())
-        .map(|(key, name, phone)| (key, name.trim().to_string(), phone.trim().to_string()))
+        .filter(|(_, _, phone, _)| !phone.trim().is_empty())
+        .map(|(key, name, phone, distance)| {
+            (
+                key,
+                name.trim().to_string(),
+                phone.trim().to_string(),
+                distance,
+            )
+        })
         .collect(),
     }))
 }
@@ -87,23 +109,59 @@ fn host_phone(config: &ModuleConfig, ctx: &GuestContext) -> String {
 
 /// Les deux lignes utiles en une phrase, dans l'ordre où on les cherche : d'abord la pharmacie,
 /// qu'on appelle, puis l'hôpital, où l'on va. Celles qui ont un numéro sont des rangées à part.
-fn useful_line(config: &ModuleConfig) -> String {
+///
+/// « Hôpital : CHU d'Antibes (3.1 km) » quand la place et le logement sont placés.
+fn useful_line(
+    config: &ModuleConfig,
+    away: &dyn Fn(Option<f64>, Option<f64>) -> Option<String>,
+) -> String {
     [
         (
             "guest.useful.pharmacy",
             config.pharmacy.trim(),
             &config.pharmacy_phone,
+            away(config.pharmacy_lat, config.pharmacy_lng),
         ),
         (
             "guest.useful.hospital",
             config.hospital.trim(),
             &config.hospital_phone,
+            away(config.hospital_lat, config.hospital_lng),
         ),
     ]
     .into_iter()
-    .filter(|(_, value, phone)| !value.is_empty() && phone.trim().is_empty())
-    .map(|(key, value, _)| (key, value))
+    .filter(|(_, value, phone, _)| !value.is_empty() && phone.trim().is_empty())
+    .map(|(key, value, _, distance)| match distance {
+        Some(distance) => (key, format!("{value} ({distance})")),
+        None => (key, value.to_string()),
+    })
     .filter_map(|(key, value)| t!(key, value = value).ok())
     .collect::<Vec<_>>()
     .join(" · ")
+}
+
+/// La distance à vol d'oiseau, en mètres sous le kilomètre et en kilomètres au-delà — copiée de
+/// `waste-recycling`, pour que deux modules l'écrivent pareil dans le même livret.
+///
+/// ponytail: à vol d'oiseau, pas par la route — un itinéraire coûterait un appel réseau par place.
+fn distance(from: (f64, f64), to: (f64, f64)) -> String {
+    let metres = haversine_metres(from, to).round() as i64;
+    if metres < 1000 {
+        // Arrondi à 50 m : annoncer « 643 m » sur une ligne droite serait une fausse précision.
+        let rounded = (((metres + 25) / 50) * 50).max(50);
+        t!("guest.distance.metres", value = rounded).unwrap_or_else(|_| format!("{rounded} m"))
+    } else {
+        let km = (metres as f64) / 1000.0;
+        t!("guest.distance.km", value = format!("{km:.1}"))
+            .unwrap_or_else(|_| format!("{km:.1} km"))
+    }
+}
+
+/// Haversine, rayon moyen de la Terre.
+fn haversine_metres((lat1, lng1): (f64, f64), (lat2, lng2): (f64, f64)) -> f64 {
+    const EARTH_RADIUS_M: f64 = 6_371_000.0;
+    let (phi1, phi2) = (lat1.to_radians(), lat2.to_radians());
+    let a = ((phi2 - phi1) / 2.0).sin().powi(2)
+        + phi1.cos() * phi2.cos() * ((lng2 - lng1).to_radians() / 2.0).sin().powi(2);
+    2.0 * EARTH_RADIUS_M * a.sqrt().asin()
 }
