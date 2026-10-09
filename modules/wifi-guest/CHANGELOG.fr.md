@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.1
+
+Les libellés et la note, contrôlés dans chaque langue.
+
+* Un libellé de réseau ou une note trop longs sont signalés quelle que soit la langue, plus seulement en français.
+* Un libellé écrit dans une seule langue, l'anglais par exemple, suffit à distinguer les réseaux.
+
 ## 1.8.0
 
 Jusqu'à trois réseaux.

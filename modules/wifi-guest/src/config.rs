@@ -284,12 +284,9 @@ impl ModuleConfig {
                     true,
                 ));
             }
-            let label = network
-                .label
-                .as_ref()
-                .map(|l| l.get("fr").trim())
-                .unwrap_or_default();
-            if networks.len() > 1 && label.is_empty() {
+            // Dans n'importe quelle langue : un hôte qui écrit en anglais a donné son libellé.
+            let unlabelled = network.label.as_ref().is_none_or(I18nText::is_blank);
+            if networks.len() > 1 && unlabelled {
                 problems.push(problem(
                     &at("label"),
                     "host.label.label",
@@ -297,11 +294,10 @@ impl ModuleConfig {
                     true,
                 ));
             }
-            if let Some(message) = network
-                .label
-                .as_ref()
-                .and_then(|l| check::max_chars(l.get("fr"), LABEL_MAX))
-            {
+            if let Some(message) = network.label.as_ref().and_then(|l| {
+                l.by_language()
+                    .find_map(|(_, text)| check::max_chars(text, LABEL_MAX))
+            }) {
                 problems.push(Problem {
                     id: at("label"),
                     label: "host.label.label",
@@ -322,11 +318,10 @@ impl ModuleConfig {
                 ));
             }
         }
-        if let Some(message) = self
-            .note
-            .as_ref()
-            .and_then(|n| check::max_chars(n.get("fr"), NOTE_MAX))
-        {
+        if let Some(message) = self.note.as_ref().and_then(|n| {
+            n.by_language()
+                .find_map(|(_, text)| check::max_chars(text, NOTE_MAX))
+        }) {
             problems.push(Problem {
                 id: "config.note".into(),
                 label: "host.note.label",
@@ -611,5 +606,22 @@ mod tests {
             config.problems()[0].message.get("fr"),
             "3 réseaux au maximum."
         );
+    }
+
+    /// Libellé et note se contrôlent dans chaque langue, et un libellé écrit en anglais seulement
+    /// compte comme donné.
+    #[test]
+    fn label_and_note_are_checked_in_every_language() {
+        let config: ModuleConfig = serde_json::from_value(serde_json::json!({
+            "networks": [
+                { "id": "a", "ssid": "Maison", "security": "nopass", "label": { "en": "Main" } },
+                { "id": "b", "ssid": "Maison 5G", "security": "nopass",
+                  "label": { "fr": "Rapide", "en": "x".repeat(31) } }
+            ],
+            "note": { "fr": "Bienvenue", "de": "y".repeat(201) }
+        }))
+        .unwrap();
+        let ids: Vec<String> = config.problems().into_iter().map(|p| p.id).collect();
+        assert_eq!(ids, ["config.networks[1].label", "config.note"]);
     }
 }
