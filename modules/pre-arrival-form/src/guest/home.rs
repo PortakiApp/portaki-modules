@@ -178,9 +178,7 @@ pub fn build_form_surface(inputs: &FormInputs) -> Surface {
                 );
             // Rien n'est coché d'avance : la question est obligatoire, et un créneau préchoisi
             // part tel quel si le voyageur ne le regarde pas.
-            if let Some(index) =
-                answered.and_then(|value| crate::slots::slot_of(value, hour_of(slots)))
-            {
+            if let Some(index) = answered.and_then(|value| crate::slots::slot_index(value, slots)) {
                 choices = choices.value(slots[index].value.clone());
             }
             form_children.push(field.child(choices).into());
@@ -442,7 +440,7 @@ fn received_message(existing: Option<&PreArrivalResponse>, slots: &[Slot]) -> St
     let announced = existing
         .and_then(|row| row.arrival_time.as_deref())
         .filter(|_| !slots.is_empty())
-        .and_then(|value| crate::slots::slot_of(value, hour_of(slots)))
+        .and_then(|value| crate::slots::slot_index(value, slots))
         .map(|index| slots[index].label.clone());
     match announced {
         Some(slot) => t!("form.received.message.slot", slot = slot)
@@ -458,14 +456,6 @@ fn counted_from_booking(size: u32) -> String {
 }
 
 /// L'heure d'entrée du logement, relue sur le premier créneau — c'est lui qui la porte.
-fn hour_of(slots: &[Slot]) -> u32 {
-    slots
-        .first()
-        .and_then(|slot| slot.value.split_once(':'))
-        .and_then(|(hour, _)| hour.parse().ok())
-        .unwrap_or(0)
-}
-
 fn text_input(
     name: &str,
     placeholder: &str,

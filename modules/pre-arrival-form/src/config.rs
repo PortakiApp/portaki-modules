@@ -70,7 +70,23 @@ pub struct ModuleConfig {
     /// pas demandé une question ne doit pas la voir apparaître dans son formulaire.
     #[field(label = "config.askTransport")]
     pub ask_transport: bool,
+    /// Le pas des créneaux d'arrivée : `ranges` (les trois plages d'avant ce réglage), ou `15`,
+    /// `30`, `60` minutes de l'heure d'entrée à [`Self::slots_until`] (spec Pré-arrivée §2.1).
+    #[field(
+        kind = "select",
+        options = ["ranges", "15", "30", "60"],
+        label = "host.slots.step"
+    )]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub slot_step: String,
+    /// Le dernier créneau, `HH:MM` ; vide : 23:00.
+    #[field(label = "host.slots.until")]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub slots_until: String,
 }
+
+/// Le dernier créneau proposé quand l'hôte n'en donne pas.
+pub const DEFAULT_SLOTS_UNTIL: &str = "23:00";
 
 impl Default for ModuleConfig {
     fn default() -> Self {
@@ -83,6 +99,8 @@ impl Default for ModuleConfig {
             ask_special_needs: false,
             ask_id_document: false,
             ask_transport: false,
+            slot_step: String::new(),
+            slots_until: String::new(),
         }
     }
 }
@@ -101,6 +119,27 @@ fn legacy(mut old: Value) -> Value {
 }
 
 impl ModuleConfig {
+    /// Les créneaux d'arrivée d'un logement qui ouvre à `hour` : les trois plages, ou des
+    /// créneaux réguliers jusqu'à l'heure de fin.
+    pub fn slots(&self, hour: u32) -> Vec<crate::slots::Slot> {
+        let step = self.slot_step.trim().parse::<u32>().ok();
+        let until = crate::slots::minutes_of(self.slots_until.trim())
+            .or_else(|| crate::slots::minutes_of(DEFAULT_SLOTS_UNTIL))
+            .unwrap_or(23 * 60);
+        match step {
+            Some(step) => crate::slots::stepped(hour, until, step),
+            None => crate::slots::slots(hour),
+        }
+    }
+
+    /// Ce qui ne va pas, champ par champ — sous le champ, et dans `publishReadiness`.
+    pub fn problems(&self) -> Vec<(&'static str, portaki_sdk::contracts::i18n::I18nText)> {
+        portaki_sdk::config::check::time(self.slots_until.trim())
+            .map(|error| ("slots_until", error))
+            .into_iter()
+            .collect()
+    }
+
     /// At least one question is asked.
     pub fn asks_anything(&self) -> bool {
         self.ask_arrival_time

@@ -32,7 +32,7 @@ pub fn render_guest_form(ctx: GuestContext) -> Result<Surface> {
                 stay.and_then(|stay| stay.checkin_at),
                 &ctx.property.timezone,
             )
-            .map(crate::slots::slots)
+            .map(|hour| config.slots(hour))
             .unwrap_or_default();
             Ok(build_form_surface(&FormInputs {
                 questions: &config,
