@@ -31,6 +31,15 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             hint: text("publish.reveal.always"),
         });
     }
+    if host.parking_too_far(ctx.property.coordinates) {
+        items.push(PublishCheck {
+            id: "config.parking_position".into(),
+            level: PublishLevel::Recommended,
+            ok: false,
+            label: text("host.parking.position"),
+            hint: text("publish.parking.far"),
+        });
+    }
 
     let config = ModuleConfig::read(&ctx)?;
     let ok = match &config.method {
@@ -71,4 +80,29 @@ fn field_label(field: &str) -> &'static str {
         "detail" => "host.step.detail",
         _ => "host.steps.label",
     }
+}
+
+#[portaki_sdk::wire]
+#[derive(PartialEq)]
+pub struct MapMarkersResponse {
+    pub markers: Vec<MapMarker>,
+}
+
+/// Le repère du parking sur la Carte du livret (§2.8) : seulement s'il y a un parking et que
+/// l'épingle est posée. La catégorie le range dans le pratique et lui donne son pictogramme.
+#[portaki_sdk::query(name = "mapMarkers", example(label = "Le parking sur la carte"))]
+pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
+    let host = crate::config::HostConfig::load(&ctx)?;
+    let markers = host
+        .parking_point()
+        .map(|(lat, lng)| {
+            let mut marker = MapMarker::new("parking", lat, lng)
+                .kind(MapMarkerKind::Poi)
+                .label("i18n:guest.parking");
+            marker.category = Some("parking".into());
+            marker
+        })
+        .into_iter()
+        .collect();
+    Ok(MapMarkersResponse { markers })
 }

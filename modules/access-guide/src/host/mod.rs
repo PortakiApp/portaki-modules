@@ -555,6 +555,22 @@ fn layer_card_parking(enabled: bool, config: &HostConfig, ctx: &HostContext) -> 
             "i18n:host.parking.mapUrl",
             &config.parking_map_url,
         ));
+        let picker = AddressMapPicker::new()
+            .label("i18n:host.parking.position")
+            .hint("i18n:host.parking.position.hint")
+            .addressName("parking_address")
+            .latName("parking_lat")
+            .lngName("parking_lng")
+            .address(config.parking_address.as_str());
+        children.push(placed(picker, config.parking_lat, config.parking_lng).into());
+        if config.parking_too_far(ctx.property.coordinates) {
+            children.push(
+                InlineNotice::new()
+                    .message("i18n:publish.parking.far")
+                    .tone(Tone::Warning)
+                    .into(),
+            );
+        }
         children.push(secret_field(
             "parking_code",
             "i18n:host.parking.code",

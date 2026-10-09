@@ -5,11 +5,12 @@ use portaki_sdk::capability;
 use serial_test::serial;
 
 use access_guide::{
-    on_config_updated, publish_readiness, render_explore_detail, render_home_card,
+    map_markers, on_config_updated, publish_readiness, render_explore_detail, render_home_card,
     render_host_main, render_upcoming_card, ConfigUpdatedArgs, HostConfig, PrimaryMethod, StepRow,
 };
 use portaki_sdk::context::StayContext;
 use portaki_sdk::contracts::i18n::I18nText;
+use portaki_sdk::contracts::publish::PublishLevel;
 use portaki_sdk::host::with_host;
 use portaki_sdk::sdui::GeoPoint;
 use portaki_test_utils::{MockContext, SurfaceAssertions};
@@ -1151,4 +1152,75 @@ fn no_late_arrival_note_without_a_late_arrival() {
     // Et l'hôte qui n'a rien écrit ne laisse pas un bandeau vide (§0.5).
     let no_note = late_arrival_card(None, Some((23, 0)));
     assert!(!no_note.contains("guest.lateArrival.title"), "{no_note}");
+}
+
+fn parked(lat: f64, lng: f64) -> HostConfig {
+    HostConfig {
+        parking_enabled: true,
+        parking_lat: Some(lat),
+        parking_lng: Some(lng),
+        ..HostConfig::default()
+    }
+}
+
+/// L'épingle du parking part sur la Carte du livret, rangée au stationnement ; sans parking ou
+/// sans épingle, rien.
+#[test]
+#[serial]
+fn a_placed_parking_reaches_the_booklet_map() {
+    let markers = |config: HostConfig| {
+        MockContext::guest()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&config)
+            .run(|ctx| map_markers(ctx).expect("markers").markers)
+    };
+    let placed = markers(parked(43.58, 7.12));
+    assert_eq!(placed.len(), 1);
+    assert_eq!(placed[0].category.as_deref(), Some("parking"));
+    assert_eq!(placed[0].label.as_deref(), Some("i18n:guest.parking"));
+    assert!(markers(HostConfig {
+        parking_enabled: false,
+        ..parked(43.58, 7.12)
+    })
+    .is_empty());
+    assert!(markers(HostConfig {
+        parking_enabled: true,
+        ..HostConfig::default()
+    })
+    .is_empty());
+}
+
+/// Au-delà de 2 km du logement, un avertissement qui ne bloque pas ; en deçà, ou sans logement
+/// géocodé, rien.
+#[test]
+#[serial]
+fn a_far_parking_pin_warns_without_blocking() {
+    let home = GeoPoint {
+        lat: 43.58,
+        lng: 7.12,
+    };
+    let check = |config: HostConfig, home: Option<GeoPoint>| {
+        MockContext::host()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_coordinates(home)
+            .with_config(&config)
+            .run(|ctx| {
+                publish_readiness(ctx)
+                    .expect("publishReadiness")
+                    .items
+                    .into_iter()
+                    .find(|item| item.id == "config.parking_position")
+            })
+    };
+    // 0,03° de latitude ≈ 3,3 km.
+    let far = check(parked(43.61, 7.12), Some(home)).expect("warning");
+    assert_eq!(far.level, PublishLevel::Recommended);
+    assert!(!far.ok);
+    assert_eq!(
+        far.hint.get("fr"),
+        "L'entrée du parking est à plus de 2 km du logement : vérifiez l'épingle."
+    );
+    // 0,005° ≈ 550 m.
+    assert!(check(parked(43.585, 7.12), Some(home)).is_none());
+    assert!(check(parked(43.61, 7.12), None).is_none());
 }

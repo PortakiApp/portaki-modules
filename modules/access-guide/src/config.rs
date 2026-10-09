@@ -547,6 +547,13 @@ pub struct HostConfig {
         label = "host.parking.code"
     )]
     pub parking_code: String,
+    /// L'entrée du parking (§2.8) : la recherche d'adresse du sélecteur, puis l'épingle.
+    #[field(label = "host.parking.position")]
+    pub parking_address: String,
+    #[field(label = "host.parking.position")]
+    pub parking_lat: Option<f64>,
+    #[field(label = "host.parking.position")]
+    pub parking_lng: Option<f64>,
     #[field(label = "host.address.label")]
     pub address: String,
     #[field(label = "host.inPerson.lat")]
@@ -651,6 +658,22 @@ impl HostConfig {
             .into_iter()
             .find(|(name, _)| name == field)
             .map(|(_, error)| error)
+    }
+
+    /// L'épingle du parking, s'il y a un parking et qu'elle est posée.
+    pub fn parking_point(&self) -> Option<(f64, f64)> {
+        self.parking_enabled
+            .then(|| coord_pair(self.parking_lat, self.parking_lng))
+            .flatten()
+    }
+
+    /// L'épingle à plus de 2 km du logement (§2.8) : un avertissement, jamais un blocage. Sans
+    /// logement géocodé, rien à comparer.
+    pub fn parking_too_far(&self, property: Option<GeoPoint>) -> bool {
+        match (self.parking_point(), property) {
+            (Some(pin), Some(home)) => distance_km(pin, (home.lat, home.lng)) > 2.0,
+            _ => false,
+        }
     }
 
     /// The chosen access method, if the host picked one.
@@ -820,6 +843,14 @@ pub(crate) fn coord_pair(lat: Option<f64>, lng: Option<f64>) -> Option<(f64, f64
     let (lat, lng) = (lat?, lng?);
     ((-90.0..=90.0).contains(&lat) && (-180.0..=180.0).contains(&lng) && (lat, lng) != (0.0, 0.0))
         .then_some((lat, lng))
+}
+
+/// La distance à vol d'oiseau (haversine), en kilomètres.
+fn distance_km((lat1, lng1): (f64, f64), (lat2, lng2): (f64, f64)) -> f64 {
+    let (dlat, dlng) = ((lat2 - lat1).to_radians(), (lng2 - lng1).to_radians());
+    let a = (dlat / 2.0).sin().powi(2)
+        + lat1.to_radians().cos() * lat2.to_radians().cos() * (dlng / 2.0).sin().powi(2);
+    2.0 * 6371.0 * a.sqrt().asin()
 }
 
 fn nonempty(value: &str) -> Option<String> {
