@@ -128,8 +128,12 @@ fn open_cell(data: &GuestData) -> Cell {
         } => Cell {
             label: "i18n:guest.status.inPerson",
             // The slot is what the guest needs at a glance; the place is in the Access page.
-            value: first_filled(&[time_hint.as_deref(), Some(meeting_place)])
-                .unwrap_or_else(|| "i18n:guest.status.inPerson.toAgree".into()),
+            value: first_filled(&[
+                data.config.handover_slot.as_deref(),
+                time_hint.as_deref(),
+                Some(meeting_place),
+            ])
+            .unwrap_or_else(|| "i18n:guest.status.inPerson.toAgree".into()),
             mono: false,
             icon: method_icon(&data.config.method),
         },

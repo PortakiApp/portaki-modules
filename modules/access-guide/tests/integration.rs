@@ -5,8 +5,9 @@ use portaki_sdk::capability;
 use serial_test::serial;
 
 use access_guide::{
-    map_markers, on_config_updated, publish_readiness, render_explore_detail, render_home_card,
-    render_host_main, render_upcoming_card, ConfigUpdatedArgs, HostConfig, PrimaryMethod, StepRow,
+    map_markers, missing_code_tasks, on_config_updated, publish_readiness, render_explore_detail,
+    render_home_card, render_host_main, render_host_stay, render_upcoming_card, ConfigUpdatedArgs,
+    HostConfig, PrimaryMethod, StepRow,
 };
 use portaki_sdk::context::StayContext;
 use portaki_sdk::contracts::i18n::I18nText;
@@ -432,6 +433,8 @@ fn host_forms() -> Vec<(String, portaki_sdk::sdui::surface::Surface)> {
             // Dans la rue : le tarif n'est dessiné que là.
             let mut config = always_reveal_config();
             config.parking_type = "street".into();
+            // Une autre personne remet les clés : son nom et son numéro ne sont dessinés que là.
+            config.handover_person = "other".into();
             let (mut ctx, host) = MockContext::host()
                 .with_capabilities(&[capability::core::STORAGE])
                 .with_config(&config)
@@ -554,6 +557,7 @@ fn a_save_in_english_keeps_the_french() {
             "building_note",
             "building_staff_desk_location",
             "building_staff_hours",
+            "desk_after_hours",
             "global_note",
             "host_greets_contact_note",
             "host_greets_eta_hint",
@@ -1223,4 +1227,229 @@ fn a_far_parking_pin_warns_without_blocking() {
     // 0,005° ≈ 550 m.
     assert!(check(parked(43.585, 7.12), Some(home)).is_none());
     assert!(check(parked(43.61, 7.12), None).is_none());
+}
+
+// ── Remise des clés, réception, serrure, départ, séjour, À venir (spec Accès §2.4–2.6, §1) ──
+
+fn detail_json(config: &HostConfig, stay: Option<StayContext>) -> String {
+    let (mut ctx, host) = MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(config)
+        .build();
+    ctx.property.timezone = "Europe/Paris".into();
+    ctx.stay = stay;
+    with_host(host, ctx.clone(), || {
+        serde_json::to_string(&render_explore_detail(ctx).expect("detail")).expect("json")
+    })
+}
+
+fn stay_between(checkin: (i32, u32, u32), checkout: (i32, u32, u32)) -> Option<StayContext> {
+    let at = |(y, m, d): (i32, u32, u32)| Utc.with_ymd_and_hms(y, m, d, 14, 0, 0).single();
+    Some(StayContext {
+        stay_id: Uuid::nil(),
+        checkin_at: at(checkin),
+        checkout_at: at(checkout),
+        ..StayContext::default()
+    })
+}
+
+#[test]
+#[serial]
+fn the_handover_slot_and_the_person_reach_the_booklet() {
+    let config = HostConfig {
+        primary_method: "in_person".into(),
+        in_person_meeting_place: I18nText::new("Café du port", ""),
+        in_person_time_hint: I18nText::new("en fin d'après-midi", ""),
+        handover_slot_from: "16:00".into(),
+        handover_slot_until: "19:00".into(),
+        handover_person: "other".into(),
+        handover_name: "Paulette".into(),
+        handover_phone: "+33 6 12 34 56 78".into(),
+        ..HostConfig::default()
+    };
+    let (ctx, host) = MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&config)
+        .build();
+    let card = with_host(host, ctx.clone(), || {
+        serde_json::to_string(&render_home_card(ctx).expect("card")).expect("json")
+    });
+    // Le créneau prend la place de l'indication libre dans la tuile.
+    assert!(card.contains("16:00 – 19:00"));
+    assert!(!card.contains("en fin d'après-midi"));
+    let detail = detail_json(&config, None);
+    assert!(detail.contains("Paulette"));
+    assert!(detail.contains("tel:+33612345678"));
+}
+
+#[test]
+#[serial]
+fn the_reception_phone_and_after_hours_note_reach_the_booklet() {
+    let config = HostConfig {
+        primary_method: "building_staff".into(),
+        building_staff_desk_location: I18nText::new("Hall", ""),
+        desk_phone: "+33 4 93 00 00 00".into(),
+        desk_after_hours: I18nText::new("Clés au coffre, code envoyé le jour même", ""),
+        ..HostConfig::default()
+    };
+    let detail = detail_json(&config, None);
+    assert!(detail.contains("tel:+33493000000"));
+    assert!(detail.contains("i18n:guest.desk.call"));
+    assert!(detail.contains("Clés au coffre, code envoyé le jour même"));
+    // Une autre méthode : ni bouton ni consigne.
+    let detail = detail_json(
+        &HostConfig {
+            primary_method: "keybox".into(),
+            keybox_code: "4821".into(),
+            ..config
+        },
+        None,
+    );
+    assert!(!detail.contains("tel:"));
+    assert!(!detail.contains("Clés au coffre"));
+}
+
+#[test]
+#[serial]
+fn the_unlock_button_shows_in_the_stay_unless_the_host_follows_the_reveal() {
+    const UNLOCK: &str = "i18n:guest.smartLock.unlock";
+    // Codes visibles dès la réservation, arrivée en 2099 : le bouton attend l'arrivée, le code
+    // de la serrure suit la révélation.
+    let stay = stay_between((2099, 7, 1), (2099, 7, 5));
+    let json = detail_json(&smart_lock_config(Some("nuki")), stay.clone());
+    assert!(json.contains("9999"));
+    assert!(!json.contains(UNLOCK));
+    assert!(json.contains("getGuestCredential"));
+    let json = detail_json(
+        &HostConfig {
+            unlock_window: "reveal".into(),
+            ..smart_lock_config(Some("nuki"))
+        },
+        stay,
+    );
+    assert!(json.contains(UNLOCK));
+    // Dans le séjour, le bouton est là.
+    let json = detail_json(
+        &smart_lock_config(Some("nuki")),
+        stay_between((2020, 7, 1), (2099, 7, 5)),
+    );
+    assert!(json.contains(UNLOCK));
+}
+
+#[test]
+#[serial]
+fn after_check_out_the_card_is_the_address_alone() {
+    let json = detail_json(
+        &always_reveal_config(),
+        stay_between((2020, 7, 1), (2020, 7, 5)),
+    );
+    assert!(json.contains("Ch. des Douaniers"));
+    for gone in [
+        "4821",
+        "A17B",
+        "••••••",
+        "Se garer",
+        "i18n:guest.reveal.lockedTitle",
+    ] {
+        assert!(!json.contains(gone), "{gone}");
+    }
+}
+
+#[test]
+#[serial]
+fn a_smart_lock_without_a_backup_code_warns_without_blocking() {
+    let readiness = |manual: &str| {
+        MockContext::host()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&HostConfig {
+                smart_lock_manual_code: manual.into(),
+                ..smart_lock_config(Some("nuki"))
+            })
+            .run(|ctx| publish_readiness(ctx).expect("publishReadiness").items)
+    };
+    let items = readiness("");
+    let backup = items
+        .iter()
+        .find(|item| item.id == "config.smart_lock_manual_code")
+        .expect("avertissement");
+    assert_eq!(backup.level, PublishLevel::Recommended);
+    // La serrure liée émet les codes : l'entrée n'est pas bloquée.
+    assert!(items.iter().any(|item| item.id == "entry-code" && item.ok));
+    assert!(readiness("9999")
+        .iter()
+        .all(|item| item.id != "config.smart_lock_manual_code"));
+}
+
+#[test]
+#[serial]
+fn the_stay_card_says_when_the_code_is_missing() {
+    let stay_card = |code: &str| {
+        let (mut ctx, host) = MockContext::host()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&HostConfig {
+                primary_method: "keybox".into(),
+                keybox_code: code.into(),
+                ..HostConfig::default()
+            })
+            .build();
+        ctx.input = json!({ "stay": { "checkIn": "2099-08-24T14:00:00Z",
+                                      "checkOut": "2099-08-29T08:00:00Z" } });
+        with_host(host, ctx.clone(), || {
+            serde_json::to_string(&render_host_stay(ctx).expect("stay")).expect("json")
+        })
+    };
+    assert!(stay_card("").contains("i18n:host.stay.missing"));
+    let shown = stay_card("4821");
+    assert!(!shown.contains("i18n:host.stay.missing"));
+    // L'encart dit quand, jamais le code.
+    assert!(!shown.contains("4821"));
+}
+
+#[test]
+fn a_missing_code_is_a_task_for_each_arrival_to_come() {
+    use portaki_sdk::contracts::timeline::{TimelineStay, TimelineTasksArgs};
+    let at = |raw: &str| {
+        chrono::DateTime::parse_from_rfc3339(raw)
+            .unwrap()
+            .with_timezone(&Utc)
+    };
+    let stay = |name: &str, check_in: &str| TimelineStay {
+        id: Uuid::new_v4(),
+        check_in: at(check_in),
+        check_out: at(check_in) + chrono::Duration::days(3),
+        guest_name: name.into(),
+        status: "UPCOMING".into(),
+    };
+    let args = TimelineTasksArgs {
+        property_id: Uuid::nil(),
+        from: at("2026-08-17T00:00:00Z"),
+        to: at("2026-08-31T00:00:00Z"),
+        stays: vec![
+            stay("Ada", "2026-08-15T14:00:00Z"),   // déjà arrivée
+            stay("Marie", "2026-08-21T14:00:00Z"), // dans 2 j
+        ],
+    };
+    let now = at("2026-08-19T12:00:00Z");
+    let missing = HostConfig {
+        primary_method: "keybox".into(),
+        ..HostConfig::default()
+    }
+    .to_model("fr");
+    let tasks = missing_code_tasks(&missing, &args, now, "Europe/Paris");
+    assert_eq!(tasks.len(), 1);
+    assert_eq!(tasks[0].stay_id, Some(args.stays[1].id));
+    assert_eq!(tasks[0].title.get("fr"), "Code manquant");
+    assert_eq!(
+        tasks[0].context.get("fr"),
+        "Séjour de Marie · arrivée dans 2 j"
+    );
+    // La veille à 16 h, à Paris.
+    assert_eq!(tasks[0].at, at("2026-08-20T14:00:00Z"));
+    let set = HostConfig {
+        primary_method: "keybox".into(),
+        keybox_code: "4821".into(),
+        ..HostConfig::default()
+    }
+    .to_model("fr");
+    assert!(missing_code_tasks(&set, &args, now, "Europe/Paris").is_empty());
 }

@@ -12,8 +12,19 @@ use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{coord_pair, HostConfig, PrimaryMethod, RevealPolicy, StepRow};
 
+mod stay;
+
+pub use stay::render_host_stay;
+
 const STEP_SLOTS: usize = crate::config::MAX_STEPS;
 
+// « Code manquant · séjour de Marie · arrivée dans 2 j » dans À venir : `crate::tasks`.
+#[portaki_sdk::nav(
+    placement = HostPlacement::WorkspaceTimelineTask,
+    path = "tasks",
+    label_key = "catalog.host.tasks",
+    icon = IconName::DangerTriangle
+)]
 #[portaki_sdk::surface(
     host,
     id = "main",
@@ -83,7 +94,11 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
                 .title("i18n:host.section.reveal")
                 .subtitle("i18n:host.section.reveal.help")
                 .icon(IconName::ClockCircle)
-                .children(vec![reveal_choice_list(config.reveal()).into()])
+                .children(vec![
+                    reveal_choice_list(config.reveal()).into(),
+                    // Masquer après le départ (§2.3) : pas un réglage, une règle — dite ici.
+                    FieldHint::new().text("i18n:host.reveal.hideAfter").into(),
+                ])
                 .into(),
         );
     }
@@ -312,6 +327,12 @@ fn push_smart_lock_fields(children: &mut Vec<Component>, config: &HostConfig, ct
             .text("i18n:host.smartLock.manualCode.hint")
             .into(),
     );
+    children.push(select_field(
+        "unlock_window",
+        "i18n:host.smartLock.unlockWindow",
+        &["stay", "reveal"],
+        config.unlock_window.trim(),
+    ));
     children.push(instructions_field(
         config,
         ctx,
@@ -385,11 +406,54 @@ fn push_in_person_fields(children: &mut Vec<Component>, config: &HostConfig, ctx
         )
         .into(),
     );
+    // Le créneau (§2.5), puis l'ancienne indication libre, que le livret lit à défaut.
+    children.push(text_field(
+        "handover_slot_from",
+        "i18n:host.handover.from",
+        &config.handover_slot_from,
+    ));
+    children.push(text_field(
+        "handover_slot_until",
+        "i18n:host.handover.until",
+        &config.handover_slot_until,
+    ));
+    children.push(FieldHint::new().text("i18n:host.handover.slot.hint").into());
     children.push(text_field(
         "in_person_time_hint",
         "i18n:host.inPerson.timeHint",
         config.in_person_time_hint.host_value(ctx),
     ));
+    let by_other = ctx
+        .input_str("handover_person")
+        .map_or(config.handover_by_other(), |person| person == "other");
+    children.push(
+        named("handover_person")
+            .label("i18n:host.handover.person")
+            .child(
+                ChoiceList::new()
+                    .name("handover_person")
+                    .value(if by_other { "other" } else { "me" })
+                    .emitOnChange(true)
+                    .layout(ChoiceListLayout::Compact)
+                    .choices(vec![
+                        ChoiceOption::new("me", "i18n:host.handover.person.me"),
+                        ChoiceOption::new("other", "i18n:host.handover.person.other"),
+                    ]),
+            )
+            .into(),
+    );
+    if by_other {
+        children.push(text_field(
+            "handover_name",
+            "i18n:host.handover.name",
+            &config.handover_name,
+        ));
+        children.push(text_field(
+            "handover_phone",
+            "i18n:host.handover.phone",
+            &config.handover_phone,
+        ));
+    }
     children.push(text_field(
         "in_person_contact",
         "i18n:host.inPerson.contact",
@@ -435,6 +499,16 @@ fn push_building_staff_fields(
         "building_staff_contact",
         "i18n:host.buildingStaff.contact",
         &config.building_staff_contact,
+    ));
+    children.push(text_field(
+        "desk_phone",
+        "i18n:host.desk.phone",
+        &config.desk_phone,
+    ));
+    children.push(rich_text_field(
+        "desk_after_hours",
+        "i18n:host.desk.afterHours",
+        config.desk_after_hours.host_value(ctx),
     ));
 }
 
