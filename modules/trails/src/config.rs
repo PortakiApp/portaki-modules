@@ -62,10 +62,10 @@ pub struct ModuleConfig {
     pub public_enabled: bool,
     /// Les itinéraires de la page publique, 2 à 4, par identifiant de route, dans l'ordre choisi.
     ///
-    /// À plat et en `text` : le choix multiple envoie du JSON en chaîne, qu'un champ `structured`
-    /// ferait refuser par la plateforme ; il est relu en liste à l'arrivée.
-    #[field(kind = "text", label = "host.public.trails")]
-    #[serde(deserialize_with = "id_list", serialize_with = "id_list_text")]
+    /// À plat et en `structured` : le choix multiple envoie un vrai tableau, qu'un champ `text`
+    /// ferait refuser par la plateforme.
+    #[field(kind = "structured", label = "host.public.trails")]
+    #[serde(deserialize_with = "id_list")]
     pub public_trails: Vec<String>,
 }
 
@@ -300,8 +300,8 @@ where
     })
 }
 
-/// Une liste d'identifiants, en tableau ou en texte : le choix multiple envoie du JSON en chaîne
-/// (`"[\"a\",\"b\"]"`), un choix simple la valeur seule, une saisie à la main une liste à virgules.
+/// Une liste d'identifiants, en tableau ou en texte : le choix multiple envoie un tableau ; les
+/// brouillons d'avant le gardaient en JSON dans une chaîne (`"[\"a\",\"b\"]"`), ou en virgules.
 fn id_list<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
 where
     D: serde::Deserializer<'de>,
@@ -321,14 +321,6 @@ where
         }),
         _ => Vec::new(),
     })
-}
-
-/// Réécrite comme le formulaire l'envoie, en texte : le champ est déclaré `text`.
-fn id_list_text<S>(ids: &[String], serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: serde::Serializer,
-{
-    serializer.serialize_str(&serde_json::to_string(ids).unwrap_or_default())
 }
 
 /// Une mesure utilisable : finie et strictement positive.
