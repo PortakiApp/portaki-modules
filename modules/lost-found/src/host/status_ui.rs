@@ -9,30 +9,27 @@ use portaki_sdk::sdui::primitives::{Button, Field, Form, ListItem, Pill, Select,
 use crate::commands::UpdateStatusArgs;
 use crate::description;
 use crate::entities::LostFoundReport;
+use crate::status;
 
-/// Select options for host status updates.
-pub(crate) fn status_choice_options() -> Vec<ChoiceOption> {
-    vec![
-        ChoiceOption::new("to_collect", "i18n:status.to_collect"),
-        ChoiceOption::new("sent", "i18n:status.sent"),
-        ChoiceOption::new("returned", "i18n:status.returned"),
-    ]
+/// Select options for host status updates: the current status, then where it can go.
+pub(crate) fn status_choice_options(current: &str) -> Vec<ChoiceOption> {
+    std::iter::once(current)
+        .chain(status::next(current).iter().copied())
+        .map(|wire| ChoiceOption::new(wire, status_label_i18n(wire)))
+        .collect()
 }
 
-fn status_tone(wire: &str) -> Tone {
+pub(crate) fn status_tone(wire: &str) -> Tone {
     match wire {
-        "sent" => Tone::Success,
-        "returned" => Tone::Neutral,
-        _ => Tone::Warning,
+        "declared" => Tone::Warning,
+        "found" => Tone::Info,
+        "not_found" => Tone::Neutral,
+        _ => Tone::Success,
     }
 }
 
-fn status_label_i18n(wire: &str) -> &'static str {
-    match wire {
-        "sent" => "i18n:status.sent",
-        "returned" => "i18n:status.returned",
-        _ => "i18n:status.to_collect",
-    }
+pub(crate) fn status_label_i18n(wire: &str) -> String {
+    format!("i18n:status.{wire}")
 }
 
 pub(crate) fn report_title(report: &LostFoundReport) -> String {
@@ -198,7 +195,7 @@ pub(crate) fn build_status_update_form(report: &LostFoundReport) -> Component {
                     .child(
                         Select::new()
                             .name("status")
-                            .options(status_choice_options())
+                            .options(status_choice_options(&report.status))
                             .value(report.status.as_str()),
                     ),
             )
@@ -210,18 +207,36 @@ pub(crate) fn build_status_update_form(report: &LostFoundReport) -> Component {
     )
 }
 
-/// Stack: design list row + status Select (functional update).
+/// Stack: design list row, what the guest asked for (and where to ship), then the status
+/// Select — left out once the item is back with its owner: there is nowhere left to go.
 pub(crate) fn build_report_block(
     report: &LostFoundReport,
     now: DateTime<Utc>,
     locale: &str,
 ) -> Component {
+    let mut children = vec![build_report_list_item(report, now, locale)];
+    if let Some(choice) = report.return_choice.as_deref() {
+        children.push(
+            Text::new()
+                .text(format!("i18n:host.item.choice.{choice}"))
+                .variant(TextVariant::Caption)
+                .into(),
+        );
+    }
+    if let Some(address) = report.return_address.as_deref() {
+        children.push(
+            Text::new()
+                .text(address.to_string())
+                .variant(TextVariant::Caption)
+                .into(),
+        );
+    }
+    if !status::next(&report.status).is_empty() {
+        children.push(build_status_update_form(report));
+    }
     Component::Stack(
         portaki_sdk::sdui::primitives::Stack::new()
             .gap(6.0)
-            .children(vec![
-                build_report_list_item(report, now, locale),
-                build_status_update_form(report),
-            ]),
+            .children(children),
     )
 }

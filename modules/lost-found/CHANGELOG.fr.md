@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.12.0
+
+Six statuts pour suivre chaque objet.
+
+* Chaque objet passe par Déclaré, Trouvé, Renvoyé, Retiré, Donné ou Introuvable ; seuls les passages qui ont un sens sont proposés.
+* Le voyageur lit où en est son objet, et un message clair quand il reste introuvable.
+* Un onglet du logement liste tous les objets, avec le souhait du voyageur et son adresse de renvoi.
+* « Objet à renvoyer » apparaît dans À venir ; cocher la tâche passe l'objet à Renvoyé.
+* Les objets déjà suivis gardent leur avancement sous les nouveaux noms.
+
 ## 1.11.0
 
 Durée de garde et restitution.

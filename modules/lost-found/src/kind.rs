@@ -13,12 +13,3 @@ pub fn parse_kind(raw: &str) -> Result<String> {
     }
     Err(PortakiError::Host(format!("invalid_kind:{trimmed}")))
 }
-
-/// i18n key for a stored kind wire value.
-pub fn kind_label_key(wire: &str) -> &'static str {
-    match wire {
-        "lost" => "form.kind.lost",
-        "found" => "form.kind.found",
-        _ => "form.kind.lost",
-    }
-}

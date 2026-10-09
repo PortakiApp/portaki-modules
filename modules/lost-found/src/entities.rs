@@ -33,14 +33,11 @@ pub struct LostFoundReport {
     /// Ce que le voyageur voudrait qu'on en fasse — `ship`, `pickup`, `donate`.
     #[serde(default)]
     pub return_choice: Option<String>,
-    /// Wire: `to_collect` | `sent` | `returned` — default `to_collect`.
-    #[serde(default = "default_status")]
+    /// One of [`crate::status::WIRE_VALUES`]. Rows from before the six statuses still hold
+    /// `to_collect` | `sent` | `returned`: storage reads them through [`crate::status::normalize`].
+    #[serde(default)]
     pub status: String,
     pub created_at: DateTime<Utc>,
-}
-
-fn default_status() -> String {
-    crate::status::DEFAULT.to_string()
 }
 
 #[portaki_sdk::entity_indexes(LostFoundReport)]

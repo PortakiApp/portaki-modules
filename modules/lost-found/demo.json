@@ -318,10 +318,10 @@
     },
     {
       "i18n": {
-        "form.kind.lost": "J'ai perdu quelque chose",
         "guest.return.pickup": "Récupération sur place",
         "guest.return.ship": "Renvoi postal",
         "guest.return.ship.paidByGuest": "À vos frais, à convenir avec votre hôte",
+        "guest.status.declared": "Déclaration reçue : votre hôte cherche.",
         "home.card.sent": "Déclaration envoyée",
         "home.card.thanks": "Merci — votre hôte a été prévenu.",
         "home.card.title": "Objets perdus ou trouvés",
@@ -354,7 +354,7 @@
                 "variant": "caption"
               },
               {
-                "subtitle": "i18n:form.kind.lost",
+                "subtitle": "i18n:guest.status.declared",
                 "title": "Chargeur de téléphone blanc",
                 "type": "ListItem"
               },
@@ -396,10 +396,10 @@
     },
     {
       "i18n": {
-        "form.kind.lost": "J'ai perdu quelque chose",
         "guest.return.pickup": "Récupération sur place",
         "guest.return.ship": "Renvoi postal",
         "guest.return.ship.paidByGuest": "À vos frais, à convenir avec votre hôte",
+        "guest.status.declared": "Déclaration reçue : votre hôte cherche.",
         "home.card.sent": "Déclaration envoyée",
         "home.card.thanks": "Merci — votre hôte a été prévenu.",
         "home.card.title": "Objets perdus ou trouvés",
@@ -433,7 +433,7 @@
                 "variant": "caption"
               },
               {
-                "subtitle": "i18n:form.kind.lost",
+                "subtitle": "i18n:guest.status.declared",
                 "title": "Chargeur de téléphone blanc",
                 "type": "ListItem"
               },

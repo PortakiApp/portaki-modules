@@ -9,7 +9,6 @@ use portaki_sdk::sdui::surface::Surface;
 use super::load::GuestData;
 use crate::description;
 use crate::entities::LostFoundReport;
-use crate::kind;
 
 pub fn build_home_card(data: &GuestData) -> Surface {
     let reports = &data.reports;
@@ -119,8 +118,9 @@ fn return_icon(option: &str) -> &'static str {
     }
 }
 
+/// The item, and where it stands in words the guest reads (`guest.status.<statut>`) — an
+/// « Introuvable » item says so instead of leaving the guest waiting.
 fn report_list_item(report: &LostFoundReport) -> ListItem {
-    let subtitle = kind::kind_label_key(report.kind.as_str());
     let title = description::to_plain_text(&report.item_description);
     let title = if title.is_empty() {
         report.item_description.clone()
@@ -129,7 +129,7 @@ fn report_list_item(report: &LostFoundReport) -> ListItem {
     };
     ListItem::new()
         .title(title)
-        .subtitle(format!("i18n:{subtitle}"))
+        .subtitle(format!("i18n:guest.status.{}", report.status))
 }
 
 /// « Déclaration envoyée · Claire cherche », ou sans prénom « Déclaration envoyée ».

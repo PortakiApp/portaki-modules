@@ -1,7 +1,7 @@
 //! Property statistics « Objets trouvés » — the tile (`statsSummary`) and the
 //! `property-stats-detail` surface: counters and the declared items, no chart.
 //!
-//! An item still `to_collect` after [`NO_ANSWER_DAYS`] reads « Sans réponse ». A row opens the
+//! An item neither returned nor « Introuvable » after [`NO_ANSWER_DAYS`] reads « Sans réponse ». A row opens the
 //! dashboard detail modal (`host.surface.overlay`), which renders this surface again with the
 //! row's `itemId`: the item, its follow-up and « Marquer comme rendu » (`updateStatus`).
 
@@ -31,11 +31,14 @@ enum Stage {
     Waiting,
     NoAnswer,
     Returned,
+    NotFound,
 }
 
 fn stage(report: &LostFoundReport, now: DateTime<Utc>) -> Stage {
-    if report.status != status::DEFAULT {
+    if status::is_returned(&report.status) {
         Stage::Returned
+    } else if report.status == "not_found" {
+        Stage::NotFound
     } else if now - report.created_at >= Duration::days(NO_ANSWER_DAYS) {
         Stage::NoAnswer
     } else {
@@ -173,6 +176,7 @@ fn status_of(report: &LostFoundReport, now: DateTime<Utc>) -> (&'static str, Ton
         Stage::Waiting => ("stats.status.waiting", Tone::Warning),
         Stage::NoAnswer => ("stats.status.noAnswer", Tone::Neutral),
         Stage::Returned => ("stats.status.returned", Tone::Success),
+        Stage::NotFound => ("status.not_found", Tone::Neutral),
     }
 }
 
@@ -210,7 +214,8 @@ fn item_row(report: &LostFoundReport, now: DateTime<Utc>, locale: &str) -> Compo
 /// Body of the detail modal: the item, its follow-up, the guest's options and the actions.
 fn item_detail(report: &LostFoundReport, now: DateTime<Utc>, locale: &str) -> Component {
     let declared = format_short_date(report.created_at, locale);
-    let returned = stage(report, now) == Stage::Returned;
+    let stage = stage(report, now);
+    let returned = stage == Stage::Returned;
     let mut children: Vec<Component> = vec![
         KeyValue::new()
             .key("i18n:stats.detail.source")
@@ -255,7 +260,13 @@ fn item_detail(report: &LostFoundReport, now: DateTime<Utc>, locale: &str) -> Co
             .action(Action::navigate(NavigateTarget::path("/messages"), None))
             .into(),
     ]);
-    if !returned {
+    // « Marquer comme rendu » : renvoyé quand le voyageur l'a demandé, retiré sinon.
+    let done = if report.return_choice.as_deref() == Some("ship") {
+        "shipped"
+    } else {
+        "picked_up"
+    };
+    if status::can_move(&report.status, done) && !returned {
         children.push(
             Button::new()
                 .label("i18n:stats.detail.markReturned")
@@ -263,7 +274,7 @@ fn item_detail(report: &LostFoundReport, now: DateTime<Utc>, locale: &str) -> Co
                     crate::commands::UPDATE_STATUS,
                     UpdateStatusArgs {
                         report_id: report.id,
-                        status: "returned".into(),
+                        status: done.into(),
                     },
                 ))
                 .into(),
