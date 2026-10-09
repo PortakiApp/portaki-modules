@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.6.0...checklist-v1.7.0) (2026-10-09)
+
+
+### Features
+
+* **checklist:** add display settings, stay card ([69a2718](https://github.com/PortakiApp/portaki-modules/commit/69a27187c7a1cd7d7fcbd016d2f2da9bbc68659b))
+
 ## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.5.0...checklist-v1.6.0) (2026-10-09)
 
 

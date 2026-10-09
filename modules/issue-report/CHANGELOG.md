@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.7.0...issue-report-v1.8.0) (2026-10-09)
+
+
+### Features
+
+* **issue-report:** stay surfaces and 24h task ([4c59fc6](https://github.com/PortakiApp/portaki-modules/commit/4c59fc64688b6067daf47d45412ec1d1955b73d5))
+
+
+### Bug Fixes
+
+* **issue-report:** require a phase and a category ([9b268fd](https://github.com/PortakiApp/portaki-modules/commit/9b268fdd66885046766b9d95f1cd945daa65a89a))
+
 ## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.6.0...issue-report-v1.7.0) (2026-10-09)
 
 

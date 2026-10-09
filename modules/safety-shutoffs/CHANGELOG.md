@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0](https://github.com/PortakiApp/portaki-modules/compare/safety-shutoffs-v0.6.0...safety-shutoffs-v0.7.0) (2026-10-09)
+
+
+### Features
+
+* **safety-shutoffs:** provide amenities ([7939f03](https://github.com/PortakiApp/portaki-modules/commit/7939f037bd174dbead6d8913b92cb0d26cdda268))
+
+
+### Bug Fixes
+
+* **safety-shutoffs:** spec messages for list, note ([dbef322](https://github.com/PortakiApp/portaki-modules/commit/dbef3223592e89cc538679bf3b2ad59f96344130))
+
 ## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/safety-shutoffs-v0.5.0...safety-shutoffs-v0.6.0) (2026-10-09)
 
 

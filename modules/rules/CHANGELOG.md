@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/PortakiApp/portaki-modules/compare/rules-v1.8.0...rules-v1.8.1) (2026-10-09)
+
+
+### Bug Fixes
+
+* **rules:** keep untitled rows with their error ([6c1f41f](https://github.com/PortakiApp/portaki-modules/commit/6c1f41f950eecbbf569528a4c8ff0926bf37bab6))
+
 ## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/rules-v1.7.0...rules-v1.8.0) (2026-10-09)
 
 

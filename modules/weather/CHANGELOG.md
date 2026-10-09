@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.5.0...weather-v1.6.0) (2026-10-09)
+
+
+### Features
+
+* **weather:** climate block on the public page ([b9da6dc](https://github.com/PortakiApp/portaki-modules/commit/b9da6dc8596fd356d00135bd74154273403d5a9c))
+
+
+### Bug Fixes
+
+* **weather:** hide card without a location ([6be8095](https://github.com/PortakiApp/portaki-modules/commit/6be8095a28ba99fc36f163d914fd783cf02a5aaa))
+
 ## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.4.3...weather-v1.5.0) (2026-10-09)
 
 

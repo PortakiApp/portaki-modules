@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.8.0...wifi-guest-v1.9.0) (2026-10-09)
+
+
+### Features
+
+* **wifi-guest:** provide amenities ([b955f12](https://github.com/PortakiApp/portaki-modules/commit/b955f1253b32e5aa0be6dcacf9bb1054af37e26a))
+
+
+### Bug Fixes
+
+* **wifi-guest:** check label and note in every language ([ecdaea1](https://github.com/PortakiApp/portaki-modules/commit/ecdaea12b78c3f51df2d572cdc87c02b9ed7871e))
+
 ## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.7.0...wifi-guest-v1.8.0) (2026-10-09)
 
 

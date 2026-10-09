@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.13.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.12.0...facility-hours-v1.13.0) (2026-10-09)
+
+
+### Features
+
+* **facility-hours:** closed days per facility ([d183986](https://github.com/PortakiApp/portaki-modules/commit/d1839862c372ec5b24d09e3993a007e5b4163c7c))
+* **facility-hours:** closing soon, reopen date ([575825f](https://github.com/PortakiApp/portaki-modules/commit/575825ff1f23a2df53f5d2ca29b69542d05e2525))
+* **facility-hours:** opening hours by weekday ([78d70ef](https://github.com/PortakiApp/portaki-modules/commit/78d70effcf6b13e7fa7959c5fe6e5ab0a224466d))
+
+
+### Bug Fixes
+
+* **facility-hours:** ignore unnamed day ranges ([6736195](https://github.com/PortakiApp/portaki-modules/commit/67361955d50cec305b8c7ff7c877c5b6db76fc6c))
+* **facility-hours:** key day rows by weekday id ([7fde2fa](https://github.com/PortakiApp/portaki-modules/commit/7fde2fabb1673f1448ccd33ee3067711d4536ba6))
+* **facility-hours:** require both times per day ([485978e](https://github.com/PortakiApp/portaki-modules/commit/485978eca2066532f59ab1a4bc5f779fb2312879))
+
 ## [1.12.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.11.0...facility-hours-v1.12.0) (2026-10-09)
 
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.10.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.9.0...waste-recycling-v1.10.0) (2026-10-09)
+
+
+### Features
+
+* **waste-recycling:** collection days per bin ([60676e3](https://github.com/PortakiApp/portaki-modules/commit/60676e3de1b7a719606fedd1ac2a0c77144aa9fc))
+* **waste-recycling:** provide amenities ([c9b3d32](https://github.com/PortakiApp/portaki-modules/commit/c9b3d32663f6e0de4cbe035d3f606f8f554f65aa))
+
+
+### Bug Fixes
+
+* **waste-recycling:** never copy the preview mask ([9dbd59e](https://github.com/PortakiApp/portaki-modules/commit/9dbd59e84f98c1ec9f897cacf23f0cdfd1c47d30))
+* **waste-recycling:** reveal bin room code as secret ([3bb1e33](https://github.com/PortakiApp/portaki-modules/commit/3bb1e3318edf85d86858b51d560f0fcd0167aba0))
+
 ## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.8.0...waste-recycling-v1.9.0) (2026-10-09)
 
 

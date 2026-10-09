@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.8.0...access-guide-v1.9.0) (2026-10-09)
+
+
+### Features
+
+* **access-guide:** floor, lift and parking details ([f9287b3](https://github.com/PortakiApp/portaki-modules/commit/f9287b3b577c080274efb36c4ae952395bd25dc2))
+* **access-guide:** handover, stay card, code task ([a77a8b1](https://github.com/PortakiApp/portaki-modules/commit/a77a8b1fc863432489f269716b8204ef276f2221))
+* **access-guide:** parking pin on the map ([4c57569](https://github.com/PortakiApp/portaki-modules/commit/4c57569e3731433837409738ab6fb49b9d36197f))
+* **access-guide:** provide amenities ([d99889d](https://github.com/PortakiApp/portaki-modules/commit/d99889dfba3f8c4acc68efc6fcd28e760c188d77))
+
+
+### Bug Fixes
+
+* **access-guide:** check video, phones, lengths ([80dbb74](https://github.com/PortakiApp/portaki-modules/commit/80dbb7406ae85c7be153f2d7ce881dd3533b2a45))
+* **access-guide:** warn on contact phone only ([aa7e4b6](https://github.com/PortakiApp/portaki-modules/commit/aa7e4b64bbd89f33eeb005a11aeacdea33d132c8))
+
 ## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.7.0...access-guide-v1.8.0) (2026-10-09)
 
 
