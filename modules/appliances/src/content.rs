@@ -11,12 +11,12 @@ use serde_json::Value;
 /// maquette était tout simplement inatteignable. La borne reste — soixante tient dans une liste
 /// groupée par pièce — mais c'est celle du contrat.
 pub const MAX_APPLIANCES: usize = 60;
-/// Quatre tuiles en avant sur la carte d'accueil (§2.4), pas cinq.
-///
-/// La carte d'accueil n'est pas la liste : elle donne un aperçu et renvoie au reste. Une cinquième
-/// ligne allongeait la carte sans rien apprendre, puisque « Voir les N appareils » est juste en
-/// dessous.
-pub const MAX_FEATURED: usize = 4;
+/// Les appareils mis en avant sur la carte d'accueil : quatre par défaut, de deux à six au choix
+/// de l'hôte (spec Appareils §2.1). La carte d'accueil n'est pas la liste : elle donne un aperçu
+/// et renvoie au reste, « Voir les N appareils » juste en dessous.
+pub const DEFAULT_FEATURED: usize = 4;
+pub const MIN_FEATURED: usize = 2;
+pub const MAX_FEATURED: usize = 6;
 
 /// Guest-visible vs host-only hidden.
 #[portaki_sdk::params]
@@ -72,9 +72,56 @@ pub struct AppliancesPayload {
         alias = "paper_manuals_location"
     )]
     pub paper_manuals_location: String,
+    /// « Appareils mis en avant » (§2.1). Absent : [`DEFAULT_FEATURED`].
+    #[serde(
+        default,
+        rename = "featuredLimit",
+        alias = "featured_limit",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub featured_limit: Option<u32>,
 }
 
 impl AppliancesPayload {
+    /// Combien d'appareils la carte d'accueil met en avant, borné.
+    pub fn featured_limit(&self) -> usize {
+        self.featured_limit.map_or(DEFAULT_FEATURED, |n| {
+            (n as usize).clamp(MIN_FEATURED, MAX_FEATURED)
+        })
+    }
+
+    /// Ce qui ne va pas, champ par champ — dans `publishReadiness`. Les longueurs de la spec, et
+    /// plus d'appareils en avant que la carte n'en montre.
+    pub fn problems(&self) -> Vec<(String, portaki_sdk::contracts::i18n::I18nText)> {
+        use portaki_sdk::config::check;
+        let mut problems = Vec::new();
+        if let Some(error) = check::max_chars(&self.paper_manuals_location, 120) {
+            problems.push(("paperManualsLocation".to_string(), error));
+        }
+        let featured = self
+            .devices
+            .iter()
+            .filter(|d| d.featured && d.status == ApplianceStatus::Active)
+            .count();
+        if featured > self.featured_limit() {
+            problems.push((
+                "featuredLimit".to_string(),
+                crate::i18n::text("host.featured.tooMany"),
+            ));
+        }
+        for (index, device) in self.devices.iter().enumerate() {
+            for (key, error) in [
+                ("name", check::max_chars(&device.name, 60)),
+                ("manualUrl", check::https_url(device.manual_url.trim())),
+            ] {
+                if let Some(error) = error {
+                    problems.push((format!("devices.{index}.{key}"), error));
+                }
+            }
+        }
+        problems
+    }
+
     pub fn parse(raw: &str) -> Self {
         let trimmed = raw.trim();
         if trimmed.is_empty() {
@@ -116,12 +163,13 @@ impl AppliancesPayload {
         devices
     }
 
-    /// Featured + active for home card (max [`MAX_FEATURED`]).
+    /// Featured + active for home card (at most [`Self::featured_limit`]).
     pub fn featured_guest_devices(&self) -> Vec<&Appliance> {
+        let limit = self.featured_limit();
         self.guest_devices()
             .into_iter()
             .filter(|d| d.featured)
-            .take(MAX_FEATURED)
+            .take(limit)
             .collect()
     }
 
@@ -364,6 +412,7 @@ fn migrate_legacy(value: &Value) -> AppliancesPayload {
         paper_manuals_location: string_field(value, "paperManualsLocation"),
         devices: migrated,
         safety_notice: plain_text_to_tiptap(&legacy_safety),
+        featured_limit: None,
     }
 }
 
@@ -651,5 +700,26 @@ mod tests {
         assert_eq!(guest.len(), 1);
         assert_eq!(guest[0].id, "1");
         assert_eq!(payload.featured_guest_devices().len(), 1);
+    }
+
+    /// Mis en avant : quatre par défaut, de deux à six ; au-delà, la publication le dit.
+    #[test]
+    fn the_featured_limit_is_bounded_and_checked() {
+        let device = |featured| Appliance {
+            name: "Four".into(),
+            featured,
+            ..Appliance::default()
+        };
+        let mut payload = AppliancesPayload {
+            devices: vec![device(true), device(true), device(true)],
+            ..AppliancesPayload::default()
+        };
+        assert_eq!(payload.featured_limit(), DEFAULT_FEATURED);
+        payload.featured_limit = Some(9);
+        assert_eq!(payload.featured_limit(), MAX_FEATURED);
+        payload.featured_limit = Some(2);
+        assert_eq!(payload.featured_guest_devices().len(), 2);
+        let fields: Vec<String> = payload.problems().into_iter().map(|(f, _)| f).collect();
+        assert_eq!(fields, ["featuredLimit"]);
     }
 }

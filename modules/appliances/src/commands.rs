@@ -4,7 +4,7 @@ use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::content::{Appliance, ApplianceStatus, MAX_APPLIANCES, MAX_FEATURED};
+use crate::content::{Appliance, ApplianceStatus, MAX_APPLIANCES};
 use crate::store;
 
 #[portaki_sdk::params]
@@ -54,6 +54,9 @@ pub struct SaveSafetyNoticeArgs {
         alias = "paper_manuals_location"
     )]
     pub paper_manuals_location: String,
+    /// « Appareils mis en avant » : un nombre, le `NumberInput` n'envoie pas d'entier.
+    #[serde(default, rename = "featuredLimit", alias = "featured_limit")]
+    pub featured_limit: Option<f64>,
 }
 
 /// Host SDUI form payload — nested `devices.N.*` + `safetyNotice`.
@@ -162,9 +165,10 @@ pub fn save_appliance(ctx: Context, args: SaveApplianceArgs) -> Result<Appliance
             .iter()
             .filter(|d| d.id != id && d.featured && d.status != ApplianceStatus::Hidden)
             .count();
-        if featured_others >= MAX_FEATURED {
+        let limit = payload.featured_limit();
+        if featured_others >= limit {
             return Err(PortakiError::Host(format!(
-                "max {MAX_FEATURED} featured appliances allowed"
+                "max {limit} featured appliances allowed"
             )));
         }
     }
@@ -235,6 +239,9 @@ pub fn save_safety_notice(ctx: Context, args: SaveSafetyNoticeArgs) -> Result<()
     let mut payload = store::load_payload_for(&lang, &ctx.property.locale)?;
     payload.safety_notice = normalize_description(&args.safety_notice);
     payload.paper_manuals_location = args.paper_manuals_location.trim().to_string();
+    if let Some(limit) = args.featured_limit.filter(|n| n.is_finite() && *n > 0.0) {
+        payload.featured_limit = Some(limit.round() as u32);
+    }
     let _ = store::save_payload_for(&lang, &payload)?;
     Ok(())
 }
@@ -292,17 +299,18 @@ pub fn replace_devices(ctx: Context, args: ReplaceDevicesArgs) -> Result<()> {
         });
     }
 
+    let mut payload = store::load_payload_for(&lang, &ctx.property.locale)?;
     let featured_count = next_devices
         .iter()
         .filter(|d| d.featured && d.status != ApplianceStatus::Hidden)
         .count();
-    if featured_count > MAX_FEATURED {
+    let limit = payload.featured_limit();
+    if featured_count > limit {
         return Err(PortakiError::Host(format!(
-            "max {MAX_FEATURED} featured appliances allowed"
+            "max {limit} featured appliances allowed"
         )));
     }
 
-    let mut payload = store::load_payload_for(&lang, &ctx.property.locale)?;
     payload.safety_notice = normalize_description(&args.safety_notice);
     if let Some(location) = args.paper_manuals_location.as_deref() {
         payload.paper_manuals_location = location.trim().to_string();
