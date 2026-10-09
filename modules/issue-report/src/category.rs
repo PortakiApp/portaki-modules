@@ -3,7 +3,15 @@
 use portaki_sdk::prelude::*;
 
 /// Allowed category values on the wire.
-pub const WIRE_VALUES: &[&str] = &["appliance", "cleanliness", "noise", "access", "other"];
+pub const WIRE_VALUES: &[&str] = &[
+    "appliance",
+    "cleanliness",
+    "noise",
+    "access",
+    "wifi",
+    "outdoor",
+    "other",
+];
 
 /// Issue category picked in the guest form; serde rejects any other value.
 #[portaki_sdk::params]
@@ -14,6 +22,8 @@ pub enum Category {
     Cleanliness,
     Noise,
     Access,
+    Wifi,
+    Outdoor,
     Other,
 }
 
@@ -25,6 +35,8 @@ impl Category {
             Self::Cleanliness => "cleanliness",
             Self::Noise => "noise",
             Self::Access => "access",
+            Self::Wifi => "wifi",
+            Self::Outdoor => "outdoor",
             Self::Other => "other",
         }
     }
@@ -37,6 +49,8 @@ pub fn category_label_key(wire: &str) -> &'static str {
         "cleanliness" => "form.category.cleanliness",
         "noise" => "form.category.noise",
         "access" => "form.category.access",
+        "wifi" => "form.category.wifi",
+        "outdoor" => "form.category.outdoor",
         "other" => "form.category.other",
         _ => "form.category.other",
     }

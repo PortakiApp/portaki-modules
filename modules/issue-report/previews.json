@@ -9,11 +9,14 @@
         "form.category.label": "Catégorie",
         "form.category.noise": "Bruit ou nuisance",
         "form.category.other": "Autre",
+        "form.category.outdoor": "Extérieur",
+        "form.category.wifi": "Wi-Fi",
         "form.details.label": "Détails",
         "form.details.placeholder": "Optionnel — quoi, quand, où",
         "form.head.lead": "Votre hôte est prévenu aussitôt.",
         "form.head.title": "Signaler un problème",
         "form.photo.label": "Photo",
+        "form.responseTime.within_day": "Réponse dans la journée.",
         "form.submit": "Envoyer",
         "form.summary.label": "Résumé court",
         "form.summary.placeholder": "ex. Lave-vaisselle ne se vide pas",
@@ -80,6 +83,16 @@
                     "value": "access"
                   },
                   {
+                    "icon": "wifi",
+                    "label": "i18n:form.category.wifi",
+                    "value": "wifi"
+                  },
+                  {
+                    "icon": "sun",
+                    "label": "i18n:form.category.outdoor",
+                    "value": "outdoor"
+                  },
+                  {
                     "icon": "message-circle",
                     "label": "i18n:form.category.other",
                     "value": "other"
@@ -140,6 +153,12 @@
             },
             "label": "i18n:form.submit",
             "type": "Button"
+          },
+          {
+            "emphasis": "subtle",
+            "text": "i18n:form.responseTime.within_day",
+            "type": "Text",
+            "variant": "caption"
           },
           {
             "emphasis": "subtle",

@@ -61,3 +61,31 @@ fn require_stay_id(ctx: &Context) -> Result<Uuid> {
         .map(|guest| guest.session_id)
         .ok_or_else(|| PortakiError::Host("stay_id_required".to_string()))
 }
+
+/// Ce qui bloque la publication : les erreurs du tiroir
+/// ([`crate::config::ModuleConfig::problems`]), chacune désignant son champ (`config.<clé>`).
+#[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
+pub fn publish_readiness(
+    ctx: Context,
+) -> Result<portaki_sdk::contracts::publish::PublishReadiness> {
+    use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
+    let config = crate::config::ModuleConfig::load(&ctx)?;
+    let items = config
+        .problems()
+        .into_iter()
+        .map(|(field, error)| PublishCheck {
+            id: format!("config.{field}"),
+            level: PublishLevel::Required,
+            ok: false,
+            label: crate::i18n::text(
+                match field {
+                    "urgent_number" => "host.urgentNumber.label",
+                    _ => "host.autoReply.label",
+                },
+                &[],
+            ),
+            hint: error,
+        })
+        .collect();
+    Ok(PublishReadiness { items })
+}
