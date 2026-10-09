@@ -1,6 +1,7 @@
 //! Module queries — stay reports, host recent list, email context.
 
 use chrono::{DateTime, Utc};
+use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
@@ -78,4 +79,35 @@ fn resolve_list_stay_id(ctx: &Context, stay_id: Option<Uuid>) -> Result<Uuid> {
         return Ok(guest.session_id);
     }
     stay_id.ok_or_else(|| PortakiError::Host("stay_id_required".to_string()))
+}
+
+/// Ce qui bloque la publication : les mêmes messages que sous les champs du tiroir
+/// ([`crate::config::ModuleConfig::problems`]), désignant chacun son champ (`config.<clé>`).
+///
+/// « Au moins une option de restitution » n'y est pas : aucune cochée vaut renvoi et
+/// récupération (`return_options`), le voyageur a toujours un choix.
+#[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
+pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
+    let config = crate::config::ModuleConfig::load(&ctx)?;
+    let items = config
+        .problems()
+        .into_iter()
+        .map(|(field, error)| PublishCheck {
+            id: format!("config.{field}"),
+            level: PublishLevel::Required,
+            ok: false,
+            label: crate::i18n::text(field_label(field), &[]),
+            hint: error,
+        })
+        .collect();
+    Ok(PublishReadiness { items })
+}
+
+fn field_label(field: &str) -> &'static str {
+    match field {
+        "window_days" => "host.window.label",
+        "keep_days" => "host.keep.label",
+        "pickup_note" => "host.pickupNote.label",
+        _ => "host.donateOrg.label",
+    }
 }
