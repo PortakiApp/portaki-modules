@@ -3,6 +3,8 @@
   "config.contacts": "实用号码",
   "guest.call": "拨打",
   "guest.dial112": "拨打 112",
+  "guest.distance.km": "{value} 公里",
+  "guest.distance.metres": "{value} 米",
   "guest.emergency.message": "遇到危及生命的紧急情况，请拨打 112 或当地紧急电话。",
   "guest.emergency.title": "危及生命的紧急情况",
   "guest.empty.description": "遇到危及生命的紧急情况，请拨打 112。",

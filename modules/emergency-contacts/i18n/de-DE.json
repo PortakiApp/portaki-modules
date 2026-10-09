@@ -3,6 +3,8 @@
   "config.contacts": "Nützliche Nummern",
   "guest.call": "Anrufen",
   "guest.dial112": "112 wählen",
+  "guest.distance.km": "{value} km",
+  "guest.distance.metres": "{value} m",
   "guest.emergency.message": "Wählen Sie bei einem lebensbedrohlichen Notfall die 112 oder die örtliche Notrufnummer.",
   "guest.emergency.title": "Lebensbedrohlicher Notfall",
   "guest.empty.description": "Wählen Sie bei einem lebensbedrohlichen Notfall die 112.",

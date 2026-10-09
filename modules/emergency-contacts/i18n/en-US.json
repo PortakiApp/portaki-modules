@@ -3,6 +3,8 @@
   "config.contacts": "Useful numbers",
   "guest.call": "Call",
   "guest.dial112": "Dial 112",
+  "guest.distance.km": "{value} km",
+  "guest.distance.metres": "{value} m",
   "guest.emergency.message": "For life-threatening emergencies, dial 112 or your local emergency number.",
   "guest.emergency.title": "Life-threatening emergency",
   "guest.empty.description": "In a life-threatening emergency, dial 112.",

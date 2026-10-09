@@ -3,6 +3,8 @@
   "config.contacts": "Numeri utili",
   "guest.call": "Chiama",
   "guest.dial112": "Comporre il 112",
+  "guest.distance.km": "{value} km",
+  "guest.distance.metres": "{value} m",
   "guest.emergency.message": "In caso di emergenza vitale, componi il 112 o il numero di emergenza locale.",
   "guest.emergency.title": "Emergenza vitale",
   "guest.empty.description": "In caso di emergenza vitale, componi il 112.",

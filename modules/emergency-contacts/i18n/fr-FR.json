@@ -3,6 +3,8 @@
   "config.contacts": "Numéros utiles",
   "guest.call": "Appeler",
   "guest.dial112": "Composer le 112",
+  "guest.distance.km": "{value} km",
+  "guest.distance.metres": "{value} m",
   "guest.emergency.message": "En cas d’urgence vitale, composez le 112 ou le 15 (SAMU) selon les consignes locales.",
   "guest.emergency.title": "Urgence vitale",
   "guest.empty.description": "En cas d’urgence vitale, composez le 112.",

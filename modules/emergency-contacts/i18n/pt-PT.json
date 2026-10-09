@@ -3,6 +3,8 @@
   "config.contacts": "Números úteis",
   "guest.call": "Ligar",
   "guest.dial112": "Marcar o 112",
+  "guest.distance.km": "{value} km",
+  "guest.distance.metres": "{value} m",
   "guest.emergency.message": "Em caso de emergência com risco de vida, marque o 112 ou o número de emergência local.",
   "guest.emergency.title": "Emergência com risco de vida",
   "guest.empty.description": "Em caso de emergência com risco de vida, marque o 112.",

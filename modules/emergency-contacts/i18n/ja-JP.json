@@ -3,6 +3,8 @@
   "config.contacts": "お役立ち番号",
   "guest.call": "電話する",
   "guest.dial112": "112 に発信",
+  "guest.distance.km": "{value} km",
+  "guest.distance.metres": "{value} m",
   "guest.emergency.message": "生命にかかわる緊急時は、112 または現地の緊急通報番号に発信してください。",
   "guest.emergency.title": "生命にかかわる緊急事態",
   "guest.empty.description": "生命にかかわる緊急時は 112 に発信してください。",

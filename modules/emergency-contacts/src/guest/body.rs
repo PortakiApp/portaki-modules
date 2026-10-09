@@ -72,7 +72,7 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
     }
 
     // Pharmacie, hôpital, médecin : une rangée qu'on appelle, comme les contacts.
-    for (key, name, phone) in &data.health {
+    for (key, name, phone, distance) in &data.health {
         let title = if name.is_empty() {
             format!("i18n:{key}")
         } else {
@@ -81,7 +81,10 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
         children.push(Component::ListItem(
             ListItem::new()
                 .title(title)
-                .subtitle(phone.clone())
+                .subtitle(match distance {
+                    Some(distance) => format!("{phone} · {distance}"),
+                    None => phone.clone(),
+                })
                 .leading(Leading::Icon("heart-handshake".into()))
                 .trailing(Trailing::Text("i18n:guest.call".into()))
                 .action(tel_action(phone)),
