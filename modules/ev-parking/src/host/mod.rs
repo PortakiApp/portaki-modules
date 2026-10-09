@@ -2,11 +2,12 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{
-    Card, ChoiceList, Field, Form, Page, SecretInput, Stack, TextArea, TextInput,
+    Card, ChoiceList, Field, FieldHint, Form, NumberInput, Page, SecretInput, Select, Stack,
+    TextArea, TextInput, Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{ModuleConfig, RevealPolicy};
+use crate::config::{ModuleConfig, RevealPolicy, CHARGER_TYPES, POWER_KW, PRICINGS};
 
 #[portaki_sdk::surface(
     host,
@@ -19,14 +20,13 @@ use crate::config::{ModuleConfig, RevealPolicy};
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let config = ModuleConfig::load(&ctx)?;
 
-    let form_children: Vec<Component> = vec![
+    let mut form_children: Vec<Component> = vec![
         Card::new()
             .title("i18n:host.section.spot")
             .subtitle("i18n:host.section.spot.help")
             .icon(IconName::Zap)
             .children(vec![
-                Field::new()
-                    .name("spot_label")
+                named(&config, &ctx, "spot_label")
                     .label("i18n:host.spotLabel.label")
                     .required(true)
                     .child(
@@ -72,8 +72,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
             .title("i18n:host.section.instructions")
             .subtitle("i18n:host.section.instructions.help")
             .icon(IconName::InfoCircle)
-            .children(vec![Field::new()
-                .name("instructions")
+            .children(vec![named(&config, &ctx, "instructions")
                 .label("i18n:host.instructions.label")
                 .child(
                     // TipTap preferred in design; TextArea until guest renders rich HTML.
@@ -98,11 +97,133 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
             .into(),
     ];
 
+    // La borne et le tarif après la place et ses codes (§2.2, §2.3).
+    form_children.insert(1, charger_card(&config, &ctx));
+    form_children.insert(2, pricing_card(&config, &ctx));
+
     // No Page title / Save — the modules sheet owns chrome + footer Save.
     Ok(Surface::new(
         Page::new().child(Form::new().child(Stack::new().gap(16.0).children(form_children))),
     )
     .with_id(MAIN))
+}
+
+/// §2.2 La borne : la prise, la puissance, le câble.
+fn charger_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let mut power = NumberInput::new()
+        .name("power_kw")
+        .min(POWER_KW.0)
+        .max(POWER_KW.1);
+    if config.power_kw != 0.0 {
+        power = power.value(config.power_kw);
+    }
+    Card::new()
+        .title("i18n:host.section.charger")
+        .icon(IconName::Zap)
+        .child(select(
+            "charger_type",
+            "i18n:host.chargerType.label",
+            &CHARGER_TYPES,
+            config.charger_type(),
+        ))
+        .child(
+            named(config, ctx, "power_kw")
+                .label("i18n:host.power.label")
+                .child(power),
+        )
+        .child(FieldHint::new().text("i18n:host.power.hint"))
+        .child(
+            Field::new()
+                .name("cable_provided")
+                .label("i18n:host.cable.label")
+                .child(
+                    Toggle::new()
+                        .name("cable_provided")
+                        .checked(config.cable_provided()),
+                ),
+        )
+        .into()
+}
+
+/// §2.3 Tarif et réservation : le prix n'est demandé que si la recharge n'est pas incluse, la
+/// consigne de réservation que si elle est requise (règles communes : masqué, pas grisé).
+fn pricing_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let mut card = Card::new()
+        .title("i18n:host.section.pricing")
+        .icon(IconName::Ticket)
+        .child(select(
+            "pricing",
+            "i18n:host.pricing.label",
+            &PRICINGS,
+            config.pricing(),
+        ));
+    if config.pricing() != "included" {
+        card = card.child(
+            named(config, ctx, "price")
+                .label("i18n:host.price.label")
+                .required(true)
+                .child(
+                    TextInput::new()
+                        .name("price")
+                        .value(config.price.clone())
+                        .placeholder("i18n:host.price.placeholder"),
+                ),
+        );
+    }
+    card = card
+        .child(
+            Field::new()
+                .name("booking_required")
+                .label("i18n:host.booking.label")
+                .child(
+                    Toggle::new()
+                        .name("booking_required")
+                        .checked(config.booking_required),
+                ),
+        )
+        .child(FieldHint::new().text("i18n:host.booking.hint"));
+    if config.booking_required {
+        card = card.child(
+            named(config, ctx, "booking_note")
+                .label("i18n:host.bookingNote.label")
+                .child(
+                    TextInput::new()
+                        .name("booking_note")
+                        .value(
+                            config
+                                .booking_note
+                                .as_ref()
+                                .map(|note| note.host_value(ctx))
+                                .unwrap_or_default(),
+                        )
+                        .placeholder("i18n:host.bookingNote.placeholder"),
+                ),
+        );
+    }
+    card.into()
+}
+
+fn select(name: &str, label: &str, values: &[&str], chosen: &str) -> Field {
+    Field::new().name(name).label(label).child(
+        Select::new()
+            .name(name)
+            .options(
+                values
+                    .iter()
+                    .map(|value| ChoiceOption::new(*value, format!("{label}.{value}")))
+                    .collect(),
+            )
+            .value(chosen),
+    )
+}
+
+/// Le champ `name`, avec le message de [`ModuleConfig::error_of`] sous lui s'il y en a un.
+fn named(config: &ModuleConfig, ctx: &HostContext, name: &str) -> Field {
+    let field = Field::new().name(name);
+    match config.error_of(name) {
+        Some(error) => field.error(error.get(&ctx.locale).to_string()),
+        None => field,
+    }
 }
 
 fn reveal_choice_list(policy: RevealPolicy) -> ChoiceList {
