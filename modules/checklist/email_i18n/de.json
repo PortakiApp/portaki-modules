@@ -1,7 +1,7 @@
 {
   "email.departureReminder.subject": "Vor der Abreise: Ihre Checkliste",
   "email.departureReminder.eyebrow": "Abreise",
-  "email.departureReminder.title": "Vor der Abreise fehlen noch ein paar Schritte",
-  "email.departureReminder.body": "Ihre Abreise-Checkliste ist noch nicht abgeschlossen. Nehmen Sie sich einen Moment, um die letzten Schritte abzuhaken, bevor Sie die Schlüssel abgeben.",
+  "email.departureReminder.title": "Morgen, vor der Abreise",
+  "email.departureReminder.body": "Sie reisen morgen ab und Ihre Abreise-Checkliste ist noch nicht abgeschlossen. Denken Sie daran, die letzten Schritte abzuhaken, bevor Sie die Schlüssel abgeben.",
   "email.departureReminder.cta": "Checkliste öffnen"
 }

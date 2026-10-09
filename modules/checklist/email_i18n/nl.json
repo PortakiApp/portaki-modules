@@ -1,7 +1,7 @@
 {
   "email.departureReminder.subject": "Voor u vertrekt: uw checklist",
   "email.departureReminder.eyebrow": "Vertrek",
-  "email.departureReminder.title": "Nog een paar stappen voor u vertrekt",
-  "email.departureReminder.body": "Uw vertrekchecklist is nog niet af. Neem even de tijd om de laatste stappen af te vinken voordat u de sleutels inlevert.",
+  "email.departureReminder.title": "Morgen, voor u vertrekt",
+  "email.departureReminder.body": "U vertrekt morgen en uw vertrekchecklist is nog niet af. Vergeet niet de laatste stappen af te vinken voordat u de sleutels inlevert.",
   "email.departureReminder.cta": "Checklist openen"
 }

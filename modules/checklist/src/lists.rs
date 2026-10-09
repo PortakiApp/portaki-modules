@@ -12,9 +12,10 @@ pub const HOST: &str = "host";
 pub const DURING_STAY: &str = "duringStay";
 pub const AT_DEPARTURE: &str = "atDeparture";
 pub const DEPARTURE_DAY: &str = "departureDay";
-pub const GUEST_TRIGGERS: &[&str] = &[DURING_STAY, AT_DEPARTURE, DEPARTURE_DAY];
-/// No longer offered (the spec has no « before arrival »): read as [`DURING_STAY`].
+/// `beforeArrival` is not in the spec; kept last so a list stored with it keeps opening before
+/// arrival, and is never the fallback.
 pub const BEFORE_ARRIVAL: &str = "beforeArrival";
+pub const GUEST_TRIGGERS: &[&str] = &[DURING_STAY, AT_DEPARTURE, DEPARTURE_DAY, BEFORE_ARRIVAL];
 
 /// The lists the guest ticks on their way out — also shown on the post-stay card.
 pub fn is_departure_trigger(trigger: &str) -> bool {
