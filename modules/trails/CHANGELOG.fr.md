@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0
+
+Aller simple et bornes des mesures.
+
+* Un itinéraire peut être un aller simple.
+* Jusqu'à 30 itinéraires ; durée, distance et dénivelé hors bornes sont signalés sous le champ.
+* Un niveau manquant bloque la publication ; un départ sans position déclenche un avertissement.
+
 ## 0.6.0
 
 Montée technique.

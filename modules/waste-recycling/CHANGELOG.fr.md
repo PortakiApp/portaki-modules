@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.0
+
+Collecte, local et points d'apport.
+
+* Indiquez s'il y a un ramassage devant le logement, et quand sortir les bacs.
+* Le local poubelles a sa carte, avec son emplacement ; huit couleurs de bacs.
+* Les points d'apport acceptent aussi le textile et les piles, et demandent leur position.
+* Sans aucune information de tri, la publication avertit sans bloquer.
+
 ## 1.8.0
 
 Montée technique.

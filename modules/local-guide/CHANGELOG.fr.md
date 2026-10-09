@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.12.0
+
+Plus d'adresses, mieux vérifiées.
+
+* Jusqu'à 30 adresses.
+* Un nom manquant, un texte trop long, un téléphone sans indicatif ou un lien sans https sont signalés sous le champ.
+* Une adresse sans position sur la carte déclenche un avertissement.
+
 ## 1.11.0
 
 Montée technique.

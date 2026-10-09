@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0
+
+Plus d'organes, un nom par défaut.
+
+* Jusqu'à 20 organes de coupure.
+* Sans nom, le bloc prend celui du type : Gaz, Eau, Électricité…
+* Les textes trop longs sont signalés ; une ligne sans emplacement n'est pas publiée, avec un avertissement.
+
 ## 0.5.0
 
 Montée technique.

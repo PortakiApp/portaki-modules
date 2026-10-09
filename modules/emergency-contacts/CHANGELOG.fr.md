@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.0
+
+Vos horaires et la santé.
+
+* Choisissez d'afficher votre numéro, et quand on peut vous joindre ; en dehors, le livret renvoie au 112.
+* La pharmacie, l'hôpital et le médecin peuvent avoir un numéro : le voyageur les appelle d'un geste.
+* Jusqu'à 20 contacts, avec « Quand l'appeler » pour chacun.
+* Un numéro long doit porter son indicatif (+33…) ; les numéros courts comme le 18 restent acceptés.
+
 ## 1.6.0
 
 Montée technique.

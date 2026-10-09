@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.0
+
+Urgences, périodes et réponse.
+
+* Le bouton « Tout de suite » appelle votre numéro, ou celui de votre profil.
+* Choisissez les périodes où le formulaire est proposé : avant l'arrivée, pendant le séjour, après le départ.
+* Écrivez la réponse automatique et le délai annoncé ; deux catégories en plus : Wi-Fi et Extérieur.
+* La photo peut être désactivée ; les réglages passent dans le tiroir du module.
+
 ## 1.6.0
 
 Montée technique.

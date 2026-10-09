@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.0
+
+Des contrôles avant publication.
+
+* Une checklist compte 40 étapes au plus, et une étape 80 caractères.
+* Un code écrit dans une étape du livret déclenche un avertissement : il serait visible sans calendrier de révélation.
+
 ## 1.5.0
 
 Montée technique.

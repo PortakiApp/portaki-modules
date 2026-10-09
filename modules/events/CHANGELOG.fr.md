@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.0
+
+Événements récurrents et annulés.
+
+* Un événement peut se répéter chaque semaine ou chaque mois : le livret montre la prochaine date pendant le séjour.
+* « Toute la journée » masque l'heure ; « Annulé » affiche un badge et retire le lien.
+* Jusqu'à 50 événements ; une fin avant le début ou un lien sans https bloquent la publication.
+
 ## 1.6.0
 
 Montée technique.

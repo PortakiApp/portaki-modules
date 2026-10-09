@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.0
+
+Toutes les plateformes d'avis, au bon moment.
+
+* Le lien d'avis peut viser n'importe quelle plateforme, pas seulement Airbnb.
+* Choisissez quand demander l'avis : au départ, ou le lendemain à 10 h.
+* Le réglage passe dans le tiroir du module.
+
 ## 1.4.0
 
 Montée technique.

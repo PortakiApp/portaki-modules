@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.12.0
+
+Plus de réglages pour vos horaires.
+
+* Choisissez combien de lignes la carte d'accueil affiche (de 1 à 6).
+* Jusqu'à 30 équipements, rangés par groupe : Séjour, Équipements ou Services.
+* Chaque ligne a un mode : même horaire tous les jours, 24 h/24 ou sur demande, avec la façon de demander.
+* Les heures invalides et les saisons incomplètes sont signalées sous le champ.
+
 ## 1.11.0
 
 Montée technique.

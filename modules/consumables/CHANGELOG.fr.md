@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.9.0
+
+Encadrez les demandes de réassort.
+
+* Vous pouvez fermer les demandes : la carte informe alors seulement le voyageur.
+* Le nombre de demandes par séjour se règle de 1 à 20 (5 par défaut) ; au-delà, le voyageur est invité à vous contacter.
+* Le catalogue accepte jusqu'à 30 produits.
+
 ## 2.8.0
 
 Montée technique.

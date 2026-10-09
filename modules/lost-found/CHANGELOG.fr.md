@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.11.0
+
+Durée de garde et restitution.
+
+* Indiquez combien de temps vous gardez un objet (de 7 à 180 jours) : le voyageur le lit.
+* Ajoutez vos consignes de retrait et l'association qui reçoit les dons.
+* Proposer le don demande désormais le nom de l'association avant de republier.
+* Les réglages passent dans le tiroir du module.
+
 ## 1.10.0
 
 Montée technique.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.0
+
+Des créneaux d'arrivée réguliers.
+
+* Proposez des créneaux toutes les 15, 30 ou 60 minutes, de l'heure d'arrivée jusqu'à l'heure de votre choix.
+* Les trois plages habituelles restent le réglage par défaut.
+
 ## 1.7.0
 
 Montée technique.
