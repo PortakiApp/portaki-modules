@@ -10,6 +10,7 @@ use crate::config::ModuleConfig;
 #[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
 pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
     let config = ModuleConfig::load(&ctx)?;
+    let property = ctx.property.coordinates.map(|point| (point.lat, point.lng));
     let mut items = vec![PublishCheck {
         id: "trails".into(),
         level: PublishLevel::Required,
@@ -18,11 +19,12 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         hint: crate::i18n::text("publish.trails.hint"),
     }];
 
-    // Les erreurs du formulaire bloquent, chacune sur son champ — un niveau manquant compris :
-    // une ligne sans niveau ne s'affiche pas, l'hôte croirait l'avoir publiée.
+    // Les erreurs du formulaire bloquent, chacune sur son champ — un niveau manquant compris
+    // (une ligne sans niveau ne s'affiche pas, l'hôte croirait l'avoir publiée), et un départ
+    // absent ou à plus de 100 km du logement.
     items.extend(
         config
-            .problems()
+            .problems(property)
             .into_iter()
             .map(|(field, error)| PublishCheck {
                 label: crate::i18n::text(field_label(&field)),
@@ -33,21 +35,27 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             }),
     );
 
-    // Sans départ sur la carte : ni repère, ni « itinéraire jusqu'au départ ». La spec l'exige ;
-    // des itinéraires existants n'en ont pas et s'affichent quand même.
-    if let Some(index) = config
-        .trails
-        .iter()
-        .position(|trail| !trail.is_blank() && trail.coordinates().is_none())
-    {
-        items.push(PublishCheck {
-            id: format!("config.trails.{index}.lat"),
-            level: PublishLevel::Recommended,
-            ok: false,
-            label: crate::i18n::text("host.trails.start"),
-            hint: crate::i18n::text("host.trails.start.required"),
-        });
-    }
+    // Une trace refusée ne s'ignore plus en silence : le livret ne la dessinerait pas, et le
+    // voyageur téléchargerait un fichier que son application rejette. Une trace que la plateforme
+    // ne sert pas (retirée, au-delà de ce qu'elle lit) ne se juge pas ici.
+    items.extend(
+        config
+            .trails
+            .iter()
+            .enumerate()
+            .filter(|(_, trail)| !trail.is_blank())
+            .filter_map(|(index, trail)| {
+                let bytes = portaki_sdk::host::files::read(trail.gpx_ref()?).ok()?;
+                let refusal = crate::gpx::refusal(&bytes)?;
+                Some(PublishCheck {
+                    id: format!("config.trails.{index}.gpx_file"),
+                    level: PublishLevel::Required,
+                    ok: false,
+                    label: crate::i18n::text("host.trails.gpx"),
+                    hint: crate::i18n::text(refusal),
+                })
+            }),
+    );
 
     // Sans durée ni distance, la fiche s'affiche avec moins de tuiles — lisible, mais on ne peut
     // plus choisir entre deux randonnées, ce qui est à quoi sert la liste.
@@ -90,6 +98,9 @@ fn field_label(field: &str) -> &'static str {
         "link_url" => "host.trails.link",
         "description" => "host.trails.description",
         "commune_url" => "host.commune.label",
+        "lat" => "host.trails.start",
+        "season_from" => "host.trails.season.from",
+        "season_to" => "host.trails.season.to",
         _ => "publish.trails.label",
     }
 }

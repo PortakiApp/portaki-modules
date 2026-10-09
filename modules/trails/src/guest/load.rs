@@ -9,6 +9,8 @@ pub struct GuestData {
     pub commune_url: Option<String>,
     pub property: Option<(f64, f64)>,
     pub locale: String,
+    /// Aujourd'hui en `MMJJ` (voir [`crate::config::parse_month_day`]), `None` sans horloge.
+    pub today: Option<u32>,
 }
 
 pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestData> {
@@ -18,6 +20,11 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestData> {
         commune_url: config.commune_link().map(str::to_string),
         property: ctx.property.coordinates.map(|point| (point.lat, point.lng)),
         locale: ctx.locale.clone(),
+        // ponytail: le jour UTC, pas celui du fuseau du logement — au pire un badge en retard de
+        // quelques heures autour de minuit, un jour de changement de saison.
+        today: portaki_sdk::host::time::now()
+            .ok()
+            .and_then(|now| now.format("%m%d").to_string().parse().ok()),
     })
 }
 
@@ -41,6 +48,16 @@ impl GuestData {
     pub fn starts_far(&self, trail: &TrailRow) -> bool {
         self.start_metres(trail)
             .is_some_and(|metres| metres >= crate::config::FAR_START_METRES)
+    }
+
+    /// L'itinéraire est-il hors saison aujourd'hui ? Il reste listé, avec un badge.
+    pub fn off_season(&self, trail: &TrailRow) -> bool {
+        self.today.is_some_and(|today| !trail.in_season(today))
+    }
+
+    /// « Hors saison », traduit.
+    pub fn off_season_label() -> String {
+        t!("guest.offSeason").unwrap_or_else(|_| "i18n:guest.offSeason".into())
     }
 
     /// Le départ est-il le logement lui-même ?

@@ -152,3 +152,50 @@ mod barre_du_bas {
         assert!(json.contains("openTrace"), "la fiche tierce prend la place");
     }
 }
+
+/// Le refus à l'import (§9 n° 6) : le message de la spec, pas un fichier ignoré en silence.
+#[test]
+fn une_trace_refusee_dit_pourquoi() {
+    assert_eq!(gpx::refusal(TRACK.as_bytes()), None);
+    // Pas un GPX, ou pas deux points.
+    assert_eq!(
+        gpx::refusal(b"pas du tout du xml"),
+        Some("host.trails.gpx.invalid")
+    );
+    assert_eq!(
+        gpx::refusal(b"<gpx></gpx>"),
+        Some("host.trails.gpx.invalid")
+    );
+    // Des points, mais sans racine `<gpx>` : un autre format.
+    let kml = TRACK.replace("<gpx ", "<kml ").replace("</gpx>", "</kml>");
+    assert_eq!(
+        gpx::refusal(kml.as_bytes()),
+        Some("host.trails.gpx.invalid")
+    );
+    // Une entité déclarée : refusée même si les points se lisent.
+    let entity = TRACK.replace(
+        "<gpx ",
+        "<!DOCTYPE gpx [<!ENTITY x SYSTEM \"file:///etc/passwd\">]>\n<gpx ",
+    );
+    assert!(gpx::read(&entity).is_some());
+    assert_eq!(
+        gpx::refusal(entity.as_bytes()),
+        Some("host.trails.gpx.invalid")
+    );
+    // Au-delà de 5 Mo.
+    let mut big = TRACK.as_bytes().to_vec();
+    big.resize(gpx::MAX_BYTES + 1, b' ');
+    assert_eq!(gpx::refusal(&big), Some("host.trails.gpx.tooLarge"));
+}
+
+/// Les deux messages, mot pour mot.
+#[test]
+fn les_messages_de_refus_sont_ceux_de_la_spec() {
+    let fr: serde_json::Value =
+        serde_json::from_str(include_str!("../i18n/fr-FR.json")).expect("lot fr");
+    assert_eq!(
+        fr["host.trails.gpx.invalid"],
+        "Ce fichier n’est pas une trace GPX valide."
+    );
+    assert_eq!(fr["host.trails.gpx.tooLarge"], "5 Mo au maximum.");
+}

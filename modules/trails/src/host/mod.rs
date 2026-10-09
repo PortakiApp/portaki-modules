@@ -92,15 +92,23 @@ struct PrefillRow {
 ///
 /// Lues à ce rendu-là seulement : relire le fichier à chaque ouverture du formulaire coûterait un
 /// appel par ligne, et écraserait sans le dire une mesure que l'hôte aurait corrigée à la main.
-/// Une trace illisible rend `None` — le formulaire garde alors ce qui est enregistré, et l'hôte
-/// voit que rien n'a changé plutôt que de voir ses mesures effacées.
-fn prefill(ctx: &HostContext, index: usize, trail: Option<&TrailRow>) -> Option<crate::gpx::Track> {
+/// Une trace refusée rend la clé de son message, sous le champ : le formulaire garde ce qui est
+/// enregistré, et l'hôte sait pourquoi rien n'a changé. Une trace que la plateforme ne sert pas
+/// rend `None`, comme avant.
+fn prefill(
+    ctx: &HostContext,
+    index: usize,
+    trail: Option<&TrailRow>,
+) -> Option<std::result::Result<crate::gpx::Track, &'static str>> {
     if ctx.input_u64("prefill_trail") != Some(index as u64) {
         return None;
     }
     let reference = trail?.gpx_ref()?;
     let bytes = portaki_sdk::host::files::read(reference).ok()?;
-    crate::gpx::read(&String::from_utf8_lossy(&bytes))
+    Some(match crate::gpx::refusal(&bytes) {
+        Some(refusal) => Err(refusal),
+        None => crate::gpx::read(&String::from_utf8_lossy(&bytes)).ok_or("host.trails.gpx.invalid"),
+    })
 }
 
 fn emit_input(payload: impl Serialize) -> Action {
@@ -111,7 +119,9 @@ fn trail_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Componen
     let trail: Option<&TrailRow> = config.trails.get(index);
     // Les mesures de la trace, si l'hôte vient de cliquer « pré-remplir ». Elles remplacent ce
     // qu'il avait saisi dans ces trois champs, et il peut encore les corriger avant d'enregistrer.
-    let measured = prefill(ctx, index, trail);
+    let prefilled = prefill(ctx, index, trail);
+    let measured = prefilled.as_ref().and_then(|read| read.as_ref().ok());
+    let gpx_refusal = prefilled.as_ref().and_then(|read| read.as_ref().err());
     let title = trail
         .map(|t| t.title.host_value(ctx))
         .unwrap_or_default()
@@ -162,7 +172,6 @@ fn trail_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Componen
         "i18n:host.trails.distance",
         MAX_DISTANCE_KM,
         measured
-            .as_ref()
             .map(|track| round_tenth(track.distance_km))
             .or_else(|| trail.and_then(|t| t.distance_km)),
     ));
@@ -174,7 +183,6 @@ fn trail_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Componen
         "i18n:host.trails.elevation",
         MAX_ELEVATION_M,
         measured
-            .as_ref()
             .map(|track| track.elevation_m.round())
             .or_else(|| trail.and_then(|t| t.elevation_m)),
     ));
@@ -185,7 +193,7 @@ fn trail_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Componen
         "shape",
         "i18n:host.shape.label",
         SHAPES,
-        shape_value(trail, measured.as_ref()),
+        shape_value(trail, measured),
     ));
     if measured.is_some() {
         children.push(
@@ -205,7 +213,11 @@ fn trail_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Componen
     if let Some((lat, lng)) = trail.and_then(TrailRow::coordinates) {
         picker = picker.lat(lat).lng(lng);
     }
-    children.push(picker.into());
+    children.push(
+        named(config, ctx, &format!("trails.{index}.lat"))
+            .child(picker)
+            .into(),
+    );
     // Pour la page publique, sur une ligne déjà enregistrée : pas sur un créneau vide, qu'il ferait
     // compter comme rempli.
     if let Some(trail) = trail.filter(|t| !t.is_blank()) {
@@ -249,10 +261,14 @@ fn trail_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Componen
         trail.map(|t| t.link_url.clone()).unwrap_or_default(),
     ));
     children.push(FieldHint::new().text("i18n:host.trails.link.hint").into());
+    let mut gpx_field = Field::new()
+        .name(format!("trails.{index}.gpx_file"))
+        .label("i18n:host.trails.gpx");
+    if let Some(refusal) = gpx_refusal {
+        gpx_field = gpx_field.error(crate::i18n::text(refusal).get(&ctx.locale).to_string());
+    }
     children.push(
-        Field::new()
-            .name(format!("trails.{index}.gpx_file"))
-            .label("i18n:host.trails.gpx")
+        gpx_field
             .child(
                 ImageUpload::new()
                     .name(format!("trails.{index}.gpx_file"))
@@ -285,6 +301,32 @@ fn trail_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Componen
             )
             .into(),
     );
+
+    for (name, label, placeholder) in [
+        ("season_from", "i18n:host.trails.season.from", "04-01"),
+        ("season_to", "i18n:host.trails.season.to", "10-31"),
+    ] {
+        let value = trail
+            .map(|t| {
+                if name == "season_from" {
+                    &t.season_from
+                } else {
+                    &t.season_to
+                }
+            })
+            .cloned()
+            .unwrap_or_default();
+        children.push(text_field(
+            config,
+            ctx,
+            index,
+            name,
+            label,
+            placeholder,
+            value,
+        ));
+    }
+    children.push(FieldHint::new().text("i18n:host.trails.season.hint").into());
 
     Stack::new()
         .id(format!("trail-{index}"))
@@ -361,7 +403,8 @@ fn choice_field(
 /// Le champ `name`, avec le message de [`ModuleConfig::error_of`] sous lui s'il y en a un.
 fn named(config: &ModuleConfig, ctx: &HostContext, name: &str) -> Field {
     let field = Field::new().name(name);
-    match config.error_of(name) {
+    let property = ctx.property.coordinates.map(|point| (point.lat, point.lng));
+    match config.error_of(name, property) {
         Some(error) => field.error(error.get(&ctx.locale).to_string()),
         None => field,
     }

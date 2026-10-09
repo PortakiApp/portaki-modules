@@ -179,6 +179,26 @@ fn simplify_to_budget(points: &[GeoPoint]) -> Vec<GeoPoint> {
     kept
 }
 
+/// Le plafond d'une trace déposée (spec §2.1).
+pub const MAX_BYTES: usize = 5 * 1024 * 1024;
+
+/// Pourquoi une trace déposée est refusée : la clé du message, ou `None` quand elle est bonne.
+///
+/// Un document qui déclare un DOCTYPE ou une entité est refusé même si ses points se lisent : la
+/// spec veut un XML sans entité externe, et un GPX n'en a jamais besoin.
+pub fn refusal(bytes: &[u8]) -> Option<&'static str> {
+    if bytes.len() > MAX_BYTES {
+        return Some("host.trails.gpx.tooLarge");
+    }
+    let xml = String::from_utf8_lossy(bytes);
+    let lowered = xml.to_lowercase();
+    let valid = !lowered.contains("<!doctype")
+        && !lowered.contains("<!entity")
+        && find_tag(&xml, "gpx").is_some()
+        && read(&xml).is_some();
+    (!valid).then_some("host.trails.gpx.invalid")
+}
+
 /// Lit une trace GPX. `None` quand le fichier ne porte pas deux points lisibles — il n'y a alors
 /// pas de tracé à dessiner, et la fiche montre son seul départ.
 pub fn read(xml: &str) -> Option<Track> {

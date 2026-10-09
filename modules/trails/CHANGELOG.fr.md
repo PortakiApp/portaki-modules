@@ -4,11 +4,11 @@
 
 Les randonnées sur la page publique du logement.
 
-* Nouvelle carte « Page publique » : affichez 2 à 4 itinéraires de votre choix sur la page du logement.
-* Les visiteurs voient la photo, le niveau, la durée, la distance et le dénivelé ; jamais la trace GPX, le lien ni le départ.
-* Un départ à moins de 300 m du logement s'annonce « Départ du logement », sans adresse ni position.
-* Une trace ne remplace plus le type que vous avez choisi, et une trace qui ne revient pas au départ est proposée en aller-retour.
-* Les itinéraires concernés retrouvent leur tuile « Type » chez le voyageur.
+* Nouvelle carte « Page publique » : 2 à 4 itinéraires avec photo, niveau et mesures ; jamais la trace GPX, le lien ni le départ.
+* Un départ à moins de 300 m du logement s'y annonce « Départ du logement », sans adresse ni position.
+* Une trace ne remplace plus le type choisi ; sans retour au départ, elle propose un aller-retour, et la tuile « Type » revient.
+* Une trace GPX invalide ou de plus de 5 Mo bloque la publication, comme un départ placé à plus de 100 km du logement.
+* Chaque itinéraire peut avoir une saison, avec un badge « Hors saison » ; un aller simple montre son arrivée et le retour à prévoir.
 
 ## 0.7.0
 
