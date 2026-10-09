@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.10.0...waste-recycling-v1.11.0) (2026-10-09)
+
+
+### Features
+
+* **waste-recycling:** add bin reminder, room pin ([5bf4b1e](https://github.com/PortakiApp/portaki-modules/commit/5bf4b1edddd34f5afd2fc1f8008bbaa79a418b15))
+
 ## [1.10.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.9.0...waste-recycling-v1.10.0) (2026-10-09)
 
 

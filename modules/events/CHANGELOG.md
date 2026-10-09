@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/events-v1.8.0...events-v1.9.0) (2026-10-09)
+
+
+### Features
+
+* **events:** weekdays, chosen dates, tips cap ([86829e3](https://github.com/PortakiApp/portaki-modules/commit/86829e39ce55d8878814306d80379b5e3d068f31))
+
 ## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/events-v1.7.0...events-v1.8.0) (2026-10-09)
 
 
