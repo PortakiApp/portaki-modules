@@ -20,8 +20,10 @@ use super::load::GuestData;
 fn kind_label(kind: Option<&str>) -> String {
     match kind.map(str::trim).unwrap_or("") {
         "parking" => "i18n:host.step.kind.parking".into(),
+        "gate" => "i18n:host.step.kind.gate".into(),
         "door" => "i18n:host.step.kind.door".into(),
         "elevator" => "i18n:host.step.kind.elevator".into(),
+        "stairs" => "i18n:host.step.kind.stairs".into(),
         _ => "i18n:host.step.kind.other".into(),
     }
 }
