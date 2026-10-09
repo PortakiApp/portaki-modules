@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.1
+
+Les événements bien rangés sur la Carte.
+
+* Sur la Carte du livret, les événements se rangent toujours sous « Événements ».
+
 ## 1.7.0
 
 Événements récurrents et annulés.
