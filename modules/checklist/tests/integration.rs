@@ -17,11 +17,11 @@ use uuid::Uuid;
 use checklist::{
     complete_item, create_checklist, items_of, list_checklists, list_completions, list_items,
     publish_readiness, render_home_card, render_host_main, render_host_stay, render_post_stay_card,
-    render_stats_checklist, render_stats_cleaning, reset_test_store, set_completed, stats_summary,
-    task_complete, task_toggle, timeline_tasks, uncomplete_item, update_config,
-    CreateChecklistArgs, ItemIdArgs, SetCompletedArgs, UpdateConfigArgs,
+    render_stats_checklist, render_stats_cleaning, reset_test_store, send_departure_reminder,
+    set_completed, stats_summary, task_complete, task_toggle, timeline_tasks, uncomplete_item,
+    update_config, CreateChecklistArgs, ItemIdArgs, SetCompletedArgs, UpdateConfigArgs,
 };
-use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
+use portaki_test_utils::{Booking, MockContext, Property, SurfaceAssertions};
 
 fn create(ctx: &Context, template: &str) {
     create_checklist(
@@ -126,11 +126,11 @@ fn guest_list_waits_for_its_trigger() {
 #[serial]
 fn legacy_show_when_is_adopted_once() {
     reset_test_store();
-    let config = serde_json::to_vec(&json!({ "show_when": "always" })).expect("json");
+    let config = serde_json::to_vec(&json!({ "show_when": "checkout_day" })).expect("json");
     MockContext::host().with_kv("config", config).run(|ctx| {
         create(&ctx, "departure");
         let lists = list_checklists().expect("lists");
-        assert_eq!(lists[0].trigger, "beforeArrival");
+        assert_eq!(lists[0].trigger, "departureDay");
         assert!(portaki_sdk::host::kv::get("config").expect("kv").is_none());
     });
 }
@@ -798,4 +798,129 @@ fn a_removed_step_does_not_block_publication() {
             assert!(checks.iter().all(|check| check.ok), "{checks:?}");
             assert_eq!(items_of(list).expect("items").len(), 1);
         });
+}
+
+/// L'éditeur rend la rubrique et la précision d'une étape dans la langue éditée, et chaque langue
+/// garde la sienne à l'enregistrement.
+#[test]
+#[serial]
+fn step_group_and_detail_render_and_persist_per_language() {
+    reset_test_store();
+    MockContext::host().run(|ctx| {
+        create(&ctx, "emptyGuest");
+        create(&ctx, "emptyHost");
+        let lists = list_checklists().expect("lists");
+        let (guest, host) = (lists[0].id, lists[1].id);
+        let save = |locale: &str, id: Option<Uuid>, group: &str, description: &str| {
+            let mut ctx = ctx.clone();
+            ctx.locale = locale.into();
+            let mut row =
+                json!({ "label": "Vider le frigo", "group": group, "description": description });
+            if let Some(id) = id {
+                row["id"] = json!(id);
+            }
+            update_config(
+                ctx,
+                UpdateConfigArgs {
+                    id: guest.to_string(),
+                    items: Some(json!([row])),
+                    ..UpdateConfigArgs::default()
+                },
+            )
+            .expect("save");
+            items_of(guest).expect("items")[0].clone()
+        };
+        let item = save("fr-FR", None, "Cuisine", "Porte entrouverte");
+        let item = save("en-US", Some(item.id), "Kitchen", "Leave the door ajar");
+        assert!(item.group_i18n.contains("Cuisine") && item.group_i18n.contains("Kitchen"));
+        assert!(item.description_i18n.contains("Porte entrouverte"));
+        assert!(item.description_i18n.contains("Leave the door ajar"));
+
+        let editor = |locale: &str, list: Uuid| {
+            let mut ctx = ctx.clone();
+            ctx.locale = locale.into();
+            ctx.input = json!({ "selectedId": list.to_string() });
+            json_of(&render_host_main(ctx))
+        };
+        let fr = editor("fr-FR", guest);
+        assert!(fr.contains(r#""groupField":true"#), "{fr}");
+        assert!(
+            fr.contains(r#""group":"Cuisine""#) && !fr.contains("Kitchen"),
+            "{fr}"
+        );
+        assert!(fr.contains(r#""description":"Porte entrouverte""#), "{fr}");
+        let en = editor("en-US", guest);
+        assert!(
+            en.contains(r#""group":"Kitchen""#) && !en.contains("Cuisine"),
+            "{en}"
+        );
+        // Une tâche d'équipe ne lit ni rubrique ni précision : pas de champ mort.
+        let team = editor("fr-FR", host);
+        assert!(!team.contains(r#""groupField":true"#), "{team}");
+    });
+}
+
+/// « Rappel le matin du départ » : un e-mail le jour du départ si la liste n'est pas terminée,
+/// rien quand elle l'est ou que l'hôte a coupé le rappel.
+#[test]
+#[serial]
+fn the_departure_reminder_goes_only_to_an_unfinished_list() {
+    for case in ["unfinished", "finished", "off", "gone"] {
+        reset_test_store();
+        let builder = MockContext::guest().with_property(Property::default());
+        let stay_id = builder.context().guest.expect("guest").session_id;
+        let booking = Booking {
+            id: stay_id,
+            ..Booking::default()
+        };
+        let now = match case {
+            "gone" => booking.check_out + Duration::hours(1),
+            _ => booking.check_out - Duration::hours(2),
+        };
+        builder
+            .with_stay(booking)
+            .with_now(now)
+            .run_with(|ctx, host| {
+                create(&ctx, "departure");
+                let list = list_checklists().expect("lists")[0].id;
+                if case == "finished" {
+                    let ids: Vec<String> = items_of(list)
+                        .expect("items")
+                        .iter()
+                        .map(|item| item.id.to_string())
+                        .collect();
+                    set_completed(
+                        ctx.clone(),
+                        SetCompletedArgs {
+                            item_ids: ids.join(","),
+                        },
+                    )
+                    .expect("tick all");
+                }
+                if case == "off" {
+                    update_config(
+                        ctx.clone(),
+                        UpdateConfigArgs {
+                            id: list.to_string(),
+                            trigger: "atDeparture".into(),
+                            remind: Some(json!(false)),
+                            items: Some(json!(items_of(list)
+                                .expect("items")
+                                .iter()
+                                .map(|item| json!({ "id": item.id, "label": item.label_fr }))
+                                .collect::<Vec<_>>())),
+                            ..UpdateConfigArgs::default()
+                        },
+                    )
+                    .expect("save");
+                }
+                send_departure_reminder(ctx, EmptyArgs {}).expect("reminder");
+                let sent = host
+                    .sent_emails()
+                    .into_iter()
+                    .filter(|email| email.email_id == "departure-reminder")
+                    .count();
+                assert_eq!(sent, usize::from(case == "unfinished"), "{case}");
+            });
+    }
 }

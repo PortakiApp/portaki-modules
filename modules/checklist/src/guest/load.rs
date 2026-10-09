@@ -32,12 +32,12 @@ pub struct GuestChecklistData {
     pub display: storage::display::Display,
 }
 
-/// `departure_only` keeps the `atDeparture` lists (post-stay card).
+/// `departure_only` keeps the departure lists (post-stay card).
 pub fn load_guest_checklist(ctx: &GuestContext, departure_only: bool) -> Result<GuestLoad> {
     let mut guest_lists = Vec::new();
     for list in storage::list_checklists()? {
         let wanted = list.audience == lists::GUEST
-            && (!departure_only || list.trigger == lists::AT_DEPARTURE);
+            && (!departure_only || lists::is_departure_trigger(&list.trigger));
         if !wanted {
             continue;
         }
@@ -53,8 +53,10 @@ pub fn load_guest_checklist(ctx: &GuestContext, departure_only: bool) -> Result<
     let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at);
     let checkout_at = ctx.stay.as_ref().and_then(|stay| stay.checkout_at);
     let now = time::now()?;
-    guest_lists
-        .retain(|(list, _)| is_checklist_available(&list.trigger, now, checkin_at, checkout_at));
+    let timezone = ctx.property.timezone.as_str();
+    guest_lists.retain(|(list, _)| {
+        is_checklist_available(&list.trigger, now, checkin_at, checkout_at, timezone)
+    });
     if guest_lists.is_empty() {
         return Ok(GuestLoad::NotYet);
     }

@@ -1,0 +1,7 @@
+{
+  "email.departureReminder.subject": "Before you leave, your checklist",
+  "email.departureReminder.eyebrow": "Departure",
+  "email.departureReminder.title": "A few steps left before you leave",
+  "email.departureReminder.body": "Your departure checklist isn't finished yet. Take a moment to tick the last steps before handing back the keys.",
+  "email.departureReminder.cta": "Open the checklist"
+}
