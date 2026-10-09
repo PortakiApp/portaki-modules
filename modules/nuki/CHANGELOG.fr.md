@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0
+
+Le voyageur sait ce que la serrure a fait.
+
+* Après « Ouvrir », le livret dit si la porte s'est ouverte, ou que la serrure n'a pas répondu et quel code taper.
+* Le message est traduit dans les dix langues du livret.
+
 ## 1.4.1
 
 Montée technique.

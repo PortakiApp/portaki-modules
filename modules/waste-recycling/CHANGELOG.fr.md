@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.0
+
+Montée technique.
+
+* Le module est passé à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 1.7.2
 
 Trois bacs sur la carte, et le chemin vers le reste.

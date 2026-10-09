@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.0
+
+Les réglages de la météo, revus pour l'hôte.
+
+* L'hôte choisit le nom affiché sous les prévisions, par exemple « Chamrousse 1750 » plutôt que la commune.
+* Une autre position que l'adresse du logement peut être choisie quand elle est imprécise (montagne, île).
+* La carte météo avant l'arrivée peut être masquée.
+* Les températures suivent la langue du voyageur : degrés Fahrenheit en anglais américain, Celsius ailleurs.
+* Une erreur de saisie s'affiche sous le champ et empêche de publier ; une position lointaine est signalée.
+
 ## 1.4.3
 
 La météo du séjour, pas cinq jours en dur.

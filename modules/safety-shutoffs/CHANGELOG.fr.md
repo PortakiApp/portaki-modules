@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+
+Montée technique.
+
+* Le module est passé à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 0.4.1
 
 Montée technique.

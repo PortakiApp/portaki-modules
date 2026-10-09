@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.0
+
+Montée technique.
+
+* Le module est passé à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 1.5.0
 
 La feuille dit ce qu'elle fait, et ne fait plus choisir pour rien.
