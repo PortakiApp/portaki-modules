@@ -9,6 +9,9 @@ use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{ModuleConfig, RevealPolicy, CHARGER_TYPES, POWER_KW, PRICINGS};
 
+mod stay;
+pub use stay::render_host_stay;
+
 #[portaki_sdk::surface(
     host,
     id = "main",

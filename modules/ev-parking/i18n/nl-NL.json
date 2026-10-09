@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "EV-parkeerplaats",
+  "catalog.host.stay": "EV-parkeren",
   "config.revealPolicy": "Wanneer codes en pincode verschijnen",
   "config.revealPolicy.always": "Altijd zichtbaar",
   "config.revealPolicy.at_checkin": "Op het tijdstip van aankomst",
@@ -83,6 +84,10 @@
   "host.section.spot.help": "Wat gasten met een elektrische auto zien. De codes volgen het schema hieronder.",
   "host.spotLabel.label": "Gereserveerde plek",
   "host.spotLabel.placeholder": "bijv. Plek P2 / nr. 14, niveau -1",
+  "host.spotLabel.required": "Geef aan waar de plek is.",
+  "host.stay.charger": "laadpaal {charger}",
+  "host.stay.noSpot": "— Geen plek ingevuld.",
+  "host.stay.title": "EV-parkeren",
   "module.catalogDescription": "Gereserveerde plek, slagboomcode en pincode van de laadpaal voor gasten met een elektrische auto.",
   "module.description": "Gereserveerde EV-plek, slagboomcode en laadpaalpincode voor de gastengids",
   "module.displayName": "EV-parkeerplaats",

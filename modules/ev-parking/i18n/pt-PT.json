@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "Estacionamento VE",
+  "catalog.host.stay": "Estacionamento VE",
   "config.revealPolicy": "Quando mostrar os códigos e o PIN",
   "config.revealPolicy.always": "Sempre visível",
   "config.revealPolicy.at_checkin": "À hora do check-in",
@@ -83,6 +84,10 @@
   "host.section.spot.help": "O que o hóspede com veículo elétrico vê. Os códigos seguem o calendário abaixo.",
   "host.spotLabel.label": "Lugar reservado",
   "host.spotLabel.placeholder": "ex.: Lugar P2 / n.º 14, piso -1",
+  "host.spotLabel.required": "Indique onde fica o lugar.",
+  "host.stay.charger": "carregador {charger}",
+  "host.stay.noSpot": "— Nenhum lugar indicado.",
+  "host.stay.title": "Estacionamento VE",
   "module.catalogDescription": "Lugar reservado, código da cancela e PIN do carregador para hóspedes com veículo elétrico.",
   "module.description": "Lugar VE reservado, código da cancela e PIN do carregador para o guia do hóspede",
   "module.displayName": "Estacionamento VE",

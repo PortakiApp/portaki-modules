@@ -5,6 +5,8 @@
 La borne dans les équipements.
 
 * Dès que la place est renseignée, la borne de recharge s'ajoute aux équipements de la page du logement, avec sa prise (Type 2, CCS), sans la place ni code.
+* La fiche du séjour rappelle la place et la borne : « Place 8 · borne Type 2 7 kW ».
+* Une place vide affiche « Indiquez où se trouve la place. » sous le champ et avant la publication.
 
 ## 1.8.0
 

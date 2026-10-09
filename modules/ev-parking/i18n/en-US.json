@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "EV parking",
+  "catalog.host.stay": "EV parking",
   "config.revealPolicy": "When to show codes and PIN",
   "config.revealPolicy.always": "Always visible",
   "config.revealPolicy.at_checkin": "At check-in time",
@@ -83,6 +84,10 @@
   "host.section.spot.help": "What EV guests see. Codes follow the reveal schedule below.",
   "host.spotLabel.label": "Reserved spot",
   "host.spotLabel.placeholder": "e.g. Spot P2 / #14, level -1",
+  "host.spotLabel.required": "Say where the spot is.",
+  "host.stay.charger": "{charger} charger",
+  "host.stay.noSpot": "— No spot set.",
+  "host.stay.title": "EV parking",
   "module.catalogDescription": "Reserved spot, gate code, and charger PIN for guests with an electric vehicle.",
   "module.description": "Reserved EV spot, gate code, and charger PIN for the guest booklet",
   "module.displayName": "EV parking",

@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "موقف السيارات الكهربائية",
+  "catalog.host.stay": "موقف السيارات الكهربائية",
   "config.revealPolicy": "متى تظهر الرموز ورمز الشاحن",
   "config.revealPolicy.always": "ظاهرة دائمًا",
   "config.revealPolicy.at_checkin": "عند موعد الوصول",
@@ -83,6 +84,10 @@
   "host.section.spot.help": "ما يراه الضيف الذي يقود سيارة كهربائية. تتبع الرموز الجدول أدناه.",
   "host.spotLabel.label": "موقف محجوز",
   "host.spotLabel.placeholder": "مثال: الموقف P2 / رقم 14، الطابق -1",
+  "host.spotLabel.required": "حدّد مكان الموقف.",
+  "host.stay.charger": "شاحن {charger}",
+  "host.stay.noSpot": "— لم يُحدَّد أي موقف.",
+  "host.stay.title": "موقف السيارات الكهربائية",
   "module.catalogDescription": "موقف محجوز ورمز بوابة ورمز شاحن للضيوف الذين يقودون سيارة كهربائية.",
   "module.description": "موقف محجوز للسيارات الكهربائية ورمز البوابة ورمز الشاحن في دليل الضيف",
   "module.displayName": "موقف السيارات الكهربائية",

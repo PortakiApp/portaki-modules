@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "Parcheggio EV",
+  "catalog.host.stay": "Parcheggio VE",
   "config.revealPolicy": "Quando mostrare codici e PIN",
   "config.revealPolicy.always": "Sempre visibile",
   "config.revealPolicy.at_checkin": "All'ora del check-in",
@@ -83,6 +84,10 @@
   "host.section.spot.help": "Quello che vede l'ospite con veicolo elettrico. I codici seguono il calendario qui sotto.",
   "host.spotLabel.label": "Posto riservato",
   "host.spotLabel.placeholder": "es. Posto P2 / n. 14, livello -1",
+  "host.spotLabel.required": "Indicate dove si trova il posto.",
+  "host.stay.charger": "colonnina {charger}",
+  "host.stay.noSpot": "— Nessun posto indicato.",
+  "host.stay.title": "Parcheggio VE",
   "module.catalogDescription": "Posto riservato, codice della sbarra e PIN della colonnina per gli ospiti con veicolo elettrico.",
   "module.description": "Posto EV riservato, codice della sbarra e PIN della colonnina per la guida dell'ospite",
   "module.displayName": "Parcheggio EV",

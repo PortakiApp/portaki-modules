@@ -15,7 +15,7 @@ pub use amenities::amenities_list;
 pub use config::{ModuleConfig, RevealPolicy};
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use guest::{render_explore_detail, render_home_card};
-pub use host::render_host_main;
+pub use host::{render_host_main, render_host_stay};
 
 portaki_sdk::portaki_module!(
     id = "ev-parking",
