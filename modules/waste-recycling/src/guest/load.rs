@@ -69,7 +69,9 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
     let decision = RevealPolicy::default().evaluate_for(ctx, now);
     // Jamais après le départ : un ancien voyageur ne lit pas le code du suivant.
     let ended = checkout_at.is_some_and(|checkout| now > checkout);
-    let code_revealed = decision.revealed && !ended;
+    // En aperçu, la plateforme remplace les secrets par `***` : rien à copier.
+    let masked_by_platform = config.bin_room_code.trim() == "***";
+    let code_revealed = decision.revealed && !ended && !masked_by_platform;
     let code_reveal_at = match (code_revealed || ended, decision.available_from) {
         (false, Some(from)) => {
             let local = ctx.property_tz().map(|tz| tz.to_local(from));
