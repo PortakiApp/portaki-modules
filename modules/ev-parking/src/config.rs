@@ -209,8 +209,16 @@ impl ModuleConfig {
                 problems.push((field, error));
             }
         };
-        // Vide, l'emplacement est refusé par la plateforme (`required`) : ici, la longueur.
-        push("spot_label", too_long(Some(&self.spot_label), 60));
+        // Vide, la plateforme le refuse aussi (`required`) : ici, le message de la spec, sous le
+        // champ et dans `publishReadiness`.
+        push(
+            "spot_label",
+            if self.spot_label.is_blank() {
+                Some(text("host.spotLabel.required"))
+            } else {
+                too_long(Some(&self.spot_label), 60)
+            },
+        );
         push(
             "power_kw",
             (self.power_kw != 0.0)
@@ -403,6 +411,10 @@ mod tests {
             )),
             ["power_kw", "price"]
         );
+        let empty = config(json!({})).problems();
+        assert_eq!(empty[0].0, "spot_label");
+        assert_eq!(empty[0].1.get("fr"), "Indiquez où se trouve la place.");
+        assert_eq!(empty[0].1.get("en"), "Say where the spot is.");
         assert_eq!(config(json!({})).charger_type(), "type2");
         assert!(config(json!({})).cable_provided());
     }

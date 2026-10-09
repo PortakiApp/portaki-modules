@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "EV駐車場",
+  "catalog.host.stay": "EV駐車場",
   "config.revealPolicy": "コードとPINを表示するタイミング",
   "config.revealPolicy.always": "常に表示",
   "config.revealPolicy.at_checkin": "チェックイン時刻から",
@@ -83,6 +84,10 @@
   "host.section.spot.help": "電気自動車のゲストに表示される内容です。コードは下のスケジュールに従います。",
   "host.spotLabel.label": "専用駐車スペース",
   "host.spotLabel.placeholder": "例：P2／14番、地下1階",
+  "host.spotLabel.required": "駐車スペースの場所を入力してください。",
+  "host.stay.charger": "{charger} 充電器",
+  "host.stay.noSpot": "— 駐車スペースが未設定です。",
+  "host.stay.title": "EV駐車場",
   "module.catalogDescription": "電気自動車を利用するゲストのための専用駐車スペース、ゲートコード、充電器のPIN。",
   "module.description": "ゲストガイド用の専用EV駐車スペース、ゲートコード、充電器のPIN",
   "module.displayName": "EV駐車場",

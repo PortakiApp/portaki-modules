@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "E-Auto-Parkplatz",
+  "catalog.host.stay": "E-Parkplatz",
   "config.revealPolicy": "Wann Codes und PIN erscheinen",
   "config.revealPolicy.always": "Immer sichtbar",
   "config.revealPolicy.at_checkin": "Zur Ankunftszeit",
@@ -83,6 +84,10 @@
   "host.section.spot.help": "Was Gäste mit E-Auto sehen. Die Codes folgen dem Zeitplan unten.",
   "host.spotLabel.label": "Reservierter Stellplatz",
   "host.spotLabel.placeholder": "z. B. Platz P2 / Nr. 14, Ebene -1",
+  "host.spotLabel.required": "Geben Sie an, wo sich der Stellplatz befindet.",
+  "host.stay.charger": "Ladestation {charger}",
+  "host.stay.noSpot": "— Kein Stellplatz angegeben.",
+  "host.stay.title": "E-Parkplatz",
   "module.catalogDescription": "Reservierter Stellplatz, Schrankencode und PIN der Ladesäule für Gäste mit Elektroauto.",
   "module.description": "Reservierter E-Auto-Stellplatz, Schrankencode und Ladesäulen-PIN für die Gästemappe",
   "module.displayName": "E-Auto-Parkplatz",

@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "Parking VE",
+  "catalog.host.stay": "Parking VE",
   "config.revealPolicy": "Quand afficher codes et PIN",
   "config.revealPolicy.always": "Toujours visible",
   "config.revealPolicy.at_checkin": "À l’heure du check-in",
@@ -83,6 +84,10 @@
   "host.section.spot.help": "Ce que voit le voyageur en véhicule électrique. Les codes sont soumis à la révélation programmée ci-dessous.",
   "host.spotLabel.label": "Place réservée",
   "host.spotLabel.placeholder": "ex. Place P2 / n°14, niveau -1",
+  "host.spotLabel.required": "Indiquez où se trouve la place.",
+  "host.stay.charger": "borne {charger}",
+  "host.stay.noSpot": "— Aucune place renseignée.",
+  "host.stay.title": "Parking VE",
   "module.catalogDescription": "Place réservée, code barrière et PIN borne pour les voyageurs en véhicule électrique.",
   "module.description": "Place VE réservée, code barrière et PIN borne pour le livret",
   "module.displayName": "Parking VE",

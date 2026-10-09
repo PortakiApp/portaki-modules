@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "电动车停车位",
+  "catalog.host.stay": "电动车停车位",
   "config.revealPolicy": "何时显示密码和充电桩 PIN",
   "config.revealPolicy.always": "始终可见",
   "config.revealPolicy.at_checkin": "入住时间起",
@@ -83,6 +84,10 @@
   "host.section.spot.help": "驾驶电动车的房客所看到的内容。密码按下方时间表显示。",
   "host.spotLabel.label": "专用车位",
   "host.spotLabel.placeholder": "例如：P2 车位／14 号，负一层",
+  "host.spotLabel.required": "请注明车位的位置。",
+  "host.stay.charger": "{charger} 充电桩",
+  "host.stay.noSpot": "— 尚未填写车位。",
+  "host.stay.title": "电动车停车位",
   "module.catalogDescription": "为驾驶电动车的房客提供专用车位、道闸密码和充电桩 PIN。",
   "module.description": "指南中的专用电动车车位、道闸密码和充电桩 PIN",
   "module.displayName": "电动车停车位",
