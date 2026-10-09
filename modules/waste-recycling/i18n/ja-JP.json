@@ -58,7 +58,7 @@
   "host.bin.title": "名称",
   "host.bin.title.required": "名前を入力してください。",
   "host.binRoom.code": "ゴミ置き場のドア暗証番号",
-  "host.binRoom.code.hint": "任意。お客さまに表示され、テンキーの前でワンタップでコピーできます。",
+  "host.binRoom.code.hint": "任意。暗号化され、アクセスコードと同じく到着前日の16時からお客さまに表示されます。",
   "host.binRoom.code.length": "3〜12文字で入力してください。",
   "host.binRoom.code.placeholder": "1234A",
   "host.binRoom.enabled": "ごみ置き場",

@@ -58,7 +58,7 @@
   "host.bin.title": "العنوان",
   "host.bin.title.required": "أدخل اسمًا.",
   "host.binRoom.code": "رمز باب غرفة النفايات",
-  "host.binRoom.code.hint": "اختياري. يظهر للضيف ويُنسخ بلمسة واحدة أمام لوحة الأرقام.",
+  "host.binRoom.code.hint": "اختياري. مُشفَّر، ويظهر للضيف ابتداءً من الساعة 16:00 في اليوم السابق للوصول، مثل رموز الدخول.",
   "host.binRoom.code.length": "بين 3 و12 حرفًا.",
   "host.binRoom.code.placeholder": "1234A",
   "host.binRoom.enabled": "غرفة النفايات",

@@ -58,7 +58,7 @@
   "host.bin.title": "名称",
   "host.bin.title.required": "请填写名称。",
   "host.binRoom.code": "垃圾房门禁密码",
-  "host.binRoom.code.hint": "可选。住客可见，在密码锁前一键复制。",
+  "host.binRoom.code.hint": "可选。加密保存，与门禁密码一样，在入住前一天16:00起向住客显示。",
   "host.binRoom.code.length": "3 到 12 个字符。",
   "host.binRoom.code.placeholder": "1234A",
   "host.binRoom.enabled": "垃圾房",

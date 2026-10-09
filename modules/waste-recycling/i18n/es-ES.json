@@ -58,7 +58,7 @@
   "host.bin.title": "Título",
   "host.bin.title.required": "Indique un nombre.",
   "host.binRoom.code": "Código de la puerta del cuarto",
-  "host.binRoom.code.hint": "Opcional. Visible para el viajero y copiable con un toque ante el teclado.",
+  "host.binRoom.code.hint": "Opcional. Cifrado y visible para el viajero desde las 16:00 del día antes de la llegada, como los códigos de acceso.",
   "host.binRoom.code.length": "Entre 3 y 12 caracteres.",
   "host.binRoom.code.placeholder": "1234A",
   "host.binRoom.enabled": "Cuarto de basuras",

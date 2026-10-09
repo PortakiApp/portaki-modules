@@ -1,7 +1,8 @@
 //! Guest explore / bottom-sheet detail surface.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::common::{Leading, LeadingVisual};
+use portaki_sdk::reveal::SECRET_MASK;
+use portaki_sdk::sdui::common::{Leading, LeadingVisual, SecretState};
 use portaki_sdk::sdui::primitives::{Card, Eyebrow, KeyValue, ListItem, Map, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
@@ -113,15 +114,16 @@ fn bin_room_card(data: &GuestData) -> Option<Component> {
         ));
     }
     if !data.bin_room_code.is_empty() {
-        rows.push(Component::KeyValue(
-            KeyValue::new()
-                .key("i18n:guest.binRoom.code")
-                .value(data.bin_room_code.clone())
-                .mono(true)
-                // Copiable et non masqué : on le lit devant un digicode, et le local est derrière
-                // une porte que le voyageur a déjà franchie.
-                .copy(true),
-        ));
+        let tile = KeyValue::new().key("i18n:guest.binRoom.code").mono(true);
+        // Masqué, la tuile dit quand elle s'ouvrira et ne se copie pas — des points dans le
+        // presse-papiers se prendraient pour le code. Révélé, copiable : on le lit devant un
+        // digicode.
+        rows.push(Component::KeyValue(if data.code_revealed {
+            tile.value(data.bin_room_code.clone()).copy(true)
+        } else {
+            tile.value(SECRET_MASK)
+                .secret(SecretState::hidden(data.code_reveal_at.clone()))
+        }));
     }
     if !data.bin_room_hours.is_empty() {
         rows.push(Component::KeyValue(

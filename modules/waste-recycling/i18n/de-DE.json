@@ -58,7 +58,7 @@
   "host.bin.title": "Titel",
   "host.bin.title.required": "Geben Sie einen Namen ein.",
   "host.binRoom.code": "Türcode des Müllraums",
-  "host.binRoom.code.hint": "Optional. Für den Gast sichtbar und am Tastenfeld mit einem Tipp kopierbar.",
+  "host.binRoom.code.hint": "Optional. Verschlüsselt und dem Gast ab 16 Uhr am Vortag der Anreise angezeigt, wie die Zugangscodes.",
   "host.binRoom.code.length": "Zwischen 3 und 12 Zeichen.",
   "host.binRoom.code.placeholder": "1234A",
   "host.binRoom.enabled": "Müllraum",

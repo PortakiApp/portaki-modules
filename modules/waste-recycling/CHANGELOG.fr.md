@@ -6,6 +6,7 @@ Les jours de collecte par bac.
 
 * Cochez les jours de collecte de chaque bac : le livret les affiche sous le bac et annonce la prochaine collecte.
 * Un bac sans jour de collecte déclenche un avertissement à la publication.
+* Le code du local poubelles est chiffré et suit la révélation des codes d'accès : visible dès la veille de l'arrivée à 16 h.
 
 ## 1.9.0
 

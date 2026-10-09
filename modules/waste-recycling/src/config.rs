@@ -97,10 +97,18 @@ pub struct ModuleConfig {
     pub bin_room_steps: I18nText,
     /// Le code de la porte du local, s'il y en a une (§2.7).
     ///
-    /// Pas masqué chez le voyageur, contrairement aux codes d'accès au logement : le local est
-    /// derrière une porte que le voyageur a déjà franchie, et la cérémonie de révélation coûterait
-    /// plus qu'elle ne protège. Copiable, parce qu'on le lit devant un digicode.
-    #[field(label = "host.binRoom.code")]
+    /// Un secret « comme Accès » (spec Tri §2.3) : chiffré au repos, masqué chez le voyageur
+    /// jusqu'à la veille de l'arrivée à 16 h (le défaut d'Accès — voir `guest::load`), copiable
+    /// ensuite parce qu'on le lit devant un digicode.
+    ///
+    /// Un code enregistré en clair avant ce marquage reste lisible : la plateforme ne déchiffre
+    /// que les valeurs préfixées `enc:v1:`, rend les autres telles quelles et les scelle à la
+    /// prochaine écriture.
+    #[field(
+        secret,
+        reveal(guest_pre_arrival, guest_stay),
+        label = "host.binRoom.code"
+    )]
     pub bin_room_code: String,
     /// Les heures d'ouverture du local : « 7 h – 21 h », « fermé le dimanche ».
     ///
@@ -778,6 +786,27 @@ mod tests {
             ]
         );
         assert!(ModuleConfig::default().problems().is_empty());
+    }
+
+    /// 3 à 12 caractères (§2.3), jugés côté hôte où la plateforme rend le code en clair ; vide
+    /// n'est pas une erreur.
+    #[test]
+    fn the_bin_room_code_is_three_to_twelve_characters() {
+        let error = |code: &str| {
+            serde_json::from_value::<ModuleConfig>(json!({
+                "bin_room_enabled": true,
+                "bin_room_where": "Cour",
+                "bin_room_code": code
+            }))
+            .unwrap()
+            .error_of("bin_room_code")
+            .is_some()
+        };
+        assert!(error("12"));
+        assert!(error("1234567890123"));
+        assert!(!error("123"));
+        assert!(!error("123456789012"));
+        assert!(!error(""));
     }
 
     /// Les jours d'un bac comptent pour la prochaine collecte ; un bac sans jour avertit, sauf si
