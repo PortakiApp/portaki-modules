@@ -81,6 +81,7 @@ pub(crate) fn reveal_line(
     }
     let decision = evaluate_reveal(
         config.reveal_policy,
+        config.reveal_hours,
         now,
         Some(checkin),
         Some(checkout),

@@ -4,6 +4,7 @@ use chrono::Timelike;
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::GeoPoint;
+use portaki_sdk::sdui::hours;
 
 use crate::config::{has_content, HostConfig, ModuleConfig, UnlockWindow};
 use crate::reveal::{evaluate_reveal, format_available_from, locked_message, RevealDecision};
@@ -37,6 +38,16 @@ pub struct GuestData {
     pub late_arrival_note: Option<String>,
     /// Le bouton « Déverrouiller » se montre (§2.4) : dans le séjour, ou comme les codes.
     pub unlock_open: bool,
+    /// La réception aujourd'hui (§2.6) : ouverte à cette heure-ci, et ses plages du jour.
+    /// `None` sans horaires en plages.
+    pub desk_today: Option<DeskToday>,
+}
+
+/// La réception aujourd'hui, à l'heure du logement.
+pub struct DeskToday {
+    pub open_now: bool,
+    /// « 07:00 – 12:00, 14:00 – 22:00 » ; vide un jour de fermeture.
+    pub ranges: String,
 }
 
 pub enum GuestLoad {
@@ -67,6 +78,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestLoad> {
     let now = time::now()?;
     let decision = evaluate_reveal(
         config.reveal_policy,
+        config.reveal_hours,
         now,
         checkin_at,
         checkout_at,
@@ -74,6 +86,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestLoad> {
     );
 
     let late_arrival_note = late_arrival_note(ctx, &texts, &property_timezone);
+    let desk_today = desk_today(&config.desk_hours, now, &property_timezone);
     let unlock_open = unlock_open(config.unlock_window, &decision, now, checkin_at);
 
     Ok(GuestLoad::Ready(Box::new(GuestData {
@@ -90,6 +103,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestLoad> {
         checkin_hour: checkin_hour(ctx, &property_timezone),
         late_arrival_note,
         unlock_open,
+        desk_today,
     })))
 }
 
@@ -177,6 +191,38 @@ fn late_arrival_note(
         .filter(|hour| *hour <= 23);
     let late = announced >= LATE_HOUR || after_checkin.is_some_and(|hour| announced >= hour);
     late.then(|| note.to_string())
+}
+
+/// « Ouvert maintenant » (§2.6) : l'heure du logement dans une plage du jour. Une plage qui
+/// passe minuit court jusqu'à la fin du jour, comme dans `hours::overlaps`.
+pub(crate) fn desk_today(
+    week: &str,
+    now: chrono::DateTime<chrono::Utc>,
+    property_timezone: &str,
+) -> Option<DeskToday> {
+    use chrono::Datelike;
+    let week = hours::parse_week(week);
+    if week.iter().all(Vec::is_empty) {
+        return None;
+    }
+    let local = portaki_sdk::host::time::PropertyTz::parse(property_timezone)?.to_local(now);
+    let today = &week[local.weekday().num_days_from_monday() as usize];
+    let at = local.format("%H:%M").to_string();
+    Some(DeskToday {
+        open_now: today
+            .iter()
+            .any(|(start, end)| *start <= at && (end < start || at < *end)),
+        ranges: format_ranges(today),
+    })
+}
+
+/// « 07:00 – 12:00, 14:00 – 22:00 ».
+pub(crate) fn format_ranges(ranges: &[hours::Range]) -> String {
+    ranges
+        .iter()
+        .map(|(start, end)| format!("{start} – {end}"))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 fn checkin_local_hour(ctx: &GuestContext, property_timezone: &str) -> Option<u32> {

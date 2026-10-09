@@ -121,25 +121,17 @@ fn a_reception_desk_hands_over_keys() {
     assert!(json.contains("i18n:guest.buildingStaff.reception"));
 }
 
-/// §1.5 asks for « Accueil · {hôte} ». `Context.host` exists in the SDK and the runtime does not
-/// fill it, so the cell names the role. This test is the record of that gap: it fails the day the
-/// host arrives, which is when the wording should change.
+/// « Vous accueillez » is no longer a method of its own: a stored one reads as an in-person
+/// handover (spec Accès §8), and the hour the host wrote stays on the cell.
 #[test]
 #[serial]
-fn a_host_welcome_names_the_role_until_the_runtime_sends_the_host() {
+fn a_host_welcome_reads_as_an_in_person_handover() {
     let json = render(revealed("host_greets"));
-    assert!(json.contains("i18n:guest.status.welcome"));
-    assert!(json.contains("i18n:guest.status.welcome.host"));
-}
-
-#[test]
-#[serial]
-fn a_host_welcome_prefers_the_eta_the_host_wrote() {
+    assert!(json.contains("i18n:guest.status.inPerson"));
     let json = render(HostConfig {
         host_greets_eta_hint: I18nText::new("vers 17 h", ""),
         ..revealed("host_greets")
     });
-    assert!(json.contains("i18n:guest.status.welcome"));
     assert!(json.contains("vers 17 h"));
 }
 

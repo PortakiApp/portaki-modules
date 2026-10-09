@@ -62,6 +62,7 @@ fn always_reveal_config() -> HostConfig {
             kind: Some("parking".into()),
             title: I18nText::new("Se garer", ""),
             detail: I18nText::new("Place résident", ""),
+            ..StepRow::default()
         }],
         ..HostConfig::default()
     }
@@ -129,7 +130,8 @@ fn upcoming_card_icon_follows_the_method() {
         ("smart_lock", "key"),
         ("in_person", "clock"),
         ("building_staff", "handshake"),
-        ("host_greets", "user"),
+        // « Vous accueillez » se lit « Remise en main propre » (§8).
+        ("host_greets", "clock"),
         ("other", "key"),
     ] {
         let config = HostConfig {
@@ -435,6 +437,13 @@ fn host_forms() -> Vec<(String, portaki_sdk::sdui::surface::Surface)> {
             config.parking_type = "street".into();
             // Une autre personne remet les clés : son nom et son numéro ne sont dessinés que là.
             config.handover_person = "other".into();
+            // Les anciens champs ne sont dessinés que tant qu'ils portent une valeur.
+            config.building_note = I18nText::new("Sonnette", "");
+            config.building_staff_hours = I18nText::new("7h-22h", "");
+            config.building_staff_desk_location = I18nText::new("Hall", "");
+            config.building_staff_contact = "Gardien".into();
+            config.in_person_time_hint = I18nText::new("Vers 16 h", "");
+            config.in_person_contact = "Paulette".into();
             let (mut ctx, host) = MockContext::host()
                 .with_capabilities(&[capability::core::STORAGE])
                 .with_config(&config)
@@ -444,6 +453,8 @@ fn host_forms() -> Vec<(String, portaki_sdk::sdui::surface::Surface)> {
                 "primary_method": method.as_wire(),
                 "building_access_enabled": true,
                 "parking_enabled": true,
+                // « Personnalisé » : les heures ne sont dessinées que là.
+                "reveal_policy": "custom",
             });
             let surface =
                 with_host(host, ctx.clone(), || render_host_main(ctx)).expect("host main");
@@ -489,7 +500,24 @@ fn the_host_form_sends_the_declared_keys() {
         );
         sent.extend(keys);
     }
-    let missing: Vec<_> = declared.difference(&sent).collect();
+    // Kept for what is stored, no longer asked: the address comes from the property (§2.10),
+    // the slot is one `handover_slot`, « Vous accueillez » is an in-person handover (§8), the
+    // parking switch is « Pas de parking », and the staff kind went with the spec.
+    let legacy = [
+        "address",
+        "arrival_lat",
+        "arrival_lng",
+        "building_staff_kind",
+        "handover_slot_from",
+        "handover_slot_until",
+        "host_greets_contact_note",
+        "host_greets_eta_hint",
+        "parking_enabled",
+    ];
+    let missing: Vec<_> = declared
+        .difference(&sent)
+        .filter(|key| !legacy.contains(&key.as_str()))
+        .collect();
     assert!(missing.is_empty(), "no form fills {missing:?}");
 }
 
@@ -566,6 +594,7 @@ fn a_save_in_english_keeps_the_french() {
             "keybox_location",
             "late_arrival_note",
             "method_instructions",
+            "method_other",
             "parking_info",
             "parking_price",
             "steps.detail",
@@ -618,7 +647,10 @@ fn a_save_in_english_keeps_the_french() {
                 assert_eq!(saved[key], stored[key], "{key}");
             }
             assert_eq!(saved["building_access_intercom"]["fr"], "Apt 3");
-            assert_eq!(saved["steps"][0], stored["steps"][0]);
+            // The row as stored, and the photo slot the form now sends, empty.
+            let mut first = stored["steps"][0].clone();
+            first["photo"] = json!("");
+            assert_eq!(saved["steps"][0], first);
             assert_eq!(saved["steps"][2]["id"], "b");
             assert_eq!(saved["steps"][2]["title"]["fr"], "Monter");
             assert_eq!(saved["steps"][2]["detail"]["fr"], "2e étage");
@@ -648,7 +680,7 @@ fn a_removed_step_is_cleared() {
             let saved = config_save::save(EMISSIONS, &surface, &stored, "fr");
             assert_eq!(
                 saved["steps"][0],
-                json!({ "id": "", "kind": "", "title": "", "detail": "" })
+                json!({ "id": "", "kind": "", "title": "", "detail": "", "photo": "" })
             );
             assert_eq!(saved["steps"][1]["id"], "b");
             assert_eq!(saved["steps"][1]["title"], stored["steps"][1]["title"]);
@@ -714,7 +746,8 @@ fn coordinates_are_numbers_and_stay_on_the_map() {
         .run(|ctx| {
             let json = serde_json::to_value(render_host_main(ctx).expect("host main")).unwrap();
             let text = json.to_string();
-            for point in ["43.7", "7.26", "43.5", "7.1"] {
+            // L'adresse se lit dans Logement › Informations (§2.10) : plus de carte pour elle.
+            for point in ["43.7", "7.26"] {
                 assert!(text.contains(point), "{point} is not on the map");
             }
         });
@@ -1452,4 +1485,142 @@ fn a_missing_code_is_a_task_for_each_arrival_to_come() {
     }
     .to_model("fr");
     assert!(missing_code_tasks(&set, &args, now, "Europe/Paris").is_empty());
+}
+
+/// « Autre », la photo d'une étape, les horaires de la réception : chacun a son effet dans le
+/// livret, et un champ vide n'en a aucun (§2.1, §2.6, §2.9).
+#[test]
+#[serial]
+fn the_new_settings_reach_the_booklet() {
+    let other = HostConfig {
+        primary_method: "other".into(),
+        method_other: I18nText::new("Les clés sont chez la voisine", ""),
+        steps: vec![
+            StepRow {
+                id: "a".into(),
+                title: I18nText::new("Passez le portail vert", ""),
+                photo: "https://img.example.com/portail.jpg".into(),
+                ..StepRow::default()
+            },
+            StepRow {
+                id: "b".into(),
+                title: I18nText::new("Montez", ""),
+                ..StepRow::default()
+            },
+        ],
+        ..HostConfig::default()
+    };
+    let detail = detail_json(&other, None);
+    assert!(detail.contains("Les clés sont chez la voisine"));
+    assert!(detail.contains("\"url\":\"https://img.example.com/portail.jpg\""));
+    assert!(detail.contains("\"aspectRatio\":\"4/3\""));
+    // Une seule photo : l'étape sans photo n'en dessine pas.
+    assert_eq!(detail.matches("\"type\":\"Image\"").count(), 1);
+
+    let desk = HostConfig {
+        primary_method: "building_staff".into(),
+        desk_hours: "mon=07:00-12:00,14:00-22:00;sun=09:00-12:00".into(),
+        ..HostConfig::default()
+    };
+    let detail = detail_json(&desk, None);
+    assert!(detail.contains("i18n:day.mon"));
+    assert!(detail.contains("07:00 – 12:00, 14:00 – 22:00"));
+    assert!(detail.contains("i18n:guest.desk.closed"));
+}
+
+#[test]
+fn the_rotation_reminder_follows_each_departure() {
+    use access_guide::rotate_code_tasks;
+    use portaki_sdk::contracts::timeline::{TimelineStay, TimelineTasksArgs};
+    let at = |raw: &str| {
+        chrono::DateTime::parse_from_rfc3339(raw)
+            .unwrap()
+            .with_timezone(&Utc)
+    };
+    let stay = |check_out: &str| TimelineStay {
+        id: Uuid::new_v4(),
+        check_in: at(check_out) - chrono::Duration::days(3),
+        check_out: at(check_out),
+        guest_name: "Marie".into(),
+        status: "UPCOMING".into(),
+    };
+    let args = TimelineTasksArgs {
+        property_id: Uuid::nil(),
+        from: at("2026-08-17T00:00:00Z"),
+        to: at("2026-08-31T00:00:00Z"),
+        stays: vec![stay("2026-08-29T08:00:00Z"), stay("2026-09-05T08:00:00Z")],
+    };
+    let config = |rotate: bool| {
+        HostConfig {
+            primary_method: "keybox".into(),
+            keybox_code: "4821".into(),
+            rotate_reminder: rotate,
+            ..HostConfig::default()
+        }
+        .to_model("fr")
+    };
+    assert!(rotate_code_tasks(&config(false), &args, "Europe/Paris").is_empty());
+    let tasks = rotate_code_tasks(&config(true), &args, "Europe/Paris");
+    assert_eq!(tasks.len(), 1, "only the departure inside the window");
+    assert_eq!(
+        tasks[0].title.get("fr"),
+        "Changer le code de la boîte à clés"
+    );
+    assert_eq!(tasks[0].context.get("fr"), "Après le départ du 29/08");
+    assert_eq!(tasks[0].at, at("2026-08-29T08:00:00Z"));
+    assert_eq!(tasks[0].stay_id, Some(args.stays[0].id));
+}
+
+/// One `Section` per block of the spec, in its order, never a `Card` inside; the blocks of a
+/// method only with that method (§2.2 of the common rules).
+#[test]
+#[serial]
+fn the_settings_are_one_section_per_block() {
+    let render = |input: serde_json::Value| {
+        let (mut ctx, host) = MockContext::host()
+            .with_capabilities(&[capability::core::STORAGE])
+            .build();
+        ctx.input = input;
+        with_host(host, ctx.clone(), || {
+            serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json")
+        })
+    };
+    let keybox = render(json!({}));
+    assert!(!keybox.contains("\"type\":\"Card\""));
+    let order = [
+        "host.section.method",
+        "host.section.codes",
+        "host.section.reveal",
+        "host.section.building",
+        "host.section.parking",
+        "host.section.path",
+        "host.section.know",
+    ];
+    let positions: Vec<usize> = order
+        .iter()
+        .map(|key| keybox.find(key).unwrap_or_else(|| panic!("{key}")))
+        .collect();
+    assert!(positions.windows(2).all(|w| w[0] < w[1]), "{positions:?}");
+    // Sans méthode enregistrée, la boîte à clés est choisie : c'est le défaut (§2.1).
+    assert!(keybox.contains("\"value\":\"keybox\""));
+    assert!(keybox.contains("rotate_reminder"));
+    assert!(!keybox.contains("host.section.handover"));
+
+    let handover = render(json!({ "primary_method": "in_person" }));
+    assert!(handover.contains("\"type\":\"TimeRange\""));
+    assert!(handover.contains("\"type\":\"PhoneInput\""));
+    assert!(!handover.contains("host.section.codes"));
+
+    let desk = render(json!({ "primary_method": "building_staff" }));
+    assert!(desk.contains("\"type\":\"WeeklyHours\""));
+    assert!(desk.contains("mon=07:00-22:00"));
+
+    let custom = render(json!({ "reveal_policy": "custom" }));
+    assert!(custom.contains("\"type\":\"NumberInput\""));
+    assert!(!keybox.contains("\"type\":\"NumberInput\""));
+
+    // Le stationnement en cartes ; ses champs seulement avec un parking.
+    assert!(keybox.contains("\"type\":\"SelectableCard\""));
+    assert!(!keybox.contains("parking_spot"));
+    assert!(render(json!({ "parking_type": "street" })).contains("parking_price"));
 }

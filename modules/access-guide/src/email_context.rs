@@ -77,6 +77,7 @@ pub fn build_email_context(ctx: &Context, args: &EmailContextArgs) -> Result<Ema
     let now = time::now()?;
     let decision = evaluate_reveal(
         config.reveal_policy,
+        config.reveal_hours,
         now,
         checkin_at,
         checkout_at,

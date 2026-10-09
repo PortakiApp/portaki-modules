@@ -35,9 +35,11 @@ pub struct RevealDecision {
     pub ended: bool,
 }
 
-/// Decide whether secrets may be shown in guest SDUI.
+/// Decide whether secrets may be shown in guest SDUI. `custom_hours` is read for
+/// [`RevealPolicy::Custom`] only.
 pub fn evaluate_reveal(
     policy: RevealPolicy,
+    custom_hours: u32,
     now: DateTime<Utc>,
     checkin_at: Option<DateTime<Utc>>,
     checkout_at: Option<DateTime<Utc>>,
@@ -67,7 +69,7 @@ pub fn evaluate_reveal(
         };
     };
 
-    let Some(available_from) = reveal_at(policy, checkin, property_timezone) else {
+    let Some(available_from) = reveal_at(policy, custom_hours, checkin, property_timezone) else {
         return RevealDecision {
             revealed: false,
             available_from: None,
@@ -82,9 +84,11 @@ pub fn evaluate_reveal(
     }
 }
 
-/// Instant from which secrets are visible for `policy`.
+/// Instant from which secrets are visible for `policy`; `custom_hours` before check-in for
+/// [`RevealPolicy::Custom`].
 pub fn reveal_at(
     policy: RevealPolicy,
+    custom_hours: u32,
     checkin_at: DateTime<Utc>,
     property_timezone: &str,
 ) -> Option<DateTime<Utc>> {
@@ -92,6 +96,7 @@ pub fn reveal_at(
         RevealPolicy::Always => None,
         RevealPolicy::HoursBefore24 => Some(checkin_at - Duration::hours(24)),
         RevealPolicy::AtCheckin => Some(checkin_at),
+        RevealPolicy::Custom => Some(checkin_at - Duration::hours(i64::from(custom_hours))),
         RevealPolicy::DayBefore16h => day_before_16h(checkin_at, property_timezone),
     }
 }
@@ -251,7 +256,14 @@ mod tests {
 
     #[test]
     fn always_reveals_without_checkin() {
-        let d = evaluate_reveal(RevealPolicy::Always, Utc::now(), None, None, "Europe/Paris");
+        let d = evaluate_reveal(
+            RevealPolicy::Always,
+            24,
+            Utc::now(),
+            None,
+            None,
+            "Europe/Paris",
+        );
         assert!(d.revealed);
         assert!(d.available_from.is_none());
     }
@@ -263,7 +275,7 @@ mod tests {
             RevealPolicy::DayBefore16h,
             RevealPolicy::AtCheckin,
         ] {
-            let d = evaluate_reveal(policy, Utc::now(), None, None, "Europe/Paris");
+            let d = evaluate_reveal(policy, 24, Utc::now(), None, None, "Europe/Paris");
             assert!(!d.revealed, "{policy:?}");
             assert!(d.available_from.is_none());
         }
@@ -272,11 +284,12 @@ mod tests {
     #[test]
     fn hours_before_24() {
         let checkin = utc("2026-07-20T14:00:00Z");
-        let at = reveal_at(RevealPolicy::HoursBefore24, checkin, "Europe/Paris").unwrap();
+        let at = reveal_at(RevealPolicy::HoursBefore24, 24, checkin, "Europe/Paris").unwrap();
         assert_eq!(at, utc("2026-07-19T14:00:00Z"));
         assert!(
             evaluate_reveal(
                 RevealPolicy::HoursBefore24,
+                24,
                 utc("2026-07-19T14:00:00Z"),
                 Some(checkin),
                 None,
@@ -287,6 +300,7 @@ mod tests {
         assert!(
             !evaluate_reveal(
                 RevealPolicy::HoursBefore24,
+                24,
                 utc("2026-07-19T13:59:59Z"),
                 Some(checkin),
                 None,
@@ -300,7 +314,7 @@ mod tests {
     fn day_before_16h_paris_summer() {
         // Check-in Monday 20 Jul 2026 16:00 CEST (= 14:00 UTC) → reveal Sun 19 Jul 16:00 CEST (= 14:00 UTC)
         let checkin = utc("2026-07-20T14:00:00Z");
-        let at = reveal_at(RevealPolicy::DayBefore16h, checkin, "Europe/Paris").unwrap();
+        let at = reveal_at(RevealPolicy::DayBefore16h, 24, checkin, "Europe/Paris").unwrap();
         assert_eq!(at, utc("2026-07-19T14:00:00Z"));
     }
 
@@ -308,7 +322,7 @@ mod tests {
     fn day_before_16h_paris_winter() {
         // Check-in Mon 19 Jan 2026 15:00 CET (= 14:00 UTC) → reveal Sun 18 Jan 16:00 CET (= 15:00 UTC)
         let checkin = utc("2026-01-19T14:00:00Z");
-        let at = reveal_at(RevealPolicy::DayBefore16h, checkin, "Europe/Paris").unwrap();
+        let at = reveal_at(RevealPolicy::DayBefore16h, 24, checkin, "Europe/Paris").unwrap();
         assert_eq!(at, utc("2026-01-18T15:00:00Z"));
     }
 
@@ -316,9 +330,30 @@ mod tests {
     fn at_checkin() {
         let checkin = utc("2026-07-20T14:00:00Z");
         assert_eq!(
-            reveal_at(RevealPolicy::AtCheckin, checkin, "Europe/Paris"),
+            reveal_at(RevealPolicy::AtCheckin, 24, checkin, "Europe/Paris"),
             Some(checkin)
         );
+    }
+
+    #[test]
+    fn custom_hours_before_checkin() {
+        let checkin = utc("2026-07-20T14:00:00Z");
+        assert_eq!(
+            reveal_at(RevealPolicy::Custom, 6, checkin, "Europe/Paris"),
+            Some(utc("2026-07-20T08:00:00Z"))
+        );
+        let at = |now| {
+            evaluate_reveal(
+                RevealPolicy::Custom,
+                168,
+                utc(now),
+                Some(checkin),
+                None,
+                "UTC",
+            )
+        };
+        assert!(!at("2026-07-13T13:59:59Z").revealed);
+        assert!(at("2026-07-13T14:00:00Z").revealed);
     }
 
     #[test]
@@ -331,7 +366,8 @@ mod tests {
             RevealPolicy::DayBefore16h,
             RevealPolicy::AtCheckin,
         ] {
-            let at = |now| evaluate_reveal(policy, utc(now), Some(checkin), Some(checkout), "UTC");
+            let at =
+                |now| evaluate_reveal(policy, 24, utc(now), Some(checkin), Some(checkout), "UTC");
             assert!(at("2026-07-25T10:00:00Z").revealed, "{policy:?}");
             let after = at("2026-07-25T10:00:01Z");
             assert!(!after.revealed && after.ended, "{policy:?}");

@@ -7,6 +7,7 @@
 
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui::hours;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
@@ -42,14 +43,14 @@ impl PrimaryMethod {
         }
     }
 
-    /// Every `value` emitted by the host primary-method ChoiceList.
+    /// Every `value` emitted by the host primary-method ChoiceList, in the spec's order (§2.1).
+    /// `host_greets` is no longer offered: a stored one reads as `in_person` (§8).
     pub const CHOICE_LIST_WIRE_VALUES: &[&str] = &[
         "keybox",
         "door_code",
         "smart_lock",
         "in_person",
         "building_staff",
-        "host_greets",
         "other",
     ];
 
@@ -105,6 +106,8 @@ pub enum RevealPolicy {
     #[serde(rename = "day_before_16h", alias = "day_before16h")]
     DayBefore16h,
     AtCheckin,
+    /// « Personnalisé » : `reveal_hours` heures avant l'arrivée (§2.3).
+    Custom,
 }
 
 impl RevealPolicy {
@@ -115,18 +118,25 @@ impl RevealPolicy {
             Self::HoursBefore24 => "hours_before_24",
             Self::DayBefore16h => "day_before_16h",
             Self::AtCheckin => "at_checkin",
+            Self::Custom => "custom",
         }
     }
 
-    /// Every `value` emitted by the host reveal-policy ChoiceList.
-    pub const CHOICE_LIST_WIRE_VALUES: &[&str] =
-        &["always", "hours_before_24", "day_before_16h", "at_checkin"];
+    /// Every `value` emitted by the host reveal-policy ChoiceList, in the spec's order (§2.3).
+    pub const CHOICE_LIST_WIRE_VALUES: &[&str] = &[
+        "always",
+        "day_before_16h",
+        "hours_before_24",
+        "at_checkin",
+        "custom",
+    ];
 
     pub const ALL: &[RevealPolicy] = &[
         Self::Always,
-        Self::HoursBefore24,
         Self::DayBefore16h,
+        Self::HoursBefore24,
         Self::AtCheckin,
+        Self::Custom,
     ];
 }
 
@@ -322,6 +332,29 @@ pub struct ModuleConfig {
     /// Que faire en arrivant hors des horaires de la réception (§2.6).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub desk_after_hours: Option<String>,
+    /// Les horaires de la réception, `mon=07:00-22:00;…` (§2.6) ; vide, l'ancien texte libre.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub desk_hours: String,
+    /// « Autre » : comment le voyageur récupère les clés (§2.1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub method_other: Option<String>,
+    /// La serrure connectée génère les codes (« Généré par la serrure », §2.2) : le code saisi
+    /// n'est alors qu'un code de secours.
+    #[serde(default)]
+    pub code_by_lock: bool,
+    /// « Personnalisé » : combien d'heures avant l'arrivée les codes s'affichent (§2.3).
+    #[serde(default = "default_reveal_hours")]
+    pub reveal_hours: u32,
+    /// Une tâche « Changer le code de la boîte à clés » après chaque départ (§2.2).
+    #[serde(default)]
+    pub rotate_reminder: bool,
+}
+
+/// « Heures avant l'arrivée » : 24 par défaut, de 1 à 168 (§2.3).
+pub const DEFAULT_REVEAL_HOURS: u32 = 24;
+
+fn default_reveal_hours() -> u32 {
+    DEFAULT_REVEAL_HOURS
 }
 
 /// Quand le bouton « Déverrouiller » se montre (§2.4).
@@ -350,6 +383,11 @@ impl Default for ModuleConfig {
             handover_by: None,
             desk_phone: None,
             desk_after_hours: None,
+            desk_hours: String::new(),
+            method_other: None,
+            code_by_lock: false,
+            reveal_hours: DEFAULT_REVEAL_HOURS,
+            rotate_reminder: false,
         }
     }
 }
@@ -370,6 +408,7 @@ impl ModuleConfig {
                 .unwrap_or(true)
             && self.arrival.is_empty()
             && opt_empty(&self.smart_lock_provider_module_id)
+            && opt_empty(&self.method_other)
             && self.primary_method == PrimaryMethod::Other
     }
 
@@ -439,10 +478,11 @@ impl ModuleConfig {
         match &self.method {
             MethodFields::Keybox { .. } => self.keybox_code().is_none(),
             MethodFields::DoorCode { code, .. } => code.trim().is_empty(),
-            MethodFields::SmartLock { .. } => {
-                self.smart_lock_manual_code().is_none()
-                    && opt_empty(&self.smart_lock_provider_module_id)
+            // Généré par la serrure : il faut la serrure ; le code saisi n'est qu'un secours.
+            MethodFields::SmartLock { .. } if self.code_by_lock => {
+                opt_empty(&self.smart_lock_provider_module_id)
             }
+            MethodFields::SmartLock { .. } => self.smart_lock_manual_code().is_none(),
             _ => false,
         }
     }
@@ -477,6 +517,9 @@ pub struct StepRow {
     pub kind: Option<String>,
     pub title: I18nText,
     pub detail: I18nText,
+    /// Une photo sous l'étape (§2.9) : une URL `https://` ou une référence `portaki-file:`.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub photo: String,
 }
 
 impl StepRow {
@@ -501,12 +544,25 @@ pub struct HostConfig {
             "smart_lock",
             "in_person",
             "building_staff",
-            "host_greets",
             "other"
         ],
         label = "host.method"
     )]
     pub primary_method: String,
+    /// « Autre » : comment le voyageur récupère les clés, ≤ 80 (§2.1).
+    #[field(label = "host.methodOther")]
+    pub method_other: I18nText,
+    /// `fixed` : le même code pour tous les séjours ; `lock` : généré par la serrure (§2.2).
+    /// Vide : `lock` pour une serrure liée à un module, `fixed` sinon.
+    #[field(
+        kind = "select",
+        options = ["fixed", "lock"],
+        label = "host.codeScope"
+    )]
+    pub code_scope: String,
+    /// Une tâche « Changer le code de la boîte à clés » après chaque départ (§2.2).
+    #[field(label = "host.rotate")]
+    pub rotate_reminder: bool,
     #[field(label = "host.keybox.location")]
     pub keybox_location: I18nText,
     #[field(
@@ -536,11 +592,11 @@ pub struct HostConfig {
         label = "host.smartLock.manualCode"
     )]
     pub smart_lock_manual_code: String,
-    #[field(label = "host.inPerson.meetingPlace")]
+    #[field(local, label = "host.inPerson.meetingPlace")]
     pub in_person_meeting_place: I18nText,
-    #[field(label = "host.inPerson.lat")]
+    #[field(local, label = "host.inPerson.lat")]
     pub in_person_meeting_lat: Option<f64>,
-    #[field(label = "host.inPerson.lng")]
+    #[field(local, label = "host.inPerson.lng")]
     pub in_person_meeting_lng: Option<f64>,
     #[field(label = "host.inPerson.timeHint")]
     pub in_person_time_hint: I18nText,
@@ -601,26 +657,29 @@ pub struct HostConfig {
     )]
     pub parking_code: String,
     /// L'entrée du parking (§2.8) : la recherche d'adresse du sélecteur, puis l'épingle.
-    #[field(label = "host.parking.position")]
+    #[field(local, label = "host.parking.position")]
     pub parking_address: String,
-    #[field(label = "host.parking.position")]
+    #[field(local, label = "host.parking.position")]
     pub parking_lat: Option<f64>,
-    #[field(label = "host.parking.position")]
+    #[field(local, label = "host.parking.position")]
     pub parking_lng: Option<f64>,
-    #[field(label = "host.address.label")]
+    #[field(local, label = "host.address.label")]
     pub address: String,
-    #[field(label = "host.inPerson.lat")]
+    #[field(local, label = "host.inPerson.lat")]
     pub arrival_lat: Option<f64>,
-    #[field(label = "host.inPerson.lng")]
+    #[field(local, label = "host.inPerson.lng")]
     pub arrival_lng: Option<f64>,
     #[field(kind = "url", label = "host.video.label")]
     pub arrival_video_url: String,
     #[field(
         kind = "select",
-        options = ["always", "hours_before_24", "day_before_16h", "at_checkin"],
+        options = ["always", "day_before_16h", "hours_before_24", "at_checkin", "custom"],
         label = "config.revealPolicy"
     )]
     pub reveal_policy: String,
+    /// « Personnalisé » : 1 à 168 heures avant l'arrivée, 24 par défaut (§2.3).
+    #[field(label = "host.reveal.hours")]
+    pub reveal_hours: Option<u32>,
     #[field(label = "host.steps.label")]
     pub steps: Vec<StepRow>,
     #[field(label = "config.methodInstructions")]
@@ -645,10 +704,13 @@ pub struct HostConfig {
         label = "host.smartLock.unlockWindow"
     )]
     pub unlock_window: String,
-    /// Le créneau de remise des clés, « 16:00 » à « 19:00 » (§2.5).
-    #[field(label = "host.handover.from")]
+    /// Le créneau de remise des clés, `16:00-19:00` (§2.5).
+    #[field(local, label = "host.handover.slot")]
+    pub handover_slot: String,
+    /// Le créneau d'avant `handover_slot`, en deux heures : lu tant que `handover_slot` est vide.
+    #[field(local, label = "host.handover.from")]
     pub handover_slot_from: String,
-    #[field(label = "host.handover.until")]
+    #[field(local, label = "host.handover.until")]
     pub handover_slot_until: String,
     #[field(
         kind = "select",
@@ -664,6 +726,10 @@ pub struct HostConfig {
     pub desk_phone: String,
     #[field(label = "host.desk.afterHours")]
     pub desk_after_hours: I18nText,
+    /// Les horaires de la réception, `mon=07:00-22:00;…` (§2.6). Vide : l'ancien texte libre
+    /// `building_staff_hours`, montré tel quel.
+    #[field(local, label = "host.desk.hours")]
+    pub desk_hours: String,
 }
 
 /// Combien d'étapes le chemin jusqu'à la porte accepte (spec Accès §2.9).
@@ -687,15 +753,29 @@ impl HostConfig {
                 problems.push((field, error));
             }
         };
-        // « Autre » demande sa précision ; les consignes, quelle que soit la méthode, ≤ 1 200.
+        // « Autre » demande sa précision (§2.1). Avant elle, c'étaient les consignes : une config
+        // qui les a remplies n'est pas bloquée.
+        let other = self.method() == Some(PrimaryMethod::Other);
         push(
-            "method_instructions".into(),
-            if self.method() == Some(PrimaryMethod::Other) && self.method_instructions.is_blank() {
+            "method_other".into(),
+            if other && self.method_other.is_blank() && self.method_instructions.is_blank() {
                 Some(text("host.other.required"))
             } else {
-                too_long(&self.method_instructions, 1200)
+                too_long(&self.method_other, 80)
             },
         );
+        push(
+            "method_instructions".into(),
+            too_long(&self.method_instructions, 1200),
+        );
+        if self.reveal() == RevealPolicy::Custom {
+            push(
+                "reveal_hours".into(),
+                self.reveal_hours
+                    .is_some_and(|hours| !(1..=168).contains(&hours))
+                    .then(|| text("host.reveal.hours.invalid")),
+            );
+        }
         push(
             "building_access_intercom".into(),
             too_long(&self.building_access_intercom, 40),
@@ -725,7 +805,7 @@ impl HostConfig {
         // méthode choisie — les autres gardent leur dernière valeur sans la montrer.
         if self.method() == Some(PrimaryMethod::InPerson) {
             push(
-                "handover_slot_from".into(),
+                "handover_slot".into(),
                 (self.handover_slot().is_err()).then(|| text("host.handover.slot.invalid")),
             );
             if self.handover_by_other() {
@@ -744,6 +824,7 @@ impl HostConfig {
             }
         }
         if self.method() == Some(PrimaryMethod::BuildingStaff) {
+            push("desk_hours".into(), desk_hours_overlap(&self.desk_hours));
             push(
                 "desk_phone".into(),
                 check::phone(&dialable(&self.desk_phone)),
@@ -778,13 +859,34 @@ impl HostConfig {
     /// Ce qui mérite un coup d'œil sans bloquer la publication : un « Contact » qui ressemble à
     /// un numéro mal saisi. Le champ est libre (un nom, un e-mail y passent sans message).
     pub fn warnings(&self) -> Vec<(String, I18nText)> {
-        [
+        let mut warnings: Vec<(String, I18nText)> = [
             ("in_person_contact", &self.in_person_contact),
             ("building_staff_contact", &self.building_staff_contact),
         ]
         .into_iter()
         .filter_map(|(field, value)| phone_error(value).map(|error| (field.to_string(), error)))
-        .collect()
+        .collect();
+        // Les anciens horaires en texte libre restent affichés au voyageur ; la réception n'a pas
+        // d'« Ouvert maintenant » tant qu'ils ne sont pas ressaisis en plages.
+        if self.method() == Some(PrimaryMethod::BuildingStaff)
+            && self.desk_hours.trim().is_empty()
+            && !self.building_staff_hours.is_blank()
+        {
+            warnings.push((
+                "desk_hours".into(),
+                crate::i18n::text("host.desk.hours.legacy"),
+            ));
+        }
+        // Le tarif, dans la rue ou en parking public (§2.8). Un avertissement : les parkings
+        // saisis avant ce champ ne bloquent pas la publication.
+        if matches!(self.parking_kind(), Some("street" | "public")) && self.parking_price.is_blank()
+        {
+            warnings.push((
+                "parking_price".into(),
+                crate::i18n::text("host.parking.price.missing"),
+            ));
+        }
+        warnings
     }
 
     /// Le message à afficher sous `field`, s'il y en a un.
@@ -795,11 +897,55 @@ impl HostConfig {
             .map(|(_, error)| error)
     }
 
+    /// Un parking (§2.8) : « Pas de parking » l'éteint, un type l'allume ; sans type, l'ancien
+    /// interrupteur décide.
+    pub fn parking_on(&self) -> bool {
+        match self.parking_type.trim() {
+            "none" => false,
+            kind if PARKING_KINDS.contains(&kind) => true,
+            _ => self.parking_enabled,
+        }
+    }
+
+    /// Le type de stationnement, s'il y a un parking et qu'il est connu.
+    pub fn parking_kind(&self) -> Option<&str> {
+        let kind = self.parking_type.trim();
+        (self.parking_on() && PARKING_KINDS.contains(&kind)).then_some(kind)
+    }
+
     /// L'épingle du parking, s'il y a un parking et qu'elle est posée.
     pub fn parking_point(&self) -> Option<(f64, f64)> {
-        self.parking_enabled
+        self.parking_on()
             .then(|| coord_pair(self.parking_lat, self.parking_lng))
             .flatten()
+    }
+
+    /// Les codes générés par la serrure (§2.2) — seulement avec une serrure connectée. Sans
+    /// choix enregistré : oui si une serrure est liée, comme avant ce réglage.
+    pub fn code_by_lock(&self) -> bool {
+        self.method() == Some(PrimaryMethod::SmartLock)
+            && match self.code_scope.trim() {
+                "lock" => true,
+                "fixed" => false,
+                _ => !self.smart_lock_provider_module_id.trim().is_empty(),
+            }
+    }
+
+    /// Le créneau tel que le formulaire l'envoie, `16:00-19:00` ; à défaut l'ancienne paire.
+    pub fn handover_slot_raw(&self) -> String {
+        let slot = self.handover_slot.trim();
+        if !slot.is_empty() {
+            return slot.to_string();
+        }
+        let (from, until) = (
+            self.handover_slot_from.trim(),
+            self.handover_slot_until.trim(),
+        );
+        if from.is_empty() && until.is_empty() {
+            String::new()
+        } else {
+            format!("{from}-{until}")
+        }
     }
 
     /// L'épingle à plus de 2 km du logement (§2.8) : un avertissement, jamais un blocage. Sans
@@ -820,32 +966,29 @@ impl HostConfig {
     /// tient pas dans la journée d'arrivée : il commence après 6:00, finit avant 23:59, et
     /// commence avant de finir.
     pub(crate) fn handover_slot(&self) -> std::result::Result<Option<String>, ()> {
-        let (from, until) = (
-            self.handover_slot_from.trim(),
-            self.handover_slot_until.trim(),
-        );
-        if from.is_empty() && until.is_empty() {
+        let raw = self.handover_slot_raw();
+        if raw.is_empty() {
             return Ok(None);
         }
-        let parse = |at: &str| chrono::NaiveTime::parse_from_str(at, "%H:%M").map_err(|_| ());
-        let (start, end) = (parse(from)?, parse(until)?);
-        let six = chrono::NaiveTime::from_hms_opt(6, 0, 0).ok_or(())?;
-        if start < six || start >= end {
+        // `HH:MM` se compare comme du texte. Le créneau tient dans la journée : il ne passe pas
+        // minuit, contrairement à une plage ordinaire.
+        let (start, end) = hours::parse_range(&raw).ok_or(())?;
+        if start.as_str() < "06:00" || start >= end {
             return Err(());
         }
-        Ok(Some(format!(
-            "{} – {}",
-            start.format("%H:%M"),
-            end.format("%H:%M")
-        )))
+        Ok(Some(format!("{start} – {end}")))
     }
 
-    /// The chosen access method, if the host picked one.
+    /// The chosen access method, if the host picked one. `host_greets` (« Vous accueillez »)
+    /// is now « Remise des clés en main propre » (§8).
     pub fn method(&self) -> Option<PrimaryMethod> {
-        PrimaryMethod::ALL
-            .iter()
-            .copied()
-            .find(|method| method.as_wire() == self.primary_method.trim())
+        match self.primary_method.trim() {
+            "host_greets" => Some(PrimaryMethod::InPerson),
+            wire => PrimaryMethod::ALL
+                .iter()
+                .copied()
+                .find(|method| method.as_wire() == wire),
+        }
     }
 
     /// The reveal policy; the pre-rename spellings (`hours_before24`) still parse.
@@ -880,7 +1023,9 @@ impl HostConfig {
                     meeting_place: text(&self.in_person_meeting_place).unwrap_or_default(),
                     lat: point.map(|(lat, _)| lat),
                     lng: point.map(|(_, lng)| lng),
-                    time_hint: text(&self.in_person_time_hint),
+                    // « Vous accueillez » disait son heure dans `host_greets_eta_hint`.
+                    time_hint: text(&self.in_person_time_hint)
+                        .or_else(|| text(&self.host_greets_eta_hint)),
                     contact: nonempty(&self.in_person_contact),
                 }
             }
@@ -913,14 +1058,13 @@ impl HostConfig {
                     _ => None,
                 },
             }),
-            parking: self.parking_enabled.then(|| ParkingLayer {
+            parking: self.parking_on().then(|| ParkingLayer {
                 map_url: self.parking_map_url.trim().to_string(),
                 code: nonempty(&self.parking_code),
-                kind: nonempty(self.parking_type.trim())
-                    .filter(|k| PARKING_KINDS.contains(&k.as_str())),
+                kind: self.parking_kind().map(str::to_string),
                 spot: nonempty(self.parking_spot.trim()),
                 // Le tarif ne se demande que dans la rue ou en parking public.
-                price: matches!(self.parking_type.trim(), "street" | "public")
+                price: matches!(self.parking_kind(), Some("street" | "public"))
                     .then(|| text(&self.parking_price))
                     .flatten(),
             }),
@@ -957,6 +1101,20 @@ impl HostConfig {
             desk_after_hours: (primary_method == PrimaryMethod::BuildingStaff)
                 .then(|| text(&self.desk_after_hours))
                 .flatten(),
+            desk_hours: if primary_method == PrimaryMethod::BuildingStaff {
+                hours::format_week(&hours::parse_week(&self.desk_hours))
+            } else {
+                String::new()
+            },
+            method_other: (primary_method == PrimaryMethod::Other)
+                .then(|| text(&self.method_other))
+                .flatten(),
+            code_by_lock: self.code_by_lock(),
+            reveal_hours: self
+                .reveal_hours
+                .filter(|hours| (1..=168).contains(hours))
+                .unwrap_or(DEFAULT_REVEAL_HOURS),
+            rotate_reminder: self.rotate_reminder && primary_method == PrimaryMethod::Keybox,
         }
     }
 
@@ -964,22 +1122,20 @@ impl HostConfig {
     /// layers show.
     pub fn texts(&self, locale: &str) -> ModuleTexts {
         let text = |text: &I18nText| text.get(locale).trim().to_string();
-        let has_instructions = matches!(
-            self.method().unwrap_or_default(),
-            PrimaryMethod::Keybox
-                | PrimaryMethod::DoorCode
-                | PrimaryMethod::SmartLock
-                | PrimaryMethod::Other
-        );
+        // Les instructions détaillées valent pour toutes les méthodes (« À savoir », §2.10). Un
+        // ancien « Vous accueillez » avait sa note de contact à la place.
+        let greets = self.primary_method.trim() == "host_greets";
         ModuleTexts {
-            method_instructions: has_instructions
-                .then(|| nonempty(self.method_instructions.get(locale)))
-                .flatten(),
+            method_instructions: nonempty(self.method_instructions.get(locale)).or_else(|| {
+                greets
+                    .then(|| nonempty(self.host_greets_contact_note.get(locale)))
+                    .flatten()
+            }),
             building_note: self
                 .building_access_enabled
                 .then(|| nonempty(self.building_note.get(locale)))
                 .flatten(),
-            parking_info: if self.parking_enabled {
+            parking_info: if self.parking_on() {
                 text(&self.parking_info)
             } else {
                 String::new()
@@ -993,6 +1149,7 @@ impl HostConfig {
                     kind: row.kind.as_deref().and_then(nonempty),
                     title: text(&row.title),
                     detail: nonempty(row.detail.get(locale)),
+                    photo: nonempty(&row.photo),
                 })
                 .collect(),
         }
@@ -1033,6 +1190,28 @@ fn distance_km((lat1, lng1): (f64, f64), (lat2, lng2): (f64, f64)) -> f64 {
     let a = (dlat / 2.0).sin().powi(2)
         + lat1.to_radians().cos() * lat2.to_radians().cos() * (dlng / 2.0).sin().powi(2);
     2.0 * 6371.0 * a.sqrt().asin()
+}
+
+/// « Deux plages se chevauchent le lundi. » (§2.6), le jour dans la langue du message.
+fn desk_hours_overlap(raw: &str) -> Option<I18nText> {
+    let week = hours::parse_week(raw);
+    let day = hours::DAYS
+        .iter()
+        .zip(&week)
+        .find(|(_, ranges)| hours::overlaps(ranges))?
+        .0;
+    let name = crate::i18n::text(&format!("day.{day}"));
+    // « le mardi » : en français, le jour garde sa minuscule au milieu d'une phrase.
+    let message = |lang: &str| {
+        let day = match lang {
+            "fr" => name.get(lang).to_lowercase(),
+            _ => name.get(lang).to_string(),
+        };
+        crate::i18n::text_vars("host.desk.hours.overlap", &[("day", &day)])
+            .get(lang)
+            .to_string()
+    };
+    Some(I18nText::new(message("fr"), message("en")))
 }
 
 /// Un lien YouTube, Vimeo, Google Drive ou un fichier `.mp4` (§2.10) ; vide, rien à dire.
@@ -1725,17 +1904,17 @@ mod tests {
 
     #[test]
     fn primary_method_choice_list_values_deserialize() {
-        assert_eq!(
-            PrimaryMethod::CHOICE_LIST_WIRE_VALUES.len(),
-            PrimaryMethod::ALL.len()
-        );
         for wire in PrimaryMethod::CHOICE_LIST_WIRE_VALUES {
             let parsed: PrimaryMethod = serde_json::from_value(json!(wire)).unwrap_or_else(|e| {
                 panic!("ChoiceList primary_method value {wire:?} must deserialize: {e}")
             });
             assert_eq!(parsed.as_wire(), *wire);
         }
-        for method in PrimaryMethod::ALL {
+        // « Vous accueillez » n'est plus offert : il se lit « Remise en main propre » (§8).
+        for method in PrimaryMethod::ALL
+            .iter()
+            .filter(|m| **m != PrimaryMethod::HostGreets)
+        {
             assert!(
                 PrimaryMethod::CHOICE_LIST_WIRE_VALUES.contains(&method.as_wire()),
                 "variant {method:?} wire {:?} missing from ChoiceList list",
@@ -2093,7 +2272,11 @@ mod tests {
             in_person_meeting_lng: Some(7.26),
             ..config
         };
-        assert_eq!(in_person.texts("en").method_instructions, None);
+        // Les instructions détaillées valent pour toutes les méthodes (§2.10).
+        assert_eq!(
+            in_person.texts("en").method_instructions.as_deref(),
+            Some("Turn left")
+        );
         assert_eq!(
             in_person.to_model("en-US").method,
             MethodFields::InPerson {
@@ -2150,10 +2333,7 @@ mod tests {
         }))
         .unwrap();
         let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
-        assert_eq!(
-            fields,
-            ["method_instructions", "keybox_location", "steps.1.title"]
-        );
+        assert_eq!(fields, ["method_other", "keybox_location", "steps.1.title"]);
     }
 
     /// L'étage, l'ascenseur, le stationnement : le tarif ne passe qu'en rue ou en parking public.
@@ -2195,8 +2375,19 @@ mod tests {
     #[test]
     fn other_method_requires_its_precision() {
         assert_eq!(
-            problem_of(json!({ "primary_method": "other" }), "method_instructions").as_deref(),
+            problem_of(json!({ "primary_method": "other" }), "method_other").as_deref(),
             Some("Décrivez comment le voyageur récupère les clés.")
+        );
+        // Avant la précision, les consignes en tenaient lieu : elles ne bloquent pas.
+        let legacy = json!({ "primary_method": "other", "method_instructions": "Chez la voisine" });
+        assert_eq!(problem_of(legacy, "method_other"), None);
+        assert_eq!(
+            problem_of(
+                json!({ "primary_method": "other", "method_other": "x".repeat(81) }),
+                "method_other"
+            )
+            .as_deref(),
+            Some("80 caractères au maximum.")
         );
     }
 
@@ -2314,7 +2505,7 @@ mod tests {
             problem_of(
                 json!({ "primary_method": "in_person", "handover_slot_from": from,
                         "handover_slot_until": until }),
-                "handover_slot_from",
+                "handover_slot",
             )
         };
         assert_eq!(slot("", ""), None);
@@ -2332,7 +2523,7 @@ mod tests {
         assert_eq!(
             problem_of(
                 json!({ "primary_method": "keybox", "handover_slot_from": "5:00" }),
-                "handover_slot_from"
+                "handover_slot"
             ),
             None
         );
@@ -2426,5 +2617,174 @@ mod tests {
         assert_eq!(window(""), UnlockWindow::Stay);
         assert_eq!(window("stay"), UnlockWindow::Stay);
         assert_eq!(window("reveal"), UnlockWindow::Reveal);
+    }
+
+    #[test]
+    fn custom_reveal_hours_are_1_to_168() {
+        let hours = |n: u32| {
+            problem_of(
+                json!({ "reveal_policy": "custom", "reveal_hours": n }),
+                "reveal_hours",
+            )
+        };
+        assert_eq!(hours(1), None);
+        assert_eq!(hours(168), None);
+        assert_eq!(hours(0).as_deref(), Some("Entre 1 et 168 heures."));
+        assert_eq!(hours(169).as_deref(), Some("Entre 1 et 168 heures."));
+        let model = |value: Value| {
+            serde_json::from_value::<HostConfig>(value)
+                .unwrap()
+                .to_model("fr")
+        };
+        let custom = model(json!({ "reveal_policy": "custom", "reveal_hours": 6 }));
+        assert_eq!(
+            (custom.reveal_policy, custom.reveal_hours),
+            (RevealPolicy::Custom, 6)
+        );
+        assert_eq!(model(json!({ "reveal_policy": "custom" })).reveal_hours, 24);
+    }
+
+    #[test]
+    fn overlapping_desk_hours_name_the_day() {
+        let desk = |week: &str| {
+            problem_of(
+                json!({ "primary_method": "building_staff", "desk_hours": week }),
+                "desk_hours",
+            )
+        };
+        assert_eq!(desk("mon=07:00-12:00,14:00-22:00"), None);
+        assert_eq!(
+            desk("tue=07:00-12:00,11:00-22:00").as_deref(),
+            Some("Deux plages se chevauchent le mardi.")
+        );
+        let config: HostConfig = serde_json::from_value(
+            json!({ "primary_method": "building_staff", "desk_hours": "wed=07:00-12:00,11:00-13:00" }),
+        )
+        .unwrap();
+        assert_eq!(
+            config.error_of("desk_hours").unwrap().get("en"),
+            "Two time ranges overlap on Wednesday."
+        );
+    }
+
+    /// Les anciens horaires en texte libre : affichés au voyageur, signalés à l'hôte, jamais
+    /// bloquants.
+    #[test]
+    fn free_text_desk_hours_warn_and_still_show() {
+        let config: HostConfig = serde_json::from_value(json!({
+            "primary_method": "building_staff",
+            "building_staff_hours": "7h – 22h"
+        }))
+        .unwrap();
+        assert!(config.problems().is_empty());
+        assert!(config
+            .warnings()
+            .iter()
+            .any(|(field, _)| field == "desk_hours"));
+        match config.to_model("fr").method {
+            MethodFields::BuildingStaff { hours, .. } => {
+                assert_eq!(hours.as_deref(), Some("7h – 22h"))
+            }
+            other => panic!("{other:?}"),
+        }
+    }
+
+    #[test]
+    fn the_parking_kind_switches_the_parking() {
+        let on = |value: Value| {
+            serde_json::from_value::<HostConfig>(value)
+                .unwrap()
+                .parking_on()
+        };
+        assert!(!on(
+            json!({ "parking_enabled": true, "parking_type": "none" })
+        ));
+        assert!(on(json!({ "parking_type": "street" })));
+        // Saisi avant les types : l'interrupteur décide encore.
+        assert!(on(json!({ "parking_enabled": true })));
+        assert!(!on(json!({})));
+        let warnings = |value: Value| {
+            serde_json::from_value::<HostConfig>(value)
+                .unwrap()
+                .warnings()
+                .into_iter()
+                .map(|(field, _)| field)
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(
+            warnings(json!({ "parking_type": "public" })),
+            ["parking_price"]
+        );
+        assert!(warnings(json!({ "parking_type": "public", "parking_price": "2 €/h" })).is_empty());
+        assert!(warnings(json!({ "parking_type": "private" })).is_empty());
+    }
+
+    #[test]
+    fn the_handover_slot_reads_the_range_then_the_old_pair() {
+        let slot = |value: Value| {
+            serde_json::from_value::<HostConfig>(value)
+                .unwrap()
+                .to_model("fr")
+                .handover_slot
+        };
+        assert_eq!(
+            slot(
+                json!({ "primary_method": "in_person", "handover_slot": "16:00-19:00",
+                         "handover_slot_from": "10:00", "handover_slot_until": "11:00" })
+            )
+            .as_deref(),
+            Some("16:00 – 19:00")
+        );
+        assert_eq!(
+            problem_of(
+                json!({ "primary_method": "in_person", "handover_slot": "22:00-02:00" }),
+                "handover_slot"
+            )
+            .as_deref(),
+            Some("Le créneau doit commencer après 6:00 et finir avant 23:59.")
+        );
+    }
+
+    /// Généré par la serrure : il faut la serrure ; le même code pour tous : il faut le code.
+    #[test]
+    fn the_code_scope_decides_what_is_missing() {
+        let missing = |value: Value| {
+            serde_json::from_value::<HostConfig>(value)
+                .unwrap()
+                .to_model("fr")
+                .entry_code_missing()
+        };
+        let lock = json!({ "primary_method": "smart_lock", "code_scope": "lock" });
+        assert!(missing(lock));
+        assert!(!missing(
+            json!({ "primary_method": "smart_lock", "code_scope": "lock",
+                                 "smart_lock_provider_module_id": "nuki" })
+        ));
+        assert!(missing(
+            json!({ "primary_method": "smart_lock", "code_scope": "fixed",
+                                "smart_lock_provider_module_id": "nuki" })
+        ));
+        // Sans choix : une serrure liée génère ses codes, comme avant ce réglage.
+        assert!(!missing(json!({ "primary_method": "smart_lock",
+                                 "smart_lock_provider_module_id": "nuki" })));
+        // « Généré par la serrure » ne vaut qu'avec une serrure.
+        let keybox: HostConfig =
+            serde_json::from_value(json!({ "primary_method": "keybox", "code_scope": "lock" }))
+                .unwrap();
+        assert!(!keybox.code_by_lock());
+    }
+
+    #[test]
+    fn the_rotation_reminder_is_for_a_key_box() {
+        let rotate = |method: &str| {
+            serde_json::from_value::<HostConfig>(
+                json!({ "primary_method": method, "rotate_reminder": true }),
+            )
+            .unwrap()
+            .to_model("fr")
+            .rotate_reminder
+        };
+        assert!(rotate("keybox"));
+        assert!(!rotate("door_code"));
     }
 }

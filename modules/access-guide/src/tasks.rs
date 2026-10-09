@@ -1,5 +1,5 @@
-//! « Code manquant · séjour de Marie · arrivée dans 2 j » (spec Accès §1, §9 cas 1–2) :
-//! `timelineTasks`. Calculée, jamais stockée, sans case à cocher : la tâche disparaît quand
+//! « Code manquant · séjour de Marie · arrivée dans 2 j » (spec Accès §1, §9 cas 1–2) et
+//! « Changer le code de la boîte à clés · après le départ du 29/08 » (§2.2) : `timelineTasks`. Calculée, jamais stockée, sans case à cocher : la tâche disparaît quand
 //! l'hôte saisit le code dans les réglages — cocher une case ne ferait entrer personne.
 
 use chrono::{DateTime, Utc};
@@ -20,9 +20,40 @@ use crate::reveal::reveal_at;
 )]
 pub fn timeline_tasks(ctx: Context, args: TimelineTasksArgs) -> Result<TimelineTasks> {
     let config = ModuleConfig::read(&ctx)?;
-    Ok(TimelineTasks {
-        tasks: missing_code_tasks(&config, &args, time::now()?, &ctx.property.timezone),
-    })
+    let now = time::now()?;
+    let mut tasks = missing_code_tasks(&config, &args, now, &ctx.property.timezone);
+    tasks.extend(rotate_code_tasks(&config, &args, &ctx.property.timezone));
+    Ok(TimelineTasks { tasks })
+}
+
+/// Le rappel de rotation (§2.2) : une tâche à chaque départ de la fenêtre — à venir ou tout
+/// juste passé, la fenêtre en décide —, tant que l'hôte l'a demandé pour sa boîte à clés.
+pub fn rotate_code_tasks(
+    config: &ModuleConfig,
+    args: &TimelineTasksArgs,
+    timezone: &str,
+) -> Vec<TimelineTask> {
+    if !config.rotate_reminder {
+        return Vec::new();
+    }
+    args.stays
+        .iter()
+        .filter(|stay| (args.from..=args.to).contains(&stay.check_out))
+        .map(|stay| {
+            let date = match time::PropertyTz::parse(timezone) {
+                Some(tz) => tz.to_local(stay.check_out).format("%d/%m").to_string(),
+                None => stay.check_out.format("%d/%m").to_string(),
+            };
+            timeline::task(
+                format!("rotate-code:{}", stay.id),
+                stay.check_out,
+                args.property_id,
+                i18n::text("task.rotateCode.title"),
+                i18n::text_vars("task.rotateCode.context", &[("date", &date)]),
+            )
+            .stay(stay.id)
+        })
+        .collect()
 }
 
 /// Une tâche par arrivée à venir de la fenêtre, tant que la méthode demande un code et que
@@ -41,10 +72,15 @@ pub fn missing_code_tasks(
         .iter()
         .filter(|stay| stay.check_in > now && (args.from..=args.to).contains(&stay.check_in))
         .map(|stay| {
-            let at = reveal_at(config.reveal_policy, stay.check_in, timezone)
-                .unwrap_or(now)
-                .max(args.from)
-                .min(stay.check_in);
+            let at = reveal_at(
+                config.reveal_policy,
+                config.reveal_hours,
+                stay.check_in,
+                timezone,
+            )
+            .unwrap_or(now)
+            .max(args.from)
+            .min(stay.check_in);
             // « dans 2 j » : les jours pleins, au moins un.
             let days = (stay.check_in - now).num_days().max(1).to_string();
             let guest = stay.guest_name.trim();

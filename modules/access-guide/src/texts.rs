@@ -54,6 +54,9 @@ pub struct StepText {
     pub title: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub detail: Option<String>,
+    /// La photo sous l'étape (§2.9), sans langue.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub photo: Option<String>,
 }
 
 impl StepText {
