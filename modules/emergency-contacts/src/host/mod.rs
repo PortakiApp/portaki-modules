@@ -3,7 +3,8 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
-    Card, Field, FieldHint, Form, Page, Select, Stack, StepList, Text, TextInput, Toggle,
+    AddressMapPicker, Card, Field, FieldHint, Form, Page, Select, Stack, StepList, Text, TextInput,
+    Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -276,6 +277,31 @@ fn useful_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
                 .child(TextInput::new().name(phone_key).value(phone.clone()))
                 .into(),
         );
+        // La pharmacie et l'hôpital se placent sur la carte : un repère sur la Carte du livret.
+        if let Some((address, lat, lng)) = match name_key {
+            "pharmacy" => Some((
+                &config.pharmacy_address,
+                config.pharmacy_lat,
+                config.pharmacy_lng,
+            )),
+            "hospital" => Some((
+                &config.hospital_address,
+                config.hospital_lat,
+                config.hospital_lng,
+            )),
+            _ => None,
+        } {
+            let mut picker = AddressMapPicker::new()
+                .addressName(format!("{name_key}_address"))
+                .latName(format!("{name_key}_lat"))
+                .lngName(format!("{name_key}_lng"))
+                .address(address.clone())
+                .label(format!("i18n:host.{name_key}.position"));
+            if let (Some(lat), Some(lng)) = (lat, lng) {
+                picker = picker.lat(lat).lng(lng);
+            }
+            children.push(picker.into());
+        }
     }
     Card::new()
         .title("i18n:host.section.useful")

@@ -7,7 +7,8 @@ use serde_json::Value;
 
 /// The keys are the names of the host form fields: the platform takes `updateConfig` itself.
 #[portaki_sdk::config(legacy = legacy)]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+// Pas d'`Eq` : les positions sont des flottants.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct ModuleConfig {
     /// « Afficher mon numéro ». Absent : oui — c'était le comportement avant ce réglage.
     #[field(label = "host.showHost.label")]
@@ -54,6 +55,37 @@ pub struct ModuleConfig {
     pub doctor: String,
     #[field(label = "host.doctorPhone.label")]
     pub doctor_phone: String,
+    /// Les positions (spec Urgences §2.3) : un repère sur la Carte du livret. Le sélecteur de
+    /// carte les envoie en texte (`"43.5"`) ou en nombre.
+    #[field(label = "host.pharmacy.position")]
+    #[serde(default, deserialize_with = "coord")]
+    pub pharmacy_lat: Option<f64>,
+    #[field(label = "host.pharmacy.position")]
+    #[serde(default, deserialize_with = "coord")]
+    pub pharmacy_lng: Option<f64>,
+    #[field(label = "host.pharmacy.address")]
+    pub pharmacy_address: String,
+    #[field(label = "host.hospital.position")]
+    #[serde(default, deserialize_with = "coord")]
+    pub hospital_lat: Option<f64>,
+    #[field(label = "host.hospital.position")]
+    #[serde(default, deserialize_with = "coord")]
+    pub hospital_lng: Option<f64>,
+    #[field(label = "host.hospital.address")]
+    pub hospital_address: String,
+}
+
+/// `43.5`, `"43.5"`, ou rien. Un texte illisible ne pose pas de repère, et ne fait pas refuser
+/// toute la configuration.
+fn coord<'de, D>(deserializer: D) -> std::result::Result<Option<f64>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Ok(match Value::deserialize(deserializer)? {
+        Value::Number(n) => n.as_f64(),
+        Value::String(s) => s.trim().parse().ok(),
+        _ => None,
+    })
 }
 
 /// Disponibilité de l'hôte (§2.2), 24 h/24 d'abord : c'est le défaut.

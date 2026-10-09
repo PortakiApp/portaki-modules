@@ -344,3 +344,25 @@ fn the_numbers_follow_the_property_not_the_reader() {
             });
     }
 }
+
+/// La pharmacie et l'hôpital placés partent sur la Carte du livret ; sans position, rien.
+#[test]
+#[serial]
+fn placed_health_places_reach_the_booklet_map() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({
+            "pharmacy": "Pharmacie du port",
+            "pharmacy_lat": "43.58",
+            "pharmacy_lng": 7.12,
+            "hospital": "Hôpital d'Antibes"
+        }))
+        .run(|ctx| {
+            let markers = emergency_contacts::map_markers(ctx)
+                .expect("markers")
+                .markers;
+            let json = serde_json::to_string(&markers).unwrap();
+            assert_eq!(markers.len(), 1, "{json}");
+            assert!(json.contains("Pharmacie du port"), "{json}");
+        });
+}

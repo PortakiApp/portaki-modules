@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.0
+
+La pharmacie et l'hôpital sur la carte.
+
+* Placez la pharmacie et l'hôpital sur la carte : ils apparaissent sur la Carte du livret.
+* Une épingle à plus de 30 km (pharmacie) ou 50 km (hôpital) du logement déclenche un avertissement.
+
 ## 1.7.0
 
 Vos horaires et la santé.
