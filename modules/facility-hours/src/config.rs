@@ -701,7 +701,15 @@ mod tests {
             schedule.state_at(wednesday, None),
             Some(crate::schedule::State::OpensAt(14 * 60))
         );
-        // Laissées en quittant « selon le jour », ces plages ne nomment aucun jour.
+        // Laissées en quittant « selon le jour », ces plages ne nomment aucun jour : sans heures
+        // habituelles, la ligne garde sa phrase plutôt qu'un « Fermé ».
+        let prose = FacilityRow {
+            mode: "same".into(),
+            opens_at: String::new(),
+            closes_at: String::new(),
+            ..row.clone()
+        };
+        assert!(!prose.schedule().is_structured());
         let same = FacilityRow {
             mode: "same".into(),
             closed_days: Vec::new(),

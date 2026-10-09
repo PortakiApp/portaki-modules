@@ -138,8 +138,11 @@ impl Schedule {
     pub fn is_structured(&self) -> bool {
         self.all_day
             || (self.opens_at.is_some() && self.closes_at.is_some())
+            // Un jour nommé : des plages « selon le jour » laissées en changeant de mode n'en
+            // nomment aucun, et ne doivent pas faire afficher « Fermé » à la place de la phrase.
             || self.exceptions.iter().any(|day| {
-                day.opens_at.as_deref().and_then(parse_hm).is_some()
+                !day.day.trim().is_empty()
+                    && day.opens_at.as_deref().and_then(parse_hm).is_some()
                     && day.closes_at.as_deref().and_then(parse_hm).is_some()
             })
     }
