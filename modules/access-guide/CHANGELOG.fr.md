@@ -7,6 +7,7 @@ L'immeuble et le parking, en détail.
 * Indiquez l'étage et la porte, et s'il n'y a pas d'ascenseur : le livret affiche « Sans ascenseur ».
 * Précisez le stationnement (place privée, rue, parking public, garage) et le numéro de place.
 * Dans la rue ou en parking public, ajoutez le tarif.
+* Placez l'épingle sur l'entrée du parking : un repère « P » sur la Carte, et un avertissement si elle est à plus de 2 km du logement.
 
 ## 1.8.0
 
