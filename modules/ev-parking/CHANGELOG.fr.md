@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.0
+
+La borne et son tarif.
+
+* Décrivez la prise, la puissance et le câble ; le livret estime le temps de recharge.
+* Indiquez si la recharge est incluse ou payante, avec son prix.
+* Si la borne se réserve, le livret le dit, avec votre consigne.
+
 ## 1.6.0
 
 Montée technique.

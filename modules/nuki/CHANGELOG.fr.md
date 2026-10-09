@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.0
+
+La règle du code clavier.
+
+* Le code clavier fait 6 chiffres et ne commence pas par 0 : un autre code bloque la publication.
+* Les réglages passent dans le tiroir du module.
+
 ## 1.5.0
 
 Le voyageur sait ce que la serrure a fait.

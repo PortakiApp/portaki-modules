@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.0
+
+Votre gare et vos destinations.
+
+* Choisissez la gare, les destinations à suivre et le sens des trains.
+
 ## 2.2.0
 
 Montée technique.

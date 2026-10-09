@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.8.0
+
+Des règles de saisie plus claires.
+
+* Avec la méthode « Autre », la précision devient obligatoire : le voyageur doit savoir comment récupérer les clés.
+* Le chemin jusqu'à la porte compte 8 étapes au plus, chacune avec un titre ; deux types en plus : Portail et Escalier.
+* Les textes trop longs sont signalés sous le champ et bloquent la publication.
+* Afficher les codes dès la réservation affiche un avertissement : ils restent visibles même si le séjour est annulé.
+
 ## 1.7.0
 
 Montée technique.

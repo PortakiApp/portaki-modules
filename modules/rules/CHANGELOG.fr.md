@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.8.0
+
+Types, thèmes et horaires.
+
+* Une règle peut être Interdite ; « Autorisé » n'est plus affiché en vert.
+* Les thèmes deviennent une liste : Bruit, Animaux, Tabac, Fêtes, Visiteurs, Ménage, Sécurité, Autre.
+* Ajoutez des horaires à une règle (22:00 – 08:00), et choisissez combien de règles la carte affiche.
+* Jusqu'à 30 règles.
+
 ## 1.7.0
 
 Montée technique.

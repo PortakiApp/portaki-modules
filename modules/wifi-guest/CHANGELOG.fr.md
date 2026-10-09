@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.0
+
+Jusqu'à trois réseaux.
+
+* Configurez jusqu'à trois réseaux Wi-Fi, chacun avec son mot de passe gardé secret.
+* Le livret affiche chaque réseau à part.
+
 ## 1.7.0
 
 Montée technique.

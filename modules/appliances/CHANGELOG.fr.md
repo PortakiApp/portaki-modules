@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.10.0
+
+Choisissez combien d'appareils mettre en avant.
+
+* Le nombre d'appareils mis en avant sur la carte d'accueil se règle de 2 à 6 (4 par défaut).
+* Un nom trop long, un lien de notice sans https ou trop d'appareils en avant bloquent la publication, avec le message.
+
 ## 1.9.0
 
 Montée technique.

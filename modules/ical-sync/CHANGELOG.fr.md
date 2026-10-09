@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.0
+
+Suspendre un calendrier.
+
+* Un calendrier peut être suspendu sans perdre son lien : il n'est plus relevé.
+* Jusqu'à 10 calendriers ; un lien sans https est signalé sous le champ.
+
 ## 1.5.0
 
 Montée technique.
