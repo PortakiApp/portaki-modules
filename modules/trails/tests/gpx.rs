@@ -28,7 +28,9 @@ fn une_trace_donne_ses_points_sa_distance_et_sa_montee() {
         "{}",
         track.elevation_m
     );
-    assert_eq!(track.shape, "out_and_back");
+    // Une valeur que le formulaire et la tuile « Type » connaissent.
+    assert_eq!(track.shape, "round_trip");
+    assert!(trails::SHAPES.contains(&track.shape));
     assert!(track.points.len() >= 2);
 }
 

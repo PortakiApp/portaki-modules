@@ -250,9 +250,15 @@ impl TrailRow {
         LEVELS.iter().copied().find(|known| *known == level)
     }
 
-    /// La forme, si elle est l'une des deux.
-    pub fn shape_key(&self) -> Option<&str> {
-        let shape = self.shape.trim();
+    /// La forme, si elle est l'une de [`SHAPES`].
+    ///
+    /// `out_and_back` est ce qu'écrivait le pré-remplissage GPX avant 0.7.1 : c'est un aller-retour,
+    /// et le lire comme tel garde la tuile « Type » des itinéraires déjà enregistrés.
+    pub fn shape_key(&self) -> Option<&'static str> {
+        let shape = match self.shape.trim() {
+            "out_and_back" => "round_trip",
+            other => other,
+        };
         SHAPES.iter().copied().find(|known| *known == shape)
     }
 
@@ -409,6 +415,16 @@ mod tests {
             ..TrailRow::default()
         };
         assert_eq!(loop_row.shape_key(), Some("loop"));
+    }
+
+    /// Le pré-remplissage GPX écrivait `out_and_back` : ces itinéraires gardent leur tuile.
+    #[test]
+    fn a_stored_out_and_back_reads_as_a_round_trip() {
+        let row = TrailRow {
+            shape: "out_and_back".into(),
+            ..TrailRow::default()
+        };
+        assert_eq!(row.shape_key(), Some("round_trip"));
     }
 
     /// Les bornes de la spec, sur la ligne et le champ qui les dépassent ; une ligne vide n'a rien.

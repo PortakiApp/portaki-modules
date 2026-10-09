@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.1
+
+Le type d'itinéraire choisi par l'hôte est respecté.
+
+* Lire les mesures d'une trace ne remplace plus le type que vous avez choisi : il ne remplit qu'un type encore vide.
+* Une trace qui ne revient pas au départ est proposée en aller-retour, un type que le formulaire et le livret connaissent.
+* Les itinéraires concernés retrouvent leur tuile « Type » chez le voyageur.
+
 ## 0.7.0
 
 Aller simple et bornes des mesures.

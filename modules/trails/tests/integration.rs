@@ -244,6 +244,23 @@ fn a_trail_without_measures_drops_its_tiles() {
     });
 }
 
+/// Un aller-retour enregistré `out_and_back` par l'ancien pré-remplissage GPX garde sa tuile.
+#[test]
+#[serial]
+fn a_stored_out_and_back_keeps_its_type_tile() {
+    let config = json!({
+        "trails": [{ "id": "x", "title": "Baou", "level": "hard", "shape": "out_and_back",
+                     "gpx_file": "portaki-file:6f1c1d2e-3a4b-4c5d-8e9f-0a1b2c3d4e5f" }]
+    });
+    guest().with_config(&config).run(|ctx| {
+        let mut item = ctx.clone();
+        item.input = json!({ "trailId": "x" });
+        let json = tree(&render_explore_item(item).expect("item"));
+        assert!(json.contains("guest.tile.shape"), "{json}");
+        assert!(json.contains("Aller-retour"), "{json}");
+    });
+}
+
 /// Le formulaire hôte dessine ce que la configuration déclare, et une ligne par itinéraire stocké.
 #[test]
 #[serial]

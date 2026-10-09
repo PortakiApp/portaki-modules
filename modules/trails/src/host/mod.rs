@@ -184,11 +184,7 @@ fn trail_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Componen
         "shape",
         "i18n:host.shape.label",
         SHAPES,
-        measured
-            .as_ref()
-            .map(|track| track.shape)
-            .or_else(|| trail.and_then(TrailRow::shape_key))
-            .unwrap_or(""),
+        shape_value(trail, measured.as_ref()),
     ));
     if measured.is_some() {
         children.push(
@@ -350,6 +346,16 @@ fn named(config: &ModuleConfig, ctx: &HostContext, name: &str) -> Field {
     }
 }
 
+/// Le type de la ligne : celui que l'hôte a choisi, sinon celui que la trace suggère (§9 n° 5).
+///
+/// Une trace ne distingue pas un aller-retour d'un aller simple : elle ne remplit qu'un champ vide.
+fn shape_value(trail: Option<&TrailRow>, measured: Option<&crate::gpx::Track>) -> &'static str {
+    trail
+        .and_then(TrailRow::shape_key)
+        .or_else(|| measured.map(|track| track.shape))
+        .unwrap_or("")
+}
+
 /// Au dixième de kilomètre : une distance de randonnée au millième dit une précision que ni le
 /// GPS ni le pas n'ont.
 fn round_tenth(value: f64) -> f64 {
@@ -373,4 +379,40 @@ fn commune_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         )
         .child(FieldHint::new().text("i18n:host.commune.hint"))
         .into()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::gpx::Track;
+
+    fn track(shape: &'static str) -> Track {
+        Track {
+            points: Vec::new(),
+            distance_km: 3.0,
+            elevation_m: 100.0,
+            shape,
+        }
+    }
+
+    #[test]
+    fn the_trace_does_not_override_the_host_s_shape() {
+        let row = TrailRow {
+            shape: "one_way".into(),
+            ..TrailRow::default()
+        };
+        assert_eq!(
+            shape_value(Some(&row), Some(&track("round_trip"))),
+            "one_way"
+        );
+    }
+
+    #[test]
+    fn the_trace_fills_an_empty_shape_with_a_known_one() {
+        let row = TrailRow::default();
+        let shape = shape_value(Some(&row), Some(&track("round_trip")));
+        assert_eq!(shape, "round_trip");
+        assert!(SHAPES.contains(&shape));
+        assert_eq!(shape_value(None, None), "");
+    }
 }
