@@ -10,7 +10,8 @@ use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 
 /// Le rayon d'un hôte qui n'en a jamais choisi (§2.1). Un rayon déjà enregistré n'est jamais
-/// réécrit : hors de `MIN..=MAX`, il est signalé sous le champ et borné à la lecture.
+/// réécrit : hors de `MIN..=MAX`, il est signalé sous le champ (sans bloquer la publication) et
+/// borné à la lecture.
 const DEFAULT_RADIUS_KM: u32 = 15;
 const MIN_RADIUS_KM: u32 = 1;
 const MAX_RADIUS_KM: u32 = 50;
