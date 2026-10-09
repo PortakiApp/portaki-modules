@@ -137,6 +137,8 @@ pub struct Schedule {
     /// l'hôte tous les ans le ferait oublier une fois sur deux. L'intervalle peut passer l'hiver
     /// (`11-15` → `03-15`) ; il se lit alors à l'envers.
     pub season: Option<(u32, u32)>,
+    /// « Selon le jour » : les plages des jours suffisent à calculer la ligne.
+    pub by_day: bool,
 }
 
 impl Schedule {
@@ -144,13 +146,13 @@ impl Schedule {
     pub fn is_structured(&self) -> bool {
         self.all_day
             || (self.opens_at.is_some() && self.closes_at.is_some())
-            // Un jour nommé : des plages « selon le jour » laissées en changeant de mode n'en
-            // nomment aucun, et ne doivent pas faire afficher « Fermé » à la place de la phrase.
-            || self.exceptions.iter().any(|day| {
-                !day.day.trim().is_empty()
-                    && day.opens_at.as_deref().and_then(parse_hm).is_some()
-                    && day.closes_at.as_deref().and_then(parse_hm).is_some()
-            })
+            // Selon le jour seulement : dans un autre mode, une dérogation sans heures habituelles
+            // ne doit pas faire afficher « Fermé » à la place de la phrase de l'hôte.
+            || (self.by_day
+                && self.exceptions.iter().any(|day| {
+                    day.opens_at.as_deref().and_then(parse_hm).is_some()
+                        && day.closes_at.as_deref().and_then(parse_hm).is_some()
+                }))
     }
 
     /// Les plages d'un jour : une, ou deux quand l'équipement coupe à midi.
@@ -350,6 +352,7 @@ mod tests {
             exceptions: Vec::new(),
             break_at: None,
             season: None,
+            by_day: false,
         }
     }
 

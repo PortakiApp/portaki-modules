@@ -53,6 +53,7 @@
   "host.facility.breakTo": "Öffnet wieder um",
   "host.facility.closedDays": "Ruhetage",
   "host.facility.closesAt": "Schließzeit",
+  "host.facility.day.both": "Geben Sie Öffnungs- und Schließzeit an.",
   "host.facility.group": "Gruppe",
   "host.facility.group.equipment": "Ausstattung",
   "host.facility.group.services": "Services",

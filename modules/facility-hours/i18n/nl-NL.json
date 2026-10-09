@@ -53,6 +53,7 @@
   "host.facility.breakTo": "Weer open om",
   "host.facility.closedDays": "Gesloten op",
   "host.facility.closesAt": "Sluitingstijd",
+  "host.facility.day.both": "Geef zowel de openings- als de sluitingstijd op.",
   "host.facility.group": "Groep",
   "host.facility.group.equipment": "Voorzieningen",
   "host.facility.group.services": "Diensten",

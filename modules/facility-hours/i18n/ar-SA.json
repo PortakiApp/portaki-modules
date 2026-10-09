@@ -53,6 +53,7 @@
   "host.facility.breakTo": "يعاود الفتح عند",
   "host.facility.closedDays": "أيام الإغلاق",
   "host.facility.closesAt": "وقت الإغلاق",
+  "host.facility.day.both": "أدخل وقت الفتح ووقت الإغلاق.",
   "host.facility.group": "المجموعة",
   "host.facility.group.equipment": "المرافق",
   "host.facility.group.services": "الخدمات",

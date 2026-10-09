@@ -135,24 +135,18 @@ fn by_day_rows(
                     .into_iter()
                     .find_map(|(at, entry)| (at == d).then_some(entry))
             });
-            let time = |key: &str, value: Option<&String>, placeholder: &str| -> Component {
+            let time = |key: &str, label: &str, value: Option<&String>, placeholder: &str| {
                 let name = format!("facilities.{index}.exceptions.{d}.{key}");
-                named(config, ctx, name.clone())
-                    .label(format!(
-                        "i18n:host.facility.{}",
-                        if key == "opens_at" {
-                            "opensAt"
-                        } else {
-                            "closesAt"
-                        }
-                    ))
-                    .child(
-                        TextInput::new()
-                            .name(name)
-                            .value(value.map(String::as_str).unwrap_or(""))
-                            .placeholder(placeholder),
-                    )
-                    .into()
+                Component::from(
+                    named(config, ctx, name.clone())
+                        .label(format!("i18n:host.facility.{label}"))
+                        .child(
+                            TextInput::new()
+                                .name(name)
+                                .value(value.map(String::as_str).unwrap_or(""))
+                                .placeholder(placeholder),
+                        ),
+                )
             };
             [
                 // Le jour de la ligne, en champ caché : le formulaire resserre les index, et
@@ -162,9 +156,15 @@ fn by_day_rows(
                     .text(format!("i18n:host.day.{key}"))
                     .variant(TextVariant::Body)
                     .into(),
-                time("opens_at", entry.and_then(|e| e.opens_at.as_ref()), "08:00"),
+                time(
+                    "opens_at",
+                    "opensAt",
+                    entry.and_then(|e| e.opens_at.as_ref()),
+                    "08:00",
+                ),
                 time(
                     "closes_at",
+                    "closesAt",
                     entry.and_then(|e| e.closes_at.as_ref()),
                     "20:00",
                 ),
