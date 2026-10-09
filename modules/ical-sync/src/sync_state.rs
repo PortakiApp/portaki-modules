@@ -30,6 +30,18 @@ pub struct SeenStay {
     pub has_guest_email: bool,
 }
 
+/// A feed failing since `since`, `count` runs in a row; dropped at its next successful read.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FeedFailure {
+    /// First failed run of the streak (RFC 3339).
+    pub since: String,
+    pub count: u32,
+}
+
+/// Runs in a row after which a feed is in error (spec Calendriers §3).
+pub const FEED_ERROR_RUNS: u32 = 3;
+
 /// Sync runs of one day (`YYYY-MM-DD`, UTC).
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -62,9 +74,28 @@ pub struct SyncState {
     /// One-line outcome of the last run (`N stay(s) · N feed(s) ok · N feed(s) failed`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub summary: Option<String>,
+    /// Feed id → its current failure streak.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub feed_failures: BTreeMap<String, FeedFailure>,
 }
 
 impl SyncState {
+    /// One feed's outcome of a run at `now` (RFC 3339).
+    pub fn record_feed(&mut self, id: &str, ok: bool, now: &str) {
+        if ok {
+            self.feed_failures.remove(id);
+            return;
+        }
+        let failure = self
+            .feed_failures
+            .entry(id.to_string())
+            .or_insert_with(|| FeedFailure {
+                since: now.to_string(),
+                count: 0,
+            });
+        failure.count += 1;
+    }
+
     /// Counts one run on `day` (`YYYY-MM-DD`).
     pub fn record_run(&mut self, day: &str, failed: bool, new_stays: usize) {
         if day.is_empty() {
@@ -224,6 +255,22 @@ mod tests {
         let diff = diff_rows(&previous, &rows);
         assert!(diff.new_rows.is_empty());
         assert_eq!(diff.updated_rows.len(), 1);
+    }
+
+    #[test]
+    fn a_failure_streak_counts_up_and_clears_on_success() {
+        let mut state = SyncState::default();
+        state.record_feed("booking", false, "2026-08-01T06:00:00Z");
+        state.record_feed("booking", false, "2026-08-01T12:00:00Z");
+        assert_eq!(
+            state.feed_failures["booking"],
+            FeedFailure {
+                since: "2026-08-01T06:00:00Z".into(),
+                count: 2
+            }
+        );
+        state.record_feed("booking", true, "2026-08-01T18:00:00Z");
+        assert!(state.feed_failures.is_empty());
     }
 
     #[test]

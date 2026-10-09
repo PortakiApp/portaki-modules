@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.0
+
+Calendriers vérifiés, séjours et tâches.
+
+* Sans calendrier, la publication est bloquée : « Ajoutez au moins un calendrier. »
+* Un lien illisible trois synchros de suite est signalé : « Ce lien ne renvoie pas un calendrier .ics valide. »
+* La fiche du séjour dit d'où il vient, quand il a été mis à jour, et s'il manque l'e-mail du voyageur.
+* À venir montre les conflits de dates et les calendriers injoignables depuis 2 jours.
+
 ## 1.6.0
 
 Suspendre un calendrier.
