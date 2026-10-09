@@ -8,7 +8,7 @@ Vos adresses sur la page publique du logement, et des fiches plus complètes.
 * Les visiteurs voient la photo, la catégorie et une distance approximative, à pied ou en voiture.
 * Avantages, prix, téléphone, horaires, adresse et conseils restent dans le livret, que la page annonce.
 * Chaque adresse prend un emoji, une saison et un avertissement ; hors saison, elle disparaît du livret.
-* La catégorie devient obligatoire ; prestataire, durée, téléphone et lien de vos activités sont vérifiés.
+* Une adresse sans catégorie est signalée ; prestataire, durée, téléphone et lien de vos activités sont vérifiés.
 
 ## 1.12.0
 

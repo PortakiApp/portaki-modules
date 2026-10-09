@@ -14,8 +14,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         .into_iter()
         .map(|(field, error)| PublishCheck {
             label: crate::i18n::text(field_label(&field)),
+            level: level_of(&field),
             id: format!("config.{field}"),
-            level: PublishLevel::Required,
             ok: false,
             hint: error,
         })
@@ -50,6 +50,16 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         });
     }
     Ok(PublishReadiness { items })
+}
+
+/// Bloquant, sauf la catégorie manquante : des adresses saisies avant la règle n'en ont pas, et
+/// les bloquer enfermerait l'hôte hors de son livret. Elle avertit, comme la position.
+fn level_of(field: &str) -> PublishLevel {
+    if field.starts_with("spots.") && field.ends_with(".category") {
+        PublishLevel::Recommended
+    } else {
+        PublishLevel::Required
+    }
 }
 
 /// Le libellé du champ en défaut : celui du formulaire, sans l'index de la ligne.

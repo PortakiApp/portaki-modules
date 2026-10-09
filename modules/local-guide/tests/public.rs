@@ -287,3 +287,30 @@ fn an_out_of_bounds_choice_warns_without_blocking() {
             });
     }
 }
+
+/// Une catégorie manquante avertit sans bloquer ; un lien sans https bloque toujours.
+#[test]
+#[serial]
+fn a_missing_category_warns_without_blocking() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({
+            "spots": [{ "title": "Le Bacon", "lat": 43.55, "lng": 7.01, "url": "http://bacon.fr" }]
+        }))
+        .run(|ctx| {
+            let readiness = publish_readiness(ctx).expect("readiness");
+            let level = |id: &str| {
+                let item = readiness.items.iter().find(|i| i.id == id).expect(id);
+                serde_json::to_value(item.level).unwrap()
+            };
+            assert_eq!(level("config.spots.0.category"), json!("recommended"));
+            assert_eq!(level("config.spots.0.url"), json!("required"));
+            let hint = &readiness
+                .items
+                .iter()
+                .find(|i| i.id == "config.spots.0.category")
+                .unwrap()
+                .hint;
+            assert_eq!(hint.get("fr"), "Choisissez une catégorie.");
+        });
+}
