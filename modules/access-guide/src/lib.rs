@@ -1,5 +1,6 @@
 //! Portaki access-guide module — arrival steps, codes, and parking.
 
+mod amenities;
 mod commands;
 mod config;
 mod email_context;
@@ -11,6 +12,7 @@ mod queries;
 mod reveal;
 mod texts;
 
+pub use amenities::amenities_list;
 pub use commands::{on_config_updated, ConfigUpdatedArgs};
 pub use config::{
     ArrivalGuide, BuildingAccess, HostConfig, MethodFields, ModuleConfig, ParkingLayer,
@@ -38,3 +40,6 @@ portaki_sdk::portaki_module!(
 
 #[portaki_sdk::capability(required, id = "core.storage")]
 pub const STORAGE: &str = "core.storage";
+
+#[portaki_sdk::capability(provided, id = "amenities.provide")]
+pub const AMENITIES: &str = "amenities.provide";

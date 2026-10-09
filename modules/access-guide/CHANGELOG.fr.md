@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.0
+
+L'accès dans les équipements.
+
+* La serrure connectée ou la boîte à clés s'ajoute aux équipements de la page du logement, selon la méthode d'accès ; ni code ni emplacement n'y figurent.
+
 ## 1.9.0
 
 L'immeuble et le parking, en détail.
