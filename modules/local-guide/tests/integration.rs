@@ -202,6 +202,91 @@ fn every_host_tip_is_a_signed_quote_the_module_does_not_compose() {
     }
 }
 
+/// Emoji, saison, avertissement (§2.1) : l'emoji sur la tuile et le repère, l'adresse hors saison
+/// absente du livret et de la carte, l'avertissement en bandeau sur la fiche.
+#[test]
+#[serial]
+fn emoji_season_and_warning_reach_the_guest() {
+    let january = chrono::DateTime::parse_from_rfc3339("2026-01-15T10:00:00Z")
+        .expect("date")
+        .with_timezone(&chrono::Utc);
+    let config = json!({
+        "spots": [
+            { "id": "bacon", "title": { "fr": "Le Bacon" }, "category": "Restaurant",
+              "emoji": "🦞", "lat": 43.55, "lng": 7.01,
+              "warning": { "fr": "Réservation indispensable en août" } },
+            { "id": "marche", "title": { "fr": "Marché Forville" }, "category": "Marché" },
+            { "id": "plage", "title": { "fr": "Plage du Midi" }, "category": "Plage",
+              "lat": 43.548, "lng": 7.005, "season_from": "01/06", "season_to": "30/09" }
+        ]
+    });
+    let guest = || {
+        MockContext::guest()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&config)
+            .with_now(january)
+    };
+    guest().run(|ctx| {
+        let json = surface_json(&render_home_card(ctx).expect("surface"));
+        assert!(json.contains(r#""emoji":"🦞""#), "{json}");
+        assert!(json.contains(r#""emoji":"🧺""#), "{json}");
+        assert!(!json.contains("Plage du Midi"), "hors saison : {json}");
+    });
+    guest().run(|ctx| {
+        let markers = local_guide::map_markers(ctx).expect("markers").markers;
+        assert_eq!(markers.len(), 1);
+        assert_eq!(markers[0].emoji.as_deref(), Some("🦞"));
+    });
+    let (mut ctx, host) = guest().build();
+    ctx.input = json!({ "spotId": "bacon" });
+    with_host(host, ctx.clone(), || {
+        let json = surface_json(&render_explore_item(ctx.clone()).expect("surface"));
+        let banner = json
+            .find("Réservation indispensable en août")
+            .expect("bandeau");
+        let start = json[..banner]
+            .rfind(r#""type":"InfoBanner""#)
+            .expect("InfoBanner");
+        assert!(
+            json[start..banner].contains(r#""tone":"warning""#),
+            "{json}"
+        );
+    });
+    // En saison, la plage revient.
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&config)
+        .with_now(january + chrono::Duration::days(180))
+        .run(|ctx| {
+            let json = surface_json(&render_home_card(ctx).expect("surface"));
+            assert!(json.contains("Plage du Midi"), "{json}");
+        });
+}
+
+/// Le formulaire : l'erreur d'une activité sous son champ, « Hors saison » sous la saison.
+#[test]
+#[serial]
+fn the_form_shows_activity_errors_and_the_off_season_hint() {
+    let january = chrono::DateTime::parse_from_rfc3339("2026-01-15T10:00:00Z")
+        .expect("date")
+        .with_timezone(&chrono::Utc);
+    MockContext::host()
+        .with_now(january)
+        .with_config(&json!({
+            "spots": [{ "title": "Plage", "category": "Plage",
+                        "season_from": "01/06", "season_to": "30/09" }],
+            "host_activities": [{ "title": "Voilier", "provider": "Marc", "url": "http://marc.fr" }]
+        }))
+        .run(|ctx| {
+            let json = surface_json(&render_host_main(ctx).expect("host main"));
+            assert!(
+                json.contains("L'adresse doit commencer par https://"),
+                "{json}"
+            );
+            assert!(json.contains("i18n:host.spot.offSeason"), "{json}");
+        });
+}
+
 // --- Carte -------------------------------------------------------------------------------
 
 /// Config avec un spot situé et un spot sans position.
@@ -383,7 +468,8 @@ fn a_save_in_english_keeps_the_french() {
             "spots.detail",
             "spots.note",
             "spots.perk",
-            "spots.title"
+            "spots.title",
+            "spots.warning"
         ]
     );
     let stored = json!({

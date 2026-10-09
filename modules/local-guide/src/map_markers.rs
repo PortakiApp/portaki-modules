@@ -26,8 +26,10 @@ pub struct MapMarkersResponse {
 #[portaki_sdk::query(name = "mapMarkers", example(label = "Points sur la carte"))]
 pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
     let config = ModuleConfig::load(&ctx)?;
+    // Les adresses hors saison quittent la carte comme le reste du livret (§3).
+    let today = crate::guest::today_at_property(&ctx.timezone);
     let markers = config
-        .parse_spots()
+        .guest_spots(today)
         .into_iter()
         .filter_map(|spot| {
             // Les spots sans position ne sont pas une anomalie : la carte est arrivée après
@@ -42,6 +44,7 @@ pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
             if let Some(category) = spot.category.as_deref().filter(|c| !c.trim().is_empty()) {
                 marker.category = Some(category.to_string());
             }
+            marker.emoji = spot.emoji();
             Some(marker)
         })
         .take(MAX_MARKERS)

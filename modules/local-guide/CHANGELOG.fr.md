@@ -2,11 +2,13 @@
 
 ## 1.13.0
 
-Vos adresses sur la page publique du logement.
+Vos adresses sur la page publique du logement, et des fiches plus complètes.
 
 * Nouvelle carte « Page publique » : affichez 3 à 6 de vos adresses sur la page du logement.
 * Les visiteurs voient la photo, la catégorie et une distance approximative, à pied ou en voiture.
 * Avantages, prix, téléphone, horaires, adresse et conseils restent dans le livret, que la page annonce.
+* Chaque adresse prend un emoji, une saison et un avertissement ; hors saison, elle disparaît du livret.
+* La catégorie devient obligatoire ; prestataire, durée, téléphone et lien de vos activités sont vérifiés.
 
 ## 1.12.0
 

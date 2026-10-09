@@ -1,5 +1,6 @@
 //! Shared guest SDUI body for local guide spots.
 
+use chrono::Datelike;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::{
@@ -17,7 +18,7 @@ use super::load::GuestData;
 /// « Fermé aujourd'hui », quand on sait quel jour il est et que l'adresse ferme ce jour-là.
 pub fn closed_today_label(data: &GuestData, spot: &crate::config::SpotRow) -> Option<String> {
     let today = data.today?;
-    spot.closed_on(today).then(|| {
+    spot.closed_on(today.weekday()).then(|| {
         t!("guest.spot.closedToday").unwrap_or_else(|_| "i18n:guest.spot.closedToday".into())
     })
 }
@@ -67,6 +68,7 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         if let (Some(lat), Some(lng)) = (spot.lat, spot.lng) {
             item = item.leading(Leading::Visual(Box::new(LeadingVisual {
                 map: Some(GeoPoint { lat, lng }),
+                emoji: spot.emoji(),
                 ..LeadingVisual::default()
             })));
         } else {
@@ -74,8 +76,11 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
             // sa tuile sortait nue au milieu d'un carrousel de plans, décalée de toutes les
             // autres. Un repère neutre tient la ligne ; la Carte, elle, ne la montre toujours pas,
             // faute de position (§2.12).
+            // L'emoji de l'adresse (ou de sa catégorie) prend sa place quand il y en a un.
+            let emoji = spot.emoji();
             item = item.leading(Leading::Visual(Box::new(LeadingVisual {
-                icon: Some(IconName::MapPin),
+                icon: emoji.is_none().then_some(IconName::MapPin),
+                emoji,
                 ..LeadingVisual::default()
             })));
         }
@@ -524,11 +529,11 @@ fn spots_map(data: &GuestData) -> Option<Component> {
         };
         lat_sum += lat;
         lng_sum += lng;
-        markers.push(
-            MapMarker::new(spot.id.clone(), lat, lng)
-                .label(spot.title.get(&data.locale))
-                .kind(MapMarkerKind::Poi),
-        );
+        let mut marker = MapMarker::new(spot.id.clone(), lat, lng)
+            .label(spot.title.get(&data.locale))
+            .kind(MapMarkerKind::Poi);
+        marker.emoji = spot.emoji();
+        markers.push(marker);
     }
 
     if markers.is_empty() {
