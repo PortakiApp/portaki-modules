@@ -29,6 +29,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
         *errors.borrow_mut() = config
             .problems()
             .into_iter()
+            .chain(config.warnings())
             .map(|(field, error)| (field, error.get(&ctx.locale).to_string()))
             .collect();
     });

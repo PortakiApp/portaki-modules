@@ -21,6 +21,18 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             hint: error,
         })
         .collect();
+    // Un « Contact » qui ressemble à un numéro mal saisi : un avertissement, le champ est libre.
+    items.extend(
+        host.warnings()
+            .into_iter()
+            .map(|(field, hint)| PublishCheck {
+                label: text(field_label(&field)),
+                id: format!("config.{field}"),
+                level: PublishLevel::Recommended,
+                ok: false,
+                hint,
+            }),
+    );
     // Dès la réservation : le code se lit même si le séjour est annulé ensuite (§3).
     if host.reveal_policy.trim() == "always" {
         items.push(PublishCheck {

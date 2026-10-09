@@ -608,14 +608,13 @@ impl HostConfig {
                 problems.push((field, error));
             }
         };
-        // « Autre » : la précision (`method_other`, ≤ 80) ; sinon les consignes (≤ 1 200).
-        let other = self.method() == Some(PrimaryMethod::Other);
+        // « Autre » demande sa précision ; les consignes, quelle que soit la méthode, ≤ 1 200.
         push(
             "method_instructions".into(),
-            if other && self.method_instructions.is_blank() {
+            if self.method() == Some(PrimaryMethod::Other) && self.method_instructions.is_blank() {
                 Some(text("host.other.required"))
             } else {
-                too_long(&self.method_instructions, if other { 80 } else { 1200 })
+                too_long(&self.method_instructions, 1200)
             },
         );
         push(
@@ -626,14 +625,6 @@ impl HostConfig {
         push(
             "arrival_video_url".into(),
             (!is_video_url(self.arrival_video_url.trim())).then(|| text("host.video.invalid")),
-        );
-        push(
-            "in_person_contact".into(),
-            phone_error(&self.in_person_contact),
-        );
-        push(
-            "building_staff_contact".into(),
-            phone_error(&self.building_staff_contact),
         );
         push(
             "keybox_location".into(),
@@ -671,6 +662,18 @@ impl HostConfig {
             push(format!("steps.{index}.detail"), too_long(&step.detail, 280));
         }
         problems
+    }
+
+    /// Ce qui mérite un coup d'œil sans bloquer la publication : un « Contact » qui ressemble à
+    /// un numéro mal saisi. Le champ est libre (un nom, un e-mail y passent sans message).
+    pub fn warnings(&self) -> Vec<(String, I18nText)> {
+        [
+            ("in_person_contact", &self.in_person_contact),
+            ("building_staff_contact", &self.building_staff_contact),
+        ]
+        .into_iter()
+        .filter_map(|(field, value)| phone_error(value).map(|error| (field.to_string(), error)))
+        .collect()
     }
 
     /// Le message à afficher sous `field`, s'il y en a un.
@@ -898,7 +901,13 @@ fn is_video_url(url: &str) -> bool {
 }
 
 /// E.164, ou un numéro court (« 3237 ») comme dans `emergency-contacts` : on l'appelle tel quel.
+/// Seulement pour une tentative de numéro : des chiffres, ni lettre ni `@`.
 fn phone_error(phone: &str) -> Option<I18nText> {
+    let attempt = phone.chars().any(|c| c.is_ascii_digit())
+        && !phone.chars().any(|c| c.is_alphabetic() || c == '@');
+    if !attempt {
+        return None;
+    }
     let phone: String = phone
         .chars()
         .filter(|c| !c.is_whitespace() && !matches!(c, '.' | '-' | '(' | ')'))
@@ -2011,13 +2020,9 @@ mod tests {
     }
 
     #[test]
-    fn other_method_precision_is_80_chars_at_most() {
-        let json = |n| json!({ "primary_method": "other", "method_instructions": "x".repeat(n) });
-        assert_eq!(problem_of(json(80), "method_instructions"), None);
-        assert_eq!(
-            problem_of(json(81), "method_instructions").as_deref(),
-            Some("80 caractères au maximum.")
-        );
+    fn other_method_accepts_long_instructions() {
+        let json = json!({ "primary_method": "other", "method_instructions": "x".repeat(1200) });
+        assert_eq!(problem_of(json, "method_instructions"), None);
     }
 
     #[test]
@@ -2090,33 +2095,47 @@ mod tests {
         }
     }
 
+    fn warning_of(config: serde_json::Value, field: &str) -> Option<String> {
+        let config: HostConfig = serde_json::from_value(config).unwrap();
+        assert!(
+            config.problems().iter().all(|(f, _)| f != field),
+            "jamais bloquant"
+        );
+        config
+            .warnings()
+            .into_iter()
+            .find(|(f, _)| f == field)
+            .map(|(_, error)| error.get("fr").to_string())
+    }
+
     #[test]
-    fn in_person_contact_is_a_phone_number() {
-        let error =
-            |phone: &str| problem_of(json!({ "in_person_contact": phone }), "in_person_contact");
-        assert_eq!(error("+33 6 12 34 56 78"), None);
+    fn in_person_contact_warns_on_a_mistyped_phone() {
+        let warning = |v: &str| warning_of(json!({ "in_person_contact": v }), "in_person_contact");
+        assert_eq!(warning("+33 6 12 34 56 78"), None);
         assert_eq!(
-            error("3237"),
+            warning("3237"),
             None,
             "un numéro court passe, comme dans emergency-contacts"
         );
+        assert_eq!(warning("Marie, la voisine"), None);
         assert_eq!(
-            error("06 12 34 56 78").as_deref(),
+            warning("06 12 34 56 78").as_deref(),
             Some("Ce numéro n'est pas valide. Vérifiez l'indicatif.")
         );
     }
 
     #[test]
-    fn building_staff_contact_is_a_phone_number() {
-        let error = |phone: &str| {
-            problem_of(
-                json!({ "building_staff_contact": phone }),
+    fn building_staff_contact_warns_on_a_mistyped_phone() {
+        let warning = |v: &str| {
+            warning_of(
+                json!({ "building_staff_contact": v }),
                 "building_staff_contact",
             )
         };
-        assert_eq!(error("+41 22 123 45 67"), None);
+        assert_eq!(warning("+41 22 123 45 67"), None);
+        assert_eq!(warning("accueil@hotel.fr"), None);
         assert_eq!(
-            error("Marie").as_deref(),
+            warning("022 123 45 67").as_deref(),
             Some("Ce numéro n'est pas valide. Vérifiez l'indicatif.")
         );
     }
