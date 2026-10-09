@@ -285,8 +285,12 @@ fn the_form_grows_one_row_at_a_time_up_to_the_bound() {
         .with_config(&json!({ "trails": rows }))
         .run(|ctx| {
             let json = tree(&render_host_main(ctx).expect("host main"));
-            assert!(json.contains("trails.11.title"), "{json}");
-            assert!(!json.contains("trails.12.title"), "{json}");
+            let last = MAX_TRAILS - 1;
+            assert!(json.contains(&format!("trails.{last}.title")), "{json}");
+            assert!(
+                !json.contains(&format!("trails.{}.title", last + 1)),
+                "{json}"
+            );
             assert!(
                 json.contains(&format!(r#""trails_count":{MAX_TRAILS}"#)),
                 "{json}"
@@ -339,7 +343,8 @@ fn saving_in_english_keeps_the_french_text() {
         });
 }
 
-/// La porte de publication : un itinéraire complet suffit, le reste se recommande.
+/// La porte de publication : un itinéraire complet suffit ; un niveau manquant bloque sur sa
+/// ligne, un départ sans position et des mesures absentes se recommandent.
 #[test]
 #[serial]
 fn publication_needs_one_complete_trail() {
@@ -355,7 +360,8 @@ fn publication_needs_one_complete_trail() {
     assert_eq!(empty.items.len(), 1);
 
     let ready = check(json!({
-        "trails": [{ "title": "A", "level": "easy", "duration_min": 60, "distance_km": 3 }]
+        "trails": [{ "title": "A", "level": "easy", "duration_min": 60, "distance_km": 3,
+                      "lat": 43.56, "lng": 7.12 }]
     }));
     assert!(ready.items[0].ok);
     assert_eq!(ready.items.len(), 1);
@@ -368,7 +374,15 @@ fn publication_needs_one_complete_trail() {
     }));
     assert!(half.items[0].ok);
     let ids: Vec<&str> = half.items.iter().map(|item| item.id.as_str()).collect();
-    assert_eq!(ids, ["trails", "level", "measures"]);
+    assert_eq!(
+        ids,
+        [
+            "trails",
+            "config.trails.1.level",
+            "config.trails.0.lat",
+            "measures"
+        ]
+    );
 }
 
 /// La carte du livret ne reçoit que les départs situés.

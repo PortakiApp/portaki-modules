@@ -12,9 +12,9 @@ use serde::Serialize;
 use crate::config::{ModuleConfig, TrailRow, LEVELS, MAX_TRAILS, SHAPES};
 
 /// Les bornes d'une mesure de randonnée : au-delà, c'est une faute de frappe.
-const MAX_DURATION_MIN: f64 = 1_440.0;
-const MAX_DISTANCE_KM: f64 = 200.0;
-const MAX_ELEVATION_M: f64 = 5_000.0;
+const MAX_DURATION_MIN: f64 = crate::config::DURATION_MIN.1;
+const MAX_DISTANCE_KM: f64 = crate::config::DISTANCE_KM.1;
+const MAX_ELEVATION_M: f64 = crate::config::ELEVATION_M.1;
 
 #[portaki_sdk::surface(
     host,
@@ -34,7 +34,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
                         .variant(TextVariant::Caption)
                         .into(),
                     trails_card(&config, &ctx),
-                    commune_card(&config),
+                    commune_card(&config, &ctx),
                 ]))),
     )
     .with_id(MAIN))
@@ -44,7 +44,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
 fn trails_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
     let rows_count = draft_rows(ctx, config.parse_trails().len());
     let rows: Vec<Component> = (0..rows_count)
-        .map(|index| trail_row(index, config.trails.get(index), ctx))
+        .map(|index| trail_row(index, config, ctx))
         .collect();
 
     Card::new()
@@ -106,7 +106,8 @@ fn emit_input(payload: impl Serialize) -> Action {
     Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
 }
 
-fn trail_row(index: usize, trail: Option<&TrailRow>, ctx: &HostContext) -> Component {
+fn trail_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let trail: Option<&TrailRow> = config.trails.get(index);
     // Les mesures de la trace, si l'hôte vient de cliquer « pré-remplir ». Elles remplacent ce
     // qu'il avait saisi dans ces trois champs, et il peut encore les corriger avant d'enregistrer.
     let measured = prefill(ctx, index, trail);
@@ -125,6 +126,8 @@ fn trail_row(index: usize, trail: Option<&TrailRow>, ctx: &HostContext) -> Compo
 
     let mut children: Vec<Component> = id.into_iter().collect();
     children.push(text_field(
+        config,
+        ctx,
         index,
         "title",
         "i18n:host.trails.rowTitle",
@@ -132,6 +135,8 @@ fn trail_row(index: usize, trail: Option<&TrailRow>, ctx: &HostContext) -> Compo
         title,
     ));
     children.push(choice_field(
+        config,
+        ctx,
         index,
         "level",
         "i18n:host.level.label",
@@ -140,6 +145,8 @@ fn trail_row(index: usize, trail: Option<&TrailRow>, ctx: &HostContext) -> Compo
     ));
     children.push(FieldHint::new().text("i18n:host.level.hint").into());
     children.push(number_field(
+        config,
+        ctx,
         index,
         "duration_min",
         "i18n:host.trails.duration",
@@ -147,6 +154,8 @@ fn trail_row(index: usize, trail: Option<&TrailRow>, ctx: &HostContext) -> Compo
         trail.and_then(|t| t.duration_min),
     ));
     children.push(number_field(
+        config,
+        ctx,
         index,
         "distance_km",
         "i18n:host.trails.distance",
@@ -157,6 +166,8 @@ fn trail_row(index: usize, trail: Option<&TrailRow>, ctx: &HostContext) -> Compo
             .or_else(|| trail.and_then(|t| t.distance_km)),
     ));
     children.push(number_field(
+        config,
+        ctx,
         index,
         "elevation_m",
         "i18n:host.trails.elevation",
@@ -167,6 +178,8 @@ fn trail_row(index: usize, trail: Option<&TrailRow>, ctx: &HostContext) -> Compo
             .or_else(|| trail.and_then(|t| t.elevation_m)),
     ));
     children.push(choice_field(
+        config,
+        ctx,
         index,
         "shape",
         "i18n:host.shape.label",
@@ -198,8 +211,7 @@ fn trail_row(index: usize, trail: Option<&TrailRow>, ctx: &HostContext) -> Compo
     children.push(picker.into());
 
     children.push(
-        Field::new()
-            .name(format!("trails.{index}.description"))
+        named(config, ctx, &format!("trails.{index}.description"))
             .label("i18n:host.trails.description")
             .child(
                 TextArea::new()
@@ -211,6 +223,8 @@ fn trail_row(index: usize, trail: Option<&TrailRow>, ctx: &HostContext) -> Compo
             .into(),
     );
     children.push(text_field(
+        config,
+        ctx,
         index,
         "link_url",
         "i18n:host.trails.link",
@@ -263,6 +277,8 @@ fn trail_row(index: usize, trail: Option<&TrailRow>, ctx: &HostContext) -> Compo
 }
 
 fn text_field(
+    config: &ModuleConfig,
+    ctx: &HostContext,
     index: usize,
     name: &str,
     label: &str,
@@ -270,8 +286,7 @@ fn text_field(
     value: String,
 ) -> Component {
     let field = format!("trails.{index}.{name}");
-    Field::new()
-        .name(field.clone())
+    named(config, ctx, &field)
         .label(label)
         .child(
             TextInput::new()
@@ -283,24 +298,39 @@ fn text_field(
 }
 
 /// Une mesure : vide vaut « pas renseigné », et la tuile disparaît chez le voyageur.
-fn number_field(index: usize, name: &str, label: &str, max: f64, value: Option<f64>) -> Component {
+fn number_field(
+    config: &ModuleConfig,
+    ctx: &HostContext,
+    index: usize,
+    name: &str,
+    label: &str,
+    max: f64,
+    value: Option<f64>,
+) -> Component {
     let field = format!("trails.{index}.{name}");
     let mut input = NumberInput::new().name(field.clone()).min(0.0).max(max);
     if let Some(value) = value {
         input = input.value(value);
     }
-    Field::new().name(field).label(label).child(input).into()
+    named(config, ctx, &field).label(label).child(input).into()
 }
 
 /// Une liste figée : le niveau et la forme ne sont pas du texte libre (§2.23).
-fn choice_field(index: usize, name: &str, label: &str, values: &[&str], chosen: &str) -> Component {
+fn choice_field(
+    config: &ModuleConfig,
+    ctx: &HostContext,
+    index: usize,
+    name: &str,
+    label: &str,
+    values: &[&str],
+    chosen: &str,
+) -> Component {
     let field = format!("trails.{index}.{name}");
     let options = values
         .iter()
         .map(|value| ChoiceOption::new(*value, format!("{label}.{value}")))
         .collect();
-    Field::new()
-        .name(field.clone())
+    named(config, ctx, &field)
         .label(label)
         .child(
             Select::new()
@@ -311,6 +341,15 @@ fn choice_field(index: usize, name: &str, label: &str, values: &[&str], chosen: 
         .into()
 }
 
+/// Le champ `name`, avec le message de [`ModuleConfig::error_of`] sous lui s'il y en a un.
+fn named(config: &ModuleConfig, ctx: &HostContext, name: &str) -> Field {
+    let field = Field::new().name(name);
+    match config.error_of(name) {
+        Some(error) => field.error(error.get(&ctx.locale).to_string()),
+        None => field,
+    }
+}
+
 /// Au dixième de kilomètre : une distance de randonnée au millième dit une précision que ni le
 /// GPS ni le pas n'ont.
 fn round_tenth(value: f64) -> f64 {
@@ -318,13 +357,12 @@ fn round_tenth(value: f64) -> f64 {
 }
 
 /// Le lien de la commune, sous la liste du voyageur.
-fn commune_card(config: &ModuleConfig) -> Component {
+fn commune_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
     Card::new()
         .title("i18n:host.commune.title")
         .icon(IconName::Link)
         .child(
-            Field::new()
-                .name("commune_url")
+            named(config, ctx, "commune_url")
                 .label("i18n:host.commune.label")
                 .child(
                     TextInput::new()

@@ -18,14 +18,34 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         hint: crate::i18n::text("publish.trails.hint"),
     }];
 
-    // Une ligne sans niveau ne s'affiche pas : l'hôte a saisi un sentier et croit l'avoir publié.
-    if config.trails_incomplete() > 0 {
+    // Les erreurs du formulaire bloquent, chacune sur son champ — un niveau manquant compris :
+    // une ligne sans niveau ne s'affiche pas, l'hôte croirait l'avoir publiée.
+    items.extend(
+        config
+            .problems()
+            .into_iter()
+            .map(|(field, error)| PublishCheck {
+                label: crate::i18n::text(field_label(&field)),
+                id: format!("config.{field}"),
+                level: PublishLevel::Required,
+                ok: false,
+                hint: error,
+            }),
+    );
+
+    // Sans départ sur la carte : ni repère, ni « itinéraire jusqu'au départ ». La spec l'exige ;
+    // des itinéraires existants n'en ont pas et s'affichent quand même.
+    if let Some(index) = config
+        .trails
+        .iter()
+        .position(|trail| !trail.is_blank() && trail.coordinates().is_none())
+    {
         items.push(PublishCheck {
-            id: "level".into(),
+            id: format!("config.trails.{index}.lat"),
             level: PublishLevel::Recommended,
             ok: false,
-            label: crate::i18n::text("publish.level.label"),
-            hint: crate::i18n::text("publish.level.hint"),
+            label: crate::i18n::text("host.trails.start"),
+            hint: crate::i18n::text("host.trails.start.required"),
         });
     }
 
@@ -42,6 +62,21 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
     }
 
     Ok(PublishReadiness { items })
+}
+
+/// Le libellé du champ en défaut : celui du formulaire, sans l'index de la ligne.
+fn field_label(field: &str) -> &'static str {
+    match field.rsplit('.').next().unwrap_or_default() {
+        "title" => "host.trails.rowTitle",
+        "level" => "host.level.label",
+        "duration_min" => "host.trails.duration",
+        "distance_km" => "host.trails.distance",
+        "elevation_m" => "host.trails.elevation",
+        "link_url" => "host.trails.link",
+        "description" => "host.trails.description",
+        "commune_url" => "host.commune.label",
+        _ => "publish.trails.label",
+    }
 }
 
 #[portaki_sdk::wire]
