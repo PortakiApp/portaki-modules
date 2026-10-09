@@ -186,7 +186,7 @@ fn an_empty_form_draws_one_row_and_can_ask_for_another() {
         });
 }
 
-/// La borne tient : au huitième organe, « Ajouter » ne demande pas un neuvième.
+/// La borne tient : au dernier organe, « Ajouter » n'en demande pas un de plus.
 #[test]
 #[serial]
 fn the_bound_holds_at_the_last_row() {
@@ -199,8 +199,15 @@ fn the_bound_holds_at_the_last_row() {
         .run(|ctx| {
             let json =
                 serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
-            assert!(json.contains(r#""shutoffs.7.kind""#), "{json}");
-            assert!(!json.contains(r#""shutoffs.8.kind""#), "{json}");
+            let last = safety_shutoffs::MAX_SHUTOFFS - 1;
+            assert!(
+                json.contains(&format!(r#""shutoffs.{last}.kind""#)),
+                "{json}"
+            );
+            assert!(
+                !json.contains(&format!(r#""shutoffs.{}.kind""#, last + 1)),
+                "{json}"
+            );
             assert!(
                 json.contains(&format!(
                     r#""shutoffs_count":{}"#,

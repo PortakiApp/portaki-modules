@@ -43,7 +43,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
 fn shutoffs_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
     let rows_count = draft_rows(ctx, config.parse_shutoffs().len());
     let rows: Vec<Component> = (0..rows_count)
-        .map(|index| shutoff_row(index, config.shutoffs.get(index), ctx))
+        .map(|index| shutoff_row(index, config, ctx))
         .collect();
 
     Card::new()
@@ -83,7 +83,17 @@ fn emit_input(payload: impl Serialize) -> Action {
     Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
 }
 
-fn shutoff_row(index: usize, row: Option<&ShutoffRow>, ctx: &HostContext) -> Component {
+fn shutoff_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let row: Option<&ShutoffRow> = config.shutoffs.get(index);
+    // Le champ, avec le message de `problems` sous lui s'il y en a un.
+    let named = |key: &str| {
+        let name = format!("shutoffs.{index}.{key}");
+        let field = Field::new().name(name.clone());
+        match config.error_of(&name) {
+            Some(error) => field.error(error.get(&ctx.locale).to_string()),
+            None => field,
+        }
+    };
     let kind = row.map(ShutoffRow::kind_key).unwrap_or("other");
     let title = row.map(|r| r.title.host_value(ctx)).unwrap_or_default();
     let location = row.map(|r| r.location.host_value(ctx)).unwrap_or_default();
@@ -116,8 +126,7 @@ fn shutoff_row(index: usize, row: Option<&ShutoffRow>, ctx: &HostContext) -> Com
             .into(),
     );
     children.push(
-        Field::new()
-            .name(format!("shutoffs.{index}.title"))
+        named("title")
             .label("i18n:host.shutoffs.rowTitle")
             .child(
                 TextInput::new()
@@ -128,8 +137,7 @@ fn shutoff_row(index: usize, row: Option<&ShutoffRow>, ctx: &HostContext) -> Com
             .into(),
     );
     children.push(
-        Field::new()
-            .name(format!("shutoffs.{index}.location"))
+        named("location")
             .label("i18n:host.shutoffs.location")
             .child(
                 TextInput::new()
@@ -145,8 +153,7 @@ fn shutoff_row(index: usize, row: Option<&ShutoffRow>, ctx: &HostContext) -> Com
             .into(),
     );
     children.push(
-        Field::new()
-            .name(format!("shutoffs.{index}.instruction"))
+        named("instruction")
             .label("i18n:host.shutoffs.instruction")
             .child(
                 TextArea::new()
@@ -184,20 +191,21 @@ fn shutoff_row(index: usize, row: Option<&ShutoffRow>, ctx: &HostContext) -> Com
 
 /// La consigne générale : ce que l'hôte veut dire avant la liste.
 fn note_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let mut field = Field::new().name("general_note");
+    if let Some(error) = config.error_of("general_note") {
+        field = field.error(error.get(&ctx.locale).to_string());
+    }
     Card::new()
         .title("i18n:host.note.title")
         .icon(IconName::MessageCircle)
         .child(
-            Field::new()
-                .name("general_note")
-                .label("i18n:host.note.label")
-                .child(
-                    TextArea::new()
-                        .name("general_note")
-                        .value(config.general_note.host_value(ctx))
-                        .rows(3)
-                        .placeholder("i18n:host.note.placeholder"),
-                ),
+            field.label("i18n:host.note.label").child(
+                TextArea::new()
+                    .name("general_note")
+                    .value(config.general_note.host_value(ctx))
+                    .rows(3)
+                    .placeholder("i18n:host.note.placeholder"),
+            ),
         )
         .child(FieldHint::new().text("i18n:host.note.hint"))
         .into()

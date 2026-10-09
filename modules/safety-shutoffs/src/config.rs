@@ -1,15 +1,19 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
+use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
-/// Combien d'organes le formulaire accepte.
-///
-/// Huit, et non les six types : un logement a souvent deux vannes d'eau (froide, sanitaire) ou
-/// deux détecteurs. Le nombre de lignes reste dynamique — le motif de `rules` et `ical-sync` —
-/// plutôt que six emplacements figés que la plupart des hôtes laisseraient vides (§2.22).
-pub const MAX_SHUTOFFS: usize = 8;
+/// Combien d'organes la configuration accepte (spec Sécurité §2.2) : un logement a souvent deux
+/// vannes d'eau ou un détecteur par chambre. Le nombre de lignes reste dynamique — le motif de
+/// `rules` et `ical-sync` — plutôt que des emplacements figés laissés vides.
+pub const MAX_SHUTOFFS: usize = 20;
+
+/// Longueurs des textes (§2.1, §2.2).
+const TITLE_MAX: usize = 60;
+const LOCATION_MAX: usize = 120;
+const TEXT_MAX: usize = 280;
 
 /// Les six types d'organe, dans l'ordre du formulaire, et le glyphe de chacun.
 ///
@@ -57,7 +61,7 @@ impl ModuleConfig {
             .collect()
     }
 
-    /// Les lignes commencées mais incomplètes : un titre sans emplacement, ou l'inverse.
+    /// Les lignes commencées mais incomplètes : sans emplacement.
     pub fn shutoffs_incomplete(&self) -> usize {
         self.shutoffs
             .iter()
@@ -67,6 +71,56 @@ impl ModuleConfig {
 
     pub fn is_empty(&self) -> bool {
         self.parse_shutoffs().is_empty() && self.general_note.is_blank()
+    }
+
+    /// Ce qui ne va pas, champ par champ (`shutoffs.<i>.location`…) — sous le champ dans le
+    /// formulaire, et dans `publishReadiness`. Une ligne vide n'a rien à dire, et un nom absent
+    /// n'est pas une erreur : le type le donne (§4).
+    pub fn problems(&self) -> Vec<(String, I18nText)> {
+        let too_long = |value: &I18nText, max: usize| {
+            value
+                .by_language()
+                .find_map(|(_, text)| check::max_chars(text, max))
+        };
+        let mut problems: Vec<(String, I18nText)> = Vec::new();
+        if let Some(error) = too_long(&self.general_note, TEXT_MAX) {
+            problems.push(("general_note".into(), error));
+        }
+        let filled = self.shutoffs.iter().filter(|row| !row.is_blank()).count();
+        if filled > MAX_SHUTOFFS {
+            problems.push((
+                "shutoffs".into(),
+                crate::i18n::text("host.shutoffs.tooMany"),
+            ));
+        }
+        for (index, row) in self.shutoffs.iter().enumerate() {
+            if row.is_blank() {
+                continue;
+            }
+            let location = if row.location.is_blank() {
+                Some(crate::i18n::text("host.shutoffs.location.required"))
+            } else {
+                too_long(&row.location, LOCATION_MAX)
+            };
+            for (key, error) in [
+                ("title", too_long(&row.title, TITLE_MAX)),
+                ("location", location),
+                ("instruction", too_long(&row.instruction, TEXT_MAX)),
+            ] {
+                if let Some(error) = error {
+                    problems.push((format!("shutoffs.{index}.{key}"), error));
+                }
+            }
+        }
+        problems
+    }
+
+    /// Le message à afficher sous `field`, s'il y en a un.
+    pub fn error_of(&self, field: &str) -> Option<I18nText> {
+        self.problems()
+            .into_iter()
+            .find(|(name, _)| name == field)
+            .map(|(_, error)| error)
     }
 }
 
@@ -103,9 +157,19 @@ impl ShutoffRow {
         self.title.is_blank() && self.location.is_blank() && self.instruction.is_blank()
     }
 
-    /// De quoi s'afficher chez le voyageur.
+    /// De quoi s'afficher chez le voyageur : l'emplacement. Sans nom, le type le donne (§4).
     pub fn is_complete(&self) -> bool {
-        !self.title.is_blank() && !self.location.is_blank()
+        !self.location.is_blank()
+    }
+
+    /// Le titre du bloc : celui de l'hôte, sinon le libellé du type (« Gaz »).
+    pub fn title_for(&self, locale: &str) -> String {
+        let title = self.title.get(locale).trim();
+        if title.is_empty() {
+            format!("i18n:host.kind.label.{}", self.kind_key())
+        } else {
+            title.to_string()
+        }
     }
 
     /// Le type retenu, ramené à une valeur connue.
@@ -176,5 +240,22 @@ mod tests {
             .collect();
         let config = config(json!({ "shutoffs": rows }));
         assert_eq!(config.parse_shutoffs().len(), MAX_SHUTOFFS);
+    }
+
+    /// Sans nom, le type le donne ; sans emplacement, la ligne attend, avec son erreur.
+    #[test]
+    fn a_row_needs_its_location_not_its_name() {
+        let config = config(json!({ "shutoffs": [
+            { "kind": "gas", "location": "Sous l'évier" },
+            { "title": "Disjoncteur" },
+            { "title": "", "location": "" }
+        ] }));
+        assert_eq!(config.parse_shutoffs().len(), 1);
+        assert_eq!(
+            config.parse_shutoffs()[0].title_for("fr"),
+            "i18n:host.kind.label.gas"
+        );
+        let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
+        assert_eq!(fields, ["shutoffs.1.location"]);
     }
 }

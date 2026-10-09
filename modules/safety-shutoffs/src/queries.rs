@@ -21,8 +21,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         hint: crate::i18n::text("publish.shutoffs.hint"),
     }];
 
-    // Un titre sans emplacement ne s'affiche pas : l'hôte a commencé une ligne et croit l'avoir
-    // écrite. Recommandé, pas requis — le reste du module marche.
+    // Une ligne commencée sans emplacement ne s'affiche pas : « N emplacements vides ne seront
+    // pas publiés » (§3). Avertit ; l'erreur bloquante est sous le champ, plus bas.
     if config.shutoffs_incomplete() > 0 {
         items.push(PublishCheck {
             id: "incomplete".into(),
@@ -33,5 +33,39 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         });
     }
 
+    // Un emplacement manquant n'est pas bloquant : la ligne est écartée, et l'avertissement
+    // ci-dessus le dit (§3). Les autres erreurs du formulaire bloquent.
+    let missing_location = |field: &str| {
+        field
+            .strip_prefix("shutoffs.")
+            .and_then(|rest| rest.strip_suffix(".location"))
+            .and_then(|index| index.parse::<usize>().ok())
+            .and_then(|index| config.shutoffs.get(index))
+            .is_some_and(|row| row.location.is_blank())
+    };
+    let blocking: Vec<_> = config
+        .problems()
+        .into_iter()
+        .filter(|(field, _)| !missing_location(field))
+        .collect();
+    items.extend(blocking.into_iter().map(|(field, error)| PublishCheck {
+        label: crate::i18n::text(field_label(&field)),
+        id: format!("config.{field}"),
+        level: PublishLevel::Required,
+        ok: false,
+        hint: error,
+    }));
+
     Ok(PublishReadiness { items })
+}
+
+/// Le libellé du champ en défaut : celui du formulaire, sans l'index de la ligne.
+fn field_label(field: &str) -> &'static str {
+    match field.rsplit('.').next().unwrap_or_default() {
+        "general_note" => "host.note.label",
+        "title" => "host.shutoffs.rowTitle",
+        "location" => "host.shutoffs.location",
+        "instruction" => "host.shutoffs.instruction",
+        _ => "publish.shutoffs.label",
+    }
 }
