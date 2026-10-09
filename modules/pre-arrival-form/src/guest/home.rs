@@ -9,7 +9,7 @@ use portaki_sdk::sdui::common::Leading;
 use portaki_sdk::sdui::primitives::{Card, HostFragment, ListItem, Stack};
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::ModuleConfig;
+use crate::config::{ModuleConfig, QuestionKind};
 use crate::entities::PreArrivalResponse;
 use crate::slots::Slot;
 
@@ -107,6 +107,8 @@ pub struct FormInputs<'a> {
     pub host_name: String,
     /// Le nombre de voyageurs du séjour, quand la plateforme le connaît.
     pub party_size: Option<u32>,
+    /// Pour lire les questions de l'hôte dans la langue du voyageur.
+    pub ctx: &'a Context,
 }
 
 /// Fullscreen overlay form body (design `prearrivalBody` — no nested Card chrome).
@@ -126,6 +128,7 @@ pub fn build_form_surface(inputs: &FormInputs) -> Surface {
         slots,
         host_name,
         party_size,
+        ctx,
     } = inputs;
     let completed = *completed;
     let existing = *existing;
@@ -309,6 +312,51 @@ pub fn build_form_surface(inputs: &FormInputs) -> Surface {
         );
     }
 
+    // Les questions de l'hôte, après les questions standard (§2.2).
+    let stored = existing.map(crate::answers::stored).unwrap_or_default();
+    for (index, question) in questions.guest_questions().enumerate() {
+        let name = crate::answers::field_name(index);
+        let value = crate::answers::prefill(question, &stored);
+        let control: Component = match question.kind {
+            QuestionKind::Text => text_input(&name, "", value.as_deref()).into(),
+            QuestionKind::YesNo | QuestionKind::Choice => {
+                let choices = if question.kind == QuestionKind::YesNo {
+                    vec![
+                        ChoiceOption::new("yes", "i18n:form.custom.yes"),
+                        ChoiceOption::new("no", "i18n:form.custom.no"),
+                    ]
+                } else {
+                    question
+                        .options()
+                        .iter()
+                        .enumerate()
+                        .map(|(i, label)| ChoiceOption::new(i.to_string(), label.for_ctx(ctx)))
+                        .collect()
+                };
+                let mut list = ChoiceList::new()
+                    .name(name.clone())
+                    .layout(if question.kind == QuestionKind::YesNo {
+                        ChoiceListLayout::Segmented
+                    } else {
+                        ChoiceListLayout::Compact
+                    })
+                    .choices(choices);
+                if let Some(value) = value {
+                    list = list.value(value);
+                }
+                list.into()
+            }
+        };
+        form_children.push(
+            Field::new()
+                .name(name)
+                .label(question.label.for_ctx(ctx))
+                .required(question.required)
+                .child(control)
+                .into(),
+        );
+    }
+
     form_children.push(
         Field::new()
             .name("messageToHost")
@@ -336,7 +384,11 @@ pub fn build_form_surface(inputs: &FormInputs) -> Surface {
 }
 
 /// Read-only summary after check-in (answers no longer editable).
-pub fn build_readonly_surface(questions: &ModuleConfig, response: &PreArrivalResponse) -> Surface {
+pub fn build_readonly_surface(
+    questions: &ModuleConfig,
+    response: &PreArrivalResponse,
+    ctx: &Context,
+) -> Surface {
     use portaki_sdk::sdui::primitives::Text;
 
     let mut children: Vec<Component> = Vec::new();
@@ -397,6 +449,13 @@ pub fn build_readonly_surface(questions: &ModuleConfig, response: &PreArrivalRes
             "clipboard",
             "i18n:form.idDocument.label",
             display_or_dash(response.id_document.as_deref()),
+        ));
+    }
+    for answer in crate::answers::stored(response) {
+        children.push(readonly_row(
+            "info-circle",
+            answer.question.for_ctx(ctx),
+            crate::answers::display(&answer.answer, ctx),
         ));
     }
     if let Some(message) = response

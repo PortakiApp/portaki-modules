@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 /// One pre-arrival form response per stay.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 2)]
+#[portaki_sdk::entity(schema_version = 3)]
 pub struct PreArrivalResponse {
     pub id: Uuid,
     pub stay_id: Uuid,
@@ -21,6 +21,10 @@ pub struct PreArrivalResponse {
     #[serde(default)]
     pub transport: Option<String>,
     pub guest_message: Option<String>,
+    /// Les réponses aux questions de l'hôte, en JSON ([`crate::answers::CustomAnswer`]).
+    /// Absent des réponses d'avant ces questions.
+    #[serde(default)]
+    pub custom_answers: Option<String>,
     pub completed_at: DateTime<Utc>,
 }
 

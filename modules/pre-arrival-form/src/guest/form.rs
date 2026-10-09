@@ -20,7 +20,7 @@ pub fn render_guest_form(ctx: GuestContext) -> Result<Surface> {
         GuestLoad::NotYet => Ok(not_yet(GUEST_FORM)),
         GuestLoad::Locked { response } => {
             let config = ModuleConfig::load(&ctx)?;
-            Ok(build_readonly_surface(&config, &response))
+            Ok(build_readonly_surface(&config, &response, &ctx))
         }
         GuestLoad::Form {
             completed,
@@ -45,6 +45,7 @@ pub fn render_guest_form(ctx: GuestContext) -> Result<Surface> {
                     .map(|host| host.name.trim().to_string())
                     .unwrap_or_default(),
                 party_size: stay.and_then(|stay| stay.party_size),
+                ctx: &ctx,
             }))
         }
     }

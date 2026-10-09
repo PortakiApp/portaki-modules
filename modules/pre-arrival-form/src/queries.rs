@@ -79,16 +79,21 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         label: text("publish.questions.label"),
         hint: text("publish.questions.hint"),
     }];
-    // L'heure du dernier créneau, sous son champ : elle bloque, comme dans le formulaire.
+    // L'heure du dernier créneau et les questions de l'hôte, sous leur champ : elles bloquent,
+    // comme dans le formulaire.
     items.extend(
         config
             .problems()
             .into_iter()
             .map(|(field, error)| PublishCheck {
+                label: text(if field == "slots_until" {
+                    "host.slots.until"
+                } else {
+                    "host.custom.title"
+                }),
                 id: format!("config.{field}"),
                 level: PublishLevel::Required,
                 ok: false,
-                label: text("host.slots.until"),
                 hint: error,
             }),
     );

@@ -40,6 +40,18 @@ pub struct SubmitArgs {
     #[serde(default)]
     pub transport: Option<String>,
     pub message_to_host: Option<String>,
+    /// Les réponses aux questions de l'hôte, dans leur ordre (`custom0`…) : le livret envoie
+    /// des champs à plat, et l'hôte en pose 5 au plus.
+    #[serde(default)]
+    pub custom0: Option<String>,
+    #[serde(default)]
+    pub custom1: Option<String>,
+    #[serde(default)]
+    pub custom2: Option<String>,
+    #[serde(default)]
+    pub custom3: Option<String>,
+    #[serde(default)]
+    pub custom4: Option<String>,
 }
 
 /// Scheduling tick / stay-created — module owns availability gate + email content.
@@ -177,6 +189,19 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
         None
     };
     let message = normalize(args.message_to_host);
+    let custom = crate::answers::collect(
+        &q,
+        [
+            args.custom0,
+            args.custom1,
+            args.custom2,
+            args.custom3,
+            args.custom4,
+        ],
+    )?;
+    let custom_answers = (!custom.is_empty())
+        .then(|| serde_json::to_string(&custom))
+        .transpose()?;
 
     let _ = storage::upsert(
         stay_id,
@@ -189,6 +214,7 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
             id_document,
             transport: transport.clone(),
             guest_message: message.clone(),
+            custom_answers,
         },
     )?;
 

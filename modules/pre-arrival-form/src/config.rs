@@ -5,6 +5,8 @@
 //! - which questions are enabled (`ask_*`)
 
 use chrono::{DateTime, Duration, Utc};
+use portaki_sdk::config::check;
+use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::host::time::PropertyTz;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -138,6 +140,84 @@ pub struct ModuleConfig {
     /// Un e-mail au voyageur qui n'a pas répondu, la veille de la limite (§2.3).
     #[field(label = "host.reminder")]
     pub reminder: bool,
+    /// Les questions de l'hôte, posées après les questions standard (§2.2), 5 au plus.
+    #[field(structured, label = "host.custom.title")]
+    pub custom_questions: Vec<CustomQuestion>,
+}
+
+/// Combien de questions l'hôte peut ajouter (§2.2).
+pub const MAX_CUSTOM_QUESTIONS: usize = 5;
+/// Les bornes des options d'une question à choix (§2.2).
+pub const MIN_OPTIONS: usize = 2;
+pub const MAX_OPTIONS: usize = 6;
+
+/// Ce qu'une question de l'hôte attend du voyageur.
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum QuestionKind {
+    Text,
+    Choice,
+    /// Une valeur inconnue se lit « oui / non » : elle ne doit pas rendre la config illisible.
+    #[default]
+    #[serde(other)]
+    YesNo,
+}
+
+impl QuestionKind {
+    pub const WIRE_VALUES: [&'static str; 3] = ["yes_no", "text", "choice"];
+
+    pub fn as_wire(&self) -> &'static str {
+        match self {
+            Self::Text => "text",
+            Self::YesNo => "yes_no",
+            Self::Choice => "choice",
+        }
+    }
+}
+
+/// Une question de l'hôte, telle que le formulaire l'envoie (`custom_questions.N.*`).
+#[portaki_sdk::params]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(default)]
+pub struct CustomQuestion {
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub id: String,
+    pub label: I18nText,
+    #[serde(rename = "type")]
+    pub kind: QuestionKind,
+    /// Les pastilles d'une question à choix ; une sous-liste (`custom_questions.N.options.M`).
+    pub options: Vec<QuestionOption>,
+    #[serde(deserialize_with = "lenient_bool")]
+    pub required: bool,
+}
+
+/// Une option d'une question à choix.
+#[portaki_sdk::params]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(default)]
+pub struct QuestionOption {
+    pub label: I18nText,
+}
+
+impl CustomQuestion {
+    /// Les options saisies, vides retirées, 6 au plus.
+    pub fn options(&self) -> Vec<&I18nText> {
+        self.options
+            .iter()
+            .map(|option| &option.label)
+            .filter(|label| !label.is_blank())
+            .take(MAX_OPTIONS)
+            .collect()
+    }
+}
+
+/// Un interrupteur dans une ligne arrive en booléen ou en texte (`"true"`).
+fn lenient_bool<'de, D: serde::Deserializer<'de>>(de: D) -> Result<bool, D::Error> {
+    Ok(match Value::deserialize(de)? {
+        Value::Bool(value) => value,
+        Value::String(raw) => matches!(raw.trim(), "true" | "on" | "1"),
+        _ => false,
+    })
 }
 
 /// Le dernier créneau proposé quand l'hôte n'en donne pas.
@@ -158,6 +238,7 @@ impl Default for ModuleConfig {
             slots_until: String::new(),
             deadline: Deadline::J1At18,
             reminder: true,
+            custom_questions: Vec::new(),
         }
     }
 }
@@ -189,12 +270,66 @@ impl ModuleConfig {
         }
     }
 
-    /// Ce qui ne va pas, champ par champ — sous le champ, et dans `publishReadiness`.
-    pub fn problems(&self) -> Vec<(&'static str, portaki_sdk::contracts::i18n::I18nText)> {
-        portaki_sdk::config::check::time(self.slots_until.trim())
-            .map(|error| ("slots_until", error))
+    /// Ce qui ne va pas, champ par champ (`custom_questions.0.label`…) — sous le champ, et dans
+    /// `publishReadiness`.
+    pub fn problems(&self) -> Vec<(String, I18nText)> {
+        let too_long = |value: &I18nText, max: usize| {
+            value
+                .by_language()
+                .find_map(|(_, text)| check::max_chars(text, max))
+        };
+        let mut problems: Vec<(String, I18nText)> = check::time(self.slots_until.trim())
+            .map(|error| ("slots_until".to_string(), error))
             .into_iter()
-            .collect()
+            .collect();
+        if self.custom_questions.len() > MAX_CUSTOM_QUESTIONS {
+            problems.push((
+                "custom_questions".into(),
+                crate::i18n::text("host.custom.tooMany"),
+            ));
+        }
+        for (index, question) in self.custom_questions.iter().enumerate() {
+            let label = if question.label.is_blank() {
+                Some(crate::i18n::text("host.custom.label.required"))
+            } else {
+                too_long(&question.label, 120)
+            };
+            if let Some(error) = label {
+                problems.push((format!("custom_questions.{index}.label"), error));
+            }
+            if question.kind == QuestionKind::Choice {
+                let options = question.options();
+                let error = if options.len() < MIN_OPTIONS {
+                    Some(crate::i18n::text("host.custom.options.min"))
+                } else {
+                    options.iter().find_map(|option| too_long(option, 40))
+                };
+                if let Some(error) = error {
+                    problems.push((format!("custom_questions.{index}.options"), error));
+                }
+            }
+        }
+        problems
+    }
+
+    /// L'erreur d'un champ du formulaire, s'il en a une.
+    pub fn error_of(&self, field: &str) -> Option<I18nText> {
+        self.problems()
+            .into_iter()
+            .find(|(name, _)| name == field)
+            .map(|(_, error)| error)
+    }
+
+    /// Les questions que le voyageur voit : écrites, 5 au plus, et à choix seulement avec deux
+    /// options.
+    pub fn guest_questions(&self) -> impl Iterator<Item = &CustomQuestion> {
+        self.custom_questions
+            .iter()
+            .filter(|question| !question.label.is_blank())
+            .filter(|question| {
+                question.kind != QuestionKind::Choice || question.options().len() >= MIN_OPTIONS
+            })
+            .take(MAX_CUSTOM_QUESTIONS)
     }
 
     /// At least one question is asked.
@@ -205,6 +340,7 @@ impl ModuleConfig {
             || self.ask_guest_count
             || self.ask_special_needs
             || self.ask_id_document
+            || self.guest_questions().next().is_some()
     }
 }
 

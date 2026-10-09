@@ -1,5 +1,6 @@
 //! Portaki pre-arrival form module — ETA, occasion, allergies, and host-configurable questions.
 
+mod answers;
 mod commands;
 mod config;
 mod email_i18n;
@@ -14,10 +15,11 @@ mod show_when;
 mod slots;
 mod storage;
 
+pub use answers::{Answer, CustomAnswer};
 pub use commands::{
     send_form_available, send_reminder_j0, send_reminder_j1, send_reminder_j3, submit, SubmitArgs,
 };
-pub use config::{Deadline, ModuleConfig, ShowWhen};
+pub use config::{CustomQuestion, Deadline, ModuleConfig, QuestionKind, QuestionOption, ShowWhen};
 pub use entities::PreArrivalResponse;
 pub use guest::{render_guest_form, render_home_card};
 pub use host::{render_host_main, render_host_stay};

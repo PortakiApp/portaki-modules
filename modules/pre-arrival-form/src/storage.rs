@@ -56,6 +56,7 @@ pub struct ResponseDraft {
     pub id_document: Option<String>,
     pub transport: Option<String>,
     pub guest_message: Option<String>,
+    pub custom_answers: Option<String>,
 }
 
 pub fn upsert(stay_id: Uuid, draft: ResponseDraft) -> Result<PreArrivalResponse> {
@@ -78,6 +79,7 @@ pub fn upsert(stay_id: Uuid, draft: ResponseDraft) -> Result<PreArrivalResponse>
         id_document: draft.id_document,
         transport: draft.transport,
         guest_message: draft.guest_message,
+        custom_answers: draft.custom_answers,
         completed_at: now,
     };
     persist_row(row.clone())?;
