@@ -7,7 +7,8 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::ChoiceListLayout;
 use portaki_sdk::sdui::primitives::{
-    Button, Card, Celebration, ChoiceList, Divider, Field, Form, QRCode, Stack, Text, TextArea,
+    Button, Card, Celebration, Checkbox, ChoiceList, Divider, Field, Form, QRCode, Stack, Text,
+    TextArea,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -83,6 +84,7 @@ pub fn build_home_card(data: &GuestData) -> Surface {
             crate::commands::SubmitReviewArgs {
                 rating: 0,
                 comment: String::new(),
+                public_consent: false,
             },
         );
 
@@ -113,6 +115,13 @@ pub fn build_home_card(data: &GuestData) -> Surface {
         let form = comment_field(data.private_comment)
             .into_iter()
             .fold(form, |form, field| form.child(field));
+        // La page publique du logement ne montre que les avis consentis : décochée par défaut.
+        let form = form.child(
+            Checkbox::new()
+                .name("public_consent")
+                .label("i18n:guest.publicConsent")
+                .checked(false),
+        );
         children.push(Component::Form(
             form.child(
                 Button::new()

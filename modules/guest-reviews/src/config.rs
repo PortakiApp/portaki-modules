@@ -65,6 +65,18 @@ pub struct ModuleConfig {
     pub private_comment: bool,
     #[field(label = "host.thanks.label")]
     pub thank_you_message: I18nText,
+    /// Carte « Page publique » : le bloc d'avis paraît sur la page publique du logement.
+    ///
+    /// À plat (`public_enabled`, pas `public.enabled`) : le tableau de bord n'imbrique que
+    /// `liste.N.champ`, et la plateforme refuse une clé `public.enabled` (`config_field_unknown`).
+    #[field(label = "host.public.enabled.label")]
+    pub public_enabled: bool,
+    /// Les avis montrés sur la page publique, 2 à 6 : le séjour de chacun (`stay:<id>:review`),
+    /// pris parmi les avis consentis. Le choix multiple envoie du JSON en texte : un champ
+    /// `structured` le refuserait, d'où `text`, lu en liste à l'arrivée.
+    #[field(kind = "text", label = "host.public.reviews.label")]
+    #[serde(deserialize_with = "id_list", serialize_with = "id_list_text")]
+    pub public_reviews: Vec<String>,
 
     /// How the booking-platform link is decided against the stay's channel (`auto`). No host
     /// form sets it: left out of the declared config.
@@ -72,6 +84,39 @@ pub struct ModuleConfig {
     /// Le lien Airbnb d'avant `review_url` : lu tant que `review_url` est vide.
     #[serde(skip_serializing_if = "String::is_empty")]
     pub airbnb_review_url: String,
+}
+
+/// Les bornes du choix d'avis de la page publique.
+pub const PUBLIC_REVIEWS_MIN: usize = 2;
+pub const PUBLIC_REVIEWS_MAX: usize = 6;
+
+/// Une liste d'identifiants, en tableau ou en texte : le choix multiple envoie du JSON en chaîne
+/// (`"[\"a\",\"b\"]"`), un choix simple la valeur seule (`"a"`). Comme `days_list` d'Horaires.
+fn id_list<'de, D>(deserializer: D) -> std::result::Result<Vec<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Ok(match Value::deserialize(deserializer)? {
+        Value::Array(items) => items
+            .into_iter()
+            .filter_map(|item| item.as_str().map(str::to_string))
+            .collect(),
+        Value::String(text) => serde_json::from_str::<Vec<String>>(&text).unwrap_or_else(|_| {
+            text.split(',')
+                .map(|id| id.trim().to_string())
+                .filter(|id| !id.is_empty())
+                .collect()
+        }),
+        _ => Vec::new(),
+    })
+}
+
+/// Réécrite comme le formulaire l'envoie, en texte : le champ est déclaré `text`.
+fn id_list_text<S>(ids: &[String], serializer: S) -> std::result::Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    serializer.serialize_str(&serde_json::to_string(ids).unwrap_or_default())
 }
 
 /// Quand demander l'avis.
@@ -165,6 +210,8 @@ impl Default for ModuleConfig {
             thank_you_message: I18nText::default(),
             channel_mode: ChannelMode::Manual,
             airbnb_review_url: String::new(),
+            public_enabled: false,
+            public_reviews: Vec::new(),
         }
     }
 }

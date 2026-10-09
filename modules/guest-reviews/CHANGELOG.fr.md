@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.0
+
+Vos meilleurs avis sur la page publique du logement.
+
+* Le voyageur peut accepter que son avis paraisse sur la page du logement : la case est décochée par défaut.
+* Choisissez de 2 à 6 avis à afficher, parmi ceux que les voyageurs ont accepté de publier.
+* La page publique montre la note moyenne, le nombre de séjours notés et les avis choisis, au prénom seul.
+
 ## 1.5.0
 
 Toutes les plateformes d'avis, au bon moment.

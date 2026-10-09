@@ -13,7 +13,7 @@ use crate::i18n::text;
 #[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
 pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
     let config = ModuleConfig::load(&ctx)?;
-    let items = check::https_url(config.review_url.trim())
+    let mut items: Vec<PublishCheck> = check::https_url(config.review_url.trim())
         .map(|hint: I18nText| PublishCheck {
             id: "config.review_url".into(),
             level: PublishLevel::Required,
@@ -23,5 +23,19 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         })
         .into_iter()
         .collect();
+    // Page publique : un avertissement, pas un blocage. Le bloc se masque de lui-même tant
+    // qu'il manque des avis consentis ; le livret, lui, n'en dépend pas.
+    if config.public_enabled {
+        let consented = crate::commands::consented_reviews()?;
+        if let Some(key) = crate::host::public_reviews_problem(&config, &consented) {
+            items.push(PublishCheck {
+                id: "config.public_reviews".into(),
+                level: PublishLevel::Recommended,
+                ok: false,
+                label: text("host.public.reviews.label", &[]),
+                hint: text(key, &[]),
+            });
+        }
+    }
     Ok(PublishReadiness { items })
 }
