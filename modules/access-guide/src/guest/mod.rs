@@ -11,6 +11,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{EmptyState, Stack};
 use portaki_sdk::sdui::surface::Surface;
 
+pub(crate) use body::method_key;
 use detail::build_detail_surface;
 use home::build_home_card;
 use load::{load_guest_data, GuestLoad};

@@ -307,6 +307,32 @@ pub struct ModuleConfig {
     pub reveal_policy: RevealPolicy,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub smart_lock_provider_module_id: Option<String>,
+    /// Le bouton « Déverrouiller » (§2.4) : de l'arrivée au départ, ou comme les codes.
+    #[serde(default)]
+    pub unlock_window: UnlockWindow,
+    /// Le créneau de remise des clés (§2.5) : « 16:00 – 19:00 ».
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub handover_slot: Option<String>,
+    /// Qui remet les clés quand ce n'est pas l'hôte : son nom, et son numéro s'il y en a un.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub handover_by: Option<(String, Option<String>)>,
+    /// Le téléphone de la réception (§2.6).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub desk_phone: Option<String>,
+    /// Que faire en arrivant hors des horaires de la réception (§2.6).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub desk_after_hours: Option<String>,
+}
+
+/// Quand le bouton « Déverrouiller » se montre (§2.4).
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum UnlockWindow {
+    /// De l'heure d'arrivée à l'heure de départ.
+    #[default]
+    Stay,
+    /// Comme la révélation des codes.
+    Reveal,
 }
 
 impl Default for ModuleConfig {
@@ -319,6 +345,11 @@ impl Default for ModuleConfig {
             arrival: ArrivalGuide::default(),
             reveal_policy: RevealPolicy::DayBefore16h,
             smart_lock_provider_module_id: None,
+            unlock_window: UnlockWindow::Stay,
+            handover_slot: None,
+            handover_by: None,
+            desk_phone: None,
+            desk_after_hours: None,
         }
     }
 }
@@ -400,6 +431,28 @@ impl ModuleConfig {
 
     pub fn arrival_video_url(&self) -> &str {
         self.arrival.arrival_video_url.as_str()
+    }
+
+    /// Une méthode à code sans son code : le voyageur ne pourra pas entrer. Une serrure liée à
+    /// un module émet ses codes elle-même ; le code de secours n'est qu'un repli.
+    pub fn entry_code_missing(&self) -> bool {
+        match &self.method {
+            MethodFields::Keybox { .. } => self.keybox_code().is_none(),
+            MethodFields::DoorCode { code, .. } => code.trim().is_empty(),
+            MethodFields::SmartLock { .. } => {
+                self.smart_lock_manual_code().is_none()
+                    && opt_empty(&self.smart_lock_provider_module_id)
+            }
+            _ => false,
+        }
+    }
+
+    /// Un code à révéler, quel qu'il soit : celui du moyen d'accès, de l'immeuble, du parking.
+    pub fn has_any_code(&self) -> bool {
+        self.keybox_code().is_some()
+            || self.smart_lock_manual_code().is_some()
+            || self.gate_code().is_some()
+            || self.parking_code().is_some()
     }
 }
 
@@ -585,6 +638,32 @@ pub struct HostConfig {
     /// hôte écrit ici une consigne qui ne concerne pas celui qui arrive à 17 h.
     #[field(label = "config.lateArrivalNote")]
     pub late_arrival_note: I18nText,
+    /// `stay` (défaut) : de l'arrivée au départ ; `reveal` : comme les codes (§2.4).
+    #[field(
+        kind = "select",
+        options = ["stay", "reveal"],
+        label = "host.smartLock.unlockWindow"
+    )]
+    pub unlock_window: String,
+    /// Le créneau de remise des clés, « 16:00 » à « 19:00 » (§2.5).
+    #[field(label = "host.handover.from")]
+    pub handover_slot_from: String,
+    #[field(label = "host.handover.until")]
+    pub handover_slot_until: String,
+    #[field(
+        kind = "select",
+        options = ["me", "other"],
+        label = "host.handover.person"
+    )]
+    pub handover_person: String,
+    #[field(label = "host.handover.name")]
+    pub handover_name: String,
+    #[field(label = "host.handover.phone")]
+    pub handover_phone: String,
+    #[field(label = "host.desk.phone")]
+    pub desk_phone: String,
+    #[field(label = "host.desk.afterHours")]
+    pub desk_after_hours: I18nText,
 }
 
 /// Combien d'étapes le chemin jusqu'à la porte accepte (spec Accès §2.9).
@@ -642,6 +721,38 @@ impl HostConfig {
             check::max_chars(&self.parking_spot, 20),
         );
         push("parking_price".into(), too_long(&self.parking_price, 60));
+        // Champs neufs (§2.5, §2.6) : aucune donnée existante à bloquer, et seulement ceux de la
+        // méthode choisie — les autres gardent leur dernière valeur sans la montrer.
+        if self.method() == Some(PrimaryMethod::InPerson) {
+            push(
+                "handover_slot_from".into(),
+                (self.handover_slot().is_err()).then(|| text("host.handover.slot.invalid")),
+            );
+            if self.handover_by_other() {
+                push(
+                    "handover_name".into(),
+                    if self.handover_name.trim().is_empty() {
+                        Some(text("host.handover.name.required"))
+                    } else {
+                        check::max_chars(&self.handover_name, 60)
+                    },
+                );
+                push(
+                    "handover_phone".into(),
+                    check::phone(&dialable(&self.handover_phone)),
+                );
+            }
+        }
+        if self.method() == Some(PrimaryMethod::BuildingStaff) {
+            push(
+                "desk_phone".into(),
+                check::phone(&dialable(&self.desk_phone)),
+            );
+            push(
+                "desk_after_hours".into(),
+                too_long(&self.desk_after_hours, 280),
+            );
+        }
         let steps = self.steps.iter().filter(|s| !s.is_blank()).count();
         push(
             "steps".into(),
@@ -698,6 +809,35 @@ impl HostConfig {
             (Some(pin), Some(home)) => distance_km(pin, (home.lat, home.lng)) > 2.0,
             _ => false,
         }
+    }
+
+    /// Une autre personne que l'hôte remet les clés (§2.5).
+    pub fn handover_by_other(&self) -> bool {
+        self.handover_person.trim() == "other"
+    }
+
+    /// Le créneau de remise des clés, « 16:00 – 19:00 » ; `Ok(None)` sans créneau, `Err` s'il ne
+    /// tient pas dans la journée d'arrivée : il commence après 6:00, finit avant 23:59, et
+    /// commence avant de finir.
+    pub(crate) fn handover_slot(&self) -> std::result::Result<Option<String>, ()> {
+        let (from, until) = (
+            self.handover_slot_from.trim(),
+            self.handover_slot_until.trim(),
+        );
+        if from.is_empty() && until.is_empty() {
+            return Ok(None);
+        }
+        let parse = |at: &str| chrono::NaiveTime::parse_from_str(at, "%H:%M").map_err(|_| ());
+        let (start, end) = (parse(from)?, parse(until)?);
+        let six = chrono::NaiveTime::from_hms_opt(6, 0, 0).ok_or(())?;
+        if start < six || start >= end {
+            return Err(());
+        }
+        Ok(Some(format!(
+            "{} – {}",
+            start.format("%H:%M"),
+            end.format("%H:%M")
+        )))
     }
 
     /// The chosen access method, if the host picked one.
@@ -798,6 +938,24 @@ impl HostConfig {
             reveal_policy: self.reveal(),
             smart_lock_provider_module_id: (primary_method == PrimaryMethod::SmartLock)
                 .then(|| nonempty(&self.smart_lock_provider_module_id))
+                .flatten(),
+            unlock_window: if self.unlock_window.trim() == "reveal" {
+                UnlockWindow::Reveal
+            } else {
+                UnlockWindow::Stay
+            },
+            handover_slot: (primary_method == PrimaryMethod::InPerson)
+                .then(|| self.handover_slot().ok().flatten())
+                .flatten(),
+            handover_by: (primary_method == PrimaryMethod::InPerson && self.handover_by_other())
+                .then(|| nonempty(&self.handover_name))
+                .flatten()
+                .map(|name| (name, nonempty(&dialable(&self.handover_phone)))),
+            desk_phone: (primary_method == PrimaryMethod::BuildingStaff)
+                .then(|| nonempty(&dialable(&self.desk_phone)))
+                .flatten(),
+            desk_after_hours: (primary_method == PrimaryMethod::BuildingStaff)
+                .then(|| text(&self.desk_after_hours))
                 .flatten(),
         }
     }
@@ -908,14 +1066,20 @@ fn phone_error(phone: &str) -> Option<I18nText> {
     if !attempt {
         return None;
     }
-    let phone: String = phone
-        .chars()
-        .filter(|c| !c.is_whitespace() && !matches!(c, '.' | '-' | '(' | ')'))
-        .collect();
+    let phone = dialable(phone);
     let short = (2..=6).contains(&phone.len()) && phone.bytes().all(|b| b.is_ascii_digit());
     (!short)
         .then(|| portaki_sdk::config::check::phone(&phone))
         .flatten()
+}
+
+/// Le numéro tel qu'il se compose : sans espace ni séparateur — « +33 6 12 34 56 78 » tel quel
+/// ne passe ni la vérification E.164 ni un lien `tel:`.
+pub(crate) fn dialable(phone: &str) -> String {
+    phone
+        .chars()
+        .filter(|c| !c.is_whitespace() && !matches!(c, '.' | '-' | '(' | ')'))
+        .collect()
 }
 
 fn nonempty(value: &str) -> Option<String> {
@@ -1252,6 +1416,7 @@ fn migrate_new_shape(mut raw: RawConfig) -> ModuleConfig {
         arrival,
         reveal_policy: raw.reveal_policy.unwrap_or_default(),
         smart_lock_provider_module_id: nonempty_opt(raw.smart_lock_provider_module_id),
+        ..ModuleConfig::default()
     };
     config.sync_primary_method();
     config
@@ -1293,6 +1458,7 @@ fn migrate_from_legacy_fields(raw: RawConfig) -> ModuleConfig {
         arrival,
         reveal_policy: raw.reveal_policy.unwrap_or(RevealPolicy::DayBefore16h),
         smart_lock_provider_module_id: nonempty_opt(raw.smart_lock_provider_module_id),
+        ..ModuleConfig::default()
     }
 }
 
@@ -1611,6 +1777,7 @@ mod tests {
             arrival: ArrivalGuide::default(),
             reveal_policy: RevealPolicy::HoursBefore24,
             smart_lock_provider_module_id: Some("nuki".into()),
+            ..ModuleConfig::default()
         };
         let bytes = serde_json::to_vec(&cfg).unwrap();
         let value: Value = serde_json::from_slice(&bytes).unwrap();
@@ -2138,5 +2305,126 @@ mod tests {
             warning("022 123 45 67").as_deref(),
             Some("Ce numéro n'est pas valide. Vérifiez l'indicatif.")
         );
+    }
+
+    #[test]
+    fn the_handover_slot_fits_the_arrival_day() {
+        const SLOT: &str = "Le créneau doit commencer après 6:00 et finir avant 23:59.";
+        let slot = |from: &str, until: &str| {
+            problem_of(
+                json!({ "primary_method": "in_person", "handover_slot_from": from,
+                        "handover_slot_until": until }),
+                "handover_slot_from",
+            )
+        };
+        assert_eq!(slot("", ""), None);
+        assert_eq!(slot("16:00", "19:00"), None);
+        assert_eq!(slot("6:00", "23:59"), None);
+        for (from, until) in [
+            ("5:30", "9:00"),
+            ("19:00", "16:00"),
+            ("16h", "19h"),
+            ("16:00", ""),
+        ] {
+            assert_eq!(slot(from, until).as_deref(), Some(SLOT), "{from}–{until}");
+        }
+        // Une autre méthode garde sa dernière valeur sans la juger.
+        assert_eq!(
+            problem_of(
+                json!({ "primary_method": "keybox", "handover_slot_from": "5:00" }),
+                "handover_slot_from"
+            ),
+            None
+        );
+        let config: HostConfig = serde_json::from_value(json!({
+            "primary_method": "in_person", "handover_slot_from": "16:00",
+            "handover_slot_until": "19:00"
+        }))
+        .unwrap();
+        assert_eq!(
+            config.to_model("fr").handover_slot.as_deref(),
+            Some("16:00 – 19:00")
+        );
+    }
+
+    #[test]
+    fn someone_else_handing_over_needs_a_name_and_a_valid_phone() {
+        let other = |name: &str, phone: &str, field: &str| {
+            problem_of(
+                json!({ "primary_method": "in_person", "handover_person": "other",
+                        "handover_name": name, "handover_phone": phone }),
+                field,
+            )
+        };
+        assert_eq!(
+            other("", "", "handover_name").as_deref(),
+            Some("Indiquez le nom de la personne.")
+        );
+        assert_eq!(
+            other("Paulette", "06 12", "handover_phone").as_deref(),
+            Some("Ce numéro n'est pas valide. Vérifiez l'indicatif.")
+        );
+        assert_eq!(
+            other("Paulette", "+33 6 12 34 56 78", "handover_phone"),
+            None
+        );
+        // Moi : ni nom ni numéro demandés.
+        assert_eq!(
+            problem_of(
+                json!({ "primary_method": "in_person", "handover_person": "me" }),
+                "handover_name"
+            ),
+            None
+        );
+        let config: HostConfig = serde_json::from_value(json!({
+            "primary_method": "in_person", "handover_person": "other",
+            "handover_name": "Paulette", "handover_phone": "+33 6 12 34 56 78"
+        }))
+        .unwrap();
+        assert_eq!(
+            config.to_model("fr").handover_by,
+            Some(("Paulette".into(), Some("+33612345678".into())))
+        );
+    }
+
+    #[test]
+    fn the_desk_phone_is_checked_and_its_after_hours_note_is_280_chars() {
+        let desk = |config: serde_json::Value, field: &str| {
+            let mut config = config;
+            config["primary_method"] = json!("building_staff");
+            problem_of(config, field)
+        };
+        assert_eq!(
+            desk(json!({ "desk_phone": "04 93" }), "desk_phone").as_deref(),
+            Some("Ce numéro n'est pas valide. Vérifiez l'indicatif.")
+        );
+        assert_eq!(
+            desk(json!({ "desk_phone": "+33493000000" }), "desk_phone"),
+            None
+        );
+        assert!(desk(
+            json!({ "desk_after_hours": { "fr": "x".repeat(281) } }),
+            "desk_after_hours"
+        )
+        .is_some());
+        assert_eq!(
+            desk(
+                json!({ "desk_after_hours": { "fr": "x".repeat(280) } }),
+                "desk_after_hours"
+            ),
+            None
+        );
+    }
+
+    #[test]
+    fn the_unlock_window_is_the_stay_unless_the_host_picks_the_reveal() {
+        let window = |value: &str| {
+            let config: HostConfig =
+                serde_json::from_value(json!({ "unlock_window": value })).unwrap();
+            config.to_model("fr").unlock_window
+        };
+        assert_eq!(window(""), UnlockWindow::Stay);
+        assert_eq!(window("stay"), UnlockWindow::Stay);
+        assert_eq!(window("reveal"), UnlockWindow::Reveal);
     }
 }

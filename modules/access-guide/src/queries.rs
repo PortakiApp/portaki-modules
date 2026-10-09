@@ -54,19 +54,25 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
     }
 
     let config = ModuleConfig::read(&ctx)?;
-    let ok = match &config.method {
-        MethodFields::Keybox { .. } => config.keybox_code().is_some(),
-        MethodFields::DoorCode { code, .. } => !code.trim().is_empty(),
-        // A provider module issues the codes; the manual one is only a fallback.
-        MethodFields::SmartLock { .. } => {
-            config.smart_lock_manual_code().is_some()
-                || config
-                    .smart_lock_provider_module_id
-                    .as_deref()
-                    .is_some_and(|id| !id.trim().is_empty())
-        }
-        _ => return Ok(PublishReadiness { items }),
-    };
+    // Une serrure sans code de secours, hors ligne : le voyageur n'a plus qu'à appeler (§9 cas 8).
+    if let MethodFields::SmartLock { manual_code: None } = &config.method {
+        items.push(PublishCheck {
+            id: "config.smart_lock_manual_code".into(),
+            level: PublishLevel::Recommended,
+            ok: false,
+            label: text("host.smartLock.manualCode"),
+            hint: text("publish.backupCode.missing"),
+        });
+    }
+    if !matches!(
+        config.method,
+        MethodFields::Keybox { .. }
+            | MethodFields::DoorCode { .. }
+            | MethodFields::SmartLock { .. }
+    ) {
+        return Ok(PublishReadiness { items });
+    }
+    let ok = !config.entry_code_missing();
     items.insert(
         0,
         PublishCheck {
@@ -96,6 +102,11 @@ fn field_label(field: &str) -> &'static str {
         "arrival_video_url" => "host.video.label",
         "in_person_contact" => "host.inPerson.contact",
         "building_staff_contact" => "host.buildingStaff.contact",
+        "handover_slot_from" => "host.handover.slot",
+        "handover_name" => "host.handover.name",
+        "handover_phone" => "host.handover.phone",
+        "desk_phone" => "host.desk.phone",
+        "desk_after_hours" => "host.desk.afterHours",
         "title" => "host.step.title",
         "detail" => "host.step.detail",
         _ => "host.steps.label",

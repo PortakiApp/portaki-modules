@@ -5,7 +5,7 @@ use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::GeoPoint;
 
-use crate::config::{has_content, HostConfig, ModuleConfig};
+use crate::config::{has_content, HostConfig, ModuleConfig, UnlockWindow};
 use crate::reveal::{evaluate_reveal, format_available_from, locked_message, RevealDecision};
 use crate::texts::ModuleTexts;
 
@@ -35,6 +35,8 @@ pub struct GuestData {
     /// `None` quand l'hôte n'a rien écrit — son silence ne se montre pas (§0.5) — ou quand
     /// l'arrivée annoncée n'est pas tardive : la consigne ne concerne alors personne.
     pub late_arrival_note: Option<String>,
+    /// Le bouton « Déverrouiller » se montre (§2.4) : dans le séjour, ou comme les codes.
+    pub unlock_open: bool,
 }
 
 pub enum GuestLoad {
@@ -72,6 +74,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestLoad> {
     );
 
     let late_arrival_note = late_arrival_note(ctx, &texts, &property_timezone);
+    let unlock_open = unlock_open(config.unlock_window, &decision, now, checkin_at);
 
     Ok(GuestLoad::Ready(Box::new(GuestData {
         config,
@@ -86,7 +89,23 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestLoad> {
         stay_id,
         checkin_hour: checkin_hour(ctx, &property_timezone),
         late_arrival_note,
+        unlock_open,
     })))
+}
+
+/// De l'heure d'arrivée à l'heure de départ, par défaut ; comme les codes sinon. Sans heure
+/// d'arrivée (un aperçu, un séjour sans dates), la fenêtre est celle des codes : ne rien montrer
+/// cacherait le bouton à tort, l'ouvrir toujours le montrerait à qui n'a pas de séjour.
+pub(crate) fn unlock_open(
+    window: UnlockWindow,
+    decision: &RevealDecision,
+    now: chrono::DateTime<chrono::Utc>,
+    checkin_at: Option<chrono::DateTime<chrono::Utc>>,
+) -> bool {
+    match (window, checkin_at) {
+        (UnlockWindow::Stay, Some(checkin)) => now >= checkin && !decision.ended,
+        _ => decision.revealed,
+    }
 }
 
 fn property_timezone(ctx: &GuestContext) -> String {

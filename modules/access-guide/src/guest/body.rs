@@ -32,6 +32,34 @@ fn external_action(url: &str) -> Action {
     Action::external(url)
 }
 
+/// « Appeler Paulette », « Appeler la réception » : un lien `tel:` vers un numéro déjà composable.
+fn call_button(label: String, phone: &str) -> Component {
+    Component::Button(
+        Button::new()
+            .label(label)
+            .variant(ButtonVariant::Outline)
+            .action(external_action(&format!("tel:{phone}"))),
+    )
+}
+
+/// Après le départ, la carte se réduit à l'adresse (§2.3, cas 6) : les codes sont masqués côté
+/// serveur, et des tuiles de points sans date de révélation ne promettraient plus rien.
+fn ended_card(data: &GuestData) -> Vec<Component> {
+    let mut children = Vec::new();
+    if !data.address.is_empty() {
+        children.push(kv_row("i18n:guest.address", &data.address, false));
+    }
+    if let Some(url) = maps_url(data) {
+        children.push(Component::Button(
+            Button::new()
+                .label("i18n:guest.openMaps")
+                .variant(ButtonVariant::Outline)
+                .action(external_action(&url)),
+        ));
+    }
+    children
+}
+
 fn command_action(module_id: &ModuleId, name: OperationName, args: impl Serialize) -> Action {
     Action::command(module_id, name, args)
 }
@@ -279,10 +307,14 @@ fn as_row(component: Component) -> Component {
 /// <p>Ni `mono`, ni copie, ni masque : « 16–19 h » n'est pas un code.
 fn plain_method_tile(data: &GuestData) -> Option<Component> {
     let (key, icon, value) = match &data.config.method {
+        // Le créneau saisi d'abord (§2.5), l'ancienne indication libre ensuite.
         MethodFields::InPerson { time_hint, .. } => (
             "i18n:guest.inPerson.handover",
             IconName::Users,
-            time_hint.clone()?,
+            data.config
+                .handover_slot
+                .clone()
+                .or_else(|| time_hint.clone())?,
         ),
         MethodFields::BuildingStaff { hours, .. } => (
             "i18n:guest.buildingStaff.desk",
@@ -385,20 +417,23 @@ fn push_smart_lock_ctas(children: &mut Vec<Component>, data: &GuestData) {
     else {
         return;
     };
+    let args = smart_lock_command_args(data);
+    // « Déverrouiller » suit sa fenêtre (§2.4) ; le code de la serrure, un code comme un autre,
+    // suit la révélation.
+    if data.unlock_open {
+        children.push(Component::Button(
+            Button::new()
+                .label("i18n:guest.smartLock.unlock")
+                .action(command_action(
+                    &ModuleId::new(provider),
+                    contracts::smart_lock::UNLOCK,
+                    args.clone(),
+                )),
+        ));
+    }
     if !data.secrets_revealed {
         return;
     }
-
-    let args = smart_lock_command_args(data);
-    children.push(Component::Button(
-        Button::new()
-            .label("i18n:guest.smartLock.unlock")
-            .action(command_action(
-                &ModuleId::new(provider),
-                contracts::smart_lock::UNLOCK,
-                args.clone(),
-            )),
-    ));
     children.push(Component::Button(
         Button::new()
             .label("i18n:guest.smartLock.getCredential")
@@ -493,6 +528,15 @@ fn push_primary_method(children: &mut Vec<Component>, data: &GuestData, detailed
             if let Some(contact) = contact {
                 push_text_row(children, "i18n:guest.inPerson.contact", contact);
             }
+            // Qui remet les clés, quand ce n'est pas l'hôte : son nom, et de quoi l'appeler.
+            if let Some((name, phone)) = &data.config.handover_by {
+                push_text_row(children, "i18n:guest.handover.by", name);
+                if let Some(phone) = phone {
+                    let label = t!("guest.handover.call", name = name.as_str())
+                        .unwrap_or_else(|_| name.clone());
+                    children.push(call_button(label, phone));
+                }
+            }
         }
         MethodFields::BuildingStaff {
             staff_kind,
@@ -515,6 +559,12 @@ fn push_primary_method(children: &mut Vec<Component>, data: &GuestData, detailed
             }
             if let Some(contact) = contact {
                 push_text_row(children, "i18n:guest.buildingStaff.contact", contact);
+            }
+            if let Some(after_hours) = data.config.desk_after_hours.as_deref() {
+                push_text_row(children, "i18n:guest.desk.afterHours", after_hours);
+            }
+            if let Some(phone) = data.config.desk_phone.as_deref() {
+                children.push(call_button("i18n:guest.desk.call".to_string(), phone));
             }
         }
         MethodFields::HostGreets {
@@ -702,6 +752,9 @@ fn push_arrival_extras(children: &mut Vec<Component>, data: &GuestData) {
 }
 
 pub fn build_access_glance(data: &GuestData) -> Vec<Component> {
+    if data.reveal_ended {
+        return ended_card(data);
+    }
     let mut children = Vec::new();
 
     push_late_arrival_banner(&mut children, data);
@@ -819,6 +872,9 @@ fn push_arrival_path(children: &mut Vec<Component>, data: &GuestData) {
 }
 
 pub fn build_access_detail(data: &GuestData) -> Vec<Component> {
+    if data.reveal_ended {
+        return ended_card(data);
+    }
     let mut children = Vec::new();
 
     let note = data.texts.global_note.trim();
@@ -878,7 +934,7 @@ pub fn build_access_detail(data: &GuestData) -> Vec<Component> {
 ///
 /// Les deux morceaux sont traduits ici, pas assemblés en `i18n:` : le shell résout une chaîne
 /// entière, jamais un fragment, et `"i18n:a · i18n:b"` s'afficherait tel quel.
-fn method_key(method: PrimaryMethod) -> &'static str {
+pub(crate) fn method_key(method: PrimaryMethod) -> &'static str {
     // Le fil est en snake_case, les clés en camelCase : les dériver l'une de l'autre donnerait
     // trois clés fausses sur sept, et le voyageur lirait « guest.method.door_code ».
     match method {

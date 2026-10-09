@@ -4,11 +4,11 @@
 
 L'immeuble, le parking et l'accès, en détail.
 
-* Indiquez l'étage et la porte, et s'il n'y a pas d'ascenseur : le livret affiche « Sans ascenseur ».
-* Précisez le stationnement (place privée, rue, parking public, garage), le numéro de place et, dans la rue ou en parking public, le tarif.
-* Placez l'épingle sur l'entrée du parking : un repère « P » sur la Carte, et un avertissement si elle est à plus de 2 km du logement.
-* La serrure connectée ou la boîte à clés s'ajoute aux équipements de la page du logement ; ni code ni emplacement n'y figurent.
-* Interphone, consignes et vidéo d'arrivée sont vérifiés ; un numéro de contact mal saisi est signalé sans bloquer la publication.
+* Immeuble : étage, porte et « Sans ascenseur ». Parking : type, numéro de place, tarif et repère « P » sur la Carte, signalé au-delà de 2 km.
+* La serrure connectée ou la boîte à clés s'ajoute aux équipements du logement ; interphone, consignes, vidéo et numéros de téléphone sont vérifiés.
+* Remise en main propre : un créneau « 16:00 – 19:00 », et le nom et le bouton d'appel de qui remet les clés ; à la réception, un bouton d'appel.
+* Le bouton Déverrouiller s'affiche de l'arrivée au départ, ou comme les codes ; après le départ, la carte se réduit à l'adresse.
+* Dans la fiche du séjour, la date de révélation des codes ; un code manquant y est signalé, et dans À venir avant chaque arrivée.
 
 ## 1.8.0
 
