@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.10.0
+
+Les produits de base dans les équipements.
+
+* Dès qu'un produit nommé est à votre liste, les produits de base s'ajoutent aux équipements de la page du logement, sans le détail des produits.
+
 ## 2.9.1
 
 Les réglages se vérifient avant publication.

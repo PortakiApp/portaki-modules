@@ -1,5 +1,6 @@
 //! Portaki consumables module — host catalog + guest shortage reports.
 
+mod amenities;
 mod commands;
 mod config;
 mod email_i18n;
@@ -16,6 +17,7 @@ mod queries;
 mod status;
 mod storage;
 
+pub use amenities::amenities_list;
 pub use commands::{
     replace_items, seed_defaults, submit, update_config, update_status, ConsumableItemInput,
     ReplaceItemsArgs, SubmitArgs, UpdateConfigArgs, UpdateStatusArgs,
@@ -46,3 +48,6 @@ portaki_sdk::portaki_module!(
 
 #[portaki_sdk::capability(required, id = "core.storage")]
 pub const STORAGE: &str = "core.storage";
+
+#[portaki_sdk::capability(provided, id = "amenities.provide")]
+pub const AMENITIES: &str = "amenities.provide";
