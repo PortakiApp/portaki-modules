@@ -3,6 +3,7 @@
   "markers": {
     "markers": [
       {
+        "category": "event",
         "id": "marche-nocturne",
         "kind": "poi",
         "label": "Marché nocturne des artisans",

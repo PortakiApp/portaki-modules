@@ -42,6 +42,9 @@ pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
             if !label.trim().is_empty() {
                 marker = marker.label(label);
             }
+            // Le type du lieu : c'est d'après lui que le livret range le repère dans la famille
+            // « Événements », pas d'après le nom du module.
+            marker.category = Some("event".into());
             Some(marker)
         })
         .take(MAX_MARKERS)
