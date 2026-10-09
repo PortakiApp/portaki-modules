@@ -52,10 +52,13 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
     Ok(PublishReadiness { items })
 }
 
-/// Bloquant, sauf la catégorie manquante : des adresses saisies avant la règle n'en ont pas, et
-/// les bloquer enfermerait l'hôte hors de son livret. Elle avertit, comme la position.
+/// Bloquant, sauf la catégorie manquante et le téléphone d'une activité : des lignes saisies avant
+/// ces règles ne les suivent pas (adresse sans catégorie, numéro sans indicatif), et les bloquer
+/// enfermerait l'hôte hors de son livret. Ils avertissent, comme la position.
 fn level_of(field: &str) -> PublishLevel {
-    if field.starts_with("spots.") && field.ends_with(".category") {
+    let category = field.starts_with("spots.") && field.ends_with(".category");
+    let activity_phone = field.starts_with("host_activities.") && field.ends_with(".phone");
+    if category || activity_phone {
         PublishLevel::Recommended
     } else {
         PublishLevel::Required
