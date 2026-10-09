@@ -6,7 +6,6 @@
         "guest.danger.message": "Sortez du logement, puis appelez le 112. Ne touchez à aucun interrupteur.",
         "guest.danger.title": "Odeur de gaz ou fumée",
         "guest.emergency": "Numéros d’urgence",
-        "guest.note.title": "Le mot de votre hôte",
         "guest.subtitle": "Où couper l’électricité, l’eau et le gaz",
         "guest.title": "En cas de problème",
         "nav.safety-shutoffs": "Coupures & sécurité"
@@ -40,7 +39,7 @@
           },
           {
             "message": "En cas de fuite d’eau, coupez d’abord la vanne, puis appelez-moi à toute heure.",
-            "title": "i18n:guest.note.title",
+            "title": "Le mot de Claire",
             "tone": "info",
             "type": "InfoBanner"
           },

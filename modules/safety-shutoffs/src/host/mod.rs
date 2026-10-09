@@ -46,21 +46,36 @@ fn shutoffs_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         .map(|index| shutoff_row(index, config, ctx))
         .collect();
 
+    // Sous la liste, ce que dit la porte de publication : « Ajoutez au moins un emplacement. »
+    // tant qu'aucun organe n'est complet ; « 20 au maximum » vient de `problems`.
+    let error = config.error_of("shutoffs").or_else(|| {
+        config
+            .parse_shutoffs()
+            .is_empty()
+            .then(|| crate::i18n::text("host.shutoffs.required"))
+    });
+    let mut field = Field::new().name("shutoffs");
+    if let Some(error) = error {
+        field = field.error(error.get(&ctx.locale).to_string());
+    }
+
     Card::new()
         .title("i18n:host.shutoffs.title")
         .subtitle("i18n:host.shutoffs.subtitle")
         .icon(IconName::Shield)
         .child(
-            StepList::new()
-                .addLabel("i18n:host.shutoffs.add")
-                .removeLabel("i18n:host.shutoffs.remove")
-                .emptyTitle("i18n:host.shutoffs.emptyTitle")
-                .emptyDescription("i18n:host.shutoffs.emptyDescription")
-                .itemKeyPrefix("shutoffs")
-                .addAction(emit_input(RowCount {
-                    shutoffs_count: (rows_count + 1).min(MAX_SHUTOFFS),
-                }))
-                .children(rows),
+            field.child(
+                StepList::new()
+                    .addLabel("i18n:host.shutoffs.add")
+                    .removeLabel("i18n:host.shutoffs.remove")
+                    .emptyTitle("i18n:host.shutoffs.emptyTitle")
+                    .emptyDescription("i18n:host.shutoffs.emptyDescription")
+                    .itemKeyPrefix("shutoffs")
+                    .addAction(emit_input(RowCount {
+                        shutoffs_count: (rows_count + 1).min(MAX_SHUTOFFS),
+                    }))
+                    .children(rows),
+            ),
         )
         .into()
 }

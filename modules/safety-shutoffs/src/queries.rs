@@ -18,7 +18,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         level: PublishLevel::Required,
         ok: !config.parse_shutoffs().is_empty(),
         label: crate::i18n::text("publish.shutoffs.label"),
-        hint: crate::i18n::text("publish.shutoffs.hint"),
+        hint: crate::i18n::text("host.shutoffs.required"),
     }];
 
     // Une ligne commencée sans emplacement ne s'affiche pas : « N emplacements vides ne seront

@@ -9,6 +9,7 @@
   "guest.empty.description": "O seu anfitrião ainda não indicou onde cortar a água, a luz ou o gás.",
   "guest.empty.title": "Nada a mostrar por agora",
   "guest.note.title": "Uma palavra do seu anfitrião",
+  "guest.note.title.named": "Uma palavra de {host}",
   "guest.subtitle": "Onde cortar a luz, a água e o gás",
   "guest.title": "Se algo correr mal",
   "home.card.subtitle": "Luz, água, gás: onde cortar",
@@ -37,6 +38,7 @@
   "host.shutoffs.photo": "Foto",
   "host.shutoffs.photo.hint": "Uma foto da torneira ou do disjuntor reconhece-se mais depressa que uma descrição.",
   "host.shutoffs.remove": "Remover",
+  "host.shutoffs.required": "Adicione pelo menos uma localização.",
   "host.shutoffs.rowTitle": "Título",
   "host.shutoffs.rowTitle.placeholder": "Quadro elétrico",
   "host.shutoffs.subtitle": "Até oito, na ordem em que os adicionar",
@@ -47,6 +49,5 @@
   "nav.safety-shutoffs": "Cortes & segurança",
   "publish.incomplete.hint": "Uma linha sem localização não será publicada.",
   "publish.incomplete.label": "Há linhas incompletas",
-  "publish.shutoffs.hint": "Um título e uma localização bastam.",
   "publish.shutoffs.label": "Pelo menos um ponto de corte"
 }

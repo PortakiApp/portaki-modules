@@ -9,6 +9,7 @@
   "guest.empty.description": "Your host has not said yet where to shut off the water, the power or the gas.",
   "guest.empty.title": "Nothing to show yet",
   "guest.note.title": "A word from your host",
+  "guest.note.title.named": "A word from {host}",
   "guest.subtitle": "Where to shut off the power, the water and the gas",
   "guest.title": "If something goes wrong",
   "home.card.subtitle": "Power, water, gas: where to shut off",
@@ -37,6 +38,7 @@
   "host.shutoffs.photo": "Photo",
   "host.shutoffs.photo.hint": "A photo of the valve or breaker is recognised faster than a description.",
   "host.shutoffs.remove": "Remove",
+  "host.shutoffs.required": "Add at least one location.",
   "host.shutoffs.rowTitle": "Title",
   "host.shutoffs.rowTitle.placeholder": "Fuse box",
   "host.shutoffs.subtitle": "Up to eight, in the order you add them",
@@ -47,6 +49,5 @@
   "nav.safety-shutoffs": "Shutoffs & safety",
   "publish.incomplete.hint": "A row without a location will not be published.",
   "publish.incomplete.label": "Some rows are incomplete",
-  "publish.shutoffs.hint": "A title and a location are enough.",
   "publish.shutoffs.label": "At least one shutoff point"
 }

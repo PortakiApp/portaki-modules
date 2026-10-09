@@ -9,6 +9,7 @@
   "guest.empty.description": "房东还没有说明在哪里关水、断电或关燃气。",
   "guest.empty.title": "暂时没有内容",
   "guest.note.title": "房东的话",
+  "guest.note.title.named": "{host} 的话",
   "guest.subtitle": "在哪里断电、关水、关燃气",
   "guest.title": "万一出问题",
   "home.card.subtitle": "电、水、燃气：在哪里关",
@@ -37,6 +38,7 @@
   "host.shutoffs.photo": "照片",
   "host.shutoffs.photo.hint": "阀门或断路器的照片，比文字描述更容易辨认。",
   "host.shutoffs.remove": "删除",
+  "host.shutoffs.required": "请至少添加一个位置。",
   "host.shutoffs.rowTitle": "名称",
   "host.shutoffs.rowTitle.placeholder": "配电箱",
   "host.shutoffs.subtitle": "最多八处，按添加顺序排列",
@@ -47,6 +49,5 @@
   "nav.safety-shutoffs": "总闸与安全",
   "publish.incomplete.hint": "没有位置的行将不会发布。",
   "publish.incomplete.label": "有条目填写不完整",
-  "publish.shutoffs.hint": "有名称和位置就够了。",
   "publish.shutoffs.label": "至少一处总闸"
 }
