@@ -364,7 +364,7 @@ impl FacilityRow {
             }
         }
         if self.mode() == MODE_BY_DAY {
-            for (day, entry) in self.exceptions.iter().enumerate().take(7) {
+            for (day, entry) in self.by_day_entries() {
                 for (key, value) in [
                     ("opens_at", &entry.opens_at),
                     ("closes_at", &entry.closes_at),
@@ -419,20 +419,43 @@ impl FacilityRow {
         }
     }
 
+    /// Les lignes « selon le jour », chacune avec l'index de son jour dans [`WEEK`]
+    /// (lundi = 0). Le jour vient de `id` (le champ caché du formulaire), sinon de `day` ; une
+    /// ligne qui ne nomme aucun jour prend sa position.
+    ///
+    /// [`WEEK`]: crate::schedule::WEEK
+    pub fn by_day_entries(&self) -> Vec<(usize, &DayHours)> {
+        let week_index = |raw: &str| {
+            crate::schedule::WEEK.iter().position(|day| {
+                raw.trim()
+                    .eq_ignore_ascii_case(crate::schedule::day_key(*day))
+            })
+        };
+        self.exceptions
+            .iter()
+            .enumerate()
+            .filter_map(|(position, entry)| {
+                let day = week_index(&entry.id)
+                    .or_else(|| week_index(&entry.day))
+                    .or((position < 7).then_some(position))?;
+                Some((day, entry))
+            })
+            .collect()
+    }
+
     /// Les jours qui dérogent, tels que le calcul les lit.
     ///
-    /// Selon le jour, la ligne `d` du formulaire est le jour `d` de la semaine (lundi en tête), et
-    /// les jours de fermeture cochés dans un autre mode ne comptent plus : un jour sans plage est
-    /// déjà fermé. Le formulaire n'envoie pas de `day` : dans un autre mode, ces lignes ne
-    /// nomment aucun jour et ne remplacent donc pas l'horaire choisi.
+    /// Selon le jour, chaque ligne porte son jour ([`FacilityRow::by_day_entries`]), et les jours
+    /// de fermeture cochés dans un autre mode ne comptent plus : un jour sans plage est déjà
+    /// fermé. Le formulaire n'envoie pas de `day`, seulement `id` : dans un autre mode, ces
+    /// lignes ne nomment aucun jour et ne remplacent donc pas l'horaire choisi.
     fn day_exceptions(&self) -> Vec<DayHours> {
         if self.mode() == MODE_BY_DAY {
             return self
-                .exceptions
-                .iter()
-                .zip(crate::schedule::WEEK)
-                .map(|(entry, day)| DayHours {
-                    day: crate::schedule::day_key(day).to_string(),
+                .by_day_entries()
+                .into_iter()
+                .map(|(day, entry)| DayHours {
+                    day: crate::schedule::day_key(crate::schedule::WEEK[day]).to_string(),
                     ..entry.clone()
                 })
                 .collect();
@@ -721,6 +744,35 @@ mod tests {
                 .map(|s| (s.opens, s.closes)),
             Some((6 * 60, 23 * 60))
         );
+    }
+
+    /// Le formulaire resserre les index : sans la ligne du mardi, le mercredi arrive en position
+    /// 1. Son `id` le garde au mercredi, et une erreur s'affiche sous le bon jour.
+    #[test]
+    fn by_day_rows_keep_their_day_when_the_form_compacts_them() {
+        let config: ModuleConfig = serde_json::from_value(json!({ "facilities": [{
+            "title": "Spa", "mode": "by_day",
+            "exceptions": [
+                { "id": "mon", "opens_at": "09:00", "closes_at": "12:00" },
+                { "id": "wed", "opens_at": "14:00", "closes_at": "18:00" },
+                { "id": "fri", "opens_at": "25:00", "closes_at": "18:00" }
+            ]
+        }] }))
+        .unwrap();
+        let schedule = config.facilities[0].schedule();
+        let span = |day| schedule.span_on(day).map(|s| (s.opens, s.closes));
+        assert_eq!(span(chrono::Weekday::Mon), Some((9 * 60, 12 * 60)));
+        assert_eq!(span(chrono::Weekday::Tue), None);
+        assert_eq!(span(chrono::Weekday::Wed), Some((14 * 60, 18 * 60)));
+        assert_eq!(span(chrono::Weekday::Thu), None);
+        let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
+        assert_eq!(fields, ["facilities.0.exceptions.4.opens_at"]);
+        // Dans un autre mode, `id` ne nomme pas de jour : la ligne garde sa phrase.
+        let same = FacilityRow {
+            mode: "same".into(),
+            ..config.facilities[0].clone()
+        };
+        assert!(!same.schedule().is_structured());
     }
 
     /// Selon le jour, une heure invalide est signalée sous son jour.
