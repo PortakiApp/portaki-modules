@@ -4,15 +4,15 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Card, Field, FieldHint, Form, ImageUpload, InfoBanner, Page, Select, Stack,
-    StepList, Text, TextArea, TextInput, ToggleRow,
+    AddressMapPicker, Card, ChoiceList, Field, FieldHint, Form, ImageUpload, InfoBanner, Page,
+    Select, Stack, StepList, Text, TextArea, TextInput, ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::affiliate::{looks_like_url, normalize_curated_url, CuratedUrlError, MAX_CURATED_LINKS};
 use crate::config::{
     ActivityRow, HostActivityRow, ModuleConfig, SpotRow, MAX_GALLERY, MAX_HOST_ACTIVITIES,
-    TIQETS_RADIUS_CHOICES_KM, WEEKDAYS,
+    PUBLIC_MAX, PUBLIC_MIN, TIQETS_RADIUS_CHOICES_KM, WEEKDAYS,
 };
 use crate::tiqets::TiqetsStatus;
 use crate::viator::ViatorStatus;
@@ -106,6 +106,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
         &viator_min_rating,
         viator_status,
     ));
+    cards.push(public_card(&config, &ctx));
     cards.push(
         Card::new()
             .title("i18n:host.section.disclaimer")
@@ -461,6 +462,62 @@ fn spots_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
                 }))
                 .children(rows),
         )
+        .into()
+}
+
+/// « Page publique » : l'interrupteur du bloc, puis le choix de 3 à 6 adresses publiées.
+///
+/// Le choix reste rendu sans adresse à choisir : le formulaire envoie toujours les clés déclarées.
+fn public_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let enabled = ctx.input_bool("public_enabled", config.public_enabled);
+    let spots = config.parse_spots();
+    let choices: Vec<ChoiceOption> = spots
+        .iter()
+        .map(|spot| {
+            let option = ChoiceOption::new(spot.id.clone(), spot.title.host_value(ctx).to_string());
+            match spot.category.as_deref() {
+                Some(category) => option.description(category.to_string()),
+                None => option,
+            }
+        })
+        .collect();
+    let hint = if spots.is_empty() {
+        "i18n:host.public.none".to_string()
+    } else {
+        t!(
+            "host.public.count",
+            count = config.public_chosen().len(),
+            min = PUBLIC_MIN,
+            max = PUBLIC_MAX
+        )
+        .unwrap_or_else(|_| "i18n:host.public.count".into())
+    };
+    Card::new()
+        .title("i18n:host.public.title")
+        .subtitle("i18n:host.public.subtitle")
+        .icon(IconName::Home)
+        .children(vec![
+            ToggleRow::new()
+                .name("public_enabled")
+                .label("i18n:host.public.enabled")
+                .icon(IconName::Home)
+                .checked(enabled)
+                .into(),
+            Field::new()
+                .name("public_spots")
+                .label("i18n:host.public.spots")
+                .child(Stack::new().children(vec![
+                    FieldHint::new().text(hint).into(),
+                    ChoiceList::new()
+                        .name("public_spots")
+                        .multi(true)
+                        .limit(PUBLIC_MAX as u32)
+                        .choices(choices)
+                        .value(serde_json::to_string(&config.public_spots).unwrap_or_default())
+                        .into(),
+                ]))
+                .into(),
+        ])
         .into()
 }
 

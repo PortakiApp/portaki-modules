@@ -7,6 +7,7 @@ mod home;
 mod item;
 mod link;
 mod load;
+mod public;
 mod upcoming;
 
 use portaki_sdk::prelude::*;
@@ -56,6 +57,21 @@ fn render_with_data(
         Some(data) => build(&data),
         None => nothing_to_share(surface_id),
     })
+}
+
+/// Le bloc « Adresses » de la page publique du logement : 3 à 6 adresses choisies par l'hôte.
+///
+/// La configuration seule : pas de `load_guest_data`, qui interroge les fournisseurs partenaires
+/// et ne sert rien de ce bloc.
+#[portaki_sdk::surface(guest, id = "property.public")]
+pub fn render_property_public(ctx: GuestContext) -> Result<Surface> {
+    let config = crate::config::ModuleConfig::load(&ctx)?;
+    let property = ctx
+        .property
+        .coordinates
+        .as_ref()
+        .map(|point| (point.lat, point.lng));
+    Ok(public::build_public_section(&config, &ctx.locale, property))
 }
 
 /// Rien à montrer encore — écrit pour le voyageur, qui n'y peut rien.
