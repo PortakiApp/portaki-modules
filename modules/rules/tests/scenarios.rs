@@ -19,6 +19,7 @@ fn setup(builder: MockContextBuilder) -> MockContextBuilder {
             ]
         });
         let args = SaveContentArgs {
+            card_limit: None,
             items: Vec::new(),
             content_fr: content_fr.to_string(),
             content_en: String::new(),

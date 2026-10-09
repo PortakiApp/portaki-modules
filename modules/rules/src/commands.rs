@@ -19,9 +19,12 @@ pub struct RuleItemInput {
     /// `neutral` · `important` · `allowed` — partagé entre les langues.
     #[serde(default)]
     pub status: String,
-    /// Thème libre, dans la langue éditée.
+    /// Clé de thème ([`crate::content::THEMES`]) — partagée entre les langues.
     #[serde(default)]
     pub theme: String,
+    /// Heures de la règle (`22:00 – 08:00`) — partagées entre les langues.
+    #[serde(default)]
+    pub hours: String,
     /// Legacy bilingual fields.
     #[serde(default)]
     pub title_fr: String,
@@ -46,6 +49,9 @@ pub struct SaveContentArgs {
     /// Legacy JSON string for English payload.
     #[serde(default)]
     pub content_en: String,
+    /// « Règles sur la carte » — un nombre : le `NumberInput` n'envoie pas d'entier.
+    #[serde(default)]
+    pub card_limit: Option<f64>,
 }
 
 /// Workspace header Save → nested form `{ items: [{ icon, title, subtitle }] }`.
@@ -78,6 +84,9 @@ pub fn save_content(ctx: Context, args: SaveContentArgs) -> Result<()> {
         None => (String::new(), String::new()),
     };
     let mut bundle = RulesBundle::from_row(&prev_fr, &prev_en);
+    if let Some(limit) = args.card_limit.filter(|n| n.is_finite() && *n > 0.0) {
+        bundle.card_limit = Some(limit.round() as u32);
+    }
 
     if !args.items.is_empty() {
         let has_legacy_dual = args.items.iter().any(|i| {
@@ -123,9 +132,13 @@ fn build_payload_for_lang(items: &[RuleItemInput]) -> RulesPayload {
             subtitle: item.subtitle.trim().to_string(),
             status: RuleStatus::from_wire(&item.status),
             theme: item.theme.trim().to_string(),
+            hours: item.hours.trim().to_string(),
         });
     }
-    RulesPayload { items: out }
+    RulesPayload {
+        items: out,
+        ..RulesPayload::default()
+    }
 }
 
 fn build_payloads_from_legacy_items(items: &[RuleItemInput]) -> (RulesPayload, RulesPayload) {
@@ -138,12 +151,14 @@ fn build_payloads_from_legacy_items(items: &[RuleItemInput]) -> (RulesPayload, R
         let icon = item.icon.trim().to_string();
         let status = RuleStatus::from_wire(&item.status);
         let theme = item.theme.trim().to_string();
+        let hours = item.hours.trim().to_string();
         fr_items.push(RuleItem {
             icon: icon.clone(),
             title: item.title_fr.trim().to_string(),
             subtitle: item.subtitle_fr.trim().to_string(),
             status,
             theme: theme.clone(),
+            hours: hours.clone(),
         });
         en_items.push(RuleItem {
             icon,
@@ -151,10 +166,17 @@ fn build_payloads_from_legacy_items(items: &[RuleItemInput]) -> (RulesPayload, R
             subtitle: item.subtitle_en.trim().to_string(),
             status,
             theme,
+            hours,
         });
     }
     (
-        RulesPayload { items: fr_items },
-        RulesPayload { items: en_items },
+        RulesPayload {
+            items: fr_items,
+            ..RulesPayload::default()
+        },
+        RulesPayload {
+            items: en_items,
+            ..RulesPayload::default()
+        },
     )
 }

@@ -51,7 +51,10 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
         },
     )?;
 
-    let payload = RulesPayload { items: view.items };
+    let payload = RulesPayload {
+        items: view.items,
+        ..RulesPayload::default()
+    };
     let lines: Vec<String> = payload
         .by_weight()
         .into_iter()
@@ -108,6 +111,7 @@ mod tests {
                     ..RuleItem::default()
                 },
             ],
+            ..RulesPayload::default()
         };
 
         let (ctx, host) = MockContext::guest()

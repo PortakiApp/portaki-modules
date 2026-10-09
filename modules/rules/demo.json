@@ -87,7 +87,7 @@
                     "trailing": {
                       "badge": {
                         "label": "Autorisé",
-                        "tone": "success"
+                        "tone": "neutral"
                       }
                     },
                     "type": "ListItem"
@@ -185,7 +185,7 @@
             "trailing": {
               "badge": {
                 "label": "Autorisé",
-                "tone": "success"
+                "tone": "neutral"
               }
             },
             "type": "ListItem"

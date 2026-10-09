@@ -10,15 +10,18 @@ use portaki_sdk::sdui::surface::Surface;
 
 use crate::content::{RuleItem, RuleStatus, RulesPayload};
 
-/// Design glance shows four rules on the Séjour card.
-const CARD_GLANCE_LIMIT: usize = 4;
-
 pub fn build_home_card(payload: &RulesPayload) -> Surface {
     // Les essentielles d'abord : important → autorisé → neutres (§2.8). Le tri décide donc *quelles*
     // quatre règles le voyageur voit, pas seulement dans quel ordre.
     let ranked = payload.by_weight();
     let total = ranked.len();
-    let shown: Vec<&RuleItem> = ranked.into_iter().take(CARD_GLANCE_LIMIT).collect();
+    // `card_limit` vient du bundle ; un payload construit sans lui (0) garde le défaut.
+    let limit = if payload.card_limit == 0 {
+        crate::content::DEFAULT_CARD_LIMIT
+    } else {
+        payload.card_limit
+    };
+    let shown: Vec<&RuleItem> = ranked.into_iter().take(limit).collect();
 
     // Aucune règle : la carte disparaît (§2.8). Un logement sans règlement n'a pas de règlement à
     // annoncer, et une carte qui dit « rien pour l'instant » occupe l'accueil pour ne rien dire.
@@ -30,7 +33,7 @@ pub fn build_home_card(payload: &RulesPayload) -> Surface {
 
     // « Voir les N règles », et seulement s'il en reste : à quatre ou moins, le bouton promettrait
     // une liste identique à celle qu'on lit déjà (§2.8).
-    if total > CARD_GLANCE_LIMIT {
+    if total > limit {
         let label = t!("home.card.seeAll", count = total)
             .unwrap_or_else(|_| "i18n:home.card.seeAllPlain".to_string());
         children.push(Component::Button(
@@ -78,8 +81,14 @@ pub fn rule_list_item(item: &RuleItem) -> Component {
     let mut list = ListItem::new()
         .title(item.title.clone())
         .leading(Leading::Icon(icon_name));
-    if !item.subtitle.trim().is_empty() {
-        list = list.subtitle(item.subtitle.clone());
+    // « Merci pour le voisinage · 22:00 – 08:00 » : les heures suivent la précision.
+    let subtitle = [item.subtitle.trim(), item.hours.trim()]
+        .into_iter()
+        .filter(|part| !part.is_empty())
+        .collect::<Vec<_>>()
+        .join(" · ");
+    if !subtitle.is_empty() {
+        list = list.subtitle(subtitle);
     }
     if let Some(badge) = status_badge(item.status) {
         list = list.trailing(Trailing::Visual(Box::new(TrailingVisual {
@@ -96,14 +105,16 @@ pub fn count_line(plural_key: &str, one_key: &str, count: usize) -> String {
     t!(key, count = count).unwrap_or_else(|_| format!("i18n:{key}"))
 }
 
-/// L'étiquette d'un statut (§2.8) : warning « Important », success « Autorisé ».
+/// L'étiquette d'un statut (§2.8) : warning « Important », neutre « Interdit » et « Autorisé » —
+/// jamais vert pour « Autorisé » (spec Règlement §2.2) : un feu vert se lit comme une invitation.
 ///
 /// Neutre ne porte rien — une règle sur trois serait étiquetée « Normal », ce qui ne dit rien et
 /// affaiblit les deux autres.
 fn status_badge(status: RuleStatus) -> Option<BadgeSpec> {
     let (key, tone) = match status {
         RuleStatus::Important => ("rule.status.important", Tone::Warning),
-        RuleStatus::Allowed => ("rule.status.allowed", Tone::Success),
+        RuleStatus::Allowed => ("rule.status.allowed", Tone::Neutral),
+        RuleStatus::Forbidden => ("rule.status.forbidden", Tone::Neutral),
         RuleStatus::Neutral => return None,
     };
     Some(BadgeSpec::new(
