@@ -142,6 +142,7 @@ fn fetch_from_api(lat: f64, lng: f64, radius_km: u32, locale: &str) -> Result<Ve
             photo: String::new(),
             access: I18nText::default(),
             tips: I18nText::default(),
+            ..EventRow::default()
         })
         .collect())
 }

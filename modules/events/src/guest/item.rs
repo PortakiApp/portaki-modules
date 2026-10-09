@@ -8,7 +8,6 @@ use portaki_sdk::sdui::primitives::{
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::EventRow;
-use crate::time_format::format_starts_at_display;
 
 use super::load::GuestData;
 
@@ -69,7 +68,7 @@ pub fn build_event_item(data: &GuestData, event: &EventRow) -> Surface {
 /// Quand, quoi, où — dans cet ordre : on ouvre une fiche d'événement pour l'heure.
 fn header(data: &GuestData, event: &EventRow) -> Component {
     let mut children: Vec<Component> = Vec::new();
-    let when = format_starts_at_display(&event.starts_at);
+    let when = crate::time_format::event_when(event);
     if !when.trim().is_empty() {
         children.push(Badge::new().label(when).into());
     }
@@ -288,11 +287,12 @@ fn actions(data: &GuestData, event: &EventRow) -> Vec<Component> {
         }
         bar.push(button.into());
     }
+    // Annulé : plus de lien de réservation (§2.2).
     if let Some(url) = event
         .url
         .as_deref()
         .map(str::trim)
-        .filter(|u| !u.is_empty())
+        .filter(|u| !u.is_empty() && !event.cancelled)
     {
         let mut button = Button::new()
             .label("i18n:guest.openLink")

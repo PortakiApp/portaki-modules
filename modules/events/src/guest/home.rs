@@ -7,7 +7,6 @@ use portaki_sdk::sdui::surface::Surface;
 
 use super::body::build_events_body;
 use super::load::GuestData;
-use crate::time_format::format_starts_at_display;
 
 pub fn build_home_card(data: &GuestData) -> Surface {
     Surface::new(
@@ -61,7 +60,7 @@ fn upcoming_headline(data: &GuestData) -> Option<String> {
     if title.is_empty() {
         return None;
     }
-    let when = format_starts_at_display(&event.starts_at);
+    let when = crate::time_format::event_when(event);
     if when.trim().is_empty() {
         Some(title.to_string())
     } else {

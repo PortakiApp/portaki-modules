@@ -6,8 +6,10 @@ mod connectors;
 mod email_context;
 mod guest;
 mod host;
+mod i18n;
 mod map_markers;
 mod nearby;
+mod readiness;
 mod time_format;
 
 pub use commands::refresh_nearby;

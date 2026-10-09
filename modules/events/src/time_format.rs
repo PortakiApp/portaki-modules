@@ -56,11 +56,12 @@ pub fn events_within(
     };
     events
         .iter()
+        // Un événement qui se répète tombe dans la fenêtre à sa prochaine occurrence.
+        .map(|event| event.next_from(from))
         .filter(|event| match parse_starts_at(&event.starts_at) {
             Some(at) => at >= from && at <= to,
             None => true,
         })
-        .cloned()
         .collect()
 }
 
@@ -71,7 +72,7 @@ pub fn events_within(
 pub fn events_for_home_card(events: &[EventRow], now: DateTime<Utc>) -> Vec<EventRow> {
     let parsed: Vec<(EventRow, Option<DateTime<Utc>>)> = events
         .iter()
-        .cloned()
+        .map(|e| e.next_from(now))
         .map(|e| {
             let at = parse_starts_at(&e.starts_at);
             (e, at)
@@ -106,6 +107,17 @@ pub fn sort_events_by_start(mut events: Vec<EventRow>) -> Vec<EventRow> {
         }
     });
     events
+}
+
+/// Le badge « quand » d'un événement : annulé d'abord, puis toute la journée, sinon l'heure.
+pub fn event_when(event: &EventRow) -> String {
+    if event.cancelled {
+        return "i18n:guest.event.cancelled".to_string();
+    }
+    if event.all_day {
+        return "i18n:guest.event.allDay".to_string();
+    }
+    format_starts_at_display(&event.starts_at)
 }
 
 pub fn format_starts_at_display(raw: &str) -> String {
