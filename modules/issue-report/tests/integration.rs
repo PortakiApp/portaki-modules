@@ -5,9 +5,9 @@ use serde_json::json;
 use serial_test::serial;
 
 use issue_report::{
-    list_for_stay, list_recent, render_guest_form, render_home_card, render_host_stats,
-    reset_test_store, resolve, stats_summary, submit, Category, ResolveArgs, SubmitArgs,
-    GUEST_TEXT_EMAIL_MAX_CHARS,
+    list_for_stay, list_recent, render_guest_form, render_home_card, render_host_main,
+    render_host_stats, reset_test_store, resolve, stats_summary, submit, Category, ResolveArgs,
+    SubmitArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
 };
 use portaki_sdk::contracts::stats::StatsSummaryArgs;
 use portaki_sdk::limits;
@@ -82,6 +82,51 @@ fn submit_allows_multiple_reports_and_shows_list() {
             assert!(json.contains("home.card.yourReports"));
             assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
         });
+}
+
+/// §9 #5 : le voyageur voit « Résolu » dans son historique dès que l'hôte a clos le signalement.
+#[test]
+#[serial]
+fn the_guest_history_shows_resolved_reports() {
+    reset_test_store();
+    let guest = MockContext::guest().with_property(Property::default());
+    let mut oven = None;
+    guest.clone().run(|ctx| {
+        for (category, summary) in [(Category::Appliance, "Oven"), (Category::Noise, "Noise")] {
+            let report = submit(
+                ctx.clone(),
+                SubmitArgs {
+                    category,
+                    summary: summary.into(),
+                    details: None,
+                    photo: None,
+                },
+            );
+            report.expect("submit");
+        }
+        oven = list_for_stay(ctx)
+            .expect("list")
+            .into_iter()
+            .find(|row| row.summary == "Oven")
+            .map(|row| row.id);
+    });
+    let card = || {
+        let mut json = String::new();
+        guest.clone().run(|ctx| {
+            json = serde_json::to_string(&render_home_card(ctx).expect("guest surface"))
+                .expect("surface json");
+        });
+        json
+    };
+    assert!(!card().contains("home.card.resolved"));
+
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let report_id = oven.expect("oven");
+            resolve(ctx, ResolveArgs { report_id }).expect("resolve");
+        });
+    assert_eq!(card().matches("i18n:home.card.resolved").count(), 1);
 }
 
 #[test]
@@ -481,5 +526,22 @@ fn the_sheet_says_what_it_is_before_asking() {
             let first_field = json.find("form.category.label").expect("premier champ");
             assert!(title < first_field, "{json}");
             assert!(json.contains("form.head.lead"), "{json}");
+        });
+}
+
+/// Tout décoché : les cases restent décochées dans le tiroir, le message sous la dernière.
+#[test]
+#[serial]
+fn the_sheet_says_when_a_set_is_empty() {
+    MockContext::host()
+        .with_property(Property::default())
+        .with_config(&json!({ "category_other": false, "phase_after": false }))
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_host_main(ctx).expect("host surface"))
+                .expect("surface json");
+            assert!(json.contains("Choisissez au moins une catégorie."));
+            assert!(json.contains("Choisissez au moins une période."));
+            // Seules la photo et l'option urgente, ouvertes par défaut, restent cochées.
+            assert_eq!(json.matches(r#""checked":true"#).count(), 2);
         });
 }

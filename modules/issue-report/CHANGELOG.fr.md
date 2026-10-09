@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.1
+
+Des réglages qui disent ce qu'ils font, et le suivi côté voyageur.
+
+* Tout décocher dans les catégories ou les périodes bloque désormais la publication, avec un message sous le réglage.
+* Par défaut, le formulaire n'est proposé que pendant le séjour, et non plus à toutes les périodes.
+* Le voyageur voit « Résolu » dans son historique dès que vous avez clos un signalement.
+
 ## 1.7.0
 
 Urgences, périodes et réponse.
