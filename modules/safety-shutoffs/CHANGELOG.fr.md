@@ -5,6 +5,8 @@
 La sécurité dans les équipements.
 
 * L'extincteur et le détecteur de fumée s'ajoutent aux équipements de la page du logement dès qu'un organe de ce type est renseigné, sans son emplacement.
+* Sans organe complet, « Ajoutez au moins un emplacement. » s'affiche sous la liste et dans la vérification avant publication.
+* La consigne générale s'intitule « Le mot de Claire » quand le profil de l'hôte porte un nom.
 
 ## 0.6.0
 

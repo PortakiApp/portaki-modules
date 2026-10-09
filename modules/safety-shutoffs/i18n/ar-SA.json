@@ -9,6 +9,7 @@
   "guest.empty.description": "لم يوضّح المضيف بعد أين تُغلق المياه أو الكهرباء أو الغاز.",
   "guest.empty.title": "لا شيء لعرضه بعد",
   "guest.note.title": "كلمة من المضيف",
+  "guest.note.title.named": "كلمة من {host}",
   "guest.subtitle": "أين تُغلق الكهرباء والمياه والغاز",
   "guest.title": "إذا حدث خطب ما",
   "home.card.subtitle": "الكهرباء والمياه والغاز: أين تُغلق",
@@ -37,6 +38,7 @@
   "host.shutoffs.photo": "صورة",
   "host.shutoffs.photo.hint": "صورة الصنبور أو القاطع يُتعرَّف عليها أسرع من الوصف.",
   "host.shutoffs.remove": "إزالة",
+  "host.shutoffs.required": "أضف موقعًا واحدًا على الأقل.",
   "host.shutoffs.rowTitle": "العنوان",
   "host.shutoffs.rowTitle.placeholder": "لوحة الكهرباء",
   "host.shutoffs.subtitle": "حتى ثمانية، بالترتيب الذي تضيفها به",
@@ -47,6 +49,5 @@
   "nav.safety-shutoffs": "مفاتيح الإغلاق والسلامة",
   "publish.incomplete.hint": "لن يُنشر سطر بلا موقع.",
   "publish.incomplete.label": "بعض الأسطر غير مكتملة",
-  "publish.shutoffs.hint": "يكفي عنوان وموضع.",
   "publish.shutoffs.label": "مفتاح إغلاق واحد على الأقل"
 }

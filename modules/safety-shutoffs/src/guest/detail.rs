@@ -20,7 +20,7 @@ pub fn build_detail_surface(config: &ModuleConfig, ctx: &GuestContext) -> Surfac
         children.push(
             InfoBanner::new()
                 .tone(Tone::Info)
-                .title("i18n:guest.note.title")
+                .title(note_title(ctx))
                 .message(config.general_note.for_ctx(ctx).to_string())
                 .into(),
         );
@@ -106,6 +106,21 @@ fn shutoff_card(row: &ShutoffRow, ctx: &GuestContext) -> Component {
         .into()
 }
 
+/// « Le mot de Claire », ou « Le mot de votre hôte » quand le profil ne porte pas de nom.
+fn note_title(ctx: &GuestContext) -> String {
+    host_name(ctx)
+        .and_then(|name| t!("guest.note.title.named", host = name).ok())
+        .unwrap_or_else(|| "i18n:guest.note.title".to_string())
+}
+
+/// Le nom du profil de l'hôte, s'il en a un.
+fn host_name(ctx: &GuestContext) -> Option<&str> {
+    ctx.host
+        .as_ref()
+        .map(|host| host.name.trim())
+        .filter(|name| !name.is_empty())
+}
+
 /// « Appeler {hôte} » puis « Numéros d'urgence ».
 ///
 /// Le téléphone vient du profil de l'hôte, jamais d'un champ de ce module : un numéro saisi deux
@@ -122,11 +137,7 @@ fn bottom_bar(ctx: &GuestContext) -> Vec<Component> {
         .map(str::trim)
         .filter(|phone| !phone.is_empty())
     {
-        let label = ctx
-            .host
-            .as_ref()
-            .map(|host| host.name.trim())
-            .filter(|name| !name.is_empty())
+        let label = host_name(ctx)
             .and_then(|name| t!("guest.call", host = name).ok())
             .unwrap_or_else(|| "i18n:guest.call.plain".to_string());
         bar.push(

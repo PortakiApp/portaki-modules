@@ -9,6 +9,7 @@
   "guest.empty.description": "Votre hôte n’a pas encore indiqué où couper l’eau, l’électricité ou le gaz.",
   "guest.empty.title": "Rien à afficher pour l’instant",
   "guest.note.title": "Le mot de votre hôte",
+  "guest.note.title.named": "Le mot de {host}",
   "guest.subtitle": "Où couper l’électricité, l’eau et le gaz",
   "guest.title": "En cas de problème",
   "home.card.subtitle": "Électricité, eau, gaz : où couper",
@@ -37,6 +38,7 @@
   "host.shutoffs.photo": "Photo",
   "host.shutoffs.photo.hint": "Une photo du robinet ou du disjoncteur se reconnaît plus vite qu’une description.",
   "host.shutoffs.remove": "Retirer",
+  "host.shutoffs.required": "Ajoutez au moins un emplacement.",
   "host.shutoffs.rowTitle": "Titre",
   "host.shutoffs.rowTitle.placeholder": "Tableau électrique",
   "host.shutoffs.subtitle": "Jusqu’à huit, dans l’ordre où vous les ajoutez",
@@ -47,6 +49,5 @@
   "nav.safety-shutoffs": "Coupures & sécurité",
   "publish.incomplete.hint": "Une ligne sans emplacement ne sera pas publiée.",
   "publish.incomplete.label": "Des lignes sont incomplètes",
-  "publish.shutoffs.hint": "Un titre et un emplacement suffisent.",
   "publish.shutoffs.label": "Au moins un organe de coupure"
 }

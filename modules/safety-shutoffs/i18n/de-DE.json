@@ -9,6 +9,7 @@
   "guest.empty.description": "Ihr Gastgeber hat noch nicht angegeben, wo Wasser, Strom und Gas abgestellt werden.",
   "guest.empty.title": "Noch nichts zu zeigen",
   "guest.note.title": "Ein Wort Ihres Gastgebers",
+  "guest.note.title.named": "Ein Wort von {host}",
   "guest.subtitle": "Wo Strom, Wasser und Gas abgestellt werden",
   "guest.title": "Wenn etwas passiert",
   "home.card.subtitle": "Strom, Wasser, Gas: wo abstellen",
@@ -37,6 +38,7 @@
   "host.shutoffs.photo": "Foto",
   "host.shutoffs.photo.hint": "Ein Foto des Ventils oder Sicherungsschalters erkennt man schneller als eine Beschreibung.",
   "host.shutoffs.remove": "Entfernen",
+  "host.shutoffs.required": "Fügen Sie mindestens einen Ort hinzu.",
   "host.shutoffs.rowTitle": "Titel",
   "host.shutoffs.rowTitle.placeholder": "Sicherungskasten",
   "host.shutoffs.subtitle": "Bis zu acht, in der Reihenfolge, in der Sie sie hinzufügen",
@@ -47,6 +49,5 @@
   "nav.safety-shutoffs": "Abschaltungen & Sicherheit",
   "publish.incomplete.hint": "Eine Zeile ohne Ort wird nicht veröffentlicht.",
   "publish.incomplete.label": "Einige Zeilen sind unvollständig",
-  "publish.shutoffs.hint": "Ein Titel und ein Ort genügen.",
   "publish.shutoffs.label": "Mindestens ein Absperrpunkt"
 }

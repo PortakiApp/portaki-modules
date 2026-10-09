@@ -9,6 +9,7 @@
   "guest.empty.description": "Je gastheer heeft nog niet aangegeven waar je water, stroom of gas afsluit.",
   "guest.empty.title": "Nog niets te zien",
   "guest.note.title": "Een woord van je gastheer",
+  "guest.note.title.named": "Een woord van {host}",
   "guest.subtitle": "Waar je stroom, water en gas afsluit",
   "guest.title": "Als er iets misgaat",
   "home.card.subtitle": "Stroom, water, gas: waar afsluiten",
@@ -37,6 +38,7 @@
   "host.shutoffs.photo": "Foto",
   "host.shutoffs.photo.hint": "Een foto van de kraan of de groep is sneller te herkennen dan een beschrijving.",
   "host.shutoffs.remove": "Verwijderen",
+  "host.shutoffs.required": "Voeg minstens één locatie toe.",
   "host.shutoffs.rowTitle": "Titel",
   "host.shutoffs.rowTitle.placeholder": "Meterkast",
   "host.shutoffs.subtitle": "Tot acht, in de volgorde waarin je ze toevoegt",
@@ -47,6 +49,5 @@
   "nav.safety-shutoffs": "Afsluiters & veiligheid",
   "publish.incomplete.hint": "Een regel zonder locatie wordt niet gepubliceerd.",
   "publish.incomplete.label": "Sommige regels zijn onvolledig",
-  "publish.shutoffs.hint": "Een titel en een plek zijn genoeg.",
   "publish.shutoffs.label": "Minstens één afsluitpunt"
 }

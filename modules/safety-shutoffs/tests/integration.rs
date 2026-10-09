@@ -167,6 +167,8 @@ fn the_host_form_draws_the_rows_the_host_has() {
             assert!(!json.contains("shutoffs.2.kind"), "{json}");
             assert!(json.contains(r#""value":"electricity""#), "{json}");
             assert!(json.contains("Tableau électrique"), "{json}");
+            // Un organe complet : rien sous la liste.
+            assert!(!json.contains("Ajoutez au moins un emplacement."), "{json}");
         });
 }
 
@@ -183,6 +185,11 @@ fn an_empty_form_draws_one_row_and_can_ask_for_another() {
             assert!(json.contains("shutoffs.0.kind"), "{json}");
             assert!(!json.contains("shutoffs.1.kind"), "{json}");
             assert!(json.contains(r#""shutoffs_count":2"#), "{json}");
+            // Le message de la spec, sous la liste — celui que la porte de publication donne.
+            assert!(
+                json.contains(r#""error":"Ajoutez au moins un emplacement.""#),
+                "{json}"
+            );
         });
 }
 
@@ -272,6 +279,10 @@ fn publication_needs_one_complete_shutoff() {
     let empty = check(json!({}));
     assert!(!empty.items[0].ok);
     assert_eq!(empty.items.len(), 1);
+    assert_eq!(
+        empty.items[0].hint.get("fr"),
+        "Ajoutez au moins un emplacement."
+    );
 
     let ready = check(sample_config());
     assert!(ready.items[0].ok);
@@ -311,6 +322,9 @@ fn with_a_host_phone_the_call_button_comes_first() {
         // de test vide, mais c'est bien la branche « avec nom » qui a été prise.
         assert!(json.contains("guest.call\""), "{json}");
         assert!(!json.contains("guest.call.plain"), "{json}");
+        // « Le mot de Claire », pas « Le mot de votre hôte ».
+        assert!(json.contains("guest.note.title.named"), "{json}");
+        assert!(!json.contains("i18n:guest.note.title"), "{json}");
         // L'appel d'abord, les numéros d'urgence ensuite : on compose avant de chercher.
         let call = json.find("tel:+33612345678").expect("appel");
         let emergency = json.find("guest.emergency").expect("urgences");

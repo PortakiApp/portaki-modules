@@ -9,6 +9,7 @@
   "guest.empty.description": "Il tuo host non ha ancora indicato dove chiudere acqua, luce e gas.",
   "guest.empty.title": "Niente da mostrare per ora",
   "guest.note.title": "Due parole dal tuo host",
+  "guest.note.title.named": "Due parole da {host}",
   "guest.subtitle": "Dove chiudere luce, acqua e gas",
   "guest.title": "Se qualcosa va storto",
   "home.card.subtitle": "Luce, acqua, gas: dove chiudere",
@@ -37,6 +38,7 @@
   "host.shutoffs.photo": "Foto",
   "host.shutoffs.photo.hint": "Una foto del rubinetto o dell'interruttore si riconosce prima di una descrizione.",
   "host.shutoffs.remove": "Rimuovi",
+  "host.shutoffs.required": "Aggiungi almeno una posizione.",
   "host.shutoffs.rowTitle": "Titolo",
   "host.shutoffs.rowTitle.placeholder": "Quadro elettrico",
   "host.shutoffs.subtitle": "Fino a otto, nell’ordine in cui li aggiungi",
@@ -47,6 +49,5 @@
   "nav.safety-shutoffs": "Rubinetti & sicurezza",
   "publish.incomplete.hint": "Una riga senza posizione non verrà pubblicata.",
   "publish.incomplete.label": "Alcune righe sono incomplete",
-  "publish.shutoffs.hint": "Bastano un titolo e una posizione.",
   "publish.shutoffs.label": "Almeno un punto di chiusura"
 }
