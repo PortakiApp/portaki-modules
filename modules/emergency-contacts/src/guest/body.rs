@@ -26,16 +26,27 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
     if !data.host_phone.is_empty() {
         // L'action sur la ligne, pas autour : c'est ce que la maquette donne à chaque rangée, et
         // un `Pressable` enveloppant ajoutait un niveau que rien ne lit.
-        children.push(Component::ListItem(
-            ListItem::new()
-                .title("i18n:guest.host.label")
-                .subtitle(data.host_phone.clone())
-                // L'hôte mène par son pictogramme, comme chaque rangée de la maquette : c'est la
-                // ligne qu'on cherche en premier, et c'était la seule sans repère.
-                .leading(Leading::Icon("users".into()))
-                .trailing(Trailing::Text("i18n:guest.call".into()))
-                .action(tel_action(&data.host_phone)),
-        ));
+        let mut host = ListItem::new()
+            .title("i18n:guest.host.label")
+            .subtitle(data.host_phone.clone())
+            // L'hôte mène par son pictogramme, comme chaque rangée de la maquette : c'est la
+            // ligne qu'on cherche en premier, et c'était la seule sans repère.
+            .leading(Leading::Icon("users".into()))
+            .trailing(Trailing::Text("i18n:guest.call".into()))
+            .action(tel_action(&data.host_phone));
+        // « Joignable 08:00 – 21:00 », et ce qu'on fait en dehors (§2.2).
+        if let Some((from, to)) = &data.host_hours {
+            let reachable = t!("guest.host.hours", from = from.clone(), to = to.clone())
+                .unwrap_or_else(|_| format!("{from} – {to}"));
+            host = host
+                .child(Text::new().text(reachable).variant(TextVariant::Caption))
+                .child(
+                    Text::new()
+                        .text("i18n:guest.host.outOfHours")
+                        .variant(TextVariant::Caption),
+                );
+        }
+        children.push(Component::ListItem(host));
     }
 
     for contact in &data.contacts {
@@ -58,6 +69,23 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
             item = item.child(Text::new().text(note).variant(TextVariant::Caption));
         }
         children.push(Component::ListItem(item.action(tel_action(&contact.phone))));
+    }
+
+    // Pharmacie, hôpital, médecin : une rangée qu'on appelle, comme les contacts.
+    for (key, name, phone) in &data.health {
+        let title = if name.is_empty() {
+            format!("i18n:{key}")
+        } else {
+            name.clone()
+        };
+        children.push(Component::ListItem(
+            ListItem::new()
+                .title(title)
+                .subtitle(phone.clone())
+                .leading(Leading::Icon("heart-handshake".into()))
+                .trailing(Trailing::Text("i18n:guest.call".into()))
+                .action(tel_action(phone)),
+        ));
     }
 
     // La phrase utile ferme la carte : on la lit quand on n'a pas trouvé son numéro au-dessus.

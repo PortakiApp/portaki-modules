@@ -17,6 +17,10 @@ pub struct GuestData {
     /// « Pharmacie de garde : 3237 · Hôpital d'Antibes à 3,1 km » — vide quand l'hôte n'a rien
     /// donné, et la carte se termine alors sur ses contacts.
     pub useful_line: String,
+    /// La plage où l'hôte répond, quand il n'est pas joignable 24 h/24.
+    pub host_hours: Option<(String, String)>,
+    /// Pharmacie, hôpital, médecin avec un numéro : `(clé du libellé, nom, téléphone)`.
+    pub health: Vec<(&'static str, String, String)>,
 }
 
 /// Ce qu'il y a à montrer — et il y a **toujours** quelque chose (§2.16).
@@ -27,13 +31,38 @@ pub struct GuestData {
 /// sans numéro devant une porte.
 pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
     let config = ModuleConfig::load(ctx)?;
-    let host_phone = host_phone(&config, ctx);
+    // « Afficher mon numéro » décoché : pas de rangée hôte, les tuiles et les contacts restent.
+    let host_phone = if config.show_host() {
+        host_phone(&config, ctx)
+    } else {
+        String::new()
+    };
     Ok(Some(GuestData {
         contacts: config.parse_contacts(),
         host_phone,
         locale: ctx.locale.clone(),
         property_locale: ctx.property.locale.clone(),
         useful_line: useful_line(&config),
+        host_hours: config
+            .host_hours()
+            .map(|(from, to)| (from.to_string(), to.to_string())),
+        health: [
+            (
+                "guest.health.pharmacy",
+                &config.pharmacy,
+                &config.pharmacy_phone,
+            ),
+            (
+                "guest.health.hospital",
+                &config.hospital,
+                &config.hospital_phone,
+            ),
+            ("guest.health.doctor", &config.doctor, &config.doctor_phone),
+        ]
+        .into_iter()
+        .filter(|(_, _, phone)| !phone.trim().is_empty())
+        .map(|(key, name, phone)| (key, name.trim().to_string(), phone.trim().to_string()))
+        .collect(),
     }))
 }
 
@@ -57,14 +86,23 @@ fn host_phone(config: &ModuleConfig, ctx: &GuestContext) -> String {
 }
 
 /// Les deux lignes utiles en une phrase, dans l'ordre où on les cherche : d'abord la pharmacie,
-/// qu'on appelle, puis l'hôpital, où l'on va.
+/// qu'on appelle, puis l'hôpital, où l'on va. Celles qui ont un numéro sont des rangées à part.
 fn useful_line(config: &ModuleConfig) -> String {
     [
-        ("guest.useful.pharmacy", config.pharmacy.trim()),
-        ("guest.useful.hospital", config.hospital.trim()),
+        (
+            "guest.useful.pharmacy",
+            config.pharmacy.trim(),
+            &config.pharmacy_phone,
+        ),
+        (
+            "guest.useful.hospital",
+            config.hospital.trim(),
+            &config.hospital_phone,
+        ),
     ]
     .into_iter()
-    .filter(|(_, value)| !value.is_empty())
+    .filter(|(_, value, phone)| !value.is_empty() && phone.trim().is_empty())
+    .map(|(key, value, _)| (key, value))
     .filter_map(|(key, value)| t!(key, value = value).ok())
     .collect::<Vec<_>>()
     .join(" · ")

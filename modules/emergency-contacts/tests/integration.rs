@@ -106,7 +106,12 @@ fn detail_includes_emergency_banner() {
 fn the_host_form_sends_the_declared_keys() {
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&sample_config())
+        .with_config(&{
+            // Sur plages : les heures ne sont dessinées que là.
+            let mut config = sample_config();
+            config["host_availability"] = json!("hours");
+            config
+        })
         .run(|ctx| {
             let surface = render_host_main(ctx).expect("host main");
             config_form::assert_form_matches_config(
@@ -166,8 +171,12 @@ fn the_form_draws_the_contacts_the_host_has() {
         .run(|ctx| {
             let json =
                 serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
-            assert!(json.contains("contacts.11.label"), "{json}");
-            assert!(!json.contains("contacts.12.label"), "{json}");
+            let last = emergency_contacts::MAX_CONTACTS - 1;
+            assert!(json.contains(&format!("contacts.{last}.label")), "{json}");
+            assert!(
+                !json.contains(&format!("contacts.{}.label", last + 1)),
+                "{json}"
+            );
             assert!(
                 json.contains(&format!(
                     r#""contacts_count":{}"#,
