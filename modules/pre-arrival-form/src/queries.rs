@@ -71,16 +71,28 @@ pub fn get_status(ctx: Context) -> Result<PreArrivalStatus> {
 /// which the declared config cannot say.
 #[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
 pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
-    let ok = ModuleConfig::load(&ctx)?.asks_anything();
-    Ok(PublishReadiness {
-        items: vec![PublishCheck {
-            id: "questions".into(),
-            level: PublishLevel::Recommended,
-            ok,
-            label: text("publish.questions.label"),
-            hint: text("publish.questions.hint"),
-        }],
-    })
+    let config = ModuleConfig::load(&ctx)?;
+    let mut items = vec![PublishCheck {
+        id: "questions".into(),
+        level: PublishLevel::Recommended,
+        ok: config.asks_anything(),
+        label: text("publish.questions.label"),
+        hint: text("publish.questions.hint"),
+    }];
+    // L'heure du dernier créneau, sous son champ : elle bloque, comme dans le formulaire.
+    items.extend(
+        config
+            .problems()
+            .into_iter()
+            .map(|(field, error)| PublishCheck {
+                id: format!("config.{field}"),
+                level: PublishLevel::Required,
+                ok: false,
+                label: text("host.slots.until"),
+                hint: error,
+            }),
+    );
+    Ok(PublishReadiness { items })
 }
 
 fn require_stay_id(ctx: &Context) -> Result<Uuid> {

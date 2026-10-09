@@ -4,10 +4,12 @@
 //! Save chrome is owned by the workspace tab; the platform stores the declared config.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Card, ChoiceList, Form, Grid, Page, Stack, ToggleRow};
+use portaki_sdk::sdui::primitives::{
+    Card, ChoiceList, Field, FieldHint, Form, Grid, Page, Select, Stack, TextInput, ToggleRow,
+};
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{ModuleConfig, ShowWhen};
+use crate::config::{ModuleConfig, ShowWhen, DEFAULT_SLOTS_UNTIL};
 
 /// Host main — editable pre-arrival timing + question toggles.
 #[portaki_sdk::surface(
@@ -21,7 +23,7 @@ use crate::config::{ModuleConfig, ShowWhen};
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let config = ModuleConfig::load(&ctx)?;
 
-    let form_children: Vec<Component> = vec![
+    let mut form_children: Vec<Component> = vec![
         Card::new()
             .title("i18n:host.section.when")
             .subtitle("i18n:host.section.when.help")
@@ -41,11 +43,63 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
             .into(),
     ];
 
+    // Les créneaux n'ont d'objet que si l'heure d'arrivée est demandée (règles communes).
+    if config.ask_arrival_time {
+        form_children.insert(1, slots_card(&config, &ctx));
+    }
+
     // No Page title / Save — workspace tab owns chrome + footer Save.
     Ok(Surface::new(
         Page::new().child(Form::new().child(Stack::new().gap(16.0).children(form_children))),
     )
     .with_id(MAIN))
+}
+
+/// §2.1 Les créneaux d'arrivée : les trois plages, ou un pas régulier jusqu'à une heure de fin.
+fn slots_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let step = match config.slot_step.trim() {
+        "15" | "30" | "60" => config.slot_step.trim(),
+        _ => "ranges",
+    };
+    let mut card = Card::new()
+        .title("i18n:host.slots.title")
+        .icon(IconName::ClockCircle)
+        .child(
+            Field::new()
+                .name("slot_step")
+                .label("i18n:host.slots.step")
+                .child(
+                    Select::new()
+                        .name("slot_step")
+                        .options(
+                            ["ranges", "15", "30", "60"]
+                                .into_iter()
+                                .map(|key| {
+                                    ChoiceOption::new(key, format!("i18n:host.slots.step.{key}"))
+                                })
+                                .collect(),
+                        )
+                        .value(step),
+                ),
+        )
+        .child(FieldHint::new().text("i18n:host.slots.step.hint"));
+    if step != "ranges" {
+        let mut until = Field::new()
+            .name("slots_until")
+            .label("i18n:host.slots.until");
+        if let Some((_, error)) = config.problems().into_iter().next() {
+            until = until.error(error.get(&ctx.locale).to_string());
+        }
+        card = card.child(
+            until.child(
+                TextInput::new()
+                    .name("slots_until")
+                    .value(config.slots_until.clone())
+                    .placeholder(DEFAULT_SLOTS_UNTIL),
+            ),
+        );
+    }
+    card.into()
 }
 
 fn when_choice_list(selected: ShowWhen) -> ChoiceList {

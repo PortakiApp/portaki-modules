@@ -296,11 +296,13 @@ fn host_main_renders_config_editor() {
             show_when: ShowWhen::Checkin,
             ask_special_needs: true,
             ask_id_document: true,
+            // Un pas régulier : l'heure de fin n'est dessinée que là.
+            slot_step: "30".into(),
             ..ModuleConfig::default()
         })
         .run(|ctx| {
             let surface = render_host_main(ctx).expect("host main");
-            // Six flat toggles and `show_when`: exactly the declared keys.
+            // Les toggles, `show_when` et les créneaux : exactement les clés déclarées.
             config_form::assert_form_matches_config(
                 concat!(env!("OUT_DIR"), "/portaki-emissions"),
                 &surface,

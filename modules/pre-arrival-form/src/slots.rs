@@ -44,6 +44,48 @@ pub fn slots(hour: u32) -> Vec<Slot> {
     ]
 }
 
+/// Des créneaux réguliers (spec Pré-arrivée §2.1) : de l'heure d'entrée jusqu'à `until`, tous
+/// les `step` minutes. `until` avant l'entrée passe minuit (« 16:00 → 01:00 »). Toujours au moins
+/// un créneau, celui de l'entrée.
+pub fn stepped(hour: u32, until_minutes: u32, step: u32) -> Vec<Slot> {
+    let start = hour * 60;
+    let span = (until_minutes + 24 * 60 - start) % (24 * 60);
+    let step = step.max(15);
+    (0..=span / step)
+        .map(|n| {
+            let at = (start + n * step) % (24 * 60);
+            let value = format!("{:02}:{:02}", at / 60, at % 60);
+            Slot {
+                label: value.clone(),
+                value,
+            }
+        })
+        .collect()
+}
+
+/// `HH:MM` en minutes depuis minuit.
+pub fn minutes_of(raw: &str) -> Option<u32> {
+    let (hour, minute) = raw.trim().split_once(':')?;
+    let (hour, minute): (u32, u32) = (hour.parse().ok()?, minute.parse().ok()?);
+    (hour < 24 && minute < 60).then_some(hour * 60 + minute)
+}
+
+/// Le créneau qui contient une réponse déjà donnée, quels que soient les créneaux : le dernier
+/// qui commence avant elle. Une heure *antérieure* à l'entrée — plus d'une demi-journée « après »
+/// en tournant l'horloge — revient au premier : c'est le plus tôt qui existe.
+pub fn slot_index(answer: &str, slots: &[Slot]) -> Option<usize> {
+    let answered = minutes_of(answer)?;
+    let first = minutes_of(&slots.first()?.value)?;
+    let offset = |at: u32| (at + 24 * 60 - first) % (24 * 60);
+    let answered = offset(answered);
+    if answered >= 12 * 60 {
+        return Some(0);
+    }
+    slots
+        .iter()
+        .rposition(|slot| minutes_of(&slot.value).is_some_and(|at| offset(at) <= answered))
+}
+
 /// L'heure d'entrée du logement, dans son fuseau.
 ///
 /// Dans son fuseau, pas dans celui du téléphone : un voyageur qui remplit le formulaire depuis
@@ -55,28 +97,6 @@ pub fn checkin_hour(checkin_at: Option<DateTime<Utc>>, timezone: &str) -> Option
         Some(tz) => tz.to_local(checkin).hour(),
         None => checkin.hour(),
     })
-}
-
-/// Le créneau qui contient une réponse déjà donnée, pour la retrouver cochée.
-///
-/// Une réponse d'avant les créneaux est une heure libre (« 17:30 ») : elle tombe dans son
-/// créneau plutôt que de disparaître. Et une heure *antérieure* à l'entrée — ce que l'ancien
-/// sélecteur laissait saisir — revient au premier créneau : c'est le plus tôt qui existe.
-pub fn slot_of(answer: &str, hour: u32) -> Option<usize> {
-    let answered = parse_hour(answer)?;
-    let offset = (answered + 24 - hour) % 24;
-    Some(match offset {
-        0 => 0,
-        1 | 2 => 1,
-        // Au-delà d'une demi-journée, l'heure est avant l'entrée, pas treize heures après.
-        13..=23 => 0,
-        _ => 2,
-    })
-}
-
-fn parse_hour(raw: &str) -> Option<u32> {
-    let (hour, _) = raw.trim().split_once(':')?;
-    hour.parse::<u32>().ok().filter(|hour| *hour < 24)
 }
 
 fn time_value(hour: u32) -> String {
@@ -116,18 +136,36 @@ mod tests {
 
     #[test]
     fn an_answer_finds_its_slot() {
-        assert_eq!(slot_of("16:00", 16), Some(0));
-        assert_eq!(slot_of("16:45", 16), Some(0));
+        let ranges = slots(16);
+        assert_eq!(slot_index("16:00", &ranges), Some(0));
+        assert_eq!(slot_index("16:45", &ranges), Some(0));
         // Une heure libre d'avant les créneaux tombe dans le sien.
-        assert_eq!(slot_of("17:30", 16), Some(1));
-        assert_eq!(slot_of("18:00", 16), Some(1));
-        assert_eq!(slot_of("19:00", 16), Some(2));
-        assert_eq!(slot_of("23:15", 16), Some(2));
+        assert_eq!(slot_index("17:30", &ranges), Some(1));
+        assert_eq!(slot_index("18:00", &ranges), Some(1));
+        assert_eq!(slot_index("19:00", &ranges), Some(2));
+        assert_eq!(slot_index("23:15", &ranges), Some(2));
         // Avant l'heure d'entrée : le premier créneau, pas le dernier.
-        assert_eq!(slot_of("11:00", 16), Some(0));
-        assert_eq!(slot_of("", 16), None);
-        assert_eq!(slot_of("midi", 16), None);
-        assert_eq!(slot_of("99:00", 16), None);
+        assert_eq!(slot_index("11:00", &ranges), Some(0));
+        assert_eq!(slot_index("", &ranges), None);
+        assert_eq!(slot_index("midi", &ranges), None);
+        assert_eq!(slot_index("99:00", &ranges), None);
+    }
+
+    #[test]
+    fn stepped_slots_run_from_check_in_to_the_end() {
+        let values: Vec<String> = stepped(16, 23 * 60, 60)
+            .into_iter()
+            .map(|s| s.value)
+            .collect();
+        assert_eq!(values.len(), 8);
+        assert_eq!(values.first().map(String::as_str), Some("16:00"));
+        assert_eq!(values.last().map(String::as_str), Some("23:00"));
+        let half: Vec<String> = stepped(22, 60, 30).into_iter().map(|s| s.value).collect();
+        assert_eq!(
+            half,
+            ["22:00", "22:30", "23:00", "23:30", "00:00", "00:30", "01:00"]
+        );
+        assert_eq!(slot_index("22:45", &stepped(22, 60, 30)), Some(1));
     }
 
     #[test]
