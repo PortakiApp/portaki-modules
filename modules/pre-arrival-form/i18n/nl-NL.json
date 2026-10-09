@@ -82,7 +82,7 @@
   "host.stay.message.label": "Bericht aan de gastheer",
   "host.stay.missingStay": "Verblijf ontbreekt — laad de pagina opnieuw.",
   "host.stay.occasion.label": "Gelegenheid",
-  "host.stay.pending": "De gast heeft het formulier nog niet ingevuld. Vóór de aankomst gaat er automatisch een herinnering uit.",
+  "host.stay.pending": "De gast heeft het formulier nog niet ingevuld. Zodra het formulier beschikbaar is, nodigt een e-mail hem daartoe uit, als zijn adres bekend is.",
   "host.stay.specialNeeds.label": "Bijzondere wensen",
   "host.stay.status.done": "Ingevuld",
   "host.stay.status.pending": "In afwachting",

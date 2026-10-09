@@ -82,7 +82,7 @@
   "host.stay.message.label": "Nachricht an den Gastgeber",
   "host.stay.missingStay": "Aufenthalt fehlt — laden Sie die Seite neu.",
   "host.stay.occasion.label": "Anlass",
-  "host.stay.pending": "Der Gast hat das Formular noch nicht ausgefüllt. Vor der Anreise wird automatisch eine Erinnerung verschickt.",
+  "host.stay.pending": "Der Gast hat das Formular noch nicht ausgefüllt. Sobald es verfügbar ist, lädt ihn eine E-Mail dazu ein, sofern seine Adresse bekannt ist.",
   "host.stay.specialNeeds.label": "Besondere Bedürfnisse",
   "host.stay.status.done": "Abgeschlossen",
   "host.stay.status.pending": "Ausstehend",

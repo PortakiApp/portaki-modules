@@ -82,7 +82,7 @@
   "host.stay.message.label": "给房东的留言",
   "host.stay.missingStay": "缺少入住记录 — 请重新加载页面。",
   "host.stay.occasion.label": "出行目的",
-  "host.stay.pending": "房客还没有填写问卷。到达前会自动发送提醒。",
+  "host.stay.pending": "房客还没有填写问卷。问卷开放后，如有房客的邮箱地址，会发送邮件邀请其填写。",
   "host.stay.specialNeeds.label": "特殊需求",
   "host.stay.status.done": "已填写",
   "host.stay.status.pending": "待填写",

@@ -82,7 +82,7 @@
   "host.stay.message.label": "رسالة إلى المضيف",
   "host.stay.missingStay": "الإقامة غير موجودة — أعِد تحميل الصفحة.",
   "host.stay.occasion.label": "المناسبة",
-  "host.stay.pending": "لم يملأ الضيف الاستمارة بعد. يُرسَل تذكير تلقائي قبل الوصول.",
+  "host.stay.pending": "لم يملأ الضيف الاستمارة بعد. تصله رسالة بريد إلكتروني تدعوه إلى ملئها فور إتاحتها، إن كان عنوانه معروفًا.",
   "host.stay.specialNeeds.label": "احتياجات خاصة",
   "host.stay.status.done": "مكتملة",
   "host.stay.status.pending": "بالانتظار",

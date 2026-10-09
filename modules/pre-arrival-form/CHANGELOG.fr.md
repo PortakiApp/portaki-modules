@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.1
+
+Un texte rectifié.
+
+* La fiche du séjour ne promet plus de relance : elle dit que le voyageur reçoit un e-mail dès que le formulaire est disponible.
+
 ## 1.8.0
 
 Des créneaux d'arrivée réguliers.
