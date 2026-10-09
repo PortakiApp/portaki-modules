@@ -916,7 +916,7 @@ fn render_public(config: serde_json::Value) -> serde_json::Value {
 fn the_public_block_shows_only_consented_reviews_by_first_name() {
     let json = render_public(json!({
         "public_enabled": true,
-        "public_reviews": format!("[\"{STAY_A}\",\"{STAY_C}\",\"{STAY_OLD}\",\"{STAY_B}\"]"),
+        "public_reviews": [STAY_A, STAY_C, STAY_OLD, STAY_B],
     }));
     assert!(portaki_sdk::surfaces::check_property_public_tree(&json["root"]).is_empty());
     assert_eq!(json["root"]["type"], "Section");
@@ -955,12 +955,13 @@ fn the_public_block_is_empty_when_disabled_or_short() {
             "{json}"
         );
     };
-    let both = format!("[\"{STAY_A}\",\"{STAY_B}\"]");
+    let both = json!([STAY_A, STAY_B]);
     empty(render_public(json!({ "public_reviews": both })));
     empty(render_public(
         json!({ "public_enabled": false, "public_reviews": both }),
     ));
-    // Le refusé et l'ancien ne comptent pas : il reste un seul avis.
+    // Le refusé et l'ancien ne comptent pas : il reste un seul avis. (Un brouillon d'avant le
+    // tableau, en JSON dans une chaîne, se lit encore.)
     empty(render_public(json!({
         "public_enabled": true,
         "public_reviews": format!("[\"{STAY_A}\",\"{STAY_C}\",\"{STAY_OLD}\"]"),
@@ -998,7 +999,7 @@ fn the_consent_box_is_stored_with_the_review() {
 #[test]
 #[serial]
 fn the_public_card_picks_among_consented_reviews() {
-    let config = json!({ "public_enabled": true, "public_reviews": format!("[\"{STAY_A}\"]") });
+    let config = json!({ "public_enabled": true, "public_reviews": [STAY_A] });
     with_public_reviews(MockContext::host())
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&config)
@@ -1020,4 +1021,48 @@ fn the_public_card_picks_among_consented_reviews() {
             assert_eq!(items[0].level, PublishLevel::Recommended);
             assert_eq!(items[0].hint.fr, "Choisissez au moins 2 avis.");
         });
+}
+
+/// Le choix multiple part en vrai tableau : le champ est déclaré `structured` (un `text` le ferait
+/// refuser par la plateforme), sans ligne ni traduction, et se réécrit en tableau. Un brouillon
+/// d'avant, en JSON dans une chaîne ou en virgules, se relit.
+#[test]
+#[serial]
+fn the_chosen_reviews_travel_as_an_array() {
+    let field = config_save::declared_fields(EMISSIONS)
+        .into_iter()
+        .find(|f| f["key"] == "public_reviews")
+        .expect("public_reviews declared");
+    assert_eq!(field["type"], "structured", "{field}");
+    assert!(
+        field.get("item").is_none() && field.get("itemType").is_none(),
+        "{field}"
+    );
+
+    let stored = json!({ "public_enabled": true, "public_reviews": [STAY_A] });
+    with_public_reviews(MockContext::host())
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&stored)
+        .run(|ctx| {
+            let surface = render_host_main(ctx).expect("host main");
+            // Le choix montre la sélection ; le tableau de bord renvoie la nouvelle en tableau.
+            let shown = config_save::form_args(&surface)["public_reviews"].clone();
+            let shown: Vec<String> = serde_json::from_str(shown.as_str().expect("value")).unwrap();
+            assert_eq!(shown, [STAY_A]);
+            let mut saved = config_save::save(EMISSIONS, &surface, &stored, "fr");
+            saved["public_reviews"] = json!([STAY_A, STAY_B]);
+            let reread: guest_reviews::ModuleConfig = serde_json::from_value(saved).unwrap();
+            assert_eq!(reread.public_reviews, [STAY_A, STAY_B]);
+            let written = serde_json::to_value(&reread).unwrap();
+            assert_eq!(written["public_reviews"], json!([STAY_A, STAY_B]));
+        });
+
+    for draft in [
+        json!(format!("[\"{STAY_A}\",\"{STAY_B}\"]")),
+        json!(format!("{STAY_A}, {STAY_B}")),
+    ] {
+        let reread: guest_reviews::ModuleConfig =
+            serde_json::from_value(json!({ "public_reviews": draft })).unwrap();
+        assert_eq!(reread.public_reviews, [STAY_A, STAY_B]);
+    }
 }
