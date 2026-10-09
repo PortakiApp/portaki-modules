@@ -144,18 +144,14 @@ fn structured_hours_carry_a_state_and_the_week() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&structured)
+        // Une heure fixe, en pleine journée : l'heure réelle du run faisait tomber le test dans la
+        // dernière heure d'ouverture (« Ferme dans N min ») le soir.
+        .with_now(at("2026-03-11T10:00:00Z"))
         .run(|ctx| {
             let surface = render_explore_detail(ctx).expect("detail");
             let json = serde_json::to_string(&surface).expect("json");
 
-            // Le badge dit l'un des trois états du §2.6, selon l'heure qu'il est vraiment.
-            assert!(
-                json.contains("guest.state.open")
-                    || json.contains("guest.state.closed")
-                    || json.contains("Ouvre à")
-                    || json.contains("guest.state.opensAt"),
-                "{json}"
-            );
+            assert!(json.contains("guest.state.open"), "{json}");
             // Les sept jours, avec le jour courant marqué.
             assert!(json.contains("\"details\""), "{json}");
             assert!(json.contains("\"current\":true"), "{json}");
