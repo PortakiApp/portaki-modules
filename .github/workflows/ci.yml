@@ -103,6 +103,11 @@ jobs:
       - name: Notes de version françaises
         run: ./scripts/check-changelog-fr.sh
 
+      # La table d'une entité ne vient que des migrations, l'écriture prend tous les champs de la
+      # structure : un champ sans colonne fait échouer chaque écriture, et aucun test ne le voit.
+      - name: Colonnes des entités
+        run: ./scripts/check-entity-columns.py
+
       - name: Format
         run: cargo fmt --all -- --check
 

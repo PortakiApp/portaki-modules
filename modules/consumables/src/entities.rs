@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 /// Property-scoped consumable catalog entry.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 2)]
+#[portaki_sdk::entity(schema_version = 3)]
 pub struct ConsumableItem {
     pub id: Uuid,
     pub label_fr: String,

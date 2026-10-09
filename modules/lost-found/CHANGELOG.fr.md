@@ -4,11 +4,11 @@
 
 Six statuts pour suivre chaque objet.
 
-* Chaque objet passe par Déclaré, Trouvé, Renvoyé, Retiré, Donné ou Introuvable ; seuls les passages qui ont un sens sont proposés.
+* Chaque objet passe par Déclaré, Trouvé, Renvoyé, Retiré, Donné ou Introuvable ; les objets déjà suivis gardent leur avancement.
 * Le voyageur lit où en est son objet, et un message clair quand il reste introuvable.
 * Un onglet du logement liste tous les objets, avec le souhait du voyageur et son adresse de renvoi.
 * « Objet à renvoyer » apparaît dans À venir ; cocher la tâche passe l'objet à Renvoyé.
-* Les objets déjà suivis gardent leur avancement sous les nouveaux noms.
+* Déclarer un objet et changer son état échouaient depuis la 1.4.0 : c'est corrigé, rien n'est à refaire de votre côté.
 
 ## 1.11.0
 
