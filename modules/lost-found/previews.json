@@ -292,6 +292,12 @@
                 "title": "Jusqu’au 15 juin 2026",
                 "tone": "neutral",
                 "type": "InfoBanner"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "Votre hôte garde l'objet 30 jours.",
+                "type": "Text",
+                "variant": "caption"
               }
             ],
             "gap": 12.0,

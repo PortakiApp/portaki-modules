@@ -46,6 +46,10 @@ pub fn render_guest_form(ctx: GuestContext) -> Result<Surface> {
         ask_address: config.offers_shipping(),
         shipping_paid_by_guest: config.shipping_paid_by_guest(),
         return_options: config.return_options(),
+        pickup_note: Some(config.pickup_note.get(&ctx.locale).trim().to_string())
+            .filter(|note| !note.is_empty()),
+        donate_org: Some(config.donate_org.trim().to_string()).filter(|org| !org.is_empty()),
+        keep_days: config.keep_days(),
         deadline: deadline_label(&ctx, config.window_days()),
         response: response_promise(&config, &ctx),
         // Une déclaration déjà partie : la feuille s'ouvre sur sa confirmation, pas sur un
@@ -61,6 +65,12 @@ pub struct FormInputs {
     /// Le renvoi est proposé et c'est le voyageur qui en paie les frais.
     pub shipping_paid_by_guest: bool,
     pub return_options: Vec<&'static str>,
+    /// Les consignes de retrait de l'hôte, sous « Je repasse le chercher ».
+    pub pickup_note: Option<String>,
+    /// L'association qui reçoit les dons, sous « Le donner à une association ».
+    pub donate_org: Option<String>,
+    /// Combien de jours l'hôte garde l'objet.
+    pub keep_days: u32,
     pub deadline: Option<String>,
     pub response: Option<String>,
     pub already_sent: bool,
@@ -139,6 +149,9 @@ fn build_form(inputs: &FormInputs) -> Form {
         ask_address,
         shipping_paid_by_guest,
         return_options,
+        pickup_note,
+        donate_org,
+        keep_days,
         deadline,
         response,
         already_sent,
@@ -212,11 +225,17 @@ fn build_form(inputs: &FormInputs) -> Form {
     ];
 
     let mut return_step: Vec<Component> = Vec::new();
-    return_step.extend(return_choice_field(
-        return_options,
-        *shipping_paid_by_guest,
-        host_name.as_deref(),
-    ));
+    let describe = |option: &str| match option {
+        "ship" => shipping_fees(*shipping_paid_by_guest, host_name.as_deref()),
+        "pickup" => pickup_note
+            .clone()
+            .unwrap_or_else(|| "i18n:form.return.pickup.description".into()),
+        _ => donate_org
+            .as_ref()
+            .and_then(|org| t!("form.return.donate.org", org = org.clone()).ok())
+            .unwrap_or_else(|| "i18n:form.return.donate.description".into()),
+    };
+    return_step.extend(return_choice_field(return_options, &describe));
     return_step.extend(address_field(ask_address));
     // Sans renvoi, le dire : un voyageur qui attend un colis et n'en reçoit pas se demande ce
     // qu'il a mal rempli (§2.18).
@@ -240,6 +259,17 @@ fn build_form(inputs: &FormInputs) -> Form {
                 .into(),
         );
     }
+    // Combien de temps l'objet attend : le voyageur qui ne répond pas sait ce qu'il risque.
+    return_step.push(
+        Text::new()
+            .text(
+                t!("form.keep", days = keep_days.to_string())
+                    .unwrap_or_else(|_| "i18n:form.keep".into()),
+            )
+            .variant(TextVariant::Caption)
+            .emphasis(Emphasis::Subtle)
+            .into(),
+    );
     if let Some(response) = response {
         return_step.push(
             InfoBanner::new()
@@ -330,24 +360,24 @@ fn no_shipping_message(host_name: Option<&str>) -> String {
 /// Ce que le voyageur voudrait qu'on en fasse, parmi ce que l'hôte propose.
 ///
 /// Rien à choisir quand l'hôte ne propose qu'une option : la question aurait une seule réponse,
-/// et un choix à un terme se lit comme une case à cocher obligatoire.
+/// et un choix à un terme se lit comme une case à cocher obligatoire. L'option est alors dite,
+/// comme une information (spec §3).
 fn return_choice_field(
     return_options: &[&'static str],
-    shipping_paid_by_guest: bool,
-    host_name: Option<&str>,
+    describe: &dyn Fn(&str) -> String,
 ) -> Vec<Component> {
-    if return_options.len() < 2 {
-        return Vec::new();
+    if let [only] = return_options {
+        return vec![InfoBanner::new()
+            .tone(Tone::Neutral)
+            .title(format!("i18n:form.return.{only}"))
+            .message(describe(only))
+            .into()];
     }
     let choices: Vec<ChoiceOption> = return_options
         .iter()
         .map(|option| {
-            let description = match *option {
-                "ship" => shipping_fees(shipping_paid_by_guest, host_name),
-                other => format!("i18n:form.return.{other}.description"),
-            };
             ChoiceOption::new(*option, format!("i18n:form.return.{option}"))
-                .description(description)
+                .description(describe(option))
                 .icon(return_icon(option))
         })
         .collect();

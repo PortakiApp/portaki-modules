@@ -4,6 +4,7 @@
 //! décrits dans une phrase de l'interface hôte sans exister nulle part. Deux cas de la maquette
 //! étaient donc inatteignables — *délai dépassé* et *renvoi aux frais du voyageur*.
 
+use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Serialize};
 
@@ -14,6 +15,16 @@ pub const DEFAULT_WINDOW_DAYS: u32 = 7;
 /// logement a changé de mains plusieurs fois.
 pub const MIN_WINDOW_DAYS: u32 = 1;
 pub const MAX_WINDOW_DAYS: u32 = 60;
+
+/// La durée de garde par défaut, et ses bornes : une semaine au moins pour laisser le voyageur
+/// répondre, six mois au plus — au-delà, l'objet encombre plus qu'il n'attend.
+pub const DEFAULT_KEEP_DAYS: u32 = 30;
+pub const MIN_KEEP_DAYS: u32 = 7;
+pub const MAX_KEEP_DAYS: u32 = 180;
+
+/// Longueurs des deux textes libres (spec Objet oublié §2.2).
+pub const PICKUP_NOTE_MAX: usize = 200;
+pub const DONATE_ORG_MAX: usize = 60;
 
 /// Qui paie le renvoi. Seule la valeur qui s'écarte du défaut a besoin d'un nom.
 pub const SHIPPING_HOST: &str = "host";
@@ -35,6 +46,10 @@ pub struct ModuleConfig {
     /// arrondit au jour.
     #[field(label = "host.window.label")]
     pub window_days: f64,
+    /// Combien de jours l'hôte garde un objet avant de le donner ou de le jeter. `0` : rien
+    /// choisi, comme le délai — et flottant pour la même raison.
+    #[field(label = "host.keep.label")]
+    pub keep_days: f64,
     /// Renvoi postal proposé.
     #[field(label = "host.return.ship")]
     #[serde(skip_serializing_if = "std::ops::Not::not")]
@@ -43,10 +58,16 @@ pub struct ModuleConfig {
     #[field(label = "host.return.pickup")]
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub return_pickup: bool,
+    /// Où et quand récupérer l'objet, sous « Je viens le chercher ».
+    #[field(label = "host.pickupNote.label")]
+    pub pickup_note: I18nText,
     /// Don de l'objet proposé.
     #[field(label = "host.return.donate")]
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub return_donate: bool,
+    /// L'association qui reçoit les dons. Un nom propre : pas traduit.
+    #[field(label = "host.donateOrg.label")]
+    pub donate_org: String,
     /// `guest` ou `host` — qui paie le renvoi, quand le renvoi est proposé.
     #[field(
         kind = "select",
@@ -76,6 +97,58 @@ impl ModuleConfig {
             return DEFAULT_WINDOW_DAYS;
         };
         (days.round() as u32).clamp(MIN_WINDOW_DAYS, MAX_WINDOW_DAYS)
+    }
+
+    /// La durée de garde effective, en jours entiers, bornée ; le défaut sans choix.
+    pub fn keep_days(&self) -> u32 {
+        let Some(days) = positive(self.keep_days) else {
+            return DEFAULT_KEEP_DAYS;
+        };
+        (days.round() as u32).clamp(MIN_KEEP_DAYS, MAX_KEEP_DAYS)
+    }
+
+    /// Ce qui ne va pas, champ par champ — sous le champ dans le tiroir, et dans
+    /// `publishReadiness`, pour que les deux disent la même chose.
+    ///
+    /// Un délai hors bornes est corrigé à la lecture (`window_days()` le borne) : l'erreur dit à
+    /// l'hôte que sa valeur n'est pas celle que le voyageur lira.
+    pub fn problems(&self) -> Vec<(&'static str, I18nText)> {
+        let text = crate::i18n::text;
+        let out_of = |value: f64, min: u32, max: u32| {
+            value != 0.0 && !(f64::from(min)..=f64::from(max)).contains(&value)
+        };
+        let mut problems = Vec::new();
+        if out_of(self.window_days, MIN_WINDOW_DAYS, MAX_WINDOW_DAYS) {
+            problems.push(("window_days", text("host.window.error", &[])));
+        }
+        if out_of(self.keep_days, MIN_KEEP_DAYS, MAX_KEEP_DAYS) {
+            problems.push(("keep_days", text("host.keep.error", &[])));
+        }
+        let offered = self.return_options();
+        if offered.contains(&"pickup") {
+            for (_, note) in self.pickup_note.by_language() {
+                if let Some(error) = check::max_chars(note, PICKUP_NOTE_MAX) {
+                    problems.push(("pickup_note", error));
+                    break;
+                }
+            }
+        }
+        if offered.contains(&"donate") {
+            if self.donate_org.trim().is_empty() {
+                problems.push(("donate_org", text("host.donateOrg.error", &[])));
+            } else if let Some(error) = check::max_chars(&self.donate_org, DONATE_ORG_MAX) {
+                problems.push(("donate_org", error));
+            }
+        }
+        problems
+    }
+
+    /// Le message à afficher sous `field`, s'il y en a un.
+    pub fn error_of(&self, field: &str) -> Option<I18nText> {
+        self.problems()
+            .into_iter()
+            .find(|(name, _)| *name == field)
+            .map(|(_, error)| error)
     }
 
     /// Les options de restitution que l'hôte propose, dans l'ordre où le voyageur les lit.
@@ -189,5 +262,57 @@ mod tests {
             ..ModuleConfig::default()
         };
         assert!(!config.shipping_paid_by_guest());
+    }
+
+    /// La garde suit la règle du délai : rien choisi vaut le défaut, le reste est borné.
+    #[test]
+    fn the_keep_duration_defaults_and_is_bounded() {
+        let keep = |days| {
+            ModuleConfig {
+                keep_days: days,
+                ..ModuleConfig::default()
+            }
+            .keep_days()
+        };
+        assert_eq!(keep(0.0), DEFAULT_KEEP_DAYS);
+        assert_eq!(keep(2.0), MIN_KEEP_DAYS);
+        assert_eq!(keep(400.0), MAX_KEEP_DAYS);
+        assert_eq!(keep(45.0), 45);
+    }
+
+    /// Les erreurs du tiroir : un délai hors bornes, et un don sans association. Rien choisi
+    /// n'est pas une erreur, et l'association ne compte que si le don est proposé.
+    #[test]
+    fn problems_name_their_field() {
+        let fields = |config: ModuleConfig| -> Vec<&'static str> {
+            config
+                .problems()
+                .into_iter()
+                .map(|(field, _)| field)
+                .collect()
+        };
+        assert!(fields(ModuleConfig::default()).is_empty());
+        assert_eq!(
+            fields(ModuleConfig {
+                window_days: 90.0,
+                keep_days: 3.0,
+                return_donate: true,
+                ..ModuleConfig::default()
+            }),
+            ["window_days", "keep_days", "donate_org"]
+        );
+        let error = ModuleConfig {
+            return_donate: true,
+            ..ModuleConfig::default()
+        }
+        .error_of("donate_org")
+        .expect("error");
+        assert_eq!(error.get("fr"), "Indiquez l'association.");
+        assert!(fields(ModuleConfig {
+            donate_org: String::new(),
+            return_pickup: true,
+            ..ModuleConfig::default()
+        })
+        .is_empty());
     }
 }
