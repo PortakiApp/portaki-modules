@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.0
+
+Les randonnées sur la page publique du logement.
+
+* Nouvelle carte « Page publique » : affichez 2 à 4 itinéraires de votre choix sur la page du logement.
+* Les visiteurs voient la photo, le niveau, la durée, la distance et le dénivelé ; jamais la trace GPX, le lien ni le départ.
+* Un départ à moins de 300 m du logement s'annonce « Départ du logement », sans adresse ni position.
+
 ## 0.7.1
 
 Le type d'itinéraire choisi par l'hôte est respecté.
