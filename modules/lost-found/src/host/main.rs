@@ -48,7 +48,7 @@ fn window_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
                         .name("window_days")
                         .min(f64::from(MIN_WINDOW_DAYS))
                         .max(f64::from(MAX_WINDOW_DAYS))
-                        .value(f64::from(config.window_days())),
+                        .value(shown(config.window_days, config.window_days())),
                 ),
             config,
             ctx,
@@ -63,7 +63,7 @@ fn window_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
                         .name("keep_days")
                         .min(f64::from(MIN_KEEP_DAYS))
                         .max(f64::from(MAX_KEEP_DAYS))
-                        .value(f64::from(config.keep_days())),
+                        .value(shown(config.keep_days, config.keep_days())),
                 ),
             config,
             ctx,
@@ -163,6 +163,16 @@ fn return_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
     }
 
     card.into()
+}
+
+/// La valeur à montrer : celle que l'hôte a saisie, même hors bornes — c'est elle que l'erreur
+/// sous le champ désigne. L'effective seulement quand il n'a rien choisi.
+fn shown(stored: f64, effective: u32) -> f64 {
+    if stored.is_finite() && stored != 0.0 {
+        stored
+    } else {
+        f64::from(effective)
+    }
 }
 
 /// Le champ, avec le message de [`ModuleConfig::error_of`] sous lui s'il y en a un.
