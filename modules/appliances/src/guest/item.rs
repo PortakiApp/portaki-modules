@@ -2,6 +2,7 @@
 
 use crate::content::{
     description_plain_text, extract_howto_steps, Appliance, ApplianceStatus, AppliancesPayload,
+    HowToStep,
 };
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
@@ -50,18 +51,32 @@ pub fn build_item_detail(payload: &AppliancesPayload, device_id: Option<&str>) -
     .with_id(crate::guest::EXPLORE_ITEM)
 }
 
-/// La carte « Notices » : le lien du fabricant, et où trouver la version papier (§3.1).
+/// La carte « Notices » : le lien du fabricant, la vidéo, et où trouver la version papier (§3.1).
 ///
-/// Masquée quand il n'y a ni l'un ni l'autre — une carte qui annonce des notices et n'en liste
+/// Masquée quand il n'y a rien de tout cela — une carte qui annonce des notices et n'en liste
 /// aucune ne dit rien. Le dépôt d'un PDF attend le lot de stockage de fichiers.
 fn manuals_card(device: &Appliance, paper_location: &str) -> Option<Component> {
     let url = device.manual_url.trim();
     let paper = paper_location.trim();
-    if url.is_empty() && paper.is_empty() {
+    // Seulement un lien https que la règle accepte : un lien en http ou hors règle reste un
+    // avertissement chez l'hôte, pas un bouton chez le voyageur.
+    let video = device.video_url.trim();
+    let video =
+        (video.starts_with("https://") && crate::content::is_video_url(video)).then_some(video);
+    if url.is_empty() && paper.is_empty() && video.is_none() {
         return None;
     }
 
     let mut rows: Vec<Component> = Vec::new();
+    if let Some(video) = video {
+        rows.push(Component::ListItem(
+            ListItem::new()
+                .title("i18n:explore.item.video")
+                .leading(Leading::Icon("link".into()))
+                .chevron(true)
+                .action(Action::external(video.to_string())),
+        ));
+    }
     if !url.is_empty() {
         rows.push(Component::ListItem(
             ListItem::new()
@@ -92,7 +107,27 @@ fn manuals_card(device: &Appliance, paper_location: &str) -> Option<Component> {
 fn device_detail_children(device: &Appliance, paper_manuals_location: &str) -> Vec<Component> {
     let mut children = vec![header_row(device)];
 
-    let steps = extract_howto_steps(&device.description);
+    // Les étapes saisies une à une, puis le mode d'emploi libre sous elles (§2.2). Sans étapes,
+    // la fiche lit celles de la liste du texte libre, comme avant.
+    let structured: Vec<HowToStep> = device
+        .steps
+        .iter()
+        .map(|step| step.text.trim())
+        .filter(|text| !text.is_empty())
+        .map(|text| HowToStep {
+            text: text.to_string(),
+            image: None,
+        })
+        .collect();
+    let has_structured = !structured.is_empty();
+    let has_text = !description_plain_text(&device.description)
+        .trim()
+        .is_empty();
+    let steps = if has_structured {
+        structured
+    } else {
+        extract_howto_steps(&device.description)
+    };
     if !steps.is_empty() {
         let mut howto_children: Vec<Component> = vec![Component::Eyebrow(
             Eyebrow::new().text("i18n:explore.item.howto"),
@@ -120,15 +155,18 @@ fn device_detail_children(device: &Appliance, paper_manuals_location: &str) -> V
                 None => howto_children.push(Component::ListItem(row)),
             }
         }
+        // Le texte libre sous les étapes, dans la même carte : un seul « Mode d'emploi ».
+        if has_structured && has_text {
+            howto_children.push(Component::RichText(
+                RichText::new().content(device.description.trim().to_string()),
+            ));
+        }
         children.push(Component::Card(
             Card::new()
                 .surface(SurfaceLevel::Elevated)
                 .children(howto_children),
         ));
-    } else if !description_plain_text(&device.description)
-        .trim()
-        .is_empty()
-    {
+    } else if has_text {
         // Le document TipTap part tel quel : `RichText.content` est un champ TipTap, et le livret
         // le convertit lui-même. Le module pré-rendait du HTML dedans ; depuis que le livret
         // refuse d'injecter ce qui n'est pas du TipTap (une faille XSS fermée côté voyageur), ce
@@ -179,10 +217,15 @@ fn header_row(device: &Appliance) -> Component {
             .text(device.name.clone())
             .variant(TextVariant::Display),
     )]);
-    if !device.location.trim().is_empty() {
+    // « Bosch Serie 6 WAU28 · Salle de bain » : le modèle aide à retrouver la notice en ligne.
+    let caption: Vec<&str> = [device.model.trim(), device.location.trim()]
+        .into_iter()
+        .filter(|part| !part.is_empty())
+        .collect();
+    if !caption.is_empty() {
         title_stack = title_stack.child(Component::Text(
             Text::new()
-                .text(device.location.clone())
+                .text(caption.join(" · "))
                 .variant(TextVariant::Caption)
                 .emphasis(portaki_sdk::sdui::common::Emphasis::Subtle),
         ));

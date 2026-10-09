@@ -4,7 +4,7 @@ use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::content::{Appliance, ApplianceStatus, MAX_APPLIANCES};
+use crate::content::{Appliance, ApplianceStatus, ApplianceStep, MAX_APPLIANCES};
 use crate::store;
 
 #[portaki_sdk::params]
@@ -28,6 +28,15 @@ pub struct SaveApplianceArgs {
     pub safety_note: String,
     #[serde(default)]
     pub status: ApplianceStatus,
+    /// « Marque et modèle », non traduit.
+    #[serde(default)]
+    pub model: String,
+    #[serde(default, rename = "videoUrl", alias = "video_url")]
+    pub video_url: String,
+    /// La valeur de l'`EditableList` « Étapes » : `[{ label }]`, en JSON ou en tableau, ou une
+    /// liste de textes. Absente : les étapes restent telles quelles.
+    #[serde(default)]
+    pub steps: Option<serde_json::Value>,
 }
 
 #[portaki_sdk::params]
@@ -96,6 +105,15 @@ pub struct ReplaceDeviceSlot {
     pub manual_url: String,
     #[serde(default)]
     pub status: String,
+    /// « Marque et modèle », non traduit.
+    #[serde(default)]
+    pub model: String,
+    #[serde(default, rename = "videoUrl", alias = "video_url")]
+    pub video_url: String,
+    /// La valeur de l'`EditableList` « Étapes » : `[{ label }]`, en JSON ou en tableau, ou une
+    /// liste de textes. Absente : les étapes restent telles quelles.
+    #[serde(default)]
+    pub steps: Option<serde_json::Value>,
 }
 
 #[portaki_sdk::command(
@@ -144,6 +162,7 @@ pub fn save_appliance(ctx: Context, args: SaveApplianceArgs) -> Result<Appliance
             .unwrap_or(0)
     });
 
+    let previous = payload.find_device(&id);
     let next = Appliance {
         id: id.clone(),
         name,
@@ -155,6 +174,10 @@ pub fn save_appliance(ctx: Context, args: SaveApplianceArgs) -> Result<Appliance
         manual_url: args.manual_url.trim().to_string(),
         safety_note: args.safety_note.trim().to_string(),
         status: args.status,
+        model: args.model.trim().to_string(),
+        video_url: args.video_url.trim().to_string(),
+        steps: parse_steps(args.steps.as_ref())
+            .unwrap_or_else(|| previous.map(|d| d.steps.clone()).unwrap_or_default()),
     };
 
     if next.featured {
@@ -255,6 +278,7 @@ pub fn save_safety_notice(ctx: Context, args: SaveSafetyNoticeArgs) -> Result<()
 )]
 pub fn replace_devices(ctx: Context, args: ReplaceDevicesArgs) -> Result<()> {
     let lang = crate::content::AppliancesBundle::lang_code(&ctx.locale);
+    let mut payload = store::load_payload_for(&lang, &ctx.property.locale)?;
     let mut next_devices: Vec<Appliance> = Vec::new();
 
     for (index, slot) in args.devices.iter().enumerate() {
@@ -283,7 +307,6 @@ pub fn replace_devices(ctx: Context, args: ReplaceDevicesArgs) -> Result<()> {
         };
 
         next_devices.push(Appliance {
-            id,
             name,
             emoji: slot.emoji.trim().to_string(),
             description: normalize_description(&slot.description),
@@ -293,10 +316,19 @@ pub fn replace_devices(ctx: Context, args: ReplaceDevicesArgs) -> Result<()> {
             manual_url: slot.manual_url.trim().to_string(),
             safety_note: String::new(),
             status,
+            model: slot.model.trim().to_string(),
+            video_url: slot.video_url.trim().to_string(),
+            // Un formulaire sans étapes ne les efface pas.
+            steps: parse_steps(slot.steps.as_ref()).unwrap_or_else(|| {
+                payload
+                    .find_device(&id)
+                    .map(|d| d.steps.clone())
+                    .unwrap_or_default()
+            }),
+            id,
         });
     }
 
-    let mut payload = store::load_payload_for(&lang, &ctx.property.locale)?;
     let featured_count = next_devices
         .iter()
         .filter(|d| d.featured && d.status != ApplianceStatus::Hidden)
@@ -323,6 +355,40 @@ fn refusal(ctx: &Context, key: &str, vars: &[(&str, &str)]) -> PortakiError {
         crate::i18n::text_with(key, vars)
             .get(&ctx.locale)
             .to_string(),
+    )
+}
+
+/// Les étapes saisies : les rangées de l'`EditableList` (`[{ label }]`, en JSON ou en tableau) ou
+/// des textes. Les rangées vides tombent ; le nombre et la longueur se signalent sans bloquer
+/// (`warnings()`). `None` : rien d'envoyé, ou rien de lisible.
+fn parse_steps(raw: Option<&serde_json::Value>) -> Option<Vec<ApplianceStep>> {
+    use serde_json::Value;
+    let parsed;
+    let rows = match raw? {
+        Value::Null => return None,
+        Value::String(json) if json.trim().is_empty() => return Some(Vec::new()),
+        Value::String(json) => {
+            parsed = serde_json::from_str::<Value>(json).ok()?;
+            parsed.as_array()?
+        }
+        Value::Array(rows) => rows,
+        _ => return None,
+    };
+    Some(
+        rows.iter()
+            .filter_map(|row| match row {
+                Value::String(text) => Some(text.as_str()),
+                row => row
+                    .get("label")
+                    .or_else(|| row.get("text"))
+                    .and_then(Value::as_str),
+            })
+            .map(str::trim)
+            .filter(|text| !text.is_empty())
+            .map(|text| ApplianceStep {
+                text: text.to_string(),
+            })
+            .collect(),
     )
 }
 

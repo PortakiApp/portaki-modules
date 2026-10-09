@@ -7,9 +7,10 @@ use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use serde_json::json;
 
 use appliances::{
-    get_content, render_explore_detail, render_explore_item, render_home_card, render_host_main,
-    replace_devices, reset_test_store, save_appliance, save_safety_notice, ApplianceStatus,
-    GetContentArgs, ReplaceDeviceSlot, ReplaceDevicesArgs, SaveApplianceArgs, SaveSafetyNoticeArgs,
+    get_content, publish_readiness, render_explore_detail, render_explore_item, render_home_card,
+    render_host_main, replace_devices, reset_test_store, save_appliance, save_safety_notice,
+    ApplianceStatus, GetContentArgs, ReplaceDeviceSlot, ReplaceDevicesArgs, SaveApplianceArgs,
+    SaveSafetyNoticeArgs,
 };
 
 fn seed_two_devices(ctx: portaki_sdk::prelude::Context) {
@@ -39,6 +40,9 @@ fn seed_two_devices(ctx: portaki_sdk::prelude::Context) {
             manual_url: "https://example.com/tv-manual".into(),
             safety_note: String::new(),
             status: ApplianceStatus::Active,
+            model: String::new(),
+            video_url: String::new(),
+            steps: None,
         },
     )
     .expect("save tv");
@@ -62,6 +66,9 @@ fn seed_two_devices(ctx: portaki_sdk::prelude::Context) {
             manual_url: String::new(),
             safety_note: "Pas de machine après 21 h.".into(),
             status: ApplianceStatus::Active,
+            model: String::new(),
+            video_url: String::new(),
+            steps: None,
         },
     )
     .expect("save washer");
@@ -238,6 +245,9 @@ fn explore_item_sends_tiptap_not_html_to_rich_text() {
                     manual_url: String::new(),
                     safety_note: String::new(),
                     status: ApplianceStatus::Active,
+                    model: String::new(),
+                    video_url: String::new(),
+                    steps: None,
                 },
             )
             .expect("save");
@@ -284,6 +294,9 @@ fn explore_item_hides_howto_card_for_an_empty_description() {
                     manual_url: String::new(),
                     safety_note: String::new(),
                     status: ApplianceStatus::Active,
+                    model: String::new(),
+                    video_url: String::new(),
+                    steps: None,
                 },
             )
             .expect("save");
@@ -541,6 +554,9 @@ fn thirty_appliances_fit_and_the_card_stays_short() {
                         manual_url: String::new(),
                         safety_note: String::new(),
                         status: ApplianceStatus::Active,
+                        model: String::new(),
+                        video_url: String::new(),
+                        steps: None,
                     },
                 )
                 .unwrap_or_else(|e| panic!("appareil {index} refusé : {e:?}"));
@@ -583,6 +599,9 @@ fn an_appliance_without_a_name_is_refused_in_the_hosts_words() {
                     manual_url: String::new(),
                     safety_note: String::new(),
                     status: ApplianceStatus::Active,
+                    model: String::new(),
+                    video_url: String::new(),
+                    steps: None,
                 },
             )
             .expect_err("nom vide");
@@ -614,5 +633,129 @@ fn a_featured_limit_out_of_range_is_kept_and_shown_under_the_field() {
             let surface = render_host_main(ctx);
             let json = serde_json::to_string(&surface).expect("json");
             assert!(json.contains("Entre 2 et 6."), "{json}");
+        });
+}
+
+fn washer_with_steps(steps: Option<serde_json::Value>) -> SaveApplianceArgs {
+    SaveApplianceArgs {
+        id: Some("washer".into()),
+        name: "Lave-linge".into(),
+        emoji: "🌀".into(),
+        description: json!({
+            "type": "doc",
+            "content": [{
+                "type": "paragraph",
+                "content": [{ "type": "text", "text": "Lessive dans le placard." }]
+            }]
+        })
+        .to_string(),
+        featured: false,
+        order: Some(0),
+        location: "Salle de bain".into(),
+        manual_url: String::new(),
+        safety_note: String::new(),
+        status: ApplianceStatus::Active,
+        model: "Bosch Serie 6 WAU28".into(),
+        video_url: "https://youtu.be/abc".into(),
+        steps,
+    }
+}
+
+fn render_washer(ctx: &portaki_sdk::prelude::Context) -> String {
+    let mut item_ctx = ctx.clone();
+    item_ctx.input = json!({ "deviceId": "washer" });
+    serde_json::to_string(&render_explore_item(item_ctx).expect("render")).unwrap()
+}
+
+/// Les étapes de l'`EditableList` deviennent des rangées numérotées, le texte libre reste
+/// lisible sous elles ; le modèle passe en légende, la vidéo en lien.
+#[test]
+#[serial]
+fn structured_steps_model_and_video_reach_the_guest() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            let rows = json!([{ "label": "Ouvrez le hublot" }, { "label": " " }, { "label": "Choisissez Coton 40°" }]);
+            save_appliance(ctx.clone(), washer_with_steps(Some(rows.to_string().into())))
+                .expect("save");
+            let out = render_washer(&ctx);
+
+            let first = out.find("Ouvrez le hublot").expect("étape 1");
+            let second = out.find("Choisissez Coton 40°").expect("étape 2");
+            let free = out.find("Lessive dans le placard.").expect("texte libre");
+            assert!(first < second && second < free, "{out}");
+            assert!(out.contains(r#""index":2"#), "rangée vide écartée : {out}");
+            assert!(!out.contains(r#""index":3"#), "{out}");
+            assert!(out.contains("Bosch Serie 6 WAU28 · Salle de bain"), "{out}");
+            assert!(out.contains("explore.item.video"), "{out}");
+            assert!(out.contains("https://youtu.be/abc"), "{out}");
+        });
+}
+
+/// Un enregistrement sans étapes (ou depuis le formulaire complet) ne les efface pas.
+#[test]
+#[serial]
+fn saving_without_steps_keeps_them() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            save_appliance(
+                ctx.clone(),
+                washer_with_steps(Some(json!(["Ouvrez le hublot"]))),
+            )
+            .expect("save");
+            save_appliance(ctx.clone(), washer_with_steps(None)).expect("save again");
+            assert!(render_washer(&ctx).contains("Ouvrez le hublot"));
+
+            replace_devices(
+                ctx.clone(),
+                ReplaceDevicesArgs {
+                    safety_notice: String::new(),
+                    paper_manuals_location: None,
+                    devices: vec![ReplaceDeviceSlot {
+                        id: "washer".into(),
+                        name: "Lave-linge".into(),
+                        ..ReplaceDeviceSlot::default()
+                    }],
+                },
+            )
+            .expect("replace");
+            assert!(render_washer(&ctx).contains("Ouvrez le hublot"));
+        });
+}
+
+/// Un lien vidéo hors règle avertit l'hôte sous le champ et à la publication, sans la bloquer,
+/// et n'atteint pas le voyageur.
+#[test]
+#[serial]
+fn a_bad_video_warns_and_stays_off_the_booklet() {
+    reset_test_store();
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|mut ctx| {
+            ctx.locale = "fr-FR".into();
+            let mut args = washer_with_steps(Some(json!([])));
+            args.video_url = "https://example.com/video".into();
+            save_appliance(ctx.clone(), args).expect("saved, not refused");
+
+            let readiness = serde_json::to_value(publish_readiness(ctx.clone()).unwrap()).unwrap();
+            let items = readiness["items"].as_array().unwrap();
+            assert_eq!(items.len(), 1, "{readiness}");
+            assert_eq!(items[0]["id"], "config.devices.0.videoUrl");
+            assert_eq!(items[0]["level"], "recommended", "{readiness}");
+
+            ctx.input = json!({ "selectedId": "washer" });
+            let host = serde_json::to_string(&render_host_main(ctx.clone())).unwrap();
+            assert!(
+                host.contains("Utilisez un lien YouTube, Vimeo, Google Drive ou un fichier .mp4."),
+                "{host}"
+            );
+            assert!(host.contains("i18n:host.device.steps"), "{host}");
+
+            assert!(!render_washer(&ctx).contains("example.com/video"));
         });
 }

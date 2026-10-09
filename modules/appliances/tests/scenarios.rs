@@ -26,6 +26,9 @@ fn setup(builder: MockContextBuilder) -> MockContextBuilder {
                 manual_url: String::new(),
                 safety_note: String::new(),
                 status: ApplianceStatus::Active,
+                model: String::new(),
+                video_url: String::new(),
+                steps: None,
             };
             save_appliance(ctx.clone(), args).expect("save appliance");
         }

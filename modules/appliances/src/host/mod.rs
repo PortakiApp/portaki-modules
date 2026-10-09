@@ -5,10 +5,11 @@ use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::Leading;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
-    Accordion, Button, Card, EmptyState, Field, FieldHint, Form, List, ListItem, NumberInput, Page,
-    RichTextEditor, Select, Stack, Text, TextInput, Toggle,
+    Accordion, Button, Card, EditableList, EmptyState, Field, FieldHint, Form, List, ListItem,
+    NumberInput, Page, RichTextEditor, Select, Stack, Text, TextInput, Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
+use portaki_sdk::sdui::EditableListItem;
 
 use crate::content::{
     description_plain_text, Appliance, ApplianceStatus, AppliancesPayload, MAX_APPLIANCES,
@@ -155,6 +156,16 @@ fn build_detail_panel(
     let emoji = device.map(|d| d.emoji.as_str()).unwrap_or("");
     let location = device.map(|d| d.location.as_str()).unwrap_or("");
     let manual_url = device.map(|d| d.manual_url.as_str()).unwrap_or("");
+    let model = device.map(|d| d.model.as_str()).unwrap_or("");
+    let video_url = device.map(|d| d.video_url.as_str()).unwrap_or("");
+    let steps: Vec<EditableListItem> = device
+        .map(|d| {
+            d.steps
+                .iter()
+                .map(|s| EditableListItem::new(&s.text))
+                .collect()
+        })
+        .unwrap_or_default();
     let description = device
         .map(|d| editor_value(&d.description))
         .unwrap_or_else(|| editor_value(""));
@@ -184,6 +195,25 @@ fn build_detail_panel(
             .label("i18n:host.device.location")
             .child(TextInput::new().name("location").value(location))
             .into(),
+        field("model")
+            .label("i18n:host.device.model")
+            .child(
+                TextInput::new()
+                    .name("model")
+                    .value(model)
+                    .placeholder("Bosch Serie 6 WAU28"),
+            )
+            .into(),
+        field("steps")
+            .label("i18n:host.device.steps")
+            .child(FieldHint::new().text("i18n:host.device.steps.hint"))
+            .child(
+                EditableList::new()
+                    .name("steps")
+                    .items(steps)
+                    .addLabel("i18n:host.device.steps.add"),
+            )
+            .into(),
         field("description")
             .label("i18n:host.device.description")
             .child(RichTextEditor::new().name("description").value(description))
@@ -194,6 +224,15 @@ fn build_detail_panel(
                 TextInput::new()
                     .name("manualUrl")
                     .value(manual_url)
+                    .placeholder("https://…"),
+            )
+            .into(),
+        field("videoUrl")
+            .label("i18n:host.device.videoUrl")
+            .child(
+                TextInput::new()
+                    .name("videoUrl")
+                    .value(video_url)
                     .placeholder("https://…"),
             )
             .into(),

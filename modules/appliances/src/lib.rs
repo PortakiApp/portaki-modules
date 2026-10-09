@@ -19,7 +19,7 @@ pub use content::{Appliance, ApplianceStatus, AppliancesPayload, MAX_APPLIANCES,
 pub use entities::AppliancesContent;
 pub use guest::{render_explore_detail, render_explore_item, render_home_card};
 pub use host::render_host_main;
-pub use queries::{get_content, AppliancesContentView, GetContentArgs};
+pub use queries::{get_content, publish_readiness, AppliancesContentView, GetContentArgs};
 pub use store::reset_test_store;
 
 /// Test-only: write raw JSON into the content slot (legacy or v2).
