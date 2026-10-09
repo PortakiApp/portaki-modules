@@ -24,6 +24,16 @@ pub fn is_form_available(
     }
 }
 
+/// When the form opened: `None` from booking, or without a check-in date to anchor it.
+pub fn opened_at(policy: ShowWhen, checkin_at: Option<DateTime<Utc>>) -> Option<DateTime<Utc>> {
+    let checkin = checkin_at?;
+    match policy {
+        ShowWhen::Confirm => None,
+        ShowWhen::Before => Some(checkin - Duration::hours(48)),
+        ShowWhen::Checkin => Some(start_of_utc_day(checkin)),
+    }
+}
+
 /// Whether the guest may still edit / resubmit after completing the form.
 ///
 /// Editable until the stay check-in instant. Missing check-in fails open.

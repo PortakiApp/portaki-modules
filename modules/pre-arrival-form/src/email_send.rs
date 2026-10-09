@@ -1,5 +1,6 @@
 //! Module-owned transactional emails via `host::email::send`.
 
+use chrono::Duration;
 use portaki_sdk::host::email::{
     self, EmailAudience, EmailBlock, EmailFormField, ModuleEmailCta, ModuleEmailSdui, SendEmailArgs,
 };
@@ -9,7 +10,7 @@ use uuid::Uuid;
 
 use crate::config::{Deadline, ModuleConfig};
 use crate::email_i18n;
-use crate::show_when::{is_editable_until_checkin, is_form_available};
+use crate::show_when::{is_editable_until_checkin, is_form_available, opened_at};
 use crate::storage;
 
 /// Stable delivery id — orchestrator dedups per stay + module + email_id.
@@ -74,8 +75,9 @@ fn open_and_unanswered(ctx: &Context) -> Result<Option<(Uuid, ModuleConfig)>> {
 
 /// La relance de la limite `choice` (§2.3) : une commande et un e-mail par limite, la plateforme
 /// les envoie tous les trois — seule celle que l'hôte a choisie part. Comme `form-available`, il
-/// faut un formulaire ouvert et sans réponse : une relance avant l'ouverture doublerait l'e-mail
-/// d'ouverture. Et rien après la limite : un séjour réservé la veille n'est pas relancé (§9 cas 3).
+/// faut un formulaire ouvert et sans réponse, et ouvert depuis un jour : une relance au même
+/// passage que l'ouverture doublerait l'e-mail d'ouverture. Et rien après la limite : un séjour
+/// réservé la veille n'est pas relancé (§9 cas 3).
 pub fn send_reminder(ctx: &Context, choice: Deadline, email_id: &str) -> Result<()> {
     let Some((stay_id, config)) = open_and_unanswered(ctx)? else {
         return Ok(());
@@ -83,9 +85,15 @@ pub fn send_reminder(ctx: &Context, choice: Deadline, email_id: &str) -> Result<
     let Some(checkin) = ctx.stay.as_ref().and_then(|stay| stay.checkin_at) else {
         return Ok(());
     };
+    let now = time::now()?;
+    // Ouvert depuis 24 h au moins : `form-available` a eu son passage un jour plus tôt, et les
+    // deux e-mails ne partent jamais au même passage quotidien.
+    let open_for_a_day = opened_at(config.show_when, Some(checkin))
+        .is_none_or(|open| now >= open + Duration::hours(24));
     if !config.reminder
         || config.deadline != choice
-        || time::now()? >= choice.at(checkin, &ctx.property.timezone)
+        || !open_for_a_day
+        || now >= choice.at(checkin, &ctx.property.timezone)
     {
         return Ok(());
     }
