@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.0
+
+La borne dans les équipements.
+
+* Dès que la place est renseignée, la borne de recharge s'ajoute aux équipements de la page du logement, avec sa prise (Type 2, CCS), sans la place ni code.
+
 ## 1.8.0
 
 La borne sur la carte, et sa photo.
