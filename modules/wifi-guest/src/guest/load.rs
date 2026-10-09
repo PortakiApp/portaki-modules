@@ -3,13 +3,15 @@
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 
-use crate::config::ModuleConfig;
+use crate::config::{ModuleConfig, Network};
 use crate::reveal::{
     evaluate_reveal, format_available_from, locked_message, RevealDecision, SECRET_MASK,
 };
 
 pub struct GuestData {
     pub config: ModuleConfig,
+    /// The networks with a name, in the host's order: the first is the one on the card.
+    pub networks: Vec<Network>,
     /// The guest's locale, for the translated texts.
     pub locale: String,
     pub password_revealed: bool,
@@ -37,8 +39,14 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         &property_timezone,
     );
 
+    let networks = config
+        .networks()
+        .into_iter()
+        .filter(|network| !network.ssid.trim().is_empty())
+        .collect();
     Ok(Some(GuestData {
         config,
+        networks,
         locale: ctx.locale.clone(),
         password_revealed: decision.revealed,
         reveal_locked_message: locked_banner(&decision, &property_timezone, &ctx.locale),
@@ -46,8 +54,13 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
     }))
 }
 
-pub fn password_display(data: &GuestData) -> String {
-    let password = data.config.password.trim();
+/// The password as the guest may see it now: in clear once revealed, masked before ; nothing for
+/// an open network, whatever the host typed before choosing it (spec §3).
+pub fn password_display(data: &GuestData, network: &Network) -> String {
+    if network.security == crate::config::WifiSecurity::Nopass {
+        return String::new();
+    }
+    let password = network.password.trim();
     if password.is_empty() {
         return String::new();
     }

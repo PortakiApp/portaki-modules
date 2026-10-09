@@ -15,9 +15,18 @@
       "tree": {
         "children": [
           {
+            "text": "La box est dans le meuble TV si besoin de la redémarrer.",
+            "type": "Text",
+            "variant": "body"
+          },
+          {
             "message": "i18n:guest.security.message",
             "title": "i18n:guest.security.title",
             "type": "InfoBanner"
+          },
+          {
+            "text": "Principal",
+            "type": "Eyebrow"
           },
           {
             "key": "i18n:guest.ssid",
@@ -38,14 +47,26 @@
             "value": "WIFI:T:WPA;S:Maison-Invites;P:soleil-2026;;"
           },
           {
-            "text": "Le réseau 5 GHz est plus rapide dans le salon.",
-            "type": "Text",
-            "variant": "caption"
+            "text": "5 GHz, plus rapide dans le salon",
+            "type": "Eyebrow"
           },
           {
-            "text": "Choisissez « Maison-Invites » dans les réglages Wi-Fi, puis saisissez le mot de passe.",
-            "type": "Text",
-            "variant": "body"
+            "key": "i18n:guest.ssid",
+            "mono": true,
+            "type": "KeyValue",
+            "value": "Maison-Invites-5G"
+          },
+          {
+            "copy": true,
+            "copyLabel": "i18n:guest.copyPassword",
+            "key": "i18n:guest.password",
+            "mono": true,
+            "type": "KeyValue",
+            "value": "soleil-2026"
+          },
+          {
+            "type": "QRCode",
+            "value": "WIFI:T:WPA;S:Maison-Invites-5G;P:soleil-2026;;"
           }
         ],
         "gap": 12.0,
