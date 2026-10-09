@@ -72,10 +72,10 @@ pub struct ModuleConfig {
     #[field(label = "host.public.enabled.label")]
     pub public_enabled: bool,
     /// Les avis montrés sur la page publique, 2 à 6 : le séjour de chacun (`stay:<id>:review`),
-    /// pris parmi les avis consentis. Le choix multiple envoie du JSON en texte : un champ
-    /// `structured` le refuserait, d'où `text`, lu en liste à l'arrivée.
-    #[field(kind = "text", label = "host.public.reviews.label")]
-    #[serde(deserialize_with = "id_list", serialize_with = "id_list_text")]
+    /// pris parmi les avis consentis. Le choix multiple envoie un vrai tableau, que seul un champ
+    /// `structured` accepte (un `text` exige une chaîne).
+    #[field(kind = "structured", label = "host.public.reviews.label")]
+    #[serde(deserialize_with = "id_list")]
     pub public_reviews: Vec<String>,
 
     /// How the booking-platform link is decided against the stay's channel (`auto`). No host
@@ -90,8 +90,8 @@ pub struct ModuleConfig {
 pub const PUBLIC_REVIEWS_MIN: usize = 2;
 pub const PUBLIC_REVIEWS_MAX: usize = 6;
 
-/// Une liste d'identifiants, en tableau ou en texte : le choix multiple envoie du JSON en chaîne
-/// (`"[\"a\",\"b\"]"`), un choix simple la valeur seule (`"a"`). Comme `days_list` d'Horaires.
+/// Une liste d'identifiants, en tableau ou en texte : le choix multiple envoie un tableau ; les
+/// brouillons d'avant le gardaient en JSON dans une chaîne (`"[\"a\",\"b\"]"`), ou en virgules.
 fn id_list<'de, D>(deserializer: D) -> std::result::Result<Vec<String>, D::Error>
 where
     D: serde::Deserializer<'de>,
@@ -109,14 +109,6 @@ where
         }),
         _ => Vec::new(),
     })
-}
-
-/// Réécrite comme le formulaire l'envoie, en texte : le champ est déclaré `text`.
-fn id_list_text<S>(ids: &[String], serializer: S) -> std::result::Result<S::Ok, S::Error>
-where
-    S: serde::Serializer,
-{
-    serializer.serialize_str(&serde_json::to_string(ids).unwrap_or_default())
 }
 
 /// Quand demander l'avis.
