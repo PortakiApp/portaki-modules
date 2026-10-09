@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.0
+
+La sécurité dans les équipements.
+
+* L'extincteur et le détecteur de fumée s'ajoutent aux équipements de la page du logement dès qu'un organe de ce type est renseigné, sans son emplacement.
+
 ## 0.6.0
 
 Plus d'organes, un nom par défaut.
