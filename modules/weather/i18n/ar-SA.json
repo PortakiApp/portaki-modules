@@ -29,7 +29,6 @@
   "explore.forecast.title": "التوقّعات",
   "guest.error.description": "تعذّر تحميل حالة الطقس. أعِد المحاولة بعد لحظات.",
   "guest.error.title": "الطقس غير متاح مؤقتًا",
-  "guest.noLocation.description": "سيظهر الطقس بمجرد تحديد عنوان المسكن.",
   "guest.summary": "{temp} · {condition}",
   "guest.teaser": "طقس الأيام المقبلة",
   "guest.unavailable.description": "لا تُقدَّم التوقّعات لهذا المسكن.",

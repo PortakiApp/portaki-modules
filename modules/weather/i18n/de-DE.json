@@ -29,7 +29,6 @@
   "explore.forecast.title": "Vorhersage",
   "guest.error.description": "Die Wetterlage konnte nicht geladen werden. Versuchen Sie es in einem Augenblick erneut.",
   "guest.error.title": "Wetter vorübergehend nicht verfügbar",
-  "guest.noLocation.description": "Das Wetter erscheint, sobald die Adresse der Wohnung eingetragen ist.",
   "guest.summary": "{temp} · {condition}",
   "guest.teaser": "Das Wetter der nächsten Tage",
   "guest.unavailable.description": "Für diese Wohnung werden keine Vorhersagen angeboten.",

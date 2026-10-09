@@ -29,7 +29,6 @@
   "explore.forecast.title": "Forecast",
   "guest.error.description": "Conditions could not be loaded. Try again in a moment.",
   "guest.error.title": "Weather temporarily unavailable",
-  "guest.noLocation.description": "The weather will appear once the property's address is set.",
   "guest.summary": "{temp} · {condition}",
   "guest.teaser": "The forecast for the days ahead",
   "guest.unavailable.description": "Forecasts are not offered for this property.",

@@ -7,6 +7,7 @@ La météo sur la page publique du logement.
 * Un bloc Climat peut s'afficher sur la page publique du logement : la température du jour, sans rien du séjour.
 * Les températures moyennes des six mois de la saison peuvent s'y ajouter, quand OpenWeather les fournit.
 * L'hôte l'active dans une nouvelle carte « Page publique » des réglages Météo ; il est masqué par défaut.
+* Sans adresse ni position, la carte météo est masquée dans le livret au lieu d'un message au voyageur.
 
 ## 1.5.0
 

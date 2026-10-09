@@ -29,7 +29,6 @@
   "explore.forecast.title": "Verwachting",
   "guest.error.description": "De weersituatie kon niet worden geladen. Probeer het over een ogenblik opnieuw.",
   "guest.error.title": "Weer tijdelijk niet beschikbaar",
-  "guest.noLocation.description": "Het weer verschijnt zodra het adres van de woning is ingevuld.",
   "guest.summary": "{temp} · {condition}",
   "guest.teaser": "Het weer van de komende dagen",
   "guest.unavailable.description": "Voor deze woning worden geen verwachtingen aangeboden.",

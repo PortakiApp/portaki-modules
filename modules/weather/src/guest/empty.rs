@@ -4,7 +4,8 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::EmptyState;
 use portaki_sdk::sdui::surface::Surface;
 
-/// L'hôte a choisi de ne pas montrer cette carte : un état vide sans texte, que le livret masque.
+/// Rien à montrer (carte coupée par l'hôte, ou aucune position) : un état vide sans texte, que le
+/// livret masque.
 pub fn not_shown(surface_id: SurfaceId) -> Surface {
     Surface::new(EmptyState::new().icon(IconName::CloudSun)).with_id(surface_id)
 }
