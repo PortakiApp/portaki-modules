@@ -486,6 +486,17 @@ fn layer_card_building(enabled: bool, config: &HostConfig, ctx: &HostContext) ->
             "i18n:host.building.intercom",
             config.building_access_intercom.host_value(ctx),
         ));
+        children.push(text_field(
+            "building_floor",
+            "i18n:host.building.floor",
+            config.building_floor.host_value(ctx),
+        ));
+        children.push(select_field(
+            "building_lift",
+            "i18n:host.building.lift",
+            &crate::config::LIFT_CHOICES,
+            config.building_lift.trim(),
+        ));
         children.push(rich_text_field(
             "building_note",
             "i18n:host.building.note",
@@ -514,6 +525,26 @@ fn layer_card_parking(enabled: bool, config: &HostConfig, ctx: &HostContext) -> 
         .checked(enabled)
         .into()];
     if enabled {
+        let kind = config.parking_type.trim();
+        children.push(select_field(
+            "parking_type",
+            "i18n:host.parking.kind",
+            &crate::config::PARKING_KINDS,
+            kind,
+        ));
+        children.push(text_field(
+            "parking_spot",
+            "i18n:host.parking.spot",
+            &config.parking_spot,
+        ));
+        // Le tarif, dans la rue ou en parking public seulement (règles communes : masqué).
+        if matches!(kind, "street" | "public") {
+            children.push(text_field(
+                "parking_price",
+                "i18n:host.parking.price",
+                config.parking_price.host_value(ctx),
+            ));
+        }
         children.push(rich_text_field(
             "parking_info",
             "i18n:host.parking.info",
@@ -677,6 +708,29 @@ fn named(name: &str) -> Field {
         Some(error) => field.error(error),
         None => field,
     }
+}
+
+/// Une liste fermée : les options se nomment `<libellé>.<option>`.
+fn select_field(name: &str, label_key: &str, options: &[&str], value: &str) -> Component {
+    let value = if options.contains(&value) {
+        value
+    } else {
+        options[0]
+    };
+    named(name)
+        .label(label_key)
+        .child(
+            Select::new()
+                .name(name)
+                .options(
+                    options
+                        .iter()
+                        .map(|option| ChoiceOption::new(*option, format!("{label_key}.{option}")))
+                        .collect(),
+                )
+                .value(value),
+        )
+        .into()
 }
 
 fn text_field(name: &str, label_key: &str, value: &str) -> Component {

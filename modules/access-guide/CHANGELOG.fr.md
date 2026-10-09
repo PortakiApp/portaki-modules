@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.0
+
+L'immeuble et le parking, en détail.
+
+* Indiquez l'étage et la porte, et s'il n'y a pas d'ascenseur : le livret affiche « Sans ascenseur ».
+* Précisez le stationnement (place privée, rue, parking public, garage) et le numéro de place.
+* Dans la rue ou en parking public, ajoutez le tarif.
+
 ## 1.8.0
 
 Des règles de saisie plus claires.

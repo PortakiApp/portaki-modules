@@ -428,9 +428,12 @@ fn host_forms() -> Vec<(String, portaki_sdk::sdui::surface::Surface)> {
     let mut surfaces = Vec::new();
     for locale in ["fr-FR", "en-US"] {
         for method in PrimaryMethod::ALL {
+            // Dans la rue : le tarif n'est dessiné que là.
+            let mut config = always_reveal_config();
+            config.parking_type = "street".into();
             let (mut ctx, host) = MockContext::host()
                 .with_capabilities(&[capability::core::STORAGE])
-                .with_config(&always_reveal_config())
+                .with_config(&config)
                 .build();
             ctx.locale = locale.into();
             ctx.input = json!({
@@ -546,6 +549,7 @@ fn a_save_in_english_keeps_the_french() {
         config_save::localized_paths(EMISSIONS),
         [
             "building_access_intercom",
+            "building_floor",
             "building_note",
             "building_staff_desk_location",
             "building_staff_hours",
@@ -558,6 +562,7 @@ fn a_save_in_english_keeps_the_french() {
             "late_arrival_note",
             "method_instructions",
             "parking_info",
+            "parking_price",
             "steps.detail",
             "steps.title",
         ]

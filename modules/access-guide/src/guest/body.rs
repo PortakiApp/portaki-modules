@@ -565,6 +565,18 @@ fn push_building_access(
     if let Some(intercom) = building.intercom.as_deref() {
         push_text_row(children, "i18n:guest.building.intercom", intercom);
     }
+    if let Some(floor) = building.floor.as_deref() {
+        push_text_row(children, "i18n:guest.building.floor", floor);
+    }
+    // « Sans ascenseur » seulement : un ascenseur ne mérite pas une ligne, son absence avec des
+    // bagages, si (§2.7).
+    if building.lift == Some(false) {
+        push_text_row(
+            children,
+            "i18n:guest.building.lift",
+            "i18n:guest.building.noLift",
+        );
+    }
     if detailed {
         if let Some(note) = note {
             push_text_row(children, "i18n:guest.building.note", note);
@@ -586,6 +598,19 @@ fn push_parking(
     }
     if parking.map(ParkingLayer::is_empty).unwrap_or(true) && info.is_empty() {
         return;
+    }
+    if let Some(kind) = parking.and_then(|p| p.kind.as_deref()) {
+        push_text_row(
+            children,
+            "i18n:guest.parking.kind",
+            &format!("i18n:host.parking.kind.{kind}"),
+        );
+    }
+    if let Some(spot) = parking.and_then(|p| p.spot.as_deref()) {
+        push_text_row(children, "i18n:guest.parking.spot", spot);
+    }
+    if let Some(price) = parking.and_then(|p| p.price.as_deref()) {
+        push_text_row(children, "i18n:guest.parking.price", price);
     }
     if !info.is_empty() {
         push_text_row(children, "i18n:guest.parking", info);
