@@ -11,7 +11,8 @@ use portaki_sdk::sdui::primitives::{
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::content::{
-    description_plain_text, Appliance, ApplianceStatus, MAX_APPLIANCES, MAX_FEATURED, MIN_FEATURED,
+    description_plain_text, Appliance, ApplianceStatus, AppliancesPayload, MAX_APPLIANCES,
+    MAX_FEATURED, MIN_FEATURED,
 };
 use crate::store;
 
@@ -30,13 +31,9 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     let payload = store::load_payload_for(&ctx.locale, &ctx.property.locale).unwrap_or_default();
     let selected_id = ctx.input_str("selectedId").unwrap_or("").to_string();
 
-    let safety = build_safety_accordion(
-        &payload.safety_notice,
-        &payload.paper_manuals_location,
-        payload.featured_limit(),
-    );
+    let safety = build_safety_accordion(&payload, &ctx);
     let list_card = build_list_card(&payload.devices, &selected_id);
-    let detail_panel = build_detail_panel(&payload.devices, &selected_id);
+    let detail_panel = build_detail_panel(&payload, &ctx, &selected_id);
 
     Surface::new(Page::new().children(vec![
             safety,
@@ -111,7 +108,12 @@ fn build_list_card(devices: &[Appliance], selected_id: &str) -> Component {
     )
 }
 
-fn build_detail_panel(devices: &[Appliance], selected_id: &str) -> Component {
+fn build_detail_panel(
+    payload: &AppliancesPayload,
+    ctx: &HostContext,
+    selected_id: &str,
+) -> Component {
+    let devices = &payload.devices;
     if selected_id.is_empty() {
         return Component::Card(
             Card::new().title("i18n:host.detail.card.title").child(
@@ -141,6 +143,13 @@ fn build_detail_panel(devices: &[Appliance], selected_id: &str) -> Component {
         );
     }
 
+    // Les erreurs de cet appareil, sous ses champs : `devices.<rang>.<champ>` dans `problems()`.
+    let index = device.and_then(|d| devices.iter().position(|other| other.id == d.id));
+    let field = |name: &str| match index {
+        Some(index) => named(payload, ctx, &format!("devices.{index}.{name}"), name),
+        None => Field::new().name(name),
+    };
+
     let id = device.map(|d| d.id.as_str()).unwrap_or("");
     let name = device.map(|d| d.name.as_str()).unwrap_or("");
     let emoji = device.map(|d| d.emoji.as_str()).unwrap_or("");
@@ -161,9 +170,9 @@ fn build_detail_panel(devices: &[Appliance], selected_id: &str) -> Component {
 
     let mut form_children: Vec<Component> = vec![
         TextInput::new().name("id").value(id).into(),
-        Field::new()
-            .name("name")
+        field("name")
             .label("i18n:host.device.name")
+            .required(true)
             .child(TextInput::new().name("name").value(name))
             .into(),
         Field::new()
@@ -171,18 +180,15 @@ fn build_detail_panel(devices: &[Appliance], selected_id: &str) -> Component {
             .label("i18n:host.device.emoji")
             .child(TextInput::new().name("emoji").value(emoji))
             .into(),
-        Field::new()
-            .name("location")
+        field("location")
             .label("i18n:host.device.location")
             .child(TextInput::new().name("location").value(location))
             .into(),
-        Field::new()
-            .name("description")
+        field("description")
             .label("i18n:host.device.description")
             .child(RichTextEditor::new().name("description").value(description))
             .into(),
-        Field::new()
-            .name("manualUrl")
+        field("manualUrl")
             .label("i18n:host.device.manualUrl")
             .child(
                 TextInput::new()
@@ -243,11 +249,14 @@ fn build_detail_panel(devices: &[Appliance], selected_id: &str) -> Component {
     )
 }
 
-fn build_safety_accordion(
-    safety_notice: &str,
-    paper_manuals_location: &str,
-    featured_limit: usize,
-) -> Component {
+fn build_safety_accordion(payload: &AppliancesPayload, ctx: &HostContext) -> Component {
+    let safety_notice = payload.safety_notice.as_str();
+    let paper_manuals_location = payload.paper_manuals_location.as_str();
+    // La valeur saisie, même hors bornes : « Entre 2 et 6. » sous un 6 bien sage serait un faux
+    // positif.
+    let featured_limit = payload
+        .featured_limit
+        .map_or(payload.featured_limit(), |n| n as usize);
     let save_action = crate::ids::module_id().command_empty(crate::commands::SAVE_SAFETY_NOTICE);
     let has_value = !description_plain_text(safety_notice).trim().is_empty();
     // Shell Accordion: `:collapsed` → closed by default; otherwise open.
@@ -278,8 +287,7 @@ fn build_safety_accordion(
                         .into(),
                     // Une seule fois pour tous les appareils : les notices papier tiennent dans la
                     // même boîte, et le demander par appareil ferait répéter la même phrase.
-                    Field::new()
-                        .name("paperManualsLocation")
+                    named(payload, ctx, "paperManualsLocation", "paperManualsLocation")
                         .label("i18n:host.paperManuals.label")
                         .child(
                             TextInput::new()
@@ -292,8 +300,7 @@ fn build_safety_accordion(
                         .text("i18n:host.paperManuals.hint")
                         .into(),
                     // Combien d'appareils la carte d'accueil met en avant (§2.1).
-                    Field::new()
-                        .name("featuredLimit")
+                    named(payload, ctx, "featuredLimit", "featuredLimit")
                         .label("i18n:host.featured.label")
                         .child(
                             NumberInput::new()
@@ -312,6 +319,15 @@ fn build_safety_accordion(
                 ])),
             ),
     )
+}
+
+/// Le champ `name`, avec le message de `problems()` pour `key` sous lui s'il y en a un.
+fn named(payload: &AppliancesPayload, ctx: &HostContext, key: &str, name: &str) -> Field {
+    let field = Field::new().name(name);
+    match payload.error_of(key) {
+        Some(error) => field.error(error.get(&ctx.locale).to_string()),
+        None => field,
+    }
 }
 
 fn editor_value(raw: &str) -> String {

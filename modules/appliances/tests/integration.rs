@@ -7,9 +7,9 @@ use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use serde_json::json;
 
 use appliances::{
-    get_content, render_explore_detail, render_explore_item, render_home_card, replace_devices,
-    reset_test_store, save_appliance, ApplianceStatus, GetContentArgs, ReplaceDeviceSlot,
-    ReplaceDevicesArgs, SaveApplianceArgs,
+    get_content, render_explore_detail, render_explore_item, render_home_card, render_host_main,
+    replace_devices, reset_test_store, save_appliance, save_safety_notice, ApplianceStatus,
+    GetContentArgs, ReplaceDeviceSlot, ReplaceDevicesArgs, SaveApplianceArgs, SaveSafetyNoticeArgs,
 };
 
 fn seed_two_devices(ctx: portaki_sdk::prelude::Context) {
@@ -391,8 +391,9 @@ fn migrates_legacy_payload_on_read() {
             assert!(view.devices[0].description.contains("bulletList"));
             assert!(view.safety_notice.contains("Coupez l'eau"));
             let card = render_home_card(ctx).expect("render");
-            // featured=false after migration → empty featured card children, still Card
-            assert!(SurfaceAssertions::new(&card).contains_type("Card"));
+            // featured=false after migration → the card falls back to the first active ones.
+            let card = serde_json::to_string(&card).expect("json");
+            assert_eq!(card.matches("\"layout\":\"tile\"").count(), 1, "{card}");
         });
 }
 
@@ -557,5 +558,61 @@ fn thirty_appliances_fit_and_the_card_stays_short() {
             let list = render_explore_detail(ctx).expect("liste");
             let json = serde_json::to_string(&list).expect("json");
             assert_eq!(json.matches("\"type\":\"Card\"").count(), 5, "{json}");
+        });
+}
+
+/// Un nom vide est refusé avec le message de la spec, pas une phrase de développeur.
+#[test]
+#[serial]
+fn an_appliance_without_a_name_is_refused_in_the_hosts_words() {
+    reset_test_store();
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|mut ctx| {
+            ctx.locale = "fr-FR".into();
+            let error = save_appliance(
+                ctx,
+                SaveApplianceArgs {
+                    id: None,
+                    name: "  ".into(),
+                    emoji: String::new(),
+                    description: String::new(),
+                    featured: false,
+                    order: None,
+                    location: String::new(),
+                    manual_url: String::new(),
+                    safety_note: String::new(),
+                    status: ApplianceStatus::Active,
+                },
+            )
+            .expect_err("nom vide");
+            assert!(
+                error.to_string().contains("Donnez un nom à l'appareil."),
+                "{error}"
+            );
+        });
+}
+
+/// Un nombre mis en avant hors de 2 à 6 est gardé tel quel et signalé sous le champ.
+#[test]
+#[serial]
+fn a_featured_limit_out_of_range_is_kept_and_shown_under_the_field() {
+    reset_test_store();
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|mut ctx| {
+            ctx.locale = "fr-FR".into();
+            save_safety_notice(
+                ctx.clone(),
+                SaveSafetyNoticeArgs {
+                    safety_notice: String::new(),
+                    paper_manuals_location: String::new(),
+                    featured_limit: Some(9.0),
+                },
+            )
+            .expect("save");
+            let surface = render_host_main(ctx);
+            let json = serde_json::to_string(&surface).expect("json");
+            assert!(json.contains("Entre 2 et 6."), "{json}");
         });
 }

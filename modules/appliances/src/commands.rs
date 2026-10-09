@@ -113,7 +113,7 @@ pub fn save_appliance(ctx: Context, args: SaveApplianceArgs) -> Result<Appliance
     let lang = crate::content::AppliancesBundle::lang_code(&ctx.locale);
     let name = args.name.trim().to_string();
     if name.is_empty() {
-        return Err(PortakiError::Host("appliance name is required".into()));
+        return Err(refusal(&ctx, "host.device.name.required", &[]));
     }
 
     let mut payload = store::load_payload_for(&lang, &ctx.property.locale)?;
@@ -124,9 +124,7 @@ pub fn save_appliance(ctx: Context, args: SaveApplianceArgs) -> Result<Appliance
         .unwrap_or(true);
 
     if is_create && payload.devices.len() >= MAX_APPLIANCES {
-        return Err(PortakiError::Host(format!(
-            "max {MAX_APPLIANCES} appliances allowed"
-        )));
+        return Err(refusal(&ctx, "host.devices.tooMany", &[]));
     }
 
     let id = args
@@ -167,9 +165,8 @@ pub fn save_appliance(ctx: Context, args: SaveApplianceArgs) -> Result<Appliance
             .count();
         let limit = payload.featured_limit();
         if featured_others >= limit {
-            return Err(PortakiError::Host(format!(
-                "max {limit} featured appliances allowed"
-            )));
+            let count = limit.to_string();
+            return Err(refusal(&ctx, "host.featured.tooMany", &[("count", &count)]));
         }
     }
 
@@ -239,7 +236,9 @@ pub fn save_safety_notice(ctx: Context, args: SaveSafetyNoticeArgs) -> Result<()
     let mut payload = store::load_payload_for(&lang, &ctx.property.locale)?;
     payload.safety_notice = normalize_description(&args.safety_notice);
     payload.paper_manuals_location = args.paper_manuals_location.trim().to_string();
-    if let Some(limit) = args.featured_limit.filter(|n| n.is_finite() && *n > 0.0) {
+    // Enregistré tel quel : hors de 2 à 6, c'est `problems()` qui le dit sous le champ et bloque
+    // la publication ; la carte, elle, borne à la lecture.
+    if let Some(limit) = args.featured_limit.filter(|n| n.is_finite()) {
         payload.featured_limit = Some(limit.round() as u32);
     }
     let _ = store::save_payload_for(&lang, &payload)?;
@@ -264,9 +263,7 @@ pub fn replace_devices(ctx: Context, args: ReplaceDevicesArgs) -> Result<()> {
             continue;
         }
         if next_devices.len() >= MAX_APPLIANCES {
-            return Err(PortakiError::Host(format!(
-                "max {MAX_APPLIANCES} appliances allowed"
-            )));
+            return Err(refusal(&ctx, "host.devices.tooMany", &[]));
         }
 
         let id = {
@@ -306,9 +303,8 @@ pub fn replace_devices(ctx: Context, args: ReplaceDevicesArgs) -> Result<()> {
         .count();
     let limit = payload.featured_limit();
     if featured_count > limit {
-        return Err(PortakiError::Host(format!(
-            "max {limit} featured appliances allowed"
-        )));
+        let count = limit.to_string();
+        return Err(refusal(&ctx, "host.featured.tooMany", &[("count", &count)]));
     }
 
     payload.safety_notice = normalize_description(&args.safety_notice);
@@ -319,6 +315,15 @@ pub fn replace_devices(ctx: Context, args: ReplaceDevicesArgs) -> Result<()> {
     payload.sort_by_order();
     let _ = store::save_payload_for(&lang, &payload)?;
     Ok(())
+}
+
+/// Un refus dit à l'hôte dans sa langue, avec le message de la spec — pas une phrase de développeur.
+fn refusal(ctx: &Context, key: &str, vars: &[(&str, &str)]) -> PortakiError {
+    PortakiError::Host(
+        crate::i18n::text_with(key, vars)
+            .get(&ctx.locale)
+            .to_string(),
+    )
 }
 
 fn parse_boolish(value: &serde_json::Value) -> bool {

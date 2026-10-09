@@ -9,6 +9,11 @@ const BUNDLES: &[(&str, &str)] = &[
 ];
 
 pub fn text(key: &str) -> I18nText {
-    let text = LocalizedEmailText::from_i18n_key_with_vars(BUNDLES.iter().copied(), key, &[]);
+    text_with(key, &[])
+}
+
+/// [`text`], avec les `{nom}` du message remplacés.
+pub fn text_with(key: &str, vars: &[(&str, &str)]) -> I18nText {
+    let text = LocalizedEmailText::from_i18n_key_with_vars(BUNDLES.iter().copied(), key, vars);
     I18nText::new(text.fr, text.en)
 }

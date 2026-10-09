@@ -90,13 +90,21 @@ impl AppliancesPayload {
         })
     }
 
-    /// Ce qui ne va pas, champ par champ — dans `publishReadiness`. Les longueurs de la spec, et
-    /// plus d'appareils en avant que la carte n'en montre.
+    /// Ce qui ne va pas, champ par champ — sous le champ ([`Self::error_of`]) et dans
+    /// `publishReadiness`. Les bornes de la spec Appareils (§2.1, §2.2), avec ses messages.
     pub fn problems(&self) -> Vec<(String, portaki_sdk::contracts::i18n::I18nText)> {
         use portaki_sdk::config::check;
         let mut problems = Vec::new();
         if let Some(error) = check::max_chars(&self.paper_manuals_location, 120) {
             problems.push(("paperManualsLocation".to_string(), error));
+        }
+        // La valeur saisie, pas celle bornée à la lecture : un 9 enregistré se signale, il ne
+        // devient pas 6 en silence.
+        if let Some(error) = self
+            .featured_limit
+            .and_then(|n| check::between(n as f64, MIN_FEATURED as f64, MAX_FEATURED as f64))
+        {
+            problems.push(("featuredLimit".to_string(), error));
         }
         let featured = self
             .devices
@@ -104,14 +112,35 @@ impl AppliancesPayload {
             .filter(|d| d.featured && d.status == ApplianceStatus::Active)
             .count();
         if featured > self.featured_limit() {
+            let limit = self.featured_limit().to_string();
             problems.push((
                 "featuredLimit".to_string(),
-                crate::i18n::text("host.featured.tooMany"),
+                crate::i18n::text_with("host.featured.tooMany", &[("count", &limit)]),
+            ));
+        }
+        if self.devices.len() > MAX_APPLIANCES {
+            problems.push((
+                "devices".to_string(),
+                crate::i18n::text("host.devices.tooMany"),
             ));
         }
         for (index, device) in self.devices.iter().enumerate() {
+            let name_required = device
+                .name
+                .trim()
+                .is_empty()
+                .then(|| crate::i18n::text("host.device.name.required"));
             for (key, error) in [
-                ("name", check::max_chars(&device.name, 60)),
+                (
+                    "name",
+                    name_required.or_else(|| check::max_chars(&device.name, 60)),
+                ),
+                ("location", check::max_chars(&device.location, 30)),
+                ("safetyNote", check::max_chars(&device.safety_note, 280)),
+                (
+                    "description",
+                    check::max_chars(&description_plain_text(&device.description), 3000),
+                ),
                 ("manualUrl", check::https_url(device.manual_url.trim())),
             ] {
                 if let Some(error) = error {
@@ -120,6 +149,14 @@ impl AppliancesPayload {
             }
         }
         problems
+    }
+
+    /// Le message à afficher sous `field`, s'il y en a un.
+    pub fn error_of(&self, field: &str) -> Option<portaki_sdk::contracts::i18n::I18nText> {
+        self.problems()
+            .into_iter()
+            .find(|(name, _)| name == field)
+            .map(|(_, error)| error)
     }
 
     pub fn parse(raw: &str) -> Self {
@@ -164,13 +201,23 @@ impl AppliancesPayload {
     }
 
     /// Featured + active for home card (at most [`Self::featured_limit`]).
+    ///
+    /// Aucun mis en avant : les `featured_limit` premiers actifs (spec §3, cas §9 #3). Sans ce
+    /// repli, un hôte qui n'a rien coché avait une carte d'accueil vide.
     pub fn featured_guest_devices(&self) -> Vec<&Appliance> {
         let limit = self.featured_limit();
-        self.guest_devices()
-            .into_iter()
+        let devices = self.guest_devices();
+        let featured: Vec<&Appliance> = devices
+            .iter()
+            .copied()
             .filter(|d| d.featured)
             .take(limit)
-            .collect()
+            .collect();
+        if featured.is_empty() {
+            devices.into_iter().take(limit).collect()
+        } else {
+            featured
+        }
     }
 
     /// Les appareils groupés par pièce, pour la liste complète (§2.4).
@@ -721,5 +768,172 @@ mod tests {
         assert_eq!(payload.featured_guest_devices().len(), 2);
         let fields: Vec<String> = payload.problems().into_iter().map(|(f, _)| f).collect();
         assert_eq!(fields, ["featuredLimit"]);
+    }
+
+    fn named(name: &str) -> Appliance {
+        Appliance {
+            name: name.into(),
+            ..Appliance::default()
+        }
+    }
+
+    /// Le message de `field`, en français.
+    fn error_fr(payload: &AppliancesPayload, field: &str) -> Option<String> {
+        payload.error_of(field).map(|e| e.get("fr").to_string())
+    }
+
+    /// Aucun mis en avant : la carte montre les `featured_limit` premiers actifs (§3, §9 #3).
+    #[test]
+    fn without_featured_the_card_shows_the_first_active_ones() {
+        let mut devices: Vec<Appliance> = (0..6)
+            .map(|i| Appliance {
+                id: i.to_string(),
+                order: 5 - i,
+                ..named("Four")
+            })
+            .collect();
+        devices[0].status = ApplianceStatus::Hidden;
+        let mut payload = AppliancesPayload {
+            devices,
+            ..AppliancesPayload::default()
+        };
+        let ids = |p: &AppliancesPayload| -> Vec<String> {
+            p.featured_guest_devices()
+                .iter()
+                .map(|d| d.id.clone())
+                .collect()
+        };
+        assert_eq!(ids(&payload), ["5", "4", "3", "2"]);
+        payload.featured_limit = Some(2);
+        assert_eq!(ids(&payload), ["5", "4"]);
+        // Un seul coché : lui seul, pas de repli.
+        payload.devices[3].featured = true;
+        assert_eq!(ids(&payload), ["3"]);
+    }
+
+    /// Hors de 2 à 6 : « Entre 2 et 6. » sous le champ, et la carte borne toujours à la lecture.
+    #[test]
+    fn a_featured_limit_out_of_range_is_reported_not_clamped() {
+        let mut payload = AppliancesPayload {
+            featured_limit: Some(9),
+            ..AppliancesPayload::default()
+        };
+        assert_eq!(
+            error_fr(&payload, "featuredLimit").as_deref(),
+            Some("Entre 2 et 6.")
+        );
+        assert_eq!(payload.featured_limit(), MAX_FEATURED);
+        payload.featured_limit = Some(0);
+        assert_eq!(
+            error_fr(&payload, "featuredLimit").as_deref(),
+            Some("Entre 2 et 6.")
+        );
+        payload.featured_limit = Some(6);
+        assert_eq!(error_fr(&payload, "featuredLimit"), None);
+    }
+
+    #[test]
+    fn too_many_featured_says_the_spec_message() {
+        let payload = AppliancesPayload {
+            devices: vec![
+                Appliance {
+                    featured: true,
+                    ..named("A")
+                },
+                Appliance {
+                    featured: true,
+                    ..named("B")
+                },
+                Appliance {
+                    featured: true,
+                    ..named("C")
+                },
+            ],
+            featured_limit: Some(2),
+            ..AppliancesPayload::default()
+        };
+        assert_eq!(
+            error_fr(&payload, "featuredLimit").as_deref(),
+            Some("Vous avez déjà mis 2 appareils en avant.")
+        );
+    }
+
+    #[test]
+    fn more_than_sixty_appliances_is_reported() {
+        let mut payload = AppliancesPayload {
+            devices: vec![named("Four"); MAX_APPLIANCES],
+            ..AppliancesPayload::default()
+        };
+        assert_eq!(error_fr(&payload, "devices"), None);
+        payload.devices.push(named("Four"));
+        assert_eq!(
+            error_fr(&payload, "devices").as_deref(),
+            Some("60 appareils au maximum.")
+        );
+    }
+
+    #[test]
+    fn an_appliance_without_a_name_is_reported_under_its_name() {
+        let payload = AppliancesPayload {
+            devices: vec![named("Four"), named("  ")],
+            ..AppliancesPayload::default()
+        };
+        assert_eq!(error_fr(&payload, "devices.0.name"), None);
+        assert_eq!(
+            error_fr(&payload, "devices.1.name").as_deref(),
+            Some("Donnez un nom à l'appareil.")
+        );
+    }
+
+    #[test]
+    fn the_room_is_thirty_characters_at_most() {
+        let mut payload = AppliancesPayload {
+            devices: vec![Appliance {
+                location: "x".repeat(30),
+                ..named("Four")
+            }],
+            ..AppliancesPayload::default()
+        };
+        assert_eq!(error_fr(&payload, "devices.0.location"), None);
+        payload.devices[0].location.push('x');
+        assert_eq!(
+            error_fr(&payload, "devices.0.location").as_deref(),
+            Some("30 caractères au maximum.")
+        );
+    }
+
+    #[test]
+    fn the_safety_note_is_280_characters_at_most() {
+        let payload = AppliancesPayload {
+            devices: vec![Appliance {
+                safety_note: "x".repeat(281),
+                ..named("Four")
+            }],
+            ..AppliancesPayload::default()
+        };
+        assert_eq!(
+            error_fr(&payload, "devices.0.safetyNote").as_deref(),
+            Some("280 caractères au maximum.")
+        );
+    }
+
+    /// Le texte du mode d'emploi, pas son JSON TipTap : le balisage ne compte pas.
+    #[test]
+    fn the_manual_text_is_3000_characters_of_text_at_most() {
+        let doc = |text: String| RichTextDoc::new().paragraph(&text).to_json_string();
+        let mut payload = AppliancesPayload {
+            devices: vec![Appliance {
+                description: doc("x".repeat(3000)),
+                ..named("Four")
+            }],
+            ..AppliancesPayload::default()
+        };
+        assert!(payload.devices[0].description.chars().count() > 3000);
+        assert_eq!(error_fr(&payload, "devices.0.description"), None);
+        payload.devices[0].description = doc("x".repeat(3001));
+        assert_eq!(
+            error_fr(&payload, "devices.0.description").as_deref(),
+            Some("3000 caractères au maximum.")
+        );
     }
 }
