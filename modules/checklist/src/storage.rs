@@ -101,11 +101,12 @@ pub fn save_checklist(list: Checklist) -> Result<()> {
     upsert(&TEST_LISTS, list)
 }
 
-/// Deletes a list with its items.
+/// Deletes a list with its items and its display settings.
 pub fn delete_checklist(id: Uuid) -> Result<()> {
-    for item in items_of(id)? {
+    for item in all_items_of(id)? {
         remove(&TEST_ITEMS, item.id)?;
     }
+    display::delete(id)?;
     remove(&TEST_LISTS, id)
 }
 
@@ -185,8 +186,19 @@ fn adopt_legacy_config(rows: &mut [Checklist]) -> Result<()> {
 
 // --- Items ----------------------------------------------------------------------------------
 
-/// Every item of the property, in display order.
+/// Every item of the property, in display order — a step left blank by the host excepted.
+///
+/// A blank step is stored so that `publishReadiness` can say « Écrivez l'étape. » under it; until
+/// written it is no one's step: not ticked, not counted, not in a task.
 pub fn list_items() -> Result<Vec<ChecklistItem>> {
+    Ok(all_items()?
+        .into_iter()
+        .filter(|item| !labels::labels_from_item(item).is_empty())
+        .collect())
+}
+
+/// Every item, blank steps included: what the editor shows and the publish checks read.
+pub fn all_items() -> Result<Vec<ChecklistItem>> {
     let mut items = select(&TEST_ITEMS, None)?;
     items.sort_by(|a, b| {
         a.sort_order
@@ -198,6 +210,14 @@ pub fn list_items() -> Result<Vec<ChecklistItem>> {
 
 pub fn items_of(checklist_id: Uuid) -> Result<Vec<ChecklistItem>> {
     Ok(list_items()?
+        .into_iter()
+        .filter(|item| item.checklist_id == checklist_id)
+        .collect())
+}
+
+/// [`items_of`], blank steps included.
+pub fn all_items_of(checklist_id: Uuid) -> Result<Vec<ChecklistItem>> {
+    Ok(all_items()?
         .into_iter()
         .filter(|item| item.checklist_id == checklist_id)
         .collect())
@@ -215,7 +235,7 @@ pub struct ItemDraft {
 }
 
 pub fn replace_items(checklist_id: Uuid, items: Vec<ItemDraft>) -> Result<()> {
-    let existing = items_of(checklist_id)?;
+    let existing = all_items_of(checklist_id)?;
     let kept: Vec<Uuid> = items.iter().filter_map(|draft| draft.id).collect();
     for row in &existing {
         if !kept.contains(&row.id) {
@@ -332,4 +352,61 @@ pub fn set_task_item(
             done_at: done.then_some(now),
         },
     )
+}
+
+// --- Display settings of a guest list ------------------------------------------------------
+
+/// « Étapes visibles » and « Message final » of a guest list (spec Checklist §2.1).
+///
+/// In KV, one key per list, not on the `Checklist` entity: a new column would need a
+/// `schema_version` the platform does not migrate yet. Pas de TTL — un réglage d'hôte ne périme pas.
+pub mod display {
+    use portaki_sdk::host::kv;
+    use serde::{Deserialize, Serialize};
+    use uuid::Uuid;
+
+    pub const DEFAULT_VISIBLE_LIMIT: u32 = 5;
+    pub const MIN_VISIBLE_LIMIT: u32 = 3;
+    pub const MAX_VISIBLE_LIMIT: u32 = 10;
+
+    #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+    pub struct Display {
+        /// As typed, even out of bounds: the editor shows « Entre 3 et 10. » under it.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub visible_limit: Option<u32>,
+        /// JSON map of every language ([`crate::labels::encode_map`]); empty = the default thanks.
+        #[serde(default, skip_serializing_if = "String::is_empty")]
+        pub done_message: String,
+    }
+
+    impl Display {
+        pub fn visible_limit(&self) -> u32 {
+            self.visible_limit.map_or(DEFAULT_VISIBLE_LIMIT, |n| {
+                n.clamp(MIN_VISIBLE_LIMIT, MAX_VISIBLE_LIMIT)
+            })
+        }
+    }
+
+    fn key(list_id: Uuid) -> String {
+        format!("display:{list_id}")
+    }
+
+    pub fn read(list_id: Uuid) -> Display {
+        kv::get(&key(list_id))
+            .ok()
+            .flatten()
+            .and_then(|bytes| serde_json::from_slice(&bytes).ok())
+            .unwrap_or_default()
+    }
+
+    pub fn write(list_id: Uuid, display: &Display) -> portaki_sdk::Result<()> {
+        let bytes = serde_json::to_vec(display).map_err(|error| {
+            portaki_sdk::PortakiError::Storage(format!("display serialize: {error}"))
+        })?;
+        kv::set(&key(list_id), &bytes, None)
+    }
+
+    pub fn delete(list_id: Uuid) -> portaki_sdk::Result<()> {
+        kv::delete(&key(list_id))
+    }
 }

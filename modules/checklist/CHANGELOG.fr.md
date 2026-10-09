@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.0
+
+Réglages d'affichage et suivi par séjour.
+
+* Une checklist voyageur choisit combien d'étapes restent visibles, de 3 à 10, avant le bouton « Afficher les autres étapes ».
+* L'hôte peut écrire le message affiché quand tout est coché ; sans lui, le livret garde son remerciement habituel.
+* La fiche d'un séjour indique où en est la checklist du voyageur, ou l'heure à laquelle il l'a terminée.
+* Une étape laissée vide bloque la publication, comme une zone de plus de 30 caractères ou une précision de plus de 120.
+
 ## 1.6.0
 
 Des contrôles avant publication.

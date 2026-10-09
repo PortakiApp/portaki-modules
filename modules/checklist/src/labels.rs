@@ -65,14 +65,10 @@ pub fn labels_from_list(list: &Checklist) -> Labels {
     out
 }
 
+/// A blank step encodes to an empty column, which [`labels_from_item`] reads back as no label
+/// (`"{}"` would read back as the label `{}`).
 pub fn encode_labels(labels: &Labels) -> (String, String) {
-    let cleaned: BTreeMap<String, String> = labels
-        .iter()
-        .filter(|(_, v)| !v.trim().is_empty())
-        .map(|(k, v)| (lang_code(k), v.trim().to_string()))
-        .collect();
-    let json = serde_json::to_string(&cleaned).unwrap_or_else(|_| "{}".into());
-    (json, String::new())
+    (encode_map(labels), String::new())
 }
 
 /// Encode une carte de langues pour une colonne qui n'a pas d'héritage bilingue à traîner

@@ -28,6 +28,8 @@ pub struct GuestChecklistData {
     /// Departure instant (UTC) — rendered as the card title in the property timezone.
     pub checkout_at: Option<chrono::DateTime<chrono::Utc>>,
     pub property_timezone: String,
+    /// « Étapes visibles » and « Message final » of the first open list.
+    pub display: storage::display::Display,
 }
 
 /// `departure_only` keeps the `atDeparture` lists (post-stay card).
@@ -65,6 +67,10 @@ pub fn load_guest_checklist(ctx: &GuestContext, departure_only: bool) -> Result<
             .collect(),
         None => Vec::new(),
     };
+    // ponytail: the card is one list for every open guest list, so it follows the first one's
+    // display settings — the spec shows a single « Voyageur · Départ » list at a time. Per-list
+    // folding needs a `ChoiceList` per list.
+    let display = storage::display::read(guest_lists[0].0.id);
     Ok(GuestLoad::Ready(GuestChecklistData {
         lists: guest_lists,
         completed,
@@ -72,5 +78,6 @@ pub fn load_guest_checklist(ctx: &GuestContext, departure_only: bool) -> Result<
         property_locale: ctx.property.locale.clone(),
         checkout_at,
         property_timezone: ctx.property.timezone.clone(),
+        display,
     }))
 }

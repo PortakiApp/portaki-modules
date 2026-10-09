@@ -16,7 +16,7 @@ use uuid::Uuid;
 
 use checklist::{
     complete_item, create_checklist, items_of, list_checklists, list_completions, list_items,
-    publish_readiness, render_home_card, render_host_main, render_post_stay_card,
+    publish_readiness, render_home_card, render_host_main, render_host_stay, render_post_stay_card,
     render_stats_checklist, render_stats_cleaning, reset_test_store, set_completed, stats_summary,
     task_complete, task_toggle, timeline_tasks, uncomplete_item, update_config,
     CreateChecklistArgs, ItemIdArgs, SetCompletedArgs, UpdateConfigArgs,
@@ -607,5 +607,164 @@ fn the_host_group_and_line_reach_the_guest() {
             let json = json_of(&render_home_card(ctx).expect("render"));
             assert!(json.contains("Cuisine"), "{json}");
             assert!(json.contains("Laissez la porte entrouverte"), "{json}");
+        });
+}
+
+fn save_display(ctx: &Context, list: Uuid, visible_limit: Value, done_message: &str) {
+    update_config(
+        ctx.clone(),
+        UpdateConfigArgs {
+            id: list.to_string(),
+            trigger: "atDeparture".into(),
+            visible_limit: Some(visible_limit),
+            done_message: Some(done_message.into()),
+            items: Some(json!(items_of(list)
+                .expect("items")
+                .iter()
+                .map(|item| json!({ "id": item.id, "label": item.label_fr }))
+                .collect::<Vec<_>>())),
+            ..UpdateConfigArgs::default()
+        },
+    )
+    .expect("save");
+}
+
+fn readiness_hint(ctx: &Context, prefix: &str) -> Option<String> {
+    publish_readiness(ctx.clone())
+        .expect("readiness")
+        .items
+        .into_iter()
+        .find(|check| check.id.starts_with(prefix))
+        .map(|check| check.hint.get("fr").to_string())
+}
+
+/// « Étapes visibles » folds the card, « Message final » replaces the thanks (spec §2.1).
+#[test]
+#[serial]
+fn the_display_settings_reach_the_card() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            create(&ctx, "departure");
+            let json = json_of(&render_home_card(ctx.clone()).expect("render"));
+            assert!(json.contains("\"limit\":5"), "{json}");
+
+            let list = list_checklists().expect("lists")[0].id;
+            save_display(&ctx, list, json!("7"), "Claire vous remercie.");
+            let json = json_of(&render_home_card(ctx.clone()).expect("render"));
+            assert!(json.contains("\"limit\":7"), "{json}");
+            assert!(json.contains("Claire vous remercie."), "{json}");
+            assert_eq!(readiness_hint(&ctx, "config."), None);
+            assert_eq!(items_of(list).expect("items").len(), 5);
+        });
+}
+
+/// Out of bounds: « Entre 3 et 10. » blocks publication and sits under the field; the card
+/// keeps a limit it can draw.
+#[test]
+#[serial]
+fn display_settings_out_of_bounds_block_publication() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            create(&ctx, "departure");
+            let list = list_checklists().expect("lists")[0].id;
+            save_display(&ctx, list, json!(12), &"x".repeat(121));
+            assert_eq!(
+                readiness_hint(&ctx, "config.visible_limit.").as_deref(),
+                Some("Entre 3 et 10.")
+            );
+            assert_eq!(
+                readiness_hint(&ctx, "config.done_message.").as_deref(),
+                Some("120 caractères au maximum.")
+            );
+            let editor = json_of(&render_host_main(ctx.clone()));
+            assert!(editor.contains("Entre 3 et 10."), "{editor}");
+        });
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let list = list_checklists().expect("lists")[0].id;
+            save_display(&ctx, list, json!(12), "");
+            let json = json_of(&render_home_card(ctx).expect("render"));
+            assert!(json.contains("\"limit\":10"), "{json}");
+            assert!(json.contains("guest.done.message"), "{json}");
+        });
+}
+
+/// A blank step is kept for « Écrivez l'étape. » but reaches no one; group ≤ 30, detail ≤ 120.
+#[test]
+#[serial]
+fn each_step_is_checked() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            create(&ctx, "emptyGuest");
+            let list = list_checklists().expect("lists")[0].id;
+            let save = |items: Value| {
+                update_config(
+                    ctx.clone(),
+                    UpdateConfigArgs {
+                        id: list.to_string(),
+                        items: Some(items),
+                        ..UpdateConfigArgs::default()
+                    },
+                )
+                .expect("save");
+            };
+            save(json!([{ "label": "Sortir les poubelles" }, { "label": "  " }]));
+            assert_eq!(
+                readiness_hint(&ctx, "labels.").as_deref(),
+                Some("Écrivez l'étape.")
+            );
+            assert_eq!(list_items(ctx.clone()).expect("items").len(), 1);
+            let json = json_of(&render_home_card(ctx.clone()).expect("render"));
+            assert_eq!(json.matches("\"label\":").count(), 1, "{json}");
+
+            save(json!([{ "label": "Poubelles", "group": "x".repeat(31) }]));
+            assert_eq!(
+                readiness_hint(&ctx, "labels.").as_deref(),
+                Some("30 caractères au maximum.")
+            );
+            save(json!([{ "label": "Poubelles", "group": "", "description": "x".repeat(121) }]));
+            assert_eq!(
+                readiness_hint(&ctx, "labels.").as_deref(),
+                Some("120 caractères au maximum.")
+            );
+            save(json!([{ "label": "Poubelles", "description": "Bac jaune" }]));
+            assert_eq!(readiness_hint(&ctx, "labels."), None);
+        });
+}
+
+/// « 3 / 5 étapes · non terminée », then « Terminée le … » once every step is ticked (§1).
+#[test]
+#[serial]
+fn the_stay_detail_tells_the_stay_progress() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            create(&ctx, "departure");
+            create(&ctx, "cleaning");
+            let stay_id = ctx.guest.as_ref().expect("guest").session_id;
+            let mut host = ctx.clone();
+            host.input = json!({ "stayId": stay_id.to_string() });
+            let stay = |host: &Context| json_of(&render_host_stay(host.clone()).expect("render"));
+
+            let items = list_items(ctx.clone()).expect("items");
+            for item in &items[..3] {
+                complete_item(ctx.clone(), ItemIdArgs { item_id: item.id }).expect("tick");
+            }
+            assert!(stay(&host).contains("3 / 5"), "{}", stay(&host));
+            for item in &items[3..] {
+                complete_item(ctx.clone(), ItemIdArgs { item_id: item.id }).expect("tick");
+            }
+            assert!(stay(&host).contains("Terminée le"), "{}", stay(&host));
+
+            host.input = json!({});
+            assert!(stay(&host).contains("host.stay.missingStay"));
         });
 }

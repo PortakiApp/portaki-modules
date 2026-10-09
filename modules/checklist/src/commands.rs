@@ -59,6 +59,12 @@ pub struct UpdateConfigArgs {
     pub alert_host: Option<Value>,
     #[serde(default)]
     pub items: Option<Value>,
+    /// Guest lists only: « Étapes visibles » (3 à 10), a number or its text.
+    #[serde(default)]
+    pub visible_limit: Option<Value>,
+    /// Guest lists only: « Message final », in the language edited.
+    #[serde(default)]
+    pub done_message: Option<String>,
 }
 
 /// Saves the selected list. Without a known `id` there is nothing to save (the « new » panel
@@ -98,13 +104,29 @@ pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
         list.trigger = lists::pick(&args.trigger, lists::GUEST_TRIGGERS).to_string();
         list.placement = lists::pick(&args.placement, lists::PLACEMENTS).to_string();
     }
-    let items = parse_items(args.items.as_ref())?;
-    let existing_items = storage::items_of(list.id)?;
-    storage::save_checklist(list.clone())?;
     let lang = labels::lang_code(&ctx.locale);
+    if !host {
+        let mut display = storage::display::read(list.id);
+        if let Some(limit) = number(args.visible_limit.as_ref()) {
+            // Kept as typed, out of bounds too: the editor says « Entre 3 et 10. » under it.
+            display.visible_limit = Some(limit.round().clamp(0.0, f64::from(u32::MAX)) as u32);
+        }
+        if args.done_message.is_some() {
+            display.done_message = labels::encode_map(&merge_lang(
+                &lang,
+                args.done_message,
+                Some(&display.done_message),
+            ));
+        }
+        storage::display::write(list.id, &display)?;
+    }
+    let items = parse_items(args.items.as_ref())?;
+    let existing_items = storage::all_items_of(list.id)?;
+    storage::save_checklist(list.clone())?;
+    // A blank step is kept: `publishReadiness` asks for it (« Écrivez l'étape. »), and the readers
+    // skip it until it is written (`storage::list_items`).
     let rows = items
         .into_iter()
-        .filter(|item| !item.label.trim().is_empty())
         .map(|item| {
             let fr = item.label.trim().to_string();
             // A host list is written in one language: the same text serves both.
@@ -119,24 +141,16 @@ pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
             // de la requête et on garde ce que les autres langues contenaient déjà, sinon passer
             // en anglais pour corriger une faute effacerait le groupe français.
             let previous = id.and_then(|id| existing_items.iter().find(|row| row.id == id));
-            let merge = |typed: Option<String>, stored: Option<&str>| -> Labels {
-                let mut map = stored.map(labels::decode_map).unwrap_or_default();
-                match typed.map(|value| value.trim().to_string()) {
-                    Some(value) if value.is_empty() => {
-                        map.remove(&lang);
-                    }
-                    Some(value) => {
-                        map.insert(lang.clone(), value);
-                    }
-                    None => {}
-                }
-                map
-            };
             storage::ItemDraft {
                 id,
                 labels,
-                group: merge(item.group, previous.map(|row| row.group_i18n.as_str())),
-                description: merge(
+                group: merge_lang(
+                    &lang,
+                    item.group,
+                    previous.map(|row| row.group_i18n.as_str()),
+                ),
+                description: merge_lang(
+                    &lang,
                     item.description,
                     previous.map(|row| row.description_i18n.as_str()),
                 ),
@@ -145,6 +159,33 @@ pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
         })
         .collect();
     storage::replace_items(list.id, rows)
+}
+
+/// Writes the text typed in `lang` over the stored language map and keeps the other languages:
+/// the form edits one language at a time, and switching to English to fix a typo must not wipe
+/// the French. `None` leaves the map untouched, a blank text removes `lang`.
+fn merge_lang(lang: &str, typed: Option<String>, stored: Option<&str>) -> Labels {
+    let mut map = stored.map(labels::decode_map).unwrap_or_default();
+    match typed.map(|value| value.trim().to_string()) {
+        Some(value) if value.is_empty() => {
+            map.remove(lang);
+        }
+        Some(value) => {
+            map.insert(lang.to_string(), value);
+        }
+        None => {}
+    }
+    map
+}
+
+/// A number field arrives as a number, sometimes as its text; blank = untouched.
+fn number(raw: Option<&Value>) -> Option<f64> {
+    match raw? {
+        Value::Number(n) => n.as_f64(),
+        Value::String(s) => s.trim().parse().ok(),
+        _ => None,
+    }
+    .filter(|n: &f64| n.is_finite())
 }
 
 fn parse_items(raw: Option<&Value>) -> Result<Vec<HostRow>> {
