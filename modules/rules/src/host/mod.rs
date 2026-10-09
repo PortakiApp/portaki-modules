@@ -6,16 +6,19 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::primitives::{
-    Card, Field, FieldHint, Form, Page, Select, Stack, StepList, TextInput,
+    Card, Field, FieldHint, Form, NumberInput, Page, Select, Stack, StepList, TextInput,
 };
 use portaki_sdk::sdui::surface::Surface;
 use serde::Serialize;
 
-use crate::content::{RuleItem, RuleStatus, RulesBundle, RulesPayload};
+use crate::content::{
+    RuleItem, RuleStatus, RulesBundle, RulesPayload, MAX_CARD_LIMIT, MAX_RULES, MIN_CARD_LIMIT,
+    THEMES,
+};
 use crate::store;
 
 /// Design / mobile upper bound — « ajoutez-en autant que nécessaire », capped.
-const ITEM_SLOTS: usize = 12;
+const ITEM_SLOTS: usize = MAX_RULES;
 
 /// Host editor — dynamic bilingual rule rows for the active `ctx.locale`.
 ///
@@ -47,32 +50,70 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     let items_count = draft_items_count(&ctx, &payload);
     let mut rows: Vec<Component> = Vec::new();
     for index in 0..items_count {
-        rows.push(rule_row(index, payload.items.get(index)));
+        rows.push(rule_row(index, payload.items.get(index), &ctx));
     }
 
     Surface::new(
         Page::new().child(
             Form::new().child(
-                Card::new()
-                    .title("i18n:host.section.title")
-                    .subtitle("i18n:host.section.subtitle")
-                    .icon(IconName::Scale)
+                Stack::new()
+                    .gap(16.0)
+                    .child(display_card(&bundle, &ctx))
                     .child(
-                        StepList::new()
-                            .addLabel("i18n:host.rules.add")
-                            .removeLabel("i18n:host.rules.remove")
-                            .emptyTitle("i18n:host.rules.emptyTitle")
-                            .emptyDescription("i18n:host.rules.emptyDescription")
-                            .itemKeyPrefix("items")
-                            .addAction(emit_input(ItemsCountInput {
-                                items_count: (items_count + 1).min(ITEM_SLOTS),
-                            }))
-                            .children(rows),
+                        Card::new()
+                            .title("i18n:host.section.title")
+                            .subtitle("i18n:host.section.subtitle")
+                            .icon(IconName::Scale)
+                            .child(
+                                StepList::new()
+                                    .addLabel("i18n:host.rules.add")
+                                    .removeLabel("i18n:host.rules.remove")
+                                    .emptyTitle("i18n:host.rules.emptyTitle")
+                                    .emptyDescription("i18n:host.rules.emptyDescription")
+                                    .itemKeyPrefix("items")
+                                    .addAction(emit_input(ItemsCountInput {
+                                        items_count: (items_count + 1).min(ITEM_SLOTS),
+                                    }))
+                                    .children(rows),
+                            ),
                     ),
             ),
         ),
     )
     .with_id(MAIN)
+}
+
+/// §2.1 Affichage : combien de règles sur la carte, et où se règle la signature.
+fn display_card(bundle: &RulesBundle, ctx: &HostContext) -> Component {
+    let stored = bundle.card_limit;
+    let mut field = Field::new()
+        .name("card_limit")
+        .label("i18n:host.cardLimit.label")
+        .child(
+            NumberInput::new()
+                .name("card_limit")
+                .min(f64::from(MIN_CARD_LIMIT))
+                .max(f64::from(MAX_CARD_LIMIT))
+                .value(stored.map_or(bundle.card_limit() as f64, f64::from)),
+        );
+    // La valeur saisie, même hors bornes : c'est elle que l'erreur désigne.
+    if let Some(error) = stored.and_then(|n| {
+        portaki_sdk::config::check::between(
+            f64::from(n),
+            f64::from(MIN_CARD_LIMIT),
+            f64::from(MAX_CARD_LIMIT),
+        )
+    }) {
+        field = field.error(error.get(&ctx.locale).to_string());
+    }
+    Card::new()
+        .title("i18n:host.display.title")
+        .icon(IconName::Home)
+        .child(field)
+        .child(FieldHint::new().text("i18n:host.cardLimit.hint"))
+        // Faire accepter le règlement se règle dans Formalités : on le dit ici, sans le dupliquer.
+        .child(FieldHint::new().text("i18n:host.acceptance.hint"))
+        .into()
 }
 
 fn draft_items_count(ctx: &HostContext, payload: &RulesPayload) -> usize {
@@ -104,76 +145,102 @@ fn emit_input(payload: impl Serialize) -> Action {
 
 /// Design defaults — Portaki Dashboard `editorRules` / Guest `rules` block.
 pub(crate) fn default_for_lang(lang: &str) -> RulesPayload {
-    if lang == "en" {
-        RulesPayload {
-            items: vec![
-                RuleItem {
-                    icon: "clock-circle".into(),
-                    title: "Quiet after 10 pm".into(),
-                    subtitle: "Please respect neighbours".into(),
-                    status: RuleStatus::Important,
-                    theme: "Neighbours".into(),
-                },
-                RuleItem {
-                    icon: "x".into(),
-                    title: "Non-smoking property".into(),
-                    subtitle: "Terrace allowed".into(),
-                    status: RuleStatus::Important,
-                    theme: "The home".into(),
-                },
-                RuleItem {
-                    icon: "gift".into(),
-                    title: "Pets on request".into(),
-                    subtitle: "Let us know before arrival".into(),
-                    status: RuleStatus::Allowed,
-                    theme: "Pets".into(),
-                },
-                RuleItem {
-                    icon: "users".into(),
-                    title: "No parties".into(),
-                    subtitle: "Respect the guest count".into(),
-                    status: RuleStatus::Important,
-                    theme: "The home".into(),
-                },
-            ],
-        }
+    // Le modèle de la spec (§4) : silence, tabac, animaux, fêtes.
+    let rule =
+        |icon: &str, title: &str, subtitle: &str, status, theme: &str, hours: &str| RuleItem {
+            icon: icon.into(),
+            title: title.into(),
+            subtitle: subtitle.into(),
+            status,
+            theme: theme.into(),
+            hours: hours.into(),
+        };
+    let items = if lang == "en" {
+        vec![
+            rule(
+                "clock-circle",
+                "Quiet hours",
+                "Please respect neighbours",
+                RuleStatus::Important,
+                "noise",
+                "22:00 – 08:00",
+            ),
+            rule(
+                "x",
+                "Non-smoking property",
+                "Terrace allowed",
+                RuleStatus::Forbidden,
+                "smoking",
+                "",
+            ),
+            rule(
+                "gift",
+                "Pets on request",
+                "Let us know before arrival",
+                RuleStatus::Allowed,
+                "pets",
+                "",
+            ),
+            rule(
+                "users",
+                "No parties",
+                "Respect the guest count",
+                RuleStatus::Forbidden,
+                "parties",
+                "",
+            ),
+        ]
     } else {
-        RulesPayload {
-            items: vec![
-                RuleItem {
-                    icon: "clock-circle".into(),
-                    title: "Calme après 22 h".into(),
-                    subtitle: "Merci pour le voisinage".into(),
-                    status: RuleStatus::Important,
-                    theme: "Voisinage".into(),
-                },
-                RuleItem {
-                    icon: "x".into(),
-                    title: "Logement non-fumeur".into(),
-                    subtitle: "Terrasse autorisée".into(),
-                    status: RuleStatus::Important,
-                    theme: "Logement".into(),
-                },
-                RuleItem {
-                    icon: "gift".into(),
-                    title: "Animaux sur demande".into(),
-                    subtitle: "Prévenez-nous avant l'arrivée".into(),
-                    status: RuleStatus::Allowed,
-                    theme: "Animaux".into(),
-                },
-                RuleItem {
-                    icon: "users".into(),
-                    title: "Pas de fête".into(),
-                    subtitle: "Respect du nombre de voyageurs".into(),
-                    status: RuleStatus::Important,
-                    theme: "Logement".into(),
-                },
-            ],
-        }
+        vec![
+            rule(
+                "clock-circle",
+                "Silence",
+                "Merci pour le voisinage",
+                RuleStatus::Important,
+                "noise",
+                "22:00 – 08:00",
+            ),
+            rule(
+                "x",
+                "Logement non-fumeur",
+                "Terrasse autorisée",
+                RuleStatus::Forbidden,
+                "smoking",
+                "",
+            ),
+            rule(
+                "gift",
+                "Animaux sur demande",
+                "Prévenez-nous avant l'arrivée",
+                RuleStatus::Allowed,
+                "pets",
+                "",
+            ),
+            rule(
+                "users",
+                "Pas de fête",
+                "Respect du nombre de voyageurs",
+                RuleStatus::Forbidden,
+                "parties",
+                "",
+            ),
+        ]
+    };
+    RulesPayload {
+        items,
+        ..RulesPayload::default()
     }
 }
 
-fn rule_row(index: usize, item: Option<&RuleItem>) -> Component {
+fn rule_row(index: usize, item: Option<&RuleItem>, ctx: &HostContext) -> Component {
+    let problems = item.map(RuleItem::problems).unwrap_or_default();
+    let named = |key: &str| {
+        let field = Field::new().name(format!("items.{index}.{key}"));
+        match problems.iter().find(|(name, _)| *name == key) {
+            Some((_, error)) => field.error(error.get(&ctx.locale).to_string()),
+            None => field,
+        }
+    };
     let icon = item
         .map(|r| r.icon.as_str())
         .filter(|s| !s.is_empty())
@@ -194,8 +261,7 @@ fn rule_row(index: usize, item: Option<&RuleItem>) -> Component {
                         .value(icon),
                 )
                 .into(),
-            Field::new()
-                .name(format!("items.{index}.title"))
+            named("title")
                 .label("i18n:host.rule.title")
                 .child(
                     TextInput::new()
@@ -203,8 +269,7 @@ fn rule_row(index: usize, item: Option<&RuleItem>) -> Component {
                         .value(item.map(|r| r.title.as_str()).unwrap_or("")),
                 )
                 .into(),
-            Field::new()
-                .name(format!("items.{index}.subtitle"))
+            named("subtitle")
                 .label("i18n:host.rule.subtitle")
                 .child(
                     TextInput::new()
@@ -229,13 +294,29 @@ fn rule_row(index: usize, item: Option<&RuleItem>) -> Component {
                 .name(format!("items.{index}.theme"))
                 .label("i18n:host.rule.theme")
                 .child(
-                    TextInput::new()
+                    Select::new()
                         .name(format!("items.{index}.theme"))
-                        .placeholder("i18n:host.rule.theme.placeholder")
-                        .value(item.map(|r| r.theme.as_str()).unwrap_or("")),
+                        .options(
+                            THEMES
+                                .iter()
+                                .map(|key| {
+                                    ChoiceOption::new(*key, format!("i18n:rule.theme.{key}"))
+                                })
+                                .collect(),
+                        )
+                        .value(item.and_then(RuleItem::theme_key).unwrap_or("other")),
                 )
                 .into(),
-            FieldHint::new().text("i18n:host.rule.theme.hint").into(),
+            Field::new()
+                .name(format!("items.{index}.hours"))
+                .label("i18n:host.rule.hours")
+                .child(
+                    TextInput::new()
+                        .name(format!("items.{index}.hours"))
+                        .placeholder("22:00 – 08:00")
+                        .value(item.map(|r| r.hours.as_str()).unwrap_or("")),
+                )
+                .into(),
         ])
         .into()
 }
@@ -252,12 +333,13 @@ fn rule_icon_options() -> Vec<ChoiceOption> {
     ]
 }
 
-/// Statut d'une règle (§2.8) — liste fermée de trois valeurs.
+/// Type d'une règle (spec Règlement §2.2) : Interdit · Important · Autorisé · Information.
 fn rule_status_options() -> Vec<ChoiceOption> {
     vec![
-        ChoiceOption::new("neutral", "i18n:rule.status.neutral"),
+        ChoiceOption::new("forbidden", "i18n:rule.status.forbidden"),
         ChoiceOption::new("important", "i18n:rule.status.important"),
         ChoiceOption::new("allowed", "i18n:rule.status.allowed"),
+        ChoiceOption::new("neutral", "i18n:rule.status.neutral"),
     ]
 }
 

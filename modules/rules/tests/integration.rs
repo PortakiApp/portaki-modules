@@ -52,6 +52,7 @@ fn home_card_renders_list_items_with_content() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    card_limit: None,
                     items: Vec::new(),
                     content_fr: sample_payload(),
                     content_en: sample_payload(),
@@ -87,6 +88,7 @@ fn the_card_offers_the_rules_it_does_not_show() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    card_limit: None,
                     items: Vec::new(),
                     content_fr: six.clone(),
                     content_en: six.clone(),
@@ -118,6 +120,7 @@ fn no_button_when_the_card_already_shows_every_rule() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    card_limit: None,
                     items: Vec::new(),
                     content_fr: sample_payload(),
                     content_en: sample_payload(),
@@ -141,6 +144,7 @@ fn explore_detail_renders_full_list() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    card_limit: None,
                     items: Vec::new(),
                     content_fr: sample_payload(),
                     content_en: sample_payload(),
@@ -167,6 +171,7 @@ fn get_content_returns_saved_items() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    card_limit: None,
                     items: Vec::new(),
                     content_fr: sample_payload(),
                     content_en: String::new(),
@@ -212,6 +217,7 @@ fn update_config_persists_items_for_locale() {
             update_config(
                 ctx.clone(),
                 SaveContentArgs {
+                    card_limit: None,
                     items: vec![RuleItemInput {
                         icon: "clock-circle".into(),
                         title: "Calme après 22 h".into(),
@@ -266,6 +272,7 @@ fn publish_readiness_requires_one_rule() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    card_limit: None,
                     items: Vec::new(),
                     content_fr: sample_payload(),
                     content_en: String::new(),
@@ -299,6 +306,7 @@ fn the_card_lifts_the_important_rule_above_the_neutral_ones() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    card_limit: None,
                     items: Vec::new(),
                     content_fr: five.clone(),
                     content_en: String::new(),
@@ -335,6 +343,7 @@ fn only_important_and_allowed_rules_wear_a_badge() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    card_limit: None,
                     items: Vec::new(),
                     content_fr: three.clone(),
                     content_en: String::new(),
@@ -361,7 +370,8 @@ fn only_important_and_allowed_rules_wear_a_badge() {
             );
             assert_eq!(
                 badge(&rows[1]),
-                Some(("rule.status.allowed".into(), "success".into())),
+                // Jamais vert pour « Autorisé » (spec Règlement §2.2).
+                Some(("rule.status.allowed".into(), "neutral".into())),
                 "{tree}"
             );
             assert_eq!(badge(&rows[2]), None, "{tree}");
@@ -396,6 +406,7 @@ fn the_detail_groups_by_theme_but_not_when_there_is_only_one() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    card_limit: None,
                     items: Vec::new(),
                     content_fr: grouped.clone(),
                     content_en: String::new(),
@@ -412,6 +423,7 @@ fn the_detail_groups_by_theme_but_not_when_there_is_only_one() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    card_limit: None,
                     items: Vec::new(),
                     content_fr: single.clone(),
                     content_en: String::new(),
@@ -453,6 +465,7 @@ fn the_status_follows_the_rule_into_every_language() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    card_limit: None,
                     items: Vec::new(),
                     content_fr: bilingual.clone(),
                     content_en: en.clone(),
@@ -463,6 +476,7 @@ fn the_status_follows_the_rule_into_every_language() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    card_limit: None,
                     items: vec![
                         RuleItemInput {
                             icon: "clock-circle".into(),
@@ -521,6 +535,7 @@ fn unthemed_rules_close_the_detail_instead_of_breaking_it_up() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    card_limit: None,
                     items: Vec::new(),
                     content_fr: mixed.clone(),
                     content_en: String::new(),
@@ -574,6 +589,8 @@ fn host_rows_carry_status_and_theme() {
             assert!(json.contains("items.0.status"), "{json}");
             assert!(json.contains("items.0.theme"), "{json}");
             assert!(json.contains("rule.status.important"), "{json}");
-            assert!(json.contains("host.rule.theme.hint"), "{json}");
+            assert!(json.contains("rule.theme.noise"), "{json}");
+            assert!(json.contains("items.0.hours"), "{json}");
+            assert!(json.contains(r#""name":"card_limit""#), "{json}");
         });
 }
