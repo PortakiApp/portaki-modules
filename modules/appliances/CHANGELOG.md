@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.9.0...appliances-v1.10.0) (2026-10-09)
+
+
+### Features
+
+* **appliances:** featured count and readiness ([03af5bd](https://github.com/PortakiApp/portaki-modules/commit/03af5bd421bb0db84ce6b25f5231445ee35e1b0e))
+
 ## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.8.1...appliances-v1.9.0) (2026-10-09)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.7.0...access-guide-v1.8.0) (2026-10-09)
+
+
+### Features
+
+* **access-guide:** spec checks and step kinds ([0b37620](https://github.com/PortakiApp/portaki-modules/commit/0b37620190688c4c2d86a80fa2d1e99d99a9770b))
+
 ## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.6.0...access-guide-v1.7.0) (2026-10-09)
 
 

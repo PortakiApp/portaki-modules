@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.7.0...pre-arrival-form-v1.8.0) (2026-10-09)
+
+
+### Features
+
+* **pre-arrival-form:** stepped arrival slots ([368c917](https://github.com/PortakiApp/portaki-modules/commit/368c917dd4bfaaafa88a8d4b57a53ea341b3b4a2))
+
 ## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.6.0...pre-arrival-form-v1.7.0) (2026-10-09)
 
 

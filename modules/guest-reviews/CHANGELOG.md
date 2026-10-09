@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v1.4.0...guest-reviews-v1.5.0) (2026-10-09)
+
+
+### Features
+
+* **guest-reviews:** any review platform, and when to ask ([185f846](https://github.com/PortakiApp/portaki-modules/commit/185f846ca7be7145f01474ddb2d206db15b6fc10))
+
 ## [1.4.0](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v1.3.3...guest-reviews-v1.4.0) (2026-10-09)
 
 

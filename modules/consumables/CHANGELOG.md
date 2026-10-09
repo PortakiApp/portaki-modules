@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.9.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.8.0...consumables-v2.9.0) (2026-10-09)
+
+
+### Features
+
+* **consumables:** request switch and stay cap ([aa0b026](https://github.com/PortakiApp/portaki-modules/commit/aa0b0264a7d42472a9a86fa720f33d3696463ed2))
+
 ## [2.8.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.7.0...consumables-v2.8.0) (2026-10-09)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/rules-v1.7.0...rules-v1.8.0) (2026-10-09)
+
+
+### Features
+
+* **rules:** card count, themes, hours and limits ([66b11f6](https://github.com/PortakiApp/portaki-modules/commit/66b11f6f636f2822f0279835d9d48c6bc0ce866e))
+
 ## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/rules-v1.6.1...rules-v1.7.0) (2026-10-09)
 
 

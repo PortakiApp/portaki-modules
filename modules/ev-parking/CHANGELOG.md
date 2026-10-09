@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v1.6.0...ev-parking-v1.7.0) (2026-10-09)
+
+
+### Features
+
+* **ev-parking:** charger, pricing and booking ([e82c7d7](https://github.com/PortakiApp/portaki-modules/commit/e82c7d7169b91cfd57ccef0c188078a82e462e96))
+
 ## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v1.5.1...ev-parking-v1.6.0) (2026-10-09)
 
 

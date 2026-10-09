@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/events-v1.6.0...events-v1.7.0) (2026-10-09)
+
+
+### Features
+
+* **events:** repeats, all day, cancelled, checks ([8949b3c](https://github.com/PortakiApp/portaki-modules/commit/8949b3c4d73edcc2a8eec6b0248547646600b088))
+
 ## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/events-v1.5.2...events-v1.6.0) (2026-10-09)
 
 

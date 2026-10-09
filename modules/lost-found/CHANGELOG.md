@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.11.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.10.0...lost-found-v1.11.0) (2026-10-09)
+
+
+### Features
+
+* **lost-found:** set the keep time and return details ([0370697](https://github.com/PortakiApp/portaki-modules/commit/03706974bb03a4c6bb5a919ebc29f2d7736e387e))
+
+
+### Bug Fixes
+
+* **lost-found:** show the stored days under the error ([9aa8c5e](https://github.com/PortakiApp/portaki-modules/commit/9aa8c5e8f980f6a180cc50126ac807e1a51c4189))
+
 ## [1.10.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.9.0...lost-found-v1.10.0) (2026-10-09)
 
 
