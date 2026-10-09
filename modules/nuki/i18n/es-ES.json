@@ -4,10 +4,15 @@
   "catalog.host.main": "Nuki",
   "connector.nuki.name": "Cuenta Nuki Web",
   "feeds.access-guide": "el código de teclado",
+  "guest.credential.keypad": "Código del teclado: {code}",
+  "guest.unlock.keypad": "Introduzca el código {code} en el teclado.",
+  "guest.unlock.offline": "La cerradura no ha respondido. Introduzca el código {code} en el teclado.",
+  "guest.unlock.opened": "La puerta está abierta.",
   "host.banner.message": "Este módulo entrega los códigos de teclado al módulo Acceso; no añade nada visible en la guía. Para activarlo: Acceso al alojamiento → método principal «Cerradura inteligente» → proveedor «Nuki». Para abrir a distancia, añada la clave de su cuenta Nuki Web en Integraciones.",
   "host.banner.title": "Códigos para el módulo Acceso",
   "host.deviceName.label": "Nombre del dispositivo",
   "host.deviceName.placeholder": "Nuki — Puerta de entrada",
+  "host.keypadCode.invalid": "El código tiene 6 cifras y no empieza por 0.",
   "host.keypadCode.label": "Código de teclado",
   "host.keypadCode.placeholder": "Déjelo vacío para conservar el código actual",
   "host.main.help": "Vincule este módulo en Acceso → Cerradura inteligente (proveedor: Nuki). Añada un código de teclado para los huéspedes y, para abrir a distancia, la clave de su cuenta Nuki Web en Integraciones.",
@@ -22,9 +27,5 @@
   "module.description": "Cerradura inteligente Nuki — códigos de teclado para el acceso del huésped",
   "module.displayName": "Nuki",
   "publish.access.hint": "Añada un código de teclado, o el identificador de la cerradura junto con la clave de su cuenta Nuki Web en Integraciones.",
-  "publish.access.label": "Código de teclado o apertura a distancia",
-  "guest.unlock.opened": "La puerta está abierta.",
-  "guest.unlock.offline": "La cerradura no ha respondido. Introduzca el código {code} en el teclado.",
-  "guest.unlock.keypad": "Introduzca el código {code} en el teclado.",
-  "guest.credential.keypad": "Código del teclado: {code}"
+  "publish.access.label": "Código de teclado o apertura a distancia"
 }

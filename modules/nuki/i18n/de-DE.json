@@ -4,10 +4,15 @@
   "catalog.host.main": "Nuki",
   "connector.nuki.name": "Nuki-Web-Konto",
   "feeds.access-guide": "den Tastencode",
+  "guest.credential.keypad": "Tastenfeld-Code: {code}",
+  "guest.unlock.keypad": "Geben Sie den Code {code} auf dem Tastenfeld ein.",
+  "guest.unlock.offline": "Das Schloss hat nicht geantwortet. Geben Sie den Code {code} auf dem Tastenfeld ein.",
+  "guest.unlock.opened": "Die Tür ist offen.",
   "host.banner.message": "Dieses Modul liefert die Tastencodes an das Modul Zugang; in der Gästemappe erscheint nichts davon. Zum Aktivieren: Zugang zur Unterkunft → Hauptmethode „Smart Lock“ → Anbieter „Nuki“. Für das Öffnen aus der Ferne hinterlegen Sie den Schlüssel Ihres Nuki-Web-Kontos unter Integrationen.",
   "host.banner.title": "Codes für das Modul Zugang",
   "host.deviceName.label": "Gerätename",
   "host.deviceName.placeholder": "Nuki — Haustür",
+  "host.keypadCode.invalid": "Der Code hat 6 Ziffern und beginnt nicht mit 0.",
   "host.keypadCode.label": "Tastencode",
   "host.keypadCode.placeholder": "Leer lassen, um den aktuellen Code zu behalten",
   "host.main.help": "Verknüpfen Sie dieses Modul unter Zugang → Smart Lock (Anbieter: Nuki). Hinterlegen Sie einen Tastencode für Gäste und, für das Öffnen aus der Ferne, den Schlüssel Ihres Nuki-Web-Kontos unter Integrationen.",
@@ -22,9 +27,5 @@
   "module.description": "Nuki Smart Lock — Tastencodes für den Gastzugang",
   "module.displayName": "Nuki",
   "publish.access.hint": "Hinterlegen Sie einen Tastencode oder die Kennung des Schlosses zusammen mit dem Schlüssel Ihres Nuki-Web-Kontos unter Integrationen.",
-  "publish.access.label": "Tastencode oder Öffnen aus der Ferne",
-  "guest.unlock.opened": "Die Tür ist offen.",
-  "guest.unlock.offline": "Das Schloss hat nicht geantwortet. Geben Sie den Code {code} auf dem Tastenfeld ein.",
-  "guest.unlock.keypad": "Geben Sie den Code {code} auf dem Tastenfeld ein.",
-  "guest.credential.keypad": "Tastenfeld-Code: {code}"
+  "publish.access.label": "Tastencode oder Öffnen aus der Ferne"
 }
