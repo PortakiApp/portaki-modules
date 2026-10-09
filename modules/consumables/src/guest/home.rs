@@ -46,6 +46,27 @@ pub fn build_home_card(data: &GuestConsumablesData) -> Surface {
         }
     }
 
+    // Demandes fermées, ou plafond du séjour atteint : la carte informe, l'hôte se contacte.
+    if !data.can_request {
+        children.push(
+            Text::new()
+                .text(if data.requests_disabled {
+                    "i18n:home.card.requestsClosed"
+                } else {
+                    "i18n:home.card.requestsLimit"
+                })
+                .variant(TextVariant::Caption)
+                .into(),
+        );
+        return Surface::new(
+            Card::new()
+                .icon(IconName::Package)
+                .title("i18n:home.card.title")
+                .child(Stack::new().gap(12.0).children(children)),
+        )
+        .with_id(crate::guest::HOME_CARD);
+    }
+
     children.push(
         ListItem::new()
             .title("i18n:home.card.openForm")

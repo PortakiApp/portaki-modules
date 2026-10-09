@@ -2,8 +2,8 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{
-    Button, Card, EmptyState, Field, FieldHint, Form, Grid, IndexedInput, InfoBanner, List, Page,
-    Stack, Text, TextInput,
+    Button, Card, EmptyState, Field, FieldHint, Form, Grid, IndexedInput, InfoBanner, List,
+    NumberInput, Page, Stack, Text, TextInput, Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -23,7 +23,7 @@ use super::report_ui::build_report_block;
 const ITEM_SLOTS: usize = 8;
 
 /// Combien de produits le formulaire accepte en tout.
-pub const MAX_ITEMS: usize = 24;
+pub const MAX_ITEMS: usize = 30;
 
 /// Host-provided wall clock (the Wasm sandbox has none — never call `Utc::now()`).
 fn host_now() -> chrono::DateTime<chrono::Utc> {
@@ -49,6 +49,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     let open_reports = storage::list_open().unwrap_or_default();
     let locale = ctx.locale.as_str();
 
+    let settings = storage::settings::read();
     let restock_delay = storage::restock_delay::read()
         .map(|text| text.host_value(&ctx).to_string())
         .unwrap_or_default();
@@ -88,18 +89,45 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         );
     }
 
-    let catalog_form = Form::new().child(
-        Card::new()
-            .title("i18n:host.main.catalogTitle")
-            .subtitle("i18n:host.main.catalogHelp")
-            .icon(IconName::Package)
+    let mut catalog = Card::new()
+        .title("i18n:host.main.catalogTitle")
+        .subtitle("i18n:host.main.catalogHelp")
+        .icon(IconName::Package)
+        .child(
+            Grid::new()
+                .columns(4)
+                .gap(10.0)
+                .minColumnWidth(280.0)
+                .children(tiles),
+        )
+        // Les demandes : ouvertes ou non, et combien par séjour (§2.2).
+        .child(
+            Field::new()
+                .name("requests_enabled")
+                .label("i18n:host.requests.enabled")
+                .child(
+                    Toggle::new()
+                        .name("requests_enabled")
+                        .checked(settings.requests_enabled()),
+                ),
+        )
+        .child(FieldHint::new().text("i18n:host.requests.enabled.hint"));
+    // Fermées, le plafond et le délai n'ont plus d'objet (règles communes : masqué, pas grisé).
+    if settings.requests_enabled() {
+        catalog = catalog
             .child(
-                Grid::new()
-                    .columns(4)
-                    .gap(10.0)
-                    .minColumnWidth(280.0)
-                    .children(tiles),
+                Field::new()
+                    .name("max_requests")
+                    .label("i18n:host.requests.max")
+                    .child(
+                        NumberInput::new()
+                            .name("max_requests")
+                            .min(f64::from(storage::settings::MIN_MAX_REQUESTS))
+                            .max(f64::from(storage::settings::MAX_MAX_REQUESTS))
+                            .value(f64::from(settings.max_requests())),
+                    ),
             )
+            .child(FieldHint::new().text("i18n:host.requests.max.hint"))
             // Ce que l'hôte promet, à côté de ce qu'il propose : le voyageur le lit avant
             // d'envoyer son signalement, et c'est ce qui lui dit que quelqu'un l'a lu.
             .child(
@@ -113,18 +141,19 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                             .placeholder("i18n:host.main.restockDelay.placeholder"),
                     ),
             )
-            .child(FieldHint::new().text("i18n:host.main.restockDelay.hint"))
-            // Une case de plus, quand les huit sont prises. Sous la grille et non dans un
-            // `StepList` : empiler vingt-quatre rangées rendrait illisible ce qui se lit d'un
-            // coup d'œil en grille.
-            .child(
-                Button::new()
-                    .label("i18n:host.main.addItem")
-                    .variant(ButtonVariant::Outline)
-                    .action(emit_input(RowCount {
-                        items_count: (tiles_count + 1).min(MAX_ITEMS),
-                    })),
-            ),
+            .child(FieldHint::new().text("i18n:host.main.restockDelay.hint"));
+    }
+    // Une case de plus, quand les huit sont prises. Sous la grille et non dans un `StepList` :
+    // empiler les rangées rendrait illisible ce qui se lit d'un coup d'œil en grille.
+    let catalog_form = Form::new().child(
+        catalog.child(
+            Button::new()
+                .label("i18n:host.main.addItem")
+                .variant(ButtonVariant::Outline)
+                .action(emit_input(RowCount {
+                    items_count: (tiles_count + 1).min(MAX_ITEMS),
+                })),
+        ),
     );
 
     let seed_card = Card::new()

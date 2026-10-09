@@ -14,6 +14,10 @@ pub struct GuestConsumablesData {
     pub restock_delay: Option<String>,
     /// Le prénom de l'hôte, pour « Claire réapprovisionne sous 24 h ». Vide quand il est inconnu.
     pub host_name: String,
+    /// Les demandes sont ouvertes, et le séjour n'a pas atteint son plafond.
+    pub can_request: bool,
+    /// L'hôte a fermé les demandes : la carte informe seulement.
+    pub requests_disabled: bool,
 }
 
 /// The catalog and the stay's reports; `None` while the catalog is empty.
@@ -28,7 +32,12 @@ pub fn load_guest_consumables(ctx: &GuestContext) -> Result<Option<GuestConsumab
         None => Vec::new(),
     };
 
+    let settings = storage::settings::read();
+    let requests_disabled = !settings.requests_enabled();
+    let can_request = !requests_disabled && reports.len() < settings.max_requests() as usize;
     Ok(Some(GuestConsumablesData {
+        can_request,
+        requests_disabled,
         items,
         reports,
         locale: ctx.locale.clone(),
