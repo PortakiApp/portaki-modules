@@ -1,6 +1,7 @@
 //! Integration-style unit tests with `portaki-test-utils`.
 
 use portaki_sdk::capability;
+use portaki_sdk::contracts::publish::PublishLevel;
 use serial_test::serial;
 
 use portaki_sdk::context::StayContext;
@@ -152,7 +153,10 @@ fn the_host_form_sends_the_declared_keys() {
                 { "id": "yellow", "title": { "fr": "Bac jaune" }, "items": { "fr": "Plastique\nCarton" }, "color": "#f4c020" },
                 { "title": "Bac vert", "items": "Verre", "color": "green" }
             ],
-            "collection_schedule": "Mardi"
+            "collection_schedule": "Mardi",
+            // Ouverts : leurs champs ne sont dessinés que là.
+            "bin_room_enabled": true,
+            "compost_enabled": true
         }))
         .run(|ctx| {
             let surface = render_host_main(ctx).expect("host main");
@@ -355,6 +359,7 @@ fn a_save_in_english_keeps_the_french() {
         [
             "bin_room_hours",
             "bin_room_steps",
+            "bin_room_where",
             "bins.items",
             "bins.location",
             "bins.title",
@@ -528,7 +533,7 @@ fn one_source_is_enough_to_publish() {
     );
 }
 
-/// Un point nommé dont on ne dit pas ce qu'il accepte est signalé — recommandé, pas bloquant.
+/// Un point nommé dont on ne dit pas ce qu'il accepte bloque, sous sa première case (§2.4).
 #[test]
 #[serial]
 fn a_point_that_takes_nothing_is_reported() {
@@ -542,10 +547,15 @@ fn a_point_that_takes_nothing_is_reported() {
             let accepts = readiness
                 .items
                 .iter()
-                .find(|check| check.id == "dropoffAccepts")
+                .find(|check| check.id == "config.dropoff_points.0.accepts_household")
                 .expect("le défaut est signalé");
             assert!(!accepts.ok);
-            // Le module reste publiable : le point existe, il manque juste son contenu.
+            assert_eq!(accepts.level, PublishLevel::Required);
+            assert_eq!(
+                accepts.hint.get("fr"),
+                "Choisissez au moins un type de déchets."
+            );
+            // Il y a bien une source : seul le point est en défaut.
             assert!(readiness.items.iter().find(|c| c.id == "where").unwrap().ok);
         });
 }

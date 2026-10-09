@@ -8,40 +8,73 @@ use crate::config::ModuleConfig;
 /// Plafond de marqueurs rendus par ce module.
 pub const MAX_MARKERS: usize = 20;
 
-/// Ce qu'il faut pour publier : une source de déchets — des jours de collecte, des bacs, ou un
-/// point d'apport (§10).
+/// Ce qui bloque, et ce qui avertit (spec Tri §3).
 ///
-/// `bins` n'est plus `required` : un gîte rural n'a pas de ramassage devant la porte, et exiger un
-/// bac l'empêchait de publier un module qui n'a pourtant rien d'incomplet. Un champ obligatoire ne
-/// sait pas dire « l'un ou l'autre » ; cette requête, oui.
+/// Aucune source — ni bac, ni local, ni point d'apport, ni composteur, ni jour de collecte —
+/// avertit sans bloquer : la carte ne s'affichera pas, ce qui est le choix de l'hôte. Un gîte
+/// rural sans ramassage publie avec ses seuls points d'apport. Les erreurs de champ, elles,
+/// bloquent ([`ModuleConfig::problems`]), chacune désignant son champ (`config.<clé>`).
 #[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
 pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
     let config = ModuleConfig::load(&ctx)?;
     let has_source = !config.collection_days().is_empty()
         || !config.parse_bins().is_empty()
-        || !config.parse_dropoff_points().is_empty();
+        || !config.parse_dropoff_points().is_empty()
+        || config.has_bin_room()
+        || config.compost_enabled;
 
     let mut items = vec![PublishCheck {
         id: "where".into(),
-        level: PublishLevel::Required,
+        level: PublishLevel::Recommended,
         ok: has_source,
         label: crate::i18n::text("publish.where.label"),
         hint: crate::i18n::text("publish.where.hint"),
     }];
 
-    // Un point d'apport sans rien d'accepté s'affiche sans dire ce qu'on y dépose — la ligne existe
-    // et ne sert à rien. Recommandé et non requis : le reste du module marche.
-    if config.dropoff_points_missing_accepts() > 0 {
+    // Des bacs ramassés devant la porte, mais aucun jour : le bandeau ne peut rien calculer.
+    if config.has_collection()
+        && !config.parse_bins().is_empty()
+        && config.collection_days().is_empty()
+    {
         items.push(PublishCheck {
-            id: "dropoffAccepts".into(),
+            id: "collectionDays".into(),
             level: PublishLevel::Recommended,
             ok: false,
-            label: crate::i18n::text("publish.accepts.label"),
-            hint: crate::i18n::text("publish.accepts.hint"),
+            label: crate::i18n::text("host.collection.days"),
+            hint: crate::i18n::text("publish.days.hint"),
         });
     }
 
+    items.extend(
+        config
+            .problems()
+            .into_iter()
+            .map(|(field, error)| PublishCheck {
+                label: crate::i18n::text(field_label(&field)),
+                id: format!("config.{field}"),
+                level: PublishLevel::Required,
+                ok: false,
+                hint: error,
+            }),
+    );
+
     Ok(PublishReadiness { items })
+}
+
+/// Le libellé du champ en défaut : celui du formulaire, sans l'index de la ligne.
+fn field_label(field: &str) -> &'static str {
+    match field {
+        "bins" => "host.bins.title",
+        "dropoff_points" => "host.dropoff.title",
+        "bin_room_where" => "host.binRoom.where",
+        "bin_room_code" => "host.binRoom.code",
+        "compost_location" => "host.compost.location",
+        _ if field.starts_with("bins.") && field.ends_with(".title") => "host.bin.title",
+        _ if field.starts_with("bins.") => "host.bin.items",
+        _ if field.ends_with(".title") => "host.dropoff.pointTitle",
+        _ if field.ends_with(".lat") => "host.dropoff.position",
+        _ => "host.dropoff.accepts",
+    }
 }
 
 #[portaki_sdk::wire]
