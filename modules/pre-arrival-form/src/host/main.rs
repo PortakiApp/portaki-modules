@@ -9,7 +9,7 @@ use portaki_sdk::sdui::primitives::{
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{ModuleConfig, ShowWhen, DEFAULT_SLOTS_UNTIL};
+use crate::config::{Deadline, ModuleConfig, ShowWhen, DEFAULT_SLOTS_UNTIL};
 
 /// Host main — editable pre-arrival timing + question toggles.
 #[portaki_sdk::surface(
@@ -41,6 +41,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
                 .children(question_toggle_rows(&config))
                 .into()])
             .into(),
+        reminder_card(&config),
     ];
 
     // Les créneaux n'ont d'objet que si l'heure d'arrivée est demandée (règles communes).
@@ -100,6 +101,39 @@ fn slots_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         );
     }
     card.into()
+}
+
+/// §2.3 Envoi et relances : la limite, et l'e-mail de la veille.
+fn reminder_card(config: &ModuleConfig) -> Component {
+    Card::new()
+        .title("i18n:host.section.reminder")
+        .icon(IconName::Bell)
+        .child(
+            Field::new()
+                .name("deadline")
+                .label("i18n:host.deadline")
+                .child(
+                    Select::new()
+                        .name("deadline")
+                        .options(
+                            Deadline::CHOICE_LIST_WIRE_VALUES
+                                .iter()
+                                .map(|key| {
+                                    ChoiceOption::new(*key, format!("i18n:host.deadline.{key}"))
+                                })
+                                .collect(),
+                        )
+                        .value(config.deadline.as_wire()),
+                ),
+        )
+        .child(
+            ToggleRow::new()
+                .name("reminder")
+                .label("i18n:host.reminder")
+                .description("i18n:host.reminder.hint")
+                .checked(config.reminder),
+        )
+        .into()
 }
 
 fn when_choice_list(selected: ShowWhen) -> ChoiceList {

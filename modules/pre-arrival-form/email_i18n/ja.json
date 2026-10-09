@@ -10,5 +10,10 @@
   "email.formAvailable.field.guestCount": "宿泊人数",
   "email.formAvailable.field.specialNeeds": "特別なご要望（ベビーベッド、バリアフリー…）",
   "email.formAvailable.field.idDocument": "身分証明書",
-  "email.formAvailable.fieldHint": "未記入"
+  "email.formAvailable.fieldHint": "未記入",
+  "email.reminder.subject": "リマインダー：到着前のフォーム",
+  "email.reminder.title": "ホストがまだ回答をお待ちしています",
+  "email.reminder.body.j-3": "到着の3日前までにフォームにご記入ください。\n\n滞在ガイドから1分で回答できます。",
+  "email.reminder.body.j-1-18h": "到着前日の18時までにフォームにご記入ください。\n\n滞在ガイドから1分で回答できます。",
+  "email.reminder.body.j0-12h": "到着日の12時までにフォームにご記入ください。\n\n滞在ガイドから1分で回答できます。"
 }

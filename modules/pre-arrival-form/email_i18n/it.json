@@ -10,5 +10,10 @@
   "email.formAvailable.field.guestCount": "Numero di ospiti",
   "email.formAvailable.field.specialNeeds": "Esigenze particolari (culla, accessibilità…)",
   "email.formAvailable.field.idDocument": "Documento d’identità",
-  "email.formAvailable.fieldHint": "Da compilare"
+  "email.formAvailable.fieldHint": "Da compilare",
+  "email.reminder.subject": "Promemoria: il modulo prima dell’arrivo",
+  "email.reminder.title": "Il tuo host aspetta ancora le tue risposte",
+  "email.reminder.body.j-3": "Compila il modulo entro 3 giorni prima del tuo arrivo.\n\nRispondi in 1 minuto dal tuo libretto di soggiorno.",
+  "email.reminder.body.j-1-18h": "Compila il modulo entro il giorno prima del tuo arrivo, alle 18.\n\nRispondi in 1 minuto dal tuo libretto di soggiorno.",
+  "email.reminder.body.j0-12h": "Compila il modulo entro il giorno del tuo arrivo, alle 12.\n\nRispondi in 1 minuto dal tuo libretto di soggiorno."
 }

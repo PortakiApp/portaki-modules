@@ -5,7 +5,7 @@ use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
-use crate::config::ModuleConfig;
+use crate::config::{Deadline, ModuleConfig};
 use crate::email_send;
 use crate::show_when::is_editable_until_checkin;
 use crate::storage;
@@ -60,6 +60,61 @@ pub struct SubmitArgs {
 )]
 pub fn send_form_available(ctx: Context, _args: EmptyArgs) -> Result<()> {
     email_send::send_form_available(&ctx)
+}
+
+/// Relance « 24 h avant la limite » (§2.3), au passage quotidien de la plateforme : limite au
+/// soir de J-3 → passage de J-4. Chaque limite a son e-mail ; seule celle choisie part.
+#[portaki_sdk::email(
+    id = "reminder-j-3",
+    audience = EmailAudience::Guest,
+    trigger = EmailTrigger::RelativeToCheckIn,
+    offset_days = -4,
+    requires_guest_email,
+    description_key = "email.reminder-j-3.description",
+    skip_when = SkipWhen::GuestEmailMissing,
+    skip_when = SkipWhen::StayCancelled
+)]
+#[portaki_sdk::command(name = "sendReminderJ3", example(label = "Relance, limite à J-3"))]
+pub fn send_reminder_j3(ctx: Context, _args: EmptyArgs) -> Result<()> {
+    email_send::send_reminder(&ctx, Deadline::J3, "reminder-j-3")
+}
+
+/// Limite la veille à 18 h → passage de J-2.
+#[portaki_sdk::email(
+    id = "reminder-j-1-18h",
+    audience = EmailAudience::Guest,
+    trigger = EmailTrigger::RelativeToCheckIn,
+    offset_days = -2,
+    requires_guest_email,
+    description_key = "email.reminder-j-1-18h.description",
+    skip_when = SkipWhen::GuestEmailMissing,
+    skip_when = SkipWhen::StayCancelled
+)]
+#[portaki_sdk::command(
+    name = "sendReminderJ1",
+    example(label = "Relance, limite la veille à 18 h")
+)]
+pub fn send_reminder_j1(ctx: Context, _args: EmptyArgs) -> Result<()> {
+    email_send::send_reminder(&ctx, Deadline::J1At18, "reminder-j-1-18h")
+}
+
+/// Limite le jour même à midi → passage de J-1.
+#[portaki_sdk::email(
+    id = "reminder-j0-12h",
+    audience = EmailAudience::Guest,
+    trigger = EmailTrigger::RelativeToCheckIn,
+    offset_days = -1,
+    requires_guest_email,
+    description_key = "email.reminder-j0-12h.description",
+    skip_when = SkipWhen::GuestEmailMissing,
+    skip_when = SkipWhen::StayCancelled
+)]
+#[portaki_sdk::command(
+    name = "sendReminderJ0",
+    example(label = "Relance, limite le jour même à midi")
+)]
+pub fn send_reminder_j0(ctx: Context, _args: EmptyArgs) -> Result<()> {
+    email_send::send_reminder(&ctx, Deadline::J0At12, "reminder-j0-12h")
 }
 
 #[portaki_sdk::command(

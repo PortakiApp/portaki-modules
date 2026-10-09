@@ -10,5 +10,10 @@
   "email.formAvailable.field.guestCount": "Anzahl der Gäste",
   "email.formAvailable.field.specialNeeds": "Besondere Bedürfnisse (Babybett, Barrierefreiheit…)",
   "email.formAvailable.field.idDocument": "Ausweisdokument",
-  "email.formAvailable.fieldHint": "Auszufüllen"
+  "email.formAvailable.fieldHint": "Auszufüllen",
+  "email.reminder.subject": "Erinnerung: Ihr Formular vor der Anreise",
+  "email.reminder.title": "Ihr Gastgeber wartet noch auf Ihre Antworten",
+  "email.reminder.body.j-3": "Bitte füllen Sie das Formular spätestens 3 Tage vor Ihrer Anreise aus.\n\nIn 1 Minute in Ihrem Aufenthaltsheft erledigt.",
+  "email.reminder.body.j-1-18h": "Bitte füllen Sie das Formular spätestens am Vortag Ihrer Anreise um 18 Uhr aus.\n\nIn 1 Minute in Ihrem Aufenthaltsheft erledigt.",
+  "email.reminder.body.j0-12h": "Bitte füllen Sie das Formular spätestens am Anreisetag um 12 Uhr aus.\n\nIn 1 Minute in Ihrem Aufenthaltsheft erledigt."
 }

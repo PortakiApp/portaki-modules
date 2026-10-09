@@ -10,5 +10,10 @@
   "email.formAvailable.field.guestCount": "عدد الضيوف",
   "email.formAvailable.field.specialNeeds": "احتياجات خاصة (سرير أطفال، إمكانية الوصول…)",
   "email.formAvailable.field.idDocument": "وثيقة الهوية",
-  "email.formAvailable.fieldHint": "للتعبئة"
+  "email.formAvailable.fieldHint": "للتعبئة",
+  "email.reminder.subject": "تذكير: نموذجك قبل الوصول",
+  "email.reminder.title": "مضيفك لا يزال ينتظر إجاباتك",
+  "email.reminder.body.j-3": "يُرجى ملء النموذج قبل وصولك بـ 3 أيام على الأقل.\n\nأجب في دقيقة واحدة من دليل إقامتك.",
+  "email.reminder.body.j-1-18h": "يُرجى ملء النموذج في موعد أقصاه اليوم السابق لوصولك، الساعة 18:00.\n\nأجب في دقيقة واحدة من دليل إقامتك.",
+  "email.reminder.body.j0-12h": "يُرجى ملء النموذج في موعد أقصاه يوم وصولك، الساعة 12:00.\n\nأجب في دقيقة واحدة من دليل إقامتك."
 }

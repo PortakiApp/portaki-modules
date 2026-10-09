@@ -10,5 +10,10 @@
   "email.formAvailable.field.guestCount": "入住人数",
   "email.formAvailable.field.specialNeeds": "特殊需求（婴儿床、无障碍…）",
   "email.formAvailable.field.idDocument": "身份证件",
-  "email.formAvailable.fieldHint": "待填写"
+  "email.formAvailable.fieldHint": "待填写",
+  "email.reminder.subject": "提醒：入住前请填写表单",
+  "email.reminder.title": "房东仍在等待您的回复",
+  "email.reminder.body.j-3": "请最晚在入住前 3 天填写表单。\n\n在您的住宿手册中 1 分钟即可完成。",
+  "email.reminder.body.j-1-18h": "请最晚在入住前一天 18:00 前填写表单。\n\n在您的住宿手册中 1 分钟即可完成。",
+  "email.reminder.body.j0-12h": "请最晚在入住当天 12:00 前填写表单。\n\n在您的住宿手册中 1 分钟即可完成。"
 }

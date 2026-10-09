@@ -10,5 +10,10 @@
   "email.formAvailable.field.guestCount": "Number of guests",
   "email.formAvailable.field.specialNeeds": "Special needs (cot, accessibility…)",
   "email.formAvailable.field.idDocument": "ID document",
-  "email.formAvailable.fieldHint": "To fill in"
+  "email.formAvailable.fieldHint": "To fill in",
+  "email.reminder.subject": "Reminder: your form before arrival",
+  "email.reminder.title": "Your host is still waiting for your answers",
+  "email.reminder.body.j-3": "Please fill in the form no later than 3 days before your arrival.\n\nIt takes 1 minute from your stay booklet.",
+  "email.reminder.body.j-1-18h": "Please fill in the form no later than the day before your arrival, at 6 pm.\n\nIt takes 1 minute from your stay booklet.",
+  "email.reminder.body.j0-12h": "Please fill in the form no later than your arrival day, at noon.\n\nIt takes 1 minute from your stay booklet."
 }
