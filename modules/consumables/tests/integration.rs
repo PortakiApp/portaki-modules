@@ -758,8 +758,24 @@ fn more_than_thirty_products_blocks_publication() {
         });
 }
 
-/// Un emoji sans nom reste enregistré et dit « Donnez un nom au produit. » ; le voyageur ne voit
-/// pas de tuile vide.
+/// Effacer le nom d'un produit le retire, même si son emoji reste dans la case : c'est le geste
+/// de suppression du formulaire (« laissez vide pour masquer »), et il ne doit rien bloquer.
+#[test]
+#[serial]
+fn clearing_a_product_name_removes_it_even_with_its_emoji() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            save(&ctx, vec![named_item("☕", "Café")], "", None);
+            save(&ctx, vec![named_item("☕", "")], "", None);
+            assert!(list_items(ctx.clone()).expect("items").is_empty());
+            assert!(publish_readiness(ctx).expect("readiness").items.is_empty());
+        });
+}
+
+/// Une ligne sans nom n'arrive que par l'API (`items_json`) : elle dit « Donnez un nom au
+/// produit. », et le voyageur ne voit pas de tuile vide.
 #[test]
 #[serial]
 fn a_product_without_a_name_is_flagged_and_hidden_from_the_guest() {
@@ -767,12 +783,14 @@ fn a_product_without_a_name_is_flagged_and_hidden_from_the_guest() {
     MockContext::host()
         .with_property(Property::default())
         .run(|ctx| {
-            save(
-                &ctx,
-                vec![named_item("☕", ""), named_item("🧻", "Papier")],
-                "",
-                None,
-            );
+            replace_items(
+                ctx.clone(),
+                ReplaceItemsArgs {
+                    items: Vec::new(),
+                    items_json: Some(r#"[{"emoji":"☕"},{"emoji":"🧻","label":"Papier"}]"#.into()),
+                },
+            )
+            .expect("replace");
             assert_eq!(
                 blocking(&ctx, "items.0.label").as_deref(),
                 Some("Donnez un nom au produit.")

@@ -4,7 +4,7 @@
 
 Les réglages se vérifient avant publication.
 
-* Un produit sans nom, un nom ou un délai de plus de 40 caractères, ou plus de 30 produits : l'erreur s'affiche sous le champ.
+* Un nom de produit ou un délai de plus de 40 caractères, ou plus de 30 produits : l'erreur s'affiche avant publication.
 * Le nombre de demandes par séjour hors de 1 à 20 n'est plus corrigé en silence : « Entre 1 et 20. » s'affiche.
 * Un catalogue vide ne bloque plus la publication : le livret affiche simplement qu'il n'y a rien à demander.
 

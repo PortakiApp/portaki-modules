@@ -47,12 +47,9 @@ impl ReplaceItemsArgs {
             .iter()
             .enumerate()
             .filter_map(|(index, item)| {
-                // Un emoji sans nom reste : l'hôte a commencé la ligne, et « Donnez un nom au
-                // produit. » le lui dit au lieu de la faire disparaître.
                 let empty = item.label.trim().is_empty()
                     && item.label_fr.trim().is_empty()
-                    && item.label_en.trim().is_empty()
-                    && item.emoji.trim().is_empty();
+                    && item.label_en.trim().is_empty();
                 if empty {
                     return None;
                 }
