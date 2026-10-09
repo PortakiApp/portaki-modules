@@ -410,3 +410,73 @@ fn tonight_event_carries_the_badge() {
             assert!(!home.contains("i18n:guest.event.tonight"), "{home}");
         });
 }
+
+/// « Tous les mardis et jeudis » sur la fiche d'un événement hebdomadaire (§2.2).
+#[test]
+#[serial]
+fn a_weekly_event_names_its_days_on_its_page() {
+    let bundle: std::collections::BTreeMap<String, String> =
+        serde_json::from_str(include_str!("../i18n/fr-FR.json")).unwrap();
+    let mut mock = MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_property(Property::default())
+        .with_config(&json!({
+            "nearby_enabled": false,
+            "events": [{
+                "id": "marche", "title": { "fr": "Marché" }, "starts_at": "2099-07-07T08:00:00Z",
+                "recurrence": "weekly", "weekdays": ["thu", "tue"]
+            }]
+        }));
+    for (key, value) in bundle {
+        mock = mock.with_translation(key, value);
+    }
+    mock.run(|mut ctx| {
+        ctx.input = json!({ "eventId": "marche" });
+        let json_text = serde_json::to_string(&render_explore_item(ctx).expect("fiche")).unwrap();
+        assert!(
+            json_text.contains("Tous les mardis et jeudis"),
+            "{json_text}"
+        );
+    });
+}
+
+/// Les jours en choix multiple, les dates en liste : `events.0.dates.1.date`, et « Ajouter une
+/// date » dessine une ligne de plus sur cet événement seul.
+#[test]
+#[serial]
+fn the_form_draws_weekdays_and_dates() {
+    let config = json!({
+        "events": [
+            { "title": "Marché", "recurrence": "weekly", "weekdays": ["tue", "thu"] },
+            { "title": "Festival", "recurrence": "dates", "dates": [{ "date": "2026-08-14" }] }
+        ]
+    });
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&config)
+        .run(|ctx| {
+            let json =
+                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            assert!(json.contains("events.0.weekdays"), "{json}");
+            assert!(json.contains(r#"[\"tue\",\"thu\"]"#), "{json}");
+            assert!(
+                json.contains("i18n:host.event.recurrence.label.dates"),
+                "{json}"
+            );
+            assert!(json.contains("events.1.dates.0.date"), "{json}");
+            assert!(json.contains("2026-08-14"), "{json}");
+            assert!(!json.contains("events.1.dates.1.date"), "{json}");
+            assert!(json.contains(r#""dates_for":1"#), "{json}");
+            assert!(json.contains(r#""dates_count":2"#), "{json}");
+        });
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&config)
+        .run(|mut ctx| {
+            ctx.input = json!({ "events_count": 2, "dates_for": 1, "dates_count": 2 });
+            let json =
+                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            assert!(json.contains("events.1.dates.1.date"), "{json}");
+            assert!(!json.contains("events.0.dates.0.date"), "{json}");
+        });
+}

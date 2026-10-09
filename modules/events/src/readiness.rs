@@ -27,6 +27,18 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             ok: false,
             hint: error,
         })
+        .chain(
+            config
+                .warnings()
+                .into_iter()
+                .map(|(field, warning)| PublishCheck {
+                    label: crate::i18n::text(field_label(&field)),
+                    level: PublishLevel::Recommended,
+                    id: format!("config.{field}"),
+                    ok: false,
+                    hint: warning,
+                }),
+        )
         .collect();
     // Sans position, l'événement reste dans le livret mais n'a ni repère, ni itinéraire, ni
     // distance : la spec le demande, sans bloquer un hôte dont les événements n'en avaient pas.
@@ -80,6 +92,8 @@ fn field_label(field: &str) -> &'static str {
         "access" => "host.event.access",
         "note" => "host.event.note",
         "tips" => "host.event.tips",
+        "weekdays" => "host.event.weekdays",
+        "dates" => "host.event.dates",
         "radius_km" => "host.nearby.radius",
         _ => "host.events.title",
     }
@@ -126,6 +140,35 @@ mod tests {
                 assert_eq!(items[0].id, "config.radius_km");
                 assert_eq!(items[0].level, PublishLevel::Recommended);
                 assert_eq!(items[0].hint.get("fr"), "Entre 1 et 50 km.");
+            });
+    }
+
+    /// Les jours manquants et le sixième conseil avertissent, sans bloquer la publication.
+    #[test]
+    #[serial_test::serial]
+    fn missing_days_and_too_many_tips_are_recommended() {
+        let config = json!({
+            "events": [
+                { "title": "Marché", "recurrence": "weekly", "lat": 43.55, "lng": 7.01 },
+                { "title": "Concert", "tips": "1\n2\n3\n4\n5\n6", "lat": 43.55, "lng": 7.01 }
+            ]
+        });
+        MockContext::host()
+            .with_property(Property::default())
+            .with_config(&config)
+            .run(|ctx| {
+                let items = publish_readiness(ctx).unwrap().items;
+                let ids: Vec<(&str, PublishLevel)> =
+                    items.iter().map(|i| (i.id.as_str(), i.level)).collect();
+                assert_eq!(
+                    ids,
+                    [
+                        ("config.events.0.weekdays", PublishLevel::Recommended),
+                        ("config.events.1.tips", PublishLevel::Recommended)
+                    ]
+                );
+                assert_eq!(items[0].hint.get("fr"), "Choisissez au moins un jour.");
+                assert_eq!(items[0].label.get("fr"), "Jours");
             });
     }
 }

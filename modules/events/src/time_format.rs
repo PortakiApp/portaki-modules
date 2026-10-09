@@ -4,6 +4,7 @@ use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use portaki_sdk::prelude::*;
 
 use portaki_sdk::context::StayContext;
+use portaki_sdk::host::time::PropertyTz;
 
 use crate::config::EventRow;
 
@@ -50,6 +51,7 @@ pub fn stay_window(stay: Option<&StayContext>) -> Option<(DateTime<Utc>, DateTim
 pub fn events_within(
     events: &[EventRow],
     window: Option<(DateTime<Utc>, DateTime<Utc>)>,
+    tz: Option<&PropertyTz>,
 ) -> Vec<EventRow> {
     let Some((from, to)) = window else {
         return events.to_vec();
@@ -57,7 +59,7 @@ pub fn events_within(
     events
         .iter()
         // Un événement qui se répète tombe dans la fenêtre à sa prochaine occurrence.
-        .map(|event| event.next_from(from))
+        .map(|event| event.next_from(from, tz))
         .filter(|event| match parse_starts_at(&event.starts_at) {
             Some(at) => at >= from && at <= to,
             None => true,
@@ -69,10 +71,14 @@ pub fn events_within(
 ///
 /// `now` is passed in from the host context (via `time::now()`); calling `Utc::now()` here would
 /// panic in the Wasm sandbox, which has no wall clock.
-pub fn events_for_home_card(events: &[EventRow], now: DateTime<Utc>) -> Vec<EventRow> {
+pub fn events_for_home_card(
+    events: &[EventRow],
+    now: DateTime<Utc>,
+    tz: Option<&PropertyTz>,
+) -> Vec<EventRow> {
     let parsed: Vec<(EventRow, Option<DateTime<Utc>>)> = events
         .iter()
-        .map(|e| e.next_from(now))
+        .map(|e| e.next_from(now, tz))
         .map(|e| {
             let at = parse_starts_at(&e.starts_at);
             (e, at)
@@ -145,6 +151,31 @@ pub fn is_tonight(
         && tz.to_local(starts).date_naive() == tz.to_local(now).date_naive()
 }
 
+/// « Tous les mardis et jeudis » : les jours d'un événement hebdomadaire, à l'heure du logement.
+/// `None` pour un événement qui ne se répète pas chaque semaine, ou sans jour lisible.
+pub fn weekly_line(event: &EventRow, tz: Option<&PropertyTz>) -> Option<String> {
+    if event.recurrence() != "weekly" {
+        return None;
+    }
+    let days: Vec<String> = event
+        .effective_weekdays(tz)
+        .into_iter()
+        .map(|day| {
+            let key = crate::config::WEEKDAYS[day.num_days_from_monday() as usize];
+            t!(&format!("guest.recurrence.day.{key}")).unwrap_or_else(|_| key.to_string())
+        })
+        .collect();
+    let (last, rest) = days.split_last()?;
+    let days = if rest.is_empty() {
+        last.clone()
+    } else {
+        let separator = t!("guest.recurrence.separator").unwrap_or_else(|_| ", ".into());
+        let and = t!("guest.recurrence.and").unwrap_or_else(|_| " & ".into());
+        format!("{}{and}{last}", rest.join(&separator))
+    };
+    Some(t!("guest.recurrence.weekly", days = &days).unwrap_or(days))
+}
+
 pub fn format_starts_at_display(raw: &str) -> String {
     let Some(at) = parse_starts_at(raw) else {
         return raw.trim().to_string();
@@ -189,7 +220,7 @@ mod tests {
             },
         ];
         let now = Utc.with_ymd_and_hms(2050, 1, 1, 0, 0, 0).unwrap();
-        let filtered = events_for_home_card(&events, now);
+        let filtered = events_for_home_card(&events, now, None);
         assert_eq!(filtered.len(), 1);
         assert_eq!(filtered[0].id, "b");
     }
@@ -214,7 +245,7 @@ mod tests {
             row("le mois prochain", "2026-09-15T20:00:00Z"),
             row("sans date", ""),
         ];
-        let kept: Vec<String> = events_within(&events, Some((from, to)))
+        let kept: Vec<String> = events_within(&events, Some((from, to)), None)
             .into_iter()
             .map(|e| e.title.get("fr").to_string())
             .collect();
@@ -227,7 +258,7 @@ mod tests {
     fn no_stay_no_window() {
         assert_eq!(stay_window(None), None);
         let events = [row("un jour", "2027-01-01T20:00:00Z")];
-        assert_eq!(events_within(&events, None).len(), 1);
+        assert_eq!(events_within(&events, None, None).len(), 1);
     }
 
     /// Le jour est celui du logement : 22 h 30 UTC le 14, c'est 00 h 30 le 15 à Paris.
@@ -271,5 +302,44 @@ mod tests {
             starts_at: starts_at.to_string(),
             ..EventRow::default()
         }
+    }
+
+    /// « Tous les mardis et jeudis » : les jours au pluriel, joints par la langue, et rien pour
+    /// ce qui ne se répète pas chaque semaine.
+    #[test]
+    #[serial_test::serial]
+    fn the_weekly_line_names_the_days() {
+        let bundle: std::collections::BTreeMap<String, String> =
+            serde_json::from_str(include_str!("../i18n/fr-FR.json")).unwrap();
+        let mut mock = portaki_test_utils::MockContext::guest();
+        for (key, value) in bundle {
+            mock = mock.with_translation(key, value);
+        }
+        mock.run(|_| {
+            let weekly = |days: &[&str]| EventRow {
+                starts_at: "2026-01-06T20:00:00Z".into(),
+                recurrence: "weekly".into(),
+                weekdays: days.iter().map(|d| d.to_string()).collect(),
+                ..EventRow::default()
+            };
+            assert_eq!(
+                weekly_line(&weekly(&["thu", "tue"]), None).as_deref(),
+                Some("Tous les mardis et jeudis")
+            );
+            assert_eq!(
+                weekly_line(&weekly(&["mon", "wed", "fri"]), None).as_deref(),
+                Some("Tous les lundis, mercredis et vendredis")
+            );
+            // Sans jour choisi : celui de la date de début, un mardi.
+            assert_eq!(
+                weekly_line(&weekly(&[]), None).as_deref(),
+                Some("Tous les mardis")
+            );
+            let monthly = EventRow {
+                recurrence: "monthly".into(),
+                ..weekly(&["tue"])
+            };
+            assert_eq!(weekly_line(&monthly, None), None);
+        });
     }
 }

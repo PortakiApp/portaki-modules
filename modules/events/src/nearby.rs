@@ -46,10 +46,11 @@ pub fn resolve_events(
     // §0.7 : de la veille de l'arrivée au lendemain du départ, et rien au-delà. Sans la borne
     // haute, un séjour de trois nuits affichait le festival du mois prochain.
     let window = crate::time_format::stay_window(ctx.stay.as_ref());
+    let tz = ctx.property_tz();
     let mut manual = crate::time_format::sort_events_by_start(config.parse_events());
-    manual = crate::time_format::events_within(&manual, window);
+    manual = crate::time_format::events_within(&manual, window, tz.as_ref());
     if for_home_card {
-        manual = crate::time_format::events_for_home_card(&manual, now);
+        manual = crate::time_format::events_for_home_card(&manual, now, tz.as_ref());
     }
 
     if !config.nearby_enabled || !has_open_agenda(ctx) {
@@ -63,9 +64,9 @@ pub fn resolve_events(
 
     let nearby = load_nearby(ctx, config, point.lat, point.lng).unwrap_or_else(|_| Vec::new());
     let mut nearby = crate::time_format::sort_events_by_start(nearby);
-    nearby = crate::time_format::events_within(&nearby, window);
+    nearby = crate::time_format::events_within(&nearby, window, tz.as_ref());
     if for_home_card {
-        nearby = crate::time_format::events_for_home_card(&nearby, now);
+        nearby = crate::time_format::events_for_home_card(&nearby, now, tz.as_ref());
         nearby.truncate(HOME_NEARBY_CAP);
     } else {
         nearby.truncate(MAX_NEARBY);

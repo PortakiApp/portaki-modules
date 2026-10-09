@@ -69,6 +69,7 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         if !when.trim().is_empty() {
             subtitle_parts.push(when);
         }
+        subtitle_parts.extend(crate::time_format::weekly_line(event, data.tz.as_ref()));
         let subtitle = subtitle_parts.join(" · ");
 
         let mut item = ListItem::new().title(title);
