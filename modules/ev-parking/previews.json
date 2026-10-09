@@ -4,11 +4,15 @@
     {
       "i18n": {
         "guest.chargerPin": "PIN borne",
+        "guest.chargerType": "Prise",
         "guest.copyChargerPin": "Copier le PIN borne",
         "guest.copyParkingCode": "Copier le code barrière",
         "guest.openMap": "Ouvrir la carte",
         "guest.parkingCode": "Code barrière",
+        "guest.pricing": "Recharge",
+        "guest.pricing.included": "Incluse",
         "guest.spot": "Votre place",
+        "host.chargerType.label.type2": "Type 2",
         "nav.ev-parking": "Parking VE"
       },
       "surfaceId": "explore.detail",
@@ -55,6 +59,16 @@
             "href": "https://maps.example.com/parking",
             "label": "i18n:guest.openMap",
             "type": "Link"
+          },
+          {
+            "key": "i18n:guest.pricing",
+            "type": "KeyValue",
+            "value": "i18n:guest.pricing.included"
+          },
+          {
+            "key": "i18n:guest.chargerType",
+            "type": "KeyValue",
+            "value": "i18n:host.chargerType.label.type2"
           },
           {
             "text": "Branchez le câble Type 2 fourni, puis saisissez le PIN sur la borne.",

@@ -111,9 +111,14 @@ fn a_masked_tile_offers_no_copy() {
 #[test]
 #[serial]
 fn the_host_form_sends_the_declared_keys() {
+    // Payante et sur réservation : le prix et la consigne ne sont dessinés que là.
+    let mut config = sample_config();
+    config["pricing"] = json!("per_kwh");
+    config["price"] = json!("0,25 €/kWh");
+    config["booking_required"] = json!(true);
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&sample_config())
+        .with_config(&config)
         .run(|ctx| {
             let surface = render_host_main(ctx).expect("host main");
             config_form::assert_form_matches_config(
@@ -174,7 +179,7 @@ fn an_inactive_module_shows_the_sdk_state() {
 fn a_save_in_english_keeps_the_french() {
     assert_eq!(
         config_save::localized_paths(EMISSIONS),
-        ["instructions", "spot_label"]
+        ["booking_note", "instructions", "spot_label"]
     );
     let stored = json!({
         "spot_label": { "fr": "Place 14", "en": "Spot 14" },

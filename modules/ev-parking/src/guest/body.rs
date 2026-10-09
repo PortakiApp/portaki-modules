@@ -130,6 +130,60 @@ pub fn build_ev_parking_body(data: &GuestData, enriched: bool) -> Vec<Component>
         ));
     }
 
+    // La borne et le tarif (§2.2, §2.3). Un tarif payant se lit en tête : c'est ce qui décide de
+    // brancher ou non. La prise et la puissance dans le détail seulement.
+    let config = &data.config;
+    if config.pricing() != "included" && !config.price.trim().is_empty() {
+        children.push(kv_row(
+            &format!("i18n:host.pricing.label.{}", config.pricing()),
+            config.price.trim(),
+            true,
+        ));
+    } else if config.pricing() == "included" {
+        children.push(kv_row(
+            "i18n:guest.pricing",
+            "i18n:guest.pricing.included",
+            false,
+        ));
+    }
+    if enriched {
+        children.push(kv_row(
+            "i18n:guest.chargerType",
+            &format!("i18n:host.chargerType.label.{}", config.charger_type()),
+            false,
+        ));
+        if let Some(kw) = config.power() {
+            children.push(kv_row("i18n:guest.power", &format!("{kw} kW"), true));
+            // « environ 6 h pour 40 kWh » : l'ordre de grandeur, pas une promesse.
+            let hours = (40.0 / kw).round().max(1.0) as u32;
+            if let Ok(estimate) = t!("guest.power.estimate", hours = hours) {
+                children.push(
+                    Text::new()
+                        .text(estimate)
+                        .variant(TextVariant::Caption)
+                        .into(),
+                );
+            }
+        }
+    }
+    if !config.cable_provided() {
+        children.push(Component::InfoBanner(
+            InfoBanner::new().message("i18n:guest.cable.bring"),
+        ));
+    }
+    if config.booking_required {
+        let note = config
+            .booking_note
+            .as_ref()
+            .map(|note| note.get(&data.locale).trim().to_string())
+            .filter(|note| !note.is_empty());
+        let mut line = "i18n:guest.booking.required".to_string();
+        if let Some(note) = note {
+            line = t!("guest.booking.requiredWith", note = note).unwrap_or(line);
+        }
+        children.push(Text::new().text(line).variant(TextVariant::Caption).into());
+    }
+
     if let Some(instructions) = data.config.instructions_text(&data.locale) {
         children.push(
             Text::new()

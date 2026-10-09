@@ -40,7 +40,8 @@ impl RevealPolicy {
 
 /// The keys are the names of the host form fields: the platform takes `updateConfig` itself.
 #[portaki_sdk::config(legacy = legacy)]
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+// Pas d'`Eq` : la puissance est un flottant.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct ModuleConfig {
     #[field(required, label = "host.spotLabel.label")]
     pub spot_label: I18nText,
@@ -68,7 +69,56 @@ pub struct ModuleConfig {
         label = "config.revealPolicy"
     )]
     pub reveal_policy: RevealPolicy,
+    // §2.2 La borne.
+    /// `type2`, `ccs`, `domestic` ou `other` ([`CHARGER_TYPES`]) ; vide : Type 2.
+    #[field(
+        kind = "select",
+        options = ["type2", "ccs", "domestic", "other"],
+        label = "host.chargerType.label"
+    )]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub charger_type: String,
+    /// La puissance en kW ; `0` : non renseignée. Flottant : le `NumberInput` envoie un nombre.
+    #[field(label = "host.power.label")]
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub power_kw: f64,
+    /// Câble fourni. Absent : oui.
+    #[field(label = "host.cable.label")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cable_provided: Option<bool>,
+    // §2.3 Tarif et réservation.
+    /// `included`, `per_kwh`, `per_stay` ou `on_site` ([`PRICINGS`]) ; vide : incluse.
+    #[field(
+        kind = "select",
+        options = ["included", "per_kwh", "per_stay", "on_site"],
+        label = "host.pricing.label"
+    )]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub pricing: String,
+    /// Le prix, tel qu'écrit : « 0,25 €/kWh ». Obligatoire quand la recharge n'est pas incluse.
+    #[field(label = "host.price.label")]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub price: String,
+    /// La borne se réserve (partagée avec d'autres logements).
+    #[field(label = "host.booking.label")]
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub booking_required: bool,
+    /// Comment réserver : « Prévenez-moi la veille ».
+    #[field(label = "host.bookingNote.label")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub booking_note: Option<I18nText>,
 }
+
+fn is_zero(value: &f64) -> bool {
+    *value == 0.0
+}
+
+/// Les prises (§2.2), Type 2 d'abord : c'est le défaut.
+pub const CHARGER_TYPES: [&str; 4] = ["type2", "ccs", "domestic", "other"];
+/// Les tarifs (§2.3), incluse d'abord : c'est le défaut.
+pub const PRICINGS: [&str; 4] = ["included", "per_kwh", "per_stay", "on_site"];
+/// Les bornes de la puissance (§2.2).
+pub const POWER_KW: (f64, f64) = (2.3, 350.0);
 
 /// The old KV blob spelled two policies the pre-rename way (`hours_before24`, `day_before16h`),
 /// which are not options of the select: the platform would not import them.
@@ -82,6 +132,78 @@ fn legacy(mut old: Value) -> Value {
 }
 
 impl ModuleConfig {
+    pub fn charger_type(&self) -> &'static str {
+        CHARGER_TYPES
+            .iter()
+            .find(|key| **key == self.charger_type.trim())
+            .unwrap_or(&CHARGER_TYPES[0])
+    }
+
+    pub fn pricing(&self) -> &'static str {
+        PRICINGS
+            .iter()
+            .find(|key| **key == self.pricing.trim())
+            .unwrap_or(&PRICINGS[0])
+    }
+
+    pub fn cable_provided(&self) -> bool {
+        self.cable_provided.unwrap_or(true)
+    }
+
+    /// La puissance, quand elle est renseignée et plausible.
+    pub fn power(&self) -> Option<f64> {
+        (self.power_kw.is_finite() && self.power_kw > 0.0).then_some(self.power_kw)
+    }
+
+    /// Ce qui ne va pas, champ par champ — sous le champ, et dans `publishReadiness`.
+    pub fn problems(&self) -> Vec<(&'static str, I18nText)> {
+        use portaki_sdk::config::check;
+        let text = crate::i18n::text;
+        let too_long = |value: Option<&I18nText>, max: usize| {
+            value.and_then(|value| {
+                value
+                    .by_language()
+                    .find_map(|(_, text)| check::max_chars(text, max))
+            })
+        };
+        let mut problems: Vec<(&'static str, I18nText)> = Vec::new();
+        let mut push = |field: &'static str, error: Option<I18nText>| {
+            if let Some(error) = error {
+                problems.push((field, error));
+            }
+        };
+        // Vide, l'emplacement est refusé par la plateforme (`required`) : ici, la longueur.
+        push("spot_label", too_long(Some(&self.spot_label), 60));
+        push(
+            "power_kw",
+            (self.power_kw != 0.0)
+                .then(|| check::between(self.power_kw, POWER_KW.0, POWER_KW.1))
+                .flatten()
+                .map(|_| text("host.power.range")),
+        );
+        push(
+            "price",
+            if self.pricing() != "included" && self.price.trim().is_empty() {
+                Some(text("host.price.required"))
+            } else {
+                check::max_chars(&self.price, 30)
+            },
+        );
+        push("instructions", too_long(self.instructions.as_ref(), 280));
+        if self.booking_required {
+            push("booking_note", too_long(self.booking_note.as_ref(), 120));
+        }
+        problems
+    }
+
+    /// Le message à afficher sous `field`, s'il y en a un.
+    pub fn error_of(&self, field: &str) -> Option<I18nText> {
+        self.problems()
+            .into_iter()
+            .find(|(name, _)| *name == field)
+            .map(|(_, error)| error)
+    }
+
     pub fn is_empty(&self) -> bool {
         self.spot_label.is_blank()
             && self.charger_pin.trim().is_empty()
@@ -228,5 +350,23 @@ mod tests {
             .run(|ctx| {
                 assert_eq!(ModuleConfig::load(&ctx).unwrap(), ModuleConfig::default());
             });
+    }
+
+    /// Le prix n'est exigé que si la recharge n'est pas incluse ; la puissance est bornée.
+    #[test]
+    fn problems_follow_the_pricing_and_the_power() {
+        let config = |value| serde_json::from_value::<ModuleConfig>(value).unwrap();
+        let fields = |config: ModuleConfig| -> Vec<&'static str> {
+            config.problems().into_iter().map(|(f, _)| f).collect()
+        };
+        assert!(fields(config(json!({ "spot_label": "P2" }))).is_empty());
+        assert_eq!(
+            fields(config(
+                json!({ "spot_label": "P2", "pricing": "per_kwh", "power_kw": 1.0 })
+            )),
+            ["power_kw", "price"]
+        );
+        assert_eq!(config(json!({})).charger_type(), "type2");
+        assert!(config(json!({})).cable_provided());
     }
 }
