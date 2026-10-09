@@ -1,11 +1,13 @@
 //! Portaki safety-shutoffs module — where to cut the power, the water and the gas.
 
+mod amenities;
 mod config;
 mod guest;
 mod host;
 mod i18n;
 mod queries;
 
+pub use amenities::amenities_list;
 pub use config::{ModuleConfig, ShutoffRow, MAX_SHUTOFFS};
 pub use guest::{render_explore_detail, render_home_card};
 pub use host::render_host_main;
@@ -25,3 +27,6 @@ portaki_sdk::portaki_module!(
 
 #[portaki_sdk::capability(required, id = "core.storage")]
 pub const STORAGE: &str = "core.storage";
+
+#[portaki_sdk::capability(provided, id = "amenities.provide")]
+pub const AMENITIES: &str = "amenities.provide";
