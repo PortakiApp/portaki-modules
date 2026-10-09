@@ -351,8 +351,12 @@ fn the_form_draws_the_spots_the_host_has() {
         .run(|ctx| {
             let json =
                 serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
-            assert!(json.contains("spots.11.title"), "{json}");
-            assert!(!json.contains("spots.12.title"), "{json}");
+            let last = local_guide::MAX_SPOTS - 1;
+            assert!(json.contains(&format!("spots.{last}.title")), "{json}");
+            assert!(
+                !json.contains(&format!("spots.{}.title", last + 1)),
+                "{json}"
+            );
             assert!(
                 json.contains(&format!(r#""spots_count":{}"#, local_guide::MAX_SPOTS)),
                 "{json}"

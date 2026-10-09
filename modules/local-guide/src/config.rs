@@ -6,6 +6,7 @@
 //! that and numbers alike. The old KV blob went through [`legacy`].
 
 use chrono::Weekday;
+use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
@@ -261,9 +262,72 @@ impl ActivityRow {
     }
 }
 
+/// Combien de bons plans la configuration accepte (spec Bons plans §2.1).
+pub const MAX_SPOTS: usize = 30;
+
 impl ModuleConfig {
     pub fn is_empty(&self) -> bool {
         self.parse_spots().is_empty() && self.disclaimer.is_blank()
+    }
+
+    /// Ce qui ne va pas, champ par champ (`spots.<i>.title`…) — sous le champ dans le formulaire,
+    /// et dans `publishReadiness`. La position manquante n'y est pas : elle avertit sans bloquer.
+    pub fn problems(&self) -> Vec<(String, I18nText)> {
+        let too_long = |value: &I18nText, max: usize| {
+            value
+                .by_language()
+                .find_map(|(_, text)| check::max_chars(text, max))
+        };
+        let plain = |value: &Option<String>, max: usize| {
+            value
+                .as_deref()
+                .and_then(|text| check::max_chars(text, max))
+        };
+        let mut problems: Vec<(String, I18nText)> = Vec::new();
+        let filled = self.spots.iter().filter(|s| !s.is_blank()).count();
+        if filled > MAX_SPOTS {
+            problems.push(("spots".into(), crate::i18n::text("host.spots.tooMany")));
+        }
+        for (index, spot) in self.spots.iter().enumerate() {
+            if spot.is_blank() {
+                continue;
+            }
+            let phone = spot.phone.as_deref().map(|phone| {
+                phone
+                    .chars()
+                    .filter(|c| !c.is_whitespace() && !matches!(c, '.' | '-'))
+                    .collect::<String>()
+            });
+            for (key, error) in [
+                (
+                    "title",
+                    if spot.title.is_blank() {
+                        Some(crate::i18n::text("host.spot.title.required"))
+                    } else {
+                        too_long(&spot.title, 60)
+                    },
+                ),
+                ("perk", too_long(&spot.perk, 120)),
+                ("detail", too_long(&spot.detail, 280)),
+                ("price", plain(&spot.price, 30)),
+                ("parking", plain(&spot.parking, 80)),
+                ("phone", phone.as_deref().and_then(check::phone)),
+                ("url", spot.url.as_deref().and_then(check::https_url)),
+            ] {
+                if let Some(error) = error {
+                    problems.push((format!("spots.{index}.{key}"), error));
+                }
+            }
+        }
+        problems
+    }
+
+    /// Le message à afficher sous `field`, s'il y en a un.
+    pub fn error_of(&self, field: &str) -> Option<I18nText> {
+        self.problems()
+            .into_iter()
+            .find(|(name, _)| name == field)
+            .map(|(_, error)| error)
     }
 
     /// The named rows, for the guest, in form order. A row without an id takes its slot's
@@ -999,5 +1063,20 @@ mod tests {
         // Une adresse qui n'a que des photos n'est pas un emplacement vide.
         assert!(SpotRow::default().is_blank());
         assert!(!only_new.is_blank());
+    }
+
+    /// Les erreurs nomment leur champ ; une ligne vide n'en a pas.
+    #[test]
+    fn spot_problems_name_their_field() {
+        let config: ModuleConfig = serde_json::from_value(serde_json::json!({
+            "spots": [
+                { "title": "" },
+                { "title": "", "detail": "Super" },
+                { "title": "Le Bacon", "url": "http://bacon.fr", "phone": "04 93 61 50 02" }
+            ]
+        }))
+        .unwrap();
+        let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
+        assert_eq!(fields, ["spots.1.title", "spots.2.phone", "spots.2.url"]);
     }
 }
