@@ -136,6 +136,16 @@ pub fn build_trail_detail(data: &GuestData, trail: &TrailRow) -> Surface {
         children.push(tiles);
     }
 
+    // Un aller simple ne ramène pas au départ : le voyageur doit le savoir avant de partir.
+    if trail.shape_key() == Some("one_way") {
+        children.push(
+            Text::new()
+                .text("i18n:guest.oneWay.return")
+                .variant(TextVariant::Caption)
+                .into(),
+        );
+    }
+
     let description = trail.description.get(&data.locale).trim().to_string();
     if !description.is_empty() {
         children.push(
@@ -175,6 +185,9 @@ fn trail_header(data: &GuestData, trail: &TrailRow) -> Component {
     let mut children: Vec<Component> = Vec::new();
     if let Some(level) = trail.level_key() {
         children.push(Badge::new().label(format::level(level)).into());
+    }
+    if data.off_season(trail) {
+        children.push(Badge::new().label(GuestData::off_season_label()).into());
     }
     children.push(
         Text::new()
@@ -293,6 +306,20 @@ fn start_map(data: &GuestData, trail: &TrailRow) -> Option<Component> {
                 .kind(MapMarkerKind::Poi),
         );
     }
+    // Le tracé, et pour un aller simple son arrivée : le seul cas où elle n'est pas le départ.
+    let track = read_track(trail);
+    if let Some(finish) = track
+        .as_ref()
+        .filter(|_| trail.shape_key() == Some("one_way"))
+        .and_then(|track| track.points.last())
+    {
+        markers.push(
+            MapMarker::new("finish", finish.lat, finish.lng)
+                .label("i18n:guest.map.finish")
+                .icon(IconName::Flag)
+                .kind(MapMarkerKind::Poi),
+        );
+    }
     if markers.is_empty() {
         return None;
     }
@@ -306,7 +333,7 @@ fn start_map(data: &GuestData, trail: &TrailRow) -> Option<Component> {
 
     // Les repères disent où, le tracé dit par où. Sans trace déposée, pas de clé `path` : un
     // tableau vide ferait dessiner un segment au lieu de montrer le seul départ (§2.23).
-    if let Some(track) = read_track(trail) {
+    if let Some(track) = track {
         map = map.path(track.points);
     }
 

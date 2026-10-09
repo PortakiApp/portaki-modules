@@ -395,11 +395,88 @@ fn publication_needs_one_complete_trail() {
         ids,
         [
             "trails",
-            "config.trails.1.level",
             "config.trails.0.lat",
+            "config.trails.1.level",
+            "config.trails.1.lat",
             "measures"
         ]
     );
+    // Le message de la spec quand rien n'est prêt.
+    assert_eq!(
+        empty.items[0].hint.get("fr"),
+        "Ajoutez au moins un itinéraire."
+    );
+}
+
+/// Un départ posé à plus de 100 km du logement bloque, avec le message de la spec.
+#[test]
+#[serial]
+fn a_start_far_from_the_property_blocks_publication() {
+    let readiness = MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_coordinates(Some(GeoPoint::new(HOME.0, HOME.1)))
+        .with_config(&json!({
+            "trails": [{ "title": "A", "level": "easy", "duration_min": 60, "distance_km": 3,
+                          "lat": 48.85, "lng": 2.35 }]
+        }))
+        .run(|ctx| publish_readiness(ctx).expect("readiness"));
+    let start = readiness
+        .items
+        .iter()
+        .find(|item| item.id == "config.trails.0.lat")
+        .expect("start check");
+    assert!(!start.ok);
+    assert_eq!(start.hint.get("fr"), "Placez le départ sur la carte.");
+}
+
+fn item_json(config: Value, now: &str, trail: &str) -> String {
+    guest()
+        .with_now(now.parse().expect("now"))
+        .with_config(&config)
+        .run(|ctx| {
+            let mut item = ctx.clone();
+            item.input = json!({ "trailId": trail });
+            tree(&render_explore_item(item).expect("item"))
+        })
+}
+
+/// Hors saison, la fiche et la liste portent « Hors saison » ; l'itinéraire reste listé.
+#[test]
+#[serial]
+fn an_off_season_trail_wears_a_badge_and_stays_listed() {
+    let config = json!({
+        "trails": [{ "id": "x", "title": "Col d'été", "level": "hard",
+                     "season_from": "06-01", "season_to": "09-30" }]
+    });
+    let winter = item_json(config.clone(), "2026-01-15T10:00:00Z", "x");
+    assert!(winter.contains("Hors saison"), "{winter}");
+    let summer = item_json(config.clone(), "2026-07-15T10:00:00Z", "x");
+    assert!(!summer.contains("Hors saison"), "{summer}");
+
+    let list = guest()
+        .with_now("2026-01-15T10:00:00Z".parse().expect("now"))
+        .with_config(&config)
+        .run(|ctx| tree(&render_explore_detail(ctx).expect("list")));
+    assert!(list.contains("Col d'été"), "{list}");
+    assert!(list.contains("Hors saison"), "{list}");
+}
+
+/// Un aller simple annonce le retour à prévoir ; un aller-retour, non (§9 n° 7).
+#[test]
+#[serial]
+fn a_one_way_trail_says_the_return_is_to_plan() {
+    let one_way = item_json(
+        json!({ "trails": [{ "id": "x", "title": "A", "level": "easy", "shape": "one_way" }] }),
+        "2026-07-15T10:00:00Z",
+        "x",
+    );
+    assert!(one_way.contains("i18n:guest.oneWay.return"), "{one_way}");
+    let round_trip = item_json(
+        json!({ "trails": [{ "id": "x", "title": "A", "level": "easy", "shape": "round_trip" }] }),
+        "2026-07-15T10:00:00Z",
+        "x",
+    );
+    assert!(!round_trip.contains("guest.oneWay.return"), "{round_trip}");
 }
 
 /// La carte du livret ne reçoit que les départs situés.

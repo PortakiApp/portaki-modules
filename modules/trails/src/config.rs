@@ -39,6 +39,9 @@ pub const AT_PROPERTY_METRES: f64 = 120.0;
 /// côté hôte, depuis la position réelle — la page publique n'a que le centre flouté.
 pub const PUBLIC_AT_PROPERTY_METRES: f64 = 300.0;
 
+/// Au-delà, le départ n'est plus « autour du logement » : une faute de pose sur le plan (§2.1).
+pub const MAX_START_METRES: f64 = 100_000.0;
+
 /// Combien d'itinéraires la page publique montre : en dessous, le bloc ne sort pas ; au-delà, les
 /// premiers dans l'ordre du formulaire.
 pub const PUBLIC_MIN: usize = 2;
@@ -71,8 +74,9 @@ pub struct ModuleConfig {
 
 impl ModuleConfig {
     /// Ce qui ne va pas, champ par champ (`trails.<i>.title`…) — sous le champ dans le
-    /// formulaire, et dans `publishReadiness`. Le départ sans position avertit sans bloquer.
-    pub fn problems(&self) -> Vec<(String, I18nText)> {
+    /// formulaire, et dans `publishReadiness`. `property` est la position réelle du logement :
+    /// sans elle, le départ n'est pas jugé trop loin.
+    pub fn problems(&self, property: Option<(f64, f64)>) -> Vec<(String, I18nText)> {
         let text = crate::i18n::text;
         let mut problems: Vec<(String, I18nText)> = Vec::new();
         if let Some(error) = check::https_url(self.commune_url.trim()) {
@@ -96,6 +100,24 @@ impl ModuleConfig {
                     .title
                     .by_language()
                     .find_map(|(_, title)| check::max_chars(title, 60))
+            };
+            // Sans départ, ni repère ni « itinéraire jusqu'au départ » ; à plus de 100 km, le
+            // départ a été posé ailleurs que là où l'hôte le croit.
+            let start_misplaced = match trail.coordinates() {
+                None => true,
+                Some(start) => property.is_some_and(|property| {
+                    crate::format::haversine_metres(property, start) > MAX_START_METRES
+                }),
+            };
+            let (season_from, season_to) = (trail.season_from.trim(), trail.season_to.trim());
+            let season = |own: &str, other: &str| {
+                if own.is_empty() && !other.is_empty() {
+                    Some(text("host.trails.season.both"))
+                } else if !own.is_empty() && parse_month_day(own).is_none() {
+                    Some(text("host.trails.season.format"))
+                } else {
+                    None
+                }
             };
             for (key, error) in [
                 ("title", title),
@@ -129,6 +151,12 @@ impl ModuleConfig {
                         .by_language()
                         .find_map(|(_, text)| check::max_chars(text, 1_200)),
                 ),
+                (
+                    "lat",
+                    start_misplaced.then(|| text("host.trails.start.required")),
+                ),
+                ("season_from", season(season_from, season_to)),
+                ("season_to", season(season_to, season_from)),
             ] {
                 if let Some(error) = error {
                     problems.push((format!("trails.{index}.{key}"), error));
@@ -139,8 +167,8 @@ impl ModuleConfig {
     }
 
     /// Le message à afficher sous `field`, s'il y en a un.
-    pub fn error_of(&self, field: &str) -> Option<I18nText> {
-        self.problems()
+    pub fn error_of(&self, field: &str, property: Option<(f64, f64)>) -> Option<I18nText> {
+        self.problems(property)
             .into_iter()
             .find(|(name, _)| name == field)
             .map(|(_, error)| error)
@@ -281,6 +309,25 @@ pub struct TrailRow {
         skip_serializing_if = "Option::is_none"
     )]
     pub starts_at_property: Option<bool>,
+    /// La saison, en `MM-JJ` sans année — « 04-01 » au « 10-31 ». Vides : toute l'année.
+    /// Hors saison, l'itinéraire reste listé, avec un badge « Hors saison ».
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub season_from: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub season_to: String,
+}
+
+/// `MM-JJ` en un nombre comparable (`0415` pour le 15 avril), ou `None` quand ce n'est pas une
+/// date du calendrier. Copié de `facility-hours` (`schedule::parse_month_day`).
+pub fn parse_month_day(raw: &str) -> Option<u32> {
+    let (month, day) = raw.trim().split_once('-')?;
+    let month: u32 = month.trim().parse().ok()?;
+    let day: u32 = day.trim().parse().ok()?;
+    // 31 partout : refuser le 31 janvier parce qu'un mois voisin est plus court serait pire.
+    if !(1..=12).contains(&month) || !(1..=31).contains(&day) {
+        return None;
+    }
+    Some(month * 100 + day)
 }
 
 /// `true`, `"true"`, ou rien : un interrupteur de formulaire envoie l'un ou l'autre, et un texte
@@ -415,6 +462,22 @@ impl TrailRow {
                 crate::format::haversine_metres(property, start) < PUBLIC_AT_PROPERTY_METRES
             }
             _ => false,
+        }
+    }
+
+    /// `today` (`MMJJ`, voir [`parse_month_day`]) tombe-t-il dans la saison ? Toujours vrai sans
+    /// saison complète et lisible : un badge « Hors saison » deviné détourne d'un sentier ouvert.
+    pub fn in_season(&self, today: u32) -> bool {
+        let Some((from, to)) =
+            parse_month_day(&self.season_from).zip(parse_month_day(&self.season_to))
+        else {
+            return true;
+        };
+        if from <= to {
+            (from..=to).contains(&today)
+        } else {
+            // La saison passe l'hiver : de `from` à la fin de l'année, puis jusqu'à `to`.
+            today >= from || today <= to
         }
     }
 
@@ -564,14 +627,74 @@ mod tests {
             ]
         }))
         .unwrap();
-        let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
+        let fields: Vec<String> = config.problems(None).into_iter().map(|(f, _)| f).collect();
         assert_eq!(
             fields,
             [
                 "commune_url",
                 "trails.1.duration_min",
-                "trails.1.distance_km"
+                "trails.1.distance_km",
+                "trails.1.lat"
             ]
         );
+    }
+
+    fn start_problem(trail: serde_json::Value, property: Option<(f64, f64)>) -> Option<String> {
+        parsed(json!({ "trails": [trail] }))
+            .error_of("trails.0.lat", property)
+            .map(|error| error.get("fr").to_string())
+    }
+
+    /// Le départ est obligatoire, et à 100 km au plus du logement (§2.1).
+    #[test]
+    fn a_start_is_required_and_near_the_property() {
+        let home = Some((43.56, 7.13));
+        let row =
+            |lat: f64, lng: f64| json!({ "title": "A", "level": "easy", "lat": lat, "lng": lng });
+        assert!(start_problem(json!({ "title": "A", "level": "easy" }), home).is_some());
+        // Grasse, une trentaine de kilomètres : un départ du coin.
+        assert_eq!(start_problem(row(43.66, 6.92), home), None);
+        // Paris : posé au mauvais endroit.
+        assert!(start_problem(row(48.85, 2.35), home).is_some());
+        // Sans position du logement, on ne juge pas la distance.
+        assert_eq!(start_problem(row(48.85, 2.35), None), None);
+    }
+
+    /// Les deux dates ou aucune, au format `MM-JJ`.
+    #[test]
+    fn a_season_needs_both_dates_in_month_day() {
+        let problems = |from: &str, to: &str| -> Vec<String> {
+            parsed(
+                json!({ "trails": [{ "title": "A", "level": "easy", "lat": 43.56, "lng": 7.13,
+                                        "season_from": from, "season_to": to }] }),
+            )
+            .problems(None)
+            .into_iter()
+            .map(|(field, _)| field)
+            .collect()
+        };
+        assert!(problems("", "").is_empty());
+        assert!(problems("04-01", "10-31").is_empty());
+        assert_eq!(problems("04-01", ""), ["trails.0.season_to"]);
+        assert_eq!(problems("1er avril", "10-31"), ["trails.0.season_from"]);
+    }
+
+    /// Hors saison entre deux dates, y compris une saison qui passe l'hiver.
+    #[test]
+    fn a_season_closes_outside_its_dates() {
+        let row = |from: &str, to: &str| TrailRow {
+            season_from: from.into(),
+            season_to: to.into(),
+            ..TrailRow::default()
+        };
+        let summer = row("04-01", "10-31");
+        assert!(summer.in_season(415));
+        assert!(!summer.in_season(115));
+        let winter = row("12-01", "03-31");
+        assert!(winter.in_season(115));
+        assert!(!winter.in_season(715));
+        // Sans saison, ou une saison illisible : toute l'année.
+        assert!(row("", "").in_season(115));
+        assert!(row("avril", "10-31").in_season(115));
     }
 }

@@ -2,7 +2,7 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::NavigateTarget;
-use portaki_sdk::sdui::common::{Leading, Trailing, TrailingVisual};
+use portaki_sdk::sdui::common::{BadgeSpec, Leading, Tone, Trailing, TrailingVisual};
 use portaki_sdk::sdui::primitives::ListItem;
 
 use super::load::GuestData;
@@ -45,10 +45,16 @@ pub fn trail_row(data: &GuestData, trail: &TrailRow, index: usize, with_shape: b
     if let Some(line) = stats_line(trail, with_shape) {
         row = row.subtitle(line);
     }
-    // Le niveau en texte, jamais en couleur : une difficulté n'est pas un statut (§2.23).
-    if let Some(level) = trail.level_key() {
+    // Le niveau en texte, jamais en couleur : une difficulté n'est pas un statut (§2.23). Hors
+    // saison, un badge neutre à côté : l'itinéraire reste listé.
+    let badge = data
+        .off_season(trail)
+        .then(|| BadgeSpec::new(GuestData::off_season_label(), Tone::Neutral));
+    let text = trail.level_key().map(format::level);
+    if badge.is_some() || text.is_some() {
         row = row.trailing(Trailing::Visual(Box::new(TrailingVisual {
-            text: Some(format::level(level)),
+            badge,
+            text,
             ..TrailingVisual::default()
         })));
     }
