@@ -17,11 +17,42 @@ use portaki_sdk::sdui::surface::Surface;
 )]
 pub fn render_guest_form(ctx: GuestContext) -> Result<Surface> {
     let config = crate::config::ModuleConfig::load(&ctx)?;
-    Ok(build_form_surface(&config.categories()))
+    // Le numéro de l'option « Tout de suite » : celui que l'hôte a donné, sinon son profil.
+    let urgent = config
+        .urgent_phone()
+        .then(|| {
+            Some(config.urgent_number.trim().to_string())
+                .filter(|phone| !phone.is_empty())
+                .or_else(|| {
+                    ctx.host
+                        .as_ref()
+                        .and_then(|host| host.phone.as_deref())
+                        .map(|phone| phone.trim().to_string())
+                        .filter(|phone| !phone.is_empty())
+                })
+        })
+        .flatten();
+    Ok(build_form_surface(&FormInputs {
+        categories: config.categories(),
+        photo: config.photo_allowed(),
+        urgent,
+        response_time: config.response_time(),
+    }))
 }
 
-pub fn build_form_surface(categories: &[&str]) -> Surface {
-    Surface::new(build_form(categories)).with_id(GUEST_FORM)
+/// Ce que la feuille a besoin de savoir de la configuration.
+pub struct FormInputs {
+    pub categories: Vec<&'static str>,
+    /// « Ajouter une photo » proposé.
+    pub photo: bool,
+    /// Le numéro appelé par « Tout de suite », quand l'option est ouverte et qu'il y en a un.
+    pub urgent: Option<String>,
+    /// `within_day`, `within_hour` ou `none`.
+    pub response_time: &'static str,
+}
+
+pub fn build_form_surface(inputs: &FormInputs) -> Surface {
+    Surface::new(build_form(inputs)).with_id(GUEST_FORM)
 }
 
 /// Ce que la feuille annonce avant la première question (§2.17).
@@ -57,7 +88,8 @@ fn sheet_header() -> Component {
     )
 }
 
-fn build_form(categories: &[&str]) -> Form {
+fn build_form(inputs: &FormInputs) -> Form {
+    let categories = inputs.categories.as_slice();
     let submit_action = crate::ids::module_id().command_empty(crate::commands::SUBMIT);
 
     // Une seule liste, posée en une fois : `children` **remplace** là où `child` allonge, et un
@@ -68,50 +100,83 @@ fn build_form(categories: &[&str]) -> Form {
     for child in children {
         form = form.child(child);
     }
-    form.child(
-        Field::new()
-            .name("summary")
-            .label("i18n:form.summary.label")
-            .required(true)
-            .child(
-                TextInput::new()
-                    .name("summary")
-                    .placeholder("i18n:form.summary.placeholder"),
-            ),
-    )
-    .child(
-        Field::new()
-            .name("details")
-            .label("i18n:form.details.label")
-            .child(
-                TextArea::new()
-                    .name("details")
-                    .placeholder("i18n:form.details.placeholder"),
-            ),
-    )
-    .child(
-        Field::new()
-            .name("photo")
-            .label("i18n:form.photo.label")
-            .child(ImageUpload::new().name("photo")),
-    )
-    .child(
+    form = form
+        .child(
+            Field::new()
+                .name("summary")
+                .label("i18n:form.summary.label")
+                .required(true)
+                .child(
+                    TextInput::new()
+                        .name("summary")
+                        .placeholder("i18n:form.summary.placeholder"),
+                ),
+        )
+        .child(
+            Field::new()
+                .name("details")
+                .label("i18n:form.details.label")
+                .child(
+                    TextArea::new()
+                        .name("details")
+                        .placeholder("i18n:form.details.placeholder"),
+                ),
+        );
+    if inputs.photo {
+        form = form.child(
+            Field::new()
+                .name("photo")
+                .label("i18n:form.photo.label")
+                .child(ImageUpload::new().name("photo")),
+        );
+    }
+    form = form.child(
         Button::new()
             .label("i18n:form.submit")
             .action(submit_action),
-    )
-    .child(
-        Text::new()
-            .text("i18n:form.urgent.note")
-            .variant(TextVariant::Caption)
-            .emphasis(Emphasis::Subtle),
-    )
-    .child(
-        Button::new()
-            .label("i18n:form.urgent.link")
-            .variant(ButtonVariant::Ghost)
-            .action(Action::navigate(NavigateTarget::path(AIDE), None)),
-    )
+    );
+    // « Réponse dans la journée » : ce que l'hôte s'engage à tenir, sous le bouton (§2.2).
+    if inputs.response_time != "none" {
+        form = form.child(
+            Text::new()
+                .text(format!("i18n:form.responseTime.{}", inputs.response_time))
+                .variant(TextVariant::Caption)
+                .emphasis(Emphasis::Subtle),
+        );
+    }
+    // L'urgence : l'hôte au téléphone quand il l'a ouverte, sinon la page des numéros d'urgence
+    // (le 112 pour les urgences vitales).
+    match &inputs.urgent {
+        Some(phone) => form
+            .child(
+                Text::new()
+                    .text("i18n:form.urgent.callNote")
+                    .variant(TextVariant::Caption)
+                    .emphasis(Emphasis::Subtle),
+            )
+            .child(
+                Button::new()
+                    .label("i18n:form.urgent.call")
+                    .variant(ButtonVariant::Ghost)
+                    .action(Action::external(format!(
+                        "tel:{}",
+                        crate::config::compact(phone)
+                    ))),
+            ),
+        None => form
+            .child(
+                Text::new()
+                    .text("i18n:form.urgent.note")
+                    .variant(TextVariant::Caption)
+                    .emphasis(Emphasis::Subtle),
+            )
+            .child(
+                Button::new()
+                    .label("i18n:form.urgent.link")
+                    .variant(ButtonVariant::Ghost)
+                    .action(Action::navigate(NavigateTarget::path(AIDE), None)),
+            ),
+    }
 }
 
 /// La page de la section Aide, où les numéros d'urgence vivent.
@@ -156,6 +221,8 @@ fn category_option(wire: &str) -> ChoiceOption {
         "cleanliness" => option.icon(IconName::Sparkles),
         "noise" => option.icon(IconName::Volume2),
         "access" => option.icon(IconName::Key),
+        "wifi" => option.icon(IconName::Wifi),
+        "outdoor" => option.icon(IconName::Sun),
         _ => option.icon(IconName::MessageCircle),
     }
 }

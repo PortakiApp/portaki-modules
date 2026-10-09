@@ -43,12 +43,27 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     let category = args.category.as_str();
     // Une pastille retirée par l'hôte ne passe pas : un formulaire ouvert dans un téléphone avant
     // qu'il la retire les proposait encore, et le refus tient à la configuration, pas à l'écran.
-    if !crate::config::ModuleConfig::load(&ctx)?.offers(category) {
+    let config = crate::config::ModuleConfig::load(&ctx)?;
+    if !config.offers(category) {
         return Err(PortakiError::Host("category_not_offered".to_string()));
+    }
+    // Hors des périodes choisies, le formulaire n'est pas proposé : un écran resté ouvert ne
+    // passe pas non plus.
+    let stay = ctx.stay.as_ref();
+    if !config.open_at(
+        portaki_sdk::host::time::now()?,
+        stay.and_then(|stay| stay.checkin_at),
+        stay.and_then(|stay| stay.checkout_at),
+    ) {
+        return Err(PortakiError::Host("out_of_phase".to_string()));
     }
     let summary = require_summary(&args.summary)?;
     let details = normalize_optional(args.details);
-    let photo = parse_photo(args.photo)?;
+    let photo = if config.photo_allowed() {
+        parse_photo(args.photo)?
+    } else {
+        None
+    };
 
     let _ = storage::create(
         stay_id,

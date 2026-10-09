@@ -9,7 +9,9 @@ use portaki_sdk::sdui::surface::Surface;
 use crate::category;
 use crate::entities::IssueReport;
 
-pub fn build_home_card(reports: &[IssueReport]) -> Surface {
+/// `open` : le formulaire est proposé à cette période du séjour ; sinon la carte renvoie vers
+/// l'hôte. `auto_reply` : la confirmation de l'hôte, ou celle du module.
+pub fn build_home_card(reports: &[IssueReport], open: bool, auto_reply: Option<String>) -> Surface {
     let open_form = Action::open_overlay(
         OverlayPresentation::BottomSheet,
         crate::guest::form::GUEST_FORM,
@@ -30,7 +32,7 @@ pub fn build_home_card(reports: &[IssueReport]) -> Surface {
     } else {
         children.push(
             Text::new()
-                .text("i18n:home.card.thanks")
+                .text(auto_reply.unwrap_or_else(|| "i18n:home.card.thanks".to_string()))
                 .variant(TextVariant::Body)
                 .into(),
         );
@@ -43,6 +45,23 @@ pub fn build_home_card(reports: &[IssueReport]) -> Surface {
         for report in reports {
             children.push(report_list_item(report).into());
         }
+    }
+
+    // Hors des périodes choisies : pas de formulaire, l'hôte se contacte directement (§9.4).
+    if !open {
+        children.push(
+            Text::new()
+                .text("i18n:home.card.closed")
+                .variant(TextVariant::Caption)
+                .into(),
+        );
+        return Surface::new(
+            Card::new()
+                .icon(IconName::DangerTriangle)
+                .title("i18n:home.card.title")
+                .child(Stack::new().gap(12.0).children(children)),
+        )
+        .with_id(crate::guest::HOME_CARD);
     }
 
     children.push(

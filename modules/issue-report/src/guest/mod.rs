@@ -21,5 +21,18 @@ pub use form::render_guest_form;
     label_key = "nav.issue-report"
 )]
 pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
-    Ok(build_home_card(&load_guest_reports(&ctx)?))
+    let config = crate::config::ModuleConfig::load(&ctx)?;
+    let stay = ctx.stay.as_ref();
+    let open = config.open_at(
+        portaki_sdk::host::time::now()?,
+        stay.and_then(|stay| stay.checkin_at),
+        stay.and_then(|stay| stay.checkout_at),
+    );
+    let auto_reply =
+        Some(config.auto_reply.get(&ctx.locale).trim().to_string()).filter(|text| !text.is_empty());
+    Ok(build_home_card(
+        &load_guest_reports(&ctx)?,
+        open,
+        auto_reply,
+    ))
 }
