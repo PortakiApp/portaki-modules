@@ -1,7 +1,7 @@
 //! Guest home booklet card — une seule liste à cocher (§2.9).
 //!
 //! Le module donne les étapes, leur rubrique et leur précision ; le livret rend la barre de
-//! progression, le « n / N », le repli au-delà de cinq, les titres de rubrique, les étapes faites
+//! progression, le « n / N », le repli au-delà de « Étapes visibles », les titres de rubrique, les étapes faites
 //! barrées en bas et le bandeau de fin. Un module qui aurait dessiné tout ça aurait décidé à la
 //! place du livret, et aurait dû le redessiner à chaque emplacement.
 
@@ -89,7 +89,7 @@ pub fn build_home_card(data: &GuestChecklistData, surface_id: SurfaceId) -> Surf
                     .name("item_ids")
                     .layout(ChoiceListLayout::Checklist)
                     .multi(true)
-                    .limit(CARD_GLANCE_LIMIT)
+                    .limit(data.display.visible_limit())
                     // L'état part du serveur : une coche doit survivre à la fermeture du livret.
                     .value(ticked.join(","))
                     .choices(choices)
@@ -98,14 +98,21 @@ pub fn build_home_card(data: &GuestChecklistData, surface_id: SurfaceId) -> Surf
                     .doneTitle(
                         t!("guest.done.title").unwrap_or_else(|_| "i18n:guest.done.title".into()),
                     )
-                    .doneMessage(
-                        t!("guest.done.message")
-                            .unwrap_or_else(|_| "i18n:guest.done.message".into()),
-                    ),
+                    .doneMessage(done_message(data)),
             ),
     )
     .with_id(surface_id)
 }
 
-/// Cinq étapes non faites visibles, le reste replié derrière son propre bouton (§2.9).
-const CARD_GLANCE_LIMIT: u32 = 5;
+/// « Message final » in the guest's language, else the default thanks (spec Checklist §2.1).
+fn done_message(data: &GuestChecklistData) -> String {
+    let message = labels::pick_label(
+        &labels::decode_map(&data.display.done_message),
+        &data.locale,
+        &data.property_locale,
+    );
+    if !message.trim().is_empty() {
+        return message;
+    }
+    t!("guest.done.message").unwrap_or_else(|_| "i18n:guest.done.message".into())
+}

@@ -7,8 +7,8 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::primitives::{
-    Button, Card, EditableList, Eyebrow, Field, FieldHint, Form, Grid, Page, Pill, Select,
-    SelectableCard, Stack, Text, TextInput, ToggleRow,
+    Button, Card, EditableList, Eyebrow, Field, FieldHint, Form, Grid, NumberInput, Page, Pill,
+    Select, SelectableCard, Stack, Text, TextInput, ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
 use portaki_sdk::sdui::EditableListItem;
@@ -20,8 +20,10 @@ use crate::lists::{self, TEMPLATES};
 use crate::storage;
 
 mod stats;
+mod stay;
 
 pub use stats::{render_stats_checklist, render_stats_cleaning, stats_summary};
+pub use stay::render_host_stay;
 
 const SELECT_NEW: &str = "__new__";
 
@@ -42,7 +44,8 @@ const SELECT_NEW: &str = "__new__";
 pub fn render_host_main(ctx: HostContext) -> Surface {
     let fr = labels::lang_code(&ctx.locale) == "fr";
     let checklists = storage::list_checklists().unwrap_or_default();
-    let items = storage::list_items().unwrap_or_default();
+    // Blank steps included: the host must see the step « Écrivez l'étape. » is about.
+    let items = storage::all_items().unwrap_or_default();
     let selected = ctx
         .input_str("selectedId")
         .map(str::to_string)
@@ -77,7 +80,11 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         .iter()
         .find(|list| list.id.to_string() == selected)
     {
-        Some(list) => edit_panel(list, &items_of(&items, list), fr),
+        Some(list) => edit_panel(
+            list,
+            &items_of(&items, list),
+            &labels::lang_code(&ctx.locale),
+        ),
         None => new_panel(),
     };
 
@@ -127,8 +134,16 @@ fn select_field(label: &str, name: &str, values: &[&str], value: &str) -> Compon
         .into()
 }
 
-fn edit_panel(list: &Checklist, items: &[&ChecklistItem], fr: bool) -> Component {
+fn edit_panel(list: &Checklist, items: &[&ChecklistItem], lang: &str) -> Component {
+    let fr = lang == "fr";
     let host = list.audience == lists::HOST;
+    let problems = crate::queries::list_problems(list, items);
+    let error_of = |field: &str| {
+        problems
+            .iter()
+            .find(|(name, _)| *name == field)
+            .map(|(_, error)| error.get(lang).to_string())
+    };
     let settings: Vec<Component> = if host {
         let assignee = match (&list.assignee_name, &list.assignee_role) {
             (Some(name), Some(role)) => format!("{name} · {role}"),
@@ -160,6 +175,11 @@ fn edit_panel(list: &Checklist, items: &[&ChecklistItem], fr: bool) -> Component
             ),
         ]
     } else {
+        let display = storage::display::read(list.id);
+        let with_error = |field: Field, name: &str| match error_of(name) {
+            Some(error) => field.error(error),
+            None => field,
+        };
         vec![
             select_field(
                 "i18n:host.field.guestTrigger",
@@ -173,6 +193,42 @@ fn edit_panel(list: &Checklist, items: &[&ChecklistItem], fr: bool) -> Component
                 lists::PLACEMENTS,
                 &list.placement,
             ),
+            // The value as stored, out of bounds too: the error under it must point at it.
+            with_error(
+                Field::new()
+                    .label("i18n:host.field.visibleLimit")
+                    .name("visible_limit")
+                    .child(
+                        NumberInput::new()
+                            .name("visible_limit")
+                            .min(f64::from(storage::display::MIN_VISIBLE_LIMIT))
+                            .max(f64::from(storage::display::MAX_VISIBLE_LIMIT))
+                            .value(f64::from(
+                                display.visible_limit.unwrap_or(display.visible_limit()),
+                            )),
+                    )
+                    .child(FieldHint::new().text("i18n:host.field.visibleLimit.hint")),
+                "visible_limit",
+            )
+            .into(),
+            with_error(
+                Field::new()
+                    .label("i18n:host.field.doneMessage")
+                    .name("done_message")
+                    .child(
+                        TextInput::new()
+                            .name("done_message")
+                            .value(
+                                labels::decode_map(&display.done_message)
+                                    .get(lang)
+                                    .cloned()
+                                    .unwrap_or_default(),
+                            )
+                            .placeholder("i18n:guest.done.message"),
+                    ),
+                "done_message",
+            )
+            .into(),
         ]
     };
 
@@ -198,6 +254,13 @@ fn edit_panel(list: &Checklist, items: &[&ChecklistItem], fr: bool) -> Component
         .collect();
 
     let audience = if host { "host" } else { "guest" };
+    let mut items_field = Field::new()
+        .label("i18n:host.tasks.title")
+        .name("items")
+        .child(FieldHint::new().text(format!("i18n:host.tasks.hint.{audience}")));
+    if let Some(error) = error_of("steps").or_else(|| error_of("labels")) {
+        items_field = items_field.error(error);
+    }
     let mut form: Vec<Component> = vec![
         TextInput::new()
             .name("id")
@@ -213,10 +276,7 @@ fn edit_panel(list: &Checklist, items: &[&ChecklistItem], fr: bool) -> Component
             .gap(12.0)
             .children(settings)
             .into(),
-        Field::new()
-            .label("i18n:host.tasks.title")
-            .name("items")
-            .child(FieldHint::new().text(format!("i18n:host.tasks.hint.{audience}")))
+        items_field
             .child(
                 EditableList::new()
                     .name("items")
