@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.1](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.13.0...facility-hours-v1.13.1) (2026-10-09)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.4.0 ([909824e](https://github.com/PortakiApp/portaki-modules/commit/909824eef489e66ca1cb61740c730ef4e569e4ee))
+
 ## [1.13.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.12.0...facility-hours-v1.13.0) (2026-10-09)
 
 
