@@ -147,6 +147,7 @@ mod tests {
             at: Some("2026-07-14T10:00:00Z".parse().unwrap()),
             guest_name: Some(name.into()),
             public_consent: consent,
+            link_offered: false,
         }
     }
 
