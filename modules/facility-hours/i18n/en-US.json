@@ -65,6 +65,7 @@
   "host.facility.lines.placeholder": "Every day, June to September\nClosed on Mondays",
   "host.facility.mode": "Hours",
   "host.facility.mode.always": "24/7",
+  "host.facility.mode.by_day": "Depends on the day",
   "host.facility.mode.on_request": "On request",
   "host.facility.mode.same": "Same hours every day",
   "host.facility.name": "Name",

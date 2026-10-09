@@ -65,6 +65,7 @@
   "host.facility.lines.placeholder": "كل يوم، من يونيو إلى سبتمبر\nمغلق يوم الاثنين",
   "host.facility.mode": "المواعيد",
   "host.facility.mode.always": "على مدار الساعة",
+  "host.facility.mode.by_day": "حسب اليوم",
   "host.facility.mode.on_request": "عند الطلب",
   "host.facility.mode.same": "المواعيد نفسها كل يوم",
   "host.facility.name": "الاسم",

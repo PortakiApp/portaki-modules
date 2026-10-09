@@ -65,6 +65,7 @@
   "host.facility.lines.placeholder": "Tous les jours, de juin à septembre\nFermé le lundi",
   "host.facility.mode": "Horaires",
   "host.facility.mode.always": "24 h/24",
+  "host.facility.mode.by_day": "Selon le jour",
   "host.facility.mode.on_request": "Sur demande",
   "host.facility.mode.same": "Même horaire tous les jours",
   "host.facility.name": "Nom",
