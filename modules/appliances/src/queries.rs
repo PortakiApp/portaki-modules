@@ -56,3 +56,30 @@ pub fn get_content(ctx: Context, args: GetContentArgs) -> Result<AppliancesConte
 pub fn load_payload(ctx: &Context) -> Result<AppliancesPayload> {
     store::load_payload_for(&ctx.locale, &ctx.property.locale)
 }
+
+/// Ce qui bloque la publication : les longueurs de la spec Appareils et le nombre d'appareils
+/// en avant ([`AppliancesPayload::problems`]), chacun désignant son champ (`config.<clé>`).
+#[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
+pub fn publish_readiness(
+    ctx: Context,
+) -> Result<portaki_sdk::contracts::publish::PublishReadiness> {
+    use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
+    let payload = store::load_payload_for(&ctx.locale, &ctx.property.locale)?;
+    let items = payload
+        .problems()
+        .into_iter()
+        .map(|(field, error)| PublishCheck {
+            label: crate::i18n::text(match field.rsplit('.').next().unwrap_or_default() {
+                "paperManualsLocation" => "host.paperManuals.label",
+                "featuredLimit" => "host.featured.label",
+                "manualUrl" => "host.device.manualUrl",
+                _ => "host.device.name",
+            }),
+            id: format!("config.{field}"),
+            level: PublishLevel::Required,
+            ok: false,
+            hint: error,
+        })
+        .collect();
+    Ok(PublishReadiness { items })
+}

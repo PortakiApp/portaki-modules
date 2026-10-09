@@ -5,12 +5,14 @@ use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::Leading;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
-    Accordion, Button, Card, EmptyState, Field, FieldHint, Form, List, ListItem, Page,
+    Accordion, Button, Card, EmptyState, Field, FieldHint, Form, List, ListItem, NumberInput, Page,
     RichTextEditor, Select, Stack, Text, TextInput, Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::content::{description_plain_text, Appliance, ApplianceStatus, MAX_APPLIANCES};
+use crate::content::{
+    description_plain_text, Appliance, ApplianceStatus, MAX_APPLIANCES, MAX_FEATURED, MIN_FEATURED,
+};
 use crate::store;
 
 const SELECT_NEW: &str = "__new__";
@@ -28,7 +30,11 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     let payload = store::load_payload_for(&ctx.locale, &ctx.property.locale).unwrap_or_default();
     let selected_id = ctx.input_str("selectedId").unwrap_or("").to_string();
 
-    let safety = build_safety_accordion(&payload.safety_notice, &payload.paper_manuals_location);
+    let safety = build_safety_accordion(
+        &payload.safety_notice,
+        &payload.paper_manuals_location,
+        payload.featured_limit(),
+    );
     let list_card = build_list_card(&payload.devices, &selected_id);
     let detail_panel = build_detail_panel(&payload.devices, &selected_id);
 
@@ -237,7 +243,11 @@ fn build_detail_panel(devices: &[Appliance], selected_id: &str) -> Component {
     )
 }
 
-fn build_safety_accordion(safety_notice: &str, paper_manuals_location: &str) -> Component {
+fn build_safety_accordion(
+    safety_notice: &str,
+    paper_manuals_location: &str,
+    featured_limit: usize,
+) -> Component {
     let save_action = crate::ids::module_id().command_empty(crate::commands::SAVE_SAFETY_NOTICE);
     let has_value = !description_plain_text(safety_notice).trim().is_empty();
     // Shell Accordion: `:collapsed` → closed by default; otherwise open.
@@ -281,6 +291,19 @@ fn build_safety_accordion(safety_notice: &str, paper_manuals_location: &str) -> 
                     FieldHint::new()
                         .text("i18n:host.paperManuals.hint")
                         .into(),
+                    // Combien d'appareils la carte d'accueil met en avant (§2.1).
+                    Field::new()
+                        .name("featuredLimit")
+                        .label("i18n:host.featured.label")
+                        .child(
+                            NumberInput::new()
+                                .name("featuredLimit")
+                                .min(MIN_FEATURED as f64)
+                                .max(MAX_FEATURED as f64)
+                                .value(featured_limit as f64),
+                        )
+                        .into(),
+                    FieldHint::new().text("i18n:host.featured.hint").into(),
                     Button::new()
                         .label("i18n:host.safety.save")
                         .action(save_action)
