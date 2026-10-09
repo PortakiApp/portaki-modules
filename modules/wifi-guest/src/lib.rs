@@ -1,5 +1,6 @@
 //! Portaki wifi-guest module — guest Wi-Fi SSID and password for booklets.
 
+mod amenities;
 mod config;
 mod email_context;
 mod guest;
@@ -8,6 +9,7 @@ mod i18n;
 mod readiness;
 mod reveal;
 
+pub use amenities::amenities_list;
 pub use config::{ModuleConfig, Network, RevealPolicy, WifiSecurity};
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use guest::{render_explore_detail, render_home_card};
@@ -28,3 +30,6 @@ portaki_sdk::portaki_module!(
 
 #[portaki_sdk::capability(required, id = "core.storage")]
 pub const STORAGE: &str = "core.storage";
+
+#[portaki_sdk::capability(provided, id = "amenities.provide")]
+pub const AMENITIES: &str = "amenities.provide";
