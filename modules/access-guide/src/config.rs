@@ -535,7 +535,73 @@ pub struct HostConfig {
     pub late_arrival_note: I18nText,
 }
 
+/// Combien d'étapes le chemin jusqu'à la porte accepte (spec Accès §2.9).
+pub const MAX_STEPS: usize = 8;
+
 impl HostConfig {
+    /// Ce qui ne va pas, champ par champ (`keybox_location`, `steps.<i>.title`…) — sous le champ
+    /// dans le formulaire, et dans `publishReadiness`. Les codes n'y sont pas : côté hôte, un
+    /// secret revient masqué, et le juger sur son masque le dirait faux à tort.
+    pub fn problems(&self) -> Vec<(String, I18nText)> {
+        use portaki_sdk::config::check;
+        let text = crate::i18n::text;
+        let too_long = |value: &I18nText, max: usize| {
+            value
+                .by_language()
+                .find_map(|(_, text)| check::max_chars(text, max))
+        };
+        let mut problems: Vec<(String, I18nText)> = Vec::new();
+        let mut push = |field: String, error: Option<I18nText>| {
+            if let Some(error) = error {
+                problems.push((field, error));
+            }
+        };
+        if self.method() == Some(PrimaryMethod::Other) && self.method_instructions.is_blank() {
+            push(
+                "method_instructions".into(),
+                Some(text("host.other.required")),
+            );
+        }
+        push(
+            "keybox_location".into(),
+            too_long(&self.keybox_location, 120),
+        );
+        push("global_note".into(), too_long(&self.global_note, 280));
+        push(
+            "late_arrival_note".into(),
+            too_long(&self.late_arrival_note, 280),
+        );
+        push("parking_info".into(), too_long(&self.parking_info, 280));
+        let steps = self.steps.iter().filter(|s| !s.is_blank()).count();
+        push(
+            "steps".into(),
+            (steps > MAX_STEPS).then(|| text("host.steps.tooMany")),
+        );
+        for (index, step) in self.steps.iter().enumerate() {
+            if step.is_blank() {
+                continue;
+            }
+            push(
+                format!("steps.{index}.title"),
+                if step.title.is_blank() {
+                    Some(text("host.step.title.required"))
+                } else {
+                    too_long(&step.title, 60)
+                },
+            );
+            push(format!("steps.{index}.detail"), too_long(&step.detail, 280));
+        }
+        problems
+    }
+
+    /// Le message à afficher sous `field`, s'il y en a un.
+    pub fn error_of(&self, field: &str) -> Option<I18nText> {
+        self.problems()
+            .into_iter()
+            .find(|(name, _)| name == field)
+            .map(|(_, error)| error)
+    }
+
     /// The chosen access method, if the host picked one.
     pub fn method(&self) -> Option<PrimaryMethod> {
         PrimaryMethod::ALL
@@ -1740,5 +1806,25 @@ mod tests {
         assert_eq!(coord_pair(Some(0.0), Some(0.0)), None);
         assert_eq!(coord_pair(None, Some(7.26)), None);
         assert_eq!(coord_pair(Some(43.7), Some(7.26)), Some((43.7, 7.26)));
+    }
+
+    /// « Autre » demande sa précision ; une étape commencée demande son titre ; les longueurs
+    /// de la spec, chacune sur son champ.
+    #[test]
+    fn host_problems_name_their_field() {
+        let config: HostConfig = serde_json::from_value(serde_json::json!({
+            "primary_method": "other",
+            "keybox_location": "x".repeat(121),
+            "steps": [
+                { "title": "" , "detail": "" },
+                { "title": "", "detail": "Tout droit" }
+            ]
+        }))
+        .unwrap();
+        let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
+        assert_eq!(
+            fields,
+            ["method_instructions", "keybox_location", "steps.1.title"]
+        );
     }
 }

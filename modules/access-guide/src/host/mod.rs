@@ -12,7 +12,7 @@ use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{coord_pair, HostConfig, PrimaryMethod, RevealPolicy, StepRow};
 
-const STEP_SLOTS: usize = 8;
+const STEP_SLOTS: usize = crate::config::MAX_STEPS;
 
 #[portaki_sdk::surface(
     host,
@@ -24,6 +24,14 @@ const STEP_SLOTS: usize = 8;
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let config = HostConfig::load(&ctx)?;
+    // Les messages sous les champs, lus par les aides de champ plus bas.
+    ERRORS.with(|errors| {
+        *errors.borrow_mut() = config
+            .problems()
+            .into_iter()
+            .map(|(field, error)| (field, error.get(&ctx.locale).to_string()))
+            .collect();
+    });
     let saved_method = config.method();
     let draft_method = ctx
         .input_str("primary_method")
@@ -618,8 +626,10 @@ fn step_row(index: usize, ctx: &HostContext, step: Option<&StepRow>) -> Componen
                                 .name(format!("steps.{index}.kind"))
                                 .options(vec![
                                     ChoiceOption::new("parking", "i18n:host.step.kind.parking"),
+                                    ChoiceOption::new("gate", "i18n:host.step.kind.gate"),
                                     ChoiceOption::new("door", "i18n:host.step.kind.door"),
                                     ChoiceOption::new("elevator", "i18n:host.step.kind.elevator"),
+                                    ChoiceOption::new("stairs", "i18n:host.step.kind.stairs"),
                                     ChoiceOption::new("other", "i18n:host.step.kind.other"),
                                 ])
                                 .value(kind),
@@ -643,9 +653,34 @@ fn step_row(index: usize, ctx: &HostContext, step: Option<&StepRow>) -> Componen
 
 // ── Field helpers ────────────────────────────────────────────────────────────
 
+thread_local! {
+    /// Les erreurs du rendu en cours, par nom de champ.
+    ///
+    /// ponytail: un état de rendu plutôt qu'un paramètre de plus à chacune des aides de champ,
+    /// appelées de vingt endroits. Le Wasm d'un module rend une surface à la fois ; à remplacer
+    /// par un paramètre si le rendu devient concurrent.
+    static ERRORS: std::cell::RefCell<Vec<(String, String)>> =
+        const { std::cell::RefCell::new(Vec::new()) };
+}
+
+/// Le champ `name`, avec son message d'erreur du rendu en cours s'il y en a un.
+fn named(name: &str) -> Field {
+    let field = Field::new().name(name);
+    let error = ERRORS.with(|errors| {
+        errors
+            .borrow()
+            .iter()
+            .find(|(field, _)| field == name)
+            .map(|(_, error)| error.clone())
+    });
+    match error {
+        Some(error) => field.error(error),
+        None => field,
+    }
+}
+
 fn text_field(name: &str, label_key: &str, value: &str) -> Component {
-    Field::new()
-        .name(name)
+    named(name)
         .label(label_key)
         .child(TextInput::new().name(name).value(value))
         .into()
@@ -661,8 +696,7 @@ fn secret_field(name: &str, label_key: &str, saved: &str) -> Component {
 }
 
 fn rich_text_field(name: &str, label_key: &str, value: &str) -> Component {
-    Field::new()
-        .name(name)
+    named(name)
         .label(label_key)
         .child(RichTextEditor::new().name(name).value(value))
         .into()
