@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.0
+
+La borne sur la carte, et sa photo.
+
+* Placez la borne sur la carte : elle apparaît sur la Carte du livret.
+* Ajoutez une photo de la place : le voyageur reconnaît la borne avant de lire où elle est.
+* Une épingle à plus de 2 km du logement déclenche un avertissement.
+
 ## 1.7.0
 
 La borne et son tarif.

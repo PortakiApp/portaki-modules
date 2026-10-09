@@ -3,7 +3,7 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::{KeyValueLayout, SecretState};
-use portaki_sdk::sdui::primitives::{Grid, InfoBanner, KeyValue, Link, Text};
+use portaki_sdk::sdui::primitives::{Grid, Image, InfoBanner, KeyValue, Link, Text};
 
 use super::load::{has_any_secret, secret_display, GuestData};
 
@@ -87,6 +87,22 @@ pub fn build_ev_parking_body(data: &GuestData, enriched: bool) -> Vec<Component>
     if enriched {
         if let Some(spot) = data.config.spot_text(&data.locale) {
             children.push(kv_row("i18n:guest.spot", spot, false));
+        }
+        // La photo de la place, en 4/3 : on reconnaît la borne avant de lire où elle est.
+        let photo = data.config.photo.trim();
+        if !photo.is_empty() {
+            children.push(
+                Image::new()
+                    .url(photo.to_string())
+                    .alt(
+                        data.config
+                            .spot_text(&data.locale)
+                            .unwrap_or_default()
+                            .to_string(),
+                    )
+                    .aspectRatio("4 / 3")
+                    .into(),
+            );
         }
     }
 

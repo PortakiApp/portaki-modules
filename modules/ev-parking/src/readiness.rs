@@ -24,6 +24,23 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             }),
             hint: error,
         })
-        .collect();
+        .collect::<Vec<_>>();
+    // Une épingle à plus de 2 km du logement : sans doute posée au mauvais endroit (§2.1).
+    let mut items = items;
+    if let (Some(home), Some(lat), Some(lng)) = (
+        ctx.property.coordinates,
+        config.charger_lat,
+        config.charger_lng,
+    ) {
+        if !portaki_sdk::config::check::within_km(lat, lng, home.lat, home.lng, 2.0) {
+            items.push(PublishCheck {
+                id: "config.charger_lat".into(),
+                level: PublishLevel::Recommended,
+                ok: false,
+                label: crate::i18n::text("host.position.label"),
+                hint: crate::i18n::text("host.position.far"),
+            });
+        }
+    }
     Ok(PublishReadiness { items })
 }
