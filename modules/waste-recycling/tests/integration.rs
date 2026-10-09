@@ -96,6 +96,12 @@ fn bins_render_as_named_swatches() {
 fn the_bin_room_says_its_code_and_its_hours_before_the_way_there() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
+        .with_stay(StayContext {
+            checkin_at: Some(at("2026-10-10T14:00:00Z")),
+            checkout_at: Some(at("2026-10-12T08:00:00Z")),
+            ..StayContext::default()
+        })
+        .with_now(at("2026-10-11T10:00:00Z"))
         .with_config(&json!({
             "bin_room_steps": { "fr": "Derrière la haie\nPorte grise" },
             "bin_room_code": "1234A",
@@ -108,8 +114,7 @@ fn the_bin_room_says_its_code_and_its_hours_before_the_way_there() {
             let hours = json_text.find("fermé le dimanche").expect("les heures");
             let way = json_text.find("Derrière la haie").expect("le chemin");
             assert!(code < hours && hours < way, "{json_text}");
-            // Copiable — on le lit devant un digicode — et non masqué : le local est derrière une
-            // porte que le voyageur a déjà franchie.
+            // Pendant le séjour : révélé, et copiable — on le lit devant un digicode.
             assert!(json_text.contains("\"copy\":true"), "{json_text}");
             assert!(!json_text.contains("\"secret\""), "{json_text}");
         });
@@ -620,5 +625,89 @@ fn no_button_when_the_sheet_has_nothing_more_to_show() {
             let card = serde_json::to_string(&render_home_card(ctx).expect("carte")).expect("json");
             assert_eq!(card.matches("\"type\":\"ListItem\"").count(), 2, "{card}");
             assert!(!card.contains("guest.dropoff.cta"), "{card}");
+        });
+}
+
+/// Le code du local à `now`, pour un séjour du 10 octobre 16 h au 12 octobre 10 h (Paris).
+fn bin_room_code_at(now: &str, stay: bool) -> String {
+    let mut mock = MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_now(at(now))
+        // En clair et sans préfixe `enc:v1:` : ce que la plateforme rend d'un code enregistré
+        // avant qu'il ne soit déclaré secret.
+        .with_config(&json!({
+            "bin_room_where": { "fr": "Au fond de la cour" },
+            "bin_room_code": "1234A"
+        }));
+    if stay {
+        mock = mock.with_stay(StayContext {
+            checkin_at: Some(at("2026-10-10T14:00:00Z")),
+            checkout_at: Some(at("2026-10-12T08:00:00Z")),
+            ..StayContext::default()
+        });
+    }
+    mock.run(|ctx| serde_json::to_string(&render_explore_detail(ctx).expect("detail")).unwrap())
+}
+
+/// Spec Tri §2.3 : le code du local suit la révélation d'Accès — masqué, avec sa date, jusqu'à la
+/// veille 16 h ; en clair et copiable ensuite ; masqué de nouveau après le départ.
+#[test]
+#[serial]
+fn the_bin_room_code_waits_for_the_reveal() {
+    let before = bin_room_code_at("2026-10-09T13:59:00Z", true);
+    assert!(!before.contains("1234A"), "{before}");
+    assert!(before.contains("\"revealed\":false"), "{before}");
+    assert!(
+        before.contains("\"reveal_at\":\"9 oct. 2026 · 16:00\""),
+        "{before}"
+    );
+    assert!(!before.contains("\"copy\":true"), "{before}");
+
+    let after = bin_room_code_at("2026-10-09T14:00:00Z", true);
+    assert!(after.contains("1234A"), "{after}");
+    assert!(after.contains("\"copy\":true"), "{after}");
+    assert!(!after.contains("\"secret\""), "{after}");
+
+    let gone = bin_room_code_at("2026-10-12T08:00:01Z", true);
+    assert!(!gone.contains("1234A"), "{gone}");
+    assert!(gone.contains("\"revealed\":false"), "{gone}");
+    assert!(!gone.contains("reveal_at"), "{gone}");
+
+    // Sans séjour (lien d'aperçu, livret sans arrivée) : masqué, sans date promise.
+    let nowhere = bin_room_code_at("2026-10-11T10:00:00Z", false);
+    assert!(!nowhere.contains("1234A"), "{nowhere}");
+    assert!(!nowhere.contains("reveal_at"), "{nowhere}");
+}
+
+/// Un code enregistré en clair avant ce marquage : déclaré `secret` (la plateforme le chiffre à
+/// la prochaine écriture), et un enregistrement du formulaire — qui ne renvoie jamais le code —
+/// le garde.
+#[test]
+#[serial]
+fn a_plaintext_code_saved_before_survives_the_secret_form() {
+    let field = config_save::declared_fields(EMISSIONS)
+        .into_iter()
+        .find(|f| f["key"] == "bin_room_code")
+        .expect("bin_room_code déclaré");
+    assert_eq!(field["type"], "secret", "{field}");
+    assert_eq!(
+        field["reveal"],
+        json!(["guest_pre_arrival", "guest_stay"]),
+        "{field}"
+    );
+
+    let stored = json!({
+        "bin_room_enabled": true,
+        "bin_room_where": { "fr": "Au fond de la cour" },
+        "bin_room_code": "1234A"
+    });
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&stored)
+        .run(|ctx| {
+            let surface = render_host_main(ctx).expect("host main");
+            assert!(!serde_json::to_string(&surface).unwrap().contains("1234A"));
+            let saved = config_save::save(EMISSIONS, &surface, &stored, "fr");
+            assert_eq!(saved["bin_room_code"], "1234A");
         });
 }

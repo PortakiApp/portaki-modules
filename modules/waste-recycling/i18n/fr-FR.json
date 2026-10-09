@@ -58,7 +58,7 @@
   "host.bin.title": "Titre",
   "host.bin.title.required": "Donnez un nom.",
   "host.binRoom.code": "Code de la porte du local",
-  "host.binRoom.code.hint": "Facultatif. Visible par le voyageur, copiable d'un geste devant le digicode.",
+  "host.binRoom.code.hint": "Facultatif. Chiffré, et montré au voyageur la veille de l'arrivée à 16 h, comme les codes d'accès.",
   "host.binRoom.code.length": "Entre 3 et 12 caractères.",
   "host.binRoom.code.placeholder": "1234A",
   "host.binRoom.enabled": "Local poubelles",

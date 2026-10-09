@@ -58,7 +58,7 @@
   "host.bin.title": "Título",
   "host.bin.title.required": "Indique um nome.",
   "host.binRoom.code": "Código da porta do compartimento",
-  "host.binRoom.code.hint": "Facultativo. Visível para o hóspede e copiável com um toque diante do teclado.",
+  "host.binRoom.code.hint": "Facultativo. Cifrado e visível para o hóspede a partir das 16h da véspera da chegada, como os códigos de acesso.",
   "host.binRoom.code.length": "Entre 3 e 12 caracteres.",
   "host.binRoom.code.placeholder": "1234A",
   "host.binRoom.enabled": "Local do lixo",

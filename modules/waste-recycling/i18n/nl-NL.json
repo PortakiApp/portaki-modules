@@ -58,7 +58,7 @@
   "host.bin.title": "Titel",
   "host.bin.title.required": "Vul een naam in.",
   "host.binRoom.code": "Deurcode van de afvalruimte",
-  "host.binRoom.code.hint": "Optioneel. Zichtbaar voor de gast en met één tik te kopiëren bij het codeslot.",
+  "host.binRoom.code.hint": "Optioneel. Versleuteld en voor de gast zichtbaar vanaf 16.00 uur de dag vóór aankomst, zoals de toegangscodes.",
   "host.binRoom.code.length": "Tussen 3 en 12 tekens.",
   "host.binRoom.code.placeholder": "1234A",
   "host.binRoom.enabled": "Afvalruimte",

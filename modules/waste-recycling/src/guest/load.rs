@@ -1,7 +1,9 @@
 //! Load config for guest surfaces.
 
 use chrono::{DateTime, Utc};
+use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
+use portaki_sdk::reveal::RevealPolicy;
 
 use crate::config::{BinRow, DropoffRow, ModuleConfig};
 
@@ -32,8 +34,13 @@ pub struct GuestData {
     pub bin_room: bool,
     /// Où se trouve le local.
     pub bin_room_where: String,
-    /// Le code de la porte du local, vide quand il n'y en a pas.
+    /// Le code de la porte du local, vide quand il n'y en a pas — en clair même masqué : c'est
+    /// [`Self::code_revealed`] qui décide s'il part dans l'arbre.
     pub bin_room_code: String,
+    /// Le code peut se montrer (spec Tri §2.3, « comme Accès »).
+    pub code_revealed: bool,
+    /// Quand il s'ouvrira, pour la tuile masquée ; `None` sans arrivée connue ou séjour fini.
+    pub code_reveal_at: Option<String>,
     /// Les heures d'ouverture du local, vides quand il est toujours accessible.
     pub bin_room_hours: String,
 }
@@ -55,6 +62,25 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         return Ok(None);
     }
 
+    // ponytail: le calendrier par défaut d'Accès (veille 16 h), sans réglage propre — la spec
+    // n'en prévoit pas (§2.3, §7) ; un champ `reveal_policy` le jour où un hôte en demande un.
+    let now = time::now()?;
+    let checkout_at = ctx.stay.as_ref().and_then(|stay| stay.checkout_at);
+    let decision = RevealPolicy::default().evaluate_for(ctx, now);
+    // Jamais après le départ : un ancien voyageur ne lit pas le code du suivant.
+    let ended = checkout_at.is_some_and(|checkout| now > checkout);
+    let code_revealed = decision.revealed && !ended;
+    let code_reveal_at = match (code_revealed || ended, decision.available_from) {
+        (false, Some(from)) => {
+            let local = ctx.property_tz().map(|tz| tz.to_local(from));
+            Some(match local {
+                Some(local) => time::date_time(local, &ctx.lang()),
+                None => time::date_time(from, &ctx.lang()),
+            })
+        }
+        _ => None,
+    };
+
     Ok(Some(GuestData {
         bins: config.parse_bins(),
         // Sans ramassage (zone rurale) : ni jours ni phrase de collecte, donc aucun bandeau.
@@ -72,7 +98,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         takeout_note: config.takeout_note.get(&ctx.locale).to_string(),
         locale: ctx.locale.clone(),
         timezone: ctx.timezone.clone(),
-        checkout_at: ctx.stay.as_ref().and_then(|stay| stay.checkout_at),
+        checkout_at,
         dropoff_points: config.parse_dropoff_points(),
         compost_location: if config.has_compost() {
             config.compost_location.get(&ctx.locale).trim().to_string()
@@ -86,6 +112,8 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         bin_room_where: config.bin_room_where.get(&ctx.locale).trim().to_string(),
         bin_room_steps: lines(config.bin_room_steps.get(&ctx.locale)),
         bin_room_code: config.bin_room_code.trim().to_string(),
+        code_revealed,
+        code_reveal_at,
         bin_room_hours: config.bin_room_hours.get(&ctx.locale).trim().to_string(),
     }))
 }

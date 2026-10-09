@@ -58,7 +58,7 @@
   "host.bin.title": "Title",
   "host.bin.title.required": "Enter a name.",
   "host.binRoom.code": "Bin room door code",
-  "host.binRoom.code.hint": "Optional. Visible to the guest, copied with one tap at the keypad.",
+  "host.binRoom.code.hint": "Optional. Encrypted, and shown to the guest from 4 pm the day before arrival, like the access codes.",
   "host.binRoom.code.length": "Between 3 and 12 characters.",
   "host.binRoom.code.placeholder": "1234A",
   "host.binRoom.enabled": "Bin room",

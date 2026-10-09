@@ -3,8 +3,8 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Card, ChoiceList, Eyebrow, Field, FieldHint, Form, Page, Select, Stack,
-    StepList, Text, TextArea, TextInput, Toggle,
+    AddressMapPicker, Card, ChoiceList, Eyebrow, Field, FieldHint, Form, Page, SecretInput, Select,
+    Stack, StepList, Text, TextArea, TextInput, Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
 use serde::Serialize;
@@ -182,9 +182,10 @@ fn bin_room_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
             named(config, ctx, "bin_room_code")
                 .label("i18n:host.binRoom.code")
                 .child(
-                    TextInput::new()
+                    SecretInput::new()
                         .name("bin_room_code")
-                        .value(config.bin_room_code.clone())
+                        // Jamais renvoyé : vide, la plateforme garde le code enregistré.
+                        .value(String::new())
                         .placeholder("i18n:host.binRoom.code.placeholder"),
                 )
                 .into(),
