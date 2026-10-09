@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.11.0
+
+Montée technique.
+
+* Le module est passé à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 1.10.0
 
 La coupure du midi, et un badge qui ne se contredit plus.

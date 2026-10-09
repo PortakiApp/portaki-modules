@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.0
+
+Montée technique.
+
+* Le module est passé à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 1.6.2
 
 La note dite une fois, et le réseau masqué.

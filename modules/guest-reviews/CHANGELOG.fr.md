@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0
+
+Montée technique.
+
+* Le module est passé à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 1.3.3
 
 Aucune étoile d'avance, et un seul avis par séjour.

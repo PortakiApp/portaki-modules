@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.0
+
+Montée technique.
+
+* Le module est passé à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 1.8.1
 
 Jusqu'à soixante appareils, comme annoncé.

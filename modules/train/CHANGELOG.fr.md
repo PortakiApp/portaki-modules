@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.0
+
+Montée technique.
+
+* Le module est passé à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 2.1.0
 
 Le retard, la fenêtre du séjour, et le bon sens de la flèche.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0
+
+Montée technique.
+
+* Le module est passé à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 0.5.3
 
 Pas de filtre quand il n'y a qu'un niveau.
