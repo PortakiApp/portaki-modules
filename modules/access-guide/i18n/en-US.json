@@ -237,6 +237,7 @@
   "host.steps.remove": "Remove",
   "host.steps.tooMany": "8 steps at most.",
   "host.video.label": "Arrival video (URL, optional)",
+  "host.video.invalid": "Use a YouTube, Vimeo or Google Drive link, or an .mp4 file.",
   "module.catalogDescription": "Entry method, optional layers, and when codes are revealed.",
   "module.description": "Steps to reach the property",
   "module.displayName": "Access & parking",

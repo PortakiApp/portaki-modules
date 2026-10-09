@@ -237,6 +237,7 @@
   "host.steps.remove": "Elimina",
   "host.steps.tooMany": "Al massimo 8 passaggi.",
   "host.video.label": "Video di arrivo (URL, facoltativo)",
+  "host.video.invalid": "Usa un link YouTube, Vimeo, Google Drive o un file .mp4.",
   "module.catalogDescription": "Modo di ingresso, strati facoltativi e rivelazione dei codici.",
   "module.description": "Le tappe fino all'alloggio",
   "module.displayName": "Accesso e parcheggio",

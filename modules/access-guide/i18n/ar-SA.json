@@ -237,6 +237,7 @@
   "host.steps.remove": "حذف",
   "host.steps.tooMany": "8 خطوات كحد أقصى.",
   "host.video.label": "فيديو الوصول (رابط، اختياري)",
+  "host.video.invalid": "استخدم رابط YouTube أو Vimeo أو Google Drive أو ملف .mp4.",
   "module.catalogDescription": "وسيلة الدخول، وطبقات اختيارية، وإظهار الرموز.",
   "module.description": "الخطوات حتى المسكن",
   "module.displayName": "الدخول والركن",

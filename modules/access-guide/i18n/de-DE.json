@@ -237,6 +237,7 @@
   "host.steps.remove": "Löschen",
   "host.steps.tooMany": "Höchstens 8 Schritte.",
   "host.video.label": "Ankunftsvideo (URL, optional)",
+  "host.video.invalid": "Verwenden Sie einen YouTube-, Vimeo- oder Google-Drive-Link oder eine .mp4-Datei.",
   "module.catalogDescription": "Zugangsart, optionale Schichten und Freigabe der Codes.",
   "module.description": "Die Schritte bis zur Wohnung",
   "module.displayName": "Zugang & Parken",

@@ -237,6 +237,7 @@
   "host.steps.remove": "Supprimer",
   "host.steps.tooMany": "8 étapes au maximum.",
   "host.video.label": "Vidéo d’arrivée (URL, facultatif)",
+  "host.video.invalid": "Utilisez un lien YouTube, Vimeo, Google Drive ou un fichier .mp4.",
   "module.catalogDescription": "Moyen d'entrée, couches optionnelles et révélation des codes.",
   "module.description": "Étapes jusqu’au logement",
   "module.displayName": "Accès & parking",

@@ -608,12 +608,33 @@ impl HostConfig {
                 problems.push((field, error));
             }
         };
-        if self.method() == Some(PrimaryMethod::Other) && self.method_instructions.is_blank() {
-            push(
-                "method_instructions".into(),
-                Some(text("host.other.required")),
-            );
-        }
+        // « Autre » : la précision (`method_other`, ≤ 80) ; sinon les consignes (≤ 1 200).
+        let other = self.method() == Some(PrimaryMethod::Other);
+        push(
+            "method_instructions".into(),
+            if other && self.method_instructions.is_blank() {
+                Some(text("host.other.required"))
+            } else {
+                too_long(&self.method_instructions, if other { 80 } else { 1200 })
+            },
+        );
+        push(
+            "building_access_intercom".into(),
+            too_long(&self.building_access_intercom, 40),
+        );
+        push("building_note".into(), too_long(&self.building_note, 280));
+        push(
+            "arrival_video_url".into(),
+            (!is_video_url(self.arrival_video_url.trim())).then(|| text("host.video.invalid")),
+        );
+        push(
+            "in_person_contact".into(),
+            phone_error(&self.in_person_contact),
+        );
+        push(
+            "building_staff_contact".into(),
+            phone_error(&self.building_staff_contact),
+        );
         push(
             "keybox_location".into(),
             too_long(&self.keybox_location, 120),
@@ -851,6 +872,41 @@ fn distance_km((lat1, lng1): (f64, f64), (lat2, lng2): (f64, f64)) -> f64 {
     let a = (dlat / 2.0).sin().powi(2)
         + lat1.to_radians().cos() * lat2.to_radians().cos() * (dlng / 2.0).sin().powi(2);
     2.0 * 6371.0 * a.sqrt().asin()
+}
+
+/// Un lien YouTube, Vimeo, Google Drive ou un fichier `.mp4` (§2.10) ; vide, rien à dire.
+fn is_video_url(url: &str) -> bool {
+    let Some(rest) = url
+        .strip_prefix("https://")
+        .or_else(|| url.strip_prefix("http://"))
+    else {
+        return url.is_empty();
+    };
+    let host = rest.split(['/', '?', '#']).next().unwrap_or_default();
+    let host = host.to_ascii_lowercase();
+    let host = host.strip_prefix("www.").unwrap_or(&host);
+    let path = rest.split(['?', '#']).next().unwrap_or_default();
+    matches!(
+        host,
+        "youtube.com"
+            | "m.youtube.com"
+            | "youtu.be"
+            | "vimeo.com"
+            | "player.vimeo.com"
+            | "drive.google.com"
+    ) || path.to_ascii_lowercase().ends_with(".mp4")
+}
+
+/// E.164, ou un numéro court (« 3237 ») comme dans `emergency-contacts` : on l'appelle tel quel.
+fn phone_error(phone: &str) -> Option<I18nText> {
+    let phone: String = phone
+        .chars()
+        .filter(|c| !c.is_whitespace() && !matches!(c, '.' | '-' | '(' | ')'))
+        .collect();
+    let short = (2..=6).contains(&phone.len()) && phone.bytes().all(|b| b.is_ascii_digit());
+    (!short)
+        .then(|| portaki_sdk::config::check::phone(&phone))
+        .flatten()
 }
 
 fn nonempty(value: &str) -> Option<String> {
@@ -1945,5 +2001,123 @@ mod tests {
         assert_eq!(parking.kind.as_deref(), Some("private"));
         assert_eq!(parking.spot.as_deref(), Some("8"));
         assert_eq!(parking.price, None, "pas de tarif pour une place privée");
+    }
+
+    fn problem_of(config: serde_json::Value, field: &str) -> Option<String> {
+        let config: HostConfig = serde_json::from_value(config).unwrap();
+        config
+            .error_of(field)
+            .map(|error| error.get("fr").to_string())
+    }
+
+    #[test]
+    fn other_method_precision_is_80_chars_at_most() {
+        let json = |n| json!({ "primary_method": "other", "method_instructions": "x".repeat(n) });
+        assert_eq!(problem_of(json(80), "method_instructions"), None);
+        assert_eq!(
+            problem_of(json(81), "method_instructions").as_deref(),
+            Some("80 caractères au maximum.")
+        );
+    }
+
+    #[test]
+    fn other_method_requires_its_precision() {
+        assert_eq!(
+            problem_of(json!({ "primary_method": "other" }), "method_instructions").as_deref(),
+            Some("Décrivez comment le voyageur récupère les clés.")
+        );
+    }
+
+    #[test]
+    fn method_instructions_are_1200_chars_at_most_in_every_language() {
+        let json = |n| {
+            json!({
+                "primary_method": "keybox",
+                "method_instructions": { "fr": "court", "en": "x".repeat(n) }
+            })
+        };
+        assert_eq!(problem_of(json(1200), "method_instructions"), None);
+        assert_eq!(
+            problem_of(json(1201), "method_instructions").as_deref(),
+            Some("1200 caractères au maximum.")
+        );
+    }
+
+    #[test]
+    fn intercom_is_40_chars_at_most() {
+        let json = |n| json!({ "building_access_intercom": "x".repeat(n) });
+        assert_eq!(problem_of(json(40), "building_access_intercom"), None);
+        assert_eq!(
+            problem_of(json(41), "building_access_intercom").as_deref(),
+            Some("40 caractères au maximum.")
+        );
+    }
+
+    #[test]
+    fn building_note_is_280_chars_at_most() {
+        let json = |n| json!({ "building_note": { "en": "x".repeat(n) } });
+        assert_eq!(problem_of(json(280), "building_note"), None);
+        assert_eq!(
+            problem_of(json(281), "building_note").as_deref(),
+            Some("280 caractères au maximum.")
+        );
+    }
+
+    #[test]
+    fn arrival_video_is_youtube_vimeo_drive_or_mp4() {
+        let error =
+            |url: &str| problem_of(json!({ "arrival_video_url": url }), "arrival_video_url");
+        for ok in [
+            "",
+            "https://www.youtube.com/watch?v=abc",
+            "https://youtu.be/abc",
+            "https://vimeo.com/123",
+            "https://drive.google.com/file/d/abc/view",
+            "https://cdn.example.com/arrivee.MP4?v=2",
+        ] {
+            assert_eq!(error(ok), None, "{ok}");
+        }
+        for bad in [
+            "https://example.com/video",
+            "youtube.com/watch",
+            "https://evil.com/youtube.com",
+        ] {
+            assert_eq!(
+                error(bad).as_deref(),
+                Some("Utilisez un lien YouTube, Vimeo, Google Drive ou un fichier .mp4."),
+                "{bad}"
+            );
+        }
+    }
+
+    #[test]
+    fn in_person_contact_is_a_phone_number() {
+        let error =
+            |phone: &str| problem_of(json!({ "in_person_contact": phone }), "in_person_contact");
+        assert_eq!(error("+33 6 12 34 56 78"), None);
+        assert_eq!(
+            error("3237"),
+            None,
+            "un numéro court passe, comme dans emergency-contacts"
+        );
+        assert_eq!(
+            error("06 12 34 56 78").as_deref(),
+            Some("Ce numéro n'est pas valide. Vérifiez l'indicatif.")
+        );
+    }
+
+    #[test]
+    fn building_staff_contact_is_a_phone_number() {
+        let error = |phone: &str| {
+            problem_of(
+                json!({ "building_staff_contact": phone }),
+                "building_staff_contact",
+            )
+        };
+        assert_eq!(error("+41 22 123 45 67"), None);
+        assert_eq!(
+            error("Marie").as_deref(),
+            Some("Ce numéro n'est pas valide. Vérifiez l'indicatif.")
+        );
     }
 }

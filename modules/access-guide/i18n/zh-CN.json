@@ -237,6 +237,7 @@
   "host.steps.remove": "删除",
   "host.steps.tooMany": "最多 8 个步骤。",
   "host.video.label": "到达视频（网址，选填）",
+  "host.video.invalid": "请使用 YouTube、Vimeo、Google 云端硬盘链接或 .mp4 文件。",
   "module.catalogDescription": "进门方式、可选的补充信息，以及密码的显示时机。",
   "module.description": "到房源的每一步",
   "module.displayName": "进门与停车",

@@ -237,6 +237,7 @@
   "host.steps.remove": "削除",
   "host.steps.tooMany": "手順は最大8件です。",
   "host.video.label": "到着の動画（URL、任意）",
+  "host.video.invalid": "YouTube、Vimeo、Google ドライブのリンク、または .mp4 ファイルを使用してください。",
   "module.catalogDescription": "入室の方法、任意の追加情報、コードの公開タイミング。",
   "module.description": "物件までの道のり",
   "module.displayName": "アクセスと駐車",
