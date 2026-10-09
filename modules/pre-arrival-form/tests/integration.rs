@@ -538,6 +538,21 @@ fn publish_readiness_recommends_one_question() {
         .run(|ctx| {
             assert!(publish_readiness(ctx).expect("publishReadiness").items[0].ok);
         });
+    // Le transport seul, ou une question de l'hôte seule, est une question posée.
+    let mut transport_only = config.clone();
+    transport_only["ask_transport"] = json!(true);
+    let mut custom_only = config;
+    custom_only["custom_questions"] = json!([{ "label": "Draps ?", "type": "yes_no" }]);
+    for only in [transport_only, custom_only] {
+        MockContext::host()
+            .with_property(Property::default())
+            .with_config(&only)
+            .run(|ctx| {
+                let item = &publish_readiness(ctx).expect("publishReadiness").items[0];
+                assert_eq!(item.id, "questions");
+                assert!(item.ok, "{only}");
+            });
+    }
 }
 
 /// Un séjour dont l'entrée est à 16 h (Paris), pour que les créneaux soient les mêmes à chaque

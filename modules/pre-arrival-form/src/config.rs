@@ -340,6 +340,7 @@ impl ModuleConfig {
             || self.ask_guest_count
             || self.ask_special_needs
             || self.ask_id_document
+            || self.ask_transport
             || self.guest_questions().next().is_some()
     }
 }
