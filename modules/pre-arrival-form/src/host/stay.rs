@@ -30,7 +30,7 @@ pub fn render_host_stay(ctx: HostContext) -> Result<Surface> {
     let body = match stay_id {
         None => missing_stay_card(),
         Some(stay_id) => match storage::find_by_stay(stay_id).ok().flatten() {
-            Some(row) => completed_card(&row, &ModuleConfig::load(&ctx)?),
+            Some(row) => completed_card(&row, &ModuleConfig::load(&ctx)?, &ctx),
             None => pending_card(ModuleConfig::load(&ctx)?.reminder),
         },
     };
@@ -73,7 +73,7 @@ fn pending_card(reminder: bool) -> Component {
     )
 }
 
-fn completed_card(row: &PreArrivalResponse, questions: &ModuleConfig) -> Component {
+fn completed_card(row: &PreArrivalResponse, questions: &ModuleConfig, ctx: &Context) -> Component {
     let status = Pill::new()
         .label("i18n:host.stay.status.done")
         .tone(Tone::Success);
@@ -155,6 +155,16 @@ fn completed_card(row: &PreArrivalResponse, questions: &ModuleConfig) -> Compone
             "clipboard",
             "i18n:host.stay.idDocument.label",
             display_or_dash(row.id_document.as_deref()),
+            None,
+        ));
+    }
+
+    // Les questions de l'hôte, telles qu'elles étaient posées au voyageur.
+    for answer in crate::answers::stored(row) {
+        rows.push(detail_row(
+            "info-circle",
+            answer.question.for_ctx(ctx),
+            crate::answers::display(&answer.answer, ctx),
             None,
         ));
     }

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.10.0
+
+Vos propres questions.
+
+* Ajoutez jusqu'à 5 questions au formulaire : oui / non, texte libre ou choix entre 2 à 6 options.
+* Chaque question peut être obligatoire : le voyageur ne peut pas envoyer le formulaire sans y répondre.
+* Le voyageur les voit après les questions habituelles, dans sa langue quand vous l'avez traduite.
+* Ses réponses s'affichent dans la fiche du séjour, avec la question telle qu'elle était posée.
+
 ## 1.9.0
 
 Une limite pour répondre, et une relance.

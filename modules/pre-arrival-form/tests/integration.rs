@@ -702,3 +702,187 @@ fn the_host_is_named_on_the_button_and_in_the_confirmation() {
             assert!(json.contains("Mettre à jour pour Claire"), "{json}");
         });
 }
+
+/// Trois questions de l'hôte : oui / non obligatoire, choix, texte libre — le config tel que le
+/// formulaire du dashboard l'envoie (sous-liste `options`, interrupteur en texte).
+fn custom_questions_config() -> serde_json::Value {
+    json!({
+        "custom_questions": [
+            { "id": "q1", "label": { "fr": "Draps pour le canapé-lit ?", "en": "Sofa bed sheets?" },
+              "type": "yes_no", "required": "true" },
+            { "id": "q2", "label": "Petit-déjeuner ?", "type": "choice",
+              "options": [{ "label": "Sucré" }, { "label": "Salé" }, { "label": "" }] },
+            { "id": "q3", "label": "Votre train ?", "type": "text", "required": false }
+        ]
+    })
+}
+
+#[test]
+#[serial]
+fn custom_questions_are_checked_with_the_spec_messages() {
+    let problems = |config: serde_json::Value| -> Vec<(String, String)> {
+        let config: ModuleConfig = serde_json::from_value(config).expect("config");
+        config
+            .problems()
+            .into_iter()
+            .map(|(field, error)| (field, error.fr))
+            .collect()
+    };
+    assert!(problems(custom_questions_config()).is_empty());
+    assert_eq!(
+        problems(json!({ "custom_questions": [
+            { "label": "  ", "type": "text" },
+            { "label": "Choix ?", "type": "choice", "options": [{ "label": "Un" }] }
+        ]})),
+        [
+            (
+                "custom_questions.0.label".to_string(),
+                "Écrivez la question.".to_string()
+            ),
+            (
+                "custom_questions.1.options".to_string(),
+                "Ajoutez au moins 2 options.".to_string()
+            ),
+        ]
+    );
+    let six: Vec<_> = (0..6)
+        .map(|i| json!({ "label": format!("Q{i}") }))
+        .collect();
+    assert_eq!(
+        problems(json!({ "custom_questions": six })),
+        [(
+            "custom_questions".to_string(),
+            "5 questions au maximum.".to_string()
+        )]
+    );
+
+    // Bloquant à la publication, sous le champ dans le formulaire.
+    MockContext::host()
+        .with_property(Property::default())
+        .with_config(&json!({ "custom_questions": [{ "label": "", "type": "yes_no" }] }))
+        .run(|ctx| {
+            let readiness = publish_readiness(ctx.clone()).expect("publishReadiness");
+            let item = readiness
+                .items
+                .iter()
+                .find(|item| item.id == "config.custom_questions.0.label")
+                .expect("label check");
+            assert!(!item.ok);
+            assert_eq!(item.hint.fr, "Écrivez la question.");
+            let surface = render_host_main(ctx).expect("host main");
+            let json = serde_json::to_string(&surface).expect("json");
+            assert!(json.contains("Écrivez la question."), "{json}");
+        });
+}
+
+#[test]
+#[serial]
+fn host_main_edits_custom_questions() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .with_config(&custom_questions_config())
+        .run(|ctx| {
+            let surface = render_host_main(ctx).expect("host main");
+            // L'heure de fin n'est dessinée qu'avec un pas régulier.
+            config_form::assert_form_matches_config(
+                concat!(env!("OUT_DIR"), "/portaki-emissions"),
+                &surface,
+                &["slots_until"],
+            );
+            assert!(SurfaceAssertions::new(&surface).contains_type("StepList"));
+            let json = serde_json::to_string(&surface).expect("json");
+            assert!(json.contains("custom_questions.0.label"));
+            assert!(json.contains("custom_questions.0.required"));
+            // Les options, seulement pour la question à choix, en sous-liste.
+            assert!(json.contains("custom_questions.1.options.0.label"));
+            assert!(json.contains("Salé"));
+            assert!(!json.contains("custom_questions.0.options"));
+            assert!(!json.contains("custom_questions.2.options"));
+        });
+}
+
+#[test]
+#[serial]
+fn guest_form_asks_the_custom_questions_after_the_standard_ones() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_config(&custom_questions_config())
+        .run(|ctx| {
+            let form = render_guest_form(ctx).expect("guest form");
+            let json = serde_json::to_string(&form).expect("json");
+            for name in ["\"custom0\"", "\"custom1\"", "\"custom2\""] {
+                assert!(json.contains(name), "{name} in {json}");
+            }
+            assert!(json.contains("Draps pour le canapé-lit ?"));
+            assert!(json.contains("form.custom.yes"));
+            assert!(json.contains("Sucré"));
+            // L'option vide ne devient pas une pastille.
+            assert!(!json.contains("\"value\":\"2\""), "{json}");
+            // Après les questions standard, avant le message à l'hôte.
+            let standard = json.find("guestOccasion").expect("occasion");
+            let custom = json.find("\"custom0\"").expect("custom0");
+            let message = json.find("messageToHost").expect("message");
+            assert!(standard < custom && custom < message);
+            // La première est obligatoire.
+            let first = &json[custom.saturating_sub(300)..custom + 300];
+            assert!(first.contains("\"required\":true"), "{first}");
+        });
+}
+
+#[test]
+#[serial]
+fn custom_answers_are_kept_and_shown_on_the_stay() {
+    reset_test_store();
+    let stay_id = Uuid::parse_str("33333333-3333-3333-3333-333333333333").expect("uuid");
+
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_config(&custom_questions_config())
+        .run(|mut ctx| {
+            if let Some(guest) = ctx.guest.as_mut() {
+                guest.session_id = stay_id;
+            }
+            // Obligatoire sans réponse : refusé.
+            let refused = submit(ctx.clone(), sample_submit()).expect_err("required");
+            assert!(refused.to_string().contains("custom_answer_required"));
+            submit(
+                ctx.clone(),
+                SubmitArgs {
+                    custom0: Some("yes".into()),
+                    custom1: Some("1".into()),
+                    custom2: Some("TGV de 18 h 04".into()),
+                    ..sample_submit()
+                },
+            )
+            .expect("submit");
+            // Rouvert, le formulaire revient rempli.
+            let form = render_guest_form(ctx).expect("guest form");
+            let json = serde_json::to_string(&form).expect("json");
+            assert!(json.contains("TGV de 18 h 04"), "{json}");
+        });
+
+    MockContext::host()
+        .with_property(Property::default())
+        .with_config(&custom_questions_config())
+        .run(|mut ctx| {
+            ctx.input = json!({ "stayId": stay_id.to_string() });
+            let surface = render_host_stay(ctx).expect("host stay");
+            let json = serde_json::to_string(&surface).expect("json");
+            assert!(json.contains("Draps pour le canapé-lit ?"), "{json}");
+            assert!(json.contains("form.custom.yes"));
+            assert!(json.contains("Petit-déjeuner ?"));
+            assert!(json.contains("Salé"));
+            assert!(json.contains("TGV de 18 h 04"));
+        });
+
+    // La question retirée depuis : la réponse reste lisible, avec la question posée.
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|mut ctx| {
+            ctx.input = json!({ "stayId": stay_id.to_string() });
+            let json = serde_json::to_string(&render_host_stay(ctx).expect("stay")).expect("json");
+            assert!(json.contains("Petit-déjeuner ?"));
+        });
+}

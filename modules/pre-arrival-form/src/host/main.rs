@@ -4,12 +4,17 @@
 //! Save chrome is owned by the workspace tab; the platform stores the declared config.
 
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
-    Card, ChoiceList, Field, FieldHint, Form, Grid, Page, Select, Stack, TextInput, ToggleRow,
+    Card, ChoiceList, Field, FieldHint, Form, Grid, Page, Select, Stack, StepList, TextInput,
+    ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{Deadline, ModuleConfig, ShowWhen, DEFAULT_SLOTS_UNTIL};
+use crate::config::{
+    Deadline, ModuleConfig, QuestionKind, ShowWhen, DEFAULT_SLOTS_UNTIL, MAX_CUSTOM_QUESTIONS,
+    MAX_OPTIONS, MIN_OPTIONS,
+};
 
 /// Host main — editable pre-arrival timing + question toggles.
 #[portaki_sdk::surface(
@@ -41,6 +46,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
                 .children(question_toggle_rows(&config))
                 .into()])
             .into(),
+        custom_questions_card(&config, &ctx),
         reminder_card(&config),
     ];
 
@@ -88,7 +94,7 @@ fn slots_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         let mut until = Field::new()
             .name("slots_until")
             .label("i18n:host.slots.until");
-        if let Some((_, error)) = config.problems().into_iter().next() {
+        if let Some(error) = config.error_of("slots_until") {
             until = until.error(error.get(&ctx.locale).to_string());
         }
         card = card.child(
@@ -101,6 +107,135 @@ fn slots_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         );
     }
     card.into()
+}
+
+/// §2.2 « Vos questions » : 5 au plus, en lignes que l'hôte ajoute et retire.
+fn custom_questions_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let stored = config.custom_questions.len();
+    let count = match ctx.input_u64("custom_questions_count") {
+        Some(asked) => (asked as usize).min(MAX_CUSTOM_QUESTIONS),
+        // Une ligne de trop reste affichée, avec son erreur : le formulaire ne la retire pas.
+        None => stored,
+    }
+    .max(stored);
+    let rows: Vec<Component> = (0..count)
+        .map(|index| custom_question_row(index, config, ctx))
+        .collect();
+    let mut list = Field::new().name("custom_questions");
+    if let Some(error) = config.error_of("custom_questions") {
+        list = list.error(error.get(&ctx.locale).to_string());
+    }
+    Card::new()
+        .title("i18n:host.custom.title")
+        .subtitle("i18n:host.custom.help")
+        .icon(IconName::Clipboard)
+        .child(
+            list.child(
+                StepList::new()
+                    .addLabel("i18n:host.custom.add")
+                    .removeLabel("i18n:host.custom.remove")
+                    .emptyTitle("i18n:host.custom.emptyTitle")
+                    .emptyDescription("i18n:host.custom.help")
+                    .itemKeyPrefix("custom_questions")
+                    .addAction(Action::emit(
+                        contracts::shell::SURFACE_INPUT,
+                        Some(serde_json::json!({
+                            "custom_questions_count": (count + 1).min(MAX_CUSTOM_QUESTIONS)
+                        })),
+                    ))
+                    .children(rows),
+            ),
+        )
+        .into()
+}
+
+/// Une question : son libellé, ce qu'elle attend, ses options si c'est un choix, et si elle est
+/// obligatoire.
+fn custom_question_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let question = config.custom_questions.get(index);
+    let key = |name: &str| format!("custom_questions.{index}.{name}");
+    let with_error = |field: Field, name: &str| match config.error_of(name) {
+        Some(error) => field.error(error.get(&ctx.locale).to_string()),
+        None => field,
+    };
+    let kind = ctx
+        .input_str(&key("type"))
+        .and_then(|raw| serde_json::from_value(serde_json::Value::from(raw)).ok())
+        .or(question.map(|q| q.kind))
+        .unwrap_or_default();
+
+    let mut children: Vec<Component> = vec![
+        sdui::row_id("custom_questions", index, question.map(|q| q.id.as_str())),
+        with_error(Field::new().name(key("label")), &key("label"))
+            .label("i18n:host.custom.label")
+            .required(true)
+            .child(
+                TextInput::new()
+                    .name(key("label"))
+                    .value(
+                        question
+                            .map(|q| q.label.host_value(ctx))
+                            .unwrap_or_default(),
+                    )
+                    .placeholder("i18n:host.custom.label.placeholder"),
+            )
+            .into(),
+        Field::new()
+            .name(key("type"))
+            .label("i18n:host.custom.type")
+            .child(
+                Select::new()
+                    .name(key("type"))
+                    .options(
+                        QuestionKind::WIRE_VALUES
+                            .iter()
+                            .map(|wire| {
+                                ChoiceOption::new(*wire, format!("i18n:host.custom.type.{wire}"))
+                            })
+                            .collect(),
+                    )
+                    .value(kind.as_wire()),
+            )
+            .into(),
+    ];
+    if kind == QuestionKind::Choice {
+        let options = question.map(|q| q.options.as_slice()).unwrap_or_default();
+        let slots = (options.len() + 1)
+            .clamp(MIN_OPTIONS, MAX_OPTIONS)
+            .max(options.len());
+        let inputs: Vec<Component> = (0..slots)
+            .map(|option| {
+                let name = format!("custom_questions.{index}.options.{option}.label");
+                TextInput::new()
+                    .name(name)
+                    .value(
+                        options
+                            .get(option)
+                            .map(|o| o.label.host_value(ctx))
+                            .unwrap_or_default(),
+                    )
+                    .into()
+            })
+            .collect();
+        children.push(
+            with_error(Field::new().name(key("options")), &key("options"))
+                .label("i18n:host.custom.options")
+                .child(Stack::new().gap(6.0).children(inputs))
+                .into(),
+        );
+    }
+    children.push(
+        ToggleRow::new()
+            .name(key("required"))
+            .label("i18n:host.custom.required")
+            .checked(question.is_some_and(|q| q.required))
+            .into(),
+    );
+    Stack::new()
+        .id(format!("custom-question-{index}"))
+        .gap(10.0)
+        .children(children)
+        .into()
 }
 
 /// §2.3 Envoi et relances : la limite, et l'e-mail de la veille.
