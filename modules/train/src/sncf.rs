@@ -127,6 +127,17 @@ struct StopArea {
     id: Option<String>,
     #[serde(default)]
     name: Option<String>,
+    /// Navitia écrit les coordonnées en chaînes : `{ "lat": "43.58", "lon": "7.12" }`.
+    #[serde(default)]
+    coord: Option<Coord>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct Coord {
+    #[serde(default)]
+    lat: Option<String>,
+    #[serde(default)]
+    lon: Option<String>,
 }
 
 /// `/departures` et `/arrivals` ont la même forme, sous deux noms.
@@ -174,12 +185,17 @@ struct DisplayInformations {
     commercial_mode: Option<String>,
 }
 
-/// La gare résolue : son identifiant Navitia et le nom que Navitia lui donne.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// La gare résolue : son identifiant Navitia, le nom que Navitia lui donne, et où elle est.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Station {
     pub id: String,
     /// Le nom officiel, qui vaut mieux que celui tapé par l'hôte sur l'écran du voyageur.
     pub label: String,
+    /// Où est la gare, pour le temps d'accès ; absent d'une gare mise en cache avant lui.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lat: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lng: Option<f64>,
 }
 
 /// Une ligne du tableau, telle que le livret la dessine.
@@ -449,7 +465,8 @@ pub fn split_navitia_datetime(raw: &str) -> Option<(String, String)> {
 }
 
 /// La gare de l'hôte, résolue puis gardée.
-fn station(name: &str) -> std::result::Result<Station, BoardError> {
+/// La gare que l'hôte a nommée, résolue (et gardée en cache) — ou pourquoi elle ne l'est pas.
+pub fn station(name: &str) -> std::result::Result<Station, BoardError> {
     let name = name.trim();
     if name.is_empty() {
         return Err(BoardError::NoStation);
@@ -494,9 +511,13 @@ fn first_station(response: &PlacesResponse) -> Option<Station> {
             .map(str::trim)
             .filter(|name| !name.is_empty())
             .unwrap_or(id);
+        let coord = area.and_then(|a| a.coord.as_ref());
+        let parse = |raw: Option<&String>| raw.and_then(|v| v.trim().parse::<f64>().ok());
         Some(Station {
             id: id.to_string(),
             label: label.to_string(),
+            lat: coord.and_then(|c| parse(c.lat.as_ref())),
+            lng: coord.and_then(|c| parse(c.lon.as_ref())),
         })
     })
 }

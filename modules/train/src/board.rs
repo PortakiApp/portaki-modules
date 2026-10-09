@@ -25,6 +25,8 @@ pub struct BoardView {
     pub today: Option<String>,
     /// La phrase que l'hôte a écrite sous le tableau.
     pub note: String,
+    /// Le temps d'accès à la gare depuis le logement, quand les deux sont placés.
+    pub access: Option<crate::access::Access>,
     /// Les minutes écoulées depuis la lecture du tableau — `0` quand il vient d'être lu.
     pub read_min_ago: i64,
 }
@@ -52,14 +54,24 @@ pub fn load(
     }
     let (station, all, read_at) = sncf::board(station_name, way)?;
 
-    let destinations = distinct_destinations(&all);
+    // Les destinations de l'hôte d'abord (spec §2.2), puis celles du tableau qui n'y sont pas.
+    let mut destinations = config.proposed_destinations();
+    for destination in distinct_destinations(&all) {
+        if !destinations
+            .iter()
+            .any(|d| d.eq_ignore_ascii_case(&destination))
+        {
+            destinations.push(destination);
+        }
+    }
     let stops = match destination {
         ALL_STATIONS | "" => all,
         wanted => all
             .into_iter()
-            .filter(|stop| stop.direction.eq_ignore_ascii_case(wanted))
+            .filter(|stop| serves(stop, wanted))
             .collect(),
     };
+    let access = crate::access::access(&station, ctx.property.coordinates);
 
     Ok(BoardView {
         station,
@@ -67,8 +79,16 @@ pub fn load(
         destinations,
         today: Some(local_date(ctx, now).to_string()),
         note: config.note.get(&ctx.locale).trim().to_string(),
+        access,
         read_min_ago: ((now.timestamp() - read_at).max(0)) / 60,
     })
+}
+
+/// Ce train va-t-il vers `wanted` ? Le nom du tableau (« Nice-Ville ») ou un nom que l'hôte a
+/// proposé et qu'il contient (« Nice ») — sans casse.
+fn serves(stop: &Stop, wanted: &str) -> bool {
+    let (direction, wanted) = (stop.direction.to_lowercase(), wanted.trim().to_lowercase());
+    direction == wanted || direction.contains(&wanted)
 }
 
 /// Les destinations du tableau, dans l'ordre où elles y apparaissent — c'est celui de la
@@ -166,9 +186,12 @@ mod tests {
             station: Station {
                 id: "stop_area:SNCF:87756056".to_string(),
                 label: "Antibes".to_string(),
+                lat: None,
+                lng: None,
             },
             stops: Vec::new(),
             destinations: Vec::new(),
+            access: None,
             today: Some("2026-10-04".to_string()),
             note: String::new(),
             read_min_ago: 0,
@@ -194,9 +217,12 @@ mod tests {
             station: Station {
                 id: "x".to_string(),
                 label: "Antibes".to_string(),
+                lat: None,
+                lng: None,
             },
             stops: vec![one.clone(), stop("Cannes", "08:20", "2026-10-04")],
             destinations: Vec::new(),
+            access: None,
             today: None,
             note: String::new(),
             read_min_ago: 0,
@@ -204,5 +230,23 @@ mod tests {
         assert_eq!(stop_by_route_id(&view, &id), Some(one));
         assert_eq!(stop_by_route_id(&view, "20261004-2359-ter-2359"), None);
         assert_eq!(stop_by_route_id(&view, ""), None);
+    }
+
+    /// Une destination proposée par l'hôte (« Nice ») trouve le train du tableau (« Nice-Ville »).
+    #[test]
+    fn a_proposed_destination_matches_the_board_name_it_is_part_of() {
+        let stop = |direction: &str| Stop {
+            time: "08:00".into(),
+            date: "2026-08-24".into(),
+            direction: direction.into(),
+            headsign: None,
+            mode: None,
+            network: None,
+            realtime: false,
+            delay_min: None,
+        };
+        assert!(serves(&stop("Nice-Ville"), "nice"));
+        assert!(serves(&stop("Nice-Ville"), "Nice-Ville"));
+        assert!(!serves(&stop("Cannes"), "Nice"));
     }
 }
