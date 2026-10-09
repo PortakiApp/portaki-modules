@@ -1,14 +1,19 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
+use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Serialize};
 
-/// Combien d'itinéraires le formulaire accepte.
+/// Combien d'itinéraires la configuration accepte (spec Randonnées §2.1).
 ///
-/// Douze : un hôte de montagne en a plus que six, et la liste est déjà groupée par niveau, donc
-/// elle se lit à douze. Au-delà de huit, le §2.23 veut un filtre par niveau en tête — il n'est pas
-/// dans cette v1, et la borne reste basse pour que son absence ne se voie pas.
-pub const MAX_TRAILS: usize = 12;
+/// ponytail: au-delà de huit, la spec veut un filtre par niveau en tête de la carte du voyageur ;
+/// la liste reste groupée par niveau en attendant.
+pub const MAX_TRAILS: usize = 30;
+
+/// Les bornes des mesures (§2.1).
+pub const DURATION_MIN: (f64, f64) = (5.0, 1_440.0);
+pub const DISTANCE_KM: (f64, f64) = (0.1, 100.0);
+pub const ELEVATION_M: (f64, f64) = (0.0, 5_000.0);
 
 /// Les trois niveaux, figés et traduits (§2.23). Pas de texte libre : « assez sportif » ne se
 /// compare à rien, et un niveau sert à choisir entre deux randonnées.
@@ -18,8 +23,8 @@ pub const MAX_TRAILS: usize = 12;
 /// d'orange ni de rouge.
 pub const LEVELS: &[&str] = &["easy", "moderate", "hard"];
 
-/// Boucle ou aller-retour. Deux valeurs, parce qu'un sentier est l'un ou l'autre.
-pub const SHAPES: &[&str] = &["loop", "round_trip"];
+/// Boucle, aller-retour ou aller simple (un retour à prévoir).
+pub const SHAPES: &[&str] = &["loop", "round_trip", "one_way"];
 
 /// Au-delà, le départ n'est plus « devant le logement » : la fiche propose un itinéraire.
 pub const FAR_START_METRES: f64 = 1_000.0;
@@ -43,6 +48,82 @@ pub struct ModuleConfig {
 }
 
 impl ModuleConfig {
+    /// Ce qui ne va pas, champ par champ (`trails.<i>.title`…) — sous le champ dans le
+    /// formulaire, et dans `publishReadiness`. Le départ sans position avertit sans bloquer.
+    pub fn problems(&self) -> Vec<(String, I18nText)> {
+        let text = crate::i18n::text;
+        let mut problems: Vec<(String, I18nText)> = Vec::new();
+        if let Some(error) = check::https_url(self.commune_url.trim()) {
+            problems.push(("commune_url".into(), error));
+        }
+        let filled = self.trails.iter().filter(|t| !t.is_blank()).count();
+        if filled > MAX_TRAILS {
+            problems.push(("trails".into(), text("host.trails.tooMany")));
+        }
+        let out_of = |value: Option<f64>, (min, max): (f64, f64)| {
+            value.is_some_and(|v| !(min..=max).contains(&v))
+        };
+        for (index, trail) in self.trails.iter().enumerate() {
+            if trail.is_blank() {
+                continue;
+            }
+            let title = if trail.title.is_blank() {
+                Some(text("host.trails.title.required"))
+            } else {
+                trail
+                    .title
+                    .by_language()
+                    .find_map(|(_, title)| check::max_chars(title, 60))
+            };
+            for (key, error) in [
+                ("title", title),
+                (
+                    "level",
+                    trail
+                        .level_key()
+                        .is_none()
+                        .then(|| text("host.trails.level.required")),
+                ),
+                (
+                    "duration_min",
+                    out_of(trail.duration_min, DURATION_MIN)
+                        .then(|| text("host.trails.duration.range")),
+                ),
+                (
+                    "distance_km",
+                    out_of(trail.distance_km, DISTANCE_KM)
+                        .then(|| text("host.trails.distance.range")),
+                ),
+                (
+                    "elevation_m",
+                    out_of(trail.elevation_m, ELEVATION_M)
+                        .then(|| text("host.trails.elevation.range")),
+                ),
+                ("link_url", check::https_url(trail.link_url.trim())),
+                (
+                    "description",
+                    trail
+                        .description
+                        .by_language()
+                        .find_map(|(_, text)| check::max_chars(text, 1_200)),
+                ),
+            ] {
+                if let Some(error) = error {
+                    problems.push((format!("trails.{index}.{key}"), error));
+                }
+            }
+        }
+        problems
+    }
+
+    /// Le message à afficher sous `field`, s'il y en a un.
+    pub fn error_of(&self, field: &str) -> Option<I18nText> {
+        self.problems()
+            .into_iter()
+            .find(|(name, _)| name == field)
+            .map(|(_, error)| error)
+    }
+
     /// Les itinéraires que le voyageur voit, dans l'ordre du formulaire.
     pub fn parse_trails(&self) -> Vec<TrailRow> {
         self.trails
@@ -328,5 +409,28 @@ mod tests {
             ..TrailRow::default()
         };
         assert_eq!(loop_row.shape_key(), Some("loop"));
+    }
+
+    /// Les bornes de la spec, sur la ligne et le champ qui les dépassent ; une ligne vide n'a rien.
+    #[test]
+    fn problems_name_their_field() {
+        let config: ModuleConfig = serde_json::from_value(serde_json::json!({
+            "commune_url": "visorando.com",
+            "trails": [
+                { "title": "" },
+                { "title": "Garoupe", "level": "easy", "duration_min": 2, "distance_km": 150,
+                  "elevation_m": 120, "link_url": "https://www.visorando.com/x" }
+            ]
+        }))
+        .unwrap();
+        let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
+        assert_eq!(
+            fields,
+            [
+                "commune_url",
+                "trails.1.duration_min",
+                "trails.1.distance_km"
+            ]
+        );
     }
 }
