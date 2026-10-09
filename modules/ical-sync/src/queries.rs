@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::{CalendarFormat, ModuleConfig};
 use crate::email_send;
-use crate::ics::{parse_stay_rows, FeedParseContext, StayImportRow};
+use crate::ics::{is_calendar, parse_stay_rows, FeedParseContext, StayImportRow};
 use crate::sync_state::{self, SyncDiff};
 
 const MAX_EVENTS: usize = 200;
@@ -130,15 +130,17 @@ pub fn apply_feeds(ctx: Context, args: ApplyFeedsArgs) -> Result<ApplyFeedsRespo
     let mut failed_feeds: Vec<(String, CalendarFormat, Option<String>)> = Vec::new();
     // First successful feed format — used as source hint for single-stay emails.
     let mut primary_source: Option<(CalendarFormat, Option<String>)> = None;
+    let mut outcomes: Vec<(&str, bool)> = Vec::new();
 
     for feed in &args.feeds {
         let parse_context = resolve_parse_context(feed, &config);
         let format = parse_context.format;
         let feed_label = config.feed_for_id(&feed.id).and_then(|c| c.label.clone());
 
-        if feed.ics_body.trim().is_empty() {
+        if !is_calendar(&feed.ics_body) {
             failed += 1;
             failed_feeds.push((feed.id.clone(), format, feed_label));
+            outcomes.push((&feed.id, false));
             continue;
         }
         let remaining = MAX_EVENTS.saturating_sub(rows.len());
@@ -149,6 +151,7 @@ pub fn apply_feeds(ctx: Context, args: ApplyFeedsArgs) -> Result<ApplyFeedsRespo
         // Non-empty body = fetch ok. Zero stays can mean “only blocks” — not a failure.
         items_total += parsed.len() as i32;
         succeeded += 1;
+        outcomes.push((&feed.id, true));
         if primary_source.is_none() {
             primary_source = Some((format, feed_label));
         }
@@ -186,6 +189,9 @@ pub fn apply_feeds(ctx: Context, args: ApplyFeedsArgs) -> Result<ApplyFeedsRespo
     }
     if !now.is_empty() {
         next.last_run_at = Some(now.clone());
+        for (id, ok) in outcomes {
+            next.record_feed(id, ok, &now);
+        }
     }
     next.summary = Some(summary.clone());
     let _ = sync_state::save_sync_state(&next);
@@ -309,21 +315,31 @@ fn resolve_feed_format(feed: &FeedBody, config: &ModuleConfig) -> CalendarFormat
         .unwrap_or_else(|| config.format_for_id(&feed.id))
 }
 
-/// Ce qui bloque la publication : un lien qui n'est pas https, un nom trop long — chacun sur son
-/// champ (`config.calendars.<i>.<clé>`). Aucun calendrier : la plateforme avertit déjà
-/// (`recommended`).
+/// Ce qui bloque la publication : aucun calendrier, un lien qui n'est pas https, un nom trop long —
+/// chacun sur son champ (`config.calendars[.<i>.<clé>]`). Un flux que la synchro n'a pu lire trois
+/// fois de suite est signalé sans bloquer : le lien a pu marcher, il peut revenir.
 #[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
 pub fn publish_readiness(
     ctx: Context,
 ) -> Result<portaki_sdk::contracts::publish::PublishReadiness> {
     use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
     let config = ModuleConfig::load(&ctx)?;
-    let items = config
+    let state = sync_state::load_sync_state().unwrap_or_default();
+    let blocking = config
         .problems()
         .into_iter()
-        .map(|(field, error)| PublishCheck {
+        .map(|problem| (problem, PublishLevel::Required));
+    let warnings = config
+        .sync_problems(&state)
+        .into_iter()
+        .map(|problem| (problem, PublishLevel::Recommended));
+    let items = blocking
+        .chain(warnings)
+        .map(|((field, error), level)| PublishCheck {
             label: crate::i18n::text(
-                if field.ends_with(".url") {
+                if field == "calendars" {
+                    "host.calendars.label"
+                } else if field.ends_with(".url") {
                     "host.calendar.url"
                 } else {
                     "host.calendar.label"
@@ -331,10 +347,70 @@ pub fn publish_readiness(
                 &[],
             ),
             id: format!("config.{field}"),
-            level: PublishLevel::Required,
+            level,
             ok: false,
             hint: error,
         })
         .collect();
     Ok(PublishReadiness { items })
+}
+
+#[cfg(test)]
+mod tests {
+    use portaki_sdk::contracts::publish::PublishLevel;
+    use portaki_test_utils::MockContext;
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    #[serial_test::serial]
+    fn no_calendar_blocks_the_publication() {
+        MockContext::host()
+            .with_config(&json!({ "calendars": [] }))
+            .run(|ctx| {
+                let items = publish_readiness(ctx).unwrap().items;
+                assert_eq!(items.len(), 1);
+                assert_eq!(items[0].id, "config.calendars");
+                assert_eq!(items[0].level, PublishLevel::Required);
+                assert_eq!(items[0].hint.fr, "Ajoutez au moins un calendrier.");
+            });
+    }
+
+    /// Une page HTML servie en 200 est un échec de lecture ; au troisième de suite, le lien est
+    /// signalé sans bloquer la publication.
+    #[test]
+    #[serial_test::serial]
+    fn a_feed_serving_html_three_times_is_flagged_not_blocking() {
+        MockContext::host()
+            .with_config(&json!({ "calendars": [
+                { "id": "booking", "url": "https://admin.booking.com/hotel/ical.html?t=x", "channel": "booking" }
+            ]}))
+            .run(|ctx| {
+                let html = FeedBody {
+                    id: "booking".into(),
+                    provider: None,
+                    ics_body: "<!doctype html><html><body>Connexion</body></html>".into(),
+                };
+                for _ in 0..3 {
+                    let result = apply_feeds(
+                        ctx.clone(),
+                        ApplyFeedsArgs {
+                            guest_lang: "fr".into(),
+                            feeds: vec![html.clone()],
+                        },
+                    )
+                    .unwrap();
+                    assert_eq!(result.failed, 1);
+                }
+                let items = publish_readiness(ctx).unwrap().items;
+                assert_eq!(items.len(), 1);
+                assert_eq!(items[0].id, "config.calendars.0.url");
+                assert_eq!(items[0].level, PublishLevel::Recommended);
+                assert_eq!(
+                    items[0].hint.fr,
+                    "Ce lien ne renvoie pas un calendrier .ics valide."
+                );
+            });
+    }
 }

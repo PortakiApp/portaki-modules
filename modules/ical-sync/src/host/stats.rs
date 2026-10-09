@@ -187,7 +187,7 @@ fn period_days(ctx: &HostContext) -> i64 {
     }
 }
 
-fn parse(raw: &str) -> Option<DateTime<Utc>> {
+pub(super) fn parse(raw: &str) -> Option<DateTime<Utc>> {
     DateTime::parse_from_rfc3339(raw)
         .ok()
         .map(|at| at.with_timezone(&Utc))

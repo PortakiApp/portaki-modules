@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use crate::channel;
+use crate::sync_state::{SyncState, FEED_ERROR_RUNS};
 
 /// Combien de calendriers un logement relève (spec Calendriers §2.1).
 pub const CALENDAR_SLOTS: usize = 10;
@@ -191,11 +192,18 @@ impl ModuleConfig {
             .collect()
     }
 
-    /// Ce qui ne va pas, par flux (`calendars.<i>.url`…) — sous le champ dans le formulaire, et
-    /// dans `publishReadiness`.
+    /// Ce qui ne va pas, sur la liste (`calendars`) ou par flux (`calendars.<i>.url`…) — sous le
+    /// champ dans le formulaire, et dans `publishReadiness`.
     pub fn problems(&self) -> Vec<(String, I18nText)> {
         use portaki_sdk::config::check;
         let mut problems = Vec::new();
+        // Un flux suspendu compte : il existe, l'hôte l'a ajouté.
+        if self.calendars.is_empty() {
+            problems.push((
+                "calendars".to_string(),
+                crate::i18n::text("host.calendars.required", &[]),
+            ));
+        }
         for (index, feed) in self.calendars.iter().enumerate() {
             let label = feed.label.as_deref().unwrap_or_default();
             for (key, error) in [
@@ -210,12 +218,25 @@ impl ModuleConfig {
         problems
     }
 
-    /// Le message à afficher sous `field`, s'il y en a un.
-    pub fn error_of(&self, field: &str) -> Option<I18nText> {
-        self.problems()
-            .into_iter()
-            .find(|(name, _)| name == field)
-            .map(|(_, error)| error)
+    /// Les flux que la synchro n'a pu lire [`FEED_ERROR_RUNS`] fois de suite (§3) : le module ne
+    /// relève pas le lien lui-même, il dit ce que la plateforme lui a rapporté.
+    pub fn sync_problems(&self, state: &SyncState) -> Vec<(String, I18nText)> {
+        self.calendars
+            .iter()
+            .enumerate()
+            .filter(|(_, feed)| {
+                state
+                    .feed_failures
+                    .get(&feed.id)
+                    .is_some_and(|failure| failure.count >= FEED_ERROR_RUNS)
+            })
+            .map(|(index, _)| {
+                (
+                    format!("calendars.{index}.url"),
+                    crate::i18n::text("host.calendar.url.unreachable", &[]),
+                )
+            })
+            .collect()
     }
 
     pub fn has_any_feed(&self) -> bool {
@@ -249,7 +270,7 @@ fn trim_url(raw: &str) -> Option<&str> {
     }
 }
 
-fn feeds(rows: &[CalendarRow]) -> Vec<CalendarFeed> {
+pub(crate) fn feeds(rows: &[CalendarRow]) -> Vec<CalendarFeed> {
     rows.iter()
         .take(CALENDAR_SLOTS)
         .enumerate()
@@ -614,5 +635,45 @@ mod tests {
         assert_eq!(config.connected_calendars().len(), 1);
         let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
         assert_eq!(fields, ["calendars.1.url"]);
+    }
+
+    #[test]
+    fn no_calendar_at_all_is_a_problem_on_the_list() {
+        let config = ModuleConfig::default();
+        let problems = config.problems();
+        assert_eq!(problems.len(), 1);
+        assert_eq!(problems[0].0, "calendars");
+        assert_eq!(problems[0].1.fr, "Ajoutez au moins un calendrier.");
+    }
+
+    #[test]
+    fn a_feed_failing_three_runs_in_a_row_is_flagged_on_its_link() {
+        let config = ModuleConfig {
+            calendars: feeds(&[
+                CalendarRow {
+                    id: "airbnb".into(),
+                    url: "https://www.airbnb.com/calendar/ical/1.ics".into(),
+                    ..CalendarRow::default()
+                },
+                CalendarRow {
+                    id: "booking".into(),
+                    url: "https://admin.booking.com/hotel/ical.html?t=x".into(),
+                    ..CalendarRow::default()
+                },
+            ]),
+        };
+        let mut state = SyncState::default();
+        for _ in 0..FEED_ERROR_RUNS - 1 {
+            state.record_feed("booking", false, "2026-08-01T06:00:00Z");
+        }
+        assert!(config.sync_problems(&state).is_empty());
+        state.record_feed("booking", false, "2026-08-01T12:00:00Z");
+        let problems = config.sync_problems(&state);
+        assert_eq!(problems.len(), 1);
+        assert_eq!(problems[0].0, "calendars.1.url");
+        assert_eq!(
+            problems[0].1.fr,
+            "Ce lien ne renvoie pas un calendrier .ics valide."
+        );
     }
 }

@@ -37,6 +37,15 @@ struct VEvent {
     dtend: Option<DateTime<Utc>>,
 }
 
+/// The body reads as an iCalendar file: an HTML error page or a login wall served with a 200
+/// does not, and is a failed read rather than a calendar with no stays.
+pub fn is_calendar(body: &str) -> bool {
+    body.lines().any(|line| {
+        let line = line.trim();
+        line.eq_ignore_ascii_case("BEGIN:VCALENDAR") || line.eq_ignore_ascii_case("BEGIN:VEVENT")
+    })
+}
+
 /// Parse ICS text into stay import rows (max `limit`) for one configured feed.
 pub fn parse_stay_rows(
     ics_body: &str,
@@ -604,6 +613,15 @@ DTEND;VALUE=DATE:20260904\nSUMMARY:Family week\nEND:VEVENT\n";
         let rows = parse_stay_rows(ics, "en", 10, &shape(CalendarFormat::Generic));
         assert_eq!(rows.len(), 1);
         assert_eq!(rows[0].guest_name, "Family week");
+    }
+
+    #[test]
+    fn an_html_page_is_not_a_calendar() {
+        assert!(is_calendar("BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n"));
+        assert!(!is_calendar(
+            "<!doctype html><html><body>Sign in</body></html>"
+        ));
+        assert!(!is_calendar(""));
     }
 
     #[test]

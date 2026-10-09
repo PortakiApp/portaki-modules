@@ -9,15 +9,17 @@ mod i18n;
 mod ics;
 mod queries;
 mod sync_state;
+mod tasks;
 
 pub use channel::{detect as detect_channel, DetectedChannel, FeedChannelSignals};
 pub use config::{CalendarFeed, CalendarFormat, CalendarRow, Config, ModuleConfig, CALENDAR_SLOTS};
-pub use host::{render_host_main, render_host_stats, stats_summary};
+pub use host::{render_host_main, render_host_stats, render_host_stay, stats_summary};
 pub use ics::{parse_stay_rows, FeedParseContext, StayImportRow};
 pub use queries::{
     apply_feeds, list_sources, ApplyFeedsArgs, ApplyFeedsResponse, FeedBody, FeedSource,
     ListSourcesResponse,
 };
+pub use tasks::timeline_tasks;
 
 portaki_sdk::portaki_module!(
     id = "ical-sync",

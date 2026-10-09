@@ -12,9 +12,18 @@ use crate::config::{CalendarFeed, ModuleConfig, CALENDAR_SLOTS};
 use crate::sync_state::load_sync_state;
 
 mod stats;
+mod stay;
 
 pub use stats::{render_host_stats, stats_summary};
+pub use stay::render_host_stay;
 
+// « Conflit de dates », « Flux … injoignable depuis 2 j » dans À venir : `crate::tasks`.
+#[portaki_sdk::nav(
+    placement = HostPlacement::WorkspaceTimelineTask,
+    path = "tasks",
+    label_key = "catalog.host.tasks",
+    icon = IconName::DangerTriangle
+)]
 #[portaki_sdk::surface(
     host,
     id = "main",
@@ -38,10 +47,25 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
         .filter(|s| !s.trim().is_empty())
         .unwrap_or_else(|| "i18n:host.status.emptySummary".to_string());
 
+    // Sous chaque champ : ce que bloque la publication, puis un flux que la synchro ne lit plus.
+    let mut problems = config.problems();
+    problems.extend(config.sync_problems(&state));
+    let error_of = |name: &str| {
+        problems
+            .iter()
+            .find(|(field, _)| field == name)
+            .map(|(_, error)| error.get(&ctx.locale).to_string())
+    };
+
     let mut calendar_rows: Vec<Component> = Vec::new();
     for index in 0..calendars_count {
         let feed = config.calendars.get(index);
-        calendar_rows.push(calendar_row(index, feed, &config, &ctx));
+        calendar_rows.push(calendar_row(index, feed, &error_of));
+    }
+    // « Ajoutez au moins un calendrier. » sous la liste.
+    let mut calendars_field = Field::new().name("calendars");
+    if let Some(error) = error_of("calendars") {
+        calendars_field = calendars_field.error(error);
     }
 
     let form_children: Vec<Component> = vec![
@@ -53,18 +77,21 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
             .title("i18n:host.section.feeds")
             .subtitle("i18n:host.section.feeds.help")
             .icon(IconName::Calendar)
-            .children(vec![StepList::new()
-                .label("i18n:host.calendars.label")
-                .hint("i18n:host.calendars.hint")
-                .emptyTitle("i18n:host.calendars.emptyTitle")
-                .emptyDescription("i18n:host.calendars.emptyDescription")
-                .addLabel("i18n:host.calendars.add")
-                .removeLabel("i18n:host.calendars.remove")
-                .itemKeyPrefix("calendars")
-                .addAction(emit_input(CalendarsCountInput {
-                    calendars_count: (calendars_count + 1).min(CALENDAR_SLOTS),
-                }))
-                .children(calendar_rows)
+            .children(vec![calendars_field
+                .child(
+                    StepList::new()
+                        .label("i18n:host.calendars.label")
+                        .hint("i18n:host.calendars.hint")
+                        .emptyTitle("i18n:host.calendars.emptyTitle")
+                        .emptyDescription("i18n:host.calendars.emptyDescription")
+                        .addLabel("i18n:host.calendars.add")
+                        .removeLabel("i18n:host.calendars.remove")
+                        .itemKeyPrefix("calendars")
+                        .addAction(emit_input(CalendarsCountInput {
+                            calendars_count: (calendars_count + 1).min(CALENDAR_SLOTS),
+                        }))
+                        .children(calendar_rows),
+                )
                 .into()])
             .into(),
         Card::new()
@@ -118,15 +145,14 @@ fn emit_input(payload: impl Serialize) -> Action {
 fn calendar_row(
     index: usize,
     feed: Option<&CalendarFeed>,
-    config: &ModuleConfig,
-    ctx: &HostContext,
+    error_of: &dyn Fn(&str) -> Option<String>,
 ) -> Component {
     // Le champ, avec le message de `problems` sous lui s'il y en a un.
     let named = |key: &str| {
         let name = format!("calendars.{index}.{key}");
         let field = Field::new().name(name.clone());
-        match config.error_of(&name) {
-            Some(error) => field.error(error.get(&ctx.locale).to_string()),
+        match error_of(&name) {
+            Some(error) => field.error(error),
             None => field,
         }
     };
