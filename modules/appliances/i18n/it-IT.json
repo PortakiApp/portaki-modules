@@ -19,8 +19,6 @@
   "guest.teaser": "Istruzioni: TV, lavatrice, climatizzatore, macchina del caffè",
   "home.card.empty.description": "L'host non ha ancora pubblicato una guida agli elettrodomestici.",
   "home.card.empty.title": "Nessun elettrodomestico per ora",
-  "home.card.featured.empty.description": "Apri l'elenco per vedere tutti gli elettrodomestici disponibili.",
-  "home.card.featured.empty.title": "Niente in evidenza per ora",
   "home.card.safety": "Sicurezza",
   "home.card.seeAll": "Vedi i {count} elettrodomestici",
   "home.card.seeAllPlain": "Vedi tutti gli elettrodomestici",

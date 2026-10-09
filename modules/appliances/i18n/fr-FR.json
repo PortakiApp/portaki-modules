@@ -19,8 +19,6 @@
   "guest.teaser": "Modes d'emploi : TV, lave-linge, clim, cafetière",
   "home.card.empty.description": "L'hôte n'a pas encore publié de guide appareils.",
   "home.card.empty.title": "Aucun appareil pour le moment",
-  "home.card.featured.empty.description": "Ouvrez la liste pour voir tous les appareils disponibles.",
-  "home.card.featured.empty.title": "Rien en avant pour l'instant",
   "home.card.safety": "Sécurité",
   "home.card.seeAll": "Voir les {count} appareils",
   "home.card.seeAllPlain": "Voir tous les appareils",
