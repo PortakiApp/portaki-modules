@@ -4,7 +4,7 @@ use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadine
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::{MapMarker, MapMarkerKind};
 
-use crate::config::ModuleConfig;
+use crate::config::{ModuleConfig, TrailRow};
 
 /// Ce qu'il faut pour publier : un itinéraire complet — un titre et un niveau.
 #[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
@@ -21,7 +21,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
 
     // Les erreurs du formulaire bloquent, chacune sur son champ — un niveau manquant compris
     // (une ligne sans niveau ne s'affiche pas, l'hôte croirait l'avoir publiée), et un départ
-    // absent ou à plus de 100 km du logement.
+    // posé à plus de 100 km du logement.
     items.extend(
         config
             .problems(property)
@@ -34,6 +34,18 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
                 hint: error,
             }),
     );
+
+    // Sans départ sur la carte : ni repère, ni « itinéraire jusqu'au départ ». La spec l'exige ;
+    // des itinéraires existants n'en ont pas et s'affichent quand même — on avertit.
+    if let Some(index) = config.trails.iter().position(TrailRow::start_missing) {
+        items.push(PublishCheck {
+            id: format!("config.trails.{index}.lat"),
+            level: PublishLevel::Recommended,
+            ok: false,
+            label: crate::i18n::text("host.trails.start"),
+            hint: crate::i18n::text("host.trails.start.required"),
+        });
+    }
 
     // Une trace refusée ne s'ignore plus en silence : le livret ne la dessinerait pas, et le
     // voyageur téléchargerait un fichier que son application rejette. Une trace que la plateforme

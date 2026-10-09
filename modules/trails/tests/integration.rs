@@ -395,12 +395,21 @@ fn publication_needs_one_complete_trail() {
         ids,
         [
             "trails",
-            "config.trails.0.lat",
             "config.trails.1.level",
-            "config.trails.1.lat",
+            "config.trails.0.lat",
             "measures"
         ]
     );
+    // Un départ absent avertit sans bloquer : des itinéraires existants n'en ont pas.
+    let unplaced = half
+        .items
+        .iter()
+        .find(|item| item.id == "config.trails.0.lat")
+        .expect("start check");
+    assert!(matches!(
+        unplaced.level,
+        portaki_sdk::contracts::publish::PublishLevel::Recommended
+    ));
     // Le message de la spec quand rien n'est prêt.
     assert_eq!(
         empty.items[0].hint.get("fr"),

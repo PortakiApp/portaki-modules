@@ -101,14 +101,13 @@ impl ModuleConfig {
                     .by_language()
                     .find_map(|(_, title)| check::max_chars(title, 60))
             };
-            // Sans départ, ni repère ni « itinéraire jusqu'au départ » ; à plus de 100 km, le
-            // départ a été posé ailleurs que là où l'hôte le croit.
-            let start_misplaced = match trail.coordinates() {
-                None => true,
-                Some(start) => property.is_some_and(|property| {
+            // À plus de 100 km, le départ a été posé ailleurs que là où l'hôte le croit. Un départ
+            // absent n'est pas ici : il avertit sans bloquer ([`TrailRow::start_missing`]).
+            let start_misplaced = trail.coordinates().is_some_and(|start| {
+                property.is_some_and(|property| {
                     crate::format::haversine_metres(property, start) > MAX_START_METRES
-                }),
-            };
+                })
+            });
             let (season_from, season_to) = (trail.season_from.trim(), trail.season_to.trim());
             let season = |own: &str, other: &str| {
                 if own.is_empty() && !other.is_empty() {
@@ -465,6 +464,14 @@ impl TrailRow {
         }
     }
 
+    /// Une ligne écrite sans départ sur le plan : ni repère, ni « itinéraire jusqu'au départ ».
+    ///
+    /// Un avertissement, pas un blocage : des itinéraires existants n'ont pas de position et
+    /// s'affichent quand même.
+    pub fn start_missing(&self) -> bool {
+        !self.is_blank() && self.coordinates().is_none()
+    }
+
     /// `today` (`MMJJ`, voir [`parse_month_day`]) tombe-t-il dans la saison ? Toujours vrai sans
     /// saison complète et lisible : un badge « Hors saison » deviné détourne d'un sentier ouvert.
     pub fn in_season(&self, today: u32) -> bool {
@@ -633,8 +640,7 @@ mod tests {
             [
                 "commune_url",
                 "trails.1.duration_min",
-                "trails.1.distance_km",
-                "trails.1.lat"
+                "trails.1.distance_km"
             ]
         );
     }
@@ -645,13 +651,15 @@ mod tests {
             .map(|error| error.get("fr").to_string())
     }
 
-    /// Le départ est obligatoire, et à 100 km au plus du logement (§2.1).
+    /// Un départ posé l'est à 100 km au plus du logement (§2.1) ; un départ absent ne bloque pas.
     #[test]
-    fn a_start_is_required_and_near_the_property() {
+    fn a_start_is_near_the_property() {
         let home = Some((43.56, 7.13));
         let row =
             |lat: f64, lng: f64| json!({ "title": "A", "level": "easy", "lat": lat, "lng": lng });
-        assert!(start_problem(json!({ "title": "A", "level": "easy" }), home).is_some());
+        let unplaced = json!({ "title": "A", "level": "easy" });
+        assert_eq!(start_problem(unplaced.clone(), home), None);
+        assert!(parsed(json!({ "trails": [unplaced] })).trails[0].start_missing());
         // Grasse, une trentaine de kilomètres : un départ du coin.
         assert_eq!(start_problem(row(43.66, 6.92), home), None);
         // Paris : posé au mauvais endroit.

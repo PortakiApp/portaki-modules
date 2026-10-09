@@ -213,11 +213,16 @@ fn trail_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Componen
     if let Some((lat, lng)) = trail.and_then(TrailRow::coordinates) {
         picker = picker.lat(lat).lng(lng);
     }
-    children.push(
-        named(config, ctx, &format!("trails.{index}.lat"))
-            .child(picker)
-            .into(),
-    );
+    // Sous le plan : un départ trop loin bloque, un départ absent avertit (même message).
+    let mut start_field = named(config, ctx, &format!("trails.{index}.lat"));
+    if trail.is_some_and(TrailRow::start_missing) {
+        start_field = start_field.error(
+            crate::i18n::text("host.trails.start.required")
+                .get(&ctx.locale)
+                .to_string(),
+        );
+    }
+    children.push(start_field.child(picker).into());
     // Pour la page publique, sur une ligne déjà enregistrée : pas sur un créneau vide, qu'il ferait
     // compter comme rempli.
     if let Some(trail) = trail.filter(|t| !t.is_blank()) {
