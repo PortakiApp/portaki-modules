@@ -19,9 +19,15 @@ use super::load::GuestData;
 ///
 /// Rien n'est rendu sans horaires structurés : une ligne qui n'a qu'une phrase garde sa phrase, et
 /// n'affiche pas un état qu'on aurait deviné.
-fn state_badge(state: &State) -> Trailing {
+fn state_badge(state: &State, locale: &str) -> Trailing {
     let (label, tone) = match state {
         State::AlwaysOpen | State::Open => ("i18n:guest.state.open".to_string(), Tone::Success),
+        // « Ferme dans 40 min » (§9 #7) : ouvert, mais plus pour longtemps.
+        State::ClosesSoon(minutes) => (
+            t!("guest.state.closesSoon", minutes = minutes)
+                .unwrap_or_else(|_| "i18n:guest.state.open".to_string()),
+            Tone::Warning,
+        ),
         State::OpensAt(minutes) => (
             t!("guest.state.opensAt", time = format_minutes(*minutes))
                 .unwrap_or_else(|_| "i18n:guest.state.opensAtPlain".to_string()),
@@ -30,7 +36,19 @@ fn state_badge(state: &State) -> Trailing {
         State::Closed => ("i18n:guest.state.closed".to_string(), Tone::Neutral),
         // Hors saison : « Fermé » ferait croire à une fermeture du jour, et le voyageur
         // reviendrait demain devant la même porte.
-        State::OutOfSeason => ("i18n:guest.state.outOfSeason".to_string(), Tone::Neutral),
+        // « Fermé jusqu'au 1 juin » (§9 #4) : quand revenir, et pas seulement que c'est fermé.
+        State::OutOfSeason(reopens) => (
+            reopens
+                .and_then(|date| {
+                    t!(
+                        "guest.state.closedUntil",
+                        date = time::short_date(date, locale)
+                    )
+                    .ok()
+                })
+                .unwrap_or_else(|| "i18n:guest.state.outOfSeason".to_string()),
+            Tone::Neutral,
+        ),
     };
     Trailing::Visual(Box::new(TrailingVisual {
         badge: Some(BadgeSpec {
@@ -146,7 +164,7 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
             // L'état en direct et la semaine dépliable, pour les lignes qui portent des heures.
             let schedule = facility.schedule();
             if let Some(state) = now.and_then(|now| schedule.state_at(now, tz.as_ref())) {
-                item = item.trailing(state_badge(&state));
+                item = item.trailing(state_badge(&state, &data.locale));
                 item = item.details(week_rows(facility, &data.locale, today));
             }
             for line in lines {
@@ -176,11 +194,9 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
                     if !hours.is_empty() {
                         item = item.subtitle(hours.clone());
                     }
-                    item = item.trailing(state_badge(&state)).details(week_rows(
-                        facility,
-                        &data.locale,
-                        today,
-                    ));
+                    item = item
+                        .trailing(state_badge(&state, &data.locale))
+                        .details(week_rows(facility, &data.locale, today));
                     Component::ListItem(item)
                 }
                 None => Component::KeyValue(KeyValue::new().key(title).value(hours)),

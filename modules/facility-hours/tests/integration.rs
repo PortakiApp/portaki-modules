@@ -162,6 +162,54 @@ fn structured_hours_carry_a_state_and_the_week() {
         });
 }
 
+/// Une heure avant la fermeture, le badge dit combien de temps il reste (§9 #7) ; hors saison,
+/// il dit quand la ligne rouvre (§9 #4), et non plus seulement « Hors saison ».
+#[test]
+#[serial]
+fn the_badge_says_closing_soon_and_when_the_season_reopens() {
+    let config = json!({
+        "facilities": [
+            { "title": "Piscine", "opens_at": "08:00", "closes_at": "20:00" },
+            { "title": "Sauna", "opens_at": "08:00", "closes_at": "20:00",
+              "season_from": "06-01", "season_to": "09-30" }
+        ]
+    });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&config)
+        // 19:20 à Paris : la piscine ferme dans 40 min, le sauna attend juin.
+        .with_now(at("2026-03-11T18:20:00Z"))
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_explore_detail(ctx).expect("detail")).unwrap();
+            // Le mock rend la clé d'un `t!` paramétré : c'est elle qu'on lit.
+            assert!(json.contains("\"guest.state.closesSoon\""), "{json}");
+            assert!(json.contains("\"tone\":\"warning\""), "{json}");
+            assert!(json.contains("\"guest.state.closedUntil\""), "{json}");
+            assert!(!json.contains("guest.state.outOfSeason"), "{json}");
+        });
+}
+
+/// Les deux textes existent dans les dix langues, avec leur variable : une clé absente passerait
+/// tous les autres contrôles, le mock rendant la clé elle-même.
+#[test]
+fn the_new_badges_are_in_every_bundle() {
+    for bundle in std::fs::read_dir(concat!(env!("CARGO_MANIFEST_DIR"), "/i18n")).unwrap() {
+        let path = bundle.unwrap().path();
+        let texts: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        for (key, variable) in [
+            ("guest.state.closesSoon", "{minutes}"),
+            ("guest.state.closedUntil", "{date}"),
+            ("host.facility.ranges.overlap", ""),
+        ] {
+            let text = texts[key].as_str().unwrap_or_default();
+            assert!(
+                !text.is_empty() && text.contains(variable),
+                "{path:?} {key}"
+            );
+        }
+    }
+}
+
 /// La carte d'accueil dit aussi jusqu'à quand, et déplie la semaine (§2.6).
 ///
 /// L'état remplaçait l'horaire sur la carte. Mais « Ouvert » ne dit pas jusqu'à quand, et c'est

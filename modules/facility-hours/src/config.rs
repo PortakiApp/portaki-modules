@@ -352,14 +352,32 @@ impl FacilityRow {
             problems.push(("note".to_string(), error));
         }
         if self.mode() == MODE_SAME {
-            for (key, value) in [
-                ("opens_at", &self.opens_at),
-                ("closes_at", &self.closes_at),
-                ("break_from", &self.break_from),
-                ("break_to", &self.break_to),
+            // Chaque paire comme une plage, comme selon le jour : une heure mal écrite sous
+            // elle-même, une fin égale au début sous la fin.
+            for (start_key, start, end_key, end) in [
+                ("opens_at", &self.opens_at, "closes_at", &self.closes_at),
+                ("break_from", &self.break_from, "break_to", &self.break_to),
             ] {
-                if let Some(error) = check::time(value.trim()) {
-                    problems.push((key.to_string(), error));
+                let (start, end) = (start.trim(), end.trim());
+                if let Some(error) = check::time(start) {
+                    problems.push((start_key.to_string(), error));
+                } else if let Some(error) = check::time_range(start, end) {
+                    problems.push((end_key.to_string(), error));
+                }
+            }
+            // Une coupure hors des heures, ou à l'envers, coupe la journée en deux plages qui se
+            // chevauchent ; le livret l'ignorait sans rien dire à l'hôte. Pas sur une plage qui
+            // passe minuit : elle n'a pas de coupure, et ne chevauche rien.
+            let schedule = self.schedule();
+            if let (Some(opens), Some(closes), Some((from, to))) =
+                (schedule.opens_at, schedule.closes_at, schedule.break_at)
+            {
+                let span = crate::schedule::DaySpan { opens, closes };
+                if !span.overnight() && from != to && !span.holds_break(from, to) {
+                    problems.push((
+                        "break_from".to_string(),
+                        crate::i18n::text("host.facility.ranges.overlap"),
+                    ));
                 }
             }
         }
@@ -703,6 +721,47 @@ mod tests {
             ..row
         };
         assert_eq!(same.schedule().span_on(chrono::Weekday::Mon), None);
+    }
+
+    /// Même horaire tous les jours : une plage qui finit quand elle commence est signalée sous sa
+    /// fin, comme selon le jour ; une coupure hors des heures ou à l'envers, sous son début.
+    #[test]
+    fn same_hours_flag_an_empty_range_and_a_break_outside_the_day() {
+        let config: ModuleConfig = serde_json::from_value(json!({ "facilities": [
+            { "title": "Spa", "opens_at": "09:00", "closes_at": "09:00" },
+            { "title": "Bar", "opens_at": "08:30", "closes_at": "18:00",
+              "break_from": "12:00", "break_to": "12:00" },
+            { "title": "Accueil", "opens_at": "08:30", "closes_at": "18:00",
+              "break_from": "14:00", "break_to": "12:00" },
+            { "title": "Sauna", "opens_at": "08:30", "closes_at": "18:00",
+              "break_from": "17:00", "break_to": "19:00" },
+            { "title": "Piscine", "opens_at": "08:30", "closes_at": "18:00",
+              "break_from": "12:00", "break_to": "14:00" },
+            { "title": "Club", "opens_at": "22:00", "closes_at": "02:00",
+              "break_from": "23:00", "break_to": "23:30" }
+        ] }))
+        .unwrap();
+        let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
+        assert_eq!(
+            fields,
+            [
+                "facilities.0.closes_at",
+                "facilities.1.break_to",
+                "facilities.2.break_from",
+                "facilities.3.break_from"
+            ]
+        );
+        assert_eq!(
+            config.error_of("facilities.0.closes_at").unwrap().get("fr"),
+            "L'heure de fin doit être différente de l'heure de début."
+        );
+        assert_eq!(
+            config
+                .error_of("facilities.2.break_from")
+                .unwrap()
+                .get("fr"),
+            "Deux plages se chevauchent."
+        );
     }
 
     /// Selon le jour : chaque ligne porte son jour, un jour sans heures est fermé, et ni les
