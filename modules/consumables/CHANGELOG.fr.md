@@ -6,11 +6,6 @@ Les produits de base dans les équipements.
 
 * Dès qu'un produit nommé est à votre liste, les produits de base s'ajoutent aux équipements de la page du logement, sans le détail des produits.
 * Le catalogue de produits s'enregistre de nouveau : l'ajout des emojis le faisait échouer.
-
-## 2.9.1
-
-Les réglages se vérifient avant publication.
-
 * Un nom de produit ou un délai de plus de 40 caractères, ou plus de 30 produits : l'erreur s'affiche avant publication.
 * Le nombre de demandes par séjour hors de 1 à 20 n'est plus corrigé en silence : « Entre 1 et 20. » s'affiche.
 * Un catalogue vide ne bloque plus la publication : le livret affiche simplement qu'il n'y a rien à demander.

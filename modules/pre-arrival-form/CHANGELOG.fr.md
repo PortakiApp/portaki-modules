@@ -8,11 +8,6 @@ Une limite pour répondre, et une relance.
 * Le voyageur qui n'a pas répondu reçoit un rappel la veille de la limite, si le formulaire est déjà ouvert ; vous pouvez la couper.
 * La fiche du séjour dit si une relance est prévue.
 * Les réponses des voyageurs s'enregistrent de nouveau : l'ajout du moyen de transport les faisait échouer.
-
-## 1.8.1
-
-Un texte rectifié.
-
 * La fiche du séjour ne promet plus de relance : elle dit que le voyageur reçoit un e-mail dès que le formulaire est disponible.
 
 ## 1.8.0

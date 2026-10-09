@@ -7,13 +7,7 @@ Les randonnées sur la page publique du logement.
 * Nouvelle carte « Page publique » : affichez 2 à 4 itinéraires de votre choix sur la page du logement.
 * Les visiteurs voient la photo, le niveau, la durée, la distance et le dénivelé ; jamais la trace GPX, le lien ni le départ.
 * Un départ à moins de 300 m du logement s'annonce « Départ du logement », sans adresse ni position.
-
-## 0.7.1
-
-Le type d'itinéraire choisi par l'hôte est respecté.
-
-* Lire les mesures d'une trace ne remplace plus le type que vous avez choisi : il ne remplit qu'un type encore vide.
-* Une trace qui ne revient pas au départ est proposée en aller-retour, un type que le formulaire et le livret connaissent.
+* Une trace ne remplace plus le type que vous avez choisi, et une trace qui ne revient pas au départ est proposée en aller-retour.
 * Les itinéraires concernés retrouvent leur tuile « Type » chez le voyageur.
 
 ## 0.7.0
