@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.10.1
+
+La carte d'accueil n'est plus vide, et les erreurs parlent français.
+
+* Sans appareil mis en avant, la carte d'accueil montre les premiers appareils actifs au lieu de rester vide.
+* Un nombre d'appareils en avant hors de 2 à 6 n'est plus corrigé en silence : « Entre 2 et 6. » s'affiche sous le champ.
+* Un appareil sans nom, une pièce trop longue, une consigne de sécurité ou un mode d'emploi trop long sont signalés.
+* Les refus (61e appareil, trop d'appareils en avant) s'affichent en clair, dans la langue de l'hôte.
+
 ## 1.10.0
 
 Choisissez combien d'appareils mettre en avant.
