@@ -342,6 +342,14 @@ fn only_the_chosen_deadline_reminds_an_open_unanswered_form() {
     .is_empty());
     // Formulaire pas encore ouvert (48 h avant) : l'e-mail d'ouverture suffira.
     assert!(reminders_sent(json!({ "show_when": "before" }), in_ten_days, false).is_empty());
+    // 48 h avant + jour même 12 h, passage de J-1 : ouvert depuis moins de 24 h, l'e-mail
+    // d'ouverture part à ce passage-là — pas de relance ; ouvert depuis 28 h, elle part.
+    let before_noon = json!({ "show_when": "before", "deadline": "j0-12h" });
+    assert!(reminders_sent(before_noon.clone(), Duration::hours(30), false).is_empty());
+    assert_eq!(
+        reminders_sent(before_noon, Duration::hours(20), false),
+        ["reminder-j0-12h"]
+    );
     // Limite passée (arrivée dans une heure, limite la veille à 18 h) : pas de relance.
     assert!(reminders_sent(open, Duration::hours(1), false).is_empty());
 }
