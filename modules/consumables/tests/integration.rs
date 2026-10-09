@@ -409,6 +409,8 @@ fn an_emoji_follows_its_product_and_an_empty_field_does_not_erase_it() {
             update_config(
                 ctx.clone(),
                 UpdateConfigArgs {
+                    requests_enabled: None,
+                    max_requests: None,
                     restock_delay: Default::default(),
                     items: vec![save("☕", "Café")],
                 },
@@ -418,6 +420,8 @@ fn an_emoji_follows_its_product_and_an_empty_field_does_not_erase_it() {
             update_config(
                 ctx.clone(),
                 UpdateConfigArgs {
+                    requests_enabled: None,
+                    max_requests: None,
                     restock_delay: Default::default(),
                     items: vec![save("", "Coffee")],
                 },
@@ -454,6 +458,8 @@ fn the_host_s_restocking_time_reaches_the_guest() {
             update_config(
                 ctx.clone(),
                 UpdateConfigArgs {
+                    requests_enabled: None,
+                    max_requests: None,
                     restock_delay: serde_json::from_value(json!({ "fr": "sous 24 h" }))
                         .expect("délai"),
                     items: vec![item()],
@@ -467,6 +473,8 @@ fn the_host_s_restocking_time_reaches_the_guest() {
             update_config(
                 ctx.clone(),
                 UpdateConfigArgs {
+                    requests_enabled: None,
+                    max_requests: None,
                     restock_delay: Default::default(),
                     items: vec![item()],
                 },
@@ -510,6 +518,8 @@ fn update_config_replaces_catalog() {
             update_config(
                 ctx.clone(),
                 UpdateConfigArgs {
+                    requests_enabled: None,
+                    max_requests: None,
                     restock_delay: Default::default(),
                     items: vec![ConsumableItemInput {
                         emoji: String::new(),
@@ -737,5 +747,49 @@ fn an_already_reported_product_says_so_until_it_is_restocked() {
                 .expect("json");
             assert!(after.contains("form.item.reported.low"), "{after}");
             assert!(!after.contains("form.item.reported.missing"), "{after}");
+        });
+}
+
+/// Le plafond du séjour : une demande passe, la suivante est refusée et la carte le dit.
+#[test]
+#[serial]
+fn the_stay_cap_stops_requests() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_kv("settings", br#"{"max_requests":1}"#.to_vec())
+        .run(|ctx| {
+            replace_items(
+                ctx.clone(),
+                ReplaceItemsArgs {
+                    items: vec![ConsumableItemInput {
+                        emoji: String::new(),
+                        label: String::new(),
+                        label_fr: "Café".into(),
+                        label_en: "Coffee".into(),
+                        sort_order: 0,
+                        low_threshold: 0,
+                    }],
+                    items_json: None,
+                },
+            )
+            .expect("replace");
+            let item_id = list_items(ctx.clone()).expect("list items")[0].id;
+            let ask = |ctx: &portaki_sdk::prelude::Context| {
+                submit(
+                    ctx.clone(),
+                    SubmitArgs {
+                        item_ids: Vec::new(),
+                        item_id: Some(item_id),
+                        level: LEVEL_DEFAULT.into(),
+                        note: None,
+                    },
+                )
+            };
+            ask(&ctx).expect("first request");
+            assert!(ask(&ctx).is_err(), "the second goes past the cap");
+            let json = serde_json::to_string(&render_home_card(ctx).expect("render")).unwrap();
+            assert!(json.contains("home.card.requestsLimit"), "{json}");
+            assert!(!json.contains("home.card.openForm"), "{json}");
         });
 }

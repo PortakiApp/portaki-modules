@@ -307,3 +307,52 @@ pub mod restock_delay {
         kv::set(KEY, &bytes, None)
     }
 }
+
+/// Les réglages des demandes (spec Consommables §2.2) : le voyageur peut-il demander, et combien
+/// de fois par séjour. En KV comme le délai, pour la même raison : une valeur par logement.
+pub mod settings {
+    use portaki_sdk::host::kv;
+    use serde::{Deserialize, Serialize};
+
+    const KEY: &str = "settings";
+    /// Demandes par séjour : le défaut et les bornes.
+    pub const DEFAULT_MAX_REQUESTS: u32 = 5;
+    pub const MIN_MAX_REQUESTS: u32 = 1;
+    pub const MAX_MAX_REQUESTS: u32 = 20;
+
+    #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+    pub struct Settings {
+        /// Absent : oui, comme avant ce réglage.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub requests_enabled: Option<bool>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub max_requests: Option<u32>,
+    }
+
+    impl Settings {
+        pub fn requests_enabled(&self) -> bool {
+            self.requests_enabled.unwrap_or(true)
+        }
+
+        pub fn max_requests(&self) -> u32 {
+            self.max_requests.map_or(DEFAULT_MAX_REQUESTS, |n| {
+                n.clamp(MIN_MAX_REQUESTS, MAX_MAX_REQUESTS)
+            })
+        }
+    }
+
+    pub fn read() -> Settings {
+        kv::get(KEY)
+            .ok()
+            .flatten()
+            .and_then(|bytes| serde_json::from_slice(&bytes).ok())
+            .unwrap_or_default()
+    }
+
+    pub fn write(settings: &Settings) -> portaki_sdk::Result<()> {
+        let bytes = serde_json::to_vec(settings).map_err(|error| {
+            portaki_sdk::PortakiError::Storage(format!("{KEY} serialize: {error}"))
+        })?;
+        kv::set(KEY, &bytes, None)
+    }
+}

@@ -93,6 +93,12 @@ pub struct UpdateConfigArgs {
     /// un, et c'est ce qu'un hôte écrit.
     #[serde(default, alias = "restockDelay")]
     pub restock_delay: I18nText,
+    /// « Le voyageur peut demander » : un booléen, ou `"true"` / `"false"` selon le formulaire.
+    #[serde(default, alias = "requestsEnabled")]
+    pub requests_enabled: Option<serde_json::Value>,
+    /// « Demandes par séjour » : un nombre, le `NumberInput` n'envoie pas d'entier.
+    #[serde(default, alias = "maxRequests")]
+    pub max_requests: Option<f64>,
 }
 
 /// Persists catalog items from the host workspace Save chrome.
@@ -107,6 +113,22 @@ pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
     // Le délai d'abord : si le catalogue échoue, l'hôte voit son erreur sans avoir perdu sa
     // promesse de réapprovisionnement, qui n'y est pour rien.
     storage::restock_delay::write(&args.restock_delay)?;
+    let mut settings = storage::settings::read();
+    if let Some(enabled) = args
+        .requests_enabled
+        .as_ref()
+        .and_then(|value| match value {
+            serde_json::Value::Bool(on) => Some(*on),
+            serde_json::Value::String(on) => Some(on == "true"),
+            _ => None,
+        })
+    {
+        settings.requests_enabled = Some(enabled);
+    }
+    if let Some(max) = args.max_requests.filter(|n| n.is_finite() && *n > 0.0) {
+        settings.max_requests = Some(max.round() as u32);
+    }
+    storage::settings::write(&settings)?;
     replace_items(
         ctx,
         ReplaceItemsArgs {
@@ -260,6 +282,14 @@ impl SubmitArgs {
 pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     let stay_id = require_guest_stay_id(&ctx)?;
     let level = level::parse_level(&args.level)?;
+    // Demandes fermées, ou plafond du séjour atteint : un écran resté ouvert ne passe pas non plus.
+    let settings = storage::settings::read();
+    if !settings.requests_enabled() {
+        return Err(PortakiError::Host("requests_disabled".to_string()));
+    }
+    if storage::list_by_stay(stay_id)?.len() >= settings.max_requests() as usize {
+        return Err(PortakiError::Host("requests_limit".to_string()));
+    }
     // Les produits d'abord : `note` consomme `args`, et la liste se lit encore par référence.
     let selected = args.selected_items();
     let note = normalize_optional(args.note);
