@@ -1,4 +1,4 @@
-//! Module commands — guest submit, host resolve.
+//! Module commands — guest submit, host add and resolve.
 
 use portaki_sdk::files::FileRef;
 use portaki_sdk::host::email::{
@@ -11,6 +11,7 @@ use uuid::Uuid;
 
 use crate::category::Category;
 use crate::email_text;
+use crate::entities::IssueReport;
 use crate::storage;
 
 /// Arguments for `submit`.
@@ -152,10 +153,13 @@ pub struct ResolveArgs {
     )
 )]
 pub fn resolve(ctx: Context, args: ResolveArgs) -> Result<()> {
-    if ctx.guest.is_some() {
-        return Err(PortakiError::Host("host_only".to_string()));
-    }
-    let report = storage::resolve(args.report_id)?;
+    resolve_report(&ctx, args.report_id).map(|_| ())
+}
+
+/// Clôt un signalement et l'inscrit au journal — `resolve` et la tâche « non traité ».
+pub(crate) fn resolve_report(ctx: &Context, report_id: Uuid) -> Result<IssueReport> {
+    require_host(ctx)?;
+    let report = storage::resolve(report_id)?;
     // Activity log of the workspace (journal).
     events::emit(
         crate::ids::WORKSPACE_ACTIVITY_RECORD,
@@ -165,7 +169,56 @@ pub fn resolve(ctx: Context, args: ResolveArgs) -> Result<()> {
             "payload": { "reportId": report.id, "stayId": report.stay_id, "category": report.category },
             "display": { "chips": [{ "label": "Signalement", "value": report.summary }] },
         }),
+    )?;
+    Ok(report)
+}
+
+/// Arguments for host `add`.
+#[portaki_sdk::wire]
+#[portaki_sdk::params]
+pub struct AddArgs {
+    pub stay_id: Uuid,
+    pub category: Category,
+    pub summary: String,
+    #[serde(default)]
+    pub details: Option<String>,
+}
+
+/// Un signalement saisi par l'hôte depuis le séjour (constaté sur place, ou reçu par téléphone).
+/// Ni e-mail ni filtre de catégorie ou de période : l'hôte sait ce qu'il note.
+#[portaki_sdk::command(
+    name = "add",
+    example(
+        label = "Signalé par téléphone",
+        input = r#"{"stayId":"5d1a7e3c-2b9f-4c8d-a6e0-7f3b1c9d2e54","category":"appliance","summary":"Plus d'eau chaude"}"#
     )
+)]
+pub fn add(ctx: Context, args: AddArgs) -> Result<()> {
+    require_host(&ctx)?;
+    let summary = require_summary(&args.summary)?;
+    let report = storage::create(
+        args.stay_id,
+        args.category.as_str().to_string(),
+        summary,
+        normalize_optional(args.details),
+        None,
+    )?;
+    events::emit(
+        crate::ids::WORKSPACE_ACTIVITY_RECORD,
+        &serde_json::json!({
+            "eventId": "issue-report.added",
+            "propertyId": ctx.property_id,
+            "payload": { "reportId": report.id, "stayId": report.stay_id, "category": report.category },
+            "display": { "chips": [{ "label": "Signalement", "value": report.summary }] },
+        }),
+    )
+}
+
+fn require_host(ctx: &Context) -> Result<()> {
+    if ctx.guest.is_some() {
+        return Err(PortakiError::Host("host_only".to_string()));
+    }
+    Ok(())
 }
 
 fn require_summary(raw: &str) -> Result<String> {

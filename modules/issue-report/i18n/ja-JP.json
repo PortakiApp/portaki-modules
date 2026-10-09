@@ -1,6 +1,9 @@
 {
+  "catalog.host.add": "報告を追加",
   "catalog.host.issue-stats": "報告",
   "catalog.host.main": "お知らせ",
+  "catalog.host.stay": "滞在中の報告",
+  "catalog.host.tasks": "未対応の報告",
   "form.category.access": "入室・鍵",
   "form.category.appliance": "家電・設備",
   "form.category.cleanliness": "清潔さ",
@@ -33,6 +36,7 @@
   "home.card.thanks": "ありがとうございます。ホストに連絡しました。",
   "home.card.title": "問題を知らせる",
   "home.card.yourReports": "今回の滞在であなたが知らせたこと",
+  "host.add.submit": "報告を追加",
   "host.autoReply.label": "自動返信",
   "host.autoReply.placeholder": "ありがとうございます。ホストにメッセージが届きました。",
   "host.category.access": "入室",
@@ -77,6 +81,13 @@
   "host.responseTime.label.none": "案内しない",
   "host.responseTime.label.within_day": "当日中",
   "host.responseTime.label.within_hour": "1時間以内",
+  "host.stay.empty": "この滞在の報告はありません",
+  "host.stay.empty.help": "ゲストからの報告と、あなたが追加した報告がここに表示されます。",
+  "host.stay.missingStay": "滞在が見つかりません。",
+  "host.stay.openMany": "対応中の報告 {count} 件",
+  "host.stay.openNone": "対応中の報告はありません",
+  "host.stay.openOne": "対応中の報告 1 件",
+  "host.stay.title": "報告",
   "host.urgent.hint": "緊急時にゲストがあなたに直接電話できます。",
   "host.urgent.label": "「今すぐ」オプション",
   "host.urgentNumber.hint": "空欄の場合はプロフィールの番号です。",
@@ -104,5 +115,6 @@
   "stats.tile.90": "件の報告 · 90 日",
   "stats.tile.open": "対応中 {count} 件",
   "stats.withPhoto": "写真あり",
-  "stats.withPhoto.note": "ゲストが添付"
+  "stats.withPhoto.note": "ゲストが添付",
+  "task.title": "24 時間未対応の報告"
 }

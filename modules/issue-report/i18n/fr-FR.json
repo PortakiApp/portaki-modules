@@ -1,6 +1,9 @@
 {
+  "catalog.host.add": "Ajouter un signalement",
   "catalog.host.issue-stats": "Signalements",
   "catalog.host.main": "Signalements",
+  "catalog.host.stay": "Signalements du séjour",
+  "catalog.host.tasks": "Signalements non traités",
   "form.category.access": "Accès ou clés",
   "form.category.appliance": "Appareil ou équipement",
   "form.category.cleanliness": "Propreté",
@@ -33,6 +36,7 @@
   "home.card.thanks": "Merci — votre hôte a été prévenu.",
   "home.card.title": "Signaler un problème",
   "home.card.yourReports": "Vos signalements ce séjour",
+  "host.add.submit": "Ajouter le signalement",
   "host.autoReply.label": "Réponse automatique",
   "host.autoReply.placeholder": "Merci, votre hôte a reçu votre message.",
   "host.category.access": "Accès",
@@ -77,6 +81,13 @@
   "host.responseTime.label.none": "Ne pas annoncer",
   "host.responseTime.label.within_day": "Dans la journée",
   "host.responseTime.label.within_hour": "Dans l'heure",
+  "host.stay.empty": "Aucun signalement pour ce séjour",
+  "host.stay.empty.help": "Les signalements du voyageur, et ceux que vous ajoutez, apparaîtront ici.",
+  "host.stay.missingStay": "Séjour introuvable.",
+  "host.stay.openMany": "{count} signalements en cours",
+  "host.stay.openNone": "Aucun signalement en cours",
+  "host.stay.openOne": "1 signalement en cours",
+  "host.stay.title": "Signalements",
   "host.urgent.hint": "Le voyageur peut vous appeler directement pour une urgence.",
   "host.urgent.label": "Option « Tout de suite »",
   "host.urgentNumber.hint": "Vide : le numéro de votre profil.",
@@ -104,5 +115,6 @@
   "stats.tile.90": "signalements · 90 j",
   "stats.tile.open": "{count} en cours",
   "stats.withPhoto": "Avec photo",
-  "stats.withPhoto.note": "joints par le voyageur"
+  "stats.withPhoto.note": "joints par le voyageur",
+  "task.title": "Signalement non traité depuis 24 h"
 }

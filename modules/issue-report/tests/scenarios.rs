@@ -49,6 +49,6 @@ fn every_example_runs() {
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         setup,
         // Un signalement existant : un compte neuf n'en a aucun à clore.
-        &["resolve"],
+        &["resolve", "taskToggle", "taskComplete"],
     );
 }

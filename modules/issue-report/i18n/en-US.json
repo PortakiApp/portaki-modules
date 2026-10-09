@@ -1,6 +1,9 @@
 {
+  "catalog.host.add": "Add a report",
   "catalog.host.issue-stats": "Issue reports",
   "catalog.host.main": "Reports",
+  "catalog.host.stay": "Stay reports",
+  "catalog.host.tasks": "Untreated reports",
   "form.category.access": "Access or keys",
   "form.category.appliance": "Appliance or equipment",
   "form.category.cleanliness": "Cleanliness",
@@ -33,6 +36,7 @@
   "home.card.thanks": "Thanks — your host has been notified.",
   "home.card.title": "Report an issue",
   "home.card.yourReports": "Your reports this stay",
+  "host.add.submit": "Add the report",
   "host.autoReply.label": "Automatic reply",
   "host.autoReply.placeholder": "Thanks, your host has received your message.",
   "host.category.access": "Access",
@@ -77,6 +81,13 @@
   "host.responseTime.label.none": "Don't announce",
   "host.responseTime.label.within_day": "Within the day",
   "host.responseTime.label.within_hour": "Within the hour",
+  "host.stay.empty": "No reports for this stay",
+  "host.stay.empty.help": "The guest's reports, and the ones you add, will show here.",
+  "host.stay.missingStay": "Stay not found.",
+  "host.stay.openMany": "{count} open reports",
+  "host.stay.openNone": "No open reports",
+  "host.stay.openOne": "1 open report",
+  "host.stay.title": "Reports",
   "host.urgent.hint": "Guests can call you directly for an emergency.",
   "host.urgent.label": "« Right now » option",
   "host.urgentNumber.hint": "Empty: the number on your profile.",
@@ -104,5 +115,6 @@
   "stats.tile.90": "reports · 90 d",
   "stats.tile.open": "{count} open",
   "stats.withPhoto": "With photo",
-  "stats.withPhoto.note": "attached by the guest"
+  "stats.withPhoto.note": "attached by the guest",
+  "task.title": "Report untreated for 24 h"
 }

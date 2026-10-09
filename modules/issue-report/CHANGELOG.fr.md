@@ -1,12 +1,14 @@
 # Changelog
 
-## 1.7.1
+## 1.8.0
 
-Des réglages qui disent ce qu'ils font, et le suivi côté voyageur.
+Des réglages qui disent ce qu'ils font, et le suivi dans la fiche du séjour.
 
 * Tout décocher dans les catégories ou les périodes bloque désormais la publication, avec un message sous le réglage.
 * Par défaut, le formulaire n'est proposé que pendant le séjour, et non plus à toutes les périodes.
 * Le voyageur voit « Résolu » dans son historique dès que vous avez clos un signalement.
+* La fiche du séjour montre ses signalements et leur statut ; « Ajouter un signalement » note un souci reçu par téléphone.
+* Un signalement non traité depuis 24 h apparaît dans À venir ; le cocher le marque résolu.
 
 ## 1.7.0
 
