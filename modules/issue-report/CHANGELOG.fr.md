@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.1
+
+Montée technique.
+
+* Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
+
 ## 1.8.0
 
 Des réglages qui disent ce qu'ils font, et le suivi dans la fiche du séjour.

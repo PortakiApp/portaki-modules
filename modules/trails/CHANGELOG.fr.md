@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.1
+
+Montée technique.
+
+* Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
+
 ## 0.8.0
 
 Les randonnées sur la page publique du logement.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.2
+
+Montée technique.
+
+* Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
+
 ## 1.8.1
 
 Une règle sans titre n'est plus perdue.

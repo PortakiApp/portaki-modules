@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.11.1
+
+Montée technique.
+
+* Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
+
 ## 1.11.0
 
 Un rappel pour sortir les bacs, et le local poubelles sur la carte.

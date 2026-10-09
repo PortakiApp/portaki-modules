@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.1
+
+Montée technique.
+
+* Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
+
 ## 0.7.0
 
 La sécurité dans les équipements.
