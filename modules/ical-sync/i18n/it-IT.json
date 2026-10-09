@@ -6,6 +6,8 @@
   "email.sync-summary.description": "Bilancio della sincronizzazione (nuovi / aggiornati / da completare)",
   "host.alert.message": "Il formato decide come viene letto il file .ics (prenotazioni o blocchi). La piattaforma dice chi ha venduto il soggiorno — un calendario Google è uno specchio, non un venditore. Non condividere mai questi link pubblicamente.",
   "host.alert.title": "Formato del calendario e piattaforma",
+  "host.calendar.active": "Attivo",
+  "host.calendar.active.help": "Disattiva per sospendere l'importazione senza perdere il link.",
   "host.calendar.channel": "Piattaforma di prenotazione",
   "host.calendar.channel.help": "Chi vende questi soggiorni. Il formato del calendario viene dedotto automaticamente (e affinato dall'URL del flusso). Lascia «Non so» se hai dubbi — Portaki legge la piattaforma nel flusso quando c'è.",
   "host.calendar.format": "Formato del calendario",

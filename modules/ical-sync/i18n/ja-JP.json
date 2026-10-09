@@ -6,6 +6,8 @@
   "email.sync-summary.description": "同期の結果（新規 / 更新 / 要補完）",
   "host.alert.message": "形式は .ics ファイルの読み方（予約か、ブロックか）を決めます。プラットフォームは誰がその滞在を販売したかを示します — Google カレンダーは写しであって、販売元ではありません。これらのリンクを公開しないでください。",
   "host.alert.title": "カレンダーの形式とプラットフォーム",
+  "host.calendar.active": "有効",
+  "host.calendar.active.help": "リンクを残したまま取り込みを一時停止するにはオフにします。",
   "host.calendar.channel": "予約プラットフォーム",
   "host.calendar.channel.help": "これらの滞在を販売しているのは誰か。カレンダーの形式は自動で判定され、フィードの URL でさらに絞り込まれます。迷う場合は「わからない」のままで — フィードに書かれていれば Portaki が読み取ります。",
   "host.calendar.format": "カレンダーの形式",
