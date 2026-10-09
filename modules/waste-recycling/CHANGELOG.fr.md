@@ -1,11 +1,5 @@
 # Changelog
 
-## 1.11.0
-
-Le tri dans les équipements.
-
-* Le composteur et le tri sélectif s'ajoutent aux équipements de la page du logement, d'après vos jours de collecte et vos points d'apport, sans adresse.
-
 ## 1.10.0
 
 Les jours de collecte par bac, et le code du local poubelles protégé.
@@ -13,6 +7,7 @@ Les jours de collecte par bac, et le code du local poubelles protégé.
 * Cochez les jours de collecte de chaque bac : le livret les affiche sous le bac et annonce la prochaine collecte.
 * Un bac sans jour de collecte déclenche un avertissement à la publication.
 * Le code du local poubelles est chiffré et suit la révélation des codes d'accès : visible dès la veille de l'arrivée à 16 h.
+* Le composteur et le tri sélectif s'ajoutent aux équipements de la page du logement, d'après vos jours de collecte et vos points d'apport, sans adresse.
 
 ## 1.9.0
 

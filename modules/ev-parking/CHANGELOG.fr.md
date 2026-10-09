@@ -1,20 +1,14 @@
 # Changelog
 
-## 1.9.0
+## 1.8.0
 
-La borne dans les équipements.
+La borne sur la carte, sa photo, et dans les équipements.
 
+* Placez la borne sur la carte : elle apparaît sur la Carte du livret ; une épingle à plus de 2 km du logement déclenche un avertissement.
+* Ajoutez une photo de la place : le voyageur reconnaît la borne avant de lire où elle est.
 * Dès que la place est renseignée, la borne de recharge s'ajoute aux équipements de la page du logement, avec sa prise (Type 2, CCS), sans la place ni code.
 * La fiche du séjour rappelle la place et la borne : « Place 8 · borne Type 2 7 kW ».
 * Une place vide affiche « Indiquez où se trouve la place. » sous le champ et avant la publication.
-
-## 1.8.0
-
-La borne sur la carte, et sa photo.
-
-* Placez la borne sur la carte : elle apparaît sur la Carte du livret.
-* Ajoutez une photo de la place : le voyageur reconnaît la borne avant de lire où elle est.
-* Une épingle à plus de 2 km du logement déclenche un avertissement.
 
 ## 1.7.0
 
