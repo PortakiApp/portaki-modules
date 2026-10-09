@@ -314,3 +314,28 @@ fn a_missing_category_warns_without_blocking() {
             assert_eq!(hint.get("fr"), "Choisissez une catégorie.");
         });
 }
+
+/// Un téléphone d'activité sans indicatif avertit sans bloquer : des activités saisies avant la
+/// règle en ont un. Celui d'une adresse reste bloquant, comme avant.
+#[test]
+fn an_activity_phone_warns_without_blocking() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({
+            "spots": [{ "title": "Le Bacon", "category": "restaurant", "lat": 43.55, "lng": 7.01,
+                        "phone": "04 93 61 50 02" }],
+            "host_activities": [{ "title": "Balade", "phone": "06 12 34 56 78" }]
+        }))
+        .run(|ctx| {
+            let readiness = publish_readiness(ctx).expect("readiness");
+            let level = |id: &str| {
+                let item = readiness.items.iter().find(|i| i.id == id).expect(id);
+                serde_json::to_value(item.level).unwrap()
+            };
+            assert_eq!(
+                level("config.host_activities.0.phone"),
+                json!("recommended")
+            );
+            assert_eq!(level("config.spots.0.phone"), json!("required"));
+        });
+}
