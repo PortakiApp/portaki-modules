@@ -2,7 +2,7 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::common::{Emphasis, Leading, LeadingVisual};
+use portaki_sdk::sdui::common::{Emphasis, Leading, LeadingVisual, Tone};
 use portaki_sdk::sdui::primitives::{
     Badge, Button, Eyebrow, InfoBanner, Link, ListItem, Map, Pill, Stack, Text,
 };
@@ -86,6 +86,9 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         } else if !enriched {
             item = item.child(Pill::new().label("i18n:guest.event.dateTbd"));
         }
+        if data.is_tonight(event) {
+            item = item.child(tonight_badge());
+        }
 
         // La fiche, pas le lien tiers : la maquette donne à chaque ligne `action: detail`, et la
         // page de l'organisateur se rejoint depuis la fiche, après l'heure et le plan.
@@ -133,6 +136,9 @@ fn headline(data: &GuestData, event: &crate::config::EventRow) -> Component {
     } else {
         children.push(Component::Badge(Badge::new().label(when)));
     }
+    if data.is_tonight(event) {
+        children.push(tonight_badge());
+    }
     children.push(Component::Text(
         Text::new()
             .text(event.title.get(&data.locale))
@@ -148,6 +154,15 @@ fn headline(data: &GuestData, event: &crate::config::EventRow) -> Component {
         ));
     }
     Component::Stack(Stack::new().gap(4.0).children(children))
+}
+
+/// Le badge « Ce soir », en couleur de marque (§9 #2).
+pub(super) fn tonight_badge() -> Component {
+    Component::Badge(
+        Badge::new()
+            .label("i18n:guest.event.tonight")
+            .tone(Tone::Primary),
+    )
 }
 
 fn events_map(events: &[crate::config::EventRow]) -> Option<Component> {

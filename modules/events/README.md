@@ -32,7 +32,7 @@ Pool env on module-runtime: `OPENAGENDA_POOL_KEY`.
 
 ## Behaviour
 
-- Property `lat` / `lng` from host context; radius from module config (default 40 km).
+- Property `lat` / `lng` from host context; radius from module config (default 15 km, 1 to 50).
 - Nearby results cached in KV (`nearby_cache`, ~1h); refresh on render miss or `refreshNearby`.
 - Manual slots win on title+start collisions.
 

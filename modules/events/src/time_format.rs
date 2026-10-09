@@ -120,6 +120,31 @@ pub fn event_when(event: &EventRow) -> String {
     format_starts_at_display(&event.starts_at)
 }
 
+/// « Ce soir » (§9 #2) : l'événement commence aujourd'hui, à l'heure du logement — pas celle
+/// du serveur : 22 h 30 UTC, c'est déjà demain à Paris. Sans fuseau connu, pas de badge plutôt
+/// qu'un « ce soir » deviné. Ni annulé, ni toute la journée, ni déjà fini (sa fin, sinon son
+/// début, passé) : le badge annonce une soirée à venir.
+// ponytail: « aujourd'hui » plutôt qu'un seuil d'heure — un concert à 11 h porte aussi le badge ;
+// un seuil (17 h ?) quand un hôte s'en plaindra.
+pub fn is_tonight(
+    event: &EventRow,
+    now: DateTime<Utc>,
+    tz: Option<&portaki_sdk::host::time::PropertyTz>,
+) -> bool {
+    let (Some(tz), Some(starts)) = (tz, parse_starts_at(&event.starts_at)) else {
+        return false;
+    };
+    let ends = event
+        .ends_at
+        .as_deref()
+        .and_then(parse_starts_at)
+        .unwrap_or(starts);
+    !event.cancelled
+        && !event.all_day
+        && ends >= now
+        && tz.to_local(starts).date_naive() == tz.to_local(now).date_naive()
+}
+
 pub fn format_starts_at_display(raw: &str) -> String {
     let Some(at) = parse_starts_at(raw) else {
         return raw.trim().to_string();
@@ -203,6 +228,37 @@ mod tests {
         assert_eq!(stay_window(None), None);
         let events = [row("un jour", "2027-01-01T20:00:00Z")];
         assert_eq!(events_within(&events, None).len(), 1);
+    }
+
+    /// Le jour est celui du logement : 22 h 30 UTC le 14, c'est 00 h 30 le 15 à Paris.
+    #[test]
+    fn tonight_is_today_at_the_property() {
+        use portaki_sdk::host::time::PropertyTz;
+        let now = at("2026-07-14T21:30:00Z");
+        let late = row("feu", "2026-07-14T22:30:00Z");
+        let paris = PropertyTz::parse("Europe/Paris");
+        let utc = PropertyTz::parse("UTC");
+        assert!(!is_tonight(&late, now, paris.as_ref()));
+        assert!(is_tonight(&late, now, utc.as_ref()));
+        assert!(!is_tonight(&late, now, None));
+        let evening = row("concert", "2026-07-14T21:45:00Z");
+        assert!(is_tonight(&evening, now, paris.as_ref()));
+        let cancelled = EventRow {
+            cancelled: true,
+            ..evening.clone()
+        };
+        assert!(!is_tonight(&cancelled, now, paris.as_ref()));
+        // Fini à 10 h : plus « ce soir » à 23 h 30.
+        let morning = EventRow {
+            ends_at: Some("2026-07-14T10:00:00Z".into()),
+            ..row("marché", "2026-07-14T08:00:00Z")
+        };
+        assert!(!is_tonight(&morning, now, paris.as_ref()));
+        assert!(!is_tonight(
+            &row("demain", "2026-07-15T19:00:00Z"),
+            now,
+            paris.as_ref()
+        ));
     }
 
     fn at(raw: &str) -> DateTime<Utc> {

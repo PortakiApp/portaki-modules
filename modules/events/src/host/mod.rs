@@ -3,8 +3,8 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Card, Field, FieldHint, Form, ImageUpload, Page, Select, Stack, StepList,
-    Text, TextArea, TextInput, Toggle,
+    AddressMapPicker, Card, Field, FieldHint, Form, ImageUpload, NumberInput, Page, Select, Stack,
+    StepList, Text, TextArea, TextInput, Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -27,7 +27,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let open_agenda = has_open_agenda(&ctx);
 
     let form_children: Vec<Component> = vec![
-        nearby_card(&config, open_agenda),
+        nearby_card(&config, open_agenda, &ctx.locale),
         events_card(&config, &ctx),
         Card::new()
             .title("i18n:host.section.disclaimer")
@@ -54,7 +54,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     Ok(Surface::new(Page::new().child(Form::new().children(form_children))).with_id(MAIN))
 }
 
-fn nearby_card(config: &ModuleConfig, open_agenda: bool) -> Component {
+fn nearby_card(config: &ModuleConfig, open_agenda: bool, locale: &str) -> Component {
     let status_key = if !config.nearby_enabled {
         "i18n:host.nearby.status.off"
     } else if open_agenda {
@@ -67,7 +67,13 @@ fn nearby_card(config: &ModuleConfig, open_agenda: bool) -> Component {
     } else {
         "false"
     };
-    let radius_value = config.normalized_radius_km().to_string();
+    // Le rayon tel qu'enregistré, pas borné : un 60 d'avant reste 60, avec l'erreur dessous.
+    let mut radius = Field::new()
+        .name("radius_km")
+        .label("i18n:host.nearby.radius");
+    if let Some(error) = config.error_of("radius_km") {
+        radius = radius.error(error.get(locale).to_string());
+    }
 
     Card::new()
         .title("i18n:host.section.nearby")
@@ -87,22 +93,16 @@ fn nearby_card(config: &ModuleConfig, open_agenda: bool) -> Component {
                         .value(nearby_value),
                 )
                 .into(),
-            Field::new()
-                .name("radius_km")
-                .label("i18n:host.nearby.radius")
+            radius
                 .child(
-                    Select::new()
+                    NumberInput::new()
                         .name("radius_km")
-                        .options(vec![
-                            ChoiceOption::new("10", "i18n:host.nearby.radius.10"),
-                            ChoiceOption::new("20", "i18n:host.nearby.radius.20"),
-                            ChoiceOption::new("40", "i18n:host.nearby.radius.40"),
-                            ChoiceOption::new("60", "i18n:host.nearby.radius.60"),
-                            ChoiceOption::new("100", "i18n:host.nearby.radius.100"),
-                        ])
-                        .value(radius_value),
+                        .min(1.0)
+                        .max(50.0)
+                        .value(f64::from(config.radius_km)),
                 )
                 .into(),
+            FieldHint::new().text("i18n:host.nearby.radius.hint").into(),
             Text::new()
                 .text(status_key)
                 .variant(TextVariant::Caption)
@@ -317,8 +317,7 @@ fn event_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Componen
             )
             .into(),
         FieldHint::new().text("i18n:host.event.access.hint").into(),
-        Field::new()
-            .name(format!("events.{index}.tips"))
+        named("tips")
             .label("i18n:host.event.tips")
             .child(
                 TextArea::new()

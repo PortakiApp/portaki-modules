@@ -1,7 +1,7 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 //!
 //! The keys are the names of the host form fields: the platform takes `updateConfig` itself. The
-//! form sends the select and the event coordinates as text (`radius_km: "40"`, `lat: "43.5"`);
+//! form may send the radius and the event coordinates as text (`radius_km: "15"`, `lat: "43.5"`);
 //! the readers below accept that and numbers alike.
 
 use portaki_sdk::config::check;
@@ -9,12 +9,15 @@ use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 
-const DEFAULT_RADIUS_KM: u32 = 40;
-const MIN_RADIUS_KM: u32 = 5;
-const MAX_RADIUS_KM: u32 = 100;
-const RADIUS_OPTIONS: [u32; 5] = [10, 20, 40, 60, 100];
+/// Le rayon d'un hôte qui n'en a jamais choisi (§2.1). Un rayon déjà enregistré n'est jamais
+/// réécrit : hors de `MIN..=MAX`, il est signalé sous le champ et borné à la lecture.
+const DEFAULT_RADIUS_KM: u32 = 15;
+const MIN_RADIUS_KM: u32 = 1;
+const MAX_RADIUS_KM: u32 = 50;
+/// Un conseil, une ligne : 120 caractères au plus (§2.2).
+const TIP_MAX: usize = 120;
 
-#[portaki_sdk::config(legacy = legacy)]
+#[portaki_sdk::config]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ModuleConfig {
     /// The rows of the host form, blank ones included (see [`Self::parse_events`]).
@@ -26,11 +29,7 @@ pub struct ModuleConfig {
     #[field(label = "host.nearby.enabled")]
     pub nearby_enabled: bool,
     /// Search radius in kilometers (bbox approximation for OpenAgenda `geo`).
-    #[field(
-        kind = "select",
-        options = ["10", "20", "40", "60", "100"],
-        label = "host.nearby.radius"
-    )]
+    #[field(kind = "number", label = "host.nearby.radius")]
     #[serde(deserialize_with = "deserialize_radius")]
     pub radius_km: u32,
 }
@@ -44,19 +43,6 @@ impl Default for ModuleConfig {
             radius_km: DEFAULT_RADIUS_KM,
         }
     }
-}
-
-/// The old KV blob kept the radius as a number, which the select (text) rejects: it becomes the
-/// nearest option. Everything else already has the declared shape.
-fn legacy(mut old: Value) -> Value {
-    if let Some(radius) = old.get("radius_km").and_then(Value::as_u64) {
-        let nearest = RADIUS_OPTIONS
-            .into_iter()
-            .min_by_key(|option| u64::from(*option).abs_diff(radius))
-            .unwrap_or(DEFAULT_RADIUS_KM);
-        old["radius_km"] = Value::from(nearest.to_string());
-    }
-    old
 }
 
 impl ModuleConfig {
@@ -96,6 +82,9 @@ impl ModuleConfig {
         };
         let mut problems: Vec<(String, I18nText)> = Vec::new();
         let filled = self.events.iter().filter(|e| !e.is_blank()).count();
+        if !(MIN_RADIUS_KM..=MAX_RADIUS_KM).contains(&self.radius_km) {
+            problems.push(("radius_km".into(), text("host.nearby.radius.range")));
+        }
         if filled > MAX_EVENTS {
             problems.push(("events".into(), text("host.events.tooMany")));
         }
@@ -135,6 +124,12 @@ impl ModuleConfig {
                     .and_then(|price| check::max_chars(price, PRICE_MAX)),
             );
             push("access", too_long(&event.access, ACCESS_MAX));
+            push(
+                "tips",
+                event.tips.by_language().find_map(|(_, tips)| {
+                    tips.lines().find_map(|tip| check::max_chars(tip, TIP_MAX))
+                }),
+            );
             push(
                 "note",
                 event
@@ -320,20 +315,25 @@ impl EventRow {
     }
 }
 
-/// `40`, `"40"`, or `""` (the default) — the host form sends the select value as a string.
+/// `15`, `"15"`, or `""` / `null` (the default). A number below zero reads as 0 and one past
+/// `u32` as `u32::MAX`: out of range, shown as an error under the field, never a config that no
+/// longer loads.
 fn deserialize_radius<'de, D>(deserializer: D) -> std::result::Result<u32, D::Error>
 where
     D: Deserializer<'de>,
 {
+    let saturate = |n: f64| n.round().clamp(0.0, f64::from(u32::MAX)) as u32;
     match Value::deserialize(deserializer)? {
+        Value::Null => Ok(DEFAULT_RADIUS_KM),
         Value::Number(n) => n
-            .as_u64()
-            .map(|n| u32::try_from(n).unwrap_or(MAX_RADIUS_KM))
+            .as_f64()
+            .map(saturate)
             .ok_or_else(|| serde::de::Error::custom(format!("invalid radius_km {n}"))),
         Value::String(s) if s.trim().is_empty() => Ok(DEFAULT_RADIUS_KM),
         Value::String(s) => s
             .trim()
-            .parse()
+            .parse::<f64>()
+            .map(saturate)
             .map_err(|_| serde::de::Error::custom(format!("invalid radius_km {s:?}"))),
         other => Err(serde::de::Error::custom(format!(
             "invalid radius_km {other}"
@@ -411,11 +411,11 @@ mod tests {
         });
     }
 
-    /// The old KV blob: a numeric radius (the select takes text), a `{fr, en}` disclaimer, rows
-    /// with per-language texts, numeric coordinates, `null` for what an event did not have.
+    /// The old KV blob, read as is: per-language texts, numeric coordinates, `null` for what an
+    /// event did not have — and a numeric radius, kept as stored.
     #[test]
-    fn legacy_maps_the_kv_blob() {
-        let old = json!({
+    fn the_kv_blob_reads_as_is() {
+        let config: ModuleConfig = serde_json::from_value(json!({
             "radius_km": 60,
             "nearby_enabled": false,
             "disclaimer": { "fr": "Dates indicatives", "en": "Dates are indicative" },
@@ -428,12 +428,8 @@ mod tests {
                 "id": "evt-2", "title": { "fr": "Brocante" }, "place": { "fr": "" },
                 "starts_at": "", "ends_at": null, "url": null, "lat": null, "lng": null, "note": null
             }]
-        });
-        let mapped = legacy(old.clone());
-        let mut expected = old;
-        expected["radius_km"] = json!("60");
-        assert_eq!(mapped, expected);
-        let config: ModuleConfig = serde_json::from_value(mapped).unwrap();
+        }))
+        .unwrap();
         assert_eq!(config.radius_km, 60);
         assert_eq!(config.disclaimer.get("en"), "Dates are indicative");
         assert_eq!(
@@ -443,13 +439,48 @@ mod tests {
         assert_eq!(config.events[0].note.as_ref().unwrap().get("en"), "Free");
         assert_eq!(config.events[0].lat, Some(43.5));
         assert_eq!(config.events[1].note, None);
-        // A radius off the select: the nearest option, never dropped.
-        assert_eq!(legacy(json!({ "radius_km": 25 }))["radius_km"], "20");
-        assert_eq!(legacy(json!({ "radius_km": 500 }))["radius_km"], "100");
+    }
+
+    /// §2.1 : 15 km quand l'hôte n'a rien choisi ; un rayon enregistré hors de 1 à 50 n'est pas
+    /// réécrit — il est signalé sous le champ, et borné pour la recherche.
+    #[test]
+    fn the_radius_defaults_to_15_and_reports_out_of_range() {
+        for unset in [
+            json!({}),
+            json!({ "radius_km": "" }),
+            json!({ "radius_km": null }),
+        ] {
+            let config: ModuleConfig = serde_json::from_value(unset).unwrap();
+            assert_eq!(config.radius_km, 15);
+            assert!(config.error_of("radius_km").is_none());
+        }
+        let stored: ModuleConfig = serde_json::from_value(json!({ "radius_km": "60" })).unwrap();
+        assert_eq!(stored.radius_km, 60);
+        assert_eq!(stored.normalized_radius_km(), 50);
         assert_eq!(
-            legacy(json!({ "disclaimer": "d" })),
-            json!({ "disclaimer": "d" })
+            stored.error_of("radius_km").unwrap().get("fr"),
+            "Entre 1 et 50 km."
         );
+        let below: ModuleConfig = serde_json::from_value(json!({ "radius_km": -3 })).unwrap();
+        assert_eq!(below.normalized_radius_km(), 1);
+        assert!(below.error_of("radius_km").is_some());
+        let fine: ModuleConfig = serde_json::from_value(json!({ "radius_km": 50 })).unwrap();
+        assert!(fine.error_of("radius_km").is_none());
+    }
+
+    /// Un conseil par ligne, 120 caractères chacun (§2.2).
+    #[test]
+    fn a_tip_over_120_characters_is_reported() {
+        let long = "x".repeat(121);
+        let config: ModuleConfig = serde_json::from_value(json!({
+            "events": [
+                { "title": "Concert", "tips": format!("{}\n{}", "y".repeat(120), "z".repeat(120)) },
+                { "title": "Marché", "tips": { "fr": "Court", "en": long } }
+            ]
+        }))
+        .unwrap();
+        let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
+        assert_eq!(fields, ["events.1.tips"]);
     }
 
     #[test]
