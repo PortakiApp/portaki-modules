@@ -53,6 +53,7 @@
   "host.facility.breakTo": "重新开放",
   "host.facility.closedDays": "休息日",
   "host.facility.closesAt": "关闭时间",
+  "host.facility.day.both": "请填写开放时间和关闭时间。",
   "host.facility.group": "分组",
   "host.facility.group.equipment": "设施",
   "host.facility.group.services": "服务",

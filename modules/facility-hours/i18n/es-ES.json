@@ -53,6 +53,7 @@
   "host.facility.breakTo": "Reabre a las",
   "host.facility.closedDays": "Días de cierre",
   "host.facility.closesAt": "Hora de cierre",
+  "host.facility.day.both": "Indique la hora de apertura y de cierre.",
   "host.facility.group": "Grupo",
   "host.facility.group.equipment": "Equipamientos",
   "host.facility.group.services": "Servicios",

@@ -53,6 +53,7 @@
   "host.facility.breakTo": "再開時刻",
   "host.facility.closedDays": "定休日",
   "host.facility.closesAt": "終了時刻",
+  "host.facility.day.both": "開始時刻と終了時刻の両方を入力してください。",
   "host.facility.group": "グループ",
   "host.facility.group.equipment": "設備",
   "host.facility.group.services": "サービス",
