@@ -811,3 +811,41 @@ fn replace_devices_keeps_what_the_row_does_not_send() {
             assert!(!render_washer(&ctx).contains("Pas de machine après 21 h."));
         });
 }
+
+/// La consigne propre à l'appareil a son champ dans le formulaire, et s'enregistre par langue
+/// comme la description.
+#[test]
+#[serial]
+fn the_safety_note_has_its_field_and_is_saved_per_language() {
+    reset_test_store();
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|mut ctx| {
+            let host_form = |ctx: &portaki_sdk::prelude::Context, locale: &str| {
+                let mut ctx = ctx.clone();
+                ctx.locale = locale.into();
+                ctx.input = json!({ "selectedId": "washer" });
+                serde_json::to_string(&render_host_main(ctx)).expect("json")
+            };
+            for (locale, note) in [
+                ("fr-FR", "Pas de machine après 22 h."),
+                ("en-US", "No laundry after 10 pm."),
+            ] {
+                ctx.locale = locale.into();
+                let mut args = washer_with_steps(None);
+                args.safety_note = format!("  {note} ");
+                save_appliance(ctx.clone(), args).expect("save");
+            }
+
+            let fr = host_form(&ctx, "fr-FR");
+            assert!(fr.contains(r#""name":"safetyNote""#), "{fr}");
+            assert!(fr.contains("host.device.safetyNote"), "{fr}");
+            assert!(
+                fr.contains(r#""value":"Pas de machine après 22 h.""#),
+                "{fr}"
+            );
+            assert!(!fr.contains("No laundry"), "{fr}");
+            let en = host_form(&ctx, "en-US");
+            assert!(en.contains(r#""value":"No laundry after 10 pm.""#), "{en}");
+        });
+}
