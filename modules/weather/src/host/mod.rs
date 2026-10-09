@@ -23,7 +23,8 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let config = ModuleConfig::load(&ctx)?;
     let form = Form::new()
         .child(location_card(&config, &ctx))
-        .child(display_card(&config));
+        .child(display_card(&config))
+        .child(public_card(&config));
     Ok(Surface::new(Page::new().child(form)).with_id(MAIN))
 }
 
@@ -114,6 +115,26 @@ fn display_card(config: &ModuleConfig) -> Component {
                 .label("i18n:host.showUpcoming.label")
                 .description("i18n:host.showUpcoming.help")
                 .checked(config.show_upcoming),
+        )
+        .into()
+}
+
+/// Carte « Page publique » (règles communes de la tranche 5) : le bloc Climat de la page publique.
+fn public_card(config: &ModuleConfig) -> Component {
+    Card::new()
+        .title("i18n:host.section.public")
+        .child(
+            ToggleRow::new()
+                .name("public_enabled")
+                .label("i18n:host.publicEnabled.label")
+                .checked(config.public_enabled),
+        )
+        .child(
+            ToggleRow::new()
+                .name("public_monthly_averages")
+                .label("i18n:host.publicMonthlyAverages.label")
+                .description("i18n:host.publicMonthlyAverages.help")
+                .checked(config.public_monthly_averages),
         )
         .into()
 }

@@ -36,6 +36,12 @@ pub struct ModuleConfig {
     /// La carte du fil avant l'arrivée, à partir de J-5.
     #[field(label = "host.showUpcoming.label")]
     pub show_upcoming: bool,
+    /// Carte « Page publique » : le bloc Climat sur la page publique du logement (`public.enabled`).
+    #[field(label = "host.publicEnabled.label")]
+    pub public_enabled: bool,
+    /// Les moyennes des six mois de la saison sous la température du jour (`public.monthlyAverages`).
+    #[field(label = "host.publicMonthlyAverages.label")]
+    pub public_monthly_averages: bool,
 }
 
 impl Default for ModuleConfig {
@@ -47,6 +53,10 @@ impl Default for ModuleConfig {
             location_lat: None,
             location_lng: None,
             show_upcoming: true,
+            public_enabled: false,
+            // Les moyennes sont la substance du bloc Climat ; la case reste sans effet tant que
+            // le bloc n'est pas affiché.
+            public_monthly_averages: true,
         }
     }
 }
@@ -114,6 +124,11 @@ mod tests {
     fn a_new_install_shows_the_upcoming_card_and_forecasts_at_the_property() {
         let config = ModuleConfig::default();
         assert!(config.show_upcoming);
+        assert!(
+            !config.public_enabled,
+            "la page publique est un choix de l'hôte"
+        );
+        assert!(config.public_monthly_averages);
         assert_eq!(config.point(Some(HOME)), Some(HOME));
         assert_eq!(config.label(), None);
     }

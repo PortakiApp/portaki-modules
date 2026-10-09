@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.0
+
+La météo sur la page publique du logement.
+
+* Un bloc Climat peut s'afficher sur la page publique du logement : la température du jour, sans rien du séjour.
+* Les températures moyennes des six mois de la saison peuvent s'y ajouter, quand OpenWeather les fournit.
+* L'hôte l'active dans une nouvelle carte « Page publique » des réglages Météo ; il est masqué par défaut.
+
 ## 1.5.0
 
 Les réglages de la météo, revus pour l'hôte.

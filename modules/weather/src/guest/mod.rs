@@ -6,6 +6,7 @@ mod details;
 mod empty;
 mod home;
 mod load;
+mod public;
 mod sheet;
 mod table;
 mod upcoming;
@@ -16,6 +17,7 @@ use portaki_sdk::sdui::surface::Surface;
 
 use home::build_home_card;
 use load::{load_guest_weather, GuestLoad};
+pub use public::render_property_public;
 use sheet::build_sheet_surface;
 use upcoming::build_upcoming_card;
 

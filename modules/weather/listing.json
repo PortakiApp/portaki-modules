@@ -29,6 +29,10 @@
     {
       "fr": "Carte météo avant l’arrivée, à partir de J-5",
       "en": "Weather card before arrival, from 5 days before"
+    },
+    {
+      "fr": "Bloc Climat sur la page publique du logement, avec les moyennes de saison",
+      "en": "Climate block on the property's public page, with seasonal averages"
     }
   ],
   "capabilities": [

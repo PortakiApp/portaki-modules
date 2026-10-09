@@ -1,6 +1,7 @@
 //! Portaki weather module — current conditions and 5-day forecast via OpenWeather.
 
 mod cache;
+mod climate;
 mod commands;
 mod config;
 mod connectors;
@@ -20,7 +21,9 @@ pub use config::ModuleConfig;
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use entities::{WeatherCache, WeatherUnits};
 pub use events::{on_booking_confirmed, BookingConfirmedEvent};
-pub use guest::{render_explore_forecast, render_home_card, render_upcoming_card};
+pub use guest::{
+    render_explore_forecast, render_home_card, render_property_public, render_upcoming_card,
+};
 pub use host::render_host_main;
 pub use queries::{get_current, get_forecast, GetCurrentArgs, GetForecastArgs};
 pub use readiness::publish_readiness;
