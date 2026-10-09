@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.10.0](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.9.0...pre-arrival-form-v1.10.0) (2026-10-09)
+
+
+### Features
+
+* **pre-arrival-form:** host custom questions ([1a2ee25](https://github.com/PortakiApp/portaki-modules/commit/1a2ee250db0e63c837861349f76f4dea4e33bca6))
+
+
+### Bug Fixes
+
+* **pre-arrival-form:** count transport as a question ([b3234a2](https://github.com/PortakiApp/portaki-modules/commit/b3234a2209395a3c3328ed3e40ce702b5e579d44))
+
 ## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.8.0...pre-arrival-form-v1.9.0) (2026-10-09)
 
 

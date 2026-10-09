@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.7.0...checklist-v1.8.0) (2026-10-09)
+
+
+### Features
+
+* **checklist:** step fields, show_from, remind ([c9e364a](https://github.com/PortakiApp/portaki-modules/commit/c9e364afbbba63d03ddea2f670efec1943aed797))
+
+
+### Bug Fixes
+
+* **checklist:** keep beforeArrival, remind the eve ([8019a6f](https://github.com/PortakiApp/portaki-modules/commit/8019a6f0f0b07b0c5f518157c9670376367f4d40))
+
 ## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.6.0...checklist-v1.7.0) (2026-10-09)
 
 
