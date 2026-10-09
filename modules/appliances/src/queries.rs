@@ -58,17 +58,25 @@ pub fn load_payload(ctx: &Context) -> Result<AppliancesPayload> {
 }
 
 /// Ce qui bloque la publication : les longueurs de la spec Appareils et le nombre d'appareils
-/// en avant ([`AppliancesPayload::problems`]), chacun désignant son champ (`config.<clé>`).
+/// en avant ([`AppliancesPayload::problems`]), chacun désignant son champ (`config.<clé>`) ; et,
+/// sans bloquer, le modèle, la vidéo et les étapes ([`AppliancesPayload::warnings`]).
 #[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
 pub fn publish_readiness(
     ctx: Context,
 ) -> Result<portaki_sdk::contracts::publish::PublishReadiness> {
     use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
     let payload = store::load_payload_for(&ctx.locale, &ctx.property.locale)?;
-    let items = payload
+    let required = payload
         .problems()
         .into_iter()
-        .map(|(field, error)| PublishCheck {
+        .map(|problem| (problem, PublishLevel::Required));
+    let recommended = payload
+        .warnings()
+        .into_iter()
+        .map(|warning| (warning, PublishLevel::Recommended));
+    let items = required
+        .chain(recommended)
+        .map(|((field, error), level)| PublishCheck {
             label: crate::i18n::text(match field.rsplit('.').next().unwrap_or_default() {
                 "paperManualsLocation" => "host.paperManuals.label",
                 "featuredLimit" => "host.featured.label",
@@ -76,11 +84,14 @@ pub fn publish_readiness(
                 "location" => "host.device.location",
                 "description" => "host.device.description",
                 "safetyNote" => "host.device.safetyNote",
+                "model" => "host.device.model",
+                "videoUrl" => "host.device.videoUrl",
+                "steps" => "host.device.steps",
                 "devices" => "host.list.title",
                 _ => "host.device.name",
             }),
             id: format!("config.{field}"),
-            level: PublishLevel::Required,
+            level,
             ok: false,
             hint: error,
         })

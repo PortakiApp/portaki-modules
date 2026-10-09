@@ -17,6 +17,9 @@ pub const MAX_APPLIANCES: usize = 60;
 pub const DEFAULT_FEATURED: usize = 4;
 pub const MIN_FEATURED: usize = 2;
 pub const MAX_FEATURED: usize = 6;
+/// Les étapes d'un appareil (§2.2 : `steps`, 0 → 15), chacune de 280 caractères au plus.
+pub const MAX_STEPS: usize = 15;
+pub const MAX_STEP_CHARS: usize = 280;
 
 /// Guest-visible vs host-only hidden.
 #[portaki_sdk::params]
@@ -52,6 +55,23 @@ pub struct Appliance {
     pub safety_note: String,
     #[serde(default)]
     pub status: ApplianceStatus,
+    /// « Marque et modèle » (§2.2), non traduit : la légende de la fiche.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub model: String,
+    /// YouTube, Vimeo, Google Drive ou `.mp4` : le lien « Voir la vidéo » de la fiche.
+    #[serde(default, rename = "videoUrl", skip_serializing_if = "String::is_empty")]
+    pub video_url: String,
+    /// Les étapes numérotées (§2.2), traduites. S'ajoutent au mode d'emploi libre, qui reste
+    /// lisible en dessous.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub steps: Vec<ApplianceStep>,
+}
+
+/// Une étape du mode d'emploi : `{ text }` (§8). Le schéma attend le stockage de fichiers.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct ApplianceStep {
+    #[serde(default)]
+    pub text: String,
 }
 
 /// Root payload stored as JSON in `content_fr` (canonical; single language).
@@ -146,10 +166,40 @@ impl AppliancesPayload {
         problems
     }
 
+    /// Ce qui mérite un coup d'œil sans bloquer la publication : les contrôles arrivés après
+    /// coup (modèle, vidéo, étapes), pour ne pas bloquer un appareil déjà publié.
+    pub fn warnings(&self) -> Vec<(String, portaki_sdk::contracts::i18n::I18nText)> {
+        use portaki_sdk::config::check;
+        let mut warnings = Vec::new();
+        for (index, device) in self.devices.iter().enumerate() {
+            let steps = if device.steps.len() > MAX_STEPS {
+                Some(crate::i18n::text("host.device.steps.tooMany"))
+            } else {
+                device
+                    .steps
+                    .iter()
+                    .find_map(|step| check::max_chars(&step.text, MAX_STEP_CHARS))
+            };
+            let video = (!is_video_url(device.video_url.trim()))
+                .then(|| crate::i18n::text("host.video.invalid"));
+            for (key, warning) in [
+                ("model", check::max_chars(&device.model, 60)),
+                ("videoUrl", video),
+                ("steps", steps),
+            ] {
+                if let Some(warning) = warning {
+                    warnings.push((format!("devices.{index}.{key}"), warning));
+                }
+            }
+        }
+        warnings
+    }
+
     /// Le message à afficher sous `field`, s'il y en a un.
     pub fn error_of(&self, field: &str) -> Option<portaki_sdk::contracts::i18n::I18nText> {
         self.problems()
             .into_iter()
+            .chain(self.warnings())
             .find(|(name, _)| name == field)
             .map(|(_, error)| error)
     }
@@ -341,6 +391,8 @@ impl AppliancesBundle {
                     device.order = src.order;
                     device.manual_url = src.manual_url.clone();
                     device.status = src.status;
+                    device.model = src.model.clone();
+                    device.video_url = src.video_url.clone();
                 }
             }
             // Align device list order/ids with source when missing.
@@ -351,6 +403,7 @@ impl AppliancesBundle {
                     clone.description.clear();
                     clone.location.clear();
                     clone.safety_note.clear();
+                    clone.steps.clear();
                     payload.devices.push(clone);
                 }
             }
@@ -397,8 +450,12 @@ fn looks_legacy(value: &Value) -> bool {
     devices.iter().any(|device| {
         let has_title = device.get("title").is_some();
         let has_name = device.get("name").is_some();
-        let has_steps = device.get("steps").is_some();
-        (has_title && !has_name) || has_steps
+        // Les étapes v1 sont des chaînes ; celles d'aujourd'hui, des objets `{ text }`.
+        let has_legacy_steps = device
+            .get("steps")
+            .and_then(|steps| steps.as_array())
+            .is_some_and(|steps| steps.iter().any(Value::is_string));
+        (has_title && !has_name) || has_legacy_steps
     })
 }
 
@@ -446,6 +503,7 @@ fn migrate_legacy(value: &Value) -> AppliancesPayload {
             manual_url: string_field(device, "manualUrl"),
             safety_note: String::new(),
             status: ApplianceStatus::Active,
+            ..Appliance::default()
         });
     }
 
@@ -496,6 +554,31 @@ fn steps_and_tip_to_tiptap(steps: &[String], tip: &str) -> String {
         doc = doc.paragraph(tip);
     }
     doc.ensure_non_empty().to_json_string()
+}
+
+/// Un lien YouTube, Vimeo, Google Drive ou un fichier `.mp4` ; vide, rien à dire.
+///
+/// La règle d'`access-guide` (vidéo d'arrivée), recopiée : un module ne dépend pas d'un autre.
+pub fn is_video_url(url: &str) -> bool {
+    let Some(rest) = url
+        .strip_prefix("https://")
+        .or_else(|| url.strip_prefix("http://"))
+    else {
+        return url.is_empty();
+    };
+    let host = rest.split(['/', '?', '#']).next().unwrap_or_default();
+    let host = host.to_ascii_lowercase();
+    let host = host.strip_prefix("www.").unwrap_or(&host);
+    let path = rest.split(['?', '#']).next().unwrap_or_default();
+    matches!(
+        host,
+        "youtube.com"
+            | "m.youtube.com"
+            | "youtu.be"
+            | "vimeo.com"
+            | "player.vimeo.com"
+            | "drive.google.com"
+    ) || path.to_ascii_lowercase().ends_with(".mp4")
 }
 
 fn string_field(value: &Value, key: &str) -> String {
@@ -933,5 +1016,164 @@ mod tests {
             error_fr(&payload, "devices.0.description").as_deref(),
             Some("3000 caractères au maximum.")
         );
+    }
+
+    fn step(text: &str) -> ApplianceStep {
+        ApplianceStep { text: text.into() }
+    }
+
+    /// Les nouveaux contrôles avertissent, ils ne bloquent pas : un appareil déjà publié reste
+    /// publiable.
+    fn only_warns(payload: &AppliancesPayload) {
+        assert!(payload.problems().is_empty(), "{:?}", payload.problems());
+    }
+
+    /// La règle vidéo d'`access-guide`, cas compris, et son message.
+    #[test]
+    fn the_video_is_youtube_vimeo_drive_or_mp4() {
+        let warning = |url: &str| {
+            let payload = AppliancesPayload {
+                devices: vec![Appliance {
+                    video_url: url.into(),
+                    ..named("Télévision")
+                }],
+                ..AppliancesPayload::default()
+            };
+            only_warns(&payload);
+            error_fr(&payload, "devices.0.videoUrl")
+        };
+        for ok in [
+            "",
+            "https://www.youtube.com/watch?v=abc",
+            "https://youtu.be/abc",
+            "https://vimeo.com/123",
+            "https://drive.google.com/file/d/abc/view",
+            "https://cdn.example.com/arrivee.MP4?v=2",
+        ] {
+            assert_eq!(warning(ok), None, "{ok}");
+        }
+        for bad in [
+            "https://example.com/video",
+            "youtube.com/watch",
+            "https://evil.com/youtube.com",
+        ] {
+            assert_eq!(
+                warning(bad).as_deref(),
+                Some("Utilisez un lien YouTube, Vimeo, Google Drive ou un fichier .mp4."),
+                "{bad}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_model_is_60_characters_at_most() {
+        let mut payload = AppliancesPayload {
+            devices: vec![Appliance {
+                model: "x".repeat(60),
+                ..named("Lave-linge")
+            }],
+            ..AppliancesPayload::default()
+        };
+        assert_eq!(error_fr(&payload, "devices.0.model"), None);
+        payload.devices[0].model = "x".repeat(61);
+        only_warns(&payload);
+        assert_eq!(
+            error_fr(&payload, "devices.0.model").as_deref(),
+            Some("60 caractères au maximum.")
+        );
+    }
+
+    #[test]
+    fn fifteen_steps_at_most() {
+        let mut payload = AppliancesPayload {
+            devices: vec![Appliance {
+                steps: (0..15).map(|i| step(&format!("Étape {i}"))).collect(),
+                ..named("Four")
+            }],
+            ..AppliancesPayload::default()
+        };
+        assert_eq!(error_fr(&payload, "devices.0.steps"), None);
+        payload.devices[0].steps.push(step("Une de trop"));
+        only_warns(&payload);
+        assert_eq!(
+            error_fr(&payload, "devices.0.steps").as_deref(),
+            Some("15 étapes au maximum.")
+        );
+    }
+
+    #[test]
+    fn a_step_is_280_characters_at_most() {
+        let mut payload = AppliancesPayload {
+            devices: vec![Appliance {
+                steps: vec![step(&"x".repeat(280))],
+                ..named("Four")
+            }],
+            ..AppliancesPayload::default()
+        };
+        assert_eq!(error_fr(&payload, "devices.0.steps"), None);
+        payload.devices[0].steps.push(step(&"x".repeat(281)));
+        only_warns(&payload);
+        assert_eq!(
+            error_fr(&payload, "devices.0.steps").as_deref(),
+            Some("280 caractères au maximum.")
+        );
+    }
+
+    /// Des étapes `{ text }` ne font pas passer un appareil pour un appareil v1 : la migration
+    /// effacerait son nom.
+    #[test]
+    fn structured_steps_are_not_legacy() {
+        let raw = r#"{"devices":[{"id":"a1","name":"Four","model":"Bosch HBA","videoUrl":"https://youtu.be/x","steps":[{"text":"Tournez"}]}]}"#;
+        let payload = AppliancesPayload::parse(raw);
+        assert_eq!(payload.devices[0].name, "Four");
+        assert_eq!(payload.devices[0].model, "Bosch HBA");
+        assert_eq!(payload.devices[0].video_url, "https://youtu.be/x");
+        assert_eq!(payload.devices[0].steps, vec![step("Tournez")]);
+        let bundle = AppliancesBundle::from_row(raw, "");
+        assert_eq!(bundle.get("fr").devices[0].name, "Four");
+    }
+
+    /// Le modèle et la vidéo valent pour toutes les langues ; les étapes se traduisent.
+    #[test]
+    fn model_and_video_are_shared_steps_are_translated() {
+        let fr = AppliancesPayload {
+            devices: vec![Appliance {
+                id: "a1".into(),
+                model: "Bosch".into(),
+                video_url: "https://youtu.be/x".into(),
+                steps: vec![step("Tournez")],
+                ..named("Four")
+            }],
+            ..AppliancesPayload::default()
+        };
+        let mut bundle = AppliancesBundle::default();
+        bundle.set("fr", fr.clone());
+        bundle.set(
+            "en",
+            AppliancesPayload {
+                devices: vec![Appliance {
+                    id: "a1".into(),
+                    steps: vec![step("Turn")],
+                    ..named("Oven")
+                }],
+                ..AppliancesPayload::default()
+            },
+        );
+        bundle.set("de", AppliancesPayload::default());
+        bundle.sync_shared_from(&fr);
+        let en = &bundle.get("en").devices[0];
+        assert_eq!(en.model, "Bosch");
+        assert_eq!(en.video_url, "https://youtu.be/x");
+        assert_eq!(en.steps, vec![step("Turn")]);
+        let de = &bundle.get("de").devices[0];
+        assert_eq!(de.model, "Bosch");
+        assert!(de.steps.is_empty());
+    }
+
+    /// Un appareil sans les nouveaux champs s'écrit comme avant.
+    #[test]
+    fn empty_new_fields_are_not_written() {
+        let json = serde_json::to_string(&named("Four")).unwrap();
+        assert!(!json.contains("model") && !json.contains("videoUrl") && !json.contains("steps"));
     }
 }

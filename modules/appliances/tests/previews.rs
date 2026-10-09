@@ -35,6 +35,9 @@ fn seed(ctx: Context) {
             manual_url: "https://example.com/notice-plaques.pdf".into(),
             safety_note: "La surface reste chaude quelques minutes après l'arrêt.".into(),
             status: ApplianceStatus::Active,
+            model: String::new(),
+            video_url: String::new(),
+            steps: None,
         },
         SaveApplianceArgs {
             id: Some("lave-linge".into()),
@@ -49,6 +52,9 @@ fn seed(ctx: Context) {
             manual_url: String::new(),
             safety_note: "Merci de ne pas lancer de machine après 22 h.".into(),
             status: ApplianceStatus::Active,
+            model: String::new(),
+            video_url: String::new(),
+            steps: None,
         },
         SaveApplianceArgs {
             id: Some("tv".into()),
@@ -63,6 +69,9 @@ fn seed(ctx: Context) {
             manual_url: String::new(),
             safety_note: String::new(),
             status: ApplianceStatus::Active,
+            model: String::new(),
+            video_url: String::new(),
+            steps: None,
         },
     ];
     for device in devices {
