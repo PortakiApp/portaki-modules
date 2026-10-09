@@ -29,7 +29,6 @@
   "explore.forecast.title": "予報",
   "guest.error.description": "天気を読み込めませんでした。少しあとでもう一度お試しください。",
   "guest.error.title": "天気は一時的にご利用いただけません",
-  "guest.noLocation.description": "物件の住所が登録されると天気が表示されます。",
   "guest.summary": "{temp} · {condition}",
   "guest.teaser": "これからの数日の天気",
   "guest.unavailable.description": "この物件では予報をご案内していません。",

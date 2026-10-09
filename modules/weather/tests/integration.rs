@@ -476,7 +476,7 @@ fn a_label_too_long_shows_its_error_under_the_field() {
         });
 }
 
-/// Not geocoded: every consumer stays quiet — a guest empty state, no email sentence, no
+/// Not geocoded: every consumer stays quiet — a hidden guest card, no email sentence, no
 /// prewarm, no invalidation, a query error — and not one network call. Never a default position.
 #[test]
 #[serial]
@@ -499,8 +499,9 @@ fn without_coordinates_there_is_no_weather_and_no_call() {
             render_explore_forecast(ctx.clone()),
         ] {
             let json = serde_json::to_string(&surface.expect("render")).expect("json");
+            // Un état vide sans texte : le livret masque la carte (§9 #4).
             assert!(json.contains("EmptyState"), "{json}");
-            assert!(json.contains("guest.noLocation.description"), "{json}");
+            assert!(!json.contains("i18n:"), "{json}");
         }
         let email = email_context(
             ctx.clone(),

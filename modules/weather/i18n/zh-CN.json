@@ -29,7 +29,6 @@
   "explore.forecast.title": "预报",
   "guest.error.description": "天气加载失败。请稍后再试。",
   "guest.error.title": "天气暂时无法显示",
-  "guest.noLocation.description": "填写房源地址后就会显示天气。",
   "guest.summary": "{temp} · {condition}",
   "guest.teaser": "未来几天的天气",
   "guest.unavailable.description": "这处房源不提供天气预报。",

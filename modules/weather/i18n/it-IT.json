@@ -29,7 +29,6 @@
   "explore.forecast.title": "Previsioni",
   "guest.error.description": "Non è stato possibile caricare le condizioni. Riprova tra un istante.",
   "guest.error.title": "Meteo temporaneamente non disponibile",
-  "guest.noLocation.description": "Il meteo comparirà appena sarà indicato l'indirizzo dell'alloggio.",
   "guest.summary": "{temp} · {condition}",
   "guest.teaser": "Il meteo dei prossimi giorni",
   "guest.unavailable.description": "Le previsioni non sono proposte per questo alloggio.",

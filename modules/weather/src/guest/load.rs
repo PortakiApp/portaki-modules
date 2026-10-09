@@ -8,7 +8,7 @@ use crate::entities::WeatherUnits;
 use crate::queries::{get_current, get_forecast, GetCurrentArgs, GetForecastArgs};
 use crate::weather::{has_open_weather, resolve_city_label, WeatherCurrent, WeatherForecast};
 
-use super::empty::no_weather;
+use super::empty::{no_weather, not_shown};
 
 pub struct GuestWeatherData {
     pub current: WeatherCurrent,
@@ -22,8 +22,8 @@ pub enum GuestLoad {
     Empty(Box<Surface>),
 }
 
-/// Shared gate + fetch for the guest surfaces. No capability or no position: a content empty
-/// state, and no network call.
+/// Shared gate + fetch for the guest surfaces. No capability: a content empty state; no position:
+/// the textless empty state the booklet hides. Neither makes a network call.
 pub fn load_guest_weather(ctx: &GuestContext, surface_id: SurfaceId) -> Result<GuestLoad> {
     if !has_open_weather(ctx) {
         return Ok(GuestLoad::Empty(Box::new(no_weather(
@@ -32,11 +32,10 @@ pub fn load_guest_weather(ctx: &GuestContext, surface_id: SurfaceId) -> Result<G
         ))));
     }
     let config = ModuleConfig::load(ctx)?;
+    // Sans adresse ni position, la carte est masquée (§9 #4) : l'hôte, lui, voit
+    // « Complétez l'adresse » dans ses réglages.
     if config.point(ctx.property.coordinates).is_none() {
-        return Ok(GuestLoad::Empty(Box::new(no_weather(
-            surface_id,
-            "i18n:guest.noLocation.description",
-        ))));
+        return Ok(GuestLoad::Empty(Box::new(not_shown(surface_id))));
     }
 
     // La fenêtre du séjour plutôt que cinq jours en dur (§0.7, §2.14) : une semaine à la mer

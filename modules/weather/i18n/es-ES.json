@@ -29,7 +29,6 @@
   "explore.forecast.title": "Previsión",
   "guest.error.description": "No se han podido cargar las condiciones. Inténtelo dentro de un momento.",
   "guest.error.title": "El tiempo no está disponible temporalmente",
-  "guest.noLocation.description": "El tiempo aparecerá en cuanto se indique la dirección del alojamiento.",
   "guest.summary": "{temp} · {condition}",
   "guest.teaser": "El tiempo de los próximos días",
   "guest.unavailable.description": "Las previsiones no se ofrecen para este alojamiento.",
