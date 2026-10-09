@@ -84,7 +84,7 @@ fn shutoff_card(row: &ShutoffRow, ctx: &GuestContext) -> Component {
         children.push(
             Image::new()
                 .url(reference.to_string())
-                .alt(row.title.for_ctx(ctx).to_string())
+                .alt(row.title_for(&ctx.locale))
                 .aspectRatio("4 / 3")
                 .into(),
         );
@@ -101,7 +101,7 @@ fn shutoff_card(row: &ShutoffRow, ctx: &GuestContext) -> Component {
     Card::new()
         .surface(SurfaceLevel::Elevated)
         .icon(row.icon())
-        .title(row.title.for_ctx(ctx).to_string())
+        .title(row.title_for(&ctx.locale))
         .children(children)
         .into()
 }
