@@ -22,7 +22,11 @@ pub struct GuestConsumablesData {
 
 /// The catalog and the stay's reports; `None` while the catalog is empty.
 pub fn load_guest_consumables(ctx: &GuestContext) -> Result<Option<GuestConsumablesData>> {
-    let items = storage::list_items()?;
+    // Un produit sans nom n'a rien à afficher sur sa tuile : il attend que l'hôte le nomme.
+    let items: Vec<ConsumableItem> = storage::list_items()?
+        .into_iter()
+        .filter(|item| !crate::labels::labels_from_item(item).is_empty())
+        .collect();
     if items.is_empty() {
         return Ok(None);
     }

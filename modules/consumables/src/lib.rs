@@ -1,6 +1,7 @@
 //! Portaki consumables module — host catalog + guest shortage reports.
 
 mod commands;
+mod config;
 mod email_i18n;
 mod email_send;
 mod email_text;

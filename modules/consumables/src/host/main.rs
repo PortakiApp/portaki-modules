@@ -9,6 +9,7 @@ use portaki_sdk::sdui::surface::Surface;
 
 use portaki_sdk::host::time;
 
+use crate::config::Stored;
 use crate::labels::{self, lang_code};
 use crate::storage;
 
@@ -50,9 +51,22 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     let locale = ctx.locale.as_str();
 
     let settings = storage::settings::read();
-    let restock_delay = storage::restock_delay::read()
+    let stored_delay = storage::restock_delay::read();
+    let restock_delay = stored_delay
+        .as_ref()
         .map(|text| text.host_value(&ctx).to_string())
         .unwrap_or_default();
+    let stored = Stored {
+        items: &items,
+        restock_delay: stored_delay.as_ref(),
+        settings: &settings,
+    };
+    // Le message sous le champ, dans la langue de l'hôte.
+    let error_of = |name: &str| {
+        stored
+            .error_of(name)
+            .map(|error| error.get(&ctx.locale).to_string())
+    };
     let tiles_count = draft_rows(&ctx, items.len());
     let mut tiles: Vec<Component> = Vec::with_capacity(tiles_count);
     for index in 0..tiles_count {
@@ -67,6 +81,18 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
             .get(index)
             .map(|item| item.emoji.clone())
             .unwrap_or_default();
+        let name = format!("items.{index}.label");
+        let input = IndexedInput::new()
+            .index((index + 1) as u32)
+            .name(name.clone())
+            .value(label)
+            .placeholder("i18n:host.item.empty")
+            .showCheck(true);
+        // Un `Field` seulement pour porter l'erreur : une case juste garde le dessin de la grille.
+        let input: Component = match error_of(&name) {
+            Some(error) => Field::new().name(name).error(error).child(input).into(),
+            None => input.into(),
+        };
         tiles.push(
             Stack::new()
                 .direction(StackDirection::Horizontal)
@@ -77,14 +103,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
                         .value(emoji)
                         .placeholder("i18n:host.item.emoji"),
                 )
-                .child(
-                    IndexedInput::new()
-                        .index((index + 1) as u32)
-                        .name(format!("items.{index}.label"))
-                        .value(label)
-                        .placeholder("i18n:host.item.empty")
-                        .showCheck(true),
-                )
+                .child(input)
                 .into(),
         );
     }
@@ -116,23 +135,26 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     if settings.requests_enabled() {
         catalog = catalog
             .child(
-                Field::new()
-                    .name("max_requests")
+                named("max_requests", error_of("max_requests"))
                     .label("i18n:host.requests.max")
                     .child(
                         NumberInput::new()
                             .name("max_requests")
                             .min(f64::from(storage::settings::MIN_MAX_REQUESTS))
                             .max(f64::from(storage::settings::MAX_MAX_REQUESTS))
-                            .value(f64::from(settings.max_requests())),
+                            // Ce que l'hôte a tapé, hors bornes compris, à côté de son erreur.
+                            .value(f64::from(
+                                settings
+                                    .max_requests
+                                    .unwrap_or(storage::settings::DEFAULT_MAX_REQUESTS),
+                            )),
                     ),
             )
             .child(FieldHint::new().text("i18n:host.requests.max.hint"))
             // Ce que l'hôte promet, à côté de ce qu'il propose : le voyageur le lit avant
             // d'envoyer son signalement, et c'est ce qui lui dit que quelqu'un l'a lu.
             .child(
-                Field::new()
-                    .name("restock_delay")
+                named("restock_delay", error_of("restock_delay"))
                     .label("i18n:host.main.restockDelay")
                     .child(
                         TextInput::new()
@@ -205,6 +227,15 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
     children.push(recent_card.into());
 
     Surface::new(Page::new().child(Stack::new().gap(16.0).children(children))).with_id(MAIN)
+}
+
+/// Le champ `name`, avec le message de [`Stored::error_of`] sous lui s'il y en a un.
+fn named(name: &str, error: Option<String>) -> Field {
+    let field = Field::new().name(name);
+    match error {
+        Some(error) => field.error(error),
+        None => field,
+    }
 }
 
 /// Combien de cases dessiner : ce que « Ajouter » a demandé, sinon les huit d'origine — ou plus
