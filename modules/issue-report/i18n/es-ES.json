@@ -1,6 +1,9 @@
 {
+  "catalog.host.add": "Añadir una incidencia",
   "catalog.host.issue-stats": "Informes",
   "catalog.host.main": "Avisos",
+  "catalog.host.stay": "Incidencias de la estancia",
+  "catalog.host.tasks": "Incidencias sin atender",
   "form.category.access": "Acceso o llaves",
   "form.category.appliance": "Aparato o equipamiento",
   "form.category.cleanliness": "Limpieza",
@@ -33,6 +36,7 @@
   "home.card.thanks": "Gracias — su anfitrión ha sido avisado.",
   "home.card.title": "Informar de un problema",
   "home.card.yourReports": "Sus informes de esta estancia",
+  "host.add.submit": "Añadir la incidencia",
   "host.autoReply.label": "Respuesta automática",
   "host.autoReply.placeholder": "Gracias, su anfitrión ha recibido su mensaje.",
   "host.category.access": "Acceso",
@@ -77,6 +81,13 @@
   "host.responseTime.label.none": "No anunciar",
   "host.responseTime.label.within_day": "En el día",
   "host.responseTime.label.within_hour": "En la hora",
+  "host.stay.empty": "Ninguna incidencia en esta estancia",
+  "host.stay.empty.help": "Las incidencias del huésped, y las que usted añada, aparecerán aquí.",
+  "host.stay.missingStay": "Estancia no encontrada.",
+  "host.stay.openMany": "{count} incidencias en curso",
+  "host.stay.openNone": "Ninguna incidencia en curso",
+  "host.stay.openOne": "1 incidencia en curso",
+  "host.stay.title": "Incidencias",
   "host.urgent.hint": "El huésped puede llamarle directamente en caso de urgencia.",
   "host.urgent.label": "Opción «Ahora mismo»",
   "host.urgentNumber.hint": "Vacío: el número de su perfil.",
@@ -104,5 +115,6 @@
   "stats.tile.90": "informes · 90 d",
   "stats.tile.open": "{count} en curso",
   "stats.withPhoto": "Con foto",
-  "stats.withPhoto.note": "adjuntadas por el huésped"
+  "stats.withPhoto.note": "adjuntadas por el huésped",
+  "task.title": "Incidencia sin atender desde hace 24 h"
 }

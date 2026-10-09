@@ -1,6 +1,9 @@
 {
+  "catalog.host.add": "添加报告",
   "catalog.host.issue-stats": "报告",
   "catalog.host.main": "反馈",
+  "catalog.host.stay": "本次入住的报告",
+  "catalog.host.tasks": "未处理的报告",
   "form.category.access": "进入或钥匙",
   "form.category.appliance": "家电或设备",
   "form.category.cleanliness": "清洁",
@@ -33,6 +36,7 @@
   "home.card.thanks": "谢谢 — 已通知房东。",
   "home.card.title": "报告问题",
   "home.card.yourReports": "您本次入住提交的报告",
+  "host.add.submit": "添加报告",
   "host.autoReply.label": "自动回复",
   "host.autoReply.placeholder": "谢谢，您的房东已收到您的消息。",
   "host.category.access": "进门",
@@ -77,6 +81,13 @@
   "host.responseTime.label.none": "不显示",
   "host.responseTime.label.within_day": "当天内",
   "host.responseTime.label.within_hour": "一小时内",
+  "host.stay.empty": "本次入住没有报告",
+  "host.stay.empty.help": "住客的报告以及您添加的报告将显示在这里。",
+  "host.stay.missingStay": "未找到该入住。",
+  "host.stay.openMany": "{count} 条处理中的报告",
+  "host.stay.openNone": "没有处理中的报告",
+  "host.stay.openOne": "1 条处理中的报告",
+  "host.stay.title": "报告",
   "host.urgent.hint": "住客可在紧急情况下直接给您打电话。",
   "host.urgent.label": "“立即”选项",
   "host.urgentNumber.hint": "留空：使用您个人资料中的号码。",
@@ -104,5 +115,6 @@
   "stats.tile.90": "条报告 · 90 天",
   "stats.tile.open": "{count} 条处理中",
   "stats.withPhoto": "带照片",
-  "stats.withPhoto.note": "由房客上传"
+  "stats.withPhoto.note": "由房客上传",
+  "task.title": "报告已 24 小时未处理"
 }

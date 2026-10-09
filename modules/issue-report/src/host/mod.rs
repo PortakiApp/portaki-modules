@@ -1,4 +1,5 @@
-//! Host surfaces — no config tab; the recent reports live in the stats detail.
+//! Host surfaces — the settings drawer, the stats, the stay encart and its « Ajouter » action;
+//! the recent reports live in the stats detail.
 //!
 //! Rows are `FeedItem`s: category tag, status pill. A row opens the dashboard detail modal
 //! (`host.surface.overlay`), which renders the stats detail again with its `issueId`: the
@@ -20,11 +21,15 @@ use crate::commands::ResolveArgs;
 use crate::entities::IssueReport;
 use crate::storage;
 
+mod add;
 mod main;
 mod stats;
+mod stay;
 
+pub use add::render_host_add;
 pub use main::render_host_main;
 pub use stats::{render_host_stats, stats_summary};
+pub use stay::render_host_stay;
 
 /// Host-provided wall clock (the Wasm sandbox has none — never call `Utc::now()`).
 pub(crate) fn host_now() -> DateTime<Utc> {

@@ -5,11 +5,13 @@ use serde_json::json;
 use serial_test::serial;
 
 use issue_report::{
-    list_for_stay, list_recent, render_guest_form, render_home_card, render_host_main,
-    render_host_stats, reset_test_store, resolve, stats_summary, submit, Category, ResolveArgs,
-    SubmitArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
+    add, list_for_stay, list_recent, render_guest_form, render_home_card, render_host_add,
+    render_host_main, render_host_stats, render_host_stay, reset_test_store, resolve,
+    stats_summary, submit, task_complete, task_toggle, timeline_tasks, AddArgs, Category,
+    ResolveArgs, SubmitArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
 };
 use portaki_sdk::contracts::stats::StatsSummaryArgs;
+use portaki_sdk::contracts::timeline::{TaskCompleteArgs, TaskToggleArgs, TimelineTasksArgs};
 use portaki_sdk::limits;
 use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use uuid::Uuid;
@@ -544,4 +546,190 @@ fn the_sheet_says_when_a_set_is_empty() {
             // Seules la photo et l'option urgente, ouvertes par défaut, restent cochées.
             assert_eq!(json.matches(r#""checked":true"#).count(), 2);
         });
+}
+
+fn host_add(ctx: portaki_sdk::prelude::Context, stay_id: Uuid, summary: &str) {
+    add(
+        ctx,
+        AddArgs {
+            stay_id,
+            category: Category::Appliance,
+            summary: summary.into(),
+            details: None,
+        },
+    )
+    .expect("add");
+}
+
+#[test]
+#[serial]
+fn the_stay_encart_lists_its_reports_or_says_there_are_none() {
+    reset_test_store();
+    let (stay, other) = (Uuid::new_v4(), Uuid::new_v4());
+    let render = |stay_id: Option<Uuid>| {
+        let mut out = String::new();
+        MockContext::host()
+            .with_property(Property::default())
+            .run(|mut ctx| {
+                if let Some(id) = stay_id {
+                    ctx.input = json!({ "stayId": id });
+                }
+                out = serde_json::to_string(&render_host_stay(ctx)).expect("surface json");
+            });
+        out
+    };
+
+    let empty = render(Some(stay));
+    assert!(empty.contains("host.stay.empty"));
+    assert!(!empty.contains("FeedItem"));
+    assert!(render(None).contains("host.stay.missingStay"));
+
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            host_add(ctx.clone(), stay, "Plus d'eau chaude");
+            host_add(ctx, other, "Autre séjour");
+        });
+    let one = render(Some(stay));
+    assert!(one.contains("Plus d'eau chaude"));
+    assert!(!one.contains("Autre séjour"));
+    assert!(one.contains("host.stay.openOne"));
+    assert!(one.contains("host.main.status.open"));
+
+    let id = MockContext::host()
+        .run(list_recent)
+        .expect("recent")
+        .into_iter()
+        .find(|row| row.stay_id == stay)
+        .expect("report")
+        .id;
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| resolve(ctx, ResolveArgs { report_id: id }).expect("resolve"));
+    let resolved = render(Some(stay));
+    assert!(resolved.contains("host.stay.openNone"));
+    assert!(resolved.contains("host.main.status.resolved"));
+}
+
+#[test]
+#[serial]
+fn the_stay_action_adds_a_report_to_the_stay() {
+    reset_test_store();
+    let stay = Uuid::new_v4();
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|mut ctx| {
+            assert!(serde_json::to_string(&render_host_add(ctx.clone()))
+                .unwrap()
+                .contains("host.stay.missingStay"));
+            ctx.input = json!({ "stayId": stay });
+            let form = render_host_add(ctx.clone());
+            assert!(SurfaceAssertions::new(&form).contains_type("Form"));
+            let json = serde_json::to_string(&form).unwrap();
+            assert!(json.contains(&stay.to_string()));
+            assert!(json.contains("host.add.submit"));
+
+            host_add(ctx.clone(), stay, "  Volet bloqué ");
+            let empty = add(
+                ctx,
+                AddArgs {
+                    stay_id: stay,
+                    category: Category::Other,
+                    summary: " ".into(),
+                    details: None,
+                },
+            );
+            assert!(empty.is_err());
+        });
+    let rows = MockContext::host().run(list_recent).expect("recent");
+    assert_eq!(rows.len(), 1);
+    assert_eq!(
+        (rows[0].stay_id, rows[0].summary.as_str()),
+        (stay, "Volet bloqué")
+    );
+
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let refused = add(
+                ctx,
+                AddArgs {
+                    stay_id: stay,
+                    category: Category::Other,
+                    summary: "x".into(),
+                    details: None,
+                },
+            );
+            assert!(refused.is_err());
+        });
+}
+
+#[test]
+#[serial]
+fn a_report_open_for_a_day_is_a_task_until_resolved() {
+    reset_test_store();
+    let t0 = DateTime::parse_from_rfc3339("2026-09-01T08:00:00Z")
+        .unwrap()
+        .with_timezone(&Utc);
+    let stay = Uuid::new_v4();
+    MockContext::host()
+        .with_property(Property::default())
+        .with_now(t0)
+        .run(|ctx| host_add(ctx, stay, "Plus d'eau chaude"));
+
+    let tasks_at = |now: DateTime<Utc>| {
+        let mut out = Vec::new();
+        MockContext::host()
+            .with_property(Property::default())
+            .with_now(now)
+            .run(|ctx| {
+                out = timeline_tasks(
+                    ctx,
+                    TimelineTasksArgs {
+                        property_id: Uuid::nil(),
+                        from: t0 - Duration::days(7),
+                        to: t0 + Duration::days(7),
+                        stays: Vec::new(),
+                    },
+                )
+                .expect("tasks")
+                .tasks;
+            });
+        out
+    };
+
+    assert!(tasks_at(t0 + Duration::hours(12)).is_empty());
+    let tasks = tasks_at(t0 + Duration::hours(25));
+    assert_eq!(tasks.len(), 1);
+    assert_eq!(tasks[0].title.fr, "Signalement non traité depuis 24 h");
+    assert_eq!(tasks[0].context.fr, "Plus d'eau chaude");
+    assert_eq!(tasks[0].stay_id, Some(stay));
+    assert_eq!(tasks[0].at, t0 + Duration::hours(24));
+
+    let task_id = tasks[0].id.clone();
+    MockContext::host()
+        .with_property(Property::default())
+        .with_now(t0 + Duration::hours(26))
+        .run(|ctx| {
+            let untick = task_toggle(
+                ctx.clone(),
+                TaskToggleArgs {
+                    property_id: Uuid::nil(),
+                    task_id: task_id.clone(),
+                    item_id: "resolve".into(),
+                    done: false,
+                    photo: None,
+                },
+            );
+            assert!(untick.is_err());
+            task_complete(
+                ctx,
+                TaskCompleteArgs {
+                    property_id: Uuid::nil(),
+                    task_id: task_id.clone(),
+                },
+            )
+            .expect("complete");
+        });
+    assert!(tasks_at(t0 + Duration::hours(27)).is_empty());
 }

@@ -1,6 +1,9 @@
 {
+  "catalog.host.add": "Melding toevoegen",
   "catalog.host.issue-stats": "Meldingen",
   "catalog.host.main": "Meldingen",
+  "catalog.host.stay": "Meldingen van het verblijf",
+  "catalog.host.tasks": "Onbehandelde meldingen",
   "form.category.access": "Toegang of sleutels",
   "form.category.appliance": "Apparaat of uitrusting",
   "form.category.cleanliness": "Netheid",
@@ -33,6 +36,7 @@
   "home.card.thanks": "Bedankt — je gastheer is op de hoogte.",
   "home.card.title": "Probleem melden",
   "home.card.yourReports": "Je meldingen tijdens dit verblijf",
+  "host.add.submit": "Melding toevoegen",
   "host.autoReply.label": "Automatisch antwoord",
   "host.autoReply.placeholder": "Bedankt, je host heeft je bericht ontvangen.",
   "host.category.access": "Toegang",
@@ -77,6 +81,13 @@
   "host.responseTime.label.none": "Niet aankondigen",
   "host.responseTime.label.within_day": "Binnen de dag",
   "host.responseTime.label.within_hour": "Binnen het uur",
+  "host.stay.empty": "Geen meldingen voor dit verblijf",
+  "host.stay.empty.help": "De meldingen van de gast, en die u toevoegt, verschijnen hier.",
+  "host.stay.missingStay": "Verblijf niet gevonden.",
+  "host.stay.openMany": "{count} lopende meldingen",
+  "host.stay.openNone": "Geen lopende meldingen",
+  "host.stay.openOne": "1 lopende melding",
+  "host.stay.title": "Meldingen",
   "host.urgent.hint": "De gast kan je in een noodgeval direct bellen.",
   "host.urgent.label": "Optie „Nu meteen”",
   "host.urgentNumber.hint": "Leeg: het nummer uit je profiel.",
@@ -104,5 +115,6 @@
   "stats.tile.90": "meldingen · 90 d",
   "stats.tile.open": "{count} lopend",
   "stats.withPhoto": "Met foto",
-  "stats.withPhoto.note": "door de gast bijgevoegd"
+  "stats.withPhoto.note": "door de gast bijgevoegd",
+  "task.title": "Melding al 24 u onbehandeld"
 }

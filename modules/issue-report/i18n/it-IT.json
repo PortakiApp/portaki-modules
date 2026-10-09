@@ -1,6 +1,9 @@
 {
+  "catalog.host.add": "Aggiungi una segnalazione",
   "catalog.host.issue-stats": "Segnalazioni",
   "catalog.host.main": "Segnalazioni",
+  "catalog.host.stay": "Segnalazioni del soggiorno",
+  "catalog.host.tasks": "Segnalazioni non gestite",
   "form.category.access": "Accesso o chiavi",
   "form.category.appliance": "Elettrodomestico o attrezzatura",
   "form.category.cleanliness": "Pulizia",
@@ -33,6 +36,7 @@
   "home.card.thanks": "Grazie — il tuo host è stato avvisato.",
   "home.card.title": "Segnala un problema",
   "home.card.yourReports": "Le tue segnalazioni di questo soggiorno",
+  "host.add.submit": "Aggiungi la segnalazione",
   "host.autoReply.label": "Risposta automatica",
   "host.autoReply.placeholder": "Grazie, il tuo host ha ricevuto il messaggio.",
   "host.category.access": "Accesso",
@@ -77,6 +81,13 @@
   "host.responseTime.label.none": "Non annunciare",
   "host.responseTime.label.within_day": "In giornata",
   "host.responseTime.label.within_hour": "Entro un'ora",
+  "host.stay.empty": "Nessuna segnalazione per questo soggiorno",
+  "host.stay.empty.help": "Le segnalazioni dell'ospite, e quelle che aggiungi, appariranno qui.",
+  "host.stay.missingStay": "Soggiorno non trovato.",
+  "host.stay.openMany": "{count} segnalazioni in corso",
+  "host.stay.openNone": "Nessuna segnalazione in corso",
+  "host.stay.openOne": "1 segnalazione in corso",
+  "host.stay.title": "Segnalazioni",
   "host.urgent.hint": "L'ospite può chiamarti direttamente per un'emergenza.",
   "host.urgent.label": "Opzione «Subito»",
   "host.urgentNumber.hint": "Vuoto: il numero del tuo profilo.",
@@ -104,5 +115,6 @@
   "stats.tile.90": "segnalazioni · 90 gg",
   "stats.tile.open": "{count} in corso",
   "stats.withPhoto": "Con foto",
-  "stats.withPhoto.note": "allegate dall'ospite"
+  "stats.withPhoto.note": "allegate dall'ospite",
+  "task.title": "Segnalazione non gestita da 24 h"
 }

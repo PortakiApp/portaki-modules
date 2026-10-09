@@ -1,6 +1,9 @@
 {
+  "catalog.host.add": "Meldung hinzufügen",
   "catalog.host.issue-stats": "Meldungen",
   "catalog.host.main": "Meldungen",
+  "catalog.host.stay": "Meldungen des Aufenthalts",
+  "catalog.host.tasks": "Unbearbeitete Meldungen",
   "form.category.access": "Zugang oder Schlüssel",
   "form.category.appliance": "Gerät oder Ausstattung",
   "form.category.cleanliness": "Sauberkeit",
@@ -33,6 +36,7 @@
   "home.card.thanks": "Danke — Ihr Gastgeber wurde benachrichtigt.",
   "home.card.title": "Problem melden",
   "home.card.yourReports": "Ihre Meldungen in diesem Aufenthalt",
+  "host.add.submit": "Meldung hinzufügen",
   "host.autoReply.label": "Automatische Antwort",
   "host.autoReply.placeholder": "Danke, Ihr Gastgeber hat Ihre Nachricht erhalten.",
   "host.category.access": "Zugang",
@@ -77,6 +81,13 @@
   "host.responseTime.label.none": "Nicht ankündigen",
   "host.responseTime.label.within_day": "Im Laufe des Tages",
   "host.responseTime.label.within_hour": "Innerhalb einer Stunde",
+  "host.stay.empty": "Keine Meldungen für diesen Aufenthalt",
+  "host.stay.empty.help": "Die Meldungen des Gastes und Ihre eigenen erscheinen hier.",
+  "host.stay.missingStay": "Aufenthalt nicht gefunden.",
+  "host.stay.openMany": "{count} offene Meldungen",
+  "host.stay.openNone": "Keine offene Meldung",
+  "host.stay.openOne": "1 offene Meldung",
+  "host.stay.title": "Meldungen",
   "host.urgent.hint": "Der Gast kann Sie im Notfall direkt anrufen.",
   "host.urgent.label": "Option „Sofort“",
   "host.urgentNumber.hint": "Leer: die Nummer aus Ihrem Profil.",
@@ -104,5 +115,6 @@
   "stats.tile.90": "Meldungen · 90 T.",
   "stats.tile.open": "{count} offen",
   "stats.withPhoto": "Mit Foto",
-  "stats.withPhoto.note": "vom Gast angehängt"
+  "stats.withPhoto.note": "vom Gast angehängt",
+  "task.title": "Meldung seit 24 Std. unbearbeitet"
 }

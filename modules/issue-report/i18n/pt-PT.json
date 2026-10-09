@@ -1,6 +1,9 @@
 {
+  "catalog.host.add": "Adicionar uma ocorrência",
   "catalog.host.issue-stats": "Comunicações",
   "catalog.host.main": "Comunicações",
+  "catalog.host.stay": "Ocorrências da estadia",
+  "catalog.host.tasks": "Ocorrências por tratar",
   "form.category.access": "Acesso ou chaves",
   "form.category.appliance": "Aparelho ou equipamento",
   "form.category.cleanliness": "Limpeza",
@@ -33,6 +36,7 @@
   "home.card.thanks": "Obrigado — o seu anfitrião foi avisado.",
   "home.card.title": "Comunicar um problema",
   "home.card.yourReports": "As suas comunicações desta estadia",
+  "host.add.submit": "Adicionar a ocorrência",
   "host.autoReply.label": "Resposta automática",
   "host.autoReply.placeholder": "Obrigado, o seu anfitrião recebeu a sua mensagem.",
   "host.category.access": "Acesso",
@@ -77,6 +81,13 @@
   "host.responseTime.label.none": "Não anunciar",
   "host.responseTime.label.within_day": "No próprio dia",
   "host.responseTime.label.within_hour": "Dentro de uma hora",
+  "host.stay.empty": "Nenhuma ocorrência nesta estadia",
+  "host.stay.empty.help": "As ocorrências do hóspede, e as que adicionar, aparecerão aqui.",
+  "host.stay.missingStay": "Estadia não encontrada.",
+  "host.stay.openMany": "{count} ocorrências em curso",
+  "host.stay.openNone": "Nenhuma ocorrência em curso",
+  "host.stay.openOne": "1 ocorrência em curso",
+  "host.stay.title": "Ocorrências",
   "host.urgent.hint": "O hóspede pode ligar-lhe diretamente numa urgência.",
   "host.urgent.label": "Opção «Agora mesmo»",
   "host.urgentNumber.hint": "Vazio: o número do seu perfil.",
@@ -104,5 +115,6 @@
   "stats.tile.90": "comunicações · 90 d",
   "stats.tile.open": "{count} em curso",
   "stats.withPhoto": "Com fotografia",
-  "stats.withPhoto.note": "anexadas pelo hóspede"
+  "stats.withPhoto.note": "anexadas pelo hóspede",
+  "task.title": "Ocorrência por tratar há 24 h"
 }

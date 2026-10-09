@@ -1,6 +1,9 @@
 {
+  "catalog.host.add": "إضافة بلاغ",
   "catalog.host.issue-stats": "البلاغات",
   "catalog.host.main": "الإبلاغات",
+  "catalog.host.stay": "بلاغات الإقامة",
+  "catalog.host.tasks": "بلاغات لم تُعالَج",
   "form.category.access": "الدخول أو المفاتيح",
   "form.category.appliance": "جهاز أو تجهيزات",
   "form.category.cleanliness": "النظافة",
@@ -33,6 +36,7 @@
   "home.card.thanks": "شكرًا — تم إبلاغ مضيفك.",
   "home.card.title": "الإبلاغ عن مشكلة",
   "home.card.yourReports": "بلاغاتك في هذه الإقامة",
+  "host.add.submit": "إضافة البلاغ",
   "host.autoReply.label": "رد تلقائي",
   "host.autoReply.placeholder": "شكرًا، لقد تلقى مضيفك رسالتك.",
   "host.category.access": "الدخول",
@@ -77,6 +81,13 @@
   "host.responseTime.label.none": "عدم الإعلان",
   "host.responseTime.label.within_day": "خلال اليوم",
   "host.responseTime.label.within_hour": "خلال ساعة",
+  "host.stay.empty": "لا توجد بلاغات لهذه الإقامة",
+  "host.stay.empty.help": "ستظهر هنا بلاغات الضيف، والبلاغات التي تضيفها.",
+  "host.stay.missingStay": "الإقامة غير موجودة.",
+  "host.stay.openMany": "{count} بلاغات قيد المعالجة",
+  "host.stay.openNone": "لا توجد بلاغات قيد المعالجة",
+  "host.stay.openOne": "بلاغ واحد قيد المعالجة",
+  "host.stay.title": "البلاغات",
   "host.urgent.hint": "يمكن للضيف الاتصال بك مباشرة في حالة طارئة.",
   "host.urgent.label": "خيار «فورًا»",
   "host.urgentNumber.hint": "فارغ: الرقم الموجود في ملفك الشخصي.",
@@ -104,5 +115,6 @@
   "stats.tile.90": "بلاغات · 90 يومًا",
   "stats.tile.open": "{count} قيد المعالجة",
   "stats.withPhoto": "مع صورة",
-  "stats.withPhoto.note": "أرفقها الضيف"
+  "stats.withPhoto.note": "أرفقها الضيف",
+  "task.title": "بلاغ لم يُعالَج منذ 24 ساعة"
 }
