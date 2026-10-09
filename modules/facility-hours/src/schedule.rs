@@ -16,7 +16,7 @@
 use portaki_sdk::host::time::PropertyTz;
 use serde::{Deserialize, Serialize};
 
-use chrono::{DateTime, Datelike, Timelike, Utc, Weekday};
+use chrono::{DateTime, Datelike, NaiveDate, Timelike, Utc, Weekday};
 
 /// Minutes since midnight, or `None` when the text is not `HH:MM`.
 ///
@@ -87,11 +87,30 @@ pub enum State {
     /// Open around the clock — no times to compare.
     AlwaysOpen,
     Open,
+    /// Ouvert, mais ferme dans ce nombre de minutes ([`CLOSES_SOON`] au plus) : « Ferme dans
+    /// 40 min » (spec Horaires §9 #7).
+    ClosesSoon(u32),
     /// Shut for now; opens at this many minutes past midnight, today.
     OpensAt(u32),
     Closed,
-    /// Hors saison : la ligne rouvrira, mais pas aujourd'hui ni demain.
-    OutOfSeason,
+    /// Hors saison : la ligne rouvrira au début de la saison, « Fermé jusqu'au 1 juin » (§9 #4).
+    /// `None` quand ce début n'existe pas cette année-là (un `04-31` que l'hôte a saisi).
+    OutOfSeason(Option<NaiveDate>),
+}
+
+/// À partir de combien de minutes avant la fermeture « Ouvert » devient « Ferme dans N min ».
+///
+/// La spec n'en donne que l'exemple, 40 min : une heure le couvre, et prévient assez tôt pour
+/// ne pas arriver devant une porte qui se ferme.
+pub const CLOSES_SOON: u32 = 60;
+
+/// « Ouvert », ou « Ferme dans N min » quand il reste [`CLOSES_SOON`] minutes ou moins.
+fn open_for(remaining: u32) -> State {
+    if remaining <= CLOSES_SOON {
+        State::ClosesSoon(remaining)
+    } else {
+        State::Open
+    }
 }
 
 /// The opening and closing of one day, once exceptions are applied.
@@ -105,6 +124,22 @@ impl DaySpan {
     /// The span runs past midnight (`22:00 – 02:00`).
     pub fn overnight(&self) -> bool {
         self.closes <= self.opens
+    }
+
+    /// La coupure `from` → `to` tient dans la plage : elle la coupe en deux plages qui ne se
+    /// chevauchent pas. Jamais sur une plage qui passe minuit — un bar ouvert de 22 h à 2 h ne
+    /// déjeune pas.
+    pub fn holds_break(&self, from: u32, to: u32) -> bool {
+        !self.overnight() && self.opens < from && from < to && to < self.closes
+    }
+
+    /// Les minutes qui restent avant la fermeture, à `minutes` d'une plage qui le couvre.
+    pub fn remaining(&self, minutes: u32) -> u32 {
+        if self.overnight() && minutes >= self.opens {
+            24 * 60 - minutes + self.closes
+        } else {
+            self.closes - minutes
+        }
     }
 
     /// `minutes` falls inside the span, midnight crossing included.
@@ -164,9 +199,7 @@ impl Schedule {
             return Vec::new();
         };
         match self.break_at {
-            Some((from, to))
-                if !span.overnight() && span.opens < from && from < to && to < span.closes =>
-            {
+            Some((from, to)) if span.holds_break(from, to) => {
                 vec![
                     DaySpan {
                         opens: span.opens,
@@ -234,7 +267,7 @@ impl Schedule {
         // La saison d'abord : un sauna ouvert de 17 h à 21 h en juillet est fermé en janvier, et
         // annoncer « Ouvert » parce que l'heure colle envoie le voyageur devant une porte close.
         if !self.in_season(&local) {
-            return Some(State::OutOfSeason);
+            return Some(State::OutOfSeason(self.season_start_after(local.date())));
         }
         if self.all_day {
             // Ouvert 24 h/24, sauf le jour de fermeture que l'hôte a coché.
@@ -249,7 +282,7 @@ impl Schedule {
 
         if let Some(span) = self.span_on(today.pred()) {
             if span.overnight() && minutes < span.closes {
-                return Some(State::Open);
+                return Some(open_for(span.closes - minutes));
             }
         }
 
@@ -257,8 +290,8 @@ impl Schedule {
         if spans.is_empty() {
             return Some(State::Closed);
         }
-        if spans.iter().any(|span| span.covers(minutes)) {
-            return Some(State::Open);
+        if let Some(span) = spans.iter().find(|span| span.covers(minutes)) {
+            return Some(open_for(span.remaining(minutes)));
         }
         // La prochaine ouverture du jour : après le déjeuner, c'est la seconde plage qu'on
         // annonce, pas celle du matin qui vient de fermer.
@@ -266,6 +299,15 @@ impl Schedule {
             return Some(State::OpensAt(next));
         }
         Some(State::Closed)
+    }
+
+    /// Le prochain début de saison après `today` : cette année, ou l'an prochain s'il est passé.
+    fn season_start_after(&self, today: NaiveDate) -> Option<NaiveDate> {
+        let (from, _) = self.season?;
+        let start = |year| NaiveDate::from_ymd_opt(year, from / 100, from % 100);
+        start(today.year())
+            .filter(|start| *start > today)
+            .or_else(|| start(today.year() + 1))
     }
 
     /// Ce jour tombe-t-il dans la saison — toujours vrai quand l'hôte n'en a pas donné.
@@ -328,10 +370,54 @@ mod tests {
         let january = Utc.with_ymd_and_hms(2026, 1, 20, 10, 0, 0).unwrap();
         let july = Utc.with_ymd_and_hms(2026, 7, 20, 10, 0, 0).unwrap();
 
-        assert_eq!(summer.state_at(january, None), Some(State::OutOfSeason));
+        let date = |y, m, d| NaiveDate::from_ymd_opt(y, m, d);
+        assert_eq!(
+            summer.state_at(january, None),
+            Some(State::OutOfSeason(date(2026, 4, 1)))
+        );
         assert_eq!(summer.state_at(july, None), Some(State::Open));
         assert_eq!(winter.state_at(january, None), Some(State::Open));
-        assert_eq!(winter.state_at(july, None), Some(State::OutOfSeason));
+        assert_eq!(
+            winter.state_at(july, None),
+            Some(State::OutOfSeason(date(2026, 11, 15)))
+        );
+        // Passé le début de cette année, c'est celui de l'an prochain qui rouvre.
+        let december = Utc.with_ymd_and_hms(2026, 12, 20, 10, 0, 0).unwrap();
+        assert_eq!(
+            summer.state_at(december, None),
+            Some(State::OutOfSeason(date(2027, 4, 1)))
+        );
+        // Un début qui n'existe pas (le 31 avril) ne donne pas de date, seulement « Hors saison ».
+        let impossible = Schedule {
+            season: parse_month_day("04-31").zip(parse_month_day("10-31")),
+            ..day("09:00", "20:00")
+        };
+        assert_eq!(
+            impossible.state_at(january, None),
+            Some(State::OutOfSeason(None))
+        );
+    }
+
+    /// Une heure avant la fermeture, « Ouvert » devient « Ferme dans N min » (§9 #7) : en fin de
+    /// journée, avant la coupure, et sur une plage qui passe minuit, des deux côtés de minuit.
+    #[test]
+    fn closing_within_the_hour_says_how_long_is_left() {
+        let pool = day("08:00", "20:00");
+        assert_eq!(pool.state_at(at(18, 59), None), Some(State::Open));
+        assert_eq!(pool.state_at(at(19, 0), None), Some(State::ClosesSoon(60)));
+        assert_eq!(pool.state_at(at(19, 20), None), Some(State::ClosesSoon(40)));
+
+        let reception = day_with_break("08:30", "18:00", "12:00", "14:00");
+        assert_eq!(
+            reception.state_at(at(11, 30), None),
+            Some(State::ClosesSoon(30))
+        );
+
+        let bar = day("22:00", "02:00");
+        assert_eq!(bar.state_at(at(23, 30), None), Some(State::Open));
+        assert_eq!(bar.state_at(at(1, 30), None), Some(State::ClosesSoon(30)));
+        let late = day("20:00", "00:30");
+        assert_eq!(late.state_at(at(23, 45), None), Some(State::ClosesSoon(45)));
     }
 
     /// Une seule date ne fait pas une saison : la ligne reste de toute saison.
@@ -389,7 +475,7 @@ mod tests {
         let pool = day("08:00", "20:00");
         assert_eq!(pool.state_at(at(7, 0), None), Some(State::OpensAt(480)));
         assert_eq!(pool.state_at(at(8, 0), None), Some(State::Open));
-        assert_eq!(pool.state_at(at(19, 59), None), Some(State::Open));
+        assert_eq!(pool.state_at(at(19, 59), None), Some(State::ClosesSoon(1)));
         assert_eq!(pool.state_at(at(20, 0), None), Some(State::Closed));
     }
 
@@ -398,7 +484,7 @@ mod tests {
         let bar = day("22:00", "02:00");
         assert_eq!(bar.state_at(at(23, 0), None), Some(State::Open));
         // One in the morning belongs to yesterday's span, not to a day that has not opened.
-        assert_eq!(bar.state_at(at(1, 0), None), Some(State::Open));
+        assert_eq!(bar.state_at(at(1, 0), None), Some(State::ClosesSoon(60)));
         // À trois heures il est fermé, et il rouvre ce soir : « Ouvre à 22:00 » en dit plus que
         // « Fermé », et c'est ce que le §2.6 veut afficher.
         assert_eq!(bar.state_at(at(3, 0), None), Some(State::OpensAt(1320)));

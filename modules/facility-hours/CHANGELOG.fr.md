@@ -6,6 +6,9 @@ Les jours de fermeture, et des horaires selon le jour.
 
 * Cochez les jours où un équipement est fermé : le livret affiche « Fermé » ces jours-là, même pour une ligne ouverte 24 h/24.
 * Nouveau mode « Selon le jour » : une plage par jour de la semaine, ses deux heures remplies ; un jour laissé vide s'affiche « Fermé ».
+* Une heure avant la fermeture, le badge passe de « Ouvert » à « Ferme dans 40 min ».
+* Hors saison, la ligne dit quand elle rouvre : « Fermé jusqu'au 1 juin ».
+* Une plage qui finit quand elle commence, ou une coupure hors des heures, est signalée sous le champ.
 
 ## 1.12.0
 
