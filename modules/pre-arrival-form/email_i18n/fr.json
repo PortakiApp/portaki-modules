@@ -10,5 +10,10 @@
   "email.formAvailable.field.guestCount": "Nombre de voyageurs",
   "email.formAvailable.field.specialNeeds": "Besoins particuliers (lit bébé, PMR…)",
   "email.formAvailable.field.idDocument": "Pièce d’identité",
-  "email.formAvailable.fieldHint": "À renseigner"
+  "email.formAvailable.fieldHint": "À renseigner",
+  "email.reminder.subject": "Rappel : votre formulaire avant l’arrivée",
+  "email.reminder.title": "Votre hôte attend encore vos réponses",
+  "email.reminder.body.j-3": "Le formulaire est à remplir au plus tard 3 jours avant votre arrivée.\n\nRépondez en 1 minute depuis votre livret séjour.",
+  "email.reminder.body.j-1-18h": "Le formulaire est à remplir au plus tard la veille de votre arrivée, à 18 h.\n\nRépondez en 1 minute depuis votre livret séjour.",
+  "email.reminder.body.j0-12h": "Le formulaire est à remplir au plus tard le jour de votre arrivée, à 12 h.\n\nRépondez en 1 minute depuis votre livret séjour."
 }

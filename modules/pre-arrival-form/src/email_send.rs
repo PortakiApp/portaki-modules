@@ -5,8 +5,9 @@ use portaki_sdk::host::email::{
 };
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
+use uuid::Uuid;
 
-use crate::config::ModuleConfig;
+use crate::config::{Deadline, ModuleConfig};
 use crate::email_i18n;
 use crate::show_when::{is_editable_until_checkin, is_form_available};
 use crate::storage;
@@ -20,26 +21,9 @@ pub const FORM_AVAILABLE_EMAIL_ID: &str = "form-available";
 /// newly opened `show_when` does not leave stays without `form-available` (dedup
 /// claim prevents re-send).
 pub fn send_form_available(ctx: &Context) -> Result<()> {
-    let stay_id = ctx
-        .guest
-        .as_ref()
-        .map(|guest| guest.session_id)
-        .or_else(|| ctx.stay.as_ref().map(|stay| stay.stay_id))
-        .ok_or_else(|| PortakiError::Host("stay_id_required".to_string()))?;
-
-    if storage::find_by_stay(stay_id)?.is_some() {
+    let Some((stay_id, config)) = open_and_unanswered(ctx)? else {
         return Ok(());
-    }
-
-    let config = ModuleConfig::load(ctx)?;
-    let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at);
-    let now = time::now()?;
-    // Once check-in has passed the form is locked: inviting the guest to fill it is pointless.
-    if !is_editable_until_checkin(now, checkin_at)
-        || !is_form_available(config.show_when, now, checkin_at)
-    {
-        return Ok(());
-    }
+    };
 
     email::send(&SendEmailArgs {
         email_id: FORM_AVAILABLE_EMAIL_ID.into(),
@@ -49,6 +33,71 @@ pub fn send_form_available(ctx: &Context) -> Result<()> {
             eyebrow: Some(email_i18n::text("email.formAvailable.eyebrow")),
             title: Some(email_i18n::text("email.formAvailable.title")),
             body: email_i18n::text("email.formAvailable.body"),
+            cta: Some(ModuleEmailCta {
+                label: email_i18n::text("email.formAvailable.cta"),
+                url: None,
+                portaki_action: Some("open-module:pre-arrival-form:default".into()),
+            }),
+            blocks: form_preview(&config),
+            ..Default::default()
+        },
+        stay_id: Some(stay_id),
+        property_id: None,
+        action_url: None,
+    })
+}
+
+/// The stay and config when the form is open, editable and still unanswered — `None` otherwise.
+fn open_and_unanswered(ctx: &Context) -> Result<Option<(Uuid, ModuleConfig)>> {
+    let stay_id = ctx
+        .guest
+        .as_ref()
+        .map(|guest| guest.session_id)
+        .or_else(|| ctx.stay.as_ref().map(|stay| stay.stay_id))
+        .ok_or_else(|| PortakiError::Host("stay_id_required".to_string()))?;
+
+    if storage::find_by_stay(stay_id)?.is_some() {
+        return Ok(None);
+    }
+
+    let config = ModuleConfig::load(ctx)?;
+    let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at);
+    let now = time::now()?;
+    // Once check-in has passed the form is locked: inviting the guest to fill it is pointless.
+    if !is_editable_until_checkin(now, checkin_at)
+        || !is_form_available(config.show_when, now, checkin_at)
+    {
+        return Ok(None);
+    }
+    Ok(Some((stay_id, config)))
+}
+
+/// La relance de la limite `choice` (§2.3) : une commande et un e-mail par limite, la plateforme
+/// les envoie tous les trois — seule celle que l'hôte a choisie part. Comme `form-available`, il
+/// faut un formulaire ouvert et sans réponse : une relance avant l'ouverture doublerait l'e-mail
+/// d'ouverture. Et rien après la limite : un séjour réservé la veille n'est pas relancé (§9 cas 3).
+pub fn send_reminder(ctx: &Context, choice: Deadline, email_id: &str) -> Result<()> {
+    let Some((stay_id, config)) = open_and_unanswered(ctx)? else {
+        return Ok(());
+    };
+    let Some(checkin) = ctx.stay.as_ref().and_then(|stay| stay.checkin_at) else {
+        return Ok(());
+    };
+    if !config.reminder
+        || config.deadline != choice
+        || time::now()? >= choice.at(checkin, &ctx.property.timezone)
+    {
+        return Ok(());
+    }
+
+    email::send(&SendEmailArgs {
+        email_id: email_id.into(),
+        audience: EmailAudience::Guest,
+        content: ModuleEmailSdui {
+            subject: email_i18n::text("email.reminder.subject"),
+            eyebrow: Some(email_i18n::text("email.formAvailable.eyebrow")),
+            title: Some(email_i18n::text("email.reminder.title")),
+            body: email_i18n::text(&format!("email.reminder.body.{}", choice.as_wire())),
             cta: Some(ModuleEmailCta {
                 label: email_i18n::text("email.formAvailable.cta"),
                 url: None,

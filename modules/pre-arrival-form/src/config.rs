@@ -4,6 +4,8 @@
 //! - when to show the guest form (`show_when`)
 //! - which questions are enabled (`ask_*`)
 
+use chrono::{DateTime, Duration, Utc};
+use portaki_sdk::host::time::PropertyTz;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -38,6 +40,49 @@ impl ShowWhen {
     }
 
     pub const CHOICE_LIST_WIRE_VALUES: &'static [&'static str] = &["confirm", "before", "checkin"];
+}
+
+/// La limite pour remplir le formulaire (spec Pré-arrivée §2.3), à l'heure du logement.
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub enum Deadline {
+    /// Trois jours avant l'arrivée, jusqu'au soir : minuit, fin de J-3.
+    #[serde(rename = "j-3")]
+    J3,
+    /// La veille de l'arrivée, à 18 h.
+    #[default]
+    #[serde(rename = "j-1-18h")]
+    J1At18,
+    /// Le jour de l'arrivée, à midi.
+    #[serde(rename = "j0-12h")]
+    J0At12,
+}
+
+impl Deadline {
+    pub fn as_wire(&self) -> &'static str {
+        match self {
+            Self::J3 => "j-3",
+            Self::J1At18 => "j-1-18h",
+            Self::J0At12 => "j0-12h",
+        }
+    }
+
+    pub const CHOICE_LIST_WIRE_VALUES: &'static [&'static str] = &["j-3", "j-1-18h", "j0-12h"];
+
+    /// L'instant de la limite pour une arrivée à `checkin`, dans le fuseau du logement (UTC
+    /// quand le SDK ne connaît pas le fuseau, comme [`crate::slots::checkin_hour`]).
+    pub fn at(&self, checkin: DateTime<Utc>, timezone: &str) -> DateTime<Utc> {
+        let tz = PropertyTz::parse(timezone);
+        let day = tz.map_or(checkin.date_naive(), |tz| tz.to_local(checkin).date_naive());
+        let (days_before, hour) = match self {
+            Self::J3 => (2, 0),
+            Self::J1At18 => (1, 18),
+            Self::J0At12 => (0, 12),
+        };
+        let local = (day - Duration::days(days_before))
+            .and_hms_opt(hour, 0, 0)
+            .unwrap_or_default();
+        tz.map_or(local.and_utc(), |tz| tz.from_local(local))
+    }
 }
 
 /// The keys are the names of the host form fields: the platform takes `updateConfig` itself.
@@ -83,6 +128,16 @@ pub struct ModuleConfig {
     #[field(label = "host.slots.until")]
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub slots_until: String,
+    /// À remplir avant (§2.3).
+    #[field(
+        kind = "select",
+        options = ["j-3", "j-1-18h", "j0-12h"],
+        label = "host.deadline"
+    )]
+    pub deadline: Deadline,
+    /// Un e-mail au voyageur qui n'a pas répondu, la veille de la limite (§2.3).
+    #[field(label = "host.reminder")]
+    pub reminder: bool,
 }
 
 /// Le dernier créneau proposé quand l'hôte n'en donne pas.
@@ -101,6 +156,8 @@ impl Default for ModuleConfig {
             ask_transport: false,
             slot_step: String::new(),
             slots_until: String::new(),
+            deadline: Deadline::J1At18,
+            reminder: true,
         }
     }
 }
@@ -210,6 +267,37 @@ mod tests {
         assert!(cfg.ask_guest_count);
         assert!(!cfg.ask_special_needs);
         assert!(!cfg.ask_id_document);
+        assert_eq!(cfg.deadline, Deadline::J1At18);
+        assert!(cfg.reminder);
+        // Un réglage d'avant la limite garde la relance, comme le dit la spec.
+        let old: ModuleConfig = serde_json::from_value(json!({ "show_when": "before" })).unwrap();
+        assert_eq!((old.deadline, old.reminder), (Deadline::J1At18, true));
+    }
+
+    #[test]
+    fn deadline_is_read_in_the_property_time() {
+        let utc = |raw: &str| {
+            DateTime::parse_from_rfc3339(raw)
+                .unwrap()
+                .with_timezone(&Utc)
+        };
+        // Arrivée le 20 juillet à 16 h, Paris (UTC+2).
+        let checkin = utc("2026-07-20T14:00:00Z");
+        let at = |d: Deadline| d.at(checkin, "Europe/Paris");
+        assert_eq!(at(Deadline::J3), utc("2026-07-17T22:00:00Z"));
+        assert_eq!(at(Deadline::J1At18), utc("2026-07-19T16:00:00Z"));
+        assert_eq!(at(Deadline::J0At12), utc("2026-07-20T10:00:00Z"));
+        // Fuseau inconnu : l'heure UTC.
+        assert_eq!(
+            Deadline::J1At18.at(checkin, "Mars/Olympus"),
+            utc("2026-07-19T18:00:00Z")
+        );
+        for wire in Deadline::CHOICE_LIST_WIRE_VALUES {
+            let parsed: Deadline = serde_json::from_value(json!(wire)).unwrap();
+            assert_eq!(parsed.as_wire(), *wire);
+        }
+        // Une limite hors liste est refusée, pas lue comme une autre.
+        assert!(serde_json::from_value::<Deadline>(json!("j-5")).is_err());
     }
 
     #[test]
@@ -218,5 +306,7 @@ mod tests {
             let parsed = ShowWhen::parse(wire);
             assert_eq!(parsed.as_wire(), *wire);
         }
+        // Une limite hors liste est refusée, pas lue comme une autre.
+        assert!(serde_json::from_value::<Deadline>(json!("j-5")).is_err());
     }
 }

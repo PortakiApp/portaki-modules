@@ -10,5 +10,10 @@
   "email.formAvailable.field.guestCount": "Aantal gasten",
   "email.formAvailable.field.specialNeeds": "Speciale wensen (babybedje, toegankelijkheid…)",
   "email.formAvailable.field.idDocument": "Identiteitsbewijs",
-  "email.formAvailable.fieldHint": "In te vullen"
+  "email.formAvailable.fieldHint": "In te vullen",
+  "email.reminder.subject": "Herinnering: uw formulier vóór aankomst",
+  "email.reminder.title": "Uw host wacht nog op uw antwoorden",
+  "email.reminder.body.j-3": "Vul het formulier uiterlijk 3 dagen voor uw aankomst in.\n\nIn 1 minuut klaar via uw verblijfsgids.",
+  "email.reminder.body.j-1-18h": "Vul het formulier uiterlijk de dag voor uw aankomst om 18.00 uur in.\n\nIn 1 minuut klaar via uw verblijfsgids.",
+  "email.reminder.body.j0-12h": "Vul het formulier uiterlijk op uw aankomstdag om 12.00 uur in.\n\nIn 1 minuut klaar via uw verblijfsgids."
 }

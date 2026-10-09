@@ -12,8 +12,8 @@ use portaki_sdk::prelude::StayContext;
 use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use pre_arrival_form::{
     get_status, publish_readiness, render_guest_form, render_home_card, render_host_main,
-    render_host_stay, reset_test_store, send_form_available, submit, ModuleConfig, ShowWhen,
-    SubmitArgs,
+    render_host_stay, reset_test_store, send_form_available, send_reminder_j0, send_reminder_j1,
+    send_reminder_j3, submit, ModuleConfig, ShowWhen, SubmitArgs,
 };
 use serde_json::json;
 
@@ -284,6 +284,66 @@ fn send_form_available_ok_when_confirm() {
             send_form_available(ctx, portaki_sdk::prelude::EmptyArgs {})
                 .expect("sendFormAvailable when available");
         });
+}
+
+/// Les e-mails de relance partis, pour une arrivée dans `checkin_in` et la config `config` ;
+/// `answered` : le voyageur a déjà répondu.
+fn reminders_sent(config: serde_json::Value, checkin_in: Duration, answered: bool) -> Vec<String> {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_config(&config)
+        .run_with(|mut ctx, host| {
+            let stay_id = ctx.guest.as_ref().map(|guest| guest.session_id).unwrap();
+            ctx.stay = Some(StayContext {
+                stay_id,
+                checkin_at: Some(Utc::now() + checkin_in),
+                ..StayContext::default()
+            });
+            if answered {
+                submit(ctx.clone(), sample_submit()).unwrap();
+            }
+            let none = portaki_sdk::prelude::EmptyArgs {};
+            send_reminder_j3(ctx.clone(), none).unwrap();
+            send_reminder_j1(ctx.clone(), none).unwrap();
+            send_reminder_j0(ctx, none).unwrap();
+            host.sent_emails()
+                .into_iter()
+                .map(|mail| mail.email_id)
+                .collect()
+        })
+}
+
+#[test]
+#[serial]
+fn only_the_chosen_deadline_reminds_an_open_unanswered_form() {
+    let open = json!({ "show_when": "confirm" });
+    let in_ten_days = Duration::days(10);
+    // Défaut : la veille à 18 h, et seule sa relance part.
+    assert_eq!(
+        reminders_sent(open.clone(), in_ten_days, false),
+        ["reminder-j-1-18h"]
+    );
+    assert_eq!(
+        reminders_sent(
+            json!({ "show_when": "confirm", "deadline": "j-3" }),
+            in_ten_days,
+            false
+        ),
+        ["reminder-j-3"]
+    );
+    // Déjà répondu, relance éteinte : rien.
+    assert!(reminders_sent(open.clone(), in_ten_days, true).is_empty());
+    assert!(reminders_sent(
+        json!({ "show_when": "confirm", "reminder": false }),
+        in_ten_days,
+        false
+    )
+    .is_empty());
+    // Formulaire pas encore ouvert (48 h avant) : l'e-mail d'ouverture suffira.
+    assert!(reminders_sent(json!({ "show_when": "before" }), in_ten_days, false).is_empty());
+    // Limite passée (arrivée dans une heure, limite la veille à 18 h) : pas de relance.
+    assert!(reminders_sent(open, Duration::hours(1), false).is_empty());
 }
 
 #[test]

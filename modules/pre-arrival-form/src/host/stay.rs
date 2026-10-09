@@ -31,7 +31,7 @@ pub fn render_host_stay(ctx: HostContext) -> Result<Surface> {
         None => missing_stay_card(),
         Some(stay_id) => match storage::find_by_stay(stay_id).ok().flatten() {
             Some(row) => completed_card(&row, &ModuleConfig::load(&ctx)?),
-            None => pending_card(),
+            None => pending_card(ModuleConfig::load(&ctx)?.reminder),
         },
     };
 
@@ -51,7 +51,7 @@ fn missing_stay_card() -> Component {
     )
 }
 
-fn pending_card() -> Component {
+fn pending_card(reminder: bool) -> Component {
     let status = Pill::new()
         .label("i18n:host.stay.status.pending")
         .tone(Tone::Neutral);
@@ -63,7 +63,11 @@ fn pending_card() -> Component {
             .child(status)
             .child(
                 Text::new()
-                    .text("i18n:host.stay.pending")
+                    .text(if reminder {
+                        "i18n:host.stay.pending.reminder"
+                    } else {
+                        "i18n:host.stay.pending"
+                    })
                     .variant(TextVariant::Caption),
             ),
     )

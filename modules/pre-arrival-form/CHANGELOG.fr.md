@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.0
+
+Une limite pour répondre, et une relance.
+
+* Choisissez jusqu'à quand le voyageur remplit le formulaire : 3 jours avant l'arrivée, la veille à 18 h, ou le jour même à 12 h.
+* Le voyageur qui n'a pas répondu reçoit un rappel la veille de la limite, si le formulaire est déjà ouvert ; vous pouvez la couper.
+* La fiche du séjour dit si une relance est prévue.
+
 ## 1.8.1
 
 Un texte rectifié.

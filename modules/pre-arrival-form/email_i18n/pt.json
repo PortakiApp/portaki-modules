@@ -10,5 +10,10 @@
   "email.formAvailable.field.guestCount": "Número de hóspedes",
   "email.formAvailable.field.specialNeeds": "Necessidades especiais (berço, acessibilidade…)",
   "email.formAvailable.field.idDocument": "Documento de identidade",
-  "email.formAvailable.fieldHint": "A preencher"
+  "email.formAvailable.fieldHint": "A preencher",
+  "email.reminder.subject": "Lembrete: o seu formulário antes da chegada",
+  "email.reminder.title": "O seu anfitrião ainda aguarda as suas respostas",
+  "email.reminder.body.j-3": "Preencha o formulário até 3 dias antes da sua chegada.\n\nResponda em 1 minuto no seu guia da estadia.",
+  "email.reminder.body.j-1-18h": "Preencha o formulário até à véspera da sua chegada, às 18h.\n\nResponda em 1 minuto no seu guia da estadia.",
+  "email.reminder.body.j0-12h": "Preencha o formulário até ao dia da sua chegada, às 12h.\n\nResponda em 1 minuto no seu guia da estadia."
 }
