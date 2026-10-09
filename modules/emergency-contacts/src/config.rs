@@ -1,5 +1,6 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
+use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -8,6 +9,22 @@ use serde_json::Value;
 #[portaki_sdk::config(legacy = legacy)]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct ModuleConfig {
+    /// « Afficher mon numéro ». Absent : oui — c'était le comportement avant ce réglage.
+    #[field(label = "host.showHost.label")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub show_host: Option<bool>,
+    /// `always` ou `hours` ([`AVAILABILITY`]) : joignable 24 h/24, ou sur une plage.
+    #[field(
+        kind = "select",
+        options = ["always", "hours"],
+        label = "host.availability.label"
+    )]
+    pub host_availability: String,
+    /// La plage où l'hôte répond, `HH:MM` ; vide : 08:00 – 21:00.
+    #[field(label = "host.hours.from")]
+    pub host_hours_from: String,
+    #[field(label = "host.hours.to")]
+    pub host_hours_to: String,
     #[field(label = "config.contacts")]
     pub contacts: Vec<ContactRow>,
     /// Le numéro que l'hôte veut montrer, quand ce n'est pas celui de son compte.
@@ -27,7 +44,26 @@ pub struct ModuleConfig {
     /// L'hôpital le plus proche, et à quelle distance.
     #[field(label = "host.hospital.label")]
     pub hospital: String,
+    /// Les numéros de la pharmacie, de l'hôpital, et le médecin (§2.3) : une rangée qu'on appelle
+    /// d'un geste, là où la phrase ne faisait que le dire.
+    #[field(label = "host.pharmacyPhone.label")]
+    pub pharmacy_phone: String,
+    #[field(label = "host.hospitalPhone.label")]
+    pub hospital_phone: String,
+    #[field(label = "host.doctor.label")]
+    pub doctor: String,
+    #[field(label = "host.doctorPhone.label")]
+    pub doctor_phone: String,
 }
+
+/// Disponibilité de l'hôte (§2.2), 24 h/24 d'abord : c'est le défaut.
+pub const AVAILABILITY: [&str; 2] = ["always", "hours"];
+/// La plage proposée quand l'hôte n'en donne pas.
+pub const DEFAULT_HOURS: (&str, &str) = ("08:00", "21:00");
+/// Combien de contacts la configuration accepte (§2.2).
+pub const MAX_CONTACTS: usize = 20;
+const LABEL_MAX: usize = 60;
+const NOTE_MAX: usize = 120;
 
 /// The old KV blob kept the contacts as a JSON string, `contacts_json`, before the form slots.
 fn legacy(mut old: Value) -> Value {
@@ -43,6 +79,105 @@ fn legacy(mut old: Value) -> Value {
 }
 
 impl ModuleConfig {
+    /// L'hôte montre son numéro ; oui sans choix enregistré.
+    pub fn show_host(&self) -> bool {
+        self.show_host.unwrap_or(true)
+    }
+
+    /// La plage où l'hôte répond, ou `None` quand il est joignable 24 h/24.
+    pub fn host_hours(&self) -> Option<(&str, &str)> {
+        if self.host_availability.trim() != "hours" {
+            return None;
+        }
+        fn pick<'a>(value: &'a str, fallback: &'a str) -> &'a str {
+            let value = value.trim();
+            if value.is_empty() {
+                fallback
+            } else {
+                value
+            }
+        }
+        Some((
+            pick(&self.host_hours_from, DEFAULT_HOURS.0),
+            pick(&self.host_hours_to, DEFAULT_HOURS.1),
+        ))
+    }
+
+    /// Ce qui ne va pas, champ par champ — sous le champ dans le formulaire, et dans
+    /// `publishReadiness`, pour que les deux disent la même chose.
+    pub fn problems(&self) -> Vec<(String, I18nText)> {
+        let text = crate::i18n::text;
+        let mut problems: Vec<(String, I18nText)> = Vec::new();
+        let mut push = |field: String, error: Option<I18nText>| {
+            if let Some(error) = error {
+                problems.push((field, error));
+            }
+        };
+        let too_long = |value: &I18nText, max: usize| {
+            value
+                .by_language()
+                .find_map(|(_, text)| check::max_chars(text, max))
+        };
+        if self.host_hours().is_some() {
+            push(
+                "host_hours_from".into(),
+                check::time(self.host_hours_from.trim()),
+            );
+            push(
+                "host_hours_to".into(),
+                check::time(self.host_hours_to.trim()),
+            );
+        }
+        let filled = self.contacts.iter().filter(|c| !c.is_blank()).count();
+        push(
+            "contacts".into(),
+            (filled > MAX_CONTACTS).then(|| text("host.contacts.tooMany")),
+        );
+        for (index, contact) in self.contacts.iter().enumerate() {
+            if contact.is_blank() {
+                continue;
+            }
+            push(
+                format!("contacts.{index}.label"),
+                if contact.label.is_blank() {
+                    Some(text("host.contact.label.required"))
+                } else {
+                    too_long(&contact.label, LABEL_MAX)
+                },
+            );
+            let phone = contact.phone.trim();
+            push(
+                format!("contacts.{index}.phone"),
+                if phone.is_empty() {
+                    Some(text("host.contact.phone.required"))
+                } else {
+                    phone_error(phone)
+                },
+            );
+            push(
+                format!("contacts.{index}.note"),
+                too_long(&contact.note, NOTE_MAX),
+            );
+        }
+        for (key, value) in [
+            ("host_visible_phone", &self.host_visible_phone),
+            ("pharmacy_phone", &self.pharmacy_phone),
+            ("hospital_phone", &self.hospital_phone),
+            ("doctor_phone", &self.doctor_phone),
+        ] {
+            push(key.into(), phone_error(value.trim()));
+        }
+        problems
+    }
+
+    /// Le message à afficher sous `field`, s'il y en a un.
+    pub fn error_of(&self, field: &str) -> Option<I18nText> {
+        self.problems()
+            .into_iter()
+            .find(|(name, _)| name == field)
+            .map(|(_, error)| error)
+    }
+
     pub fn is_empty(&self) -> bool {
         self.parse_contacts().is_empty() && self.host_visible_phone.trim().is_empty()
     }
@@ -77,6 +212,26 @@ impl ContactRow {
     pub fn is_blank(&self) -> bool {
         self.label.is_blank() && self.phone.trim().is_empty()
     }
+}
+
+/// E.164, ou un numéro court de service (« 18 », « 3237 ») : on l'appelle tel quel, et le
+/// refuser ferait retirer au voyageur le numéro qu'il compose en urgence.
+fn phone_error(phone: &str) -> Option<I18nText> {
+    let phone = compact(phone);
+    let short = (2..=6).contains(&phone.len()) && phone.bytes().all(|b| b.is_ascii_digit());
+    if short {
+        None
+    } else {
+        check::phone(&phone)
+    }
+}
+
+/// Un numéro tel qu'on le compare : sans espaces, points ni tirets (« +33 6 12 34 56 78 »).
+pub fn compact(phone: &str) -> String {
+    phone
+        .chars()
+        .filter(|c| !c.is_whitespace() && !matches!(c, '.' | '-' | '(' | ')'))
+        .collect()
 }
 
 #[cfg(test)]
@@ -135,5 +290,45 @@ mod tests {
             .with_kv("config", serde_json::to_vec(&old).unwrap())
             .with_config(&json!({}))
             .run(|ctx| assert!(ModuleConfig::load(&ctx).unwrap().contacts.is_empty()));
+    }
+
+    /// Un numéro court se compose tel quel ; un numéro long doit porter son indicatif.
+    #[test]
+    fn phones_are_e164_or_short_service_numbers() {
+        assert!(phone_error("18").is_none());
+        assert!(phone_error("3237").is_none());
+        assert!(phone_error("+33 6 12 34 56 78").is_none());
+        assert!(phone_error("06 12 34 56 78").is_some());
+        assert!(phone_error("").is_none());
+    }
+
+    /// Les erreurs nomment leur champ ; une ligne vide n'en a pas ; la plage n'est vérifiée que
+    /// sur plages.
+    #[test]
+    fn problems_name_their_field() {
+        let config: ModuleConfig = serde_json::from_value(json!({
+            "host_availability": "hours",
+            "host_hours_from": "8h",
+            "contacts": [
+                { "label": "", "phone": "" },
+                { "label": "Paulette", "phone": "" },
+                { "label": "", "phone": "+33612345678" }
+            ],
+            "doctor_phone": "04 93 12 34 56"
+        }))
+        .unwrap();
+        let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
+        assert_eq!(
+            fields,
+            [
+                "host_hours_from",
+                "contacts.1.phone",
+                "contacts.2.label",
+                "doctor_phone"
+            ]
+        );
+        assert_eq!(config.host_hours(), Some(("8h", "21:00")));
+        assert!(ModuleConfig::default().host_hours().is_none());
+        assert!(ModuleConfig::default().show_host());
     }
 }

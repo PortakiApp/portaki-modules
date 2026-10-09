@@ -2,17 +2,13 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
-use portaki_sdk::sdui::primitives::{Card, Field, Form, Page, Stack, StepList, Text, TextInput};
+use portaki_sdk::sdui::primitives::{
+    Card, Field, FieldHint, Form, Page, Select, Stack, StepList, Text, TextInput, Toggle,
+};
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{ContactRow, ModuleConfig};
-
-/// Combien de contacts le formulaire accepte.
-///
-/// Une capacité, pas un nombre de lignes dessinées : six emplacements figés gelaient la liste à
-/// six — l'hôte ne pouvait pas en saisir un septième parce que le formulaire ne le dessinait
-/// jamais, et voyait quatre cartes vides quand il en avait saisi deux.
-pub const MAX_CONTACTS: usize = 12;
+pub use crate::config::MAX_CONTACTS;
+use crate::config::{ModuleConfig, AVAILABILITY, DEFAULT_HOURS};
 
 #[portaki_sdk::surface(
     host,
@@ -25,24 +21,15 @@ pub const MAX_CONTACTS: usize = 12;
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let config = ModuleConfig::load(&ctx)?;
 
+    // L'ordre de la spec (§2) : les numéros du pays, vos contacts, la santé.
     let mut cards: Vec<Component> = vec![Card::new()
-        .title("i18n:host.section.hostPhone")
-        .subtitle("i18n:host.section.hostPhone.help")
-        .icon(IconName::InfoCircle)
-        .children(vec![Field::new()
-            .name("host_visible_phone")
-            .label("i18n:host.phone.label")
-            .child(
-                TextInput::new()
-                    .name("host_visible_phone")
-                    .value(config.host_visible_phone.clone())
-                    .placeholder("i18n:host.phone.placeholder"),
-            )
-            .into()])
+        .title("i18n:host.section.country")
+        .icon(IconName::Phone)
+        .child(FieldHint::new().text("i18n:host.section.country.help"))
         .into()];
-
+    cards.push(host_card(&config, &ctx));
     cards.push(contacts_card(&config, &ctx));
-    cards.push(useful_card(&config));
+    cards.push(useful_card(&config, &ctx));
 
     // No Save button — the modules drawer owns the footer Save.
     Ok(Surface::new(
@@ -57,11 +44,107 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     .with_id(MAIN))
 }
 
+/// §2.2 L'hôte : son numéro affiché ou non, et quand on peut l'appeler.
+fn host_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let mut children: Vec<Component> = vec![
+        Field::new()
+            .name("show_host")
+            .label("i18n:host.showHost.label")
+            .child(Toggle::new().name("show_host").checked(config.show_host()))
+            .into(),
+        FieldHint::new().text("i18n:host.showHost.hint").into(),
+    ];
+    // Masqué, le numéro ne demande ni disponibilité ni surcharge (règles communes).
+    if config.show_host() {
+        let availability = if config.host_hours().is_some() {
+            "hours"
+        } else {
+            "always"
+        };
+        children.push(
+            Field::new()
+                .name("host_availability")
+                .label("i18n:host.availability.label")
+                .child(
+                    Select::new()
+                        .name("host_availability")
+                        .options(
+                            AVAILABILITY
+                                .iter()
+                                .map(|key| {
+                                    ChoiceOption::new(
+                                        *key,
+                                        format!("i18n:host.availability.label.{key}"),
+                                    )
+                                })
+                                .collect(),
+                        )
+                        .value(availability),
+                )
+                .into(),
+        );
+        if let Some((from, to)) = config.host_hours() {
+            for (name, label, value, placeholder) in [
+                (
+                    "host_hours_from",
+                    "i18n:host.hours.from",
+                    from,
+                    DEFAULT_HOURS.0,
+                ),
+                ("host_hours_to", "i18n:host.hours.to", to, DEFAULT_HOURS.1),
+            ] {
+                children.push(
+                    named(config, ctx, name)
+                        .label(label)
+                        .child(
+                            TextInput::new()
+                                .name(name)
+                                .value(value)
+                                .placeholder(placeholder),
+                        )
+                        .into(),
+                );
+            }
+        }
+        children.push(
+            named(config, ctx, "host_visible_phone")
+                .label("i18n:host.phone.label")
+                .child(
+                    TextInput::new()
+                        .name("host_visible_phone")
+                        .value(config.host_visible_phone.clone())
+                        .placeholder("i18n:host.phone.placeholder"),
+                )
+                .into(),
+        );
+        children.push(
+            FieldHint::new()
+                .text("i18n:host.section.hostPhone.help")
+                .into(),
+        );
+    }
+    Card::new()
+        .title("i18n:host.section.hostPhone")
+        .icon(IconName::Users)
+        .children(children)
+        .into()
+}
+
+/// Le champ `name`, avec le message de [`ModuleConfig::error_of`] sous lui s'il y en a un.
+fn named(config: &ModuleConfig, ctx: &HostContext, name: impl Into<String>) -> Field {
+    let name = name.into();
+    let field = Field::new().name(name.clone());
+    match config.error_of(&name) {
+        Some(error) => field.error(error.get(&ctx.locale).to_string()),
+        None => field,
+    }
+}
+
 /// Les contacts de l'hôte, en lignes dynamiques bornées.
 fn contacts_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
     let rows_count = draft_rows(ctx, config.contacts.len());
     let rows: Vec<Component> = (0..rows_count)
-        .map(|index| contact_row(index, config.contacts.get(index), ctx))
+        .map(|index| contact_row(index, config, ctx))
         .collect();
 
     Card::new()
@@ -101,8 +184,10 @@ fn emit_input(payload: impl serde::Serialize) -> Action {
     Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
 }
 
-fn contact_row(index: usize, contact: Option<&ContactRow>, ctx: &HostContext) -> Component {
+fn contact_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let contact = config.contacts.get(index);
     let label = contact.map(|c| c.label.host_value(ctx)).unwrap_or_default();
+    let note = contact.map(|c| c.note.host_value(ctx)).unwrap_or_default();
     let phone = contact.map(|c| c.phone.as_str()).unwrap_or("");
     // A filled row sends its id, so a save merges into it (and keeps its note, its category, its
     // other languages). A blank slot has nothing to keep — and an id would make it count as filled.
@@ -116,22 +201,31 @@ fn contact_row(index: usize, contact: Option<&ContactRow>, ctx: &HostContext) ->
         .children(
             id.into_iter()
                 .chain([
-                    Field::new()
-                        .name(format!("contacts.{index}.label"))
+                    named(config, ctx, format!("contacts.{index}.label"))
                         .label("i18n:host.contact.label")
                         .child(
                             TextInput::new()
                                 .name(format!("contacts.{index}.label"))
-                                .value(label),
+                                .value(label)
+                                .placeholder("i18n:host.contact.label.placeholder"),
                         )
                         .into(),
-                    Field::new()
-                        .name(format!("contacts.{index}.phone"))
+                    named(config, ctx, format!("contacts.{index}.phone"))
                         .label("i18n:host.contact.phone")
                         .child(
                             TextInput::new()
                                 .name(format!("contacts.{index}.phone"))
-                                .value(phone),
+                                .value(phone)
+                                .placeholder("+33 6 12 34 56 78"),
+                        )
+                        .into(),
+                    named(config, ctx, format!("contacts.{index}.note"))
+                        .label("i18n:host.contact.note")
+                        .child(
+                            TextInput::new()
+                                .name(format!("contacts.{index}.note"))
+                                .value(note)
+                                .placeholder("i18n:host.contact.note.placeholder"),
                         )
                         .into(),
                 ])
@@ -140,34 +234,53 @@ fn contact_row(index: usize, contact: Option<&ContactRow>, ctx: &HostContext) ->
         .into()
 }
 
-/// La pharmacie de garde et l'hôpital : les deux lignes que le §2.16 attend de l'hôte, et qui
-/// ferment la carte du voyageur en une phrase.
-fn useful_card(config: &ModuleConfig) -> Component {
+/// §2.3 Santé : la pharmacie, l'hôpital et le médecin — un nom et un numéro chacun.
+fn useful_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let mut children: Vec<Component> = Vec::new();
+    for (name_key, name, phone_key, phone) in [
+        (
+            "pharmacy",
+            &config.pharmacy,
+            "pharmacy_phone",
+            &config.pharmacy_phone,
+        ),
+        (
+            "hospital",
+            &config.hospital,
+            "hospital_phone",
+            &config.hospital_phone,
+        ),
+        (
+            "doctor",
+            &config.doctor,
+            "doctor_phone",
+            &config.doctor_phone,
+        ),
+    ] {
+        let camel = |key: &str| key.replace("_phone", "Phone");
+        children.push(
+            Field::new()
+                .name(name_key)
+                .label(format!("i18n:host.{name_key}.label"))
+                .child(
+                    TextInput::new()
+                        .name(name_key)
+                        .value(name.clone())
+                        .placeholder(format!("i18n:host.{name_key}.placeholder")),
+                )
+                .into(),
+        );
+        children.push(
+            named(config, ctx, phone_key)
+                .label(format!("i18n:host.{}.label", camel(phone_key)))
+                .child(TextInput::new().name(phone_key).value(phone.clone()))
+                .into(),
+        );
+    }
     Card::new()
         .title("i18n:host.section.useful")
         .subtitle("i18n:host.section.useful.help")
         .icon(IconName::InfoCircle)
-        .children(vec![
-            Field::new()
-                .name("pharmacy")
-                .label("i18n:host.pharmacy.label")
-                .child(
-                    TextInput::new()
-                        .name("pharmacy")
-                        .value(config.pharmacy.clone())
-                        .placeholder("i18n:host.pharmacy.placeholder"),
-                )
-                .into(),
-            Field::new()
-                .name("hospital")
-                .label("i18n:host.hospital.label")
-                .child(
-                    TextInput::new()
-                        .name("hospital")
-                        .value(config.hospital.clone())
-                        .placeholder("i18n:host.hospital.placeholder"),
-                )
-                .into(),
-        ])
+        .children(children)
         .into()
 }
