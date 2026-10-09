@@ -17,12 +17,7 @@ use crate::config::{
 use crate::tiqets::TiqetsStatus;
 use crate::viator::ViatorStatus;
 
-/// Combien d'adresses le formulaire accepte.
-///
-/// Une capacité, pas un nombre de lignes dessinées : six emplacements figés gelaient la liste à
-/// six — l'hôte ne pouvait pas en saisir une septième parce que le formulaire ne la dessinait
-/// jamais, et voyait quatre cartes vides quand il en avait saisi deux.
-pub const MAX_SPOTS: usize = 12;
+pub use crate::config::MAX_SPOTS;
 
 /// Créneaux d'activités affichés : les lignes stockées, plus un libre.
 ///
@@ -447,7 +442,7 @@ fn viator_card(enabled: bool, min_rating: &str, status: ViatorStatus) -> Compone
 fn spots_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
     let rows_count = draft_rows(ctx, config.spots.len());
     let rows: Vec<Component> = (0..rows_count)
-        .map(|index| spot_row(index, config.spots.get(index), ctx))
+        .map(|index| spot_row(index, config, ctx))
         .collect();
 
     Card::new()
@@ -659,10 +654,16 @@ fn emit_input(payload: impl serde::Serialize) -> Action {
 }
 
 /// Une ligne de texte d'une adresse — le motif se répète six fois, autant le nommer une fois.
-fn text_field(index: usize, name: &str, label: &str, value: &str) -> Component {
+fn text_field(
+    config: &ModuleConfig,
+    ctx: &HostContext,
+    index: usize,
+    name: &str,
+    label: &str,
+    value: &str,
+) -> Component {
     let field = format!("spots.{index}.{name}");
-    Field::new()
-        .name(field.clone())
+    named(config, ctx, field.clone())
         .label(label)
         .child(TextInput::new().name(field).value(value))
         .into()
@@ -714,7 +715,8 @@ fn photo_fields(index: usize, spot: Option<&SpotRow>) -> Vec<Component> {
         .collect()
 }
 
-fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Component {
+fn spot_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let spot: Option<&SpotRow> = config.spots.get(index);
     let title = spot.map(|s| s.title.host_value(ctx)).unwrap_or_default();
     let category = spot.and_then(|s| s.category.as_deref()).unwrap_or("");
     let distance = spot.and_then(|s| s.distance.as_deref()).unwrap_or("");
@@ -753,8 +755,7 @@ fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Componen
         .map(|s| sdui::row_id("spots", index, Some(&s.id)));
 
     let mut fields: Vec<Component> = vec![
-        Field::new()
-            .name(format!("spots.{index}.title"))
+        named(config, ctx, format!("spots.{index}.title"))
             .label("i18n:host.spot.name")
             .child(
                 TextInput::new()
@@ -789,8 +790,7 @@ fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Componen
                     .value(tag),
             )
             .into(),
-        Field::new()
-            .name(format!("spots.{index}.detail"))
+        named(config, ctx, format!("spots.{index}.detail"))
             .label("i18n:host.spot.description")
             .child(
                 TextArea::new()
@@ -800,8 +800,7 @@ fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Componen
             .into(),
         // L'avantage en entier, à côté du badge : « −10 % » tient sur une tuile, « 10 % sur le
         // menu du soir, sur présentation de cette page » demande une phrase.
-        Field::new()
-            .name(format!("spots.{index}.perk"))
+        named(config, ctx, format!("spots.{index}.perk"))
             .label("i18n:host.spot.perk")
             .child(
                 TextArea::new()
@@ -823,8 +822,8 @@ fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Componen
             )
             .into(),
         FieldHint::new().text("i18n:host.spot.note.hint").into(),
-        text_field(index, "price", "i18n:host.spot.price", price),
-        text_field(index, "hours", "i18n:host.spot.hours", hours),
+        text_field(config, ctx, index, "price", "i18n:host.spot.price", price),
+        text_field(config, ctx, index, "hours", "i18n:host.spot.hours", hours),
         // Le jour de fermeture en liste fermée, à côté de la phrase libre : c'est ce qui permet au
         // livret de dire « fermé aujourd'hui » plutôt que de laisser le voyageur lire « Fermé le
         // lundi » et compter les jours (§2.12).
@@ -838,10 +837,24 @@ fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Componen
                     .value(closed_day),
             )
             .into(),
-        text_field(index, "opening", "i18n:host.spot.opening", opening),
-        text_field(index, "parking", "i18n:host.spot.parking", parking),
-        text_field(index, "phone", "i18n:host.spot.phone", phone),
-        text_field(index, "url", "i18n:host.spot.url", url),
+        text_field(
+            config,
+            ctx,
+            index,
+            "opening",
+            "i18n:host.spot.opening",
+            opening,
+        ),
+        text_field(
+            config,
+            ctx,
+            index,
+            "parking",
+            "i18n:host.spot.parking",
+            parking,
+        ),
+        text_field(config, ctx, index, "phone", "i18n:host.spot.phone", phone),
+        text_field(config, ctx, index, "url", "i18n:host.spot.url", url),
         picker.into(),
     ];
     fields.extend(photo_fields(index, spot));
@@ -851,6 +864,16 @@ fn spot_row(index: usize, spot: Option<&SpotRow>, ctx: &HostContext) -> Componen
         .gap(10.0)
         .children(id.into_iter().chain(fields).collect())
         .into()
+}
+
+/// Le champ `name`, avec le message de [`ModuleConfig::error_of`] sous lui s'il y en a un.
+fn named(config: &ModuleConfig, ctx: &HostContext, name: impl Into<String>) -> Field {
+    let name = name.into();
+    let field = Field::new().name(name.clone());
+    match config.error_of(&name) {
+        Some(error) => field.error(error.get(&ctx.locale).to_string()),
+        None => field,
+    }
 }
 
 #[cfg(test)]
