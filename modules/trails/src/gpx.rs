@@ -26,7 +26,9 @@ pub struct Track {
     pub distance_km: f64,
     /// Somme des montées seules, en mètres — le dénivelé positif, pas l'amplitude.
     pub elevation_m: f64,
-    /// `loop` quand l'arrivée rejoint le départ, sinon `out_and_back`.
+    /// `loop` quand l'arrivée rejoint le départ, sinon `round_trip` — une valeur de [`crate::SHAPES`].
+    /// Une trace qui s'arrête loin du départ est le plus souvent l'aller d'un aller-retour ; un
+    /// aller simple ne s'en distingue pas, l'hôte le choisit lui-même.
     pub shape: &'static str,
 }
 
@@ -210,7 +212,7 @@ pub fn read(xml: &str) -> Option<Track> {
     let shape = if haversine_m(start, finish) <= LOOP_TOLERANCE_M {
         "loop"
     } else {
-        "out_and_back"
+        "round_trip"
     };
 
     let points: Vec<GeoPoint> = raw.iter().map(|(point, _)| *point).collect();
