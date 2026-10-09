@@ -34,6 +34,18 @@ pub fn bin_rows(data: &GuestData) -> Vec<Component> {
             if !subtitle.is_empty() {
                 item = item.subtitle(subtitle);
             }
+            // « Collecte : mardi, vendredi » — ses propres jours, quand l'hôte les a cochés.
+            let days: Vec<&str> = bin
+                .days
+                .iter()
+                .filter_map(|day| crate::collection::parse_day(day))
+                .map(|day| time::weekday_name(day, &data.locale))
+                .collect();
+            if !days.is_empty() {
+                let line = t!("guest.bin.days", days = days.join(", "))
+                    .unwrap_or_else(|_| days.join(", "));
+                item = item.child(Text::new().text(line).variant(TextVariant::Caption));
+            }
             if let Some(swatch) = bin_swatch(bin.color.as_deref()) {
                 item = item.leading(Leading::Visual(Box::new(LeadingVisual {
                     swatch: Some(swatch),

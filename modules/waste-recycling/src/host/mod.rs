@@ -3,8 +3,8 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Card, Eyebrow, Field, FieldHint, Form, Page, Select, Stack, StepList, Text,
-    TextArea, TextInput, Toggle,
+    AddressMapPicker, Card, ChoiceList, Eyebrow, Field, FieldHint, Form, Page, Select, Stack,
+    StepList, Text, TextArea, TextInput, Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
 use serde::Serialize;
@@ -519,7 +519,37 @@ fn bin_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component 
                         )
                         .into(),
                 ])
+                .chain(bin_days_field(index, bin, config))
                 .collect(),
         )
         .into()
+}
+
+/// Les jours de collecte du bac, en choix multiple — sans ramassage (zone rurale), sans objet.
+fn bin_days_field(index: usize, bin: Option<&BinRow>, config: &ModuleConfig) -> Option<Component> {
+    if !config.has_collection() {
+        return None;
+    }
+    let chosen = bin.map(|b| b.days.clone()).unwrap_or_default();
+    Some(
+        Field::new()
+            .name(format!("bins.{index}.days"))
+            .label("i18n:host.bin.days")
+            .child(
+                ChoiceList::new()
+                    .name(format!("bins.{index}.days"))
+                    .multi(true)
+                    .layout(ChoiceListLayout::Compact)
+                    .choices(
+                        ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+                            .into_iter()
+                            .map(|day| {
+                                ChoiceOption::new(day, format!("i18n:host.collection.day.{day}"))
+                            })
+                            .collect(),
+                    )
+                    .value(serde_json::to_string(&chosen).unwrap_or_default()),
+            )
+            .into(),
+    )
 }
