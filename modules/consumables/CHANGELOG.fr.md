@@ -5,6 +5,7 @@
 Les produits de base dans les équipements.
 
 * Dès qu'un produit nommé est à votre liste, les produits de base s'ajoutent aux équipements de la page du logement, sans le détail des produits.
+* Le catalogue de produits s'enregistre de nouveau : l'ajout des emojis le faisait échouer.
 
 ## 2.9.1
 
