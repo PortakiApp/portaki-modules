@@ -82,7 +82,7 @@
   "host.stay.message.label": "Mensaje para el anfitrión",
   "host.stay.missingStay": "Falta la estancia — recargue la página.",
   "host.stay.occasion.label": "Ocasión",
-  "host.stay.pending": "El huésped aún no ha rellenado el formulario. Se envía un recordatorio automático antes de la llegada.",
+  "host.stay.pending": "El huésped aún no ha rellenado el formulario. Un correo le invita a hacerlo en cuanto el formulario está disponible, si se conoce su dirección.",
   "host.stay.specialNeeds.label": "Necesidades especiales",
   "host.stay.status.done": "Completado",
   "host.stay.status.pending": "Pendiente",

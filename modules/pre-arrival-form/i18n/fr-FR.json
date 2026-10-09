@@ -82,7 +82,7 @@
   "host.stay.message.label": "Message pour l’hôte",
   "host.stay.missingStay": "Séjour manquant — rechargez la page.",
   "host.stay.occasion.label": "Occasion",
-  "host.stay.pending": "Le voyageur n’a pas encore rempli le formulaire. Un rappel est envoyé automatiquement avant l’arrivée.",
+  "host.stay.pending": "Le voyageur n’a pas encore rempli le formulaire. Un e-mail l’y invite dès que le formulaire est disponible, si son adresse est connue.",
   "host.stay.specialNeeds.label": "Besoins particuliers",
   "host.stay.status.done": "Complété",
   "host.stay.status.pending": "En attente",

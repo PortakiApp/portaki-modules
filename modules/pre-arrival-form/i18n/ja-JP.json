@@ -82,7 +82,7 @@
   "host.stay.message.label": "ホストへのメッセージ",
   "host.stay.missingStay": "滞在が見つかりません — ページを再読み込みしてください。",
   "host.stay.occasion.label": "目的",
-  "host.stay.pending": "ゲストはまだフォームに記入していません。到着前に自動でリマインダーが送られます。",
+  "host.stay.pending": "ゲストはまだフォームに記入していません。フォームが利用可能になると、メールアドレスがわかっていれば記入を案内するメールが届きます。",
   "host.stay.specialNeeds.label": "特別なご要望",
   "host.stay.status.done": "記入済み",
   "host.stay.status.pending": "未記入",
