@@ -4,7 +4,7 @@ use portaki_sdk::contracts::booking_channel::BookingChannel;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::primitives::{
-    Card, Field, Form, InfoBanner, Page, Select, Stack, StepList, Text, TextInput,
+    Card, Field, Form, InfoBanner, Page, Select, Stack, StepList, Text, TextInput, Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -41,7 +41,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let mut calendar_rows: Vec<Component> = Vec::new();
     for index in 0..calendars_count {
         let feed = config.calendars.get(index);
-        calendar_rows.push(calendar_row(index, feed));
+        calendar_rows.push(calendar_row(index, feed, &config, &ctx));
     }
 
     let form_children: Vec<Component> = vec![
@@ -115,7 +115,21 @@ fn emit_input(payload: impl Serialize) -> Action {
     Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
 }
 
-fn calendar_row(index: usize, feed: Option<&CalendarFeed>) -> Component {
+fn calendar_row(
+    index: usize,
+    feed: Option<&CalendarFeed>,
+    config: &ModuleConfig,
+    ctx: &HostContext,
+) -> Component {
+    // Le champ, avec le message de `problems` sous lui s'il y en a un.
+    let named = |key: &str| {
+        let name = format!("calendars.{index}.{key}");
+        let field = Field::new().name(name.clone());
+        match config.error_of(&name) {
+            Some(error) => field.error(error.get(&ctx.locale).to_string()),
+            None => field,
+        }
+    };
     let id = feed
         .map(|f| f.id.as_str())
         .filter(|s| !s.is_empty())
@@ -148,8 +162,7 @@ fn calendar_row(index: usize, feed: Option<&CalendarFeed>) -> Component {
                 .text("i18n:host.calendar.channel.help")
                 .variant(TextVariant::Caption)
                 .into(),
-            Field::new()
-                .name(format!("calendars.{index}.label"))
+            named("label")
                 .label("i18n:host.calendar.label")
                 .child(
                     TextInput::new()
@@ -158,8 +171,7 @@ fn calendar_row(index: usize, feed: Option<&CalendarFeed>) -> Component {
                         .placeholder("i18n:host.calendar.label.placeholder"),
                 )
                 .into(),
-            Field::new()
-                .name(format!("calendars.{index}.url"))
+            named("url")
                 .label("i18n:host.calendar.url")
                 .child(
                     TextInput::new()
@@ -167,6 +179,20 @@ fn calendar_row(index: usize, feed: Option<&CalendarFeed>) -> Component {
                         .value(url)
                         .placeholder("i18n:host.calendar.url.placeholder"),
                 )
+                .into(),
+            // Suspendre l'import sans perdre le lien (§2.1).
+            Field::new()
+                .name(format!("calendars.{index}.active"))
+                .label("i18n:host.calendar.active")
+                .child(
+                    Toggle::new()
+                        .name(format!("calendars.{index}.active"))
+                        .checked(feed.is_none_or(|f| f.active)),
+                )
+                .into(),
+            Text::new()
+                .text("i18n:host.calendar.active.help")
+                .variant(TextVariant::Caption)
                 .into(),
         ])
         .into()

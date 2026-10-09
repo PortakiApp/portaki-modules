@@ -6,6 +6,8 @@
   "email.sync-summary.description": "同步结果（新增 / 更新 / 待补全）",
   "host.alert.message": "格式决定如何读取 .ics 文件（预订还是封锁）。平台说明这次入住由谁售出 — Google 日历只是镜像，不是售出方。请勿公开分享这些链接。",
   "host.alert.title": "日历格式与平台",
+  "host.calendar.active": "启用",
+  "host.calendar.active.help": "关闭可暂停导入，但保留链接。",
   "host.calendar.channel": "预订平台",
   "host.calendar.channel.help": "由谁售出这些入住。日历格式会自动推断（并根据订阅网址进一步判断）。拿不准就保留「不清楚」— 订阅里写明时 Portaki 会自行读取。",
   "host.calendar.format": "日历格式",

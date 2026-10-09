@@ -1,14 +1,15 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
 use portaki_sdk::contracts::booking_channel::{BookingChannel, ChannelSignal};
+use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use crate::channel;
 
-/// Soft cap for host SDUI rows (abuse / UI guard). Not a product “max 2”.
-pub const CALENDAR_SLOTS: usize = 20;
+/// Combien de calendriers un logement relève (spec Calendriers §2.1).
+pub const CALENDAR_SLOTS: usize = 10;
 
 /// Declared ICS dialect for a feed — drives VEVENT filtering / guest naming.
 ///
@@ -91,6 +92,8 @@ pub struct CalendarFeed {
     /// Provenance of `channel` — only `HostOverride`, `FeedUrlHost`, or `None`.
     /// Import weighs an explicit choice above a URL prefill.
     pub channel_signal: ChannelSignal,
+    /// Relevé ou suspendu : un flux suspendu garde son lien et n'est plus relevé (§2.1).
+    pub active: bool,
 }
 
 impl CalendarFeed {
@@ -140,6 +143,18 @@ pub struct CalendarRow {
     pub channel: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub channel_signal: Option<ChannelSignal>,
+    /// « Actif » : un booléen, ou `"true"` / `"false"` selon le formulaire. Absent : actif.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub active: Option<Value>,
+}
+
+/// L'état « Actif » d'une ligne : absent ou illisible vaut actif, comme avant ce réglage.
+fn active(raw: Option<&Value>) -> bool {
+    match raw {
+        Some(Value::Bool(on)) => *on,
+        Some(Value::String(on)) => on.trim() != "false",
+        _ => true,
+    }
 }
 
 /// The host config, held by the platform (`#[portaki_sdk::config]`), which also takes
@@ -168,11 +183,39 @@ impl ModuleConfig {
         })
     }
 
+    /// Les flux relevés : un lien, et pas suspendus.
     pub fn connected_calendars(&self) -> Vec<&CalendarFeed> {
         self.calendars
             .iter()
-            .filter(|c| c.trimmed_url().is_some())
+            .filter(|c| c.active && c.trimmed_url().is_some())
             .collect()
+    }
+
+    /// Ce qui ne va pas, par flux (`calendars.<i>.url`…) — sous le champ dans le formulaire, et
+    /// dans `publishReadiness`.
+    pub fn problems(&self) -> Vec<(String, I18nText)> {
+        use portaki_sdk::config::check;
+        let mut problems = Vec::new();
+        for (index, feed) in self.calendars.iter().enumerate() {
+            let label = feed.label.as_deref().unwrap_or_default();
+            for (key, error) in [
+                ("url", check::https_url(feed.url.trim())),
+                ("label", check::max_chars(label, 40)),
+            ] {
+                if let Some(error) = error {
+                    problems.push((format!("calendars.{index}.{key}"), error));
+                }
+            }
+        }
+        problems
+    }
+
+    /// Le message à afficher sous `field`, s'il y en a un.
+    pub fn error_of(&self, field: &str) -> Option<I18nText> {
+        self.problems()
+            .into_iter()
+            .find(|(name, _)| name == field)
+            .map(|(_, error)| error)
     }
 
     pub fn has_any_feed(&self) -> bool {
@@ -238,6 +281,7 @@ fn feed(index: usize, row: &CalendarRow) -> Option<CalendarFeed> {
         url: url.to_string(),
         label,
         format: resolve_format(&row.format, url, channel),
+        active: active(row.active.as_ref()),
         channel,
         channel_signal,
     })
@@ -552,5 +596,23 @@ mod tests {
             .with_kv("config", bytes)
             .with_config(&json!({}))
             .run(|ctx| assert!(ModuleConfig::load(&ctx).unwrap().calendars.is_empty()));
+    }
+
+    /// Un flux suspendu garde son lien, n'est plus relevé ; un lien sans https bloque.
+    #[test]
+    fn a_paused_feed_is_kept_but_not_fetched() {
+        let rows: Vec<CalendarRow> = serde_json::from_value(json!([
+            { "url": "https://www.airbnb.com/calendar/ical/1.ics", "active": "false" },
+            { "url": "http://booking.com/2.ics" }
+        ]))
+        .unwrap();
+        let config = ModuleConfig {
+            calendars: feeds(&rows),
+        };
+        assert_eq!(config.calendars.len(), 2);
+        assert!(!config.calendars[0].active);
+        assert_eq!(config.connected_calendars().len(), 1);
+        let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
+        assert_eq!(fields, ["calendars.1.url"]);
     }
 }

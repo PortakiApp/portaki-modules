@@ -6,6 +6,8 @@
   "email.sync-summary.description": "Balans van de synchronisatie (nieuw / bijgewerkt / aan te vullen)",
   "host.alert.message": "Het formaat bepaalt hoe het .ics-bestand wordt gelezen (boekingen of blokkades). Het platform zegt wie het verblijf heeft verkocht — een Google-agenda is een spiegel, geen verkoper. Deel deze links nooit openbaar.",
   "host.alert.title": "Agendaformaat en platform",
+  "host.calendar.active": "Actief",
+  "host.calendar.active.help": "Zet uit om de import te pauzeren zonder de link te verliezen.",
   "host.calendar.channel": "Boekingsplatform",
   "host.calendar.channel.help": "Wie deze verblijven verkoopt. Het agendaformaat wordt daaruit afgeleid (en verfijnd via de feed-URL). Laat ‘Ik weet het niet’ staan bij twijfel — Portaki leest het platform uit de feed wanneer het erin staat.",
   "host.calendar.format": "Agendaformaat",

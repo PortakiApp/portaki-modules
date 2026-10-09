@@ -308,3 +308,33 @@ fn resolve_feed_format(feed: &FeedBody, config: &ModuleConfig) -> CalendarFormat
         .and_then(CalendarFormat::parse)
         .unwrap_or_else(|| config.format_for_id(&feed.id))
 }
+
+/// Ce qui bloque la publication : un lien qui n'est pas https, un nom trop long — chacun sur son
+/// champ (`config.calendars.<i>.<clé>`). Aucun calendrier : la plateforme avertit déjà
+/// (`recommended`).
+#[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
+pub fn publish_readiness(
+    ctx: Context,
+) -> Result<portaki_sdk::contracts::publish::PublishReadiness> {
+    use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
+    let config = ModuleConfig::load(&ctx)?;
+    let items = config
+        .problems()
+        .into_iter()
+        .map(|(field, error)| PublishCheck {
+            label: crate::i18n::text(
+                if field.ends_with(".url") {
+                    "host.calendar.url"
+                } else {
+                    "host.calendar.label"
+                },
+                &[],
+            ),
+            id: format!("config.{field}"),
+            level: PublishLevel::Required,
+            ok: false,
+            hint: error,
+        })
+        .collect();
+    Ok(PublishReadiness { items })
+}

@@ -6,6 +6,8 @@
   "email.sync-summary.description": "Bilanz der Synchronisierung (neu / aktualisiert / zu vervollständigen)",
   "host.alert.message": "Das Format entscheidet, wie die .ics-Datei gelesen wird (Buchungen oder Sperren). Die Plattform sagt, wer den Aufenthalt verkauft hat — ein Google-Kalender ist ein Spiegel, kein Verkäufer. Teilen Sie diese Links niemals öffentlich.",
   "host.alert.title": "Kalenderformat und Plattform",
+  "host.calendar.active": "Aktiv",
+  "host.calendar.active.help": "Deaktivieren, um den Import zu pausieren, ohne den Link zu verlieren.",
   "host.calendar.channel": "Buchungsplattform",
   "host.calendar.channel.help": "Wer diese Aufenthalte verkauft. Das Kalenderformat wird daraus abgeleitet (und anhand der Feed-URL verfeinert). Lassen Sie „Ich weiß es nicht“ stehen, wenn Sie zögern — Portaki liest die Plattform aus dem Feed, wenn sie dort steht.",
   "host.calendar.format": "Kalenderformat",
