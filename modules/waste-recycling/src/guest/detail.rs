@@ -95,13 +95,23 @@ fn inside_card(data: &GuestData) -> Option<Component> {
 ///
 /// Rien quand l'hôte n'a rempli aucun des trois : une carte vide promettrait un local.
 fn bin_room_card(data: &GuestData) -> Option<Component> {
-    if data.bin_room_steps.is_empty()
-        && data.bin_room_code.is_empty()
-        && data.bin_room_hours.is_empty()
+    if !data.bin_room
+        || (data.bin_room_where.is_empty()
+            && data.bin_room_steps.is_empty()
+            && data.bin_room_code.is_empty()
+            && data.bin_room_hours.is_empty())
     {
         return None;
     }
     let mut rows: Vec<Component> = Vec::new();
+    if !data.bin_room_where.is_empty() {
+        rows.push(Component::Text(
+            Text::new()
+                .text(data.bin_room_where.clone())
+                .variant(TextVariant::Body)
+                .emphasis(Emphasis::Strong),
+        ));
+    }
     if !data.bin_room_code.is_empty() {
         rows.push(Component::KeyValue(
             KeyValue::new()

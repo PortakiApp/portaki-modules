@@ -2,6 +2,7 @@
 
 use std::collections::BTreeSet;
 
+use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -17,6 +18,18 @@ pub struct ModuleConfig {
     /// porte, seulement des points d'apport (§3.2). La porte de publication est passée dans
     /// `publishReadiness`, qui sait dire « des bacs **ou** un point d'apport » — ce qu'un
     /// `required` sur un champ ne peut pas exprimer.
+    /// Ramassage devant le logement. Absent : oui — c'est le cas courant, et un hôte d'avant ce
+    /// réglage avait des jours ou une phrase de collecte. Faux : zone rurale, pas de bandeau.
+    #[field(label = "host.hasCollection.label")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub has_collection: Option<bool>,
+    /// Quand sortir les bacs : `evening`, `before7` ou `before9` ([`PUT_OUT`]).
+    #[field(
+        kind = "select",
+        options = ["evening", "before7", "before9"],
+        label = "host.putOut.label"
+    )]
+    pub put_out: String,
     #[field(label = "config.bins")]
     pub bins: Vec<BinRow>,
     /// La phrase que l'hôte a écrite. Conservée : elle s'affiche tant qu'aucun jour n'est coché, et
@@ -72,6 +85,14 @@ pub struct ModuleConfig {
     ///
     /// Numérotées chez le voyageur : un local derrière une haie, une porte grise et un bac à
     /// couvercle jaune se suivent, et une phrase unique les mélange.
+    /// Le bloc « Le local ». Absent : présent dès qu'un hôte d'avant ce réglage en avait rempli
+    /// une ligne.
+    #[field(label = "host.binRoom.enabled")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bin_room_enabled: Option<bool>,
+    /// Où se trouve le local — la ligne en gras du bloc.
+    #[field(label = "host.binRoom.where")]
+    pub bin_room_where: I18nText,
     #[field(label = "host.binRoom.label")]
     pub bin_room_steps: I18nText,
     /// Le code de la porte du local, s'il y en a une (§2.7).
@@ -169,9 +190,140 @@ impl ModuleConfig {
     /// Le local comptait pour rien dans [`Self::is_empty`] : un hôte qui n'avait rempli que le
     /// chemin jusqu'au local n'obtenait aucune carte, et le module se taisait sur ce qu'il savait.
     pub fn has_bin_room(&self) -> bool {
-        !self.bin_room_steps.is_blank()
+        self.bin_room_enabled
+            .unwrap_or_else(|| self.bin_room_filled())
+    }
+
+    fn bin_room_filled(&self) -> bool {
+        !self.bin_room_where.is_blank()
+            || !self.bin_room_steps.is_blank()
             || !self.bin_room_code.trim().is_empty()
             || !self.bin_room_hours.is_blank()
+    }
+
+    /// Ramassage devant le logement ; oui sans choix enregistré.
+    pub fn has_collection(&self) -> bool {
+        self.has_collection.unwrap_or(true)
+    }
+
+    /// Quand sortir les bacs, dans la liste ; la veille au soir sans choix.
+    pub fn put_out(&self) -> &'static str {
+        PUT_OUT
+            .iter()
+            .find(|key| **key == self.put_out.trim())
+            .unwrap_or(&PUT_OUT[0])
+    }
+
+    /// Ce qui ne va pas, champ par champ (`bins.<i>.title`…) — sous le champ dans le formulaire,
+    /// et dans `publishReadiness`, pour que les deux disent la même chose.
+    pub fn problems(&self) -> Vec<(String, I18nText)> {
+        let text = crate::i18n::text;
+        let mut problems: Vec<(String, I18nText)> = Vec::new();
+        let mut push = |field: String, error: Option<I18nText>| {
+            if let Some(error) = error {
+                problems.push((field, error));
+            }
+        };
+        let too_long = |value: &I18nText, max: usize| {
+            value
+                .by_language()
+                .find_map(|(_, text)| check::max_chars(text, max))
+        };
+
+        let bins = self.bins.iter().filter(|bin| !bin.is_blank()).count();
+        push(
+            "bins".into(),
+            (bins > MAX_BINS).then(|| text("host.bins.tooMany")),
+        );
+        for (index, bin) in self.bins.iter().enumerate() {
+            if bin.is_blank() {
+                continue;
+            }
+            push(
+                format!("bins.{index}.title"),
+                if bin.title.is_blank() {
+                    Some(text("host.bin.title.required"))
+                } else {
+                    too_long(&bin.title, BIN_TITLE_MAX)
+                },
+            );
+            push(
+                format!("bins.{index}.items"),
+                bin.items
+                    .is_blank()
+                    .then(|| text("host.bin.items.required")),
+            );
+        }
+
+        if self.has_bin_room() {
+            push(
+                "bin_room_where".into(),
+                if self.bin_room_where.is_blank() {
+                    Some(text("host.binRoom.where.required"))
+                } else {
+                    too_long(&self.bin_room_where, WHERE_MAX)
+                },
+            );
+            let code = self.bin_room_code.trim().chars().count();
+            push(
+                "bin_room_code".into(),
+                (code > 0 && !(CODE_MIN..=CODE_MAX).contains(&code))
+                    .then(|| text("host.binRoom.code.length")),
+            );
+        }
+
+        let points = self.dropoff_points.iter().filter(|p| !p.is_blank()).count();
+        push(
+            "dropoff_points".into(),
+            (points > MAX_DROPOFF_POINTS).then(|| text("host.dropoff.tooMany")),
+        );
+        for (index, point) in self.dropoff_points.iter().enumerate() {
+            if point.is_blank() {
+                continue;
+            }
+            push(
+                format!("dropoff_points.{index}.title"),
+                if point.title.is_blank() {
+                    Some(text("host.dropoff.title.required"))
+                } else {
+                    too_long(&point.title, DROPOFF_TITLE_MAX)
+                },
+            );
+            push(
+                format!("dropoff_points.{index}.lat"),
+                point
+                    .coordinates()
+                    .is_none()
+                    .then(|| text("host.dropoff.position.required")),
+            );
+            push(
+                format!("dropoff_points.{index}.accepts_household"),
+                point
+                    .accepted_keys()
+                    .is_empty()
+                    .then(|| text("host.dropoff.accepts.required")),
+            );
+        }
+
+        if self.compost_enabled {
+            push(
+                "compost_location".into(),
+                if self.compost_location.is_blank() {
+                    Some(text("host.compost.location.required"))
+                } else {
+                    too_long(&self.compost_location, WHERE_MAX)
+                },
+            );
+        }
+        problems
+    }
+
+    /// Le message à afficher sous `field`, s'il y en a un.
+    pub fn error_of(&self, field: &str) -> Option<I18nText> {
+        self.problems()
+            .into_iter()
+            .find(|(name, _)| name == field)
+            .map(|(_, error)| error)
     }
 
     /// The named dropoff rows, for the guest: the form sends its slots, blank ones included.
@@ -269,6 +421,19 @@ impl BinRow {
 /// Au plus dix points d'apport, et dix lignes par liste du composteur (§10). Des constantes du
 /// module : une borne n'est pas un réglage, et elle ne doit jamais arriver par le formulaire.
 pub const MAX_DROPOFF_POINTS: usize = 10;
+
+/// Combien de bacs la configuration accepte (§2.2).
+pub const MAX_BINS: usize = 12;
+
+/// Quand sortir les bacs, la veille au soir d'abord : c'est le défaut (§2.1).
+pub const PUT_OUT: [&str; 3] = ["evening", "before7", "before9"];
+
+/// Longueurs et bornes des champs (§2.2 à §2.5).
+const BIN_TITLE_MAX: usize = 30;
+const WHERE_MAX: usize = 120;
+const DROPOFF_TITLE_MAX: usize = 60;
+const CODE_MIN: usize = 3;
+const CODE_MAX: usize = 12;
 pub const MAX_COMPOST_LINES: usize = 10;
 
 /// Un point d'apport : un conteneur de quartier, le plus souvent sur un parking.
@@ -298,6 +463,10 @@ pub struct DropoffRow {
     pub accepts_glass: bool,
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub accepts_paper: bool,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub accepts_textile: bool,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub accepts_batteries: bool,
     pub note: I18nText,
 }
 
@@ -319,6 +488,8 @@ impl DropoffRow {
             ("waste.packaging", self.accepts_packaging),
             ("waste.glass", self.accepts_glass),
             ("waste.paper", self.accepts_paper),
+            ("waste.textile", self.accepts_textile),
+            ("waste.batteries", self.accepts_batteries),
         ]
         .into_iter()
         .filter(|(_, ticked)| *ticked)
@@ -331,11 +502,15 @@ impl DropoffRow {
 ///
 /// A name, never a hex: the yellow bin is yellow because the municipality says so, but which
 /// yellow is the shell's call — its palette, a dark theme, contrast.
-const BIN_SWATCHES: [(&str, Swatch); 4] = [
+pub const BIN_SWATCHES: [(&str, Swatch); 8] = [
     ("yellow", Swatch::Yellow),
     ("green", Swatch::Green),
+    ("blue", Swatch::Blue),
     ("brown", Swatch::Brown),
     ("grey", Swatch::Grey),
+    ("black", Swatch::Black),
+    ("white", Swatch::White),
+    ("red", Swatch::Red),
 ];
 
 /// The hex values stored before swatches, read back as the tint they stood for.
@@ -504,5 +679,47 @@ mod tests {
             .with_kv("config", serde_json::to_vec(&old).unwrap())
             .with_config(&json!({}))
             .run(|ctx| assert_eq!(ModuleConfig::load(&ctx).unwrap(), ModuleConfig::default()));
+    }
+
+    /// Sans choix enregistré : ramassage oui, local présent dès qu'une ligne en est remplie. Un
+    /// choix l'emporte.
+    #[test]
+    fn unset_toggles_follow_what_the_host_already_had() {
+        let config = |value| serde_json::from_value::<ModuleConfig>(value).unwrap();
+        assert!(config(json!({})).has_collection());
+        assert!(!config(json!({ "has_collection": false })).has_collection());
+        assert!(!config(json!({})).has_bin_room());
+        assert!(config(json!({ "bin_room_code": "1234" })).has_bin_room());
+        assert!(
+            !config(json!({ "bin_room_code": "1234", "bin_room_enabled": false })).has_bin_room()
+        );
+        assert_eq!(config(json!({})).put_out(), "evening");
+        assert_eq!(config(json!({ "put_out": "before7" })).put_out(), "before7");
+    }
+
+    /// Les erreurs nomment leur champ, ligne comprise ; une ligne vide n'en a pas.
+    #[test]
+    fn problems_name_their_field() {
+        let config: ModuleConfig = serde_json::from_value(json!({
+            "bins": [{ "title": "", "items": "" }, { "title": "Bac jaune" }],
+            "bin_room_enabled": true,
+            "bin_room_code": "12",
+            "dropoff_points": [{ "title": "Parking" }],
+            "compost_enabled": true
+        }))
+        .unwrap();
+        let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
+        assert_eq!(
+            fields,
+            [
+                "bins.1.items",
+                "bin_room_where",
+                "bin_room_code",
+                "dropoff_points.0.lat",
+                "dropoff_points.0.accepts_household",
+                "compost_location"
+            ]
+        );
+        assert!(ModuleConfig::default().problems().is_empty());
     }
 }

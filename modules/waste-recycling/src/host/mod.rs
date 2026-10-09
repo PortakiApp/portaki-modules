@@ -9,14 +9,10 @@ use portaki_sdk::sdui::primitives::{
 use portaki_sdk::sdui::surface::Surface;
 use serde::Serialize;
 
-use crate::config::{bin_color_name, BinRow, DropoffRow, ModuleConfig, MAX_DROPOFF_POINTS};
-
-/// Combien de bacs le formulaire accepte.
-///
-/// Une capacité, pas un nombre de lignes dessinées : six emplacements figés gelaient la liste à
-/// six — l'hôte ne pouvait pas en saisir un septième parce que le formulaire ne le dessinait
-/// jamais, et voyait quatre cartes vides quand il en avait saisi deux.
-pub const MAX_BINS: usize = 12;
+pub use crate::config::MAX_BINS;
+use crate::config::{
+    bin_color_name, BinRow, DropoffRow, ModuleConfig, BIN_SWATCHES, MAX_DROPOFF_POINTS, PUT_OUT,
+};
 
 /// Host configuration page — bin cards + collection schedule.
 #[portaki_sdk::surface(
@@ -30,8 +26,10 @@ pub const MAX_BINS: usize = 12;
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let config = ModuleConfig::load(&ctx)?;
 
-    let mut cards: Vec<Component> = vec![bins_card(&config, &ctx)];
-    cards.push(schedule_card(&config, &ctx));
+    // L'ordre de la spec (§2) : collecte, bacs, local, points d'apport, composteur.
+    let mut cards: Vec<Component> = vec![schedule_card(&config, &ctx)];
+    cards.push(bins_card(&config, &ctx));
+    cards.push(bin_room_card(&config, &ctx));
     cards.push(dropoff_card(&config, &ctx));
     cards.push(compost_card(&config, &ctx));
 
@@ -63,35 +61,67 @@ fn schedule_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         ("collects_sun", "sun", config.collects_sun),
     ];
 
-    // Un champ par jour, nommé comme son `#[field]` : la plateforme refuse tout le formulaire dès
-    // qu'un nom n'est pas une clé déclarée, et un groupe de cases n'a pas de nom à lui.
     let mut children: Vec<Component> = vec![
-        Eyebrow::new().text("i18n:host.collection.days").into(),
-        Text::new()
-            .text("i18n:host.collection.days.desc")
-            .variant(TextVariant::Caption)
-            .into(),
-    ];
-    children.extend(days.into_iter().map(|(name, key, ticked)| {
-        Field::new()
-            .name(name)
-            .label(format!("i18n:host.collection.day.{key}"))
-            .child(Toggle::new().name(name).checked(ticked))
-            .into()
-    }));
-
-    children.push(
-        Field::new()
-            .name("collection_schedule")
-            .label("i18n:host.schedule.label")
+        named(config, ctx, "has_collection")
+            .label("i18n:host.hasCollection.label")
             .child(
-                TextArea::new()
-                    .name("collection_schedule")
-                    .value(config.collection_schedule.host_value(ctx))
-                    .placeholder("i18n:host.schedule.placeholder"),
+                Toggle::new()
+                    .name("has_collection")
+                    .checked(config.has_collection()),
             )
             .into(),
-    );
+        FieldHint::new().text("i18n:host.hasCollection.hint").into(),
+    ];
+
+    // Sans ramassage (zone rurale), ni jours ni heure de sortie : la question n'a pas d'objet.
+    if config.has_collection() {
+        children.push(
+            named(config, ctx, "put_out")
+                .label("i18n:host.putOut.label")
+                .child(
+                    Select::new()
+                        .name("put_out")
+                        .options(
+                            PUT_OUT
+                                .iter()
+                                .map(|key| {
+                                    ChoiceOption::new(*key, format!("i18n:host.putOut.label.{key}"))
+                                })
+                                .collect(),
+                        )
+                        .value(config.put_out()),
+                )
+                .into(),
+        );
+        // Un champ par jour, nommé comme son `#[field]` : la plateforme refuse tout le formulaire
+        // dès qu'un nom n'est pas une clé déclarée, et un groupe de cases n'a pas de nom à lui.
+        children.push(Eyebrow::new().text("i18n:host.collection.days").into());
+        children.push(
+            Text::new()
+                .text("i18n:host.collection.days.desc")
+                .variant(TextVariant::Caption)
+                .into(),
+        );
+        children.extend(days.into_iter().map(|(name, key, ticked)| {
+            Field::new()
+                .name(name)
+                .label(format!("i18n:host.collection.day.{key}"))
+                .child(Toggle::new().name(name).checked(ticked))
+                .into()
+        }));
+        children.push(
+            Field::new()
+                .name("collection_schedule")
+                .label("i18n:host.schedule.label")
+                .child(
+                    TextArea::new()
+                        .name("collection_schedule")
+                        .value(config.collection_schedule.host_value(ctx))
+                        .placeholder("i18n:host.schedule.placeholder"),
+                )
+                .into(),
+        );
+    }
     children.push(
         Field::new()
             .name("takeout_note")
@@ -107,56 +137,86 @@ fn schedule_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
             .into(),
     );
 
-    // Le chemin jusqu'au local, une étape par ligne : il appartient à la collecte plus qu'aux
-    // bacs — c'est le trajet du jour de sortie.
-    children.push(
-        Field::new()
-            .name("bin_room_steps")
-            .label("i18n:host.binRoom.label")
-            .children(vec![
-                FieldHint::new().text("i18n:host.binRoom.hint").into(),
-                TextArea::new()
-                    .name("bin_room_steps")
-                    .value(config.bin_room_steps.host_value(ctx))
-                    .rows(3)
-                    .placeholder("i18n:host.binRoom.placeholder")
-                    .into(),
-            ])
-            .into(),
-    );
-
-    // Le code et les horaires du local, à côté du chemin : c'est la même porte (§2.7).
-    children.push(
-        Field::new()
-            .name("bin_room_code")
-            .label("i18n:host.binRoom.code")
-            .child(
-                TextInput::new()
-                    .name("bin_room_code")
-                    .value(config.bin_room_code.clone())
-                    .placeholder("i18n:host.binRoom.code.placeholder"),
-            )
-            .into(),
-    );
-    children.push(FieldHint::new().text("i18n:host.binRoom.code.hint").into());
-    children.push(
-        Field::new()
-            .name("bin_room_hours")
-            .label("i18n:host.binRoom.hours")
-            .child(
-                TextInput::new()
-                    .name("bin_room_hours")
-                    .value(config.bin_room_hours.host_value(ctx))
-                    .placeholder("i18n:host.binRoom.hours.placeholder"),
-            )
-            .into(),
-    );
-
     Card::new()
         .title("i18n:host.section.schedule")
         .icon(IconName::Calendar)
         .children(children)
         .into()
+}
+
+/// §2.3 Le local poubelles : une case, puis l'emplacement, le chemin, le code et les horaires.
+fn bin_room_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let enabled = config.has_bin_room();
+    let mut children: Vec<Component> = vec![named(config, ctx, "bin_room_enabled")
+        .label("i18n:host.binRoom.enabled")
+        .child(Toggle::new().name("bin_room_enabled").checked(enabled))
+        .into()];
+    if enabled {
+        children.push(
+            named(config, ctx, "bin_room_where")
+                .label("i18n:host.binRoom.where")
+                .required(true)
+                .child(
+                    TextInput::new()
+                        .name("bin_room_where")
+                        .value(config.bin_room_where.host_value(ctx))
+                        .placeholder("i18n:host.binRoom.where.placeholder"),
+                )
+                .into(),
+        );
+        children.push(
+            named(config, ctx, "bin_room_steps")
+                .label("i18n:host.binRoom.label")
+                .children(vec![
+                    FieldHint::new().text("i18n:host.binRoom.hint").into(),
+                    TextArea::new()
+                        .name("bin_room_steps")
+                        .value(config.bin_room_steps.host_value(ctx))
+                        .rows(3)
+                        .placeholder("i18n:host.binRoom.placeholder")
+                        .into(),
+                ])
+                .into(),
+        );
+        children.push(
+            named(config, ctx, "bin_room_code")
+                .label("i18n:host.binRoom.code")
+                .child(
+                    TextInput::new()
+                        .name("bin_room_code")
+                        .value(config.bin_room_code.clone())
+                        .placeholder("i18n:host.binRoom.code.placeholder"),
+                )
+                .into(),
+        );
+        children.push(FieldHint::new().text("i18n:host.binRoom.code.hint").into());
+        children.push(
+            named(config, ctx, "bin_room_hours")
+                .label("i18n:host.binRoom.hours")
+                .child(
+                    TextInput::new()
+                        .name("bin_room_hours")
+                        .value(config.bin_room_hours.host_value(ctx))
+                        .placeholder("i18n:host.binRoom.hours.placeholder"),
+                )
+                .into(),
+        );
+    }
+    Card::new()
+        .title("i18n:host.binRoom.title")
+        .icon(IconName::Key)
+        .children(children)
+        .into()
+}
+
+/// Le champ `name`, avec le message de [`ModuleConfig::error_of`] sous lui s'il y en a un.
+fn named(config: &ModuleConfig, ctx: &HostContext, name: impl Into<String>) -> Field {
+    let name = name.into();
+    let field = Field::new().name(name.clone());
+    match config.error_of(&name) {
+        Some(error) => field.error(error.get(&ctx.locale).to_string()),
+        None => field,
+    }
 }
 
 /// Les points d'apport : des lignes dessinées à la demande, pas dix emplacements vides.
@@ -168,7 +228,7 @@ fn dropoff_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
     let stored = config.parse_dropoff_points().len();
     let rows_count = draft_rows(ctx, "dropoff_points", stored, MAX_DROPOFF_POINTS);
     let rows: Vec<Component> = (0..rows_count)
-        .map(|index| dropoff_row(index, config.dropoff_points.get(index), ctx))
+        .map(|index| dropoff_row(index, config, ctx))
         .collect();
 
     Card::new()
@@ -217,7 +277,8 @@ fn emit_input(payload: impl Serialize) -> Action {
     Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
 }
 
-fn dropoff_row(index: usize, point: Option<&DropoffRow>, ctx: &HostContext) -> Component {
+fn dropoff_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let point: Option<&DropoffRow> = config.dropoff_points.get(index);
     let title = point.map(|p| p.title.host_value(ctx)).unwrap_or_default();
     let note = point.map(|p| p.note.host_value(ctx)).unwrap_or_default();
     let address = point.and_then(|p| p.address.as_deref()).unwrap_or("");
@@ -237,8 +298,7 @@ fn dropoff_row(index: usize, point: Option<&DropoffRow>, ctx: &HostContext) -> C
 
     let mut children: Vec<Component> = id.into_iter().collect();
     children.push(
-        Field::new()
-            .name(format!("dropoff_points.{index}.title"))
+        named(config, ctx, format!("dropoff_points.{index}.title"))
             .label("i18n:host.dropoff.pointTitle")
             .child(
                 TextInput::new()
@@ -248,7 +308,16 @@ fn dropoff_row(index: usize, point: Option<&DropoffRow>, ctx: &HostContext) -> C
             )
             .into(),
     );
-    children.push(picker.into());
+    // Le sélecteur n'a pas d'erreur à lui : un champ sans nom la porte en dessous.
+    children.push(
+        match config.error_of(&format!("dropoff_points.{index}.lat")) {
+            Some(error) => Field::new()
+                .error(error.get(&ctx.locale).to_string())
+                .child(picker)
+                .into(),
+            None => picker.into(),
+        },
+    );
     children.push(Eyebrow::new().text("i18n:host.dropoff.accepts").into());
     for (suffix, ticked) in [
         (
@@ -261,11 +330,15 @@ fn dropoff_row(index: usize, point: Option<&DropoffRow>, ctx: &HostContext) -> C
         ),
         ("accepts_glass", point.is_some_and(|p| p.accepts_glass)),
         ("accepts_paper", point.is_some_and(|p| p.accepts_paper)),
+        ("accepts_textile", point.is_some_and(|p| p.accepts_textile)),
+        (
+            "accepts_batteries",
+            point.is_some_and(|p| p.accepts_batteries),
+        ),
     ] {
         let name = format!("dropoff_points.{index}.{suffix}");
         children.push(
-            Field::new()
-                .name(name.clone())
+            named(config, ctx, name.clone())
                 .label(format!("i18n:host.dropoff.{suffix}"))
                 .child(Toggle::new().name(name).checked(ticked))
                 .into(),
@@ -291,53 +364,54 @@ fn dropoff_row(index: usize, point: Option<&DropoffRow>, ctx: &HostContext) -> C
         .into()
 }
 
-/// Le composteur : une case, un emplacement, et deux listes d'une ligne par élément.
+/// Le composteur : une case, puis un emplacement et deux listes d'une ligne par élément.
 fn compost_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let mut children: Vec<Component> = vec![
-        Field::new()
-            .name("compost_enabled")
-            .label("i18n:host.compost.enabled")
-            .child(
-                Toggle::new()
-                    .name("compost_enabled")
-                    .checked(config.compost_enabled),
-            )
-            .into(),
-        Field::new()
-            .name("compost_location")
-            .label("i18n:host.compost.location")
-            .child(
-                TextInput::new()
-                    .name("compost_location")
-                    .value(config.compost_location.host_value(ctx))
-                    .placeholder("i18n:host.compost.location.placeholder"),
-            )
-            .into(),
-        FieldHint::new()
-            .text("i18n:host.compost.location.hint")
-            .into(),
-    ];
-    for (name, label) in [
-        ("compost_accepted", "i18n:host.compost.accepted"),
-        ("compost_refused", "i18n:host.compost.refused"),
-    ] {
-        let value = if name == "compost_accepted" {
-            config.compost_accepted.host_value(ctx)
-        } else {
-            config.compost_refused.host_value(ctx)
-        };
+    let mut children: Vec<Component> = vec![Field::new()
+        .name("compost_enabled")
+        .label("i18n:host.compost.enabled")
+        .child(
+            Toggle::new()
+                .name("compost_enabled")
+                .checked(config.compost_enabled),
+        )
+        .into()];
+    // Fermé, le composteur ne demande rien de plus (règles communes : masqué, pas grisé).
+    if config.compost_enabled {
         children.push(
-            Field::new()
-                .name(name)
-                .label(label)
+            named(config, ctx, "compost_location")
+                .label("i18n:host.compost.location")
+                .required(true)
                 .child(
-                    TextArea::new()
-                        .name(name)
-                        .value(value)
-                        .placeholder("i18n:host.compost.lines.placeholder"),
+                    TextInput::new()
+                        .name("compost_location")
+                        .value(config.compost_location.host_value(ctx))
+                        .placeholder("i18n:host.compost.location.placeholder"),
                 )
                 .into(),
         );
+        children.push(
+            FieldHint::new()
+                .text("i18n:host.compost.location.hint")
+                .into(),
+        );
+        for (name, value) in [
+            ("compost_accepted", &config.compost_accepted),
+            ("compost_refused", &config.compost_refused),
+        ] {
+            let key = name.trim_start_matches("compost_");
+            children.push(
+                Field::new()
+                    .name(name)
+                    .label(format!("i18n:host.compost.{key}"))
+                    .child(
+                        TextArea::new()
+                            .name(name)
+                            .value(value.host_value(ctx))
+                            .placeholder("i18n:host.compost.lines.placeholder"),
+                    )
+                    .into(),
+            );
+        }
     }
 
     Card::new()
@@ -352,7 +426,7 @@ fn compost_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
 fn bins_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
     let rows_count = draft_rows(ctx, "bins", config.bins.len(), MAX_BINS);
     let rows: Vec<Component> = (0..rows_count)
-        .map(|index| bin_row(index, config.bins.get(index), ctx))
+        .map(|index| bin_row(index, config, ctx))
         .collect();
 
     Card::new()
@@ -374,7 +448,8 @@ fn bins_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         .into()
 }
 
-fn bin_row(index: usize, bin: Option<&BinRow>, ctx: &HostContext) -> Component {
+fn bin_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let bin: Option<&BinRow> = config.bins.get(index);
     let title = bin.map(|b| b.title.host_value(ctx)).unwrap_or_default();
     let items = bin.map(|b| b.items.host_value(ctx)).unwrap_or_default();
     let color = bin_color_name(bin.and_then(|b| b.color.as_deref())).unwrap_or("");
@@ -391,8 +466,7 @@ fn bin_row(index: usize, bin: Option<&BinRow>, ctx: &HostContext) -> Component {
         .children(
             id.into_iter()
                 .chain([
-                    Field::new()
-                        .name(format!("bins.{index}.title"))
+                    named(config, ctx, format!("bins.{index}.title"))
                         .label("i18n:host.bin.title")
                         .child(
                             TextInput::new()
@@ -401,8 +475,7 @@ fn bin_row(index: usize, bin: Option<&BinRow>, ctx: &HostContext) -> Component {
                         )
                         .into(),
                     // One item per line.
-                    Field::new()
-                        .name(format!("bins.{index}.items"))
+                    named(config, ctx, format!("bins.{index}.items"))
                         .label("i18n:host.bin.items")
                         .child(
                             TextArea::new()
@@ -429,13 +502,19 @@ fn bin_row(index: usize, bin: Option<&BinRow>, ctx: &HostContext) -> Component {
                         .child(
                             Select::new()
                                 .name(format!("bins.{index}.color"))
-                                .options(vec![
-                                    ChoiceOption::new("", "i18n:host.bin.color.none"),
-                                    ChoiceOption::new("yellow", "i18n:host.bin.color.yellow"),
-                                    ChoiceOption::new("green", "i18n:host.bin.color.green"),
-                                    ChoiceOption::new("brown", "i18n:host.bin.color.brown"),
-                                    ChoiceOption::new("grey", "i18n:host.bin.color.grey"),
-                                ])
+                                .options(
+                                    std::iter::once(ChoiceOption::new(
+                                        "",
+                                        "i18n:host.bin.color.none",
+                                    ))
+                                    .chain(BIN_SWATCHES.iter().map(|(name, _)| {
+                                        ChoiceOption::new(
+                                            *name,
+                                            format!("i18n:host.bin.color.{name}"),
+                                        )
+                                    }))
+                                    .collect(),
+                                )
                                 .value(color),
                         )
                         .into(),

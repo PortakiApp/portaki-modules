@@ -10,6 +10,8 @@ pub struct GuestData {
     pub collection_schedule: String,
     /// Les jours cochés, `mon` … `sun` — vide tant que l'hôte n'en a coché aucun.
     pub collection_days: Vec<String>,
+    /// Quand sortir les bacs (`evening`, `before7`, `before9`).
+    pub put_out: &'static str,
     pub takeout_note: String,
     pub locale: String,
     /// Le fuseau du logement : « demain » se compte à l'heure du lieu, pas à celle du serveur.
@@ -26,6 +28,10 @@ pub struct GuestData {
     pub property: Option<(f64, f64)>,
     /// Le chemin jusqu'au local poubelles, une étape par ligne.
     pub bin_room_steps: Vec<String>,
+    /// Le bloc « Le local » est proposé.
+    pub bin_room: bool,
+    /// Où se trouve le local.
+    pub bin_room_where: String,
     /// Le code de la porte du local, vide quand il n'y en a pas.
     pub bin_room_code: String,
     /// Les heures d'ouverture du local, vides quand il est toujours accessible.
@@ -51,8 +57,18 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
 
     Ok(Some(GuestData {
         bins: config.parse_bins(),
-        collection_schedule: config.collection_schedule.get(&ctx.locale).to_string(),
-        collection_days: config.collection_days(),
+        // Sans ramassage (zone rurale) : ni jours ni phrase de collecte, donc aucun bandeau.
+        collection_schedule: if config.has_collection() {
+            config.collection_schedule.get(&ctx.locale).to_string()
+        } else {
+            String::new()
+        },
+        collection_days: if config.has_collection() {
+            config.collection_days()
+        } else {
+            Vec::new()
+        },
+        put_out: config.put_out(),
         takeout_note: config.takeout_note.get(&ctx.locale).to_string(),
         locale: ctx.locale.clone(),
         timezone: ctx.timezone.clone(),
@@ -66,6 +82,8 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         compost_accepted: lines(config.compost_accepted.get(&ctx.locale)),
         compost_refused: lines(config.compost_refused.get(&ctx.locale)),
         property: ctx.property.coordinates.map(|point| (point.lat, point.lng)),
+        bin_room: config.has_bin_room(),
+        bin_room_where: config.bin_room_where.get(&ctx.locale).trim().to_string(),
         bin_room_steps: lines(config.bin_room_steps.get(&ctx.locale)),
         bin_room_code: config.bin_room_code.trim().to_string(),
         bin_room_hours: config.bin_room_hours.get(&ctx.locale).trim().to_string(),

@@ -164,6 +164,7 @@ fn collection_banner(data: &GuestData, next: Option<NextCollection>) -> Vec<Comp
         )];
     };
 
+    let put_out_key = format!("i18n:guest.putOut.{}", data.put_out);
     let title = if next.today {
         "i18n:guest.collection.today".to_string()
     } else {
@@ -183,6 +184,8 @@ fn collection_banner(data: &GuestData, next: Option<NextCollection>) -> Vec<Comp
     let message = match next.departure {
         Some(Departure::SameDay) => "i18n:guest.collection.departureDay",
         Some(Departure::Eve) => "i18n:guest.collection.departureEve",
+        // Sans phrase de l'hôte, quand sortir les bacs (§2.1).
+        None if schedule.is_empty() => &put_out_key,
         None => schedule,
     };
 
