@@ -2,9 +2,10 @@
 
 ## 1.13.0
 
-Les jours de fermeture.
+Les jours de fermeture, et des horaires selon le jour.
 
 * Cochez les jours où un équipement est fermé : le livret affiche « Fermé » ces jours-là, même pour une ligne ouverte 24 h/24.
+* Nouveau mode « Selon le jour » : une plage par jour de la semaine, et un jour laissé vide s'affiche « Fermé ».
 
 ## 1.12.0
 

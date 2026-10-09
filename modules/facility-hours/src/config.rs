@@ -107,8 +107,10 @@ pub const GROUPS: [&str; 3] = ["stay", "equipment", "services"];
 pub const DEFAULT_GROUP: &str = "equipment";
 
 /// Comment une ligne donne ses horaires (§2.2). « Selon le jour » attend les plages par jour.
-pub const MODES: [&str; 3] = [MODE_SAME, MODE_ALWAYS, MODE_ON_REQUEST];
+pub const MODES: [&str; 4] = [MODE_SAME, MODE_BY_DAY, MODE_ALWAYS, MODE_ON_REQUEST];
 pub const MODE_SAME: &str = "same";
+/// « Selon le jour » : une plage par jour, dans `exceptions` ; un jour sans heures est fermé.
+pub const MODE_BY_DAY: &str = "by_day";
 pub const MODE_ALWAYS: &str = "always";
 pub const MODE_ON_REQUEST: &str = "on_request";
 
@@ -320,28 +322,34 @@ impl FacilityRow {
 
     /// Ce qui ne va pas sur cette ligne, par clé de champ. Une ligne vide n'a rien à dire : le
     /// formulaire envoie ses emplacements, et un emplacement laissé n'est pas une erreur.
-    pub fn problems(&self) -> Vec<(&'static str, I18nText)> {
+    pub fn problems(&self) -> Vec<(String, I18nText)> {
         if self.is_blank() {
             return Vec::new();
         }
-        let mut problems = Vec::new();
+        let mut problems: Vec<(String, I18nText)> = Vec::new();
         if self.title.is_blank() {
-            problems.push(("title", crate::i18n::text("host.facility.name.required")));
+            problems.push((
+                "title".to_string(),
+                crate::i18n::text("host.facility.name.required"),
+            ));
         } else if let Some(error) = self
             .title
             .by_language()
             .find_map(|(_, title)| check::max_chars(title, TITLE_MAX))
         {
-            problems.push(("title", error));
+            problems.push(("title".to_string(), error));
         }
         if self.mode() == MODE_ON_REQUEST && self.note.is_blank() {
-            problems.push(("note", crate::i18n::text("host.facility.note.required")));
+            problems.push((
+                "note".to_string(),
+                crate::i18n::text("host.facility.note.required"),
+            ));
         } else if let Some(error) = self
             .note
             .by_language()
             .find_map(|(_, note)| check::max_chars(note, NOTE_MAX))
         {
-            problems.push(("note", error));
+            problems.push(("note".to_string(), error));
         }
         if self.mode() == MODE_SAME {
             for (key, value) in [
@@ -351,7 +359,19 @@ impl FacilityRow {
                 ("break_to", &self.break_to),
             ] {
                 if let Some(error) = check::time(value.trim()) {
-                    problems.push((key, error));
+                    problems.push((key.to_string(), error));
+                }
+            }
+        }
+        if self.mode() == MODE_BY_DAY {
+            for (day, entry) in self.exceptions.iter().enumerate().take(7) {
+                for (key, value) in [
+                    ("opens_at", &entry.opens_at),
+                    ("closes_at", &entry.closes_at),
+                ] {
+                    if let Some(error) = value.as_deref().and_then(|v| check::time(v.trim())) {
+                        problems.push((format!("exceptions.{day}.{key}"), error));
+                    }
                 }
             }
         }
@@ -361,7 +381,10 @@ impl FacilityRow {
             } else {
                 "season_to"
             };
-            problems.push((missing, crate::i18n::text("host.facility.season.both")));
+            problems.push((
+                missing.to_string(),
+                crate::i18n::text("host.facility.season.both"),
+            ));
         }
         problems
     }
@@ -378,27 +401,51 @@ impl FacilityRow {
 impl FacilityRow {
     /// Les horaires de cette ligne, tels que le calcul les lit.
     pub fn schedule(&self) -> Schedule {
+        // Selon le jour, les heures habituelles ne comptent pas : un jour sans plage est fermé,
+        // pas ouvert aux heures d'un mode qu'on a quitté.
+        let by_day = self.mode() == MODE_BY_DAY;
+        let usual = |raw: &str| if by_day { None } else { parse_hm(raw) };
         Schedule {
             all_day: self.mode() == MODE_ALWAYS,
-            opens_at: parse_hm(&self.opens_at),
-            closes_at: parse_hm(&self.closes_at),
-            exceptions: self
-                .exceptions
-                .iter()
-                .cloned()
-                .chain(self.closed_days.iter().map(|day| DayHours {
-                    day: day.trim().to_string(),
-                    closed: true,
-                    ..DayHours::default()
-                }))
-                .collect(),
+            opens_at: usual(&self.opens_at),
+            closes_at: usual(&self.closes_at),
+            exceptions: self.day_exceptions(),
             // Les deux bornes, ou aucune : une coupure sans fin laisserait la porte close.
-            break_at: parse_hm(&self.break_from).zip(parse_hm(&self.break_to)),
+            break_at: usual(&self.break_from).zip(usual(&self.break_to)),
             // Les deux bornes, ou aucune : une saison à une seule date ne dit pas quand elle
             // s'arrête, et la deviner fermerait la ligne à une date inventée.
             season: crate::schedule::parse_month_day(&self.season_from)
                 .zip(crate::schedule::parse_month_day(&self.season_to)),
         }
+    }
+
+    /// Les jours qui dérogent, tels que le calcul les lit.
+    ///
+    /// Selon le jour, la ligne `d` du formulaire est le jour `d` de la semaine (lundi en tête), et
+    /// les jours de fermeture cochés dans un autre mode ne comptent plus : un jour sans plage est
+    /// déjà fermé. Le formulaire n'envoie pas de `day` : dans un autre mode, ces lignes ne
+    /// nomment aucun jour et ne remplacent donc pas l'horaire choisi.
+    fn day_exceptions(&self) -> Vec<DayHours> {
+        if self.mode() == MODE_BY_DAY {
+            return self
+                .exceptions
+                .iter()
+                .zip(crate::schedule::WEEK)
+                .map(|(entry, day)| DayHours {
+                    day: crate::schedule::day_key(day).to_string(),
+                    ..entry.clone()
+                })
+                .collect();
+        }
+        self.exceptions
+            .iter()
+            .cloned()
+            .chain(self.closed_days.iter().map(|day| DayHours {
+                day: day.trim().to_string(),
+                closed: true,
+                ..DayHours::default()
+            }))
+            .collect()
     }
 }
 
@@ -625,6 +672,62 @@ mod tests {
             ..row
         };
         assert_eq!(same.schedule().span_on(chrono::Weekday::Mon), None);
+    }
+
+    /// Selon le jour : la ligne `d` est le jour `d`, un jour sans heures est fermé, et ni les
+    /// heures habituelles ni les jours de fermeture d'un autre mode ne s'en mêlent.
+    #[test]
+    fn by_day_reads_one_range_per_weekday() {
+        let row: FacilityRow = serde_json::from_value(json!({
+            "title": "Spa", "mode": "by_day",
+            "opens_at": "06:00", "closes_at": "23:00", "closed_days": ["mon"],
+            "exceptions": [
+                { "opens_at": "09:00", "closes_at": "12:00" },
+                {},
+                { "opens_at": "14:00", "closes_at": "18:00" }
+            ]
+        }))
+        .unwrap();
+        let schedule = row.schedule();
+        assert!(schedule.is_structured());
+        let span = |day| schedule.span_on(day).map(|s| (s.opens, s.closes));
+        assert_eq!(span(chrono::Weekday::Mon), Some((9 * 60, 12 * 60)));
+        assert_eq!(span(chrono::Weekday::Tue), None);
+        assert_eq!(span(chrono::Weekday::Wed), Some((14 * 60, 18 * 60)));
+        assert_eq!(span(chrono::Weekday::Sun), None);
+        // Mercredi 15 juillet 2026, 10 h UTC : la plage du mercredi n'a pas commencé.
+        let wednesday = "2026-07-15T10:00:00Z".parse().unwrap();
+        assert_eq!(
+            schedule.state_at(wednesday, None),
+            Some(crate::schedule::State::OpensAt(14 * 60))
+        );
+        // Laissées en quittant « selon le jour », ces plages ne nomment aucun jour.
+        let same = FacilityRow {
+            mode: "same".into(),
+            closed_days: Vec::new(),
+            ..row
+        };
+        assert_eq!(
+            same.schedule()
+                .span_on(chrono::Weekday::Wed)
+                .map(|s| (s.opens, s.closes)),
+            Some((6 * 60, 23 * 60))
+        );
+    }
+
+    /// Selon le jour, une heure invalide est signalée sous son jour.
+    #[test]
+    fn by_day_flags_a_bad_time_under_its_day() {
+        let config: ModuleConfig = serde_json::from_value(json!({ "facilities": [{
+            "title": "Spa", "mode": "by_day", "opens_at": "nope",
+            "exceptions": [{}, { "opens_at": "25:00", "closes_at": "18:00" }]
+        }] }))
+        .unwrap();
+        let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
+        assert_eq!(fields, ["facilities.0.exceptions.1.opens_at"]);
+        let empty: FacilityRow =
+            serde_json::from_value(json!({ "title": "Spa", "mode": "by_day" })).unwrap();
+        assert!(!empty.schedule().is_structured());
     }
 
     /// Un jour coché arrive en tableau, en JSON dans une chaîne, ou seul : tous se relisent.

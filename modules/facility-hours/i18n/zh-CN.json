@@ -65,6 +65,7 @@
   "host.facility.lines.placeholder": "6 月至 9 月每天开放\n周一休息",
   "host.facility.mode": "开放时间",
   "host.facility.mode.always": "24 小时",
+  "host.facility.mode.by_day": "按星期",
   "host.facility.mode.on_request": "按需提供",
   "host.facility.mode.same": "每天相同时间",
   "host.facility.name": "名称",

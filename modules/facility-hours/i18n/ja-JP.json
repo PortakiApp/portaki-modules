@@ -65,6 +65,7 @@
   "host.facility.lines.placeholder": "6 月から 9 月まで毎日\n月曜休み",
   "host.facility.mode": "営業時間",
   "host.facility.mode.always": "24時間",
+  "host.facility.mode.by_day": "曜日ごと",
   "host.facility.mode.on_request": "リクエスト制",
   "host.facility.mode.same": "毎日同じ時間",
   "host.facility.name": "名称",

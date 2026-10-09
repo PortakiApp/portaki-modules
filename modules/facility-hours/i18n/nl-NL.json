@@ -65,6 +65,7 @@
   "host.facility.lines.placeholder": "Elke dag, juni tot september\nMaandag gesloten",
   "host.facility.mode": "Openingstijden",
   "host.facility.mode.always": "24/7",
+  "host.facility.mode.by_day": "Per dag",
   "host.facility.mode.on_request": "Op aanvraag",
   "host.facility.mode.same": "Elke dag dezelfde tijden",
   "host.facility.name": "Naam",

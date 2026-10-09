@@ -10,7 +10,8 @@ use portaki_sdk::sdui::surface::Surface;
 
 pub use crate::config::MAX_FACILITIES;
 use crate::config::{
-    FacilityRow, ModuleConfig, GROUPS, ICONS, MAX_CARD_LIMIT, MIN_CARD_LIMIT, MODES, MODE_SAME,
+    FacilityRow, ModuleConfig, GROUPS, ICONS, MAX_CARD_LIMIT, MIN_CARD_LIMIT, MODES, MODE_BY_DAY,
+    MODE_SAME,
 };
 
 #[portaki_sdk::surface(
@@ -81,13 +82,14 @@ fn display_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         .into()
 }
 
-/// Les jours de fermeture, en choix multiple : sans objet pour un service « sur demande ».
+/// Les jours de fermeture, en choix multiple : sans objet pour un service « sur demande », ni
+/// « selon le jour », où un jour sans plage est déjà fermé.
 fn closed_days_field(
     index: usize,
     facility: Option<&FacilityRow>,
     mode: &str,
 ) -> Option<Component> {
-    if mode == crate::config::MODE_ON_REQUEST {
+    if mode == crate::config::MODE_ON_REQUEST || mode == MODE_BY_DAY {
         return None;
     }
     let chosen = facility.map(|f| f.closed_days.clone()).unwrap_or_default();
@@ -113,6 +115,54 @@ fn closed_days_field(
             )
             .into(),
     )
+}
+
+/// « Selon le jour » : une ouverture et une fermeture par jour, lundi en tête. La ligne `d` est
+/// le jour `d` ; un jour laissé vide est fermé.
+fn by_day_rows(
+    index: usize,
+    facility: Option<&FacilityRow>,
+    config: &ModuleConfig,
+    ctx: &HostContext,
+) -> Vec<Component> {
+    crate::schedule::WEEK
+        .iter()
+        .enumerate()
+        .flat_map(|(d, day)| {
+            let entry = facility.and_then(|f| f.exceptions.get(d));
+            let time = |key: &str, value: Option<&String>, placeholder: &str| -> Component {
+                let name = format!("facilities.{index}.exceptions.{d}.{key}");
+                named(config, ctx, name.clone())
+                    .label(format!(
+                        "i18n:host.facility.{}",
+                        if key == "opens_at" {
+                            "opensAt"
+                        } else {
+                            "closesAt"
+                        }
+                    ))
+                    .child(
+                        TextInput::new()
+                            .name(name)
+                            .value(value.map(String::as_str).unwrap_or(""))
+                            .placeholder(placeholder),
+                    )
+                    .into()
+            };
+            [
+                Text::new()
+                    .text(format!("i18n:host.day.{}", crate::schedule::day_key(*day)))
+                    .variant(TextVariant::Body)
+                    .into(),
+                time("opens_at", entry.and_then(|e| e.opens_at.as_ref()), "08:00"),
+                time(
+                    "closes_at",
+                    entry.and_then(|e| e.closes_at.as_ref()),
+                    "20:00",
+                ),
+            ]
+        })
+        .collect()
 }
 
 /// Le champ `name`, avec le message de [`ModuleConfig::error_of`] sous lui s'il y en a un.
@@ -195,7 +245,9 @@ fn facility_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Compo
 
     // Les heures ne se demandent que pour « Même horaire tous les jours » : 24 h/24 et sur
     // demande n'en ont pas (règles communes : masqué, pas grisé).
-    let times: Vec<Component> = if mode == MODE_SAME {
+    let times: Vec<Component> = if mode == MODE_BY_DAY {
+        by_day_rows(index, facility, config, ctx)
+    } else if mode == MODE_SAME {
         vec![
             // Les heures structurées, à côté de la phrase et non à sa place : un hôte qui
             // les remplit gagne l'état en direct, un hôte qui ne les remplit pas garde

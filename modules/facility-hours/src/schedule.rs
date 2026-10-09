@@ -136,7 +136,12 @@ pub struct Schedule {
 impl Schedule {
     /// Whether anything here can be computed. A row without times keeps its sentence.
     pub fn is_structured(&self) -> bool {
-        self.all_day || (self.opens_at.is_some() && self.closes_at.is_some())
+        self.all_day
+            || (self.opens_at.is_some() && self.closes_at.is_some())
+            || self.exceptions.iter().any(|day| {
+                day.opens_at.as_deref().and_then(parse_hm).is_some()
+                    && day.closes_at.as_deref().and_then(parse_hm).is_some()
+            })
     }
 
     /// Les plages d'un jour : une, ou deux quand l'équipement coupe à midi.
