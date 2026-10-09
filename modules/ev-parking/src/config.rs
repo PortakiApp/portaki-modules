@@ -107,6 +107,43 @@ pub struct ModuleConfig {
     #[field(label = "host.bookingNote.label")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub booking_note: Option<I18nText>,
+    /// La position de la borne (spec Parking VE §2.1) : un repère ⚡ sur la Carte du livret. Le
+    /// sélecteur de carte l'envoie en texte (`"43.5"`) ou en nombre.
+    #[field(label = "host.position.label")]
+    #[serde(
+        default,
+        deserialize_with = "coord",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub charger_lat: Option<f64>,
+    #[field(label = "host.position.label")]
+    #[serde(
+        default,
+        deserialize_with = "coord",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub charger_lng: Option<f64>,
+    #[field(label = "host.position.address")]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub charger_address: String,
+    /// La photo de la place, en référence `portaki-file:` : la plateforme l'échange contre une
+    /// URL signée au rendu.
+    #[field(label = "host.photo.label")]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub photo: String,
+}
+
+/// `43.5`, `"43.5"`, ou rien. Un texte illisible ne pose pas de repère, et ne fait pas refuser
+/// toute la configuration.
+fn coord<'de, D>(deserializer: D) -> std::result::Result<Option<f64>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Ok(match Value::deserialize(deserializer)? {
+        Value::Number(n) => n.as_f64(),
+        Value::String(s) => s.trim().parse().ok(),
+        _ => None,
+    })
 }
 
 fn is_zero(value: &f64) -> bool {

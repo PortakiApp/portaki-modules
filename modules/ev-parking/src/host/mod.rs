@@ -2,8 +2,8 @@
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{
-    Card, ChoiceList, Field, FieldHint, Form, NumberInput, Page, SecretInput, Select, Stack,
-    TextArea, TextInput, Toggle,
+    AddressMapPicker, Card, ChoiceList, Field, FieldHint, Form, ImageUpload, NumberInput, Page,
+    SecretInput, Select, Stack, TextArea, TextInput, Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -66,6 +66,12 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
                             .placeholder("i18n:host.mapUrl.placeholder"),
                     )
                     .into(),
+                position_picker(&config),
+                Field::new()
+                    .name("photo")
+                    .label("i18n:host.photo.label")
+                    .child(ImageUpload::new().name("photo").value(config.photo.clone()))
+                    .into(),
             ])
             .into(),
         Card::new()
@@ -106,6 +112,21 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
         Page::new().child(Form::new().child(Stack::new().gap(16.0).children(form_children))),
     )
     .with_id(MAIN))
+}
+
+/// §2.1 La position de la borne, sur la carte : le repère ⚡ du livret.
+fn position_picker(config: &ModuleConfig) -> Component {
+    let mut picker = AddressMapPicker::new()
+        .addressName("charger_address")
+        .latName("charger_lat")
+        .lngName("charger_lng")
+        .address(config.charger_address.clone())
+        .label("i18n:host.position.label")
+        .hint("i18n:host.position.hint");
+    if let (Some(lat), Some(lng)) = (config.charger_lat, config.charger_lng) {
+        picker = picker.lat(lat).lng(lng);
+    }
+    picker.into()
 }
 
 /// §2.2 La borne : la prise, la puissance, le câble.

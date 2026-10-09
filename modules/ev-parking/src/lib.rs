@@ -4,6 +4,8 @@ mod config;
 mod email_context;
 mod guest;
 mod host;
+mod map_markers;
+pub use map_markers::map_markers;
 mod i18n;
 mod readiness;
 mod reveal;

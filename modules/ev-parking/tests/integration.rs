@@ -289,3 +289,21 @@ fn the_barrier_tile_carries_the_car_glyph() {
             assert!(json.contains("\"icon\":\"car\""), "{json}");
         });
 }
+
+/// La borne placée part sur la Carte du livret ; sans position, rien.
+#[test]
+#[serial]
+fn a_placed_charger_reaches_the_booklet_map() {
+    let markers = |config: Value| {
+        MockContext::guest()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&config)
+            .run(|ctx| ev_parking::map_markers(ctx).expect("markers").markers)
+    };
+    assert_eq!(
+        markers(json!({ "spot_label": "Place 8", "charger_lat": "43.58", "charger_lng": 7.12 }))
+            .len(),
+        1
+    );
+    assert!(markers(json!({ "spot_label": "Place 8" })).is_empty());
+}
