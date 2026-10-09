@@ -26,8 +26,13 @@ fn wanted_destination(ctx: &GuestContext) -> String {
         .to_string()
 }
 
+/// Le sens choisi par le voyageur, sinon celui de l'hôte (spec §2.2), sinon les départs.
 fn wanted_way(ctx: &GuestContext) -> Way {
-    Way::parse(ctx.input.get("dir").and_then(|value| value.as_str()))
+    let chosen = ctx.input.get("dir").and_then(|value| value.as_str());
+    let default = crate::config::ModuleConfig::load(ctx)
+        .map(|config| config.direction.as_wire())
+        .unwrap_or("from");
+    Way::parse(chosen.or(Some(default)))
 }
 
 /// Le tableau, ou la surface qui dit pourquoi il n'y en a pas.

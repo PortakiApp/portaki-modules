@@ -91,9 +91,12 @@ mod tests {
             station: Station {
                 id: "stop_area:SNCF:87756056".to_string(),
                 label: "Antibes".to_string(),
+                lat: None,
+                lng: None,
             },
             stops,
             destinations: Vec::new(),
+            access: None,
             today: None,
             note: String::new(),
             read_min_ago: 0,

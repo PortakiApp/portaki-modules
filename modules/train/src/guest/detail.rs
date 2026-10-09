@@ -24,7 +24,7 @@ pub fn build_detail_page(view: &BoardView, way: Way, selected: &str) -> Surface 
     Surface::new(Stack::new().gap(12.0).children(vec![
             Component::Text(
                 Text::new()
-                    .text(view.station.label.clone())
+                    .text(station_line(view))
                     .variant(TextVariant::Caption)
                     .emphasis(Emphasis::Subtle),
             ),
@@ -39,6 +39,24 @@ pub fn build_detail_page(view: &BoardView, way: Way, selected: &str) -> Surface 
             disclaimer(view),
         ]))
     .with_id(crate::guest::EXPLORE_DETAIL)
+}
+
+/// « Antibes · Gare à 12 min à pied » : à pied jusqu'à 25 min, en voiture au-delà (spec §2.1).
+fn station_line(view: &BoardView) -> String {
+    let label = view.station.label.clone();
+    let Some(access) = view.access else {
+        return label;
+    };
+    let (key, minutes) = if access.walk_min <= crate::access::WALK_LIMIT_MIN {
+        ("explore.detail.access.walk", access.walk_min)
+    } else {
+        ("explore.detail.access.drive", access.drive_min)
+    };
+    let minutes = minutes.to_string();
+    match t!(key, min = &minutes) {
+        Ok(text) if text.contains(&minutes) => format!("{label} · {text}"),
+        _ => label,
+    }
 }
 
 /// Ce que le voyageur voit quand il n'y a pas de tableau : jamais une page vide, jamais un

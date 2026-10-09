@@ -4,10 +4,13 @@
 //! réels par le connecteur [`sncf`]. Les destinations proposées au voyageur sortent du tableau
 //! lui-même — aucune liste de gares n'est écrite ici.
 
+mod access;
 mod board;
 mod config;
 mod guest;
 mod host;
+mod i18n;
+mod readiness;
 mod sncf;
 
 pub use guest::{
