@@ -4,6 +4,7 @@
 //! form sends the select and the event coordinates as text (`radius_km: "40"`, `lat: "43.5"`);
 //! the readers below accept that and numbers alike.
 
+use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
@@ -83,6 +84,75 @@ impl ModuleConfig {
     pub fn normalized_radius_km(&self) -> u32 {
         self.radius_km.clamp(MIN_RADIUS_KM, MAX_RADIUS_KM)
     }
+
+    /// Ce qui ne va pas, champ par champ (`events.<i>.title`…) — sous le champ dans le formulaire,
+    /// et dans `publishReadiness`. Le lieu sans position n'y est pas : il avertit, il ne bloque pas.
+    pub fn problems(&self) -> Vec<(String, I18nText)> {
+        let text = crate::i18n::text;
+        let too_long = |value: &I18nText, max: usize| {
+            value
+                .by_language()
+                .find_map(|(_, text)| check::max_chars(text, max))
+        };
+        let mut problems: Vec<(String, I18nText)> = Vec::new();
+        let filled = self.events.iter().filter(|e| !e.is_blank()).count();
+        if filled > MAX_EVENTS {
+            problems.push(("events".into(), text("host.events.tooMany")));
+        }
+        for (index, event) in self.events.iter().enumerate() {
+            if event.is_blank() {
+                continue;
+            }
+            let mut push = |key: &str, error: Option<I18nText>| {
+                if let Some(error) = error {
+                    problems.push((format!("events.{index}.{key}"), error));
+                }
+            };
+            push(
+                "title",
+                if event.title.is_blank() {
+                    Some(text("host.event.title.required"))
+                } else {
+                    too_long(&event.title, TITLE_MAX)
+                },
+            );
+            let ends_before = event
+                .ends_at
+                .as_deref()
+                .and_then(crate::time_format::parse_starts_at)
+                .zip(crate::time_format::parse_starts_at(&event.starts_at))
+                .is_some_and(|(ends, starts)| ends < starts);
+            push(
+                "ends_at",
+                ends_before.then(|| text("host.event.ends.beforeStart")),
+            );
+            push("url", event.url.as_deref().and_then(check::https_url));
+            push(
+                "price",
+                event
+                    .price
+                    .as_deref()
+                    .and_then(|price| check::max_chars(price, PRICE_MAX)),
+            );
+            push("access", too_long(&event.access, ACCESS_MAX));
+            push(
+                "note",
+                event
+                    .note
+                    .as_ref()
+                    .and_then(|note| too_long(note, NOTE_MAX)),
+            );
+        }
+        problems
+    }
+
+    /// Le message à afficher sous `field`, s'il y en a un.
+    pub fn error_of(&self, field: &str) -> Option<I18nText> {
+        self.problems()
+            .into_iter()
+            .find(|(name, _)| name == field)
+            .map(|(_, error)| error)
+    }
 }
 
 /// An event. The form sends `title`, `place`, `starts_at`, `url`, `lat`, `lng` (and `id`); the
@@ -126,7 +196,26 @@ pub struct EventRow {
     /// « Bon à savoir » : une ligne par conseil, écrites par l'hôte.
     #[serde(default)]
     pub tips: I18nText,
+    /// Toute la journée : pas d'heure affichée (§2.2).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub all_day: bool,
+    /// `none`, `weekly` ou `monthly` ([`RECURRENCES`]) : chaque semaine le jour de la date de
+    /// début, chaque mois à la même date.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub recurrence: String,
+    /// Annulé : badge « Annulé », plus de bouton de réservation (§2.2).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub cancelled: bool,
 }
+
+/// Les répétitions proposées (§2.2). « Dates choisies » attend une liste par événement.
+pub const RECURRENCES: [&str; 3] = ["none", "weekly", "monthly"];
+/// Combien d'événements la configuration accepte (§2.2).
+pub const MAX_EVENTS: usize = 50;
+const TITLE_MAX: usize = 80;
+const PRICE_MAX: usize = 30;
+const ACCESS_MAX: usize = 120;
+const NOTE_MAX: usize = 1200;
 
 impl EventRow {
     pub fn has_coords(&self) -> bool {
@@ -156,6 +245,62 @@ impl EventRow {
         let ends = crate::time_format::parse_starts_at(self.ends_at.as_deref()?)?;
         let minutes = (ends - starts).num_minutes();
         (minutes > 0).then_some(minutes)
+    }
+
+    /// La répétition, dans la liste ; aucune sans choix.
+    pub fn recurrence(&self) -> &'static str {
+        RECURRENCES
+            .iter()
+            .find(|key| **key == self.recurrence.trim())
+            .unwrap_or(&RECURRENCES[0])
+    }
+
+    /// L'événement à sa prochaine occurrence à partir de `from` : la date de début (et de fin)
+    /// avancée d'une semaine ou d'un mois tant qu'elle précède `from`. Inchangé sans répétition,
+    /// sans date lisible, ou quand il commence déjà après `from`.
+    pub fn next_from(&self, from: chrono::DateTime<chrono::Utc>) -> EventRow {
+        use chrono::Months;
+        let Some(starts) = crate::time_format::parse_starts_at(&self.starts_at) else {
+            return self.clone();
+        };
+        let step = |at: chrono::DateTime<chrono::Utc>, n: u32| match self.recurrence() {
+            "weekly" => Some(at + chrono::Duration::weeks(i64::from(n))),
+            "monthly" => at.checked_add_months(Months::new(n)),
+            _ => None,
+        };
+        // Le nombre de pas, d'un coup : un événement hebdomadaire saisi il y a trois ans ne doit
+        // pas boucler mille fois.
+        let steps = match self.recurrence() {
+            "weekly" if starts < from => ((from - starts).num_days() as u32).div_ceil(7),
+            "monthly" if starts < from => {
+                use chrono::Datelike;
+                let months = (from.year() - starts.year()) * 12 + from.month() as i32
+                    - starts.month() as i32;
+                months.max(0) as u32
+            }
+            _ => 0,
+        };
+        let mut next = starts;
+        let mut n = steps;
+        while let Some(at) = step(starts, n) {
+            next = at;
+            if at >= from {
+                break;
+            }
+            n += 1;
+        }
+        if next == starts {
+            return self.clone();
+        }
+        let shift = next - starts;
+        let mut event = self.clone();
+        event.starts_at = next.to_rfc3339();
+        event.ends_at = self
+            .ends_at
+            .as_deref()
+            .and_then(crate::time_format::parse_starts_at)
+            .map(|ends| (ends + shift).to_rfc3339());
+        event
     }
 
     /// La photo déposée, en référence, ou `None` quand il n'y en a pas.
@@ -325,5 +470,54 @@ mod tests {
             .with_kv("config", serde_json::to_vec(&old).unwrap())
             .with_config(&json!({}))
             .run(|ctx| assert_eq!(ModuleConfig::load(&ctx).unwrap(), ModuleConfig::default()));
+    }
+
+    /// Un événement hebdomadaire avance d'une semaine jusqu'à la fenêtre ; sa fin le suit.
+    #[test]
+    fn a_weekly_event_moves_to_its_next_occurrence() {
+        let event = EventRow {
+            title: I18nText::from("Marché"),
+            starts_at: "2026-01-06T08:00:00Z".into(),
+            ends_at: Some("2026-01-06T12:00:00Z".into()),
+            recurrence: "weekly".into(),
+            ..EventRow::default()
+        };
+        let from = crate::time_format::parse_starts_at("2026-07-09T00:00:00Z").unwrap();
+        let next = event.next_from(from);
+        assert_eq!(next.starts_at, "2026-07-14T08:00:00+00:00");
+        assert_eq!(next.ends_at.as_deref(), Some("2026-07-14T12:00:00+00:00"));
+        let monthly = EventRow {
+            recurrence: "monthly".into(),
+            ..event.clone()
+        };
+        assert_eq!(
+            monthly.next_from(from).starts_at,
+            "2026-08-06T08:00:00+00:00"
+        );
+        // Sans répétition, rien ne bouge.
+        let once = EventRow {
+            recurrence: String::new(),
+            ..event
+        };
+        assert_eq!(once.next_from(from).starts_at, "2026-01-06T08:00:00Z");
+    }
+
+    /// Les erreurs nomment leur champ ; une ligne vide n'en a pas.
+    #[test]
+    fn problems_name_their_field() {
+        let config: ModuleConfig = serde_json::from_value(json!({
+            "events": [
+                { "title": "" },
+                { "title": "", "place": "Port" },
+                { "title": "Concert", "starts_at": "2026-07-14T21:00:00Z",
+                  "ends_at": "2026-07-14T20:00:00Z", "url": "http://x.fr" }
+            ]
+        }))
+        .unwrap();
+        let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
+        assert_eq!(
+            fields,
+            ["events.1.title", "events.2.ends_at", "events.2.url"]
+        );
     }
 }

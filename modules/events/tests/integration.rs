@@ -224,9 +224,13 @@ fn the_form_draws_the_rows_the_host_has() {
         .run(|ctx| {
             let json =
                 serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
-            assert!(json.contains("events.11.title"), "{json}");
-            assert!(!json.contains("events.12.title"), "{json}");
-            // La borne tient : au douzième, « Ajouter » n'en demande pas un treizième.
+            let last = events::MAX_EVENTS - 1;
+            assert!(json.contains(&format!("events.{last}.title")), "{json}");
+            assert!(
+                !json.contains(&format!("events.{}.title", last + 1)),
+                "{json}"
+            );
+            // La borne tient : au dernier, « Ajouter » n'en demande pas un de plus.
             assert!(
                 json.contains(&format!(r#""events_count":{}"#, events::MAX_EVENTS)),
                 "{json}"

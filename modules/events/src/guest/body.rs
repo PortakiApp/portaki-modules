@@ -7,7 +7,7 @@ use portaki_sdk::sdui::primitives::{
     Badge, Button, Eyebrow, InfoBanner, Link, ListItem, Map, Pill, Stack, Text,
 };
 
-use crate::time_format::{format_starts_at_display, parse_starts_at};
+use crate::time_format::parse_starts_at;
 
 use super::load::GuestData;
 
@@ -65,7 +65,7 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         if !place.trim().is_empty() {
             subtitle_parts.push(place);
         }
-        let when = format_starts_at_display(&event.starts_at);
+        let when = crate::time_format::event_when(event);
         if !when.trim().is_empty() {
             subtitle_parts.push(when);
         }
@@ -125,7 +125,7 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
 /// L'événement qui arrive, en vedette : son heure, son titre, son lieu.
 fn headline(data: &GuestData, event: &crate::config::EventRow) -> Component {
     let mut children: Vec<Component> = Vec::new();
-    let when = format_starts_at_display(&event.starts_at);
+    let when = crate::time_format::event_when(event);
     if when.trim().is_empty() {
         children.push(Component::Pill(
             Pill::new().label("i18n:guest.event.dateTbd"),

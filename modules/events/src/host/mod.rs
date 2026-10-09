@@ -4,19 +4,15 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
     AddressMapPicker, Card, Field, FieldHint, Form, ImageUpload, Page, Select, Stack, StepList,
-    Text, TextArea, TextInput,
+    Text, TextArea, TextInput, Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{EventRow, ModuleConfig};
 use crate::nearby::has_open_agenda;
 
-/// Combien d'événements le formulaire accepte.
-///
-/// Une capacité, pas un nombre de lignes dessinées : six emplacements figés gelaient la liste à
-/// six — l'hôte ne pouvait pas saisir un septième parce que le formulaire ne le dessinait jamais,
-/// et voyait quatre cartes vides quand il en avait saisi deux.
-pub const MAX_EVENTS: usize = 12;
+pub use crate::config::MAX_EVENTS;
+use crate::config::RECURRENCES;
 
 #[portaki_sdk::surface(
     host,
@@ -119,7 +115,7 @@ fn nearby_card(config: &ModuleConfig, open_agenda: bool) -> Component {
 fn events_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
     let rows_count = draft_rows(ctx, config.events.len());
     let rows: Vec<Component> = (0..rows_count)
-        .map(|index| event_row(index, config.events.get(index), ctx))
+        .map(|index| event_row(index, config, ctx))
         .collect();
 
     Card::new()
@@ -159,7 +155,17 @@ fn emit_input(payload: impl serde::Serialize) -> Action {
     Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
 }
 
-fn event_row(index: usize, event: Option<&EventRow>, ctx: &HostContext) -> Component {
+fn event_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let event: Option<&EventRow> = config.events.get(index);
+    // Le champ, avec le message de `problems` sous lui s'il y en a un.
+    let named = |key: &str| {
+        let name = format!("events.{index}.{key}");
+        let field = Field::new().name(name.clone());
+        match config.error_of(&name) {
+            Some(error) => field.error(error.get(&ctx.locale).to_string()),
+            None => field,
+        }
+    };
     let title = event.map(|e| e.title.host_value(ctx)).unwrap_or_default();
     let place = event.map(|e| e.place.host_value(ctx)).unwrap_or_default();
     let starts_at = event.map(|e| e.starts_at.as_str()).unwrap_or("");
@@ -198,8 +204,7 @@ fn event_row(index: usize, event: Option<&EventRow>, ctx: &HostContext) -> Compo
         .map(|e| sdui::row_id("events", index, Some(&e.id)));
 
     let fields: Vec<Component> = vec![
-        Field::new()
-            .name(format!("events.{index}.title"))
+        named("title")
             .label("i18n:host.event.title")
             .child(
                 TextInput::new()
@@ -226,8 +231,7 @@ fn event_row(index: usize, event: Option<&EventRow>, ctx: &HostContext) -> Compo
                     .placeholder("i18n:host.event.startsAt.placeholder"),
             )
             .into(),
-        Field::new()
-            .name(format!("events.{index}.url"))
+        named("url")
             .label("i18n:host.event.url")
             .child(
                 TextInput::new()
@@ -235,8 +239,7 @@ fn event_row(index: usize, event: Option<&EventRow>, ctx: &HostContext) -> Compo
                     .value(url),
             )
             .into(),
-        Field::new()
-            .name(format!("events.{index}.ends_at"))
+        named("ends_at")
             .label("i18n:host.event.endsAt")
             .child(
                 TextInput::new()
@@ -247,7 +250,38 @@ fn event_row(index: usize, event: Option<&EventRow>, ctx: &HostContext) -> Compo
             .into(),
         FieldHint::new().text("i18n:host.event.endsAt.hint").into(),
         Field::new()
-            .name(format!("events.{index}.price"))
+            .name(format!("events.{index}.all_day"))
+            .label("i18n:host.event.allDay")
+            .child(
+                Toggle::new()
+                    .name(format!("events.{index}.all_day"))
+                    .checked(event.is_some_and(|e| e.all_day)),
+            )
+            .into(),
+        Field::new()
+            .name(format!("events.{index}.recurrence"))
+            .label("i18n:host.event.recurrence")
+            .child(
+                Select::new()
+                    .name(format!("events.{index}.recurrence"))
+                    .options(
+                        RECURRENCES
+                            .iter()
+                            .map(|key| {
+                                ChoiceOption::new(
+                                    *key,
+                                    format!("i18n:host.event.recurrence.label.{key}"),
+                                )
+                            })
+                            .collect(),
+                    )
+                    .value(event.map_or("none", EventRow::recurrence)),
+            )
+            .into(),
+        FieldHint::new()
+            .text("i18n:host.event.recurrence.hint")
+            .into(),
+        named("price")
             .label("i18n:host.event.price")
             .child(
                 TextInput::new()
@@ -260,8 +294,7 @@ fn event_row(index: usize, event: Option<&EventRow>, ctx: &HostContext) -> Compo
         // pas la latitude de la place du port, et une virgule de travers posait l'événement
         // au large.
         picker.into(),
-        Field::new()
-            .name(format!("events.{index}.note"))
+        named("note")
             .label("i18n:host.event.note")
             .child(
                 TextArea::new()
@@ -273,8 +306,7 @@ fn event_row(index: usize, event: Option<&EventRow>, ctx: &HostContext) -> Compo
             .into(),
         // L'accès avant les conseils : c'est la question qu'on se pose avant d'y aller, et un
         // voyageur en fauteuil ne doit pas la chercher au milieu des bons plans de parking.
-        Field::new()
-            .name(format!("events.{index}.access"))
+        named("access")
             .label("i18n:host.event.access")
             .child(
                 TextArea::new()
@@ -304,6 +336,15 @@ fn event_row(index: usize, event: Option<&EventRow>, ctx: &HostContext) -> Compo
                 ImageUpload::new()
                     .name(format!("events.{index}.photo"))
                     .value(photo),
+            )
+            .into(),
+        Field::new()
+            .name(format!("events.{index}.cancelled"))
+            .label("i18n:host.event.cancelled")
+            .child(
+                Toggle::new()
+                    .name(format!("events.{index}.cancelled"))
+                    .checked(event.is_some_and(|e| e.cancelled)),
             )
             .into(),
     ];
