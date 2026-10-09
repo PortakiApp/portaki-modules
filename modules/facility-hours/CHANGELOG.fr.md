@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.13.0
+
+Les jours de fermeture.
+
+* Cochez les jours où un équipement est fermé : le livret affiche « Fermé » ces jours-là, même pour une ligne ouverte 24 h/24.
+
 ## 1.12.0
 
 Plus de réglages pour vos horaires.
