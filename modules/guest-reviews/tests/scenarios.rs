@@ -8,13 +8,10 @@ use portaki_test_utils::scenarios::check_each;
 use portaki_test_utils::MockContextBuilder;
 use serde_json::json;
 
-/// L'avis déposé sur Portaki, et le lien Airbnb pour les séjours réservés là-bas.
+/// La note, et le lien Airbnb pour les séjours réservés là-bas.
 fn setup(builder: MockContextBuilder) -> MockContextBuilder {
     builder.with_config(&json!({
-        "platform_airbnb": true,
-        "platform_portaki": true,
-        "show_qr_code": true,
-        "airbnb_review_url": "https://www.airbnb.fr/users/review/123456",
+        "review_url": "https://www.airbnb.fr/users/review/123456",
         "thank_you_message": "Merci pour votre séjour ! Votre avis aide les prochains voyageurs à nous choisir."
     }))
 }

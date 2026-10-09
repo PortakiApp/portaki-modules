@@ -8,7 +8,6 @@ use portaki_sdk::host::email::{
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::config::ModuleConfig;
 use crate::email_text;
 
 /// Longest guest name in the rating lines, in chars.
@@ -117,12 +116,7 @@ pub(crate) fn has_arrived(ctx: &Context) -> Result<bool> {
     example(label = "Note sans commentaire", input = r#"{"rating":3}"#)
 )]
 pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
-    let config = ModuleConfig::load(&ctx)?;
-    if !config.portaki_feasible() {
-        return Err(PortakiError::Host(
-            "portaki_review_platform_not_enabled".into(),
-        ));
-    }
+    // La note se propose toujours (spec §2.1) : plus d'interrupteur à vérifier.
     if !has_arrived(&ctx)? {
         return Err(PortakiError::Host("review_before_arrival".into()));
     }

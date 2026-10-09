@@ -1,0 +1,46 @@
+//! Stay detail encart (spec Votre avis §1) : « Note : 5 / 5 · lien public proposé », ou « Pas
+//! encore noté ». Le commentaire privé reste sur la page de statistiques.
+
+use portaki_sdk::prelude::*;
+use portaki_sdk::sdui::primitives::{Card, Page, Text};
+use portaki_sdk::sdui::surface::Surface;
+
+use crate::config::ModuleConfig;
+
+#[portaki_sdk::surface(
+    host,
+    id = "stay",
+    placement = HostPlacement::StayDetail,
+    label_key = "catalog.host.stay",
+    icon = IconName::Star
+)]
+pub fn render_host_stay(ctx: HostContext) -> Result<Surface> {
+    let stay_id = ctx
+        .input_str("stayId")
+        .and_then(|raw| Uuid::parse_str(raw).ok());
+    let review = match stay_id {
+        Some(stay_id) => crate::commands::review_for_stay(stay_id)?,
+        None => None,
+    };
+    let link = ModuleConfig::load(&ctx)?.public_url().is_some();
+    let line = match review {
+        None => "i18n:host.stay.notYet".to_string(),
+        Some(review) => {
+            let rating = review.rating.to_string();
+            let key = if link {
+                "host.stay.ratedWithLink"
+            } else {
+                "host.stay.rated"
+            };
+            t!(key, rating = &rating)
+                .ok()
+                .filter(|text| text.contains(&rating))
+                .unwrap_or_else(|| format!("Note : {rating} / 5"))
+        }
+    };
+    let card = Card::new()
+        .icon(IconName::Star)
+        .title("i18n:host.stay.title")
+        .child(Text::new().text(line).variant(TextVariant::Body));
+    Ok(Surface::new(Page::new().child(card)).with_id(STAY))
+}

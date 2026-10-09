@@ -467,6 +467,7 @@ dependencies = [
 name = "guest-reviews"
 version = "1.4.0"
 dependencies = [
+ "chrono",
  "extism-pdk",
  "portaki-sdk",
  "portaki-sdk-macros",

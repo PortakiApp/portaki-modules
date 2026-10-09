@@ -2,13 +2,15 @@
 
 use portaki_sdk::capability;
 use portaki_sdk::limits;
+use portaki_sdk::prelude::{DateTime, Utc};
 use serial_test::serial;
 
 use guest_reviews::{
-    publish_readiness, render_home_card, render_host_main, render_host_stats,
-    render_post_stay_card, stats_summary, submit_review, ChannelMode, ModuleConfig,
-    SubmitReviewArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
+    publish_readiness, render_home_card, render_host_main, render_host_stats, render_host_stay,
+    render_post_stay_card, stats_summary, submit_review, AskFrom, ModuleConfig, SubmitReviewArgs,
+    GUEST_TEXT_EMAIL_MAX_CHARS,
 };
+use portaki_sdk::context::StayContext;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::contracts::publish::PublishLevel;
 use portaki_sdk::contracts::stats::StatsSummaryArgs;
@@ -21,39 +23,55 @@ mod config_form;
 mod config_save;
 
 const EMISSIONS: &str = concat!(env!("OUT_DIR"), "/portaki-emissions");
+const AIRBNB_URL: &str = "https://www.airbnb.com/users/review/test";
 
 fn sample_config() -> ModuleConfig {
     ModuleConfig {
-        channel_mode: ChannelMode::Manual,
-        platform_airbnb: true,
-        platform_portaki: true,
-        show_qr_code: true,
-        airbnb_review_url: "https://www.airbnb.com/users/review/test".into(),
+        review_url: AIRBNB_URL.into(),
         thank_you_message: I18nText::new("Merci !", ""),
+        ..ModuleConfig::default()
     }
+}
+
+fn at(raw: &str) -> DateTime<Utc> {
+    DateTime::parse_from_rfc3339(raw)
+        .expect("instant")
+        .with_timezone(&Utc)
+}
+
+/// A stay booked on `channel`, with the default `Booking` dates.
+fn stay_on(channel: &str) -> StayContext {
+    let mut stay: StayContext = Booking::default().into();
+    stay.booking_channel = Some(channel.into());
+    stay
+}
+
+fn to_json(surface: &impl serde::Serialize) -> String {
+    serde_json::to_string(surface).expect("json")
 }
 
 #[test]
 #[serial]
-fn home_card_empty_for_airbnb_without_url() {
+fn without_a_link_the_card_offers_the_rating_alone() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&json!({
-            "platform_airbnb": true,
-            "platform_portaki": false,
-            "airbnb_review_url": ""
-        }))
+        .with_config(&json!({ "review_url": "" }))
         .run(|ctx| {
-            assert!(
-                SurfaceAssertions::new(&render_home_card(ctx).expect("guest card"))
-                    .contains_type("EmptyState")
-            );
+            let surface = render_home_card(ctx).expect("guest card");
+            let assertions = SurfaceAssertions::new(&surface);
+            assert!(assertions.contains_type("Form"));
+            assert!(assertions.contains_type("ChoiceList"));
+            assert!(!assertions.contains_type("QRCode"));
+            assert!(!assertions.contains_type("EmptyState"));
+            let json = to_json(&surface);
+            assert!(!json.contains("guest.cta."), "{json}");
+            assert!(!json.contains("guest.orPortaki"), "{json}");
         });
 }
 
 #[test]
 #[serial]
-fn home_card_migrates_legacy_both_channel() {
+fn home_card_migrates_the_legacy_kv_config() {
     // No `moduleConfig` yet: the KV blob, read through `legacy`.
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
@@ -61,7 +79,7 @@ fn home_card_migrates_legacy_both_channel() {
             "config",
             serde_json::to_vec(&json!({
                 "review_channel": "both",
-                "show_qr_code": true,
+                "show_qr_code": false,
                 "airbnb_review_url": "https://www.airbnb.com/users/review/legacy",
                 "thank_you_message": "Merci !"
             }))
@@ -70,64 +88,146 @@ fn home_card_migrates_legacy_both_channel() {
         .run(|ctx| {
             let surface = render_home_card(ctx).expect("guest card");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
+            // `show_qr_code` is gone: the QR comes with the link.
             assert!(SurfaceAssertions::new(&surface).contains_type("QRCode"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
+            let json = to_json(&surface);
+            assert!(json.contains("i18n:guest.cta.airbnb"), "{json}");
+            assert!(json.contains("users/review/legacy"), "{json}");
         });
 }
 
 #[test]
 #[serial]
-fn home_card_airbnb_only_skips_portaki_form() {
-    MockContext::guest()
-        .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&json!({
-            "platform_airbnb": true,
-            "platform_portaki": false,
-            "airbnb_review_url": "https://www.airbnb.com/users/review/test",
-            "show_qr_code": false
-        }))
-        .run(|ctx| {
-            let surface = render_home_card(ctx).expect("guest card");
-            assert!(SurfaceAssertions::new(&surface).contains_type("Button"));
-            assert!(!SurfaceAssertions::new(&surface).contains_type("Form"));
-            assert!(!SurfaceAssertions::new(&surface).contains_type("QRCode"));
-        });
-}
-
-#[test]
-#[serial]
-fn home_card_portaki_only_when_airbnb_url_missing() {
-    // Both selected, but Airbnb not feasible without URL → Portaki only.
-    MockContext::guest()
-        .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&json!({
-            "platform_airbnb": true,
-            "platform_portaki": true,
-            "airbnb_review_url": ""
-        }))
-        .run(|ctx| {
-            let surface = render_home_card(ctx).expect("guest card");
-            assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
-            assert!(!SurfaceAssertions::new(&surface).contains_type("QRCode"));
-            let json = serde_json::to_string(&surface).expect("json");
-            assert!(!json.contains("airbnb.com"));
-            assert!(!json.contains("guest.airbnbCta"));
-        });
-}
-
-#[test]
-#[serial]
-fn home_card_inline_both_platforms() {
+fn with_a_link_the_card_shows_the_button_the_qr_and_the_rating() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_home_card(ctx).expect("guest card");
-            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("QRCode"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
-            let json = serde_json::to_string(&surface).expect("json");
+            let assertions = SurfaceAssertions::new(&surface);
+            assert!(assertions.contains_type("Card"));
+            assert!(assertions.contains_type("QRCode"));
+            assert!(assertions.contains_type("Form"));
+            assert!(assertions.contains_type("TextArea"));
+            let json = to_json(&surface);
+            assert!(json.contains("i18n:guest.cta.airbnb"), "{json}");
+            assert!(json.contains(AIRBNB_URL), "{json}");
+            assert!(json.contains("i18n:guest.orPortaki"), "{json}");
             assert!(!json.contains("openOverlay"));
+        });
+}
+
+/// The button names the platform read on the link's domain.
+#[test]
+#[serial]
+fn the_button_names_the_platform_of_the_link() {
+    for (url, key) in [
+        (
+            "https://www.booking.com/hotel/fr/x.html",
+            "i18n:guest.cta.booking",
+        ),
+        ("https://g.page/r/abc/review", "i18n:guest.cta.google"),
+        (
+            "https://www.abritel.fr/location/1",
+            "i18n:guest.cta.abritel",
+        ),
+        ("https://www.tripadvisor.fr/x", "i18n:guest.cta.tripadvisor"),
+        ("https://example.com/avis", "i18n:guest.cta.other"),
+    ] {
+        MockContext::guest()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&json!({ "review_url": url }))
+            .run(|ctx| {
+                let json = to_json(&render_home_card(ctx).expect("guest card"));
+                assert!(json.contains(key), "{url}: {json}");
+                assert!(json.contains(url), "{url}: {json}");
+            });
+    }
+}
+
+#[test]
+#[serial]
+fn without_private_comment_the_text_area_is_gone() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({ "review_url": AIRBNB_URL, "private_comment": false }))
+        .run(|ctx| {
+            let surface = render_home_card(ctx).expect("guest card");
+            let assertions = SurfaceAssertions::new(&surface);
+            assert!(assertions.contains_type("Form"));
+            assert!(assertions.contains_type("ChoiceList"));
+            assert!(!assertions.contains_type("TextArea"));
+            assert!(!to_json(&surface).contains("i18n:guest.comment"));
+        });
+}
+
+/// In `auto` mode an Airbnb link is not offered to a guest who booked on Booking.com — the
+/// rating still is.
+#[test]
+#[serial]
+fn auto_mode_hides_a_booking_platform_link_from_other_stays() {
+    let config = json!({ "review_url": AIRBNB_URL, "channel_mode": "auto" });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&config)
+        .with_stay(stay_on("booking"))
+        .run(|ctx| {
+            let surface = render_home_card(ctx).expect("guest card");
+            assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
+            assert!(!SurfaceAssertions::new(&surface).contains_type("QRCode"));
+            assert!(!to_json(&surface).contains(AIRBNB_URL));
+        });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&config)
+        .with_stay(stay_on("airbnb"))
+        .run(|ctx| {
+            let surface = render_home_card(ctx).expect("guest card");
+            assert!(SurfaceAssertions::new(&surface).contains_type("QRCode"));
+            assert!(to_json(&surface).contains(AIRBNB_URL));
+        });
+}
+
+/// Filtering the public link on the guest's rating is forbidden: a one-star guest still gets it.
+#[test]
+#[serial]
+fn a_low_rating_still_gets_the_public_link() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&sample_config())
+        .with_stay(Booking::default())
+        .run(|ctx| {
+            submit_review(
+                ctx.clone(),
+                SubmitReviewArgs {
+                    rating: 1,
+                    comment: "Décevant".into(),
+                },
+            )
+            .expect("submit");
+            let surface = render_home_card(ctx).expect("guest card");
+            assert!(SurfaceAssertions::new(&surface).contains_type("Celebration"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("QRCode"));
+            let json = to_json(&surface);
+            assert!(json.contains("i18n:guest.cta.airbnb"), "{json}");
+            assert!(json.contains(AIRBNB_URL), "{json}");
+        });
+}
+
+/// Before arrival the home card says when it opens; no form.
+#[test]
+#[serial]
+fn the_home_card_waits_for_the_arrival() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&sample_config())
+        .with_stay(Booking::default())
+        .with_now(at("2026-05-20T12:00:00Z"))
+        .run(|ctx| {
+            let surface = render_home_card(ctx).expect("guest card");
+            assert!(!SurfaceAssertions::new(&surface).contains_type("Form"));
+            assert!(to_json(&surface).contains("i18n:guest.notYet"));
         });
 }
 
@@ -137,13 +237,47 @@ fn post_stay_card_reuses_home_card_content() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&sample_config())
+        .with_stay(Booking::default())
+        .with_now(at("2026-06-10T12:00:00Z"))
         .run(|ctx| {
-            let home = serde_json::to_string(&render_home_card(ctx.clone()).expect("guest card"))
-                .expect("home json");
-            let post = serde_json::to_string(&render_post_stay_card(ctx).expect("guest card"))
-                .expect("post-stay json");
+            let home = to_json(&render_home_card(ctx.clone()).expect("guest card"));
+            let post = to_json(&render_post_stay_card(ctx).expect("guest card"));
             assert_eq!(home, post);
         });
+}
+
+/// « Le lendemain à 10 h » : the post-stay card stays an empty state until 10:00 the day after
+/// checkout, property time. `Booking::default` checks out at 2026-06-08T10:00Z (12:00 Paris):
+/// the card opens 2026-06-09T10:00 Paris, 08:00Z.
+#[test]
+#[serial]
+fn the_post_stay_card_waits_for_ask_from() {
+    let card = |now: &str| {
+        MockContext::guest()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&ModuleConfig {
+                ask_from: AskFrom::NextDay10h,
+                ..sample_config()
+            })
+            .with_stay(Booking::default())
+            .with_now(at(now))
+            .run(|ctx| render_post_stay_card(ctx).expect("post-stay card"))
+    };
+    let early = card("2026-06-09T07:59:00Z");
+    assert!(SurfaceAssertions::new(&early).contains_type("EmptyState"));
+    assert!(!SurfaceAssertions::new(&early).contains_type("Form"));
+    let open = card("2026-06-09T08:00:00Z");
+    assert!(!SurfaceAssertions::new(&open).contains_type("EmptyState"));
+    assert!(SurfaceAssertions::new(&open).contains_type("Form"));
+
+    // « L'heure de départ » : open from checkout.
+    let at_checkout = MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&sample_config())
+        .with_stay(Booking::default())
+        .with_now(at("2026-06-08T10:00:00Z"))
+        .run(|ctx| render_post_stay_card(ctx).expect("post-stay card"));
+    assert!(SurfaceAssertions::new(&at_checkout).contains_type("Form"));
 }
 
 #[test]
@@ -151,41 +285,39 @@ fn post_stay_card_reuses_home_card_content() {
 fn submit_review_validates_rating() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&json!({
-            "platform_airbnb": false,
-            "platform_portaki": true
-        }))
+        .with_config(&json!({}))
+        .with_stay(Booking::default())
         .run(|ctx| {
-            let err = submit_review(
-                ctx,
-                SubmitReviewArgs {
-                    rating: 0,
-                    comment: "".into(),
-                },
-            );
-            assert!(err.is_err());
+            for rating in [0, 6] {
+                let err = submit_review(
+                    ctx.clone(),
+                    SubmitReviewArgs {
+                        rating,
+                        comment: "".into(),
+                    },
+                );
+                assert!(err.is_err(), "{rating}");
+            }
         });
 }
 
+/// No more Portaki switch: with a public link, the rating is still taken.
 #[test]
 #[serial]
-fn submit_review_rejects_when_portaki_disabled() {
+fn submit_review_is_taken_alongside_a_public_link() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&json!({
-            "platform_airbnb": true,
-            "platform_portaki": false,
-            "airbnb_review_url": "https://www.airbnb.com/users/review/test"
-        }))
+        .with_config(&sample_config())
+        .with_stay(Booking::default())
         .run(|ctx| {
-            let err = submit_review(
+            submit_review(
                 ctx,
                 SubmitReviewArgs {
                     rating: 5,
                     comment: "Great".into(),
                 },
-            );
-            assert!(err.is_err());
+            )
+            .expect("submit");
         });
 }
 
@@ -194,7 +326,7 @@ fn submit_review_rejects_when_portaki_disabled() {
 fn submit_review_stores_one_review_per_stay() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&json!({ "platform_airbnb": false, "platform_portaki": true }))
+        .with_config(&json!({}))
         .with_stay(Booking::default())
         .run_with(|ctx, host| {
             let review = || SubmitReviewArgs {
@@ -221,7 +353,7 @@ fn submit_review_stores_one_review_per_stay() {
 fn a_review_under_the_first_per_stay_key_still_counts() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&json!({ "platform_airbnb": false, "platform_portaki": true }))
+        .with_config(&json!({}))
         .with_stay(Booking::default())
         .run_with(|ctx, host| {
             let stay_id = ctx.stay.as_ref().expect("stay").stay_id;
@@ -250,7 +382,7 @@ fn a_review_under_the_first_per_stay_key_still_counts() {
 fn submit_review_needs_a_stay() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&json!({ "platform_airbnb": false, "platform_portaki": true }))
+        .with_config(&json!({}))
         .run(|ctx| {
             let err = submit_review(
                 ctx,
@@ -272,12 +404,54 @@ fn the_host_form_sends_the_declared_keys() {
         .with_config(&sample_config())
         .run(|ctx| {
             let surface = render_host_main(ctx).expect("host main");
-            assert!(SurfaceAssertions::new(&surface).contains_type("ToggleRow"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
-            config_form::assert_form_matches_config(
-                concat!(env!("OUT_DIR"), "/portaki-emissions"),
-                &surface,
-                &[],
+            let assertions = SurfaceAssertions::new(&surface);
+            assert!(assertions.contains_type("ToggleRow"));
+            assert!(assertions.contains_type("ChoiceList"));
+            assert!(assertions.contains_type("TextInput"));
+            assert!(assertions.contains_type("Card"));
+            config_form::assert_form_matches_config(EMISSIONS, &surface, &[]);
+            // The detected platform, read-only.
+            assert!(to_json(&surface).contains("\"Airbnb\""));
+        });
+}
+
+/// A link that is not https: the error sits under the field, in the host's language.
+#[test]
+#[serial]
+fn the_host_form_shows_the_https_error_under_the_link() {
+    let error_of = |url: &str| {
+        MockContext::host()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&json!({ "review_url": url }))
+            .run(|mut ctx| {
+                ctx.locale = "fr-FR".into();
+                let tree =
+                    serde_json::to_value(render_host_main(ctx).expect("host main")).expect("tree");
+                field_error(&tree, "review_url")
+            })
+    };
+    assert_eq!(
+        error_of("http://www.booking.com/x").as_deref(),
+        Some("L'adresse doit commencer par https://")
+    );
+    assert!(error_of("www.booking.com/x").is_some());
+    assert_eq!(error_of("https://www.booking.com/x"), None);
+    assert_eq!(error_of(""), None);
+}
+
+/// Before `review_url` is saved, the old Airbnb link fills the field.
+#[test]
+#[serial]
+fn the_host_form_shows_the_old_airbnb_link() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({ "airbnb_review_url": "airbnb.fr/users/review/1" }))
+        .run(|ctx| {
+            let tree =
+                serde_json::to_value(render_host_main(ctx).expect("host main")).expect("tree");
+            assert_eq!(
+                form_value(&tree, "review_url").as_deref(),
+                Some("https://airbnb.fr/users/review/1")
             );
         });
 }
@@ -292,7 +466,7 @@ fn host_form_shows_the_message_in_the_host_language() {
     );
     let stored = json!({
         "thank_you_message": { "fr": "Merci !", "en": "Thanks!" },
-        "airbnb_review_url": "https://www.airbnb.com/users/review/test"
+        "review_url": AIRBNB_URL
     });
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
@@ -316,21 +490,20 @@ fn guest_card_shows_the_message_in_the_guest_language() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&json!({
-            "platform_airbnb": false,
             "thank_you_message": { "fr": "Merci !", "en": "Thanks!" }
         }))
         .run(|mut ctx| {
             ctx.locale = "en-GB".into();
-            let json = serde_json::to_string(&render_home_card(ctx).expect("card")).unwrap();
+            let json = to_json(&render_home_card(ctx).expect("card"));
             assert!(json.contains("Thanks!"));
             assert!(!json.contains("Merci !"));
         });
 }
 
-/// No platform ticked: blocks. Airbnb selected without its URL: recommended, never blocking.
+/// One rule: a link that is not https blocks. No link is fine — the rating alone.
 #[test]
 #[serial]
-fn publish_readiness_requires_a_platform_and_recommends_the_airbnb_url() {
+fn publish_readiness_requires_an_https_link() {
     let check = |config: serde_json::Value| {
         MockContext::host()
             .with_capabilities(&[capability::core::STORAGE])
@@ -340,35 +513,83 @@ fn publish_readiness_requires_a_platform_and_recommends_the_airbnb_url() {
                     .expect("publishReadiness")
                     .items
                     .into_iter()
-                    .map(|item| (item.id, item.level, item.ok))
+                    .map(|item| (item.id, item.level, item.ok, item.hint.fr))
                     .collect::<Vec<_>>()
             })
     };
-    let platform = |ok| ("platform".to_string(), PublishLevel::Required, ok);
-    let url = |ok| {
-        (
-            "airbnb-review-url".to_string(),
-            PublishLevel::Recommended,
-            ok,
-        )
-    };
+    let blocked = vec![(
+        "config.review_url".to_string(),
+        PublishLevel::Required,
+        false,
+        "L'adresse doit commencer par https://".to_string(),
+    )];
 
+    assert_eq!(check(json!({})), vec![]);
+    assert_eq!(check(json!({ "review_url": "" })), vec![]);
+    assert_eq!(check(json!({ "review_url": AIRBNB_URL })), vec![]);
     assert_eq!(
-        check(json!({ "platform_airbnb": false, "platform_portaki": false })),
-        vec![platform(false)]
+        check(json!({ "review_url": "http://www.booking.com/x" })),
+        blocked
     );
-    assert_eq!(
-        check(json!({ "platform_airbnb": false, "platform_portaki": true })),
-        vec![platform(true)]
+    assert_eq!(check(json!({ "review_url": "booking.com/x" })), blocked);
+}
+
+/// The stay encart: not rated yet, the rating, and whether the public link was offered.
+#[test]
+#[serial]
+fn the_stay_encart_says_the_rating() {
+    let encart = |config: serde_json::Value, rating: Option<u8>| {
+        let stay_id = "00000000-0000-4000-8000-000000000001";
+        let mut builder = MockContext::host()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&config)
+            .with_translation("host.stay.notYet", "Pas encore noté.")
+            .with_translation("host.stay.rated", "Note : {rating} / 5")
+            .with_translation(
+                "host.stay.ratedWithLink",
+                "Note : {rating} / 5 · lien public proposé",
+            );
+        if let Some(rating) = rating {
+            builder = builder.with_kv(
+                format!("stay:{stay_id}:review"),
+                serde_json::to_vec(&json!({ "rating": rating, "comment": "" })).unwrap(),
+            );
+        }
+        builder.run(|mut ctx| {
+            ctx.input = json!({ "stayId": stay_id });
+            to_json(&render_host_stay(ctx).expect("stay encart"))
+        })
+    };
+    assert!(encart(json!({}), None).contains("i18n:host.stay.notYet"));
+    let rated = encart(json!({}), Some(4));
+    assert!(rated.contains("Note : 4 / 5"), "{rated}");
+    assert!(!rated.contains("lien public"), "{rated}");
+    let with_link = encart(json!({ "review_url": AIRBNB_URL }), Some(5));
+    assert!(
+        with_link.contains("Note : 5 / 5 · lien public proposé"),
+        "{with_link}"
     );
-    assert_eq!(
-        check(json!({ "platform_airbnb": true, "airbnb_review_url": "" })),
-        vec![platform(true), url(false)]
-    );
-    assert_eq!(
-        check(json!({ "platform_airbnb": true, "airbnb_review_url": "https://airbnb.com/r/1" })),
-        vec![platform(true), url(true)]
-    );
+    // Without a stay id: nothing to read, not rated.
+    let no_stay = MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| to_json(&render_host_stay(ctx).expect("stay encart")));
+    assert!(no_stay.contains("i18n:host.stay.notYet"));
+}
+
+/// The error a `Field` named `name` shows, if any.
+fn field_error(tree: &serde_json::Value, name: &str) -> Option<String> {
+    match tree {
+        serde_json::Value::Object(object) => {
+            if object.get("name").and_then(serde_json::Value::as_str) == Some(name) {
+                if let Some(error) = object.get("error").and_then(serde_json::Value::as_str) {
+                    return Some(error.to_string());
+                }
+            }
+            object.values().find_map(|child| field_error(child, name))
+        }
+        serde_json::Value::Array(items) => items.iter().find_map(|item| field_error(item, name)),
+        _ => None,
+    }
 }
 
 /// A 20 000-char comment: the stored review keeps it whole, the host email quotes at most
@@ -381,10 +602,7 @@ fn long_comment_is_stored_whole_and_quoted_in_the_host_email() {
 
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&json!({
-            "platform_airbnb": false,
-            "platform_portaki": true
-        }))
+        .with_config(&json!({}))
         .with_stay(Booking::default())
         .run_with(|ctx, host| {
             submit_review(
@@ -429,10 +647,7 @@ fn long_comment_is_stored_whole_and_quoted_in_the_host_email() {
 fn stored_reviews_feed_the_stats() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&json!({
-            "platform_airbnb": false,
-            "platform_portaki": true
-        }))
+        .with_config(&json!({}))
         .run(|ctx| {
             for (rating, comment) in [(5, "Très propre, super emplacement"), (4, "")] {
                 let mut on_stay = ctx.clone();
@@ -510,7 +725,7 @@ fn chrono_like_days_ago(days: i64) -> String {
 fn the_rating_the_form_sends_reaches_the_command() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&json!({ "platform_airbnb": false, "platform_portaki": true }))
+        .with_config(&json!({}))
         .with_stay(Booking::default())
         .run(|ctx| {
             let tree = serde_json::to_value(render_home_card(ctx.clone()).expect("home card"))
@@ -589,7 +804,7 @@ fn uuid_for(days: i64) -> String {
 fn a_stay_already_rated_is_thanked_not_asked_again() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&json!({ "platform_airbnb": false, "platform_portaki": true }))
+        .with_config(&json!({}))
         .with_stay(Booking::default())
         .with_translation("guest.given.title", "Merci pour votre avis")
         .run(|ctx| {
@@ -625,7 +840,7 @@ fn a_stay_already_rated_is_thanked_not_asked_again() {
 fn no_star_is_given_in_advance() {
     MockContext::guest()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&json!({ "platform_airbnb": false, "platform_portaki": true }))
+        .with_config(&json!({}))
         .with_stay(Booking::default())
         .run(|ctx| {
             let tree = serde_json::to_value(render_home_card(ctx).expect("home card")).unwrap();

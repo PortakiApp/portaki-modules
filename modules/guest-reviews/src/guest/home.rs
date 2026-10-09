@@ -1,6 +1,6 @@
 //! Guest home card — inline post-stay review (no overlay).
 //!
-//! Only selected *and* feasible platforms are offered (Airbnb needs a URL).
+//! The rating is always offered; the host's public review link (any platform) to every guest.
 
 use portaki_sdk::host::i18n::{translate, Vars};
 use portaki_sdk::prelude::*;
@@ -12,6 +12,22 @@ use portaki_sdk::sdui::primitives::{
 use portaki_sdk::sdui::surface::Surface;
 
 use super::load::GuestData;
+
+/// Le commentaire privé (spec §2.1) : la zone de texte après la note, quand l'hôte la propose.
+fn comment_field(private_comment: bool) -> Vec<Component> {
+    if !private_comment {
+        return Vec::new();
+    }
+    vec![Field::new()
+        .name("comment")
+        .label("i18n:guest.comment")
+        .child(
+            TextArea::new()
+                .name("comment")
+                .placeholder("i18n:guest.commentPlaceholder"),
+        )
+        .into()]
+}
 
 pub fn build_home_card(data: &GuestData) -> Surface {
     let mut children = Vec::new();
@@ -36,12 +52,12 @@ pub fn build_home_card(data: &GuestData) -> Surface {
         ));
     }
 
-    let airbnb_url = data.airbnb_url.clone().unwrap_or_default();
-    if data.show_airbnb {
+    // Le lien public, à tous, avant la note : filtrer selon la note est interdit (spec §3).
+    if let Some((url, platform)) = &data.link {
         children.push(Component::Button(
             Button::new()
-                .label("i18n:guest.airbnbCta")
-                .action(Action::external(airbnb_url.clone())),
+                .label(platform.cta_key())
+                .action(Action::external(url.clone())),
         ));
     }
 
@@ -50,8 +66,8 @@ pub fn build_home_card(data: &GuestData) -> Surface {
     // mot pour recevoir une erreur (§2.19).
     if let Some(rating) = data.rating_given {
         children.push(review_thanks(rating, &data.host_name));
-    } else if data.show_portaki {
-        if data.show_airbnb {
+    } else {
+        if data.link.is_some() {
             children.push(Component::Text(
                 Text::new()
                     .text("i18n:guest.orPortaki")
@@ -70,57 +86,50 @@ pub fn build_home_card(data: &GuestData) -> Surface {
             },
         );
 
-        children.push(Component::Form(
-            Form::new()
+        let form = Form::new().child(
+            Field::new()
+                .name("rating")
+                .label("i18n:guest.rating")
+                // Obligatoire, et aucune étoile préchoisie : cinq étoiles servies
+                // d'avance partaient telles quelles chez qui touchait « Envoyer » sans
+                // rien noter. Le livret retient l'envoi tant que rien n'est choisi.
+                .required(true)
+                // Des étoiles, pas une liste déroulante : une note se donne d'un doigt.
+                // `Stars` dessine les cinq, et porte les flèches du clavier.
                 .child(
-                    Field::new()
+                    ChoiceList::new()
                         .name("rating")
-                        .label("i18n:guest.rating")
-                        // Obligatoire, et aucune étoile préchoisie : cinq étoiles servies
-                        // d'avance partaient telles quelles chez qui touchait « Envoyer » sans
-                        // rien noter. Le livret retient l'envoi tant que rien n'est choisi.
-                        .required(true)
-                        // Des étoiles, pas une liste déroulante : une note se donne d'un doigt.
-                        // `Stars` dessine les cinq, et porte les flèches du clavier.
-                        .child(
-                            ChoiceList::new()
-                                .name("rating")
-                                .layout(ChoiceListLayout::Stars)
-                                .choices(vec![
-                                    ChoiceOption::new("1", "i18n:guest.rating.1"),
-                                    ChoiceOption::new("2", "i18n:guest.rating.2"),
-                                    ChoiceOption::new("3", "i18n:guest.rating.3"),
-                                    ChoiceOption::new("4", "i18n:guest.rating.4"),
-                                    ChoiceOption::new("5", "i18n:guest.rating.5"),
-                                ]),
-                        ),
-                )
-                .child(
-                    Field::new()
-                        .name("comment")
-                        .label("i18n:guest.comment")
-                        .child(
-                            TextArea::new()
-                                .name("comment")
-                                .placeholder("i18n:guest.commentPlaceholder"),
-                        ),
-                )
-                .child(
-                    Button::new()
-                        .label("i18n:guest.submit")
-                        .action(submit_action),
+                        .layout(ChoiceListLayout::Stars)
+                        .choices(vec![
+                            ChoiceOption::new("1", "i18n:guest.rating.1"),
+                            ChoiceOption::new("2", "i18n:guest.rating.2"),
+                            ChoiceOption::new("3", "i18n:guest.rating.3"),
+                            ChoiceOption::new("4", "i18n:guest.rating.4"),
+                            ChoiceOption::new("5", "i18n:guest.rating.5"),
+                        ]),
                 ),
+        );
+        // `children` remplacerait la liste (la note avec) : le commentaire s'ajoute après elle.
+        let form = comment_field(data.private_comment)
+            .into_iter()
+            .fold(form, |form, field| form.child(field));
+        children.push(Component::Form(
+            form.child(
+                Button::new()
+                    .label("i18n:guest.submit")
+                    .action(submit_action),
+            ),
         ));
     }
 
     // Le QR vient en dernier, séparé par un filet : il sert à finir l'avis sur un téléphone,
     // pas à le commencer (§2.19). Au-dessus du formulaire, il détournait du champ.
-    if data.show_qr && !airbnb_url.is_empty() {
+    if let Some((url, _)) = &data.link {
         if children.len() > 2 {
             children.push(Component::Divider(Divider::new()));
         }
         children.push(Component::QRCode(
-            QRCode::new().value(airbnb_url).size(144.0),
+            QRCode::new().value(url.clone()).size(144.0),
         ));
         children.push(Component::Text(
             Text::new()
