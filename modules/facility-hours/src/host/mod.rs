@@ -129,7 +129,12 @@ fn by_day_rows(
         .iter()
         .enumerate()
         .flat_map(|(d, day)| {
-            let entry = facility.and_then(|f| f.exceptions.get(d));
+            let key = crate::schedule::day_key(*day);
+            let entry = facility.and_then(|f| {
+                f.by_day_entries()
+                    .into_iter()
+                    .find_map(|(at, entry)| (at == d).then_some(entry))
+            });
             let time = |key: &str, value: Option<&String>, placeholder: &str| -> Component {
                 let name = format!("facilities.{index}.exceptions.{d}.{key}");
                 named(config, ctx, name.clone())
@@ -150,8 +155,11 @@ fn by_day_rows(
                     .into()
             };
             [
+                // Le jour de la ligne, en champ caché : le formulaire resserre les index, et
+                // une ligne sans lui glisserait au jour d'après.
+                sdui::row_id(&format!("facilities.{index}.exceptions"), d, Some(key)),
                 Text::new()
-                    .text(format!("i18n:host.day.{}", crate::schedule::day_key(*day)))
+                    .text(format!("i18n:host.day.{key}"))
                     .variant(TextVariant::Body)
                     .into(),
                 time("opens_at", entry.and_then(|e| e.opens_at.as_ref()), "08:00"),

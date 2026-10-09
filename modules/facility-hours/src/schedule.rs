@@ -43,6 +43,12 @@ pub fn parse_hm(raw: &str) -> Option<u32> {
 pub struct DayHours {
     /// `mon` … `sun`.
     pub day: String,
+    /// Le jour d'une ligne « selon le jour », envoyé par le champ caché `….id` du formulaire.
+    ///
+    /// Pas `day` : le formulaire regroupe ses lignes par index en les resserrant, et seul ce
+    /// champ garde à chaque ligne son jour. Lu seulement selon le jour, où il devient `day`.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub opens_at: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -415,7 +421,7 @@ mod tests {
             day: "WED".into(),
             opens_at: Some("14:00".into()),
             closes_at: Some("18:00".into()),
-            closed: false,
+            ..DayHours::default()
         });
         // Case is the host's business, not the lookup's.
         assert_eq!(spa.state_at(at(11, 0), None), Some(State::OpensAt(840)));
