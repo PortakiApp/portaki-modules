@@ -37,11 +37,11 @@ keypad code, or remote unlock (`external.nuki.byok` granted + `smartlock_id`).
   "smartlock_id": "…",
   "keypad_code": "……",
   "device_name": "…",
-  "code_per_stay": true
+  "code_per_stay": false
 }
 ```
 
-### One code per stay (`code_per_stay`, default `true`)
+### One code per stay (`code_per_stay`, default `false`: opt-in, unlike the spec)
 
 With the Nuki Web key and a lock ID, the guest's first reveal looks for a keypad authorization
 named `Portaki <first 8 chars of the stay id>` on the lock (`GET /smartlock/{id}/auth`) and, if

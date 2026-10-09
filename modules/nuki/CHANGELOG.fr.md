@@ -5,7 +5,7 @@
 Un code par séjour.
 
 * Chaque séjour reçoit son propre code clavier, créé sur la serrure via Nuki Web et valable de l’arrivée au départ.
-* Le réglage « Un code par séjour » est activé par défaut ; sans clé Nuki Web, le code clavier commun reste utilisé.
+* « Un code par séjour » est désactivé par défaut, à activer dans les réglages ; il demande la clé de votre compte Nuki Web.
 * Si Nuki ne répond pas, le voyageur reçoit le code clavier commun.
 * La fiche du séjour affiche la période d’accès et le code du voyageur.
 

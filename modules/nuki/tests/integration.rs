@@ -18,7 +18,7 @@ fn sample_config() -> ModuleConfig {
         smartlock_id: "lock-abc".into(),
         keypad_code: "482910".into(),
         device_name: "Front door".into(),
-        ..ModuleConfig::default()
+        code_per_stay: true,
     }
 }
 
