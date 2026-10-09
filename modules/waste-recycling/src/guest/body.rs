@@ -34,6 +34,11 @@ pub fn bin_rows(data: &GuestData) -> Vec<Component> {
             if !subtitle.is_empty() {
                 item = item.subtitle(subtitle);
             }
+            // La consigne de l'hôte — « Pas de verre » —, en légende sous le bac.
+            let note = bin.note.get(&data.locale).trim();
+            if !note.is_empty() {
+                item = item.child(Text::new().text(note).variant(TextVariant::Caption));
+            }
             // « Collecte : mardi, vendredi » — ses propres jours, quand l'hôte les a cochés.
             let days: Vec<&str> = bin
                 .days

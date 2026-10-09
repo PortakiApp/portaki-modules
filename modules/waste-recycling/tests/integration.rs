@@ -367,6 +367,7 @@ fn a_save_in_english_keeps_the_french() {
             "bin_room_where",
             "bins.items",
             "bins.location",
+            "bins.note",
             "bins.title",
             "collection_schedule",
             "compost_accepted",
@@ -709,5 +710,229 @@ fn a_plaintext_code_saved_before_survives_the_secret_form() {
             assert!(!serde_json::to_string(&surface).unwrap().contains("1234A"));
             let saved = config_save::save(EMISSIONS, &surface, &stored, "fr");
             assert_eq!(saved["bin_room_code"], "1234A");
+        });
+}
+
+/// « Sortir les bacs » la veille de chaque collecte quand l'hôte l'a demandé, et la case
+/// « Bacs sortis » gardée par date (spec Tri §1).
+#[test]
+#[serial]
+fn the_host_reminder_is_a_task_the_evening_before_a_collection() {
+    use portaki_sdk::contracts::timeline::{TaskCompleteArgs, TaskToggleArgs, TimelineTasksArgs};
+    use portaki_sdk::prelude::Uuid;
+    use portaki_test_utils::Property;
+    use waste_recycling::{task_complete, task_toggle, timeline_tasks};
+
+    let args = || TimelineTasksArgs {
+        property_id: Uuid::nil(),
+        from: at("2026-10-05T00:00:00Z"),
+        to: at("2026-10-19T00:00:00Z"),
+        stays: Vec::new(),
+    };
+    let toggle = |task_id: &str, item_id: &str, done: bool| TaskToggleArgs {
+        property_id: Uuid::nil(),
+        task_id: task_id.into(),
+        item_id: item_id.into(),
+        done,
+        photo: None,
+    };
+
+    // Sans l'option, rien.
+    MockContext::host()
+        .with_property(Property::default())
+        .with_config(&json!({ "collects_tue": true }))
+        .run(|ctx| assert!(timeline_tasks(ctx, args()).unwrap().tasks.is_empty()));
+    // Sans ramassage non plus : l'option n'a pas d'objet.
+    MockContext::host()
+        .with_property(Property::default())
+        .with_config(
+            &json!({ "collects_tue": true, "host_reminder": true, "has_collection": false }),
+        )
+        .run(|ctx| assert!(timeline_tasks(ctx, args()).unwrap().tasks.is_empty()));
+
+    MockContext::host()
+        .with_property(Property::default())
+        .with_config(&json!({
+            "host_reminder": true,
+            "bins": [{ "title": "Bac jaune", "items": "Emballages", "days": ["tue"] }]
+        }))
+        .run(|ctx| {
+            let tasks = timeline_tasks(ctx.clone(), args()).unwrap().tasks;
+            assert_eq!(tasks.len(), 2);
+            assert_eq!(tasks[0].id, "bins:2026-10-06");
+            // Lundi 20 h à Paris.
+            assert_eq!(tasks[0].at, at("2026-10-05T18:00:00Z"));
+            assert_eq!(tasks[0].title.fr, "Sortir les bacs");
+            assert_eq!(tasks[0].context.fr, "Ce soir");
+            assert_eq!(tasks[0].items.len(), 1);
+            assert_eq!(tasks[0].items[0].label.fr, "Bacs sortis");
+            assert!(!tasks[0].items[0].done);
+
+            task_toggle(ctx.clone(), toggle("bins:2026-10-06", "out", true)).unwrap();
+            let tasks = timeline_tasks(ctx.clone(), args()).unwrap().tasks;
+            assert!(tasks[0].items[0].done);
+            // Une autre date ne suit pas.
+            assert!(!tasks[1].items[0].done);
+
+            task_toggle(ctx.clone(), toggle("bins:2026-10-06", "out", false)).unwrap();
+            assert!(!timeline_tasks(ctx.clone(), args()).unwrap().tasks[0].items[0].done);
+
+            task_complete(
+                ctx.clone(),
+                TaskCompleteArgs {
+                    property_id: Uuid::nil(),
+                    task_id: "bins:2026-10-13".into(),
+                },
+            )
+            .unwrap();
+            assert!(timeline_tasks(ctx.clone(), args()).unwrap().tasks[1].items[0].done);
+
+            assert!(task_toggle(ctx.clone(), toggle("bins:2026-10-06", "other", true)).is_err());
+            assert!(task_toggle(ctx, toggle("demain", "out", true)).is_err());
+        });
+}
+
+/// L'épingle du local part sur la Carte du livret, catégorie « recycling » ; loin du logement,
+/// elle avertit sans bloquer (spec Tri §2.3).
+#[test]
+#[serial]
+fn the_bin_room_pin_is_a_marker_and_warns_when_far() {
+    use portaki_test_utils::Property;
+
+    let room = |lat: Value| {
+        json!({
+            "bin_room_enabled": true,
+            "bin_room_where": "Au fond de la cour",
+            "bin_room_lat": lat,
+            "bin_room_lng": 7.0130
+        })
+    };
+    // Le sélecteur envoie parfois la coordonnée en texte.
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_config(&room(json!("43.5520")))
+        .run(|ctx| {
+            let markers = waste_recycling::map_markers(ctx.clone()).unwrap().markers;
+            assert_eq!(markers.len(), 1);
+            assert_eq!(markers[0].category.as_deref(), Some("recycling"));
+            assert_eq!(markers[0].lat, 43.5520);
+            assert_eq!(markers[0].subtitle.as_deref(), Some("Au fond de la cour"));
+            let readiness = publish_readiness(ctx).unwrap();
+            assert!(readiness
+                .items
+                .iter()
+                .all(|c| c.id != "config.bin_room_lat"));
+        });
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_config(&room(json!(43.5613)))
+        .run(|ctx| {
+            let readiness = publish_readiness(ctx).unwrap();
+            let far = readiness
+                .items
+                .iter()
+                .find(|c| c.id == "config.bin_room_lat")
+                .expect("averti");
+            assert_eq!(far.level, PublishLevel::Recommended);
+            assert_eq!(
+                far.hint.get("fr"),
+                "Le local est à plus de 500 m du logement : vérifiez l'épingle."
+            );
+        });
+    // Local fermé : pas de repère, même épinglé.
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_config(
+            &json!({ "bin_room_enabled": false, "bin_room_lat": 43.55, "bin_room_lng": 7.01 }),
+        )
+        .run(|ctx| {
+            assert!(waste_recycling::map_markers(ctx)
+                .unwrap()
+                .markers
+                .is_empty())
+        });
+}
+
+/// La consigne d'un bac s'affiche en légende sous lui (spec Tri §2.2).
+#[test]
+#[serial]
+fn a_bin_note_is_a_caption_under_the_bin() {
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({
+            "bins": [{ "title": "Bac jaune", "items": "Emballages", "note": { "fr": "Pas de verre" } }]
+        }))
+        .run(|ctx| {
+            let surface = render_explore_detail(ctx).expect("detail");
+            let json = serde_json::to_string(&surface).unwrap();
+            assert!(json.contains(r#""text":"Pas de verre""#), "{json}");
+        });
+}
+
+/// Les bornes posées après coup avertissent, et ne bloquent jamais (spec Tri §2.1 à §2.5).
+#[test]
+#[serial]
+fn the_new_caps_warn_without_blocking() {
+    use portaki_test_utils::Property;
+
+    let long = |n: usize| "x".repeat(n);
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_config(&json!({
+            "collection_schedule": long(201),
+            "takeout_note": long(201),
+            "bins": [{ "title": "Bac jaune", "items": long(121), "note": long(121), "days": ["tue"] }],
+            "bin_room_enabled": true,
+            "bin_room_where": "Cour",
+            "bin_room_steps": "1\n2\n3\n4\n5\n6",
+            "dropoff_points": [{
+                "title": "Loin", "lat": 43.80, "lng": 7.0128, "accepts_glass": true, "note": long(121)
+            }],
+            "compost_enabled": true,
+            "compost_location": "Jardin",
+            "compost_accepted": format!("Épluchures\n{}", long(61)),
+            "compost_refused": "Viande"
+        }))
+        .run(|ctx| {
+            let readiness = publish_readiness(ctx).unwrap();
+            let warned: Vec<(&str, &str)> = readiness
+                .items
+                .iter()
+                .filter(|c| !c.ok && c.id.starts_with("config."))
+                .map(|c| {
+                    assert_eq!(c.level, PublishLevel::Recommended, "{}", c.id);
+                    (c.id.as_str(), c.hint.get("fr"))
+                })
+                .collect();
+            assert_eq!(
+                warned,
+                [
+                    ("config.collection_schedule", "200 caractères au maximum."),
+                    ("config.takeout_note", "200 caractères au maximum."),
+                    ("config.bins.0.items", "120 caractères au maximum."),
+                    ("config.bins.0.note", "120 caractères au maximum."),
+                    ("config.bin_room_steps", "5 étapes au maximum."),
+                    ("config.dropoff_points.0.note", "120 caractères au maximum."),
+                    (
+                        "config.dropoff_points.0.lat",
+                        "Ce point est à plus de 20 km du logement : vérifiez l'épingle."
+                    ),
+                    ("config.compost_accepted", "60 caractères au maximum."),
+                ]
+            );
+        });
+    // Une étape de plus de 120 caractères, elle aussi.
+    MockContext::guest()
+        .with_config(&json!({
+            "bin_room_enabled": true, "bin_room_where": "Cour", "bin_room_steps": long(121)
+        }))
+        .run(|ctx| {
+            let readiness = publish_readiness(ctx).unwrap();
+            let step = readiness
+                .items
+                .iter()
+                .find(|c| c.id == "config.bin_room_steps")
+                .expect("averti");
+            assert_eq!(step.hint.get("fr"), "120 caractères au maximum.");
         });
 }
