@@ -110,7 +110,7 @@ pub struct SubmitFoundArgs {
     pub stay_id: Option<Uuid>,
     /// TipTap JSON or plain text — stored as-is; email gets plain extract.
     pub description: String,
-    /// Wire status — default `to_collect` (« À récupérer »).
+    /// Ignored: an item the host declares is always « Trouvé ».
     #[serde(default)]
     pub status: Option<String>,
 }
@@ -136,9 +136,9 @@ pub fn submit_found(ctx: Context, args: SubmitFoundArgs) -> Result<()> {
 
     let stay_ids = resolve_stay_ids(&args)?;
     let description = require_description(&args.description)?;
-    // Create always starts as « À récupérer » — status edits use `updateStatus`.
+    // The host has the item in hand: « Trouvé ». Status edits use `updateStatus`.
     let _ = args.status;
-    let status = status::DEFAULT.to_string();
+    let status = status::FOUND.to_string();
     let plain = description::to_plain_text(&description);
     if plain.is_empty() {
         return Err(PortakiError::Host("description_required".to_string()));
@@ -195,7 +195,7 @@ pub struct UpdateStatusArgs {
     name = "updateStatus",
     example(
         label = "Objet renvoyé",
-        input = r#"{"reportId":"9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a","status":"sent"}"#
+        input = r#"{"reportId":"9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a","status":"shipped"}"#
     )
 )]
 pub fn update_status(ctx: Context, args: UpdateStatusArgs) -> Result<()> {
@@ -203,8 +203,12 @@ pub fn update_status(ctx: Context, args: UpdateStatusArgs) -> Result<()> {
         return Err(PortakiError::Host("host_only".to_string()));
     }
 
-    let status = status::parse_status(&args.status)?;
-    let report = storage::update_status(args.report_id, status)?;
+    set_status(&ctx, args.report_id, status::parse_status(&args.status)?)
+}
+
+/// Moves a report to `to` and writes the workspace journal line (`updateStatus`, task).
+pub(crate) fn set_status(ctx: &Context, report_id: Uuid, to: &str) -> Result<()> {
+    let report = storage::update_status(report_id, to)?;
     // Activity log of the workspace (journal).
     events::emit(
         crate::ids::WORKSPACE_ACTIVITY_RECORD,

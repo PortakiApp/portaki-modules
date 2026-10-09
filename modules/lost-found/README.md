@@ -24,7 +24,7 @@ OCI image: `oci.portaki.app/modules/lost-found:<semver>`
 |-------|--------|
 | `kind` | `lost` \| `found` |
 | `item_description` | Plain text (guest) or TipTap JSON (host-found) |
-| `status` | `to_collect` (default, « À récupérer ») \| `sent` (« Envoyé ») \| `returned` (« Récupéré ») |
+| `status` | `declared` (« Déclaré », guest report) \| `found` (« Trouvé », host-declared) \| `shipped` (« Renvoyé ») \| `picked_up` (« Retiré ») \| `donated` (« Donné ») \| `not_found` (« Introuvable »). Legacy `to_collect` / `sent` / `returned` rows read as `declared`-or-`found` / `shipped` / `picked_up` |
 | `contact_hint` / `details` | Guest optional fields |
 
 ## Surfaces
@@ -33,12 +33,13 @@ OCI image: `oci.portaki.app/modules/lost-found:<semver>`
 |-------|------------|-------------|
 | guest | `home.card` | Kind + description form; stay report list after submit |
 | host | `lost-stats` | `property-stats-detail` — counters (declared, returned, waiting, no answer) and the declared items as `FeedItem`s, no chart; a row opens the dashboard modal (`host.surface.overlay`), which renders this surface with `input.itemId` as the item detail |
+| host | `items` | `property-workspace-tab` — every item, its status, the guest's return choice and shipping address, and a status `Select` limited to the allowed transitions |
 | host | `create` | Stay-action modal body: TipTap description (`RichTextEditor`), hint, « Envoyer au voyageur » |
 | host | `stay` | Stay-detail Card list + status when reports exist; empty tree when none (no empty-state copy) |
 
 Host apps only embed `HostSurfacePanel` (or equivalent). No module-named React create modal.
 Stay-action « Déclarer un objet trouvé » stays available even when the stay list is empty.
-Create always defaults status to `to_collect` — no status field on create.
+A guest report starts `declared`, a host-declared item `found` — no status field on create.
 
 ## Queries and commands
 
@@ -47,7 +48,8 @@ Create always defaults status to `to_collect` — no status field on create.
 - `submit` — guest create report; `host::email::send` → host notify (module SDUI)
 - `submitFound` — host create found report(s); `host::email::send` → guest (module SDUI)
 - `sendCheckoutFollowUp` — J+2 tick; guest mail only when a stay declaration exists
-- `updateStatus` — host change report status (`to_collect` \| `sent` \| `returned`) after create; records `workspace-activity.record`
+- `updateStatus` — host moves a report along the allowed transitions (`declared` → any; `found` → `shipped` \| `picked_up` \| `donated`; `not_found` → `found`; returns are final); records `workspace-activity.record`
+- `timelineTasks` / `taskToggle` / `taskComplete` — « Objet à renvoyer » in À venir for each item the guest asked to have shipped, until it is `shipped`; completing the task ships it
 - `statsSummary` — tile `lost-stats`: items declared over the period, waiting ones as attention
 - `emailContext` — optional Portaki snippets: `checkoutTips`, `lostItemDescription` + `hasDeclaration`
 

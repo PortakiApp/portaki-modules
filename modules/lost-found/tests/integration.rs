@@ -227,7 +227,8 @@ fn host_update_status_changes_report() {
                 },
             )
             .expect("list after update");
-            assert_eq!(rows[0].status, "sent");
+            // `sent`, the old wire value, still reaches « Renvoyé ».
+            assert_eq!(rows[0].status, "shipped");
         });
 }
 
@@ -296,7 +297,7 @@ fn host_submit_found_creates_report_per_stay() {
             .expect("list a");
             assert_eq!(for_a.len(), 1);
             assert_eq!(for_a[0].kind, "found");
-            assert_eq!(for_a[0].status, STATUS_DEFAULT);
+            assert_eq!(for_a[0].status, "found");
 
             let for_b = list_for_stay(
                 ctx,
@@ -306,13 +307,13 @@ fn host_submit_found_creates_report_per_stay() {
             )
             .expect("list b");
             assert_eq!(for_b.len(), 1);
-            assert_eq!(for_b[0].status, "to_collect");
+            assert_eq!(for_b[0].status, "found");
         });
 }
 
 #[test]
 #[serial]
-fn host_submit_found_always_defaults_status_to_collect() {
+fn host_submit_found_always_starts_found() {
     reset_test_store();
     let stay_id = Uuid::new_v4();
 
@@ -338,7 +339,7 @@ fn host_submit_found_always_defaults_status_to_collect() {
             )
             .expect("list");
             assert_eq!(rows.len(), 1);
-            assert_eq!(rows[0].status, STATUS_DEFAULT);
+            assert_eq!(rows[0].status, "found");
             assert!(rows[0].item_description.contains("Doudou"));
         });
 }

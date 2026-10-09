@@ -16,6 +16,7 @@ mod kind;
 mod queries;
 mod status;
 mod storage;
+mod tasks;
 
 pub use commands::{
     send_checkout_follow_up, submit, submit_found, update_status, SubmitArgs, SubmitFoundArgs,
@@ -29,11 +30,13 @@ pub use email_text::GUEST_TEXT_EMAIL_MAX_CHARS;
 pub use entities::LostFoundReport;
 pub use guest::{render_guest_form, render_home_card, render_post_stay_card};
 pub use host::{
-    render_host_create, render_host_main, render_host_stats, render_host_stay, stats_summary,
+    render_host_create, render_host_items, render_host_main, render_host_stats, render_host_stay,
+    stats_summary,
 };
 pub use queries::{list_for_stay, list_recent, ListForStayArgs, LostFoundReportRow};
 pub use status::{DEFAULT as STATUS_DEFAULT, WIRE_VALUES as STATUS_WIRE_VALUES};
 pub use storage::reset_test_store;
+pub use tasks::{task_complete, task_toggle, timeline_tasks};
 
 portaki_sdk::portaki_module!(
     id = "lost-found",

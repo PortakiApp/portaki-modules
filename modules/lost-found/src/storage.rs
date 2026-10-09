@@ -24,8 +24,14 @@ fn in_memory_enabled() -> bool {
     cfg!(test) || cfg!(debug_assertions)
 }
 
+/// Sorts newest first, and reads every status in the current set ([`status::normalize`]).
 fn sort_newest_first(rows: &mut [LostFoundReport]) {
     rows.sort_by_key(|row| std::cmp::Reverse(row.created_at));
+    rows.iter_mut().for_each(normalize);
+}
+
+fn normalize(row: &mut LostFoundReport) {
+    row.status = status::normalize(&row.status, &row.kind).to_string();
 }
 
 /// Lists reports for a stay, newest first.
@@ -131,20 +137,25 @@ pub fn create(draft: ReportDraft) -> Result<LostFoundReport> {
 
 /// Loads a report by id.
 pub fn find_by_id(id: Uuid) -> Result<Option<LostFoundReport>> {
-    if in_memory_enabled() {
-        return Ok(TEST_ROWS.with(|store| store.borrow().iter().find(|row| row.id == id).cloned()));
-    }
-    repo::find_by_id::<LostFoundReport, LostFoundReport>(id)
+    let mut row = if in_memory_enabled() {
+        TEST_ROWS.with(|store| store.borrow().iter().find(|row| row.id == id).cloned())
+    } else {
+        repo::find_by_id::<LostFoundReport, LostFoundReport>(id)?
+    };
+    row.iter_mut().for_each(normalize);
+    Ok(row)
 }
 
-/// Updates the workflow status of an existing report (host).
-pub fn update_status(id: Uuid, status: String) -> Result<LostFoundReport> {
+/// Moves an existing report to `to` (host), refused when [`status::can_move`] says no.
+pub fn update_status(id: Uuid, to: &str) -> Result<LostFoundReport> {
     let mut row = find_by_id(id)?.ok_or_else(|| PortakiError::Host("report_not_found".into()))?;
-    row.status = if status.trim().is_empty() {
-        status::DEFAULT.to_string()
-    } else {
-        status
-    };
+    if !status::can_move(&row.status, to) {
+        return Err(PortakiError::Host(format!(
+            "invalid_transition:{}->{to}",
+            row.status
+        )));
+    }
+    row.status = to.to_string();
     persist_row(row.clone())?;
     Ok(row)
 }
@@ -164,4 +175,55 @@ fn persist_row(row: LostFoundReport) -> Result<()> {
     // Gateway `repo_create` upserts on primary key (`id`).
     let _ = repo::create::<LostFoundReport, LostFoundReport, LostFoundReport>(row)?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use portaki_test_utils::MockContext;
+
+    /// Rows written before the six statuses still read, as the nearest new status.
+    #[test]
+    fn legacy_rows_read_in_the_new_set() {
+        reset_test_store();
+        let stay_id = Uuid::new_v4();
+        MockContext::host().run(|_| {
+            for (kind, old) in [
+                ("lost", "to_collect"),
+                ("found", "to_collect"),
+                ("lost", "sent"),
+                ("found", "returned"),
+            ] {
+                create(ReportDraft {
+                    stay_id,
+                    kind: kind.into(),
+                    item_description: old.into(),
+                    status: old.into(),
+                    ..ReportDraft::default()
+                })
+                .expect("create");
+            }
+            let read = |old: &str, kind: &str| {
+                list_by_stay(stay_id)
+                    .unwrap()
+                    .into_iter()
+                    .find(|row| row.item_description == old && row.kind == kind)
+                    .unwrap()
+                    .status
+            };
+            assert_eq!(read("to_collect", "lost"), "declared");
+            assert_eq!(read("to_collect", "found"), "found");
+            assert_eq!(read("sent", "lost"), "shipped");
+            assert_eq!(read("returned", "found"), "picked_up");
+
+            // A legacy « Envoyé » row is final: it cannot go back to « Trouvé ».
+            let sent = list_by_stay(stay_id)
+                .unwrap()
+                .into_iter()
+                .find(|row| row.item_description == "sent")
+                .unwrap();
+            assert_eq!(find_by_id(sent.id).unwrap().unwrap().status, "shipped");
+            assert!(update_status(sent.id, "found").is_err());
+        });
+    }
 }
