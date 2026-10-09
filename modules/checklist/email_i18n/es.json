@@ -1,7 +1,7 @@
 {
   "email.departureReminder.subject": "Antes de irse, su checklist",
   "email.departureReminder.eyebrow": "Salida",
-  "email.departureReminder.title": "Quedan algunos pasos antes de irse",
-  "email.departureReminder.body": "Su checklist de salida aún no está terminada. Tómese un momento para marcar los últimos pasos antes de devolver las llaves.",
+  "email.departureReminder.title": "Mañana, antes de irse",
+  "email.departureReminder.body": "Se marcha mañana y su checklist de salida aún no está terminada. Recuerde marcar los últimos pasos antes de devolver las llaves.",
   "email.departureReminder.cta": "Abrir la checklist"
 }

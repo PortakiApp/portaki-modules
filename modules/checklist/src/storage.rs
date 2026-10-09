@@ -89,12 +89,6 @@ fn remove<T: Row>(table: &'static Table<T>, id: Uuid) -> Result<()> {
 pub fn list_checklists() -> Result<Vec<Checklist>> {
     let mut rows = select(&TEST_LISTS, None)?;
     adopt_legacy_config(&mut rows)?;
-    for list in &mut rows {
-        // « Avant l'arrivée » is no longer offered: such a list reads as « Pendant tout le séjour ».
-        if list.audience == lists::GUEST && list.trigger == lists::BEFORE_ARRIVAL {
-            list.trigger = lists::DURING_STAY.to_string();
-        }
-    }
     rows.sort_by(|a, b| {
         a.sort_order
             .cmp(&b.sort_order)
@@ -179,6 +173,7 @@ fn adopt_legacy_config(rows: &mut [Checklist]) -> Result<()> {
         .and_then(|config| config["show_when"].as_str().map(str::to_string))
         .unwrap_or_default();
     let trigger = match show_when.as_str() {
+        "always" => lists::BEFORE_ARRIVAL,
         "before_checkout" => lists::AT_DEPARTURE,
         "checkout_day" => lists::DEPARTURE_DAY,
         _ => lists::DURING_STAY,

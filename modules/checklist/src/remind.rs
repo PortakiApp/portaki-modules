@@ -1,9 +1,9 @@
-//! « Rappel le matin du départ » (spec Checklist §2.1): the guest is reminded of a departure list
-//! left unfinished.
+//! « Rappel » (spec Checklist §2.1): the guest is reminded of a departure list left unfinished.
 //!
-//! ponytail: the spec asks for a notification at 08:00 local. Modules have no push channel and the
-//! platform runs declared e-mails once a day (08:00 UTC), so this is an e-mail on the check-out
-//! day. An hour-precise push needs a platform channel first.
+//! ponytail: the spec asks for a notification at 08:00 local on departure day. Modules have no
+//! push channel and the platform runs declared e-mails once a day at 08:00 UTC — which is already
+//! past a 10:00 CEST check-out — so this is an e-mail the eve of check-out. An hour-precise push
+//! needs a platform channel first. A `departureDay` list is not open yet on the eve: no reminder.
 
 use portaki_sdk::host::email::{
     self, EmailAudience, ModuleEmailCta, ModuleEmailSdui, SendEmailArgs,
@@ -22,7 +22,7 @@ pub const DEPARTURE_REMINDER_EMAIL_ID: &str = "departure-reminder";
     id = "departure-reminder",
     audience = EmailAudience::Guest,
     trigger = EmailTrigger::RelativeToCheckOut,
-    offset_days = 0,
+    offset_days = -1,
     requires_guest_email,
     description_key = "email.departure-reminder.description",
     skip_when = SkipWhen::GuestEmailMissing,
@@ -30,7 +30,7 @@ pub const DEPARTURE_REMINDER_EMAIL_ID: &str = "departure-reminder";
 )]
 #[portaki_sdk::command(
     name = "sendDepartureReminder",
-    example(label = "Rappel le matin du départ")
+    example(label = "Rappel la veille du départ")
 )]
 pub fn send_departure_reminder(ctx: Context, _args: EmptyArgs) -> Result<()> {
     let stay_id = ctx
@@ -42,7 +42,7 @@ pub fn send_departure_reminder(ctx: Context, _args: EmptyArgs) -> Result<()> {
     let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at);
     let checkout_at = ctx.stay.as_ref().and_then(|stay| stay.checkout_at);
     let now = time::now()?;
-    // 08:00 UTC is the afternoon east of Europe: a guest already gone is not reminded.
+    // A stay shortened since the tick picked it: a guest already gone is not reminded.
     if checkout_at.is_some_and(|checkout| now >= checkout) {
         return Ok(());
     }
