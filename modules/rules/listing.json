@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
-  "category": "stay",
+  "category": "good-to-know",
   "tagline": {
     "fr": "Le règlement du logement en quelques consignes claires, en français et en anglais.",
     "en": "Your house rules as a few clear points, in French and English."

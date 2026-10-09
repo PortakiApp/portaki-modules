@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
-  "category": "stay",
+  "category": "welcome",
   "tagline": {
     "fr": "Des sections de texte mis en forme pour compléter votre livret d’accueil.",
     "en": "Formatted text sections to round out your welcome book."

@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
-  "category": "stay",
+  "category": "help",
   "tagline": {
     "fr": "Numéros d’urgence et contacts utiles, toujours à portée de main.",
     "en": "Emergency numbers and useful contacts, always within reach."

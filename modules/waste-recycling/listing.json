@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
-  "category": "stay",
+  "category": "good-to-know",
   "tagline": {
     "fr": "Quoi jeter dans quel bac, et quels jours sortir les poubelles.",
     "en": "What goes in which bin, and which days to put the bins out."

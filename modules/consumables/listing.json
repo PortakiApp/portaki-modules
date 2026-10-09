@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/PortakiApp/portaki-sdk/main/schema/listing.v1.json",
-  "category": "stay",
+  "category": "house",
   "tagline": {
     "fr": "Les voyageurs signalent un produit manquant, vous réapprovisionnez à temps.",
     "en": "Guests flag missing supplies so you can restock in time."
