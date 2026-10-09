@@ -237,6 +237,7 @@
   "host.steps.remove": "Verwijderen",
   "host.steps.tooMany": "Maximaal 8 stappen.",
   "host.video.label": "Aankomstvideo (URL, optioneel)",
+  "host.video.invalid": "Gebruik een YouTube-, Vimeo- of Google Drive-link, of een .mp4-bestand.",
   "module.catalogDescription": "Manier van binnenkomen, optionele lagen en vrijgave van de codes.",
   "module.description": "De stappen tot de woning",
   "module.displayName": "Toegang & parkeren",

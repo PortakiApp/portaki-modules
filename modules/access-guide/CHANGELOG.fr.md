@@ -5,6 +5,7 @@
 L'accès dans les équipements.
 
 * La serrure connectée ou la boîte à clés s'ajoute aux équipements de la page du logement, selon la méthode d'accès ; ni code ni emplacement n'y figurent.
+* Interphone, consignes, vidéo d'arrivée et numéros de contact sont vérifiés : longueur, lien YouTube, Vimeo, Drive ou .mp4, numéro valide.
 
 ## 1.9.0
 
