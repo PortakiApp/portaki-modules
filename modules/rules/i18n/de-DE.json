@@ -27,6 +27,7 @@
   "host.rule.subtitle": "Details",
   "host.rule.theme": "Thema",
   "host.rule.title": "Regel",
+  "host.rule.title.required": "Schreiben Sie die Regel.",
   "host.rules.add": "Regel hinzufügen",
   "host.rules.emptyDescription": "Fügen Sie die Regeln hinzu, die Ihre Gäste kennen sollten.",
   "host.rules.emptyTitle": "Keine Regeln",

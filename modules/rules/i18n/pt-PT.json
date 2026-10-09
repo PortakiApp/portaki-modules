@@ -27,6 +27,7 @@
   "host.rule.subtitle": "Pormenor",
   "host.rule.theme": "Tema",
   "host.rule.title": "Regra",
+  "host.rule.title.required": "Escreva a regra.",
   "host.rules.add": "Adicionar uma regra",
   "host.rules.emptyDescription": "Adicione as regras que os seus hóspedes devem conhecer.",
   "host.rules.emptyTitle": "Nenhuma regra",

@@ -27,6 +27,7 @@
   "host.rule.subtitle": "詳細",
   "host.rule.theme": "テーマ",
   "host.rule.title": "ルール",
+  "host.rule.title.required": "ルールを入力してください。",
   "host.rules.add": "ルールを追加",
   "host.rules.emptyDescription": "ゲストに知っておいてほしいルールを追加してください。",
   "host.rules.emptyTitle": "ルールなし",
