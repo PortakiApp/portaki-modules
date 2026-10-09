@@ -19,8 +19,6 @@
   "guest.teaser": "How-tos: TV, washer, A/C, coffee machine",
   "home.card.empty.description": "The host has not published an appliance guide.",
   "home.card.empty.title": "No appliances yet",
-  "home.card.featured.empty.description": "Open the full list to see every available appliance.",
-  "home.card.featured.empty.title": "Nothing featured yet",
   "home.card.safety": "Safety",
   "home.card.seeAll": "See all {count} appliances",
   "home.card.seeAllPlain": "See all appliances",

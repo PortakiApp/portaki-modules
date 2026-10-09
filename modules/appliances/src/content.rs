@@ -806,6 +806,22 @@ mod tests {
         assert_eq!(ids(&payload), ["3"]);
     }
 
+    /// La carte d'accueil n'a pas d'état vide : dès qu'un appareil s'affiche, elle a des tuiles —
+    /// même avec une borne à zéro, ou le seul mis en avant rangé.
+    #[test]
+    fn a_shown_appliance_always_fills_the_card() {
+        let mut hidden = named("Four");
+        hidden.featured = true;
+        hidden.status = ApplianceStatus::Hidden;
+        let payload = AppliancesPayload {
+            devices: vec![hidden, named("Lave-linge")],
+            featured_limit: Some(0),
+            ..AppliancesPayload::default()
+        };
+        assert!(!payload.is_empty_for_guest());
+        assert_eq!(payload.featured_guest_devices().len(), 1);
+    }
+
     /// Hors de 2 à 6 : « Entre 2 et 6. » sous le champ, et la carte borne toujours à la lecture.
     #[test]
     fn a_featured_limit_out_of_range_is_reported_not_clamped() {

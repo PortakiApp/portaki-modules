@@ -12,22 +12,13 @@ use crate::content::{Appliance, AppliancesPayload};
 /// Home card: featured active devices only. Card → list path; row → detail path.
 pub fn build_home_card(payload: &AppliancesPayload) -> Surface {
     // Les mis en avant en tuiles, dans une grille : quatre vignettes se balaient d'un coup d'œil
-    // là où quatre lignes se lisent une par une (§2.4).
+    // là où quatre lignes se lisent une par une (§2.4). Jamais vide : la carte n'est rendue
+    // qu'avec un appareil actif, et sans mis en avant ce sont les premiers actifs (§3).
     let tiles: Vec<Component> = payload
         .featured_guest_devices()
         .into_iter()
         .map(device_tile)
         .collect();
-    let children: Vec<Component> = if tiles.is_empty() {
-        Vec::new()
-    } else {
-        vec![Component::Grid(
-            Grid::new()
-                .minColumnWidth(140.0)
-                .plain(true)
-                .children(tiles),
-        )]
-    };
 
     Surface::new(
         Card::new()
@@ -41,23 +32,15 @@ pub fn build_home_card(payload: &AppliancesPayload) -> Surface {
                     .icon(IconName::Plug)
                     .title("i18n:nav.appliances"),
             ))
-            .children(if children.is_empty() {
-                // Aucun appareil mis en avant : un état vide imbriqué, pas une carte vide — et le
-                // bouton reste, puisque la liste, elle, n'est pas vide (§2.4).
-                vec![
-                    Component::EmptyState(
-                        EmptyState::new()
-                            .title("i18n:home.card.featured.empty.title")
-                            .description("i18n:home.card.featured.empty.description")
-                            .icon(IconName::Plug),
-                    ),
-                    see_all_button(payload),
-                ]
-            } else {
-                let mut rows = children;
-                rows.push(see_all_button(payload));
-                rows
-            }),
+            .children(vec![
+                Component::Grid(
+                    Grid::new()
+                        .minColumnWidth(140.0)
+                        .plain(true)
+                        .children(tiles),
+                ),
+                see_all_button(payload),
+            ]),
     )
     .with_id(crate::guest::HOME_CARD)
 }

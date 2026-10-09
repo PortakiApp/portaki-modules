@@ -19,8 +19,6 @@
   "guest.teaser": "Instrucciones: televisión, lavadora, aire acondicionado, cafetera",
   "home.card.empty.description": "El anfitrión todavía no ha publicado una guía de aparatos.",
   "home.card.empty.title": "Ningún aparato por ahora",
-  "home.card.featured.empty.description": "Abra la lista para ver todos los aparatos disponibles.",
-  "home.card.featured.empty.title": "Nada destacado por ahora",
   "home.card.safety": "Seguridad",
   "home.card.seeAll": "Ver los {count} aparatos",
   "home.card.seeAllPlain": "Ver todos los aparatos",

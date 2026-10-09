@@ -19,8 +19,6 @@
   "guest.teaser": "Bedienung: Fernseher, Waschmaschine, Klimaanlage, Kaffeemaschine",
   "home.card.empty.description": "Der Gastgeber hat noch keine Geräteanleitung veröffentlicht.",
   "home.card.empty.title": "Noch keine Geräte",
-  "home.card.featured.empty.description": "Öffnen Sie die Liste, um alle verfügbaren Geräte zu sehen.",
-  "home.card.featured.empty.title": "Derzeit nichts hervorgehoben",
   "home.card.safety": "Sicherheit",
   "home.card.seeAll": "Alle {count} Geräte ansehen",
   "home.card.seeAllPlain": "Alle Geräte ansehen",
