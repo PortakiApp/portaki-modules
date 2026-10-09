@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.5.3...trails-v0.6.0) (2026-10-09)
+
+
+### Features
+
+* **weather:** set where and what to forecast ([d60b8fa](https://github.com/PortakiApp/portaki-modules/commit/d60b8fa7496da66a59b02ae1844e19ee0f317187))
+
 ## [0.5.3](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.5.2...trails-v0.5.3) (2026-10-08)
 
 

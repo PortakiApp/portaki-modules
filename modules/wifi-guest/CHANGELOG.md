@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.6.2...wifi-guest-v1.7.0) (2026-10-09)
+
+
+### Features
+
+* **weather:** set where and what to forecast ([d60b8fa](https://github.com/PortakiApp/portaki-modules/commit/d60b8fa7496da66a59b02ae1844e19ee0f317187))
+
 ## [1.6.2](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.6.1...wifi-guest-v1.6.2) (2026-10-08)
 
 

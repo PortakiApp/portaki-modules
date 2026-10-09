@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/nuki-v1.4.1...nuki-v1.5.0) (2026-10-09)
+
+
+### Features
+
+* **nuki:** dire au voyageur ce que la serrure a fait ([b00b301](https://github.com/PortakiApp/portaki-modules/commit/b00b301cfd630bd6c27a3f1039fa9ed1c36ef0c7))
+* **weather:** set where and what to forecast ([d60b8fa](https://github.com/PortakiApp/portaki-modules/commit/d60b8fa7496da66a59b02ae1844e19ee0f317187))
+
 ## [1.4.1](https://github.com/PortakiApp/portaki-modules/compare/nuki-v1.4.0...nuki-v1.4.1) (2026-10-04)
 
 
