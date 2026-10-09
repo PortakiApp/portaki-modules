@@ -72,9 +72,22 @@ fn station_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         );
     }
     let mut children: Vec<Component> = vec![station.into()];
-    if let Some(access) = resolved
-        .and_then(|station| station.ok())
-        .and_then(|station| crate::access::access(&station, ctx.property.coordinates))
+    let resolved = resolved.and_then(|station| station.ok());
+    // Plus de 30 km : un avertissement, pas un refus — la gare reste enregistrée (§9 #4).
+    if resolved
+        .as_ref()
+        .is_some_and(|station| crate::access::too_far(station, ctx.property.coordinates))
+    {
+        children.push(
+            InfoBanner::new()
+                .tone(Tone::Warning)
+                .title("i18n:host.station.far.title")
+                .message("i18n:host.station.far.message")
+                .into(),
+        );
+    }
+    if let Some(access) =
+        resolved.and_then(|station| crate::access::access(&station, ctx.property.coordinates))
     {
         let (walk, drive) = (access.walk_min.to_string(), access.drive_min.to_string());
         let line = t!("host.access.value", walk = &walk, drive = &drive)

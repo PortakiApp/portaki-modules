@@ -17,6 +17,7 @@ pub use guest::{
     render_explore_detail, render_explore_item, render_home_card, render_upcoming_card,
 };
 pub use host::render_host_main;
+pub use readiness::publish_readiness;
 
 portaki_sdk::portaki_module!(
     id = "train",

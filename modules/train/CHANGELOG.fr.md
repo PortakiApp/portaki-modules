@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.4.0
+
+Trains supprimés, dernier train passé, gare éloignée.
+
+* Un train supprimé porte une pastille rouge « Supprimé », et sa fiche le dit.
+* Après le dernier train du jour, le tableau l’annonce et donne l’heure du premier train du lendemain.
+* Une gare à plus de 30 km du logement vous est signalée, sans empêcher la publication.
+
 ## 2.3.0
 
 Votre gare et vos destinations.

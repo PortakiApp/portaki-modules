@@ -6,7 +6,12 @@
 use portaki_test_utils::{Booking, MockContext, MockContextBuilder, Property, SurfaceAssertions};
 use serde_json::json;
 
-use train::{render_explore_detail, render_explore_item, render_home_card, render_upcoming_card};
+use portaki_sdk::contracts::publish::PublishLevel;
+use portaki_sdk::sdui::common::GeoPoint;
+use train::{
+    publish_readiness, render_explore_detail, render_explore_item, render_home_card,
+    render_host_main, render_upcoming_card,
+};
 
 const PLACES: &str = include_str!("fixtures/sncf-places.json");
 const DEPARTURES: &str = include_str!("fixtures/sncf-departures.json");
@@ -374,5 +379,117 @@ fn the_sheet_opens_the_operator_to_buy_a_ticket() {
         let json = serde_json::to_string(&item).expect("json");
         assert!(json.contains("sncf-connect.com"), "{json}");
         assert!(json.contains("explore.item.ticket"), "{json}");
+    });
+}
+
+/// §9 #2 : un train supprimé porte une pastille « danger », et sa fiche le dit.
+#[test]
+fn a_cancelled_train_wears_a_danger_badge() {
+    wired()
+        .with_translation("explore.detail.status.cancelled", "Supprimé")
+        .run(|ctx| {
+            let detail = render_explore_detail(ctx).expect("render");
+            let json = serde_json::to_string(&detail).expect("json");
+            assert!(json.contains("Vintimille (Vintimille)"), "{json}");
+            assert!(
+                json.contains("\"label\":\"Supprimé\",\"tone\":\"danger\""),
+                "{json}"
+            );
+        });
+    wired().run(|mut ctx| {
+        ctx.input = json!({ "departureId": "20261004-0930-86099" });
+        let sheet = render_explore_item(ctx).expect("render");
+        let json = serde_json::to_string(&sheet).expect("json");
+        assert!(json.contains("i18n:explore.item.cancelled.title"), "{json}");
+        assert!(!json.contains("i18n:explore.item.delayed"));
+    });
+}
+
+/// §9 #3 : plus aucun train aujourd'hui — un message, et le premier train du lendemain.
+#[test]
+fn after_the_last_train_the_board_announces_tomorrows_first() {
+    const TOMORROW_ONLY: &str = r#"{"departures":[
+        {"stop_date_time":{"departure_date_time":"20261005T062000","data_freshness":"base_schedule"},
+         "display_informations":{"direction":"Cannes (Cannes)"}},
+        {"stop_date_time":{"departure_date_time":"20261005T052100","data_freshness":"base_schedule"},
+         "display_informations":{"direction":"Nice-Ville (Nice)"}}
+    ]}"#;
+    let tomorrow = || {
+        MockContext::guest()
+            .with_property(Property::default())
+            .with_config(&json!({ "station": "Antibes" }))
+            .with_connector_response("sncf", "find_place", PLACES)
+            .with_connector_response("sncf", "departures", TOMORROW_ONLY)
+            .with_now("2026-10-04T21:00:00Z".parse().expect("23 h sur place"))
+            .with_translation(
+                "explore.detail.lastTrain.message",
+                "Premier train demain à {time}.",
+            )
+    };
+    tomorrow().run(|ctx| {
+        let json = serde_json::to_string(&render_explore_detail(ctx).expect("render")).unwrap();
+        assert!(
+            json.contains("i18n:explore.detail.lastTrain.title"),
+            "{json}"
+        );
+        // Le plus tôt, pas le premier de la réponse.
+        assert!(json.contains("Premier train demain à 05:21."), "{json}");
+    });
+    tomorrow().run(|ctx| {
+        let json = serde_json::to_string(&render_home_card(ctx).expect("render")).unwrap();
+        assert!(
+            json.contains("i18n:explore.detail.lastTrain.title"),
+            "{json}"
+        );
+    });
+    // Tant qu'un train part aujourd'hui, pas de message.
+    wired()
+        .with_now("2026-10-04T18:00:00Z".parse().expect("20 h sur place"))
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_explore_detail(ctx).expect("render")).unwrap();
+            assert!(!json.contains("lastTrain"));
+        });
+}
+
+/// §9 #4 : une gare à plus de 30 km avertit l'hôte, sans bloquer la publication.
+#[test]
+fn a_station_beyond_thirty_km_warns_without_blocking() {
+    const PLACED: &str = r#"{"places":[{"id":"stop_area:SNCF:87756056","embedded_type":"stop_area",
+        "stop_area":{"id":"stop_area:SNCF:87756056","name":"Gare d'Antibes",
+        "coord":{"lat":"43.5859","lon":"7.1194"}}}]}"#;
+    let host = |home: GeoPoint| {
+        MockContext::host()
+            .with_coordinates(Some(home))
+            .with_config(&json!({ "station": "Antibes" }))
+            .with_connector_response("sncf", "find_place", PLACED)
+    };
+    let paris = GeoPoint {
+        lat: 48.85,
+        lng: 2.35,
+    };
+    let antibes = GeoPoint {
+        lat: 43.58,
+        lng: 7.12,
+    };
+
+    host(paris).run(|ctx| {
+        let json = serde_json::to_string(&render_host_main(ctx).expect("host")).unwrap();
+        assert!(json.contains("i18n:host.station.far.title"), "{json}");
+    });
+    host(paris).run(|ctx| {
+        let items = publish_readiness(ctx).expect("readiness").items;
+        let far = items
+            .iter()
+            .find(|i| i.id == "config.station.far")
+            .expect("warning");
+        assert_eq!(far.level, PublishLevel::Recommended);
+        assert!(items.iter().all(|i| i.level != PublishLevel::Required));
+    });
+    host(antibes).run(|ctx| {
+        let json = serde_json::to_string(&render_host_main(ctx).expect("host")).unwrap();
+        assert!(!json.contains("host.station.far"));
+    });
+    host(antibes).run(|ctx| {
+        assert!(publish_readiness(ctx).expect("readiness").items.is_empty());
     });
 }

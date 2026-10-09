@@ -162,6 +162,7 @@ mod tests {
             network: None,
             realtime: true,
             delay_min: None,
+            cancelled: false,
         }
     }
 
@@ -244,6 +245,7 @@ mod tests {
             network: None,
             realtime: false,
             delay_min: None,
+            cancelled: false,
         };
         assert!(serves(&stop("Nice-Ville"), "nice"));
         assert!(serves(&stop("Nice-Ville"), "Nice-Ville"));

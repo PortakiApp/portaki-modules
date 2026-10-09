@@ -147,6 +147,33 @@ struct BoardResponse {
     departures: Vec<BoardStop>,
     #[serde(default)]
     arrivals: Vec<BoardStop>,
+    /// Les perturbations que les lignes du tableau citent par leur `id`.
+    #[serde(default)]
+    disruptions: Vec<Disruption>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct Disruption {
+    #[serde(default)]
+    id: Option<String>,
+    #[serde(default)]
+    severity: Option<Severity>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct Severity {
+    /// L'effet normalisé, d'après l'énumération GTFS-RT : `NO_SERVICE` est un train supprimé.
+    #[serde(default)]
+    effect: Option<String>,
+}
+
+/// Un renvoi Navitia : `{ "type": "disruption", "id": "…" }`.
+#[derive(Debug, Clone, Deserialize)]
+struct Link {
+    #[serde(default, rename = "type")]
+    kind: Option<String>,
+    #[serde(default)]
+    id: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -183,6 +210,9 @@ struct DisplayInformations {
     network: Option<String>,
     #[serde(default)]
     commercial_mode: Option<String>,
+    /// Les perturbations de ce train, par renvoi vers `disruptions`.
+    #[serde(default)]
+    links: Vec<Link>,
 }
 
 /// La gare résolue : son identifiant Navitia, le nom que Navitia lui donne, et où elle est.
@@ -221,6 +251,10 @@ pub struct Stop {
     /// retard, et `Some(0)` dirait « à l'heure » sans l'avoir vérifié.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub delay_min: Option<i64>,
+    /// Le train est supprimé (§9 #2). `default` : un tableau gardé en cache avant ce champ se lit
+    /// encore.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub cancelled: bool,
 }
 
 impl Stop {
@@ -368,10 +402,36 @@ fn parse_board(response: &BoardResponse, way: Way) -> Vec<Stop> {
     } else {
         rows
     };
-    rows.iter().filter_map(|row| map_stop(row, way)).collect()
+    rows.iter()
+        .filter_map(|row| map_stop(row, way, &response.disruptions))
+        .collect()
 }
 
-fn map_stop(row: &BoardStop, way: Way) -> Option<Stop> {
+/// Une ligne renvoie-t-elle vers une perturbation `NO_SERVICE` ?
+///
+/// ponytail: d'après la documentation, pas une réponse capturée — on ne sait pas encore si Navitia
+/// garde en temps réel la ligne d'un train supprimé. Quand il la garde, elle porte la pastille ;
+/// sinon le train n'est simplement pas au tableau. Comparer avec `base_schedule` si besoin.
+fn is_cancelled(row: &BoardStop, disruptions: &[Disruption]) -> bool {
+    let Some(info) = row.display_informations.as_ref() else {
+        return false;
+    };
+    info.links
+        .iter()
+        .filter(|link| link.kind.as_deref() == Some("disruption"))
+        .filter_map(|link| link.id.as_deref())
+        .any(|id| {
+            disruptions.iter().any(|d| {
+                d.id.as_deref() == Some(id)
+                    && d.severity
+                        .as_ref()
+                        .and_then(|s| s.effect.as_deref())
+                        .is_some_and(|effect| effect.eq_ignore_ascii_case("NO_SERVICE"))
+            })
+        })
+}
+
+fn map_stop(row: &BoardStop, way: Way, disruptions: &[Disruption]) -> Option<Stop> {
     let times = row.stop_date_time.as_ref()?;
     // L'heure du sens demandé d'abord ; l'autre plutôt que rien, un terminus n'ayant pas de départ.
     let raw = match way {
@@ -416,6 +476,7 @@ fn map_stop(row: &BoardStop, way: Way) -> Option<Stop> {
             .then_some(base)
             .flatten()
             .and_then(|base| delay_minutes(base, raw)),
+        cancelled: is_cancelled(row, disruptions),
     })
 }
 
