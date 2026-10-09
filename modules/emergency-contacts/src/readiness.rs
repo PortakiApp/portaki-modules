@@ -46,6 +46,26 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             });
         }
     }
+    // Une épingle loin du logement : sans doute posée au mauvais endroit (§2.3 : pharmacie à
+    // 30 km au plus, hôpital à 50). Un avertissement, pas un refus.
+    if let Some(home) = ctx.property.coordinates {
+        for (key, lat, lng, km) in [
+            ("pharmacy", config.pharmacy_lat, config.pharmacy_lng, 30.0),
+            ("hospital", config.hospital_lat, config.hospital_lng, 50.0),
+        ] {
+            if let (Some(lat), Some(lng)) = (lat, lng) {
+                if !portaki_sdk::config::check::within_km(lat, lng, home.lat, home.lng, km) {
+                    items.push(PublishCheck {
+                        id: format!("config.{key}_lat"),
+                        level: PublishLevel::Recommended,
+                        ok: false,
+                        label: crate::i18n::text(&format!("host.{key}.position")),
+                        hint: crate::i18n::text(&format!("publish.far.{key}")),
+                    });
+                }
+            }
+        }
+    }
     Ok(PublishReadiness { items })
 }
 
@@ -63,4 +83,44 @@ fn field_label(field: &str) -> &'static str {
         "doctor_phone" => "host.doctorPhone.label",
         _ => "host.contacts.title",
     }
+}
+
+#[portaki_sdk::wire]
+#[derive(PartialEq)]
+pub struct MapMarkersResponse {
+    pub markers: Vec<MapMarker>,
+}
+
+/// La pharmacie et l'hôpital sur la Carte du livret (spec Urgences §2.3). Sans position, pas de
+/// repère : un repère au hasard vaut moins qu'un repère absent.
+#[portaki_sdk::query(name = "mapMarkers", example(label = "Pharmacie et hôpital"))]
+pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
+    let config = ModuleConfig::load(&ctx)?;
+    let markers = [
+        (
+            "pharmacy",
+            &config.pharmacy,
+            config.pharmacy_lat,
+            config.pharmacy_lng,
+        ),
+        (
+            "hospital",
+            &config.hospital,
+            config.hospital_lat,
+            config.hospital_lng,
+        ),
+    ]
+    .into_iter()
+    .filter_map(|(id, name, lat, lng)| {
+        let mut marker = MapMarker::new(id, lat?, lng?).kind(MapMarkerKind::Poi);
+        let name = name.trim();
+        marker = marker.label(if name.is_empty() {
+            format!("i18n:guest.health.{id}")
+        } else {
+            name.to_string()
+        });
+        Some(marker)
+    })
+    .collect();
+    Ok(MapMarkersResponse { markers })
 }
