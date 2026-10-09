@@ -212,11 +212,20 @@ pub struct BuildingAccess {
     pub gate_code: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub intercom: Option<String>,
+    /// « 3e étage, porte de droite » (spec Accès §2.7).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub floor: Option<String>,
+    /// `false` : « Sans ascenseur », utile avec des bagages ; `None` : non précisé.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lift: Option<bool>,
 }
 
 impl BuildingAccess {
     pub fn is_empty(&self) -> bool {
-        opt_empty(&self.gate_code) && opt_empty(&self.intercom)
+        opt_empty(&self.gate_code)
+            && opt_empty(&self.intercom)
+            && opt_empty(&self.floor)
+            && self.lift.is_none()
     }
 }
 
@@ -227,13 +236,31 @@ pub struct ParkingLayer {
     pub map_url: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub code: Option<String>,
+    /// `private`, `street`, `public` ou `garage` (spec Accès §2.8).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind: Option<String>,
+    /// Le numéro de place : « 8 ».
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spot: Option<String>,
+    /// Le tarif, dans la rue ou en parking public : « Gratuit le dimanche, 2 €/h sinon ».
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub price: Option<String>,
 }
 
 impl ParkingLayer {
     pub fn is_empty(&self) -> bool {
-        self.map_url.trim().is_empty() && opt_empty(&self.code)
+        self.map_url.trim().is_empty()
+            && opt_empty(&self.code)
+            && opt_empty(&self.kind)
+            && opt_empty(&self.spot)
+            && opt_empty(&self.price)
     }
 }
+
+/// Le stationnement (§2.8). « Pas de parking » est la case du parking décochée.
+pub const PARKING_KINDS: [&str; 4] = ["private", "street", "public", "garage"];
+/// L'ascenseur (§2.7), non précisé d'abord : c'est le défaut.
+pub const LIFT_CHOICES: [&str; 3] = ["unknown", "yes", "no"];
 
 #[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
@@ -492,10 +519,28 @@ pub struct HostConfig {
     pub building_access_gate_code: String,
     #[field(label = "host.building.intercom")]
     pub building_access_intercom: I18nText,
+    #[field(label = "host.building.floor")]
+    pub building_floor: I18nText,
+    #[field(
+        kind = "select",
+        options = ["unknown", "yes", "no"],
+        label = "host.building.lift"
+    )]
+    pub building_lift: String,
     #[field(label = "host.parking.enabled")]
     pub parking_enabled: bool,
     #[field(kind = "url", label = "host.parking.mapUrl")]
     pub parking_map_url: String,
+    #[field(
+        kind = "select",
+        options = ["private", "street", "public", "garage"],
+        label = "host.parking.kind"
+    )]
+    pub parking_type: String,
+    #[field(label = "host.parking.spot")]
+    pub parking_spot: String,
+    #[field(label = "host.parking.price")]
+    pub parking_price: I18nText,
     #[field(
         secret,
         reveal(guest_pre_arrival, guest_stay),
@@ -572,6 +617,12 @@ impl HostConfig {
             too_long(&self.late_arrival_note, 280),
         );
         push("parking_info".into(), too_long(&self.parking_info, 280));
+        push("building_floor".into(), too_long(&self.building_floor, 60));
+        push(
+            "parking_spot".into(),
+            check::max_chars(&self.parking_spot, 20),
+        );
+        push("parking_price".into(), too_long(&self.parking_price, 60));
         let steps = self.steps.iter().filter(|s| !s.is_blank()).count();
         push(
             "steps".into(),
@@ -668,10 +719,23 @@ impl HostConfig {
             building_access: self.building_access_enabled.then(|| BuildingAccess {
                 gate_code: nonempty(&self.building_access_gate_code),
                 intercom: text(&self.building_access_intercom),
+                floor: text(&self.building_floor),
+                lift: match self.building_lift.trim() {
+                    "yes" => Some(true),
+                    "no" => Some(false),
+                    _ => None,
+                },
             }),
             parking: self.parking_enabled.then(|| ParkingLayer {
                 map_url: self.parking_map_url.trim().to_string(),
                 code: nonempty(&self.parking_code),
+                kind: nonempty(self.parking_type.trim())
+                    .filter(|k| PARKING_KINDS.contains(&k.as_str())),
+                spot: nonempty(self.parking_spot.trim()),
+                // Le tarif ne se demande que dans la rue ou en parking public.
+                price: matches!(self.parking_type.trim(), "street" | "public")
+                    .then(|| text(&self.parking_price))
+                    .flatten(),
             }),
             arrival: ArrivalGuide {
                 address: self.address.trim().to_string(),
@@ -1148,7 +1212,7 @@ fn method_from_legacy_codes(
         let building = if !gate.is_empty() {
             Some(BuildingAccess {
                 gate_code: Some(gate.to_string()),
-                intercom: None,
+                ..BuildingAccess::default()
             })
         } else {
             None
@@ -1183,6 +1247,7 @@ fn parking_from_legacy(
     let layer = ParkingLayer {
         map_url: map_url.trim().to_string(),
         code: nonempty_opt(code),
+        ..ParkingLayer::default()
     };
     if layer.is_empty() && !force_layer {
         None
@@ -1826,5 +1891,28 @@ mod tests {
             fields,
             ["method_instructions", "keybox_location", "steps.1.title"]
         );
+    }
+
+    /// L'étage, l'ascenseur, le stationnement : le tarif ne passe qu'en rue ou en parking public.
+    #[test]
+    fn building_and_parking_reach_the_model() {
+        let config: HostConfig = serde_json::from_value(serde_json::json!({
+            "building_access_enabled": true,
+            "building_floor": "3e étage",
+            "building_lift": "no",
+            "parking_enabled": true,
+            "parking_type": "private",
+            "parking_spot": "8",
+            "parking_price": "2 €/h"
+        }))
+        .unwrap();
+        let model = config.to_model("fr");
+        let building = model.building_access.unwrap();
+        assert_eq!(building.floor.as_deref(), Some("3e étage"));
+        assert_eq!(building.lift, Some(false));
+        let parking = model.parking.unwrap();
+        assert_eq!(parking.kind.as_deref(), Some("private"));
+        assert_eq!(parking.spot.as_deref(), Some("8"));
+        assert_eq!(parking.price, None, "pas de tarif pour une place privée");
     }
 }
