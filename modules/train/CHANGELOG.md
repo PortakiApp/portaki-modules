@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/PortakiApp/portaki-modules/compare/train-v2.2.0...train-v2.3.0) (2026-10-09)
+
+
+### Features
+
+* **train:** set the station, destinations and direction ([ec5402d](https://github.com/PortakiApp/portaki-modules/commit/ec5402de2b976c738c51f1a24aa77688dfa44b75))
+
 ## [2.2.0](https://github.com/PortakiApp/portaki-modules/compare/train-v2.1.0...train-v2.2.0) (2026-10-09)
 
 

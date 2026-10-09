@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/nuki-v1.5.0...nuki-v1.6.0) (2026-10-09)
+
+
+### Features
+
+* **nuki:** keypad code rule, drawer placement ([8addd54](https://github.com/PortakiApp/portaki-modules/commit/8addd54ae893657959718c7e1b33a47a0ea8332b))
+
 ## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/nuki-v1.4.1...nuki-v1.5.0) (2026-10-09)
 
 

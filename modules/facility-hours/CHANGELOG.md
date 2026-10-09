@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.11.0...facility-hours-v1.12.0) (2026-10-09)
+
+
+### Features
+
+* **facility-hours:** set card rows, groups and modes ([be5e036](https://github.com/PortakiApp/portaki-modules/commit/be5e036309ab695815eb0c1edc2777a49ce7999e))
+
 ## [1.11.0](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.10.0...facility-hours-v1.11.0) (2026-10-09)
 
 

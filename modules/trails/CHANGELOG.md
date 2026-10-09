@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.6.0...trails-v0.7.0) (2026-10-09)
+
+
+### Features
+
+* **trails:** one way, 30 trails, spec bounds ([baa03c1](https://github.com/PortakiApp/portaki-modules/commit/baa03c196b1a62d7b272646c7e7f23813e54284c))
+
 ## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.5.3...trails-v0.6.0) (2026-10-09)
 
 

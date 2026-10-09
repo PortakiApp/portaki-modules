@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.7.0...wifi-guest-v1.8.0) (2026-10-09)
+
+
+### Features
+
+* **wifi-guest:** up to three networks, set by the host ([dfadf89](https://github.com/PortakiApp/portaki-modules/commit/dfadf890469cbd1b864269c3a62bc05682eb40a6))
+
 ## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.6.2...wifi-guest-v1.7.0) (2026-10-09)
 
 

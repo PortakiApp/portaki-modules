@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.11.0...local-guide-v1.12.0) (2026-10-09)
+
+
+### Features
+
+* **local-guide:** 30 spots, field checks, readiness ([b91962e](https://github.com/PortakiApp/portaki-modules/commit/b91962edf596129a0464f439ac74de9de9235dca))
+
 ## [1.11.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.10.1...local-guide-v1.11.0) (2026-10-09)
 
 

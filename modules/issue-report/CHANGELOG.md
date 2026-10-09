@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.6.0...issue-report-v1.7.0) (2026-10-09)
+
+
+### Features
+
+* **issue-report:** urgent call, phases, reply settings ([ab59255](https://github.com/PortakiApp/portaki-modules/commit/ab592551f4a68af7f4de9c4177b906d22f48852f))
+
 ## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.5.0...issue-report-v1.6.0) (2026-10-09)
 
 

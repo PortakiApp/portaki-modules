@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v1.5.0...ical-sync-v1.6.0) (2026-10-09)
+
+
+### Features
+
+* **ical-sync:** pause a feed, 10 feeds, checks ([a48312d](https://github.com/PortakiApp/portaki-modules/commit/a48312d4ae5c2323ee0749b14d5e69ae72a4a43d))
+
 ## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v1.4.1...ical-sync-v1.5.0) (2026-10-09)
 
 

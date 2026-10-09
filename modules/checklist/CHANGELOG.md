@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.5.0...checklist-v1.6.0) (2026-10-09)
+
+
+### Features
+
+* **checklist:** check step count, length and codes ([5d09da7](https://github.com/PortakiApp/portaki-modules/commit/5d09da739e3f5850d9457a7aa7d8d378e9e25e82))
+
 ## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.4.2...checklist-v1.5.0) (2026-10-09)
 
 

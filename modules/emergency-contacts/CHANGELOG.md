@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.6.0...emergency-contacts-v1.7.0) (2026-10-09)
+
+
+### Features
+
+* **emergency-contacts:** host hours, health, checks ([d3083b4](https://github.com/PortakiApp/portaki-modules/commit/d3083b4246fa5721da14780eb8c67d9331a65b7b))
+
 ## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.5.1...emergency-contacts-v1.6.0) (2026-10-09)
 
 

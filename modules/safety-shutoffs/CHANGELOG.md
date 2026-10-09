@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/PortakiApp/portaki-modules/compare/safety-shutoffs-v0.5.0...safety-shutoffs-v0.6.0) (2026-10-09)
+
+
+### Features
+
+* **safety-shutoffs:** 20 rows, field checks, name from type ([2716106](https://github.com/PortakiApp/portaki-modules/commit/2716106c8f48c1a8c56e54197810ae2fe0b45429))
+
 ## [0.5.0](https://github.com/PortakiApp/portaki-modules/compare/safety-shutoffs-v0.4.1...safety-shutoffs-v0.5.0) (2026-10-09)
 
 

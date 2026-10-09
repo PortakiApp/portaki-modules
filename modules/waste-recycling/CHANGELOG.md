@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.8.0...waste-recycling-v1.9.0) (2026-10-09)
+
+
+### Features
+
+* **waste-recycling:** set collection, room and checks ([0a3ed68](https://github.com/PortakiApp/portaki-modules/commit/0a3ed68ba4cd08faa1be2766860a2d72b0f5feb8))
+
 ## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.7.2...waste-recycling-v1.8.0) (2026-10-09)
 
 
