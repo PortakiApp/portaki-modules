@@ -1,7 +1,7 @@
 {
   "email.departureReminder.subject": "离开之前，请看看您的清单",
   "email.departureReminder.eyebrow": "退房",
-  "email.departureReminder.title": "离开前还剩几个步骤",
-  "email.departureReminder.body": "您的退房清单还没有完成。交还钥匙之前，请花一点时间勾选最后几个步骤。",
+  "email.departureReminder.title": "明天离开之前",
+  "email.departureReminder.body": "您明天退房，退房清单还没有完成。交还钥匙之前，请记得勾选最后几个步骤。",
   "email.departureReminder.cta": "打开清单"
 }

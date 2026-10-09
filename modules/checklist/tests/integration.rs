@@ -875,7 +875,8 @@ fn the_departure_reminder_goes_only_to_an_unfinished_list() {
         };
         let now = match case {
             "gone" => booking.check_out + Duration::hours(1),
-            _ => booking.check_out - Duration::hours(2),
+            // The eve at 08:00 UTC, when the platform runs `offset_days = -1`.
+            _ => booking.check_out - Duration::hours(26),
         };
         builder
             .with_stay(booking)
@@ -923,4 +924,46 @@ fn the_departure_reminder_goes_only_to_an_unfinished_list() {
                 assert_eq!(sent, usize::from(case == "unfinished"), "{case}");
             });
     }
+}
+
+/// « Avant l'arrivée » n'est pas dans la spec, mais une liste qui l'a gardé s'ouvre toujours
+/// avant l'arrivée : rien n'est réécrit en silence.
+#[test]
+#[serial]
+fn a_before_arrival_list_keeps_opening_before_arrival() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|mut ctx| {
+            create(&ctx, "departure");
+            let list = list_checklists().expect("lists")[0].id;
+            update_config(
+                ctx.clone(),
+                UpdateConfigArgs {
+                    id: list.to_string(),
+                    trigger: "beforeArrival".into(),
+                    items: Some(json!(items_of(list)
+                        .expect("items")
+                        .iter()
+                        .map(|item| json!({ "id": item.id, "label": item.label_fr }))
+                        .collect::<Vec<_>>())),
+                    ..UpdateConfigArgs::default()
+                },
+            )
+            .expect("save");
+            assert_eq!(
+                list_checklists().expect("lists")[0].trigger,
+                "beforeArrival"
+            );
+
+            let stay_id = ctx.guest.as_ref().expect("guest").session_id;
+            ctx.stay = Some(StayContext {
+                stay_id,
+                checkin_at: Some(Utc::now() + Duration::days(5)),
+                checkout_at: Some(Utc::now() + Duration::days(9)),
+                ..StayContext::default()
+            });
+            let json = json_of(&render_home_card(ctx).expect("render"));
+            assert!(json.contains("setCompleted"), "{json}");
+        });
 }

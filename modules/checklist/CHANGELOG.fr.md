@@ -5,8 +5,8 @@
 Rubriques, précisions et rappel du départ.
 
 * L'hôte écrit la zone et la précision de chaque étape, langue par langue ; le livret range l'étape sous sa zone.
-* La checklist s'affiche pendant tout le séjour, la veille du départ ou le jour du départ.
-* Un e-mail rappelle au voyageur, le jour du départ, une checklist qu'il n'a pas terminée ; l'hôte peut le couper.
+* La checklist s'affiche aussi la veille ou le jour du départ ; la veille commence à minuit, et non plus 48 h avant.
+* Un e-mail rappelle au voyageur, la veille du départ, une checklist qu'il n'a pas terminée ; l'hôte peut le couper.
 
 ## 1.7.0
 
