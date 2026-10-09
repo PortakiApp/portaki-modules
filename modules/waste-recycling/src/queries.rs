@@ -8,6 +8,9 @@ use crate::config::ModuleConfig;
 /// Plafond de marqueurs rendus par ce module.
 pub const MAX_MARKERS: usize = 20;
 
+/// La catégorie des repères de ce module sur la Carte.
+const MARKER_CATEGORY: &str = "recycling";
+
 /// Ce qui bloque, et ce qui avertit (spec Tri §3).
 ///
 /// Aucune source — ni bac, ni local, ni point d'apport, ni composteur, ni jour de collecte —
@@ -63,6 +66,21 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             }),
     );
 
+    // Les bornes posées après coup et les épingles loin du logement : un avertissement, jamais
+    // un blocage (§2.1 à §2.5).
+    items.extend(
+        config
+            .warnings(ctx.property.coordinates)
+            .into_iter()
+            .map(|(field, warning)| PublishCheck {
+                label: crate::i18n::text(field_label(&field)),
+                id: format!("config.{field}"),
+                level: PublishLevel::Recommended,
+                ok: false,
+                hint: warning,
+            }),
+    );
+
     Ok(PublishReadiness { items })
 }
 
@@ -74,10 +92,18 @@ fn field_label(field: &str) -> &'static str {
         "bin_room_where" => "host.binRoom.where",
         "bin_room_code" => "host.binRoom.code",
         "compost_location" => "host.compost.location",
+        "compost_accepted" => "host.compost.accepted",
+        "compost_refused" => "host.compost.refused",
+        "collection_schedule" => "host.schedule.label",
+        "takeout_note" => "host.takeout.label",
+        "bin_room_steps" => "host.binRoom.label",
+        "bin_room_lat" => "host.binRoom.position",
         _ if field.starts_with("bins.") && field.ends_with(".title") => "host.bin.title",
+        _ if field.starts_with("bins.") && field.ends_with(".note") => "host.bin.note",
         _ if field.starts_with("bins.") => "host.bin.items",
         _ if field.ends_with(".title") => "host.dropoff.pointTitle",
         _ if field.ends_with(".lat") => "host.dropoff.position",
+        _ if field.ends_with(".note") => "host.dropoff.note",
         _ => "host.dropoff.accepts",
     }
 }
@@ -88,7 +114,7 @@ pub struct MapMarkersResponse {
     pub markers: Vec<MapMarker>,
 }
 
-/// Les points d'apport sur la carte du livret.
+/// Le local poubelles et les points d'apport sur la carte du livret.
 ///
 /// Le §2.7 l'annonçait et `MAP_SOURCE_MODULES` du livret interroge déjà ce module : il n'avait
 /// simplement rien à répondre. Un point sans position n'y figure pas — un repère au hasard vaut
@@ -96,23 +122,45 @@ pub struct MapMarkersResponse {
 #[portaki_sdk::query(name = "mapMarkers", example(label = "Points sur la carte"))]
 pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
     let config = ModuleConfig::load(&ctx)?;
-    let markers = config
-        .parse_dropoff_points()
-        .into_iter()
-        .filter_map(|point| {
-            let (lat, lng) = point.coordinates()?;
-            let id = if point.id.trim().is_empty() {
-                format!("dropoff-{lat}-{lng}")
-            } else {
-                point.id.clone()
-            };
-            let mut marker = MapMarker::new(id, lat, lng).kind(MapMarkerKind::Poi);
-            let label = point.title.get(&ctx.locale).trim().to_string();
-            if !label.is_empty() {
-                marker = marker.label(label);
+    // Le local d'abord (§2.3) : épinglé, il est le plus proche. Sans épingle, aucun repère — le
+    // poser sur le logement doublerait celui du logement.
+    let bin_room = config
+        .bin_room_position()
+        .filter(|_| config.has_bin_room())
+        .map(|(lat, lng)| {
+            let mut marker = MapMarker::new("bin-room", lat, lng)
+                .kind(MapMarkerKind::Poi)
+                .label(
+                    t!("guest.binRoom.title").unwrap_or_else(|_| "i18n:guest.binRoom.title".into()),
+                );
+            marker.category = Some(MARKER_CATEGORY.to_string());
+            let place = config.bin_room_where.get(&ctx.locale).trim();
+            if !place.is_empty() {
+                marker = marker.subtitle(place);
             }
-            Some(marker)
-        })
+            marker
+        });
+    let markers = bin_room
+        .into_iter()
+        .chain(
+            config
+                .parse_dropoff_points()
+                .into_iter()
+                .filter_map(|point| {
+                    let (lat, lng) = point.coordinates()?;
+                    let id = if point.id.trim().is_empty() {
+                        format!("dropoff-{lat}-{lng}")
+                    } else {
+                        point.id.clone()
+                    };
+                    let mut marker = MapMarker::new(id, lat, lng).kind(MapMarkerKind::Poi);
+                    let label = point.title.get(&ctx.locale).trim().to_string();
+                    if !label.is_empty() {
+                        marker = marker.label(label);
+                    }
+                    Some(marker)
+                }),
+        )
         .take(MAX_MARKERS)
         .collect();
     Ok(MapMarkersResponse { markers })

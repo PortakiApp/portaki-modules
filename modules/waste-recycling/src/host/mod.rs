@@ -15,6 +15,13 @@ use crate::config::{
 };
 
 /// Host configuration page — bin cards + collection schedule.
+// « Sortir les bacs » dans À venir, la veille d'une collecte : `crate::tasks`.
+#[portaki_sdk::nav(
+    placement = HostPlacement::WorkspaceTimelineTask,
+    path = "tasks",
+    label_key = "catalog.host.tasks",
+    icon = IconName::Recycle
+)]
 #[portaki_sdk::surface(
     host,
     id = "main",
@@ -121,6 +128,19 @@ fn schedule_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
                 )
                 .into(),
         );
+        // Le rappel suit le ramassage : sans collecte, pas de veille où sortir les bacs.
+        children.push(
+            Field::new()
+                .name("host_reminder")
+                .label("i18n:host.hostReminder.label")
+                .child(
+                    Toggle::new()
+                        .name("host_reminder")
+                        .checked(config.host_reminder),
+                )
+                .into(),
+        );
+        children.push(FieldHint::new().text("i18n:host.hostReminder.hint").into());
     }
     children.push(
         Field::new()
@@ -162,6 +182,21 @@ fn bin_room_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
                         .value(config.bin_room_where.host_value(ctx))
                         .placeholder("i18n:host.binRoom.where.placeholder"),
                 )
+                .into(),
+        );
+        let mut picker = AddressMapPicker::new()
+            .addressName("bin_room_address")
+            .latName("bin_room_lat")
+            .lngName("bin_room_lng")
+            .address(config.bin_room_address.as_str())
+            .label("i18n:host.binRoom.position");
+        if let Some((lat, lng)) = config.bin_room_position() {
+            picker = picker.lat(lat).lng(lng);
+        }
+        children.push(picker.into());
+        children.push(
+            FieldHint::new()
+                .text("i18n:host.binRoom.position.hint")
                 .into(),
         );
         children.push(
@@ -455,6 +490,7 @@ fn bin_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component 
     let items = bin.map(|b| b.items.host_value(ctx)).unwrap_or_default();
     let color = bin_color_name(bin.and_then(|b| b.color.as_deref())).unwrap_or("");
     let location = bin.map(|b| b.location.host_value(ctx)).unwrap_or_default();
+    let note = bin.map(|b| b.note.host_value(ctx)).unwrap_or_default();
     // A filled row sends its id, so a save merges into it (and keeps its other languages). A
     // blank slot has nothing to keep — and an id would make it count as filled.
     let id = bin
@@ -495,6 +531,17 @@ fn bin_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component 
                                 .name(format!("bins.{index}.location"))
                                 .value(location)
                                 .placeholder("i18n:host.bin.location.placeholder"),
+                        )
+                        .into(),
+                    // La consigne du bac, en légende chez le voyageur.
+                    Field::new()
+                        .name(format!("bins.{index}.note"))
+                        .label("i18n:host.bin.note")
+                        .child(
+                            TextInput::new()
+                                .name(format!("bins.{index}.note"))
+                                .value(note)
+                                .placeholder("i18n:host.bin.note.placeholder"),
                         )
                         .into(),
                     Field::new()

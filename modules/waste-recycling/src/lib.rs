@@ -8,6 +8,7 @@ mod guest;
 mod host;
 mod i18n;
 mod queries;
+mod tasks;
 
 pub use amenities::amenities_list;
 pub use collection::{next_collection, Departure, NextCollection};
@@ -16,6 +17,7 @@ pub use email_context::email_blocks;
 pub use guest::{render_explore_detail, render_home_card};
 pub use host::{render_host_main, MAX_BINS};
 pub use queries::{map_markers, publish_readiness, MapMarkersResponse, MAX_MARKERS};
+pub use tasks::{task_complete, task_toggle, timeline_tasks};
 
 portaki_sdk::portaki_module!(
     id = "waste-recycling",

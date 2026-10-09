@@ -65,6 +65,11 @@ pub struct ModuleConfig {
     /// part la veille d'une collecte, puisque c'est le seul moment où il doit agir avant de partir.
     #[field(label = "host.takeout.label")]
     pub takeout_note: I18nText,
+    /// Une tâche « Sortir les bacs » dans À venir, la veille de chaque collecte (spec Tri §1) :
+    /// pour l'hôte qui sort les bacs lui-même. Voir `crate::tasks`.
+    #[field(label = "host.hostReminder.label")]
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub host_reminder: bool,
     /// Les points d'apport, quand les déchets ne se sortent pas devant la porte (§3.2).
     #[field(label = "config.dropoffPoints")]
     pub dropoff_points: Vec<DropoffRow>,
@@ -95,6 +100,26 @@ pub struct ModuleConfig {
     pub bin_room_where: I18nText,
     #[field(label = "host.binRoom.label")]
     pub bin_room_steps: I18nText,
+    /// L'épingle du local (spec Tri §2.3) : un repère sur la Carte du livret. Le sélecteur de
+    /// carte l'envoie en texte (`"43.5"`) ou en nombre.
+    #[field(label = "host.binRoom.position")]
+    #[serde(
+        default,
+        deserialize_with = "coord",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub bin_room_lat: Option<f64>,
+    #[field(label = "host.binRoom.position")]
+    #[serde(
+        default,
+        deserialize_with = "coord",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub bin_room_lng: Option<f64>,
+    /// L'adresse telle que le sélecteur l'a résolue, pour la relire dans le formulaire.
+    #[field(label = "host.binRoom.position")]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub bin_room_address: String,
     /// Le code de la porte du local, s'il y en a une (§2.7).
     ///
     /// Un secret « comme Accès » (spec Tri §2.3) : chiffré au repos, masqué chez le voyageur
@@ -116,6 +141,32 @@ pub struct ModuleConfig {
     /// c'est ce qu'un gardien affiche sur sa porte.
     #[field(label = "host.binRoom.hours")]
     pub bin_room_hours: I18nText,
+}
+
+/// Le premier texte trop long, toutes langues confondues.
+fn too_long(value: &I18nText, max: usize) -> Option<I18nText> {
+    value
+        .by_language()
+        .find_map(|(_, text)| check::max_chars(text, max))
+}
+
+/// La première ligne trop longue d'un texte « un élément par ligne », toutes langues confondues.
+fn line_too_long(value: &I18nText, max: usize) -> Option<I18nText> {
+    value
+        .by_language()
+        .find_map(|(_, text)| text.lines().find_map(|line| check::max_chars(line, max)))
+}
+
+/// Une coordonnée en nombre ou en texte, comme le sélecteur de carte l'envoie.
+fn coord<'de, D>(deserializer: D) -> std::result::Result<Option<f64>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Ok(match Value::deserialize(deserializer)? {
+        Value::Number(n) => n.as_f64(),
+        Value::String(s) => s.trim().parse().ok(),
+        _ => None,
+    })
 }
 
 /// The old KV blob: the bins as a JSON string, `bins_json`, before the form slots; each bin's
@@ -232,12 +283,6 @@ impl ModuleConfig {
                 problems.push((field, error));
             }
         };
-        let too_long = |value: &I18nText, max: usize| {
-            value
-                .by_language()
-                .find_map(|(_, text)| check::max_chars(text, max))
-        };
-
         let bins = self.bins.iter().filter(|bin| !bin.is_blank()).count();
         push(
             "bins".into(),
@@ -324,6 +369,96 @@ impl ModuleConfig {
             );
         }
         problems
+    }
+
+    /// Ce qui avertit sans bloquer, champ par champ : les bornes posées après coup sur des données
+    /// déjà enregistrées, et les épingles loin du logement (`home`). Un texte trop long reste
+    /// publiable — le refuser bloquerait un hôte qui n'a rien changé.
+    pub fn warnings(&self, home: Option<GeoPoint>) -> Vec<(String, I18nText)> {
+        let mut out: Vec<(String, I18nText)> = Vec::new();
+        let mut push = |field: String, warning: Option<I18nText>| {
+            if let Some(warning) = warning {
+                out.push((field, warning));
+            }
+        };
+        let far = |lat: f64, lng: f64, km: f64| {
+            home.is_some_and(|home| !check::within_km(lat, lng, home.lat, home.lng, km))
+        };
+
+        if self.has_collection() {
+            push(
+                "collection_schedule".into(),
+                too_long(&self.collection_schedule, NOTE_MAX),
+            );
+        }
+        push(
+            "takeout_note".into(),
+            too_long(&self.takeout_note, NOTE_MAX),
+        );
+        for (index, bin) in self.bins.iter().enumerate() {
+            if bin.is_blank() {
+                continue;
+            }
+            push(
+                format!("bins.{index}.items"),
+                too_long(&bin.items, LINE_MAX),
+            );
+            push(format!("bins.{index}.note"), too_long(&bin.note, LINE_MAX));
+        }
+        if self.has_bin_room() {
+            let steps = self
+                .bin_room_steps
+                .by_language()
+                .map(|(_, text)| text.lines().filter(|l| !l.trim().is_empty()).count())
+                .max()
+                .unwrap_or(0);
+            push(
+                "bin_room_steps".into(),
+                if steps > MAX_BIN_ROOM_STEPS {
+                    Some(crate::i18n::text("host.binRoom.steps.tooMany"))
+                } else {
+                    line_too_long(&self.bin_room_steps, LINE_MAX)
+                },
+            );
+            push(
+                "bin_room_lat".into(),
+                self.bin_room_position()
+                    .filter(|(lat, lng)| far(*lat, *lng, BIN_ROOM_RADIUS_KM))
+                    .map(|_| crate::i18n::text("host.binRoom.position.far")),
+            );
+        }
+        for (index, point) in self.dropoff_points.iter().enumerate() {
+            if point.is_blank() {
+                continue;
+            }
+            push(
+                format!("dropoff_points.{index}.note"),
+                too_long(&point.note, LINE_MAX),
+            );
+            push(
+                format!("dropoff_points.{index}.lat"),
+                point
+                    .coordinates()
+                    .filter(|(lat, lng)| far(*lat, *lng, DROPOFF_RADIUS_KM))
+                    .map(|_| crate::i18n::text("host.dropoff.position.far")),
+            );
+        }
+        if self.compost_enabled {
+            push(
+                "compost_accepted".into(),
+                line_too_long(&self.compost_accepted, COMPOST_LINE_MAX),
+            );
+            push(
+                "compost_refused".into(),
+                line_too_long(&self.compost_refused, COMPOST_LINE_MAX),
+            );
+        }
+        out
+    }
+
+    /// L'épingle du local, quand le sélecteur en a posé une.
+    pub fn bin_room_position(&self) -> Option<(f64, f64)> {
+        Some((self.bin_room_lat?, self.bin_room_lng?))
     }
 
     /// Le message à afficher sous `field`, s'il y en a un.
@@ -432,6 +567,9 @@ pub struct BinRow {
     /// le livret disait quoi mettre dedans sans dire où elle était.
     #[serde(default, skip_serializing_if = "I18nText::is_blank")]
     pub location: I18nText,
+    /// La consigne du bac — « Pas de verre » —, en légende sous le bac (spec Tri §2.2).
+    #[serde(default, skip_serializing_if = "I18nText::is_blank")]
+    pub note: I18nText,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub color: Option<String>,
     /// Les jours de collecte de ce bac, `mon` … `sun` (spec Tri §2.2) : un choix multiple.
@@ -500,6 +638,14 @@ const DROPOFF_TITLE_MAX: usize = 60;
 const CODE_MIN: usize = 3;
 const CODE_MAX: usize = 12;
 pub const MAX_COMPOST_LINES: usize = 10;
+/// Les bornes qui avertissent sans bloquer (§2.1 à §2.5) : elles s'appliquent à des
+/// configurations déjà publiées.
+const NOTE_MAX: usize = 200;
+const LINE_MAX: usize = 120;
+const COMPOST_LINE_MAX: usize = 60;
+pub const MAX_BIN_ROOM_STEPS: usize = 5;
+const BIN_ROOM_RADIUS_KM: f64 = 0.5;
+const DROPOFF_RADIUS_KM: f64 = 20.0;
 
 /// Un point d'apport : un conteneur de quartier, le plus souvent sur un parking.
 ///

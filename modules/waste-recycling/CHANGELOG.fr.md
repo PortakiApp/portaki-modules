@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.11.0
+
+Un rappel pour sortir les bacs, et le local poubelles sur la carte.
+
+* Si vous sortez les bacs vous-même, une tâche « Sortir les bacs » apparaît dans À venir la veille de chaque collecte.
+* Épinglez le local poubelles : il apparaît sur la carte du livret, et la publication avertit s'il est à plus de 500 m.
+* Chaque bac peut porter une consigne, « Pas de verre » par exemple, affichée sous lui dans le livret.
+* Textes trop longs et points d'apport à plus de 20 km avertissent à la publication, sans la bloquer.
+
 ## 1.10.0
 
 Les jours de collecte par bac, et le code du local poubelles protégé.
