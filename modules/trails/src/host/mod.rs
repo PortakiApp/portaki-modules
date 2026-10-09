@@ -3,13 +3,13 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Button, Card, Field, FieldHint, Form, ImageUpload, NumberInput, Page, Select,
-    Stack, StepList, Text, TextArea, TextInput,
+    AddressMapPicker, Button, Card, ChoiceList, Field, FieldHint, Form, ImageUpload, NumberInput,
+    Page, Select, Stack, StepList, Text, TextArea, TextInput, ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
 use serde::Serialize;
 
-use crate::config::{ModuleConfig, TrailRow, LEVELS, MAX_TRAILS, SHAPES};
+use crate::config::{ModuleConfig, TrailRow, LEVELS, MAX_TRAILS, PUBLIC_MAX, PUBLIC_MIN, SHAPES};
 
 /// Les bornes d'une mesure de randonnée : au-delà, c'est une faute de frappe.
 const MAX_DURATION_MIN: f64 = crate::config::DURATION_MIN.1;
@@ -35,6 +35,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
                         .into(),
                     trails_card(&config, &ctx),
                     commune_card(&config, &ctx),
+                    public_card(&config, &ctx),
                 ]))),
     )
     .with_id(MAIN))
@@ -205,6 +206,26 @@ fn trail_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Componen
         picker = picker.lat(lat).lng(lng);
     }
     children.push(picker.into());
+    // Pour la page publique, sur une ligne déjà enregistrée : pas sur un créneau vide, qu'il ferait
+    // compter comme rempli.
+    if let Some(trail) = trail.filter(|t| !t.is_blank()) {
+        // Le départ au logement : la position réelle n'est connue qu'ici, côté hôte, et le
+        // formulaire propose la réponse tant que l'hôte n'en a pas enregistré une. Seulement une
+        // fois le départ posé : un « non » enregistré avant resterait après.
+        if trail.coordinates().is_some() {
+            let property = ctx.property.coordinates.map(|point| (point.lat, point.lng));
+            let at_property = trail
+                .starts_at_property
+                .unwrap_or_else(|| trail.near_property(property));
+            children.push(
+                ToggleRow::new()
+                    .name(format!("trails.{index}.starts_at_property"))
+                    .label("i18n:host.trails.startsAtProperty")
+                    .checked(at_property)
+                    .into(),
+            );
+        }
+    }
 
     children.push(
         named(config, ctx, &format!("trails.{index}.description"))
@@ -378,6 +399,63 @@ fn commune_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
                 ),
         )
         .child(FieldHint::new().text("i18n:host.commune.hint"))
+        .into()
+}
+
+/// « Page publique » : l'interrupteur du bloc, puis le choix de 2 à 4 itinéraires affichables.
+///
+/// Le choix reste rendu sans itinéraire à choisir : le formulaire envoie toujours les clés
+/// déclarées.
+fn public_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let enabled = ctx.input_bool("public_enabled", config.public_enabled);
+    let routed = config.routed_trails();
+    let choices: Vec<ChoiceOption> = routed
+        .iter()
+        .map(|(id, trail)| {
+            let option = ChoiceOption::new(id.clone(), trail.title.host_value(ctx).to_string());
+            match trail.level_key() {
+                Some(level) => option.description(crate::format::level(level)),
+                None => option,
+            }
+        })
+        .collect();
+    let hint = if routed.is_empty() {
+        "i18n:host.public.none".to_string()
+    } else {
+        t!(
+            "host.public.count",
+            count = config.public_chosen().len(),
+            min = PUBLIC_MIN,
+            max = PUBLIC_MAX
+        )
+        .unwrap_or_else(|_| "i18n:host.public.count".into())
+    };
+    Card::new()
+        .title("i18n:host.public.title")
+        .subtitle("i18n:host.public.subtitle")
+        .icon(IconName::Home)
+        .children(vec![
+            ToggleRow::new()
+                .name("public_enabled")
+                .label("i18n:host.public.enabled")
+                .icon(IconName::Home)
+                .checked(enabled)
+                .into(),
+            Field::new()
+                .name("public_trails")
+                .label("i18n:host.public.trails")
+                .child(Stack::new().children(vec![
+                    FieldHint::new().text(hint).into(),
+                    ChoiceList::new()
+                        .name("public_trails")
+                        .multi(true)
+                        .limit(PUBLIC_MAX as u32)
+                        .choices(choices)
+                        .value(serde_json::to_string(&config.public_trails).unwrap_or_default())
+                        .into(),
+                ]))
+                .into(),
+        ])
         .into()
 }
 

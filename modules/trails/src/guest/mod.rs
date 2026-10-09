@@ -3,6 +3,7 @@
 mod detail;
 mod home;
 mod load;
+mod public;
 mod rows;
 
 use portaki_sdk::prelude::*;
@@ -69,6 +70,13 @@ pub fn render_explore_item(ctx: GuestContext) -> Result<Surface> {
         )
         .with_id(EXPLORE_ITEM)),
     }
+}
+
+/// Le bloc « Randonnées » de la page publique du logement : 2 à 4 itinéraires choisis par l'hôte.
+#[portaki_sdk::surface(guest, id = "property.public")]
+pub fn render_property_public(ctx: GuestContext) -> Result<Surface> {
+    let config = crate::config::ModuleConfig::load(&ctx)?;
+    Ok(public::build_public_section(&config, &ctx.locale))
 }
 
 /// Nothing to show yet — the SDK renders the inactive, incomplete and error states itself.

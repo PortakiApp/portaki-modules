@@ -61,6 +61,21 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         });
     }
 
+    // La page publique n'empêche jamais de publier le livret : hors bornes, son bloc se masque
+    // (moins de deux) ou se coupe (plus de quatre), et l'hôte en est averti.
+    let chosen = config.public_chosen().len();
+    if config.public_enabled
+        && !(crate::config::PUBLIC_MIN..=crate::config::PUBLIC_MAX).contains(&chosen)
+    {
+        items.push(PublishCheck {
+            id: "config.public_enabled".into(),
+            level: PublishLevel::Recommended,
+            ok: false,
+            label: crate::i18n::text("host.public.title"),
+            hint: crate::i18n::text("publish.public.hint"),
+        });
+    }
+
     Ok(PublishReadiness { items })
 }
 

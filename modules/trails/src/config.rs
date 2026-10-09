@@ -32,6 +32,18 @@ pub const FAR_START_METRES: f64 = 1_000.0;
 /// En dessous, le départ est le logement : pas de second repère sur le plan, et pas d'itinéraire.
 pub const AT_PROPERTY_METRES: f64 = 120.0;
 
+/// Sur la page publique, en dessous de cette distance au logement, le départ est « le logement ».
+///
+/// Plus large que [`AT_PROPERTY_METRES`] : là, il s'agit de ne pas doubler une épingle sur le plan
+/// du voyageur ; ici, de ne rien laisser deviner de l'adresse à un visiteur sans séjour. Calculé
+/// côté hôte, depuis la position réelle — la page publique n'a que le centre flouté.
+pub const PUBLIC_AT_PROPERTY_METRES: f64 = 300.0;
+
+/// Combien d'itinéraires la page publique montre : en dessous, le bloc ne sort pas ; au-delà, les
+/// premiers dans l'ordre du formulaire.
+pub const PUBLIC_MIN: usize = 2;
+pub const PUBLIC_MAX: usize = 4;
+
 /// The keys are the names of the host form fields: the platform takes `updateConfig` itself.
 // Pas d'`Eq` : un départ porte des coordonnées, et deux flottants ne se comparent pas par égalité
 // totale.
@@ -45,6 +57,16 @@ pub struct ModuleConfig {
     /// Le lien « tous les sentiers de la commune », en bas de la liste.
     #[field(label = "host.commune.label")]
     pub commune_url: String,
+    /// Le bloc « Randonnées » de la page publique du logement. Éteint par défaut.
+    #[field(label = "host.public.enabled")]
+    pub public_enabled: bool,
+    /// Les itinéraires de la page publique, 2 à 4, par identifiant de route, dans l'ordre choisi.
+    ///
+    /// À plat et en `text` : le choix multiple envoie du JSON en chaîne, qu'un champ `structured`
+    /// ferait refuser par la plateforme ; il est relu en liste à l'arrivée.
+    #[field(kind = "text", label = "host.public.trails")]
+    #[serde(deserialize_with = "id_list", serialize_with = "id_list_text")]
+    pub public_trails: Vec<String>,
 }
 
 impl ModuleConfig {
@@ -160,6 +182,47 @@ impl ModuleConfig {
     pub fn is_empty(&self) -> bool {
         self.parse_trails().is_empty()
     }
+
+    /// Les itinéraires affichables, avec leur identifiant de route — ce que le choix propose.
+    pub fn routed_trails(&self) -> Vec<(String, TrailRow)> {
+        self.trails
+            .iter()
+            .enumerate()
+            .filter(|(_, row)| row.is_complete())
+            .take(MAX_TRAILS)
+            .map(|(index, row)| (row.route_id(index), row.clone()))
+            .collect()
+    }
+
+    /// Les itinéraires choisis pour la page publique qui s'affichent encore, dans l'ordre du choix.
+    pub fn public_chosen(&self) -> Vec<TrailRow> {
+        let routed = self.routed_trails();
+        let mut out: Vec<TrailRow> = Vec::new();
+        let mut seen: Vec<&str> = Vec::new();
+        for id in &self.public_trails {
+            if seen.contains(&id.as_str()) {
+                continue;
+            }
+            seen.push(id);
+            if let Some((_, row)) = routed.iter().find(|(route, _)| route == id) {
+                out.push(row.clone());
+            }
+        }
+        out
+    }
+
+    /// Ce que la page publique montre : rien quand le bloc est éteint ou qu'il manque des
+    /// itinéraires, sinon les [`PUBLIC_MAX`] premiers cochés.
+    pub fn public_trails(&self) -> Vec<TrailRow> {
+        if !self.public_enabled {
+            return Vec::new();
+        }
+        let chosen = self.public_chosen();
+        if chosen.len() < PUBLIC_MIN {
+            return Vec::new();
+        }
+        chosen.into_iter().take(PUBLIC_MAX).collect()
+    }
 }
 
 /// Un itinéraire.
@@ -208,6 +271,64 @@ pub struct TrailRow {
     /// La photo du sentier, en référence `portaki-file:` — ce qu'on voit avant de partir.
     #[serde(default)]
     pub photo: String,
+    /// Le départ est au logement (moins de [`PUBLIC_AT_PROPERTY_METRES`] de sa position réelle).
+    ///
+    /// Proposé par le formulaire hôte, qui seul connaît la position réelle, et enregistré avec la
+    /// ligne. Absent tant que l'hôte n'a pas enregistré : la page publique ne dit alors rien du
+    /// départ — elle n'en montre de toute façon jamais l'adresse ni la position.
+    #[serde(
+        deserialize_with = "lenient_opt_bool",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub starts_at_property: Option<bool>,
+}
+
+/// `true`, `"true"`, ou rien : un interrupteur de formulaire envoie l'un ou l'autre, et un texte
+/// inattendu ne doit pas faire refuser toute la configuration.
+fn lenient_opt_bool<'de, D>(deserializer: D) -> Result<Option<bool>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Ok(match serde_json::Value::deserialize(deserializer)? {
+        serde_json::Value::Bool(value) => Some(value),
+        serde_json::Value::String(value) => match value.trim() {
+            "true" => Some(true),
+            "false" => Some(false),
+            _ => None,
+        },
+        _ => None,
+    })
+}
+
+/// Une liste d'identifiants, en tableau ou en texte : le choix multiple envoie du JSON en chaîne
+/// (`"[\"a\",\"b\"]"`), un choix simple la valeur seule, une saisie à la main une liste à virgules.
+fn id_list<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde_json::Value;
+    Ok(match Value::deserialize(deserializer)? {
+        Value::Array(items) => items
+            .into_iter()
+            .filter_map(|item| item.as_str().map(|id| id.trim().to_string()))
+            .filter(|id| !id.is_empty())
+            .collect(),
+        Value::String(text) => serde_json::from_str::<Vec<String>>(&text).unwrap_or_else(|_| {
+            text.split(',')
+                .map(|id| id.trim().to_string())
+                .filter(|id| !id.is_empty())
+                .collect()
+        }),
+        _ => Vec::new(),
+    })
+}
+
+/// Réécrite comme le formulaire l'envoie, en texte : le champ est déclaré `text`.
+fn id_list_text<S>(ids: &[String], serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    serializer.serialize_str(&serde_json::to_string(ids).unwrap_or_default())
 }
 
 /// Une mesure utilisable : finie et strictement positive.
@@ -290,6 +411,18 @@ impl TrailRow {
             format!("t{index}")
         } else {
             id.to_string()
+        }
+    }
+
+    /// Le départ est-il au logement, vu de la position réelle `property` ?
+    ///
+    /// Ce que le formulaire hôte propose quand l'hôte n'a pas encore enregistré de réponse.
+    pub fn near_property(&self, property: Option<(f64, f64)>) -> bool {
+        match (property, self.coordinates()) {
+            (Some(property), Some(start)) => {
+                crate::format::haversine_metres(property, start) < PUBLIC_AT_PROPERTY_METRES
+            }
+            _ => false,
         }
     }
 
