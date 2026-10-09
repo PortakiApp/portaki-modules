@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.11.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.10.0...appliances-v1.11.0) (2026-10-09)
+
+
+### Features
+
+* **appliances:** add model, video and steps ([fdd921d](https://github.com/PortakiApp/portaki-modules/commit/fdd921d430654e39f4dc6934db7deee5c863f84f))
+* **appliances:** safety note input in host form ([e503b7b](https://github.com/PortakiApp/portaki-modules/commit/e503b7b55e612e5ec1114320dfcde8d1090952f1))
+
+
+### Bug Fixes
+
+* **appliances:** fallback card, spec errors ([4b201dc](https://github.com/PortakiApp/portaki-modules/commit/4b201dca68fbdb296a5f56f0d312326d1f93803a))
+* **appliances:** keep unsent fields on replaceDevices ([33dd292](https://github.com/PortakiApp/portaki-modules/commit/33dd2921040edb4923103d344ad42d755f2a19b2))
+* **appliances:** no readiness item for blank names ([00102a4](https://github.com/PortakiApp/portaki-modules/commit/00102a49d75699e5a860d1994216bc0a38b10fe8))
+
 ## [1.10.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.9.0...appliances-v1.10.0) (2026-10-09)
 
 

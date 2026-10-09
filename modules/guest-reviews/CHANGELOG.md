@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v1.5.0...guest-reviews-v1.6.0) (2026-10-09)
+
+
+### Features
+
+* **guest-reviews:** add public page reviews block ([82ebae1](https://github.com/PortakiApp/portaki-modules/commit/82ebae1fc82c37a9c8d7bac766c7ba2010efdb39))
+
+
+### Bug Fixes
+
+* **guest-reviews:** send chosen reviews as an array ([f7b5136](https://github.com/PortakiApp/portaki-modules/commit/f7b5136310a55987d37b36f64120bbdf8b9fdc41))
+* **guest-reviews:** stay line follows shown link ([eabd0c7](https://github.com/PortakiApp/portaki-modules/commit/eabd0c78c5c4684da79100b45500fe4faba2bfe0))
+
 ## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v1.4.0...guest-reviews-v1.5.0) (2026-10-09)
 
 

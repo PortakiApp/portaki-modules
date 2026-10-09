@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v1.7.0...ev-parking-v1.8.0) (2026-10-09)
+
+
+### Features
+
+* **ev-parking:** add stay detail surface ([134f937](https://github.com/PortakiApp/portaki-modules/commit/134f9374e18b2308ace4b295ffb93b53afa22858))
+* **ev-parking:** charger position and photo ([fa33023](https://github.com/PortakiApp/portaki-modules/commit/fa33023571400693df3bd288eb8ee808fbfc950c))
+* **ev-parking:** provide amenities ([e0cab34](https://github.com/PortakiApp/portaki-modules/commit/e0cab34411b893888644f6eee1a23f11065acf87))
+
 ## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v1.6.0...ev-parking-v1.7.0) (2026-10-09)
 
 

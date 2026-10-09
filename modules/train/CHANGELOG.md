@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.0](https://github.com/PortakiApp/portaki-modules/compare/train-v2.3.0...train-v2.4.0) (2026-10-09)
+
+
+### Features
+
+* **train:** cancelled, last train, far station ([6f86006](https://github.com/PortakiApp/portaki-modules/commit/6f860067c251e6c855c10311de3210f83ee8b5c2))
+
 ## [2.3.0](https://github.com/PortakiApp/portaki-modules/compare/train-v2.2.0...train-v2.3.0) (2026-10-09)
 
 

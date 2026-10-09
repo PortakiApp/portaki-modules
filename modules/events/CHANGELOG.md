@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/events-v1.7.0...events-v1.8.0) (2026-10-09)
+
+
+### Features
+
+* **events:** radius 1-50, tonight badge, tips ([f67b21d](https://github.com/PortakiApp/portaki-modules/commit/f67b21d404f11ad55e983661d4139909eed9f49c))
+
+
+### Bug Fixes
+
+* **events:** out-of-range radius only warns ([6a88653](https://github.com/PortakiApp/portaki-modules/commit/6a88653e58c2b7fd3ac9636bb166ef2839d66b58))
+* **events:** tag map markers as events ([255c9dc](https://github.com/PortakiApp/portaki-modules/commit/255c9dc2c11e289e6c956af97645b6985e1ff18d))
+
 ## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/events-v1.6.0...events-v1.7.0) (2026-10-09)
 
 

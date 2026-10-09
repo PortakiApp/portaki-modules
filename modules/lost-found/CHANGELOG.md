@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.12.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.11.0...lost-found-v1.12.0) (2026-10-09)
+
+
+### Features
+
+* **lost-found:** six statuses, items tab, ship task ([fc4dbd1](https://github.com/PortakiApp/portaki-modules/commit/fc4dbd10d04b0c3d6bbb8698459ea971861a9c46))
+
+
+### Bug Fixes
+
+* add entity columns missing from migrations ([9aaa3a6](https://github.com/PortakiApp/portaki-modules/commit/9aaa3a60e7a5ec06b330dc06706d79cc78899500))
+
 ## [1.11.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.10.0...lost-found-v1.11.0) (2026-10-09)
 
 

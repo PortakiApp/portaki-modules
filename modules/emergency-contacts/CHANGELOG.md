@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.7.0...emergency-contacts-v1.8.0) (2026-10-09)
+
+
+### Features
+
+* **emergency-contacts:** health places distance ([dc7cfa7](https://github.com/PortakiApp/portaki-modules/commit/dc7cfa74333e5f4f234347eb15c5b5b6496c37cf))
+* **emergency-contacts:** pharmacy and hospital on the map ([fcedb4f](https://github.com/PortakiApp/portaki-modules/commit/fcedb4fa6f74aaca8fa51a23556e465a3734a8f7))
+
 ## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.6.0...emergency-contacts-v1.7.0) (2026-10-09)
 
 

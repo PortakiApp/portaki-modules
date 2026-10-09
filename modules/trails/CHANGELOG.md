@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.8.0](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.7.0...trails-v0.8.0) (2026-10-09)
+
+
+### Features
+
+* **trails:** property.public block, chosen trails ([39b1654](https://github.com/PortakiApp/portaki-modules/commit/39b16545c35d81556896070149bf331c75b3959a))
+* **trails:** validate GPX, start, add season ([c11884e](https://github.com/PortakiApp/portaki-modules/commit/c11884e688c32c38bfe482cd9221f7d6d61cd10e))
+
+
+### Bug Fixes
+
+* **local-guide,trails:** send chosen ids as array ([9750390](https://github.com/PortakiApp/portaki-modules/commit/9750390f779d24a99c878abf39d50e9764edf2bf))
+* **trails:** keep the host's trail shape ([22148e4](https://github.com/PortakiApp/portaki-modules/commit/22148e4354aa76aaa0e6caa4e39c4fbce6a733fe))
+* **trails:** warn, don't block, on missing start ([63fa849](https://github.com/PortakiApp/portaki-modules/commit/63fa8495b1a7ff2f23cdee0b79d30ece63cfc025))
+
 ## [0.7.0](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.6.0...trails-v0.7.0) (2026-10-09)
 
 

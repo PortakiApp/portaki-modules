@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.8.0...pre-arrival-form-v1.9.0) (2026-10-09)
+
+
+### Features
+
+* **pre-arrival-form:** deadline and reminder email ([ca38b3f](https://github.com/PortakiApp/portaki-modules/commit/ca38b3fcf0a8c6d4e3ef7da37b68ce9438cd6888))
+
+
+### Bug Fixes
+
+* add entity columns missing from migrations ([9aaa3a6](https://github.com/PortakiApp/portaki-modules/commit/9aaa3a60e7a5ec06b330dc06706d79cc78899500))
+* **pre-arrival-form:** remind only a day after opening ([7282a73](https://github.com/PortakiApp/portaki-modules/commit/7282a73a7db0e50e94f6cc35a83ba1f1cae46bff))
+* **pre-arrival-form:** stop promising a reminder ([c3d07b4](https://github.com/PortakiApp/portaki-modules/commit/c3d07b476830d15f6709db3e4c7ee67121c60ee4))
+
 ## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.7.0...pre-arrival-form-v1.8.0) (2026-10-09)
 
 

@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.13.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.12.0...local-guide-v1.13.0) (2026-10-09)
+
+
+### Features
+
+* **local-guide:** property.public block ([b85d551](https://github.com/PortakiApp/portaki-modules/commit/b85d551ba323cc21cf9a018529119fbc54380dca))
+* **local-guide:** spot emoji, season, warning ([66e1520](https://github.com/PortakiApp/portaki-modules/commit/66e1520dfee52a8d8caf8cbd87e5e048b55feb77))
+
+
+### Bug Fixes
+
+* **local-guide,trails:** send chosen ids as array ([9750390](https://github.com/PortakiApp/portaki-modules/commit/9750390f779d24a99c878abf39d50e9764edf2bf))
+* **local-guide:** activity phone warns only ([62c7aa0](https://github.com/PortakiApp/portaki-modules/commit/62c7aa09f66d0fb433184be892373fccb3933dfb))
+* **local-guide:** missing category warns only ([e66fdab](https://github.com/PortakiApp/portaki-modules/commit/e66fdabc91824d10f45c1e9c14fd1a65118cdf30))
+
 ## [1.12.0](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.11.0...local-guide-v1.12.0) (2026-10-09)
 
 

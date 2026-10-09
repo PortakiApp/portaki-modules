@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.10.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.9.0...consumables-v2.10.0) (2026-10-09)
+
+
+### Features
+
+* **consumables:** Prévu status, host reply, tasks ([7babda8](https://github.com/PortakiApp/portaki-modules/commit/7babda8b12a1815f16d75323719987b15d722176))
+* **consumables:** provide amenities ([f76fd66](https://github.com/PortakiApp/portaki-modules/commit/f76fd6621f66246be4af0b0d6111518ac81938d5))
+
+
+### Bug Fixes
+
+* add entity columns missing from migrations ([9aaa3a6](https://github.com/PortakiApp/portaki-modules/commit/9aaa3a60e7a5ec06b330dc06706d79cc78899500))
+* **consumables:** align banner wording in 8 locales ([a339f8f](https://github.com/PortakiApp/portaki-modules/commit/a339f8f13f525a2ed4deef1dbb9f9566ef662600))
+* **consumables:** drop unnamed rows on save again ([57c9712](https://github.com/PortakiApp/portaki-modules/commit/57c9712aa2c23d04051c21b2ecb72c4e58c2ce55))
+* **consumables:** validate host settings ([9742553](https://github.com/PortakiApp/portaki-modules/commit/97425536846b881b9b5abe900163897d1e371733))
+
 ## [2.9.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.8.0...consumables-v2.9.0) (2026-10-09)
 
 

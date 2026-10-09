@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/nuki-v1.6.0...nuki-v1.7.0) (2026-10-09)
+
+
+### Features
+
+* **nuki:** one keypad code per stay ([ec8bf0a](https://github.com/PortakiApp/portaki-modules/commit/ec8bf0a4c7cfe9a595616cab79eb73d74758c5c8))
+
+
+### Bug Fixes
+
+* **nuki:** make code per stay opt-in ([f1a7a47](https://github.com/PortakiApp/portaki-modules/commit/f1a7a47555f96f162586d8896b9fa1b5ff6f8954))
+
 ## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/nuki-v1.5.0...nuki-v1.6.0) (2026-10-09)
 
 

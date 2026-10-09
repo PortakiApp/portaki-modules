@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v1.6.0...ical-sync-v1.7.0) (2026-10-09)
+
+
+### Features
+
+* **ical-sync:** feed checks, stay card, tasks ([afa0f5c](https://github.com/PortakiApp/portaki-modules/commit/afa0f5c30d1ac867eff1d2e1a7441b1e672c4596))
+
 ## [1.6.0](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v1.5.0...ical-sync-v1.6.0) (2026-10-09)
 
 
