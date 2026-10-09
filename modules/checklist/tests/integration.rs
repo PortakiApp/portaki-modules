@@ -768,3 +768,34 @@ fn the_stay_detail_tells_the_stay_progress() {
             assert!(stay(&host).contains("host.stay.missingStay"));
         });
 }
+
+/// The editor's ✕ drops the row from the form value: a removed step is gone, and blocks nothing.
+#[test]
+#[serial]
+fn a_removed_step_does_not_block_publication() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            create(&ctx, "emptyGuest");
+            let list = list_checklists().expect("lists")[0].id;
+            let save = |items: Value| {
+                update_config(
+                    ctx.clone(),
+                    UpdateConfigArgs {
+                        id: list.to_string(),
+                        items: Some(items),
+                        ..UpdateConfigArgs::default()
+                    },
+                )
+                .expect("save");
+            };
+            save(json!([{ "label": "Poubelles" }, { "label": "  " }]));
+            let kept = items_of(list).expect("items")[0].id;
+            save(json!([{ "id": kept, "label": "Poubelles" }]));
+            assert_eq!(readiness_hint(&ctx, "labels."), None);
+            let checks = publish_readiness(ctx.clone()).expect("readiness").items;
+            assert!(checks.iter().all(|check| check.ok), "{checks:?}");
+            assert_eq!(items_of(list).expect("items").len(), 1);
+        });
+}
