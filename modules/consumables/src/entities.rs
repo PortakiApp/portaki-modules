@@ -33,7 +33,7 @@ pub const CONSUMABLE_ITEM_INDEXES: &[&str] = &["sort_order"];
 /// `property_id` is injected by typed-repo from invocation context; kept in the
 /// schema so SELECT/INSERT/DELETE with `WHERE property_id = …` succeed.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 1)]
+#[portaki_sdk::entity(schema_version = 4)]
 pub struct ConsumableReport {
     pub id: Uuid,
     pub stay_id: Uuid,
@@ -43,13 +43,16 @@ pub struct ConsumableReport {
     /// Wire: `missing` | `low`.
     pub level: String,
     pub note: Option<String>,
-    /// Wire: `open` | `restocked` — default `open`.
+    /// Wire: `open` (à traiter) | `planned` (prévu) | `restocked` (livré) — default `open`.
     #[serde(default = "default_status")]
     pub status: String,
     pub created_at: DateTime<Utc>,
     /// Set when the host marks it restocked.
     #[serde(default)]
     pub restocked_at: Option<DateTime<Utc>>,
+    /// La réponse de l'hôte, que le voyageur lit sous sa demande.
+    #[serde(default)]
+    pub host_reply: Option<String>,
 }
 
 fn default_status() -> String {

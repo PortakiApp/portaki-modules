@@ -46,6 +46,8 @@ pub struct ConsumableReportRow {
     pub note: Option<String>,
     pub status: String,
     pub created_at: DateTime<Utc>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub host_reply: Option<String>,
 }
 
 impl From<ConsumableReport> for ConsumableReportRow {
@@ -59,6 +61,7 @@ impl From<ConsumableReport> for ConsumableReportRow {
             note: row.note,
             status: row.status,
             created_at: row.created_at,
+            host_reply: row.host_reply,
         }
     }
 }

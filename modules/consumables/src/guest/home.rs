@@ -3,12 +3,12 @@
 use portaki_sdk::prelude::*;
 
 use portaki_sdk::sdui::common::Leading;
-use portaki_sdk::sdui::primitives::{Card, ListItem, Stack, Text};
+use portaki_sdk::sdui::primitives::{Card, ListItem, Pill, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
 use super::load::GuestConsumablesData;
 use crate::entities::ConsumableReport;
-use crate::level;
+use crate::{level, status};
 
 pub fn build_home_card(data: &GuestConsumablesData) -> Surface {
     let open_form = Action::open_overlay(
@@ -86,9 +86,29 @@ pub fn build_home_card(data: &GuestConsumablesData) -> Surface {
     .with_id(crate::guest::HOME_CARD)
 }
 
+/// La demande, où en est l'hôte (« Prévu », « Livré ») et ce qu'il a répondu.
 fn report_list_item(report: &ConsumableReport) -> ListItem {
     let subtitle = level::level_label_key(report.level.as_str());
-    ListItem::new()
+    let mut row = ListItem::new()
         .title(report.item_label.clone())
-        .subtitle(format!("i18n:{subtitle}"))
+        .subtitle(format!("i18n:{subtitle}"));
+    if report.status != status::DEFAULT {
+        row = row
+            .child(Pill::new().label(format!("i18n:{}", status::status_label_key(&report.status))));
+    }
+    if let Some(reply) = report
+        .host_reply
+        .as_deref()
+        .filter(|r| !r.trim().is_empty())
+    {
+        row = row.child(
+            Text::new()
+                .text(
+                    t!("home.card.reply", reply = reply.trim().to_string())
+                        .unwrap_or_else(|_| reply.trim().to_string()),
+                )
+                .variant(TextVariant::Caption),
+        );
+    }
+    row
 }

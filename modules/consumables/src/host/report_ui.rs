@@ -4,7 +4,7 @@ use chrono::{DateTime, Datelike, Utc};
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::Leading;
 use portaki_sdk::sdui::common::Tone;
-use portaki_sdk::sdui::primitives::{Button, Form, ListItem, Pill, Stack, Text};
+use portaki_sdk::sdui::primitives::{Button, Field, Form, ListItem, Pill, Stack, Text, TextArea};
 
 use crate::commands::UpdateStatusArgs;
 use crate::entities::ConsumableReport;
@@ -12,7 +12,8 @@ use crate::status;
 
 fn status_tone(wire: &str) -> Tone {
     match wire {
-        "restocked" => Tone::Success,
+        status::RESTOCKED => Tone::Success,
+        status::PLANNED => Tone::Primary,
         _ => Tone::Warning,
     }
 }
@@ -62,28 +63,56 @@ fn level_label_plain(wire: &str, locale: &str) -> String {
     }
 }
 
-/// One-click mark restocked (only when still open).
-pub(crate) fn build_restock_form(report: &ConsumableReport) -> Option<Component> {
-    if report.status != status::DEFAULT {
-        return None;
-    }
-
-    let action = crate::ids::module_id().command(
+fn status_action(report: &ConsumableReport, next: &str) -> Action {
+    // La réponse vient du champ du formulaire, que la coquille fusionne au clic.
+    crate::ids::module_id().command(
         crate::commands::UPDATE_STATUS,
         UpdateStatusArgs {
             report_id: report.id,
-            status: "restocked".to_string(),
+            status: next.to_string(),
+            host_reply: None,
         },
-    );
+    )
+}
 
-    Some(Component::Form(
-        Form::new().child(
+/// Réponse au voyageur + « Prévu » (tant qu'à traiter) + « Marquer livré » (tant que pas livré).
+pub(crate) fn build_restock_form(report: &ConsumableReport) -> Option<Component> {
+    if !status::is_pending(&report.status) {
+        return None;
+    }
+
+    let mut form = Form::new().child(
+        Field::new()
+            .name(REPLY_FIELD)
+            .label("i18n:host.main.reply")
+            .child(
+                TextArea::new()
+                    .name(REPLY_FIELD)
+                    .value(report.host_reply.clone().unwrap_or_default())
+                    .placeholder("i18n:host.main.reply.placeholder"),
+            ),
+    );
+    let mut buttons = Stack::new().direction(StackDirection::Horizontal).gap(8.0);
+    if report.status == status::DEFAULT {
+        buttons = buttons.child(
+            Button::new()
+                .label("i18n:host.main.markPlanned")
+                .variant(ButtonVariant::Outline)
+                .action(status_action(report, status::PLANNED)),
+        );
+    }
+    form = form.child(
+        buttons.child(
             Button::new()
                 .label("i18n:host.main.markRestocked")
-                .action(action),
+                .action(status_action(report, status::RESTOCKED)),
         ),
-    ))
+    );
+    Some(Component::Form(form))
 }
+
+/// Le nom du champ tel que `UpdateStatusArgs` le lit sur le fil (camelCase).
+const REPLY_FIELD: &str = "hostReply";
 
 /// Stack: list row + optional restock button.
 pub(crate) fn build_report_block(

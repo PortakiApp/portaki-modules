@@ -16,6 +16,7 @@ mod level;
 mod queries;
 mod status;
 mod storage;
+mod tasks;
 
 pub use amenities::amenities_list;
 pub use commands::{
@@ -33,6 +34,7 @@ pub use queries::{
 };
 pub use status::DEFAULT as STATUS_DEFAULT;
 pub use storage::reset_test_store;
+pub use tasks::{task_complete, task_toggle, timeline_tasks};
 
 portaki_sdk::portaki_module!(
     id = "consumables",
