@@ -16,7 +16,7 @@ const MAX_NEARBY: usize = 12;
 const HOME_NEARBY_CAP: usize = 3;
 
 /// Host-provided wall clock (the Wasm sandbox has none — never call `Utc::now()`).
-fn host_now() -> DateTime<Utc> {
+pub(crate) fn host_now() -> DateTime<Utc> {
     time::now().unwrap_or_else(|_| DateTime::<Utc>::from_timestamp(0, 0).expect("epoch is valid"))
 }
 
@@ -34,12 +34,6 @@ struct NearbyCache {
 pub fn has_open_agenda(ctx: &Context) -> bool {
     ctx.has_capability(capability::external::OPEN_AGENDA_POOL)
         || ctx.has_capability(capability::external::OPEN_AGENDA_BYOK)
-}
-
-/// Whether nearby events can be searched: the host wants them, a key is there, and the
-/// property has a position.
-pub fn nearby_ready(ctx: &Context, config: &ModuleConfig) -> bool {
-    config.nearby_enabled && has_open_agenda(ctx) && ctx.property.coordinates.is_some()
 }
 
 /// Merges host-curated events with nearby OpenAgenda results when enabled.

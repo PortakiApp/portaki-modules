@@ -1,10 +1,14 @@
 # Changelog
 
-## 1.7.1
+## 1.8.0
 
-Les événements bien rangés sur la Carte.
+« Ce soir », un rayon resserré, et un état vide qui parle du séjour.
 
 * Sur la Carte du livret, les événements se rangent toujours sous « Événements ».
+* Rayon de 15 km par défaut, de 1 à 50 km ; un rayon déjà enregistré hors de ces bornes est signalé sous le champ.
+* Badge « Ce soir » sur les événements du jour, à l'heure du logement.
+* Sans événement pendant le séjour, le livret affiche « Rien de prévu pendant votre séjour ».
+* Un conseil de plus de 120 caractères est signalé ; un lieu au-delà du rayon donne un avertissement.
 
 ## 1.7.0
 

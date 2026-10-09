@@ -72,6 +72,9 @@ fn header(data: &GuestData, event: &EventRow) -> Component {
     if !when.trim().is_empty() {
         children.push(Badge::new().label(when).into());
     }
+    if data.is_tonight(event) {
+        children.push(super::body::tonight_badge());
+    }
     children.push(
         Text::new()
             .text(event.title.get(&data.locale))

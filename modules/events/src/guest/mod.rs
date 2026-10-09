@@ -53,12 +53,11 @@ fn render_with_data(
     })
 }
 
-/// Nothing to show yet — written for the guest, who can do nothing about it.
+/// Nothing in the stay window (§9 #1) — written for the guest, who can do nothing about it.
 fn nothing_planned(surface_id: SurfaceId) -> Surface {
     Surface::new(
         EmptyState::new()
             .title("i18n:guest.empty.title")
-            .description("i18n:guest.empty.description")
             .icon(IconName::Calendar),
     )
     .with_id(surface_id)

@@ -19,8 +19,8 @@
   },
   "configItems": [
     {
-      "fr": "Recherche automatique et rayon (10 à 100 km)",
-      "en": "Automatic search and radius (10 to 100 km)"
+      "fr": "Recherche automatique et rayon (1 à 50 km)",
+      "en": "Automatic search and radius (1 to 50 km)"
     },
     {
       "fr": "Jusqu’à six événements manuels : titre, lieu, date, lien",

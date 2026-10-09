@@ -357,3 +357,56 @@ fn a_save_in_english_keeps_the_french() {
             assert_eq!(saved["disclaimer"], stored["disclaimer"]);
         });
 }
+
+/// §9 #1 : l'hôte a un événement, mais hors du séjour — le voyageur lit l'état vide, pas une
+/// liste vide.
+#[test]
+#[serial]
+fn an_event_outside_the_stay_shows_the_empty_state() {
+    use portaki_sdk::context::StayContext;
+    let stay = StayContext {
+        checkin_at: Some("2099-08-10T15:00:00Z".parse().unwrap()),
+        checkout_at: Some("2099-08-13T10:00:00Z".parse().unwrap()),
+        ..StayContext::default()
+    };
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_stay(stay)
+        .with_config(&sample_config())
+        .run(|ctx| {
+            let detail = render_explore_detail(ctx).expect("surface");
+            assert!(SurfaceAssertions::new(&detail).contains_type("EmptyState"));
+            let json = serde_json::to_string(&detail).expect("json");
+            assert!(json.contains("i18n:guest.empty.title"), "{json}");
+        });
+}
+
+/// §9 #2 : un événement ce soir, à l'heure du logement, porte le badge « Ce soir ».
+#[test]
+#[serial]
+fn tonight_event_carries_the_badge() {
+    let config = json!({
+        "nearby_enabled": false,
+        "events": [{ "id": "evt-1", "title": "Feu d'artifice", "starts_at": "2099-07-14T20:00:00Z" }]
+    });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_property(Property::default())
+        .with_now("2099-07-14T10:00:00Z".parse().unwrap())
+        .with_config(&config)
+        .run(|ctx| {
+            let home = serde_json::to_string(&render_home_card(ctx.clone()).unwrap()).unwrap();
+            assert!(home.contains("i18n:guest.event.tonight"), "{home}");
+            let detail = serde_json::to_string(&render_explore_detail(ctx).unwrap()).unwrap();
+            assert!(detail.contains("i18n:guest.event.tonight"), "{detail}");
+        });
+    MockContext::guest()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_property(Property::default())
+        .with_now("2099-07-13T10:00:00Z".parse().unwrap())
+        .with_config(&config)
+        .run(|ctx| {
+            let home = serde_json::to_string(&render_home_card(ctx).unwrap()).unwrap();
+            assert!(!home.contains("i18n:guest.event.tonight"), "{home}");
+        });
+}
