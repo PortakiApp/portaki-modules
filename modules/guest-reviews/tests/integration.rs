@@ -324,6 +324,40 @@ fn submit_review_is_taken_alongside_a_public_link() {
         });
 }
 
+/// The review keeps whether the link was shown to this stay: in `auto`, an Airbnb link is not
+/// shown to a Booking guest.
+#[test]
+#[serial]
+fn submit_review_records_whether_the_link_was_shown() {
+    let offered = |channel: &str| {
+        MockContext::guest()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&json!({ "review_url": AIRBNB_URL, "channel_mode": "auto" }))
+            .with_stay(stay_on(channel))
+            .run(|ctx| {
+                let stay_id = ctx.stay.as_ref().expect("stay").stay_id;
+                submit_review(
+                    ctx,
+                    SubmitReviewArgs {
+                        rating: 5,
+                        comment: String::new(),
+                        public_consent: false,
+                    },
+                )
+                .expect("submit");
+                let stored: serde_json::Value = serde_json::from_slice(
+                    &portaki_sdk::host::kv::get(&format!("stay:{stay_id}:review"))
+                        .expect("kv")
+                        .expect("review"),
+                )
+                .expect("review json");
+                stored["link_offered"].clone()
+            })
+    };
+    assert_eq!(offered("airbnb"), json!(true));
+    assert_eq!(offered("booking"), json!(false));
+}
+
 #[test]
 #[serial]
 fn submit_review_stores_one_review_per_stay() {
@@ -540,11 +574,12 @@ fn publish_readiness_requires_an_https_link() {
     assert_eq!(check(json!({ "review_url": "booking.com/x" })), blocked);
 }
 
-/// The stay encart: not rated yet, the rating, and whether the public link was offered.
+/// The stay encart: not rated yet, the rating, and whether the public link was offered — as the
+/// guest saw it when rating, not as the config stands.
 #[test]
 #[serial]
 fn the_stay_encart_says_the_rating() {
-    let encart = |config: serde_json::Value, rating: Option<u8>| {
+    let encart = |config: serde_json::Value, rating: Option<(u8, bool)>| {
         let stay_id = "00000000-0000-4000-8000-000000000001";
         let mut builder = MockContext::host()
             .with_capabilities(&[capability::core::STORAGE])
@@ -555,10 +590,13 @@ fn the_stay_encart_says_the_rating() {
                 "host.stay.ratedWithLink",
                 "Note : {rating} / 5 · lien public proposé",
             );
-        if let Some(rating) = rating {
+        if let Some((rating, offered)) = rating {
             builder = builder.with_kv(
                 format!("stay:{stay_id}:review"),
-                serde_json::to_vec(&json!({ "rating": rating, "comment": "" })).unwrap(),
+                serde_json::to_vec(
+                    &json!({ "rating": rating, "comment": "", "link_offered": offered }),
+                )
+                .unwrap(),
             );
         }
         builder.run(|mut ctx| {
@@ -567,14 +605,35 @@ fn the_stay_encart_says_the_rating() {
         })
     };
     assert!(encart(json!({}), None).contains("i18n:host.stay.notYet"));
-    let rated = encart(json!({}), Some(4));
+    let rated = encart(json!({}), Some((4, false)));
     assert!(rated.contains("Note : 4 / 5"), "{rated}");
     assert!(!rated.contains("lien public"), "{rated}");
-    let with_link = encart(json!({ "review_url": AIRBNB_URL }), Some(5));
+    let with_link = encart(json!({ "review_url": AIRBNB_URL }), Some((5, true)));
     assert!(
         with_link.contains("Note : 5 / 5 · lien public proposé"),
         "{with_link}"
     );
+    // A link configured but not shown to this guest (booked elsewhere): not « proposé ».
+    let not_shown = encart(json!({ "review_url": AIRBNB_URL }), Some((5, false)));
+    assert!(not_shown.contains("Note : 5 / 5"), "{not_shown}");
+    assert!(!not_shown.contains("lien public"), "{not_shown}");
+    // A review stored before the field: not asserted.
+    let old = MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({ "review_url": AIRBNB_URL }))
+        .with_translation(
+            "host.stay.ratedWithLink",
+            "Note : {rating} / 5 · lien public proposé",
+        )
+        .with_kv(
+            "stay:00000000-0000-4000-8000-000000000001:review",
+            serde_json::to_vec(&json!({ "rating": 5, "comment": "" })).unwrap(),
+        )
+        .run(|mut ctx| {
+            ctx.input = json!({ "stayId": "00000000-0000-4000-8000-000000000001" });
+            to_json(&render_host_stay(ctx).expect("stay encart"))
+        });
+    assert!(!old.contains("lien public"), "{old}");
     // Without a stay id: nothing to read, not rated.
     let no_stay = MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])

@@ -1,11 +1,12 @@
 //! Stay detail encart (spec Votre avis §1) : « Note : 5 / 5 · lien public proposé », ou « Pas
-//! encore noté ». Le commentaire privé reste sur la page de statistiques.
+//! encore noté ». Le lien se dit proposé d'après ce que le voyageur a vu en notant
+//! (`StoredReview::link_offered`) : l'hôte ne reçoit pas la plateforme du séjour, et un lien
+//! configuré n'est pas montré à un voyageur venu d'une autre plateforme (`shows_link`). Le
+//! commentaire privé reste sur la page de statistiques.
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{Card, Page, Text};
 use portaki_sdk::sdui::surface::Surface;
-
-use crate::config::ModuleConfig;
 
 #[portaki_sdk::surface(
     host,
@@ -22,12 +23,11 @@ pub fn render_host_stay(ctx: HostContext) -> Result<Surface> {
         Some(stay_id) => crate::commands::review_for_stay(stay_id)?,
         None => None,
     };
-    let link = ModuleConfig::load(&ctx)?.public_url().is_some();
     let line = match review {
         None => "i18n:host.stay.notYet".to_string(),
         Some(review) => {
             let rating = review.rating.to_string();
-            let key = if link {
+            let key = if review.link_offered {
                 "host.stay.ratedWithLink"
             } else {
                 "host.stay.rated"

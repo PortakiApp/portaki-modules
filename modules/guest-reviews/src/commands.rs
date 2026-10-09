@@ -93,6 +93,10 @@ pub struct StoredReview {
     /// avis d'avant la case : jamais publiés.
     #[serde(default)]
     pub public_consent: bool,
+    /// Le lien public était proposé à ce séjour quand il a noté (`shows_link` sur sa plateforme
+    /// de réservation). Absent sur les avis d'avant : non affirmé.
+    #[serde(default)]
+    pub link_offered: bool,
 }
 
 /// L'avis déjà laissé pour ce séjour, s'il y en a un.
@@ -198,6 +202,11 @@ pub fn submit_review(ctx: Context, args: SubmitReviewArgs) -> Result<()> {
         at: Some(host::time::now()?),
         guest_name: guest_name.clone(),
         public_consent: args.public_consent,
+        link_offered: crate::config::ModuleConfig::load(&ctx)?.shows_link(
+            ctx.stay
+                .as_ref()
+                .and_then(|stay| stay.booking_channel.as_deref()),
+        ),
     };
     let bytes = serde_json::to_vec(&review)
         .map_err(|error| PortakiError::Storage(format!("review serialize: {error}")))?;
