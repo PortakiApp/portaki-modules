@@ -3,8 +3,8 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
-    Card, Field, FieldHint, Form, NumberInput, Page, Select, Stack, StepList, Text, TextArea,
-    TextInput,
+    Card, ChoiceList, Field, FieldHint, Form, NumberInput, Page, Select, Stack, StepList, Text,
+    TextArea, TextInput,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -79,6 +79,40 @@ fn display_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         )
         .child(FieldHint::new().text("i18n:host.cardLimit.hint"))
         .into()
+}
+
+/// Les jours de fermeture, en choix multiple : sans objet pour un service « sur demande ».
+fn closed_days_field(
+    index: usize,
+    facility: Option<&FacilityRow>,
+    mode: &str,
+) -> Option<Component> {
+    if mode == crate::config::MODE_ON_REQUEST {
+        return None;
+    }
+    let chosen = facility.map(|f| f.closed_days.clone()).unwrap_or_default();
+    Some(
+        Field::new()
+            .name(format!("facilities.{index}.closed_days"))
+            .label("i18n:host.facility.closedDays")
+            .child(
+                ChoiceList::new()
+                    .name(format!("facilities.{index}.closed_days"))
+                    .multi(true)
+                    .layout(ChoiceListLayout::Compact)
+                    .choices(
+                        crate::schedule::WEEK
+                            .iter()
+                            .map(|day| {
+                                let key = crate::schedule::day_key(*day);
+                                ChoiceOption::new(key, format!("i18n:host.day.{key}"))
+                            })
+                            .collect(),
+                    )
+                    .value(serde_json::to_string(&chosen).unwrap_or_default()),
+            )
+            .into(),
+    )
 }
 
 /// Le champ `name`, avec le message de [`ModuleConfig::error_of`] sous lui s'il y en a un.
@@ -309,16 +343,17 @@ fn facility_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Compo
                     FieldHint::new()
                         .text("i18n:host.facility.season.hint")
                         .into(),
-                    named(config, ctx, format!("facilities.{index}.hours"))
-                        .label("i18n:host.facility.hours")
-                        .child(
-                            TextInput::new()
-                                .name(format!("facilities.{index}.hours"))
-                                .value(hours)
-                                .placeholder("i18n:host.facility.hours.placeholder"),
-                        )
-                        .into(),
                 ])
+                .chain(closed_days_field(index, facility, mode))
+                .chain([named(config, ctx, format!("facilities.{index}.hours"))
+                    .label("i18n:host.facility.hours")
+                    .child(
+                        TextInput::new()
+                            .name(format!("facilities.{index}.hours"))
+                            .value(hours)
+                            .placeholder("i18n:host.facility.hours.placeholder"),
+                    )
+                    .into()])
                 .chain(times)
                 .chain([
                     // One schedule per line.

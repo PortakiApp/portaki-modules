@@ -56,8 +56,10 @@ fn week_rows(
     let schedule = row.schedule();
     WEEK.iter()
         .map(|day| {
-            let value = if schedule.all_day {
+            let value = if schedule.all_day && !schedule.closed_on(*day) {
                 "i18n:guest.state.open".to_string()
+            } else if schedule.all_day {
+                "i18n:guest.state.closed".to_string()
             } else {
                 let spans = schedule.spans_on(*day);
                 if spans.is_empty() {
