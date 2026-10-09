@@ -4,10 +4,15 @@
   "catalog.host.main": "Nuki",
   "connector.nuki.name": "Nuki Web-account",
   "feeds.access-guide": "de toetscode",
+  "guest.credential.keypad": "Toetsenblokcode: {code}",
+  "guest.unlock.keypad": "Voer code {code} in op het toetsenblok.",
+  "guest.unlock.offline": "Het slot gaf geen antwoord. Voer code {code} in op het toetsenblok.",
+  "guest.unlock.opened": "De deur is open.",
   "host.banner.message": "Deze module levert de toetscodes aan de module Toegang; in de gastengids verschijnt er niets van. Inschakelen: Toegang tot de accommodatie → hoofdmethode ‘Slim slot’ → aanbieder ‘Nuki’. Om op afstand te openen, voeg je de sleutel van je Nuki Web-account toe bij Integraties.",
   "host.banner.title": "Codes voor de module Toegang",
   "host.deviceName.label": "Naam van het apparaat",
   "host.deviceName.placeholder": "Nuki — Voordeur",
+  "host.keypadCode.invalid": "De code heeft 6 cijfers en begint niet met 0.",
   "host.keypadCode.label": "Toetscode",
   "host.keypadCode.placeholder": "Laat leeg om de huidige code te behouden",
   "host.main.help": "Koppel deze module bij Toegang → Slim slot (aanbieder: Nuki). Voeg een toetscode voor gasten toe en, om op afstand te openen, de sleutel van je Nuki Web-account bij Integraties.",
@@ -22,9 +27,5 @@
   "module.description": "Nuki slim slot — toetscodes voor toegang van de gast",
   "module.displayName": "Nuki",
   "publish.access.hint": "Voeg een toetscode toe, of het slot-ID samen met de sleutel van je Nuki Web-account bij Integraties.",
-  "publish.access.label": "Toetscode of openen op afstand",
-  "guest.unlock.opened": "De deur is open.",
-  "guest.unlock.offline": "Het slot gaf geen antwoord. Voer code {code} in op het toetsenblok.",
-  "guest.unlock.keypad": "Voer code {code} in op het toetsenblok.",
-  "guest.credential.keypad": "Toetsenblokcode: {code}"
+  "publish.access.label": "Toetscode of openen op afstand"
 }

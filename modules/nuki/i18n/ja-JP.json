@@ -4,10 +4,15 @@
   "catalog.host.main": "Nuki",
   "connector.nuki.name": "Nuki Web アカウント",
   "feeds.access-guide": "キーパッドコード",
+  "guest.credential.keypad": "キーパッドの暗証番号：{code}",
+  "guest.unlock.keypad": "キーパッドに {code} を入力してください。",
+  "guest.unlock.offline": "スマートロックから応答がありませんでした。キーパッドに {code} を入力してください。",
+  "guest.unlock.opened": "ドアが開きました。",
   "host.banner.message": "このモジュールはキーパッドコードを「アクセス」モジュールに渡すだけで、ゲストガイドには何も表示しません。有効にするには：宿泊施設へのアクセス → 主な方法「スマートロック」→ 提供元「Nuki」。遠隔解錠には、Nuki Web アカウントのキーを「連携」に追加してください。",
   "host.banner.title": "「アクセス」モジュール用のコード",
   "host.deviceName.label": "機器名",
   "host.deviceName.placeholder": "Nuki — 玄関",
+  "host.keypadCode.invalid": "コードは6桁で、0から始まりません。",
   "host.keypadCode.label": "キーパッドコード",
   "host.keypadCode.placeholder": "空欄のままにすると現在のコードを維持します",
   "host.main.help": "このモジュールは「アクセス」→「スマートロック」（提供元：Nuki）で連携します。ゲスト用のキーパッドコードを追加し、遠隔解錠には Nuki Web アカウントのキーを「連携」に追加してください。",
@@ -22,9 +27,5 @@
   "module.description": "Nuki スマートロック — ゲストのアクセス用キーパッドコード",
   "module.displayName": "Nuki",
   "publish.access.hint": "キーパッドコードを追加するか、ロックの識別子と Nuki Web アカウントのキーを「連携」に追加してください。",
-  "publish.access.label": "キーパッドコードまたは遠隔解錠",
-  "guest.unlock.opened": "ドアが開きました。",
-  "guest.unlock.offline": "スマートロックから応答がありませんでした。キーパッドに {code} を入力してください。",
-  "guest.unlock.keypad": "キーパッドに {code} を入力してください。",
-  "guest.credential.keypad": "キーパッドの暗証番号：{code}"
+  "publish.access.label": "キーパッドコードまたは遠隔解錠"
 }

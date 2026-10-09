@@ -11,7 +11,7 @@ use crate::config::ModuleConfig;
 #[portaki_sdk::surface(
     host,
     id = "main",
-    placement = HostPlacement::PropertyWorkspaceTab,
+    placement = HostPlacement::PropertyModuleSheet,
     design_id = DesignId::NukiEditorV1,
     label_key = "catalog.host.main",
     icon = IconName::Lock
@@ -19,6 +19,14 @@ use crate::config::ModuleConfig;
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let config = ModuleConfig::load(&ctx)?;
 
+    // Le champ, avec le message de `problems` sous lui s'il y en a un.
+    let named = |config: &ModuleConfig, ctx: &HostContext, name: &str| {
+        let field = Field::new().name(name);
+        match config.error_of(name) {
+            Some(error) => field.error(error.get(&ctx.locale).to_string()),
+            None => field,
+        }
+    };
     let form_children: Vec<Component> = vec![
         InfoBanner::new()
             .title("i18n:host.banner.title")
@@ -29,13 +37,12 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
             .subtitle("i18n:host.section.device.help")
             .icon(IconName::Lock)
             .children(vec![
-                Field::new()
-                    .name("device_name")
+                named(&config, &ctx, "device_name")
                     .label("i18n:host.deviceName.label")
                     .child(
                         TextInput::new()
                             .name("device_name")
-                            .value(config.device_name)
+                            .value(config.device_name.clone())
                             .placeholder("i18n:host.deviceName.placeholder"),
                     )
                     .into(),
@@ -45,12 +52,11 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
                     .child(
                         TextInput::new()
                             .name("smartlock_id")
-                            .value(config.smartlock_id)
+                            .value(config.smartlock_id.clone())
                             .placeholder("i18n:host.smartlockId.placeholder"),
                     )
                     .into(),
-                Field::new()
-                    .name("keypad_code")
+                named(&config, &ctx, "keypad_code")
                     .label("i18n:host.keypadCode.label")
                     .child(
                         SecretInput::new()

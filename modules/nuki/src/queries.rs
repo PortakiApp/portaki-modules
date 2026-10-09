@@ -13,13 +13,27 @@ use crate::i18n::text;
 pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
     let config = ModuleConfig::load(&ctx)?;
     let remote = crate::commands::has_nuki_byok(&ctx) && !config.smartlock_id_trimmed().is_empty();
-    Ok(PublishReadiness {
-        items: vec![PublishCheck {
-            id: "guest-access".into(),
-            level: PublishLevel::Required,
-            ok: !config.keypad_code_trimmed().is_empty() || remote,
-            label: text("publish.access.label"),
-            hint: text("publish.access.hint"),
-        }],
-    })
+    let mut items = vec![PublishCheck {
+        id: "guest-access".into(),
+        level: PublishLevel::Required,
+        ok: !config.keypad_code_trimmed().is_empty() || remote,
+        label: text("publish.access.label"),
+        hint: text("publish.access.hint"),
+    }];
+    items.extend(
+        config
+            .problems()
+            .into_iter()
+            .map(|(field, error)| PublishCheck {
+                id: format!("config.{field}"),
+                level: PublishLevel::Required,
+                ok: false,
+                label: text(match field {
+                    "keypad_code" => "host.keypadCode.label",
+                    _ => "host.deviceName.label",
+                }),
+                hint: error,
+            }),
+    );
+    Ok(PublishReadiness { items })
 }
