@@ -24,7 +24,7 @@ When codes are revealed, access-guide sends guest commands `unlock` and `getGues
 |------------|------|
 | `access.smart_lock` | **Provided** — peer discovery for access-guide |
 | `core.storage` | **Required** — the pre-platform KV config, read once by the platform import (`legacyConfig`) |
-| `external.nuki.byok` | **Optional** — Nuki Web API token for `POST …/action/unlock` |
+| `external.nuki.byok` | **Optional** — Nuki Web API token for remote unlock and per-stay codes |
 
 ## Config
 
@@ -36,9 +36,19 @@ keypad code, or remote unlock (`external.nuki.byok` granted + `smartlock_id`).
 {
   "smartlock_id": "…",
   "keypad_code": "……",
-  "device_name": "…"
+  "device_name": "…",
+  "code_per_stay": true
 }
 ```
+
+### One code per stay (`code_per_stay`, default `true`)
+
+With the Nuki Web key and a lock ID, the guest's first reveal looks for a keypad authorization
+named `Portaki <first 8 chars of the stay id>` on the lock (`GET /smartlock/{id}/auth`) and, if
+none, creates one (`PUT /smartlock/{id}/auth`, type 13) valid from check-in to check-out. Nuki is
+the store: no KV (host-side writes would land in the draft layer the guest never reads). The
+catalogue opens no delete or update, so codes are only bounded by `allowedUntilDate`. Any Nuki
+error, or a lock that did not answer `unlock`, falls back to `keypad_code` (spec §9 #1).
 
 ## Guest commands
 
@@ -53,7 +63,8 @@ Remote unlock uses the module connector `nuki` / `remote_unlock` (Bearer, path `
 
 | Shell | Surface id | Description |
 |-------|------------|-------------|
-| host | `main` | Smart lock ID, keypad code, device name |
+| host | `main` | Smart lock ID, keypad code, device name, one code per stay |
+| host | `stay` | Stay detail: access window and the stay's code, read from the lock |
 
 ## Development
 

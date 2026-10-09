@@ -15,6 +15,7 @@ fn setup(builder: MockContextBuilder) -> MockContextBuilder {
         smartlock_id: "lock-abc".into(),
         keypad_code: "482910".into(),
         device_name: "Porte d'entrée".into(),
+        ..ModuleConfig::default()
     })
 }
 

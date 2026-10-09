@@ -21,6 +21,10 @@
     {
       "fr": "Code clavier des voyageurs",
       "en": "Guest keypad code"
+    },
+    {
+      "fr": "Un code par séjour, valable de l’arrivée au départ",
+      "en": "One code per stay, valid from arrival to departure"
     }
   ],
   "capabilities": [

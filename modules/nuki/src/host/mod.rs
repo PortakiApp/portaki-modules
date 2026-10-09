@@ -1,8 +1,12 @@
-//! Host dashboard surface — design `editorNuki` / `nuki-editor-v1`.
+//! Host dashboard surfaces — design `editorNuki` / `nuki-editor-v1`, and the stay encart.
+
+mod stay;
+
+pub use stay::render_host_stay;
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{
-    Card, Field, Form, InfoBanner, Page, SecretInput, Stack, TextInput,
+    Card, Field, Form, InfoBanner, Page, SecretInput, Stack, TextInput, ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -65,6 +69,13 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
                             .value(String::new())
                             .placeholder("i18n:host.keypadCode.placeholder"),
                     )
+                    .into(),
+                ToggleRow::new()
+                    .name("code_per_stay")
+                    .label("i18n:host.codePerStay.label")
+                    .description("i18n:host.codePerStay.help")
+                    .icon(IconName::Lock)
+                    .checked(config.code_per_stay)
                     .into(),
             ])
             .into(),
