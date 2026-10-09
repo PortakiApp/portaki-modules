@@ -15,8 +15,15 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         .into_iter()
         .map(|(field, error)| PublishCheck {
             label: crate::i18n::text(field_label(&field)),
+            // Un rayon hors bornes avertit sans bloquer : l'ancien sélecteur offrait 60 et 100 km,
+            // et ces hôtes ne doivent pas se retrouver bloqués à la publication suivante. La
+            // recherche le borne déjà à 50.
+            level: if field == "radius_km" {
+                PublishLevel::Recommended
+            } else {
+                PublishLevel::Required
+            },
             id: format!("config.{field}"),
-            level: PublishLevel::Required,
             ok: false,
             hint: error,
         })
@@ -84,7 +91,7 @@ mod tests {
     use portaki_test_utils::{MockContext, Property};
     use serde_json::json;
 
-    /// Un lieu au-delà du rayon avertit, sans bloquer (§2.2) ; un rayon hors de 1 à 50 bloque.
+    /// Un lieu au-delà du rayon avertit, sans bloquer (§2.2) ; un rayon hors de 1 à 50 aussi.
     #[test]
     #[serial_test::serial]
     fn a_place_beyond_the_radius_warns() {
@@ -117,7 +124,7 @@ mod tests {
                 let items = publish_readiness(ctx).unwrap().items;
                 assert_eq!(items.len(), 1, "{items:?}");
                 assert_eq!(items[0].id, "config.radius_km");
-                assert_eq!(items[0].level, PublishLevel::Required);
+                assert_eq!(items[0].level, PublishLevel::Recommended);
                 assert_eq!(items[0].hint.get("fr"), "Entre 1 et 50 km.");
             });
     }
