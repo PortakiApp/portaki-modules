@@ -1,5 +1,6 @@
 //! Portaki waste-recycling module — bins and collection schedule.
 
+mod amenities;
 mod collection;
 mod config;
 mod email_context;
@@ -8,6 +9,7 @@ mod host;
 mod i18n;
 mod queries;
 
+pub use amenities::amenities_list;
 pub use collection::{next_collection, Departure, NextCollection};
 pub use config::{BinRow, DropoffRow, ModuleConfig};
 pub use email_context::email_blocks;
@@ -29,3 +31,6 @@ portaki_sdk::portaki_module!(
 
 #[portaki_sdk::capability(required, id = "core.storage")]
 pub const STORAGE: &str = "core.storage";
+
+#[portaki_sdk::capability(provided, id = "amenities.provide")]
+pub const AMENITIES: &str = "amenities.provide";
