@@ -3,6 +3,7 @@
   "surfaces": [
     {
       "i18n": {
+        "explore.detail.lastTrain.title": "Plus de train aujourd’hui",
         "explore.detail.station.all": "Toutes les gares",
         "explore.detail.station.label.from": "Gare d’arrivée",
         "explore.detail.upcoming": "Prochains départs"
@@ -72,6 +73,11 @@
                         "icon": "train",
                         "label": "Cannes (Cannes)",
                         "value": "Cannes (Cannes)"
+                      },
+                      {
+                        "icon": "train",
+                        "label": "Vintimille (Vintimille)",
+                        "value": "Vintimille (Vintimille)"
                       }
                     ],
                     "emitOnChange": true,
@@ -101,65 +107,96 @@
           {
             "children": [
               {
-                "action": {
-                  "to": "train/20261004-0812-17654",
-                  "type": "navigate"
-                },
-                "chevron": true,
-                "leading": {
-                  "time": "08:12"
-                },
-                "subtitle": "17654 · Demain",
-                "title": "Nice-Ville (Nice)",
-                "trailing": {
-                  "badge": {
-                    "label": "+2 min",
-                    "tone": "warning"
-                  }
-                },
-                "type": "ListItem"
+                "message": "Premier train demain à 08:12.",
+                "title": "i18n:explore.detail.lastTrain.title",
+                "tone": "info",
+                "type": "InfoBanner"
               },
               {
-                "action": {
-                  "to": "train/20261004-0842-86021",
-                  "type": "navigate"
-                },
-                "chevron": true,
-                "leading": {
-                  "time": "08:42"
-                },
-                "subtitle": "86021 · Demain",
-                "title": "Cannes (Cannes)",
-                "trailing": {
-                  "badge": {
-                    "label": "TGV INOUI",
-                    "tone": "neutral"
+                "children": [
+                  {
+                    "action": {
+                      "to": "train/20261004-0812-17654",
+                      "type": "navigate"
+                    },
+                    "chevron": true,
+                    "leading": {
+                      "time": "08:12"
+                    },
+                    "subtitle": "17654 · Demain",
+                    "title": "Nice-Ville (Nice)",
+                    "trailing": {
+                      "badge": {
+                        "label": "+2 min",
+                        "tone": "warning"
+                      }
+                    },
+                    "type": "ListItem"
+                  },
+                  {
+                    "action": {
+                      "to": "train/20261004-0842-86021",
+                      "type": "navigate"
+                    },
+                    "chevron": true,
+                    "leading": {
+                      "time": "08:42"
+                    },
+                    "subtitle": "86021 · Demain",
+                    "title": "Cannes (Cannes)",
+                    "trailing": {
+                      "badge": {
+                        "label": "TGV INOUI",
+                        "tone": "neutral"
+                      }
+                    },
+                    "type": "ListItem"
+                  },
+                  {
+                    "action": {
+                      "to": "train/20261005-0521-nice-ville--nice-",
+                      "type": "navigate"
+                    },
+                    "chevron": true,
+                    "leading": {
+                      "time": "05:21"
+                    },
+                    "subtitle": "Demain",
+                    "title": "Nice-Ville (Nice)",
+                    "trailing": {
+                      "badge": {
+                        "label": "TER",
+                        "tone": "neutral"
+                      }
+                    },
+                    "type": "ListItem"
+                  },
+                  {
+                    "action": {
+                      "to": "train/20261004-0930-86099",
+                      "type": "navigate"
+                    },
+                    "chevron": true,
+                    "leading": {
+                      "time": "09:30"
+                    },
+                    "subtitle": "86099 · Demain",
+                    "title": "Vintimille (Vintimille)",
+                    "trailing": {
+                      "badge": {
+                        "label": "Supprimé",
+                        "tone": "danger"
+                      }
+                    },
+                    "type": "ListItem"
                   }
-                },
-                "type": "ListItem"
-              },
-              {
-                "action": {
-                  "to": "train/20261005-0521-nice-ville--nice-",
-                  "type": "navigate"
-                },
-                "chevron": true,
-                "leading": {
-                  "time": "05:21"
-                },
-                "subtitle": "Demain",
-                "title": "Nice-Ville (Nice)",
-                "trailing": {
-                  "badge": {
-                    "label": "TER",
-                    "tone": "neutral"
-                  }
-                },
-                "type": "ListItem"
+                ],
+                "surface": "elevated",
+                "type": "Card"
               }
             ],
-            "surface": "elevated",
-            "type": "Card"
+            "gap": 8.0,
+            "type": "Stack"
           },
           {
             "emphasis": "subtle",
@@ -282,6 +319,7 @@
     },
     {
       "i18n": {
+        "explore.detail.lastTrain.title": "Plus de train aujourd’hui",
         "home.card.title": "Horaires trains"
       },
       "surfaceId": "home.card",
@@ -301,6 +339,12 @@
             "text": "Gare d'Antibes",
             "type": "Text",
             "variant": "caption"
+          },
+          {
+            "message": "Premier train demain à 08:12.",
+            "title": "i18n:explore.detail.lastTrain.title",
+            "tone": "info",
+            "type": "InfoBanner"
           },
           {
             "action": {
@@ -355,6 +399,25 @@
               "badge": {
                 "label": "TER",
                 "tone": "neutral"
+              }
+            },
+            "type": "ListItem"
+          },
+          {
+            "action": {
+              "to": "train/20261004-0930-86099",
+              "type": "navigate"
+            },
+            "chevron": true,
+            "leading": {
+              "time": "09:30"
+            },
+            "subtitle": "86099 · Demain",
+            "title": "Vintimille (Vintimille)",
+            "trailing": {
+              "badge": {
+                "label": "Supprimé",
+                "tone": "danger"
               }
             },
             "type": "ListItem"

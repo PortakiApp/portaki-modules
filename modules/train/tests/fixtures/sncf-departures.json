@@ -40,12 +40,34 @@
       }
     },
     {
+      "stop_date_time": {
+        "departure_date_time": "20261004T093000",
+        "data_freshness": "realtime"
+      },
+      "display_informations": {
+        "direction": "Vintimille (Vintimille)",
+        "headsign": "86099",
+        "commercial_mode": "TER",
+        "links": [
+          { "type": "disruption", "rel": "disruptions", "id": "dis-86099", "internal": true }
+        ]
+      }
+    },
+    {
       "stop_date_time": { "data_freshness": "realtime" },
       "display_informations": { "direction": "Sans horaire" }
     },
     {
       "stop_date_time": { "departure_date_time": "20261004T090500" },
       "display_informations": { "headsign": "sans direction" }
+    }
+  ],
+  "disruptions": [
+    {
+      "id": "dis-86099",
+      "status": "active",
+      "severity": { "name": "trip canceled", "effect": "NO_SERVICE" },
+      "messages": [{ "text": "Train supprimé" }]
     }
   ]
 }

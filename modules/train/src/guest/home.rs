@@ -28,6 +28,7 @@ pub fn build_home_card(view: &BoardView) -> Surface {
                 .icon(IconName::Train),
         ));
     }
+    children.extend(super::detail::last_train_banner(view));
     children.extend(
         view.stops
             .iter()
@@ -69,7 +70,8 @@ fn card(children: Vec<Component>) -> Card {
 /// La flèche suit le sens, sans quoi la carte d'avant l'arrivée annonce le train qu'on prendrait
 /// en partant.
 fn upcoming_headline(view: &BoardView, way: Way) -> String {
-    match view.stops.first() {
+    // Un train supprimé ne s'annonce pas comme celui qui amène le voyageur.
+    match view.stops.iter().find(|stop| !stop.cancelled) {
         Some(stop) => {
             let (from, to) = match way {
                 Way::From => (&view.station.label, &stop.direction),
@@ -115,6 +117,7 @@ mod tests {
             network: None,
             realtime: true,
             delay_min: None,
+            cancelled: false,
         };
         // Avant l'arrivée, le train qui amène : la destination est le logement, pas l'inverse.
         assert_eq!(

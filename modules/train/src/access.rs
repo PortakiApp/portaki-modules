@@ -32,6 +32,20 @@ pub fn access(station: &Station, home: Option<GeoPoint>) -> Option<Access> {
     })
 }
 
+/// Au-delà, la gare n'est plus celle du logement (spec §9 #4).
+pub const NEAR_LIMIT_KM: f64 = 30.0;
+
+/// La gare est-elle à plus de [`NEAR_LIMIT_KM`] du logement, à vol d'oiseau ? `false` quand l'un
+/// des deux n'est pas placé : on n'avertit pas sur une distance qu'on ne connaît pas.
+pub fn too_far(station: &Station, home: Option<GeoPoint>) -> bool {
+    match (station.lat, station.lng, home) {
+        (Some(lat), Some(lng), Some(home)) => {
+            haversine_km(lat, lng, home.lat, home.lng) > NEAR_LIMIT_KM
+        }
+        _ => false,
+    }
+}
+
 fn haversine_km(lat1: f64, lng1: f64, lat2: f64, lng2: f64) -> f64 {
     let (p1, p2) = (lat1.to_radians(), lat2.to_radians());
     let dp = (lat2 - lat1).to_radians();
@@ -62,6 +76,21 @@ mod tests {
         let access = access(&antibes(), Some(home)).unwrap();
         assert!((12..=20).contains(&access.walk_min), "{access:?}");
         assert!(access.drive_min <= 3, "{access:?}");
+    }
+
+    #[test]
+    fn a_station_beyond_thirty_km_is_too_far() {
+        let near = GeoPoint {
+            lat: 43.58,
+            lng: 7.12,
+        };
+        let paris = GeoPoint {
+            lat: 48.85,
+            lng: 2.35,
+        };
+        assert!(!too_far(&antibes(), Some(near)));
+        assert!(too_far(&antibes(), Some(paris)));
+        assert!(!too_far(&antibes(), None));
     }
 
     #[test]

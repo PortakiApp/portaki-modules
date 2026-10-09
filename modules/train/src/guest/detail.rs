@@ -6,7 +6,7 @@ use portaki_sdk::sdui::common::{
     BadgeSpec, Emphasis, Leading, LeadingVisual, SurfaceLevel, Tone, Trailing, TrailingVisual,
 };
 use portaki_sdk::sdui::primitives::{
-    Card, ChoiceList, EmptyState, ErrorState, Field, FieldHint, ListItem, Stack, Text,
+    Card, ChoiceList, EmptyState, ErrorState, Field, FieldHint, InfoBanner, ListItem, Stack, Text,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -202,11 +202,42 @@ fn schedule(view: &BoardView, filtered: bool) -> Component {
         .iter()
         .map(|stop| departure_row(view, stop))
         .collect();
-    Component::Card(
+    let card = Component::Card(
         Card::new()
             .surface(SurfaceLevel::Elevated)
             .children(children),
-    )
+    );
+    match last_train_banner(view) {
+        Some(banner) => Component::Stack(Stack::new().gap(8.0).child(banner).child(card)),
+        None => card,
+    }
+}
+
+/// « Plus de train aujourd'hui · Premier train demain à 05:21 » (§9 #3).
+///
+/// Le tableau ne regarde que les 24 h qui suivent : quand aucune de ses lignes n'est pour
+/// aujourd'hui, le dernier train est passé, et la première ligne qui roule est celle du lendemain.
+pub fn last_train_banner(view: &BoardView) -> Option<Component> {
+    if view.stops.is_empty() || !view.stops.iter().all(|stop| view.is_later_day(stop)) {
+        return None;
+    }
+    let first = view
+        .stops
+        .iter()
+        .filter(|stop| !stop.cancelled)
+        .min_by_key(|stop| (stop.date.as_str(), stop.time.as_str()))?;
+    Some(Component::InfoBanner(
+        InfoBanner::new()
+            .tone(Tone::Info)
+            .title("i18n:explore.detail.lastTrain.title")
+            .message(
+                t!(
+                    "explore.detail.lastTrain.message",
+                    time = first.time.as_str()
+                )
+                .unwrap_or_else(|_| "i18n:explore.detail.lastTrain.message".into()),
+            ),
+    ))
 }
 
 /// La phrase de l'hôte si elle existe, la fraîcheur du tableau sinon.
@@ -281,6 +312,15 @@ pub fn departure_row(view: &BoardView, stop: &Stop) -> Component {
 /// « TER », qui est déjà dans la fiche. Sans temps réel, il n'y a pas d'état à annoncer : le mode
 /// reprend la place plutôt que de laisser croire à un « à l'heure » vérifié.
 pub fn status_badge(stop: &Stop) -> Option<BadgeSpec> {
+    // Supprimé passe avant tout : un retard sur un train qui ne roule pas n'a pas de sens (§9 #2).
+    if stop.cancelled {
+        return Some(BadgeSpec {
+            label: t!("explore.detail.status.cancelled")
+                .unwrap_or_else(|_| "i18n:explore.detail.status.cancelled".into()),
+            tone: Tone::Danger,
+            dot: false,
+        });
+    }
     match (stop.delay_min, stop.realtime) {
         (Some(late), _) => Some(BadgeSpec {
             label: delay_label(late),

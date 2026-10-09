@@ -13,7 +13,14 @@ const TILE_WIDTH: f64 = 96.0;
 
 pub fn build_item_page(view: &BoardView, stop: &Stop, way: Way) -> Surface {
     let mut children: Vec<Component> = vec![header(view, stop, way)];
-    if let Some(late) = stop.delay_min {
+    if stop.cancelled {
+        children.push(Component::InfoBanner(
+            InfoBanner::new()
+                .tone(Tone::Danger)
+                .title("i18n:explore.item.cancelled.title")
+                .message("i18n:explore.item.cancelled.message"),
+        ));
+    } else if let Some(late) = stop.delay_min {
         children.push(delay_banner(stop, late));
     }
     children.extend([measures(view, stop), station_card(view)]);
