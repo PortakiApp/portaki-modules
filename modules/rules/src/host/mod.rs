@@ -40,7 +40,7 @@ pub fn render_host_main(ctx: HostContext) -> Surface {
         .unwrap_or_default();
     let payload = {
         let current = bundle.get(&lang);
-        if current.is_empty() {
+        if current.items.is_empty() {
             default_for_lang(&lang)
         } else {
             current
@@ -120,11 +120,7 @@ fn draft_items_count(ctx: &HostContext, payload: &RulesPayload) -> usize {
     if let Some(n) = ctx.input_u64("items_count") {
         return (n as usize).clamp(1, ITEM_SLOTS);
     }
-    let existing = payload
-        .items
-        .iter()
-        .filter(|item| !item.title.trim().is_empty())
-        .count();
+    let existing = payload.items.iter().filter(|item| !item.is_blank()).count();
     if existing == 0 {
         // Empty store → seed the four design defaults in the form.
         default_for_lang("fr").items.len().min(ITEM_SLOTS)

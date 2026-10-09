@@ -27,6 +27,7 @@
   "host.rule.subtitle": "Précision",
   "host.rule.theme": "Thème",
   "host.rule.title": "Règle",
+  "host.rule.title.required": "Écrivez la règle.",
   "host.rules.add": "Ajouter une règle",
   "host.rules.emptyDescription": "Ajoutez les consignes que vos voyageurs doivent connaître.",
   "host.rules.emptyTitle": "Aucune règle",

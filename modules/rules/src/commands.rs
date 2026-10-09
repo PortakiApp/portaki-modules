@@ -123,17 +123,19 @@ pub fn save_content(ctx: Context, args: SaveContentArgs) -> Result<()> {
 fn build_payload_for_lang(items: &[RuleItemInput]) -> RulesPayload {
     let mut out = Vec::new();
     for item in items {
-        if item.title.trim().is_empty() {
-            continue;
-        }
-        out.push(RuleItem {
+        let rule = RuleItem {
             icon: item.icon.trim().to_string(),
             title: item.title.trim().to_string(),
             subtitle: item.subtitle.trim().to_string(),
             status: RuleStatus::from_wire(&item.status),
             theme: item.theme.trim().to_string(),
             hours: item.hours.trim().to_string(),
-        });
+        };
+        // Une ligne vidée s'en va ; une précision sans titre reste, avec « Écrivez la règle. »
+        // sous son titre — l'écarter perdait ce que l'hôte avait écrit, sans un mot.
+        if !rule.is_blank() {
+            out.push(rule);
+        }
     }
     RulesPayload {
         items: out,

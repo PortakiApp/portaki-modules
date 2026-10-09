@@ -99,11 +99,22 @@ impl RuleItem {
             .copied()
     }
 
-    /// Les longueurs de la spec (§2.2), par champ du formulaire : titre ≤ 60, précision ≤ 280.
+    /// Ni titre ni précision : une ligne vidée, que l'enregistrement écarte sans rien dire.
+    pub fn is_blank(&self) -> bool {
+        self.title.trim().is_empty() && self.subtitle.trim().is_empty()
+    }
+
+    /// Les erreurs de la spec (§2.2), par champ du formulaire : un titre, s'il y a une précision
+    /// (« Écrivez la règle. ») ; titre ≤ 60, précision ≤ 280.
     pub fn problems(&self) -> Vec<(&'static str, portaki_sdk::contracts::i18n::I18nText)> {
         use portaki_sdk::config::check::max_chars;
+        let title = if self.title.trim().is_empty() && !self.is_blank() {
+            Some(crate::i18n::text("host.rule.title.required"))
+        } else {
+            max_chars(&self.title, TITLE_MAX)
+        };
         [
-            ("title", max_chars(&self.title, TITLE_MAX)),
+            ("title", title),
             ("subtitle", max_chars(&self.subtitle, DETAIL_MAX)),
         ]
         .into_iter()
@@ -270,9 +281,11 @@ impl RulesBundle {
             .unwrap_or_default()
     }
 
+    /// Une langue sans aucune ligne disparaît ; une ligne sans titre reste, pour que le
+    /// formulaire la montre avec son erreur.
     pub fn set(&mut self, lang: &str, payload: RulesPayload) {
         let code = Self::lang_code(lang);
-        if payload.is_empty() {
+        if payload.items.is_empty() {
             self.by_lang.remove(&code);
         } else {
             self.by_lang.insert(code, payload);

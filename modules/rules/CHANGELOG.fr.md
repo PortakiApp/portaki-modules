@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.1
+
+Une règle sans titre n'est plus perdue.
+
+* Une précision écrite sans titre reste dans le formulaire, avec « Écrivez la règle. » sous son titre, au lieu de disparaître à l'enregistrement.
+* Tant que ce titre manque, le règlement ne peut pas être publié ; une ligne entièrement vide est toujours retirée sans message.
+
 ## 1.8.0
 
 Types, thèmes et horaires.

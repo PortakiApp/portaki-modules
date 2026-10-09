@@ -27,6 +27,7 @@
   "host.rule.subtitle": "说明",
   "host.rule.theme": "主题",
   "host.rule.title": "规则",
+  "host.rule.title.required": "请填写守则。",
   "host.rules.add": "添加守则",
   "host.rules.emptyDescription": "添加您希望房客知道的守则。",
   "host.rules.emptyTitle": "暂无守则",

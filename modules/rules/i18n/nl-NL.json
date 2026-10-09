@@ -27,6 +27,7 @@
   "host.rule.subtitle": "Toelichting",
   "host.rule.theme": "Thema",
   "host.rule.title": "Regel",
+  "host.rule.title.required": "Schrijf de regel.",
   "host.rules.add": "Regel toevoegen",
   "host.rules.emptyDescription": "Voeg de regels toe die je gasten moeten kennen.",
   "host.rules.emptyTitle": "Geen regels",

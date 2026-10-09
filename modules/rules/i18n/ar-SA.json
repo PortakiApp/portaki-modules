@@ -27,6 +27,7 @@
   "host.rule.subtitle": "التفاصيل",
   "host.rule.theme": "الموضوع",
   "host.rule.title": "القاعدة",
+  "host.rule.title.required": "اكتب القاعدة.",
   "host.rules.add": "إضافة قاعدة",
   "host.rules.emptyDescription": "أضف القواعد التي ينبغي أن يعرفها ضيوفك.",
   "host.rules.emptyTitle": "لا قواعد",

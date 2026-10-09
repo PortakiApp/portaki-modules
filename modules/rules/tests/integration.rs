@@ -594,3 +594,91 @@ fn host_rows_carry_status_and_theme() {
             assert!(json.contains(r#""name":"card_limit""#), "{json}");
         });
 }
+
+/// Une précision sans titre n'est plus écartée en silence : la ligne reste, « Écrivez la règle. »
+/// sous son titre, et la publication attend. Une ligne vidée, elle, s'en va sans erreur (§2.2).
+#[test]
+#[serial]
+fn a_detail_without_a_title_keeps_its_row_and_its_error() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            update_config(
+                ctx.clone(),
+                SaveContentArgs {
+                    card_limit: None,
+                    items: vec![
+                        RuleItemInput {
+                            title: "Pas de fête".into(),
+                            ..Default::default()
+                        },
+                        RuleItemInput {
+                            subtitle: "Merci pour le voisinage".into(),
+                            ..Default::default()
+                        },
+                        RuleItemInput::default(),
+                    ],
+                    content_fr: String::new(),
+                    content_en: String::new(),
+                },
+            )
+            .expect("updateConfig");
+
+            let view = get_content(
+                ctx.clone(),
+                GetContentArgs {
+                    locale: Some("fr-FR".into()),
+                },
+            )
+            .expect("get");
+            assert_eq!(view.items.len(), 2, "la ligne vidée s'en va");
+            assert_eq!(view.items[1].subtitle, "Merci pour le voisinage");
+
+            let readiness = publish_readiness(ctx.clone()).expect("publishReadiness");
+            let title = readiness
+                .items
+                .iter()
+                .find(|item| item.id == "config.items.1.title")
+                .expect("erreur du titre");
+            assert!(!title.ok);
+            assert_eq!(title.hint.get("fr"), "Écrivez la règle.");
+            assert_eq!(readiness.items.len(), 2, "{:?}", readiness.items);
+
+            let json = serde_json::to_string(&render_host_main(ctx)).expect("json");
+            assert!(json.contains("items.1.subtitle"), "{json}");
+            assert!(json.contains(r#""error":"Écrivez la règle.""#), "{json}");
+            assert!(!json.contains("items.2.title"), "{json}");
+        });
+}
+
+/// Une règle seule, sans titre : rien n'est publié, mais elle reste dans le formulaire.
+#[test]
+#[serial]
+fn a_lone_untitled_rule_is_not_a_rule_yet() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            update_config(
+                ctx.clone(),
+                SaveContentArgs {
+                    card_limit: None,
+                    items: vec![RuleItemInput {
+                        subtitle: "Merci pour le voisinage".into(),
+                        ..Default::default()
+                    }],
+                    content_fr: String::new(),
+                    content_en: String::new(),
+                },
+            )
+            .expect("updateConfig");
+            assert!(!publish_readiness(ctx.clone()).expect("readiness").items[0].ok);
+            let json = serde_json::to_string(&render_host_main(ctx)).expect("json");
+            // Pas le modèle par défaut à la place du brouillon.
+            assert!(json.contains("Merci pour le voisinage"), "{json}");
+            assert!(!json.contains("Logement non-fumeur"), "{json}");
+        });
+}
