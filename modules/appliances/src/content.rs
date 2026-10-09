@@ -125,16 +125,11 @@ impl AppliancesPayload {
             ));
         }
         for (index, device) in self.devices.iter().enumerate() {
-            let name_required = device
-                .name
-                .trim()
-                .is_empty()
-                .then(|| crate::i18n::text("host.device.name.required"));
+            // Pas de « Donnez un nom à l'appareil. » ici : `saveAppliance` refuse déjà un nom vide,
+            // et le seul nom vide stocké est une traduction pas encore faite (`sync_shared_from`
+            // en sème une par langue) — la signaler en Required bloquerait la publication.
             for (key, error) in [
-                (
-                    "name",
-                    name_required.or_else(|| check::max_chars(&device.name, 60)),
-                ),
+                ("name", check::max_chars(&device.name, 60)),
                 ("location", check::max_chars(&device.location, 30)),
                 ("safetyNote", check::max_chars(&device.safety_note, 280)),
                 (
@@ -869,19 +864,6 @@ mod tests {
         assert_eq!(
             error_fr(&payload, "devices").as_deref(),
             Some("60 appareils au maximum.")
-        );
-    }
-
-    #[test]
-    fn an_appliance_without_a_name_is_reported_under_its_name() {
-        let payload = AppliancesPayload {
-            devices: vec![named("Four"), named("  ")],
-            ..AppliancesPayload::default()
-        };
-        assert_eq!(error_fr(&payload, "devices.0.name"), None);
-        assert_eq!(
-            error_fr(&payload, "devices.1.name").as_deref(),
-            Some("Donnez un nom à l'appareil.")
         );
     }
 
