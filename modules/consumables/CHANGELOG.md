@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.8.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.7.0...consumables-v2.8.0) (2026-10-09)
+
+
+### Features
+
+* **weather:** set where and what to forecast ([d60b8fa](https://github.com/PortakiApp/portaki-modules/commit/d60b8fa7496da66a59b02ae1844e19ee0f317187))
+
 ## [2.7.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.6.0...consumables-v2.7.0) (2026-10-08)
 
 

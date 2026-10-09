@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.4.3...weather-v1.5.0) (2026-10-09)
+
+
+### Features
+
+* **weather:** set where and what to forecast ([d60b8fa](https://github.com/PortakiApp/portaki-modules/commit/d60b8fa7496da66a59b02ae1844e19ee0f317187))
+
 ## [1.4.3](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.4.2...weather-v1.4.3) (2026-10-08)
 
 
