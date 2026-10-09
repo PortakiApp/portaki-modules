@@ -1,0 +1,7 @@
+{
+  "email.departureReminder.subject": "ご出発の前に、チェックリストのご確認を",
+  "email.departureReminder.eyebrow": "出発",
+  "email.departureReminder.title": "ご出発の前に、残りの手順があります",
+  "email.departureReminder.body": "出発時のチェックリストがまだ終わっていません。鍵を返却する前に、残りの手順にチェックを入れてください。",
+  "email.departureReminder.cta": "チェックリストを開く"
+}

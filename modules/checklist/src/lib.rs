@@ -2,6 +2,7 @@
 
 mod commands;
 mod email_context;
+mod email_i18n;
 mod entities;
 mod guest;
 mod host;
@@ -10,6 +11,7 @@ mod ids;
 mod labels;
 mod lists;
 mod queries;
+mod remind;
 mod show_when;
 mod storage;
 mod tasks;
@@ -27,6 +29,7 @@ pub use host::{
     stats_summary,
 };
 pub use queries::{list_completions, list_items, publish_readiness, ChecklistItemDto};
+pub use remind::send_departure_reminder;
 pub use storage::{items_of, list_checklists, reset_test_store};
 pub use tasks::{task_complete, task_id, task_toggle, timeline_tasks};
 

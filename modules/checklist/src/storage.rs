@@ -89,6 +89,12 @@ fn remove<T: Row>(table: &'static Table<T>, id: Uuid) -> Result<()> {
 pub fn list_checklists() -> Result<Vec<Checklist>> {
     let mut rows = select(&TEST_LISTS, None)?;
     adopt_legacy_config(&mut rows)?;
+    for list in &mut rows {
+        // « Avant l'arrivée » is no longer offered: such a list reads as « Pendant tout le séjour ».
+        if list.audience == lists::GUEST && list.trigger == lists::BEFORE_ARRIVAL {
+            list.trigger = lists::DURING_STAY.to_string();
+        }
+    }
     rows.sort_by(|a, b| {
         a.sort_order
             .cmp(&b.sort_order)
@@ -173,8 +179,8 @@ fn adopt_legacy_config(rows: &mut [Checklist]) -> Result<()> {
         .and_then(|config| config["show_when"].as_str().map(str::to_string))
         .unwrap_or_default();
     let trigger = match show_when.as_str() {
-        "always" => lists::BEFORE_ARRIVAL,
-        "before_checkout" | "checkout_day" => lists::AT_DEPARTURE,
+        "before_checkout" => lists::AT_DEPARTURE,
+        "checkout_day" => lists::DEPARTURE_DAY,
         _ => lists::DURING_STAY,
     };
     if list.trigger != trigger {
@@ -356,7 +362,7 @@ pub fn set_task_item(
 
 // --- Display settings of a guest list ------------------------------------------------------
 
-/// « Étapes visibles » and « Message final » of a guest list (spec Checklist §2.1).
+/// « Étapes visibles », « Message final » and « Rappel » of a guest list (spec Checklist §2.1).
 ///
 /// In KV, one key per list, not on the `Checklist` entity: a new column would need a
 /// `schema_version` the platform does not migrate yet. Pas de TTL — un réglage d'hôte ne périme pas.
@@ -377,6 +383,9 @@ pub mod display {
         /// JSON map of every language ([`crate::labels::encode_map`]); empty = the default thanks.
         #[serde(default, skip_serializing_if = "String::is_empty")]
         pub done_message: String,
+        /// « Rappel le matin du départ »; absent = on (spec default).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub remind: Option<bool>,
     }
 
     impl Display {
@@ -384,6 +393,10 @@ pub mod display {
             self.visible_limit.map_or(DEFAULT_VISIBLE_LIMIT, |n| {
                 n.clamp(MIN_VISIBLE_LIMIT, MAX_VISIBLE_LIMIT)
             })
+        }
+
+        pub fn remind(&self) -> bool {
+            self.remind.unwrap_or(true)
         }
     }
 

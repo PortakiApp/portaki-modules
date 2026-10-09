@@ -1,31 +1,39 @@
 //! Guest checklist availability from the list trigger + stay window.
 
-use chrono::{DateTime, Duration, TimeZone, Utc};
+use chrono::{DateTime, Days, NaiveTime, TimeZone, Utc};
 
+use crate::guest::depart::offset_for_iana;
 use crate::lists;
 
-/// Whether a guest list with `trigger` should be shown right now.
+/// Whether a guest list with `trigger` should be shown right now (« Afficher », spec §2.1).
 ///
-/// `beforeArrival` shows from the booking, `duringStay` from the check-in day, `atDeparture`
-/// 48 h before check-out. A missing stay date fails open.
+/// Days are counted in the property `timezone`: `duringStay` opens at midnight of the check-in
+/// day, `atDeparture` (« La veille ») at midnight of the day before check-out, `departureDay` at
+/// midnight of the check-out day. A missing stay date fails open.
 pub fn is_checklist_available(
     trigger: &str,
     now: DateTime<Utc>,
     checkin_at: Option<DateTime<Utc>>,
     checkout_at: Option<DateTime<Utc>>,
+    timezone: &str,
 ) -> bool {
-    match trigger {
-        lists::DURING_STAY => checkin_at.is_none_or(|checkin| now >= start_of_utc_day(checkin)),
-        lists::AT_DEPARTURE => {
-            checkout_at.is_none_or(|checkout| now >= checkout - Duration::hours(48))
-        }
-        _ => true,
-    }
+    let opens = match trigger {
+        lists::DURING_STAY => checkin_at.map(|checkin| start_of_day(checkin, 0, timezone)),
+        lists::AT_DEPARTURE => checkout_at.map(|checkout| start_of_day(checkout, 1, timezone)),
+        lists::DEPARTURE_DAY => checkout_at.map(|checkout| start_of_day(checkout, 0, timezone)),
+        _ => None,
+    };
+    opens.is_none_or(|opens| now >= opens)
 }
 
-fn start_of_utc_day(instant: DateTime<Utc>) -> DateTime<Utc> {
-    let date = instant.date_naive();
-    Utc.from_utc_datetime(&date.and_hms_opt(0, 0, 0).unwrap_or_default())
+/// Midnight, in `timezone`, `days_before` days before the local day of `instant`.
+fn start_of_day(instant: DateTime<Utc>, days_before: u64, timezone: &str) -> DateTime<Utc> {
+    let offset = offset_for_iana(timezone, instant);
+    let day = instant.with_timezone(&offset).date_naive() - Days::new(days_before);
+    offset
+        .from_local_datetime(&day.and_time(NaiveTime::MIN))
+        .single()
+        .map_or(instant, |local| local.with_timezone(&Utc))
 }
 
 #[cfg(test)]
@@ -38,13 +46,17 @@ mod tests {
             .with_timezone(&Utc)
     }
 
+    const PARIS: &str = "Europe/Paris";
+
     #[test]
-    fn before_arrival_always_available() {
+    fn a_retired_or_unknown_trigger_is_always_available() {
+        let now = utc("2026-07-01T10:00:00Z");
         assert!(is_checklist_available(
             lists::BEFORE_ARRIVAL,
-            utc("2026-07-01T10:00:00Z"),
+            now,
             None,
-            None
+            None,
+            PARIS
         ));
     }
 
@@ -52,35 +64,67 @@ mod tests {
     fn during_stay_opens_on_checkin_day() {
         let checkin = Some(utc("2026-07-20T15:00:00Z"));
         let during = lists::DURING_STAY;
+        // Midnight in Paris (UTC+2) is 22:00 UTC the day before.
         assert!(!is_checklist_available(
             during,
-            utc("2026-07-19T23:59:00Z"),
+            utc("2026-07-19T21:59:00Z"),
             checkin,
-            None
+            None,
+            PARIS
         ));
         assert!(is_checklist_available(
             during,
-            utc("2026-07-20T00:00:00Z"),
+            utc("2026-07-19T22:00:00Z"),
             checkin,
-            None
+            None,
+            PARIS
         ));
     }
 
     #[test]
-    fn at_departure_opens_48h_prior() {
-        let checkout = Some(utc("2026-07-22T11:00:00Z"));
-        let departure = lists::AT_DEPARTURE;
+    fn the_eve_opens_at_midnight_the_day_before_checkout() {
+        let checkout = Some(utc("2026-07-22T09:00:00Z"));
+        let eve = lists::AT_DEPARTURE;
         assert!(!is_checklist_available(
-            departure,
-            utc("2026-07-20T10:59:00Z"),
+            eve,
+            utc("2026-07-20T21:59:00Z"),
             None,
-            checkout
+            checkout,
+            PARIS
         ));
         assert!(is_checklist_available(
-            departure,
-            utc("2026-07-20T11:00:00Z"),
+            eve,
+            utc("2026-07-20T22:00:00Z"),
             None,
-            checkout
+            checkout,
+            PARIS
+        ));
+    }
+
+    #[test]
+    fn departure_day_opens_at_midnight_of_checkout_day() {
+        let checkout = Some(utc("2026-07-22T09:00:00Z"));
+        let day = lists::DEPARTURE_DAY;
+        assert!(!is_checklist_available(
+            day,
+            utc("2026-07-21T21:59:00Z"),
+            None,
+            checkout,
+            PARIS
+        ));
+        assert!(is_checklist_available(
+            day,
+            utc("2026-07-21T22:00:00Z"),
+            None,
+            checkout,
+            PARIS
+        ));
+        assert!(is_checklist_available(
+            day,
+            utc("2026-07-22T00:00:00Z"),
+            None,
+            checkout,
+            "UTC"
         ));
     }
 }

@@ -246,9 +246,17 @@ fn edit_panel(list: &Checklist, items: &[&ChecklistItem], lang: &str) -> Compone
                 label_en: (!host).then_some(label.en),
                 photo: host.then_some(item.photo_required),
                 checked: None,
-                // SDK 9.4 : la checklist n'a ni sections ni ligne secondaire.
-                group: None,
-                description: None,
+                // La langue éditée seule, sans repli : enregistrer un repli l'écrirait dans `lang`.
+                group: (!host)
+                    .then(|| labels::decode_map(&item.group_i18n).get(lang).cloned())
+                    .flatten(),
+                description: (!host)
+                    .then(|| {
+                        labels::decode_map(&item.description_i18n)
+                            .get(lang)
+                            .cloned()
+                    })
+                    .flatten(),
             }
         })
         .collect();
@@ -284,10 +292,25 @@ fn edit_panel(list: &Checklist, items: &[&ChecklistItem], lang: &str) -> Compone
                     .bilingual(!host)
                     .photoToggle(host)
                     .checkbox(true)
+                    // Rubrique et précision : seul le livret les lit, une tâche d'équipe non.
+                    .groupField(!host)
+                    .descriptionField(!host)
+                    .groupPlaceholder("i18n:host.tasks.groupPlaceholder")
                     .addLabel("i18n:host.tasks.add"),
             )
             .into(),
     ];
+    if !host {
+        form.push(
+            ToggleRow::new()
+                .name("remind")
+                .label("i18n:host.toggle.remind")
+                .description("i18n:host.toggle.remind.desc")
+                .icon(IconName::Bell)
+                .checked(storage::display::read(list.id).remind())
+                .into(),
+        );
+    }
     if host {
         form.push(
             ToggleRow::new()

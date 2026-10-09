@@ -5,11 +5,21 @@ use crate::i18n;
 pub const GUEST: &str = "guest";
 pub const HOST: &str = "host";
 
-/// Guest triggers: when the list shows in the booklet.
-pub const BEFORE_ARRIVAL: &str = "beforeArrival";
+/// Guest triggers (« Afficher », spec Checklist §2.1): when the list shows in the booklet —
+/// « Pendant tout le séjour », « La veille du départ », « Le jour du départ ».
+///
+/// `atDeparture` keeps its wire value for « La veille » so stored lists need no rewrite.
 pub const DURING_STAY: &str = "duringStay";
 pub const AT_DEPARTURE: &str = "atDeparture";
-pub const GUEST_TRIGGERS: &[&str] = &[BEFORE_ARRIVAL, DURING_STAY, AT_DEPARTURE];
+pub const DEPARTURE_DAY: &str = "departureDay";
+pub const GUEST_TRIGGERS: &[&str] = &[DURING_STAY, AT_DEPARTURE, DEPARTURE_DAY];
+/// No longer offered (the spec has no « before arrival »): read as [`DURING_STAY`].
+pub const BEFORE_ARRIVAL: &str = "beforeArrival";
+
+/// The lists the guest ticks on their way out — also shown on the post-stay card.
+pub fn is_departure_trigger(trigger: &str) -> bool {
+    trigger == AT_DEPARTURE || trigger == DEPARTURE_DAY
+}
 
 /// Guest placement: the booklet, or the booklet plus an e-mail the day before departure.
 pub const BOOKLET: &str = "booklet";
@@ -195,6 +205,6 @@ mod tests {
     #[test]
     fn pick_falls_back_to_first_value() {
         assert_eq!(pick("atDeparture", GUEST_TRIGGERS), AT_DEPARTURE);
-        assert_eq!(pick("bogus", GUEST_TRIGGERS), BEFORE_ARRIVAL);
+        assert_eq!(pick("bogus", GUEST_TRIGGERS), DURING_STAY);
     }
 }

@@ -44,9 +44,9 @@ fn every_example_runs() {
     );
 }
 
-/// La liste de départ s'ouvre 48 h avant le départ (10 h) ; l'horloge des cas est figée à 10 h.
+/// La liste de départ s'ouvre la veille du départ, à minuit ; l'horloge des cas est figée à 10 h.
 #[test]
-fn the_departure_list_opens_two_days_before_check_out() {
+fn the_departure_list_opens_the_day_before_check_out() {
     check_each(|scenario| {
         let surface = setup(scenario.guest())
             .run(render_home_card)
@@ -54,7 +54,7 @@ fn the_departure_list_opens_two_days_before_check_out() {
         let shown = serde_json::to_string(&surface)
             .unwrap()
             .contains("setCompleted");
-        let due = scenario.stay.check_out_offset <= 2;
+        let due = scenario.stay.check_out_offset <= 1;
         if shown == due {
             Ok(())
         } else {

@@ -1,0 +1,7 @@
+{
+  "email.departureReminder.subject": "قبل المغادرة، قائمة مهامك",
+  "email.departureReminder.eyebrow": "المغادرة",
+  "email.departureReminder.title": "بقيت بعض الخطوات قبل المغادرة",
+  "email.departureReminder.body": "لم تكتمل قائمة مهام المغادرة بعد. خذ لحظة لتحديد الخطوات الأخيرة قبل تسليم المفاتيح.",
+  "email.departureReminder.cta": "فتح القائمة"
+}

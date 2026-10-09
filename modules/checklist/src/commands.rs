@@ -65,6 +65,9 @@ pub struct UpdateConfigArgs {
     /// Guest lists only: « Message final », in the language edited.
     #[serde(default)]
     pub done_message: Option<String>,
+    /// Guest lists only: « Rappel le matin du départ ».
+    #[serde(default)]
+    pub remind: Option<Value>,
 }
 
 /// Saves the selected list. Without a known `id` there is nothing to save (the « new » panel
@@ -117,6 +120,9 @@ pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
                 args.done_message,
                 Some(&display.done_message),
             ));
+        }
+        if args.remind.is_some() {
+            display.remind = Some(flag(args.remind.as_ref(), display.remind()));
         }
         storage::display::write(list.id, &display)?;
     }
