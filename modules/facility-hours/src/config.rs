@@ -214,6 +214,14 @@ pub struct FacilityRow {
     /// Les jours qui dérogent aux horaires habituels, ou qui sont fermés.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub exceptions: Vec<DayHours>,
+    /// Les jours de fermeture, `mon` … `sun` (spec Horaires §2.2) : un choix multiple du
+    /// formulaire, lu comme autant d'exceptions « fermé ».
+    #[serde(
+        default,
+        skip_serializing_if = "Vec::is_empty",
+        deserialize_with = "days_list"
+    )]
+    pub closed_days: Vec<String>,
     pub note: I18nText,
     /// Le groupe sous lequel la ligne se range dans la sous-page : `stay`, `equipment` ou
     /// `services` ([`GROUPS`]). Une ligne d'avant la liste fermée porte encore le texte libre que
@@ -234,6 +242,28 @@ pub struct FacilityRow {
     /// n'en a pas choisi — la ligne sort alors sans pictogramme plutôt qu'avec un deviné.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub icon: Option<String>,
+}
+
+/// Une liste de jours, en tableau ou en texte : un dashboard d'avant le choix multiple envoie
+/// la valeur cochée seule (`"mon"`), ou du JSON en chaîne (`"[\"mon\"]"`). Refuser la chaîne
+/// ferait refuser toute la configuration, et le module rendrait son état d'erreur partout.
+fn days_list<'de, D>(deserializer: D) -> std::result::Result<Vec<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Ok(match Value::deserialize(deserializer)? {
+        Value::Array(items) => items
+            .into_iter()
+            .filter_map(|item| item.as_str().map(str::to_string))
+            .collect(),
+        Value::String(text) => serde_json::from_str::<Vec<String>>(&text).unwrap_or_else(|_| {
+            text.split(',')
+                .map(|day| day.trim().to_string())
+                .filter(|day| !day.is_empty())
+                .collect()
+        }),
+        _ => Vec::new(),
+    })
 }
 
 /// Les icônes proposées à l'hôte, celles du dessin (§2.6) plus les lieux qui reviennent.
@@ -352,7 +382,16 @@ impl FacilityRow {
             all_day: self.mode() == MODE_ALWAYS,
             opens_at: parse_hm(&self.opens_at),
             closes_at: parse_hm(&self.closes_at),
-            exceptions: self.exceptions.clone(),
+            exceptions: self
+                .exceptions
+                .iter()
+                .cloned()
+                .chain(self.closed_days.iter().map(|day| DayHours {
+                    day: day.trim().to_string(),
+                    closed: true,
+                    ..DayHours::default()
+                }))
+                .collect(),
             // Les deux bornes, ou aucune : une coupure sans fin laisserait la porte close.
             break_at: parse_hm(&self.break_from).zip(parse_hm(&self.break_to)),
             // Les deux bornes, ou aucune : une saison à une seule date ne dit pas quand elle
@@ -561,5 +600,44 @@ mod tests {
         );
         assert_eq!(config.card_limit(), MAX_CARD_LIMIT);
         assert_eq!(ModuleConfig::default().card_limit(), DEFAULT_CARD_LIMIT);
+    }
+
+    /// Un jour de fermeture ferme la ligne ce jour-là, même ouverte 24 h/24.
+    #[test]
+    fn a_closed_day_closes_the_row_that_day() {
+        let row: FacilityRow = serde_json::from_value(json!({
+            "title": "Spa", "mode": "always", "closed_days": ["mon"]
+        }))
+        .unwrap();
+        let schedule = row.schedule();
+        assert!(schedule.closed_on(chrono::Weekday::Mon));
+        assert!(!schedule.closed_on(chrono::Weekday::Tue));
+        // Lundi 13 juillet 2026, 10 h UTC.
+        let monday = "2026-07-13T10:00:00Z".parse().unwrap();
+        assert_eq!(
+            schedule.state_at(monday, None),
+            Some(crate::schedule::State::Closed)
+        );
+        let same = FacilityRow {
+            mode: "same".into(),
+            opens_at: "09:00".into(),
+            closes_at: "18:00".into(),
+            ..row
+        };
+        assert_eq!(same.schedule().span_on(chrono::Weekday::Mon), None);
+    }
+
+    /// Un jour coché arrive en tableau, en JSON dans une chaîne, ou seul : tous se relisent.
+    #[test]
+    fn closed_days_read_in_every_shape() {
+        let days = |value| {
+            serde_json::from_value::<FacilityRow>(json!({ "closed_days": value }))
+                .unwrap()
+                .closed_days
+        };
+        assert_eq!(days(json!(["mon", "sun"])), ["mon", "sun"]);
+        assert_eq!(days(json!("[\"mon\"]")), ["mon"]);
+        assert_eq!(days(json!("mon")), ["mon"]);
+        assert!(days(json!(null)).is_empty());
     }
 }

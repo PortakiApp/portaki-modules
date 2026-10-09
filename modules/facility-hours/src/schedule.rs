@@ -166,6 +166,14 @@ impl Schedule {
         }
     }
 
+    /// Ce jour est fermé, d'une exception qui le dit.
+    pub fn closed_on(&self, day: Weekday) -> bool {
+        let key = day_key(day);
+        self.exceptions
+            .iter()
+            .any(|entry| entry.closed && entry.day.trim().eq_ignore_ascii_case(key))
+    }
+
     /// The span for one weekday, or `None` when that day is closed.
     pub fn span_on(&self, day: Weekday) -> Option<DaySpan> {
         let key = day_key(day);
@@ -213,7 +221,12 @@ impl Schedule {
             return Some(State::OutOfSeason);
         }
         if self.all_day {
-            return Some(State::AlwaysOpen);
+            // Ouvert 24 h/24, sauf le jour de fermeture que l'hôte a coché.
+            return Some(if self.closed_on(local.weekday()) {
+                State::Closed
+            } else {
+                State::AlwaysOpen
+            });
         }
         let minutes = local.hour() * 60 + local.minute();
         let today = local.weekday();
