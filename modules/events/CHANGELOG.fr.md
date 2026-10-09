@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.1
+
+Montée technique.
+
+* Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
+
 ## 1.9.0
 
 Des jours au choix, et des dates choisies.

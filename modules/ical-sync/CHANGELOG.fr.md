@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.1
+
+Montée technique.
+
+* Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
+
 ## 1.7.0
 
 Calendriers vérifiés, séjours et tâches.

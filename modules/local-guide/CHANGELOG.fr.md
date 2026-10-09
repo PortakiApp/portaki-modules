@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.13.1
+
+Montée technique.
+
+* Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
+
 ## 1.13.0
 
 Vos adresses sur la page publique du logement, et des fiches plus complètes.

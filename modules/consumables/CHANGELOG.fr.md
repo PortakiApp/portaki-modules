@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.10.1
+
+Montée technique.
+
+* Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
+
 ## 2.10.0
 
 Les produits de base dans les équipements.
