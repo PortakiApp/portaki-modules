@@ -4,6 +4,7 @@
 
 use chrono::{Duration, Utc};
 use portaki_sdk::context::StayContext;
+use portaki_sdk::contracts::publish::PublishLevel;
 use portaki_sdk::contracts::stats::StatsSummaryArgs;
 use portaki_sdk::contracts::timeline::{
     TaskCompleteArgs, TaskToggleArgs, TimelineStay, TimelineTasksArgs,
@@ -414,6 +415,41 @@ fn publish_readiness_requires_an_item() {
             assert!(!ok(&ctx), "an empty list shows nothing");
             create(&ctx, "cleaning");
             assert!(ok(&ctx));
+        });
+}
+
+/// Un code écrit dans une étape du livret avertit ; une étape trop longue bloque (§3, §2.2).
+#[test]
+#[serial]
+fn publish_readiness_warns_on_a_code_and_blocks_a_long_step() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            create(&ctx, "emptyGuest");
+            let list = list_checklists().expect("lists").remove(0);
+            update_config(
+                ctx.clone(),
+                UpdateConfigArgs {
+                    id: list.id.to_string(),
+                    items: Some(json!([
+                        { "label": "Laisser la clé dans la boîte, code 4821" },
+                        { "label": "x".repeat(81) }
+                    ])),
+                    ..UpdateConfigArgs::default()
+                },
+            )
+            .expect("save");
+            let checks = publish_readiness(ctx.clone()).expect("readiness").items;
+            let level_of = |prefix: &str| {
+                checks
+                    .iter()
+                    .find(|check| check.id.starts_with(prefix))
+                    .map(|check| (check.ok, check.level))
+            };
+            assert_eq!(level_of("code."), Some((false, PublishLevel::Recommended)));
+            assert_eq!(level_of("labels."), Some((false, PublishLevel::Required)));
+            assert_eq!(level_of("steps."), None);
         });
 }
 
