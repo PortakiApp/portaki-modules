@@ -57,10 +57,10 @@ pub struct ModuleConfig {
     pub public_enabled: bool,
     /// Les adresses de la page publique, 3 à 6, par identifiant, dans l'ordre choisi.
     ///
-    /// À plat et en `text` : le choix multiple envoie du JSON en chaîne, qu'un champ `structured`
-    /// ferait refuser par la plateforme ; il est relu en liste à l'arrivée.
-    #[field(kind = "text", label = "host.public.spots")]
-    #[serde(deserialize_with = "id_list", serialize_with = "id_list_text")]
+    /// À plat et en `structured` : le choix multiple envoie un vrai tableau, qu'un champ `text`
+    /// ferait refuser par la plateforme.
+    #[field(kind = "structured", label = "host.public.spots")]
+    #[serde(deserialize_with = "id_list")]
     pub public_spots: Vec<String>,
 }
 
@@ -721,8 +721,8 @@ where
     })
 }
 
-/// A list of ids, as an array or as text: the multiple choice sends JSON in a string
-/// (`"[\"a\",\"b\"]"`), a single choice the bare value, a hand-written one a comma list.
+/// A list of ids, as an array or as text: the multiple choice sends an array; older drafts kept
+/// it as JSON in a string (`"[\"a\",\"b\"]"`), a bare value, or a comma list.
 fn id_list<'de, D>(deserializer: D) -> std::result::Result<Vec<String>, D::Error>
 where
     D: Deserializer<'de>,
@@ -741,14 +741,6 @@ where
         }),
         _ => Vec::new(),
     })
-}
-
-/// Written back as the form sends it, as text: the field is declared `text`.
-fn id_list_text<S>(ids: &[String], serializer: S) -> std::result::Result<S::Ok, S::Error>
-where
-    S: serde::Serializer,
-{
-    serializer.serialize_str(&serde_json::to_string(ids).unwrap_or_default())
 }
 
 /// A number, or the select's value as text (`"10"`); `""` is the default.

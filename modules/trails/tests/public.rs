@@ -51,7 +51,7 @@ fn config(enabled: bool, public: &[bool]) -> Value {
         .enumerate()
         .map(|(i, _)| trail(&format!("t{i}"), &format!("Sentier {i}"), "hard"))
         .collect();
-    // Le choix multiple envoie du JSON en texte.
+    // Le choix multiple envoie un tableau.
     let chosen: Vec<String> = public
         .iter()
         .enumerate()
@@ -60,7 +60,7 @@ fn config(enabled: bool, public: &[bool]) -> Value {
         .collect();
     json!({
         "public_enabled": enabled,
-        "public_trails": serde_json::to_string(&chosen).unwrap(),
+        "public_trails": chosen,
         "trails": trails
     })
 }
@@ -189,11 +189,21 @@ fn the_host_form_decides_the_start_at_the_property_and_saves_it() {
         });
 }
 
-/// La carte « Page publique » : l'interrupteur du bloc et le choix multiple, qui traversent
-/// l'enregistrement en texte et se relisent en liste.
+/// La carte « Page publique » : l'interrupteur du bloc et le choix multiple. Le choix est
+/// déclaré `structured` (le tableau de bord envoie un vrai tableau, qu'un `text` ferait refuser),
+/// sans ligne ni traduction, et se réécrit en tableau.
 #[test]
 #[serial]
 fn the_host_form_has_a_public_page_card() {
+    let field = config_save::declared_fields(EMISSIONS)
+        .into_iter()
+        .find(|f| f["key"] == "public_trails")
+        .expect("public_trails declared");
+    assert_eq!(field["type"], "structured", "{field}");
+    assert!(
+        field.get("item").is_none() && field.get("itemType").is_none(),
+        "{field}"
+    );
     let stored = config(true, &[true, false, true]);
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
@@ -205,11 +215,15 @@ fn the_host_form_has_a_public_page_card() {
             assert!(json.contains(r#""limit":4"#), "{json}");
             let args = config_save::form_args(&surface);
             assert_eq!(args["public_enabled"], true);
+            // Le choix montre la sélection ; le tableau de bord renvoie la nouvelle en tableau.
             assert_eq!(args["public_trails"], r#"["t0","t2"]"#);
-            let saved = config_save::save(EMISSIONS, &surface, &stored, "fr");
+            let mut saved = config_save::save(EMISSIONS, &surface, &stored, "fr");
+            saved["public_trails"] = json!(["t2", "t0"]);
             let reread: trails::ModuleConfig = serde_json::from_value(saved).expect("relue");
             assert!(reread.public_enabled);
-            assert_eq!(reread.public_trails, ["t0", "t2"]);
+            assert_eq!(reread.public_trails, ["t2", "t0"]);
+            let written = serde_json::to_value(&reread).unwrap();
+            assert_eq!(written["public_trails"], json!(["t2", "t0"]));
         });
     // Rien à choisir : le choix est rendu quand même, pour que la clé parte.
     MockContext::host()
@@ -221,8 +235,8 @@ fn the_host_form_has_a_public_page_card() {
         });
 }
 
-/// Le choix se lit en tableau, en JSON texte ou en liste à virgules ; un id qui n'est plus un
-/// itinéraire affichable ne compte pas.
+/// Le choix se lit en tableau, ou comme les brouillons d'avant : en JSON texte ou en liste à
+/// virgules ; un id qui n'est plus un itinéraire affichable ne compte pas.
 #[test]
 #[serial]
 fn the_choice_reads_leniently_and_ignores_gone_trails() {
