@@ -52,6 +52,16 @@ pub struct ModuleConfig {
     #[field(kind = "select", options = ["0", "3", "4"], label = "host.viator.minRating")]
     #[serde(deserialize_with = "deserialize_viator_min_rating")]
     pub viator_min_rating: u8,
+    /// Le bloc « Adresses » de la page publique du logement. Éteint par défaut.
+    #[field(label = "host.public.enabled")]
+    pub public_enabled: bool,
+    /// Les adresses de la page publique, 3 à 6, par identifiant, dans l'ordre choisi.
+    ///
+    /// À plat et en `text` : le choix multiple envoie du JSON en chaîne, qu'un champ `structured`
+    /// ferait refuser par la plateforme ; il est relu en liste à l'arrivée.
+    #[field(kind = "text", label = "host.public.spots")]
+    #[serde(deserialize_with = "id_list", serialize_with = "id_list_text")]
+    pub public_spots: Vec<String>,
 }
 
 impl Default for ModuleConfig {
@@ -69,6 +79,8 @@ impl Default for ModuleConfig {
             tiqets_min_rating: 0,
             viator_enabled: false,
             viator_min_rating: VIATOR_DEFAULT_MIN_RATING,
+            public_enabled: false,
+            public_spots: Vec::new(),
         }
     }
 }
@@ -265,6 +277,11 @@ impl ActivityRow {
 /// Combien de bons plans la configuration accepte (spec Bons plans §2.1).
 pub const MAX_SPOTS: usize = 30;
 
+/// Combien d'adresses la page publique montre : en dessous, le bloc ne sort pas ; au-delà, les
+/// premières dans l'ordre du formulaire.
+pub const PUBLIC_MIN: usize = 3;
+pub const PUBLIC_MAX: usize = 6;
+
 impl ModuleConfig {
     pub fn is_empty(&self) -> bool {
         self.parse_spots().is_empty() && self.disclaimer.is_blank()
@@ -345,6 +362,35 @@ impl ModuleConfig {
                 s
             })
             .collect()
+    }
+
+    /// Les adresses publiées choisies pour la page publique, dans l'ordre du choix. Un id qui
+    /// n'est plus celui d'une adresse publiée ne compte pas.
+    pub fn public_chosen(&self) -> Vec<SpotRow> {
+        let spots = self.parse_spots();
+        let mut out: Vec<SpotRow> = Vec::new();
+        for id in &self.public_spots {
+            if out.iter().any(|spot| &spot.id == id) {
+                continue;
+            }
+            if let Some(spot) = spots.iter().find(|spot| &spot.id == id) {
+                out.push(spot.clone());
+            }
+        }
+        out
+    }
+
+    /// Ce que la page publique montre : rien quand le bloc est éteint ou qu'il manque des
+    /// adresses, sinon les [`PUBLIC_MAX`] premières cochées.
+    pub fn public_spots(&self) -> Vec<SpotRow> {
+        if !self.public_enabled {
+            return Vec::new();
+        }
+        let chosen = self.public_chosen();
+        if chosen.len() < PUBLIC_MIN {
+            return Vec::new();
+        }
+        chosen.into_iter().take(PUBLIC_MAX).collect()
     }
 
     /// The « Activités & billets » section. Links and destination are the host's raw input:
@@ -673,6 +719,36 @@ where
         Value::String(s) => s.trim().parse().ok(),
         _ => None,
     })
+}
+
+/// A list of ids, as an array or as text: the multiple choice sends JSON in a string
+/// (`"[\"a\",\"b\"]"`), a single choice the bare value, a hand-written one a comma list.
+fn id_list<'de, D>(deserializer: D) -> std::result::Result<Vec<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Ok(match Value::deserialize(deserializer)? {
+        Value::Array(items) => items
+            .into_iter()
+            .filter_map(|item| item.as_str().map(|id| id.trim().to_string()))
+            .filter(|id| !id.is_empty())
+            .collect(),
+        Value::String(text) => serde_json::from_str::<Vec<String>>(&text).unwrap_or_else(|_| {
+            text.split(',')
+                .map(|id| id.trim().to_string())
+                .filter(|id| !id.is_empty())
+                .collect()
+        }),
+        _ => Vec::new(),
+    })
+}
+
+/// Written back as the form sends it, as text: the field is declared `text`.
+fn id_list_text<S>(ids: &[String], serializer: S) -> std::result::Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    serializer.serialize_str(&serde_json::to_string(ids).unwrap_or_default())
 }
 
 /// A number, or the select's value as text (`"10"`); `""` is the default.

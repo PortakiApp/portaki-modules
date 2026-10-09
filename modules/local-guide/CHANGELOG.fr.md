@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.13.0
+
+Vos adresses sur la page publique du logement.
+
+* Nouvelle carte « Page publique » : affichez 3 à 6 de vos adresses sur la page du logement.
+* Les visiteurs voient la photo, la catégorie et une distance approximative, à pied ou en voiture.
+* Avantages, prix, téléphone, horaires, adresse et conseils restent dans le livret, que la page annonce.
+
 ## 1.12.0
 
 Plus d'adresses, mieux vérifiées.

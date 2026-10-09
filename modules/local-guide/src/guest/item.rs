@@ -21,8 +21,8 @@ const TILE_WIDTH: f64 = 96.0;
 /// ponytail: deux constantes contre un calcul d'itinéraire. Elles tiennent sur une distance à vol
 /// d'oiseau ; un vrai temps de trajet demande un appel réseau par adresse, à chaque ouverture du
 /// livret. D'où « environ », porté par la traduction.
-const WALK_KMH: f64 = 5.0;
-const DRIVE_KMH: f64 = 30.0;
+pub(crate) const WALK_KMH: f64 = 5.0;
+pub(crate) const DRIVE_KMH: f64 = 30.0;
 
 pub fn build_spot_item(data: &GuestData, spot: &SpotRow) -> Surface {
     let mut children: Vec<Component> = Vec::new();
@@ -150,7 +150,7 @@ fn minutes_label(metres: f64, kmh: f64) -> String {
 }
 
 /// La distance orthodromique en mètres.
-fn haversine_m(lat1: f64, lng1: f64, lat2: f64, lng2: f64) -> f64 {
+pub(crate) fn haversine_m(lat1: f64, lng1: f64, lat2: f64, lng2: f64) -> f64 {
     const EARTH_M: f64 = 6_371_000.0;
     let (phi1, phi2) = (lat1.to_radians(), lat2.to_radians());
     let d_phi = phi2 - phi1;
