@@ -81,6 +81,14 @@ fn header(data: &GuestData, event: &EventRow) -> Component {
             .variant(TextVariant::Display)
             .into(),
     );
+    if let Some(weekly) = crate::time_format::weekly_line(event, data.tz.as_ref()) {
+        children.push(
+            Text::new()
+                .text(weekly)
+                .variant(TextVariant::Caption)
+                .into(),
+        );
+    }
     let place = place_line(data, event);
     if !place.is_empty() {
         children.push(

@@ -3,8 +3,8 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Card, Field, FieldHint, Form, ImageUpload, NumberInput, Page, Select, Stack,
-    StepList, Text, TextArea, TextInput, Toggle,
+    AddressMapPicker, Card, ChoiceList, DatePicker, Field, FieldHint, Form, ImageUpload,
+    NumberInput, Page, Select, Stack, StepList, Text, TextArea, TextInput, Toggle,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -12,7 +12,7 @@ use crate::config::{EventRow, ModuleConfig};
 use crate::nearby::has_open_agenda;
 
 pub use crate::config::MAX_EVENTS;
-use crate::config::RECURRENCES;
+use crate::config::{RECURRENCES, WEEKDAYS};
 
 #[portaki_sdk::surface(
     host,
@@ -151,6 +151,19 @@ struct RowCount {
     events_count: usize,
 }
 
+/// « Ajouter une date » sur l'événement `dates_for` : ses lignes de dates, et celles des
+/// événements, pour que la liste ne se replie pas.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+struct DateCount {
+    events_count: usize,
+    dates_for: usize,
+    dates_count: usize,
+}
+
+/// Au plus cinquante dates par événement : une borne de formulaire, pas un réglage.
+const MAX_DATES: usize = 50;
+
 fn emit_input(payload: impl serde::Serialize) -> Action {
     Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
 }
@@ -281,6 +294,32 @@ fn event_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Componen
         FieldHint::new()
             .text("i18n:host.event.recurrence.hint")
             .into(),
+        // Le formulaire du tableau de bord ne sait pas masquer un champ selon la répétition : les
+        // jours et les dates restent visibles, et l'aide dit lequel compte.
+        named("weekdays")
+            .label("i18n:host.event.weekdays")
+            .child(
+                ChoiceList::new()
+                    .name(format!("events.{index}.weekdays"))
+                    .multi(true)
+                    .layout(ChoiceListLayout::Compact)
+                    .choices(
+                        WEEKDAYS
+                            .iter()
+                            .map(|day| {
+                                ChoiceOption::new(*day, format!("i18n:host.event.weekday.{day}"))
+                            })
+                            .collect(),
+                    )
+                    .value(
+                        serde_json::to_string(
+                            &event.map(|e| e.weekdays.clone()).unwrap_or_default(),
+                        )
+                        .unwrap_or_default(),
+                    ),
+            )
+            .into(),
+        dates_field(index, config, ctx),
         named("price")
             .label("i18n:host.event.price")
             .child(
@@ -352,5 +391,48 @@ fn event_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Componen
         .id(format!("event-{index}"))
         .gap(10.0)
         .children(id.into_iter().chain(fields).collect())
+        .into()
+}
+
+/// Les dates d'un événement « Dates choisies », en liste : une ligne par date.
+fn dates_field(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let event = config.events.get(index);
+    let stored: Vec<&str> = event
+        .map(|e| e.dates.iter().map(|d| d.date.as_str()).collect())
+        .unwrap_or_default();
+    let asked = (ctx.input_u64("dates_for") == Some(index as u64))
+        .then(|| ctx.input_u64("dates_count"))
+        .flatten()
+        .map_or(0, |n| n as usize);
+    let count = stored.len().max(asked).min(MAX_DATES);
+    let rows: Vec<Component> = (0..count)
+        .map(|slot| {
+            DatePicker::new()
+                .name(format!("events.{index}.dates.{slot}.date"))
+                .value(stored.get(slot).copied().unwrap_or(""))
+                .into()
+        })
+        .collect();
+    let name = format!("events.{index}.dates");
+    let mut field = Field::new()
+        .name(name.clone())
+        .label("i18n:host.event.dates");
+    if let Some(error) = config.error_of(&name) {
+        field = field.error(error.get(&ctx.locale).to_string());
+    }
+    field
+        .child(
+            StepList::new()
+                .addLabel("i18n:host.event.dates.add")
+                .removeLabel("i18n:host.events.remove")
+                .emptyTitle("i18n:host.event.dates.empty")
+                .itemKeyPrefix(name)
+                .addAction(emit_input(DateCount {
+                    events_count: draft_rows(ctx, config.events.len()),
+                    dates_for: index,
+                    dates_count: (count + 1).min(MAX_DATES),
+                }))
+                .children(rows),
+        )
         .into()
 }

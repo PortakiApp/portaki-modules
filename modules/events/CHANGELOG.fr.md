@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.0
+
+Des jours au choix, et des dates choisies.
+
+* Un événement hebdomadaire peut avoir lieu plusieurs jours : le livret écrit « Tous les mardis et jeudis » et montre le prochain.
+* Nouvelle répétition « Dates choisies » : la date de début et une liste de dates, la prochaine s'affiche pendant le séjour.
+* Les jours et les dates se comptent à l'heure du logement, changement d'heure compris.
+* Un événement sans jour choisi garde le jour de sa date de début ; un avertissement invite à cocher les jours.
+* Plus de cinq conseils sur un événement donnent un avertissement, sans bloquer la publication.
+
 ## 1.8.0
 
 « Ce soir », un rayon resserré, et un état vide qui parle du séjour.
