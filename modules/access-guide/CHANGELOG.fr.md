@@ -1,20 +1,14 @@
 # Changelog
 
-## 1.10.0
-
-L'accès dans les équipements.
-
-* La serrure connectée ou la boîte à clés s'ajoute aux équipements de la page du logement, selon la méthode d'accès ; ni code ni emplacement n'y figurent.
-* Interphone, consignes, vidéo d'arrivée et numéros de contact sont vérifiés : longueur, lien YouTube, Vimeo, Drive ou .mp4, numéro valide.
-
 ## 1.9.0
 
-L'immeuble et le parking, en détail.
+L'immeuble, le parking et l'accès, en détail.
 
 * Indiquez l'étage et la porte, et s'il n'y a pas d'ascenseur : le livret affiche « Sans ascenseur ».
-* Précisez le stationnement (place privée, rue, parking public, garage) et le numéro de place.
-* Dans la rue ou en parking public, ajoutez le tarif.
+* Précisez le stationnement (place privée, rue, parking public, garage), le numéro de place et, dans la rue ou en parking public, le tarif.
 * Placez l'épingle sur l'entrée du parking : un repère « P » sur la Carte, et un avertissement si elle est à plus de 2 km du logement.
+* La serrure connectée ou la boîte à clés s'ajoute aux équipements de la page du logement ; ni code ni emplacement n'y figurent.
+* Interphone, consignes et vidéo d'arrivée sont vérifiés ; un numéro de contact mal saisi est signalé sans bloquer la publication.
 
 ## 1.8.0
 
