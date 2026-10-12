@@ -30,9 +30,6 @@ pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
     );
     let auto_reply =
         Some(config.auto_reply.get(&ctx.locale).trim().to_string()).filter(|text| !text.is_empty());
-    Ok(build_home_card(
-        &load_guest_reports(&ctx)?,
-        open,
-        auto_reply,
-    ))
+    let (reports, history) = load_guest_reports(&ctx)?;
+    Ok(build_home_card(&reports, &history, open, auto_reply))
 }

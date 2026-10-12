@@ -6,12 +6,14 @@ use serial_test::serial;
 
 use issue_report::{
     add, list_for_stay, list_recent, render_guest_form, render_home_card, render_host_add,
-    render_host_main, render_host_stats, render_host_stay, reset_test_store, resolve,
-    stats_summary, submit, task_complete, task_toggle, timeline_tasks, AddArgs, Category,
-    ResolveArgs, SubmitArgs, GUEST_TEXT_EMAIL_MAX_CHARS,
+    render_host_main, render_host_reports, render_host_stats, render_host_stay, reply,
+    reset_test_store, resolve, set_status, stats_summary, submit, task_complete, task_toggle,
+    timeline_tasks, AddArgs, Category, ReplyArgs, ResolveArgs, SetStatusArgs, SubmitArgs,
+    GUEST_TEXT_EMAIL_MAX_CHARS,
 };
 use portaki_sdk::contracts::stats::StatsSummaryArgs;
 use portaki_sdk::contracts::timeline::{TaskCompleteArgs, TaskToggleArgs, TimelineTasksArgs};
+use portaki_sdk::host::email::EmailAudience;
 use portaki_sdk::limits;
 use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use uuid::Uuid;
@@ -162,7 +164,7 @@ fn host_stats_list_recent_after_guest_submit() {
             assert!(SurfaceAssertions::new(&surface).contains_type("FeedItem"));
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("host.main.recentTitle"));
-            assert!(json.contains("host.main.status.open"));
+            assert!(json.contains("status.new"));
             assert!(json.contains("i18n:stats.category.cleanliness"));
         });
 }
@@ -226,7 +228,7 @@ fn host_stats_reflect_resolution_and_period() {
             resolve(ctx.clone(), ResolveArgs { report_id: oven.id }).expect("resolve again");
 
             let main = serde_json::to_string(&render_host_stats(ctx.clone())).expect("main json");
-            assert!(main.contains("host.main.status.resolved"));
+            assert!(main.contains("status.resolved"));
             assert_eq!(main.matches("host.main.resolvedIn").count(), 1);
 
             let tile = stats_summary(
@@ -408,7 +410,9 @@ fn a_feed_row_opens_the_report_detail() {
             ctx.input = serde_json::json!({ "issueId": report.id, "periodDays": 30 });
             let detail = serde_json::to_string(&render_host_stats(ctx)).expect("json");
             assert!(detail.contains("Door stuck"));
-            assert!(detail.contains("host.detail.resolve"));
+            assert!(detail.contains("setStatus"));
+            assert!(detail.contains("i18n:status.in_progress"));
+            assert!(detail.contains("host.history.reported"));
             assert!(detail.contains(&format!("/stays/{}", report.stay_id)));
             assert!(!detail.contains("FeedItem"));
         });
@@ -625,7 +629,7 @@ fn the_stay_encart_lists_its_reports_or_says_there_are_none() {
     assert!(one.contains("Plus d'eau chaude"));
     assert!(!one.contains("Autre séjour"));
     assert!(one.contains("host.stay.openOne"));
-    assert!(one.contains("host.main.status.open"));
+    assert!(one.contains("status.new"));
 
     let id = MockContext::host()
         .run(list_recent)
@@ -639,7 +643,7 @@ fn the_stay_encart_lists_its_reports_or_says_there_are_none() {
         .run(|ctx| resolve(ctx, ResolveArgs { report_id: id }).expect("resolve"));
     let resolved = render(Some(stay));
     assert!(resolved.contains("host.stay.openNone"));
-    assert!(resolved.contains("host.main.status.resolved"));
+    assert!(resolved.contains("status.resolved"));
 }
 
 #[test]
@@ -763,4 +767,219 @@ fn a_report_open_for_a_day_is_a_task_until_resolved() {
             .expect("complete");
         });
     assert!(tasks_at(t0 + Duration::hours(27)).is_empty());
+}
+
+/// Le bundle français semé dans le mock : `t!` rend le texte, et une clé absente reste une clé.
+fn fr(builder: portaki_test_utils::MockContextBuilder) -> portaki_test_utils::MockContextBuilder {
+    let bundle: serde_json::Map<String, serde_json::Value> =
+        serde_json::from_str(include_str!("../i18n/fr-FR.json")).expect("fr bundle");
+    bundle.iter().fold(builder, |builder, (key, text)| {
+        builder.with_translation(key, text.as_str().unwrap_or_default())
+    })
+}
+
+/// Un signalement envoyé par le voyageur du mock ; son id.
+fn one_report(summary: &str) -> Uuid {
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|ctx| {
+            submit(
+                ctx.clone(),
+                SubmitArgs {
+                    category: Category::Appliance,
+                    summary: summary.into(),
+                    details: None,
+                    photo: None,
+                },
+            )
+            .expect("submit");
+            list_for_stay(ctx)
+                .expect("list")
+                .into_iter()
+                .find(|row| row.summary == summary)
+                .expect("report")
+                .id
+        })
+}
+
+fn status_of(id: Uuid) -> (String, bool) {
+    MockContext::host().run(|ctx| {
+        let row = list_recent(ctx)
+            .expect("recent")
+            .into_iter()
+            .find(|row| row.id == id)
+            .expect("row");
+        (row.status, row.resolved_at.is_some())
+    })
+}
+
+/// Nouveau → En cours → Résolu, puis rouvert : `resolved_at` suit, et l'historique le dit.
+#[test]
+#[serial]
+fn the_host_moves_a_report_through_its_three_states() {
+    reset_test_store();
+    let id = one_report("Plus d'eau chaude");
+    assert_eq!(status_of(id), ("new".into(), false));
+    let set = |to: &str| {
+        MockContext::host().run(|ctx| {
+            set_status(
+                ctx,
+                SetStatusArgs {
+                    report_id: id,
+                    status: to.into(),
+                },
+            )
+        })
+    };
+    set("in_progress").expect("in progress");
+    assert_eq!(status_of(id), ("in_progress".into(), false));
+    set("resolved").expect("resolved");
+    assert_eq!(status_of(id), ("resolved".into(), true));
+    set("new").expect("reopen");
+    assert_eq!(status_of(id), ("new".into(), false));
+    assert!(set("closed").is_err());
+
+    // `resolve` (et la tâche) passent par le même chemin.
+    MockContext::host()
+        .run(|ctx| resolve(ctx, ResolveArgs { report_id: id }))
+        .expect("resolve");
+    assert_eq!(status_of(id), ("resolved".into(), true));
+
+    // Un voyageur ne change pas le statut.
+    let refused = MockContext::guest().run(|ctx| {
+        set_status(
+            ctx,
+            SetStatusArgs {
+                report_id: id,
+                status: "new".into(),
+            },
+        )
+    });
+    assert!(refused.is_err());
+
+    fr(MockContext::host()).run(|mut ctx| {
+        ctx.input = json!({ "issueId": id });
+        let detail = serde_json::to_string(&render_host_reports(ctx)).unwrap();
+        assert!(detail.contains("Signalé par le voyageur"), "{detail}");
+        assert!(detail.contains("En cours · par vous"), "{detail}");
+        assert!(detail.contains("Nouveau · par vous"), "{detail}");
+        assert!(detail.contains("FilterChip"), "{detail}");
+        assert!(!detail.contains("· host."), "{detail}");
+    });
+}
+
+/// « Répondre » : la réponse part au voyageur par e-mail, une par envoi, et il la lit dans son
+/// livret avec le statut (§9 #5).
+#[test]
+#[serial]
+fn a_reply_is_emailed_and_shown_in_the_guest_history() {
+    reset_test_store();
+    let id = one_report("Plus d'eau chaude");
+    fr(MockContext::host()).run_with(|ctx, host| {
+        let send = |text: &str| {
+            reply(
+                ctx.clone(),
+                ReplyArgs {
+                    report_id: id,
+                    reply: text.into(),
+                },
+            )
+        };
+        assert!(send("   ").is_err());
+        send("Le chauffagiste passe demain à 9 h.").expect("reply");
+        let emails = host.sent_emails();
+        assert_eq!(emails.len(), 1);
+        assert_eq!(emails[0].audience, EmailAudience::Guest);
+        assert!(emails[0].email_id.starts_with("host-reply-"));
+        assert!(emails[0]
+            .content
+            .body
+            .fr
+            .contains("Le chauffagiste passe demain à 9 h."));
+        assert!(emails[0].content.body.fr.contains("Plus d'eau chaude"));
+        assert!(!emails[0].content.subject.en.is_empty());
+        assert!(emails[0].content.subject.translations.contains_key("de"));
+        set_status(
+            ctx.clone(),
+            SetStatusArgs {
+                report_id: id,
+                status: "in_progress".into(),
+            },
+        )
+        .expect("in progress");
+
+        let mut detail_ctx = ctx.clone();
+        detail_ctx.input = json!({ "issueId": id });
+        let detail = serde_json::to_string(&render_host_reports(detail_ctx)).unwrap();
+        assert!(
+            detail.contains("Réponse envoyée : « Le chauffagiste passe demain à 9 h. »"),
+            "{detail}"
+        );
+    });
+    fr(MockContext::guest())
+        .with_property(Property::default())
+        .run(|ctx| {
+            let card = serde_json::to_string(&render_home_card(ctx).expect("card")).unwrap();
+            assert!(card.contains("i18n:home.card.inProgress"), "{card}");
+            assert!(
+                card.contains("Votre hôte : « Le chauffagiste passe demain à 9 h. »"),
+                "{card}"
+            );
+        });
+    // Un voyageur ne répond pas à la place de l'hôte.
+    let refused = MockContext::guest().run(|ctx| {
+        reply(
+            ctx,
+            ReplyArgs {
+                report_id: id,
+                reply: "Moi aussi".into(),
+            },
+        )
+    });
+    assert!(refused.is_err());
+}
+
+/// L'onglet : À traiter (Nouveau et En cours, avec leur nombre) par défaut, Résolus, Tous ; et
+/// « Ajouter un signalement » avec le choix du séjour.
+#[test]
+#[serial]
+fn the_tab_filters_reports_and_adds_one() {
+    reset_test_store();
+    let open = one_report("Bruit des voisins");
+    let done = one_report("Le Wi-Fi coupe");
+    MockContext::host()
+        .run(|ctx| resolve(ctx, ResolveArgs { report_id: done }))
+        .expect("resolve");
+
+    let render = |input: serde_json::Value| {
+        MockContext::host().run(|mut ctx| {
+            ctx.input = input;
+            serde_json::to_string(&render_host_reports(ctx)).unwrap()
+        })
+    };
+    let to_handle = render(json!({}));
+    assert!(to_handle.contains("Bruit des voisins"), "{to_handle}");
+    assert!(!to_handle.contains("Le Wi-Fi coupe"), "{to_handle}");
+    assert!(to_handle.contains("host.surface.input"), "{to_handle}");
+    assert!(to_handle.contains("i18n:status.new"), "{to_handle}");
+    assert!(to_handle.contains("host.category.appliance"), "{to_handle}");
+
+    let resolved = render(json!({ "filter": "resolved" }));
+    assert!(resolved.contains("Le Wi-Fi coupe"));
+    assert!(!resolved.contains("Bruit des voisins"));
+    let all = render(json!({ "filter": "all" }));
+    assert!(all.contains("Le Wi-Fi coupe") && all.contains("Bruit des voisins"));
+
+    let stay = MockContext::guest().run(|ctx| ctx.guest.unwrap().session_id);
+    let add_form = render(json!({
+        "add": "1",
+        "stays": [{ "id": stay.to_string(), "label": "Marie Dupont · 24 → 29 août" }]
+    }));
+    assert!(
+        add_form.contains("Marie Dupont · 24 → 29 août"),
+        "{add_form}"
+    );
+    assert!(add_form.contains("\"stayId\""), "{add_form}");
+    assert!(render(json!({ "add": "1" })).contains("host.add.noStay"));
+    let _ = open;
 }

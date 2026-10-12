@@ -24,53 +24,77 @@ pub fn render_host_add(ctx: HostContext) -> Surface {
             .text("i18n:host.stay.missingStay")
             .variant(TextVariant::Caption)
             .into(),
-        Some(stay_id) => form(stay_id).into(),
+        Some(stay_id) => form(AddStay::Fixed(stay_id)).into(),
     };
     Surface::new(Page::new().child(body)).with_id(ADD)
 }
 
+/// Le séjour du signalement : celui de la fiche, ou à choisir (onglet Signalements).
+pub(crate) enum AddStay {
+    Fixed(Uuid),
+    /// `(id, libellé)` des séjours que le dashboard passe à l'onglet (`input.stays`).
+    Choose(Vec<(String, String)>),
+}
+
 /// Toutes les catégories : l'hôte signale ce qu'il constate, pas seulement ce que le livret
 /// propose au voyageur.
-fn form(stay_id: Uuid) -> Form {
+pub(crate) fn form(stay: AddStay) -> Form {
     let categories = crate::category::WIRE_VALUES
         .iter()
         .map(|wire| ChoiceOption::new(*wire, format!("i18n:host.category.{wire}")))
         .collect();
-    Form::new()
-        .child(
-            Field::new()
-                .name("category")
-                .label("i18n:form.category.label")
+    let (form, args) = match stay {
+        AddStay::Fixed(stay_id) => (Form::new(), json!({ "stayId": stay_id })),
+        AddStay::Choose(stays) => {
+            let first = stays.first().map(|(id, _)| id.clone()).unwrap_or_default();
+            let options = stays
+                .into_iter()
+                .map(|(id, label)| ChoiceOption::new(id, label))
+                .collect();
+            let field = Field::new()
+                .name("stayId")
+                .label("i18n:host.add.stay")
                 .required(true)
-                .child(
-                    Select::new()
-                        .name("category")
-                        .options(categories)
-                        .value("appliance"),
-                ),
-        )
-        .child(
-            Field::new()
-                .name("summary")
-                .label("i18n:form.summary.label")
-                .required(true)
-                .child(
-                    TextInput::new()
-                        .name("summary")
-                        .placeholder("i18n:form.summary.placeholder"),
-                ),
-        )
-        .child(
-            Field::new()
-                .name("details")
-                .label("i18n:form.details.label")
-                .child(
-                    TextArea::new()
-                        .name("details")
-                        .placeholder("i18n:form.details.placeholder"),
-                ),
-        )
-        .child(Button::new().label("i18n:host.add.submit").action(
-            crate::ids::module_id().command(crate::commands::ADD, json!({ "stayId": stay_id })),
-        ))
+                .child(Select::new().name("stayId").options(options).value(first));
+            (Form::new().child(field), json!({}))
+        }
+    };
+    form.child(
+        Field::new()
+            .name("category")
+            .label("i18n:form.category.label")
+            .required(true)
+            .child(
+                Select::new()
+                    .name("category")
+                    .options(categories)
+                    .value("appliance"),
+            ),
+    )
+    .child(
+        Field::new()
+            .name("summary")
+            .label("i18n:form.summary.label")
+            .required(true)
+            .child(
+                TextInput::new()
+                    .name("summary")
+                    .placeholder("i18n:form.summary.placeholder"),
+            ),
+    )
+    .child(
+        Field::new()
+            .name("details")
+            .label("i18n:form.details.label")
+            .child(
+                TextArea::new()
+                    .name("details")
+                    .placeholder("i18n:form.details.placeholder"),
+            ),
+    )
+    .child(
+        Button::new()
+            .label("i18n:host.add.submit")
+            .action(crate::ids::module_id().command(crate::commands::ADD, args)),
+    )
 }

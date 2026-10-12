@@ -1,0 +1,8 @@
+{
+  "email.cta.seeMore": "Mehr anzeigen",
+  "email.hostReply.subject": "Ihr Gastgeber hat geantwortet",
+  "email.hostReply.eyebrow": "Problemmeldung",
+  "email.hostReply.title": "Antwort auf Ihre Meldung: {summary}",
+  "email.hostReply.body": "Sie hatten gemeldet: {summary}.\n\nIhr Gastgeber antwortet:\n\n„{reply}“",
+  "email.hostReply.cta": "Gästemappe öffnen"
+}

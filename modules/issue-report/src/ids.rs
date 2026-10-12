@@ -6,6 +6,8 @@ define_event_types! {
     WORKSPACE_ACTIVITY_RECORD = "workspace-activity.record",
     // Dashboard: open the stats detail of one row in a modal.
     HOST_SURFACE_OVERLAY = "host.surface.overlay",
+    // Dashboard: render the surface again with this input merged (the tab's filter).
+    HOST_SURFACE_INPUT = "host.surface.input",
 }
 
 /// Catalog module id (`issue-report`).

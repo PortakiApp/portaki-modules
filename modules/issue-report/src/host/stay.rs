@@ -1,6 +1,6 @@
 //! Encart du séjour (spec Signaler §1) : « 1 signalement en cours », puis chaque signalement du
 //! séjour — résumé, il y a combien de temps, statut. Une ligne ouvre le détail, comme dans les
-//! statistiques.
+//! statistiques et l'onglet.
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{Card, EmptyState, Page, Stack, Text};
@@ -17,6 +17,10 @@ use crate::storage;
     icon = IconName::DangerTriangle
 )]
 pub fn render_host_stay(ctx: HostContext) -> Surface {
+    // Une ligne ouvre le détail : le dashboard rend cette surface à nouveau avec son `issueId`.
+    if let Some(detail) = super::detail_from_input(&ctx) {
+        return Surface::new(detail).with_id(STAY);
+    }
     let card = Card::new()
         .title("i18n:host.stay.title")
         .icon(IconName::DangerTriangle);

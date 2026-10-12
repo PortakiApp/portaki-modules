@@ -7,17 +7,44 @@ use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
-use crate::entities::IssueReport;
+use crate::entities::{IssueReport, IssueReportEvent};
+use crate::status;
 
 use std::cell::RefCell;
 
 thread_local! {
     static TEST_ROWS: RefCell<Vec<IssueReport>> = const { RefCell::new(Vec::new()) };
+    static TEST_EVENTS: RefCell<Vec<IssueReportEvent>> = const { RefCell::new(Vec::new()) };
 }
 
 /// Clears in-memory rows used by unit tests.
 pub fn reset_test_store() {
     TEST_ROWS.with(|rows| rows.borrow_mut().clear());
+    TEST_EVENTS.with(|rows| rows.borrow_mut().clear());
+}
+
+/// Who wrote a history line.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Actor {
+    Guest,
+    Host,
+}
+
+impl Actor {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Guest => "guest",
+            Self::Host => "host",
+        }
+    }
+}
+
+/// The guest and the stay's dates, taken when the report is sent.
+#[derive(Debug, Clone, Default)]
+pub struct GuestSnapshot {
+    pub name: String,
+    pub check_in: Option<DateTime<Utc>>,
+    pub check_out: Option<DateTime<Utc>>,
 }
 
 fn in_memory_enabled() -> bool {
@@ -85,13 +112,15 @@ pub fn list_since(since: DateTime<Utc>) -> Result<Vec<IssueReport>> {
     Ok(page.items)
 }
 
-/// Inserts a new report for the stay.
+/// Inserts a new report for the stay, and its « Signalé » history line.
 pub fn create(
     stay_id: Uuid,
     category: String,
     summary: String,
     details: Option<String>,
     photo: Option<FileRef>,
+    actor: Actor,
+    guest: GuestSnapshot,
 ) -> Result<IssueReport> {
     let now = time::now()?;
     let row = IssueReport {
@@ -103,19 +132,94 @@ pub fn create(
         created_at: now,
         resolved_at: None,
         photo: photo.map(|photo| photo.to_string()),
+        status: status::NEW.to_string(),
+        guest_name: guest.name,
+        stay_check_in: guest.check_in,
+        stay_check_out: guest.check_out,
     };
     persist_row(row.clone())?;
+    add_event(&row, "created", actor, "", None, now)?;
     Ok(row)
 }
 
-/// Marks a report resolved; a second call keeps the first resolution time.
-pub fn resolve(id: Uuid) -> Result<IssueReport> {
+/// Moves a report to `to`. `resolved_at` follows: set on resolving (a second call keeps the
+/// first time), cleared on reopening. `changed` is false when the report already had that status.
+pub fn set_status(id: Uuid, to: &'static str) -> Result<(IssueReport, bool)> {
     let mut row = find_by_id(id)?.ok_or_else(|| PortakiError::Host("report_not_found".into()))?;
-    if row.resolved_at.is_none() {
-        row.resolved_at = Some(time::now()?);
-        persist_row(row.clone())?;
+    if status::of(&row) == to {
+        return Ok((row, false));
     }
-    Ok(row)
+    let now = time::now()?;
+    row.status = to.to_string();
+    row.resolved_at = if to == status::RESOLVED {
+        row.resolved_at.or(Some(now))
+    } else {
+        None
+    };
+    persist_row(row.clone())?;
+    add_event(&row, "status", Actor::Host, to, None, now)?;
+    Ok((row, true))
+}
+
+/// Writes the host's reply into the report's history.
+pub fn add_reply(report: &IssueReport, text: String) -> Result<IssueReportEvent> {
+    add_event(report, "reply", Actor::Host, "", Some(text), time::now()?)
+}
+
+/// A report's history, oldest first.
+pub fn events_for_report(report_id: Uuid) -> Result<Vec<IssueReportEvent>> {
+    list_events("report_id", report_id, |event| event.report_id == report_id)
+}
+
+/// A stay's history (every report), oldest first — what the booklet reads.
+pub fn events_for_stay(stay_id: Uuid) -> Result<Vec<IssueReportEvent>> {
+    list_events("stay_id", stay_id, |event| event.stay_id == stay_id)
+}
+
+fn list_events(
+    column: &str,
+    id: Uuid,
+    keep: impl Fn(&IssueReportEvent) -> bool,
+) -> Result<Vec<IssueReportEvent>> {
+    let mut rows = if in_memory_enabled() {
+        TEST_EVENTS.with(|store| store.borrow().iter().filter(|e| keep(e)).cloned().collect())
+    } else {
+        find::<IssueReportEvent, IssueReportEvent>(
+            Query::<IssueReportEvent>::new()
+                .r#where(eq(column, id))
+                .limit(500),
+        )?
+        .items
+    };
+    rows.sort_by_key(|event| event.created_at);
+    Ok(rows)
+}
+
+fn add_event(
+    report: &IssueReport,
+    kind: &str,
+    actor: Actor,
+    status: &str,
+    text: Option<String>,
+    at: DateTime<Utc>,
+) -> Result<IssueReportEvent> {
+    let event = IssueReportEvent {
+        id: Uuid::new_v4(),
+        report_id: report.id,
+        stay_id: report.stay_id,
+        kind: kind.to_string(),
+        actor: actor.as_str().to_string(),
+        status: status.to_string(),
+        text,
+        created_at: at,
+    };
+    if in_memory_enabled() {
+        TEST_EVENTS.with(|store| store.borrow_mut().push(event.clone()));
+    } else {
+        let _ =
+            repo::create::<IssueReportEvent, IssueReportEvent, IssueReportEvent>(event.clone())?;
+    }
+    Ok(event)
 }
 
 pub fn find_by_id(id: Uuid) -> Result<Option<IssueReport>> {

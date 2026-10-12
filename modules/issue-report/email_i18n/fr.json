@@ -1,3 +1,8 @@
 {
-  "email.cta.seeMore": "Voir plus"
+  "email.cta.seeMore": "Voir plus",
+  "email.hostReply.subject": "Votre hôte vous répond",
+  "email.hostReply.eyebrow": "Signalement",
+  "email.hostReply.title": "Réponse à votre signalement : {summary}",
+  "email.hostReply.body": "Vous aviez signalé : {summary}.\n\nVotre hôte vous répond :\n\n« {reply} »",
+  "email.hostReply.cta": "Ouvrir le livret"
 }

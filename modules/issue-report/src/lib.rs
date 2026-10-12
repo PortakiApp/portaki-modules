@@ -11,17 +11,22 @@ mod host;
 mod i18n;
 mod ids;
 mod queries;
+mod status;
 mod storage;
 mod tasks;
 
 pub use category::Category;
-pub use commands::{add, resolve, submit, AddArgs, ResolveArgs, SubmitArgs};
+pub use commands::{
+    add, reply, resolve, set_status, submit, AddArgs, ReplyArgs, ResolveArgs, SetStatusArgs,
+    SubmitArgs,
+};
 pub use config::ModuleConfig;
 pub use email_text::GUEST_TEXT_EMAIL_MAX_CHARS;
-pub use entities::IssueReport;
+pub use entities::{IssueReport, IssueReportEvent};
 pub use guest::{render_guest_form, render_home_card};
 pub use host::{
-    render_host_add, render_host_main, render_host_stats, render_host_stay, stats_summary,
+    render_host_add, render_host_main, render_host_reports, render_host_stats, render_host_stay,
+    stats_summary,
 };
 pub use queries::{list_for_stay, list_recent, IssueReportRow};
 pub use storage::reset_test_store;

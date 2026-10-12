@@ -1,0 +1,8 @@
+{
+  "email.cta.seeMore": "Meer bekijken",
+  "email.hostReply.subject": "Je host heeft geantwoord",
+  "email.hostReply.eyebrow": "Melding",
+  "email.hostReply.title": "Antwoord op je melding: {summary}",
+  "email.hostReply.body": "Je meldde: {summary}.\n\nJe host antwoordt:\n\n‘{reply}’",
+  "email.hostReply.cta": "Gastenboek openen"
+}
