@@ -65,7 +65,7 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         if !place.trim().is_empty() {
             subtitle_parts.push(place);
         }
-        let when = crate::time_format::event_when(event);
+        let when = crate::time_format::event_when(event, data.tz.as_ref());
         if !when.trim().is_empty() {
             subtitle_parts.push(when);
         }
@@ -81,7 +81,7 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
             // L'heure a son emplacement dans un ListItem : `Leading::Icon` est la forme d'avant,
             // où un libellé passait pour un nom d'icône. La maquette montre bien une heure.
             item = item.leading(Leading::Visual(Box::new(LeadingVisual {
-                time: Some(at.format("%H:%M").to_string()),
+                time: Some(crate::time_format::local_time(at, data.tz.as_ref())),
                 ..LeadingVisual::default()
             })));
         } else if !enriched {
@@ -129,7 +129,7 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
 /// L'événement qui arrive, en vedette : son heure, son titre, son lieu.
 fn headline(data: &GuestData, event: &crate::config::EventRow) -> Component {
     let mut children: Vec<Component> = Vec::new();
-    let when = crate::time_format::event_when(event);
+    let when = crate::time_format::event_when(event, data.tz.as_ref());
     if when.trim().is_empty() {
         children.push(Component::Pill(
             Pill::new().label("i18n:guest.event.dateTbd"),

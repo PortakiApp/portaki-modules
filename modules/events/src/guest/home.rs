@@ -60,7 +60,7 @@ fn upcoming_headline(data: &GuestData) -> Option<String> {
     if title.is_empty() {
         return None;
     }
-    let when = crate::time_format::event_when(event);
+    let when = crate::time_format::event_when(event, data.tz.as_ref());
     if when.trim().is_empty() {
         Some(title.to_string())
     } else {

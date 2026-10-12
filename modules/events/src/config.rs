@@ -516,7 +516,10 @@ impl EventRow {
 }
 
 /// L'heure du logement, sans fuseau (UTC sans fuseau connu).
-fn local(at: chrono::DateTime<chrono::Utc>, tz: Option<&PropertyTz>) -> chrono::NaiveDateTime {
+pub(crate) fn local(
+    at: chrono::DateTime<chrono::Utc>,
+    tz: Option<&PropertyTz>,
+) -> chrono::NaiveDateTime {
     tz.map_or(at.naive_utc(), |tz| tz.to_local(at).naive_local())
 }
 

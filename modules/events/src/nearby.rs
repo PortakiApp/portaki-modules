@@ -47,7 +47,9 @@ pub fn resolve_events(
     // haute, un séjour de trois nuits affichait le festival du mois prochain.
     let window = crate::time_format::stay_window(ctx.stay.as_ref());
     let tz = ctx.property_tz();
-    let mut manual = crate::time_format::sort_events_by_start(config.parse_events());
+    let anchored = |e| crate::time_format::anchored(e, tz.as_ref());
+    let manual = config.parse_events().into_iter().map(anchored).collect();
+    let mut manual = crate::time_format::sort_events_by_start(manual);
     manual = crate::time_format::events_within(&manual, window, tz.as_ref());
     if for_home_card {
         manual = crate::time_format::events_for_home_card(&manual, now, tz.as_ref());
@@ -63,6 +65,7 @@ pub fn resolve_events(
     };
 
     let nearby = load_nearby(ctx, config, point.lat, point.lng).unwrap_or_else(|_| Vec::new());
+    let nearby = nearby.into_iter().map(anchored).collect();
     let mut nearby = crate::time_format::sort_events_by_start(nearby);
     nearby = crate::time_format::events_within(&nearby, window, tz.as_ref());
     if for_home_card {
