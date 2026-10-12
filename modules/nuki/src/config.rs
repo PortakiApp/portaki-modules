@@ -5,15 +5,16 @@ use serde::{Deserialize, Serialize};
 /// The keys are the names of the host form fields: the platform takes `updateConfig`.
 /// Nothing is required on its own: « keypad code, or remote unlock (Nuki Web key + lock ID) »
 /// spans the connector, so `publishReadiness` carries it. The platform does not trim: read
-/// through the `*_trimmed` accessors.
+/// through the `*_trimmed` accessors. La serrure et le nom de l'appareil sont propres au logement
+/// (`local`) : copiés ailleurs, ils y sont marqués « À vérifier ».
 #[portaki_sdk::config]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct ModuleConfig {
-    #[field(label = "host.smartlockId.label")]
+    #[field(local, label = "host.smartlockId.label")]
     pub smartlock_id: String,
     #[field(secret, label = "host.keypadCode.label")]
     pub keypad_code: String,
-    #[field(label = "host.deviceName.label")]
+    #[field(local, label = "host.deviceName.label")]
     pub device_name: String,
     /// Un code clavier par séjour, créé sur la serrure via Nuki Web (spec Nuki §2.2). Non par
     /// défaut, contre la spec : écrire sur la serrure de l'hôte se demande, ne se suppose pas.

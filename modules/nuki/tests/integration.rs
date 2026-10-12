@@ -464,3 +464,53 @@ fn the_stay_encart_says_why_there_is_no_code() {
     );
     assert!(unknown.contains("host.stay.unknown"), "{unknown}");
 }
+
+/// Le tiroir de la planche : « Serrure » dit si la clé Nuki Web est là, « Codes » avertit
+/// toujours qu'un code par séjour écrit sur la serrure — même éteint.
+#[test]
+#[serial]
+fn the_drawer_says_whether_the_nuki_web_key_is_there() {
+    let render = |capabilities: &[capability::CapabilityId]| {
+        MockContext::host()
+            .with_capabilities(capabilities)
+            .with_config(&ModuleConfig::default())
+            .run(|ctx| serde_json::to_string(&render_host_main(ctx).expect("host main")).unwrap())
+    };
+    let with_key = render(&[capability::core::STORAGE, capability::external::NUKI_BYOK]);
+    let without = render(&[capability::core::STORAGE]);
+    assert!(with_key.contains("i18n:host.key.connected"), "{with_key}");
+    assert!(!with_key.contains("i18n:host.key.missing"), "{with_key}");
+    assert!(without.contains("i18n:host.key.missing"), "{without}");
+    for json in [&with_key, &without] {
+        assert!(json.contains("i18n:host.section.lock"), "{json}");
+        assert!(json.contains("i18n:host.section.codes"), "{json}");
+        assert!(json.contains("i18n:host.codePerStay.warning"), "{json}");
+    }
+}
+
+/// Copiés vers un autre logement, la serrure et son nom sont marqués « À vérifier » ; le code
+/// clavier et le choix d'un code par séjour suivent tels quels.
+#[test]
+fn the_lock_and_its_name_belong_to_the_property() {
+    let dir = concat!(env!("OUT_DIR"), "/portaki-emissions");
+    let path = std::fs::read_dir(dir)
+        .expect("emissions")
+        .filter_map(|entry| entry.ok().map(|e| e.path()))
+        .find(|p| {
+            p.file_name()
+                .unwrap()
+                .to_string_lossy()
+                .starts_with("config-")
+        })
+        .expect("config emission");
+    let config: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+    let local: Vec<&str> = config["fields"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|field| field["local"] == true)
+        .filter_map(|field| field["key"].as_str())
+        .collect();
+    assert_eq!(local, ["smartlock_id", "device_name"]);
+}
