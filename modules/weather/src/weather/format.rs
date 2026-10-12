@@ -90,16 +90,70 @@ pub(crate) fn parse_forecast_date(date: &str) -> Option<NaiveDate> {
     NaiveDate::parse_from_str(date, "%Y-%m-%d").ok()
 }
 
-fn city_from_address(address: &str) -> Option<&str> {
-    let segment = address.split(',').next_back()?.trim();
-    let without_postal = segment
-        .trim_start_matches(|c: char| c.is_ascii_digit() || c == '-' || c == ' ')
-        .trim();
-    if without_postal.is_empty() {
-        None
-    } else {
-        Some(without_postal)
+/// La commune d'une adresse d'une ligne. D'abord le segment « 45000 Orléans » (code postal à cinq
+/// chiffres, la règle `POSTAL_CITY` du dashboard) ; sinon le segment avant un pays final
+/// (« Cannes, France »), sinon le dernier segment, code postal retiré.
+pub fn city_from_address(address: &str) -> Option<&str> {
+    let segments: Vec<&str> = address
+        .split(',')
+        .map(str::trim)
+        .filter(|segment| !segment.is_empty())
+        .collect();
+    let postal = segments.iter().find_map(|segment| {
+        let (code, rest) = segment.split_once(char::is_whitespace)?;
+        let rest = rest.trim();
+        (code.len() == 5 && code.bytes().all(|b| b.is_ascii_digit()) && !rest.is_empty())
+            .then_some(rest)
+    });
+    if postal.is_some() {
+        return postal;
     }
+    let last = match segments.as_slice() {
+        [.., city, country] if is_country(country) => city,
+        [.., last] => last,
+        [] => return None,
+    };
+    Some(last.trim_start_matches(|c: char| c.is_ascii_digit() || c == '-' || c == ' '))
+        .filter(|city| !city.is_empty())
+}
+
+// ponytail: les pays des logements servis aujourd'hui ; un géocodeur qui rend la commune à part
+// remplacerait cette liste.
+fn is_country(segment: &str) -> bool {
+    const COUNTRIES: &[&str] = &[
+        "france",
+        "belgique",
+        "belgië",
+        "belgium",
+        "suisse",
+        "schweiz",
+        "switzerland",
+        "luxembourg",
+        "monaco",
+        "italia",
+        "italy",
+        "italie",
+        "españa",
+        "spain",
+        "espagne",
+        "portugal",
+        "deutschland",
+        "germany",
+        "allemagne",
+        "nederland",
+        "netherlands",
+        "pays-bas",
+        "united kingdom",
+        "royaume-uni",
+        "uk",
+        "united states",
+        "usa",
+        "états-unis",
+        "canada",
+        "maroc",
+        "morocco",
+    ];
+    COUNTRIES.contains(&segment.to_lowercase().as_str())
 }
 
 #[cfg(test)]
@@ -132,6 +186,23 @@ mod tests {
             resolve_city_label(None, Some("12 rue des Lilas, 06400 Antibes")),
             Some("Antibes".to_string())
         );
+    }
+
+    #[test]
+    fn the_commune_is_read_not_the_country() {
+        assert_eq!(
+            city_from_address("3 quai X, 45000 Orléans, France"),
+            Some("Orléans")
+        );
+        assert_eq!(
+            city_from_address("12 rue du Port, 56000 Vannes"),
+            Some("Vannes")
+        );
+        assert_eq!(
+            city_from_address("Chemin des Crêtes, Cannes, France"),
+            Some("Cannes")
+        );
+        assert_eq!(city_from_address("Rua Augusta, Lisboa"), Some("Lisboa"));
     }
 
     #[test]
