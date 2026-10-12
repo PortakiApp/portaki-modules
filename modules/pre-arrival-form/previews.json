@@ -16,6 +16,9 @@
         "form.occasion.label": "Occasion spéciale ?",
         "form.occasion.none": "Aucune",
         "form.occasion.remote_work": "Télétravail",
+        "form.specialNeeds.hint": "Lit bébé, allergie, arrivée tardive…",
+        "form.specialNeeds.label": "Besoins particuliers",
+        "form.specialNeeds.placeholder": "Lit bébé, PMR… (optionnel)",
         "form.submit": "Envoyer",
         "home.card.intro": "Aidez-nous à préparer votre venue en 1 minute. Ces infos ne servent qu’à votre accueil.",
         "nav.pre-arrival-form": "Pré-arrivée"
@@ -117,6 +120,23 @@
             "label": "i18n:form.guestCount.label",
             "name": "guestCount",
             "type": "Field"
+          },
+          {
+            "children": [
+              {
+                "name": "specialNeeds",
+                "placeholder": "i18n:form.specialNeeds.placeholder",
+                "rows": 2,
+                "type": "TextArea"
+              }
+            ],
+            "label": "i18n:form.specialNeeds.label",
+            "name": "specialNeeds",
+            "type": "Field"
+          },
+          {
+            "text": "i18n:form.specialNeeds.hint",
+            "type": "FieldHint"
           },
           {
             "children": [

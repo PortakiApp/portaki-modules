@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.11.0
+
+La page Avant l’arrivée refaite.
+
+* Choisissez le pas des créneaux (15 min, 30 min ou 1 h) et l’heure d’une arrivée tardive : elle crée une tâche dans À venir.
+* Vos questions dans un tableau : glissez pour les réordonner, ouvrez-en une pour la modifier.
+* Besoins particuliers et allergies ne font plus qu’un interrupteur ; l’heure d’arrivée est toujours demandée.
+* Le formulaire ne demande plus de pièce d’identité : la fiche de police (Formalités) la recueille.
+* La date limite, la relance et le moment d’affichage se règlent dans « Envoi et relances ».
+
 ## 1.10.1
 
 Montée technique.

@@ -151,17 +151,15 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
 
     let q = ModuleConfig::load(&ctx)?;
 
-    let arrival_time = if q.ask_arrival_time {
-        normalize(args.arrival_time_estimated)
-    } else {
-        None
-    };
+    // L'heure d'arrivée est toujours demandée (§9 cas 4).
+    let arrival_time = normalize(args.arrival_time_estimated);
     let occasion = if q.ask_occasion {
         normalize(args.guest_occasion)
     } else {
         None
     };
-    let allergies = if q.ask_allergies {
+    // Besoins et allergies : un seul interrupteur, deux questions (§2.2).
+    let allergies = if q.asks_needs() {
         normalize(args.guest_allergies)
     } else {
         None
@@ -171,16 +169,13 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     } else {
         None
     };
-    let special_needs = if q.ask_special_needs {
+    let special_needs = if q.asks_needs() {
         normalize(args.special_needs)
     } else {
         None
     };
-    let id_document = if q.ask_id_document {
-        normalize(args.id_document)
-    } else {
-        None
-    };
+    // La pièce d'identité n'est plus demandée ici : la fiche de police la recueille.
+    let id_document = None;
     // Et seulement un moyen de la liste : une valeur hors liste ne dit rien à l'hôte, et un
     // formulaire resté ouvert dans un téléphone peut en porter une.
     let transport = if q.ask_transport {

@@ -156,7 +156,8 @@ pub fn build_form_surface(inputs: &FormInputs) -> Surface {
         );
     }
 
-    if questions.ask_arrival_time {
+    // Toujours demandée (§9 cas 4) : `ask_arrival_time` n'est plus lu.
+    {
         let answered = existing.and_then(|row| row.arrival_time.as_deref());
         let field = Field::new()
             .name("arrivalTimeEstimated")
@@ -241,7 +242,8 @@ pub fn build_form_surface(inputs: &FormInputs) -> Surface {
                 .into(),
         );
     }
-    if questions.ask_allergies {
+    // Besoins particuliers : un interrupteur, les allergies comprises (§2.2).
+    if questions.asks_needs() {
         form_children.push(
             Field::new()
                 .name("guestAllergies")
@@ -279,7 +281,7 @@ pub fn build_form_surface(inputs: &FormInputs) -> Surface {
             ),
         }
     }
-    if questions.ask_special_needs {
+    if questions.asks_needs() {
         // Un besoin tient rarement sur une ligne : « lit bébé et allergie aux fruits à coque »
         // était coupé par un champ de saisie d'une ligne.
         let mut needs = TextArea::new()
@@ -298,19 +300,8 @@ pub fn build_form_surface(inputs: &FormInputs) -> Surface {
         );
         form_children.push(FieldHint::new().text("i18n:form.specialNeeds.hint").into());
     }
-    if questions.ask_id_document {
-        form_children.push(
-            Field::new()
-                .name("idDocument")
-                .label("i18n:form.idDocument.label")
-                .child(text_input(
-                    "idDocument",
-                    "i18n:form.idDocument.placeholder",
-                    existing.and_then(|row| row.id_document.as_deref()),
-                ))
-                .into(),
-        );
-    }
+    // Pas de pièce d'identité : la fiche de police (Formalités) la recueille, et
+    // `ask_id_document` n'est plus lu.
 
     // Les questions de l'hôte, après les questions standard (§2.2).
     let stored = existing.map(crate::answers::stored).unwrap_or_default();
@@ -405,7 +396,7 @@ pub fn build_readonly_surface(
             .into(),
     );
 
-    if questions.ask_arrival_time {
+    {
         children.push(readonly_row(
             "clock-circle",
             "i18n:form.arrival.label",
@@ -423,7 +414,7 @@ pub fn build_readonly_surface(
             display_or_dash(response.occasion.as_deref()),
         ));
     }
-    if questions.ask_allergies {
+    if questions.asks_needs() {
         children.push(readonly_row(
             "danger-triangle",
             "i18n:form.allergies.label",
@@ -437,18 +428,11 @@ pub fn build_readonly_surface(
             display_or_dash(response.guest_count.as_deref()),
         ));
     }
-    if questions.ask_special_needs {
+    if questions.asks_needs() {
         children.push(readonly_row(
             "home",
             "i18n:form.specialNeeds.label",
             display_or_dash(response.special_needs.as_deref()),
-        ));
-    }
-    if questions.ask_id_document {
-        children.push(readonly_row(
-            "clipboard",
-            "i18n:form.idDocument.label",
-            display_or_dash(response.id_document.as_deref()),
         ));
     }
     for answer in crate::answers::stored(response) {

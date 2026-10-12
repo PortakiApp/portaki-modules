@@ -12,3 +12,8 @@ pub fn text(key: &str) -> I18nText {
     let text = LocalizedEmailText::from_i18n_key(BUNDLES.iter().copied(), key);
     I18nText::new(text.fr, text.en)
 }
+
+/// [`text`], avec ses variables (`{guest}`, `{time}`).
+pub fn text_vars(key: &str, vars: &[(&str, &str)]) -> I18nText {
+    I18nText::from_bundles(BUNDLES, key, vars)
+}

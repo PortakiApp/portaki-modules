@@ -14,6 +14,7 @@ mod queries;
 mod show_when;
 mod slots;
 mod storage;
+mod tasks;
 
 pub use answers::{Answer, CustomAnswer};
 pub use commands::{
@@ -25,6 +26,7 @@ pub use guest::{render_guest_form, render_home_card};
 pub use host::{render_host_main, render_host_stay};
 pub use queries::{get_status, publish_readiness, PreArrivalStatus};
 pub use storage::reset_test_store;
+pub use tasks::{late_arrival_tasks, timeline_tasks};
 
 portaki_sdk::portaki_module!(
     id = "pre-arrival-form",
