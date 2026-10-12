@@ -25,15 +25,18 @@ pub(crate) fn build_report_list_item(
     locale: &str,
 ) -> Component {
     let level_label = level_label_plain(report.level.as_str(), locale);
-    let subtitle = match report
+    let mut subtitle = match report.guest_name.trim() {
+        "" => level_label,
+        guest => format!("{guest} · {level_label}"),
+    };
+    if let Some(note) = report
         .note
         .as_deref()
         .map(str::trim)
         .filter(|s| !s.is_empty())
     {
-        Some(note) => format!("{level_label} · {note}"),
-        None => level_label,
-    };
+        subtitle = format!("{subtitle} · {note}");
+    }
     let when = format_relative_when(report.created_at, now, locale);
     let pill = Pill::new()
         .label(format!(
@@ -92,7 +95,16 @@ pub(crate) fn build_restock_form(report: &ConsumableReport) -> Option<Component>
                     .placeholder("i18n:host.main.reply.placeholder"),
             ),
     );
-    let mut buttons = Stack::new().direction(StackDirection::Horizontal).gap(8.0);
+    // « Répondre » envoie la réponse par e-mail au voyageur sans changer le statut.
+    let mut buttons = Stack::new()
+        .direction(StackDirection::Horizontal)
+        .gap(8.0)
+        .child(
+            Button::new()
+                .label("i18n:host.main.sendReply")
+                .variant(ButtonVariant::Outline)
+                .action(status_action(report, &report.status)),
+        );
     if report.status == status::DEFAULT {
         buttons = buttons.child(
             Button::new()
@@ -129,7 +141,11 @@ pub(crate) fn build_report_block(
 
 /// `now` is passed in from the host context (via `time::now()`); calling `Utc::now()` here would
 /// panic in the Wasm sandbox, which has no wall clock.
-fn format_relative_when(created_at: DateTime<Utc>, now: DateTime<Utc>, locale: &str) -> String {
+pub(crate) fn format_relative_when(
+    created_at: DateTime<Utc>,
+    now: DateTime<Utc>,
+    locale: &str,
+) -> String {
     let fr = locale.to_ascii_lowercase().starts_with("fr");
     let hours = (now - created_at).num_hours().max(0);
     let days = (now - created_at).num_days().max(0);
@@ -162,10 +178,10 @@ fn format_relative_when(created_at: DateTime<Utc>, now: DateTime<Utc>, locale: &
             format!("{days}d")
         };
     }
-    format_short_date(created_at, locale)
+    short_date(created_at, locale)
 }
 
-fn format_short_date(created_at: DateTime<Utc>, locale: &str) -> String {
+pub(crate) fn short_date(created_at: DateTime<Utc>, locale: &str) -> String {
     let fr = locale.to_ascii_lowercase().starts_with("fr");
     let month = if fr {
         match created_at.month() {

@@ -12,7 +12,6 @@
         "form.level.missing": "Il n'y en a plus",
         "form.note.label": "Précision (optionnel)",
         "form.note.placeholder": "Ex. salle de bain du haut, dernière tablette…",
-        "form.notice": "Votre hôte est averti dès l’envoi.",
         "form.submit": "Prévenir l'hôte",
         "nav.consumables": "Consommables"
       },
@@ -55,44 +54,34 @@
               {
                 "choices": [
                   {
-                    "emoji": "🧻",
-                    "label": "Papier toilette",
+                    "emoji": "☕",
+                    "label": "Café",
                     "value": "00000000-0000-0000-0000-000000000001"
                   },
                   {
-                    "emoji": "🧼",
-                    "label": "Savon",
+                    "emoji": "🍵",
+                    "label": "Thé",
                     "value": "00000000-0000-0000-0000-000000000002"
                   },
                   {
-                    "emoji": "🚿",
-                    "label": "Gel douche",
+                    "emoji": "🧻",
+                    "label": "Papier toilette",
                     "value": "00000000-0000-0000-0000-000000000003"
                   },
                   {
-                    "emoji": "🧴",
-                    "label": "Shampoing",
+                    "emoji": "🧽",
+                    "label": "Liquide vaisselle",
                     "value": "00000000-0000-0000-0000-000000000004"
                   },
                   {
-                    "emoji": "☕",
-                    "label": "Café",
+                    "emoji": "🧂",
+                    "label": "Sel",
                     "value": "00000000-0000-0000-0000-000000000005"
                   },
                   {
-                    "emoji": "🍽️",
-                    "label": "Tablettes lave-vaisselle",
+                    "emoji": "🫒",
+                    "label": "Huile",
                     "value": "00000000-0000-0000-0000-000000000006"
-                  },
-                  {
-                    "emoji": "🧽",
-                    "label": "Essuie-tout",
-                    "value": "00000000-0000-0000-0000-000000000007"
-                  },
-                  {
-                    "emoji": "🧺",
-                    "label": "Lessive",
-                    "value": "00000000-0000-0000-0000-000000000008"
                   }
                 ],
                 "layout": "grid",
@@ -159,7 +148,7 @@
             "type": "Button"
           },
           {
-            "message": "i18n:form.notice",
+            "message": "Votre hôte réapprovisionne dans la journée.",
             "tone": "neutral",
             "type": "InfoBanner"
           }

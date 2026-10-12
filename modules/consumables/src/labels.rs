@@ -21,7 +21,17 @@ pub fn lang_code(locale: &str) -> String {
 }
 
 pub fn labels_from_item(item: &ConsumableItem) -> BTreeMap<String, String> {
-    let trimmed = item.label_fr.trim();
+    decode(&item.label_fr, &item.label_en)
+}
+
+/// « Où le trouver », par langue : la même carte JSON que le nom.
+pub fn location_from_item(item: &ConsumableItem) -> BTreeMap<String, String> {
+    decode(&item.location, "")
+}
+
+/// Une carte JSON `{"fr":…,"en":…}`, ou un texte français d'avant la carte, plus le repli anglais.
+fn decode(raw: &str, legacy_en: &str) -> BTreeMap<String, String> {
+    let trimmed = raw.trim();
     if let Ok(Value::Object(map)) = serde_json::from_str::<Value>(trimmed) {
         let mut out = BTreeMap::new();
         for (key, val) in map {
@@ -33,9 +43,9 @@ pub fn labels_from_item(item: &ConsumableItem) -> BTreeMap<String, String> {
         }
         // Une carte, même vide, est la carte : un produit sans nom s'enregistre `{}`, et ce `{}`
         // n'est pas un libellé français.
-        if !item.label_en.trim().is_empty() {
+        if !legacy_en.trim().is_empty() {
             out.entry("en".into())
-                .or_insert_with(|| item.label_en.trim().to_string());
+                .or_insert_with(|| legacy_en.trim().to_string());
         }
         return out;
     }
@@ -43,8 +53,8 @@ pub fn labels_from_item(item: &ConsumableItem) -> BTreeMap<String, String> {
     if !trimmed.is_empty() {
         out.insert("fr".into(), trimmed.to_string());
     }
-    if !item.label_en.trim().is_empty() {
-        out.insert("en".into(), item.label_en.trim().to_string());
+    if !legacy_en.trim().is_empty() {
+        out.insert("en".into(), legacy_en.trim().to_string());
     }
     out
 }
@@ -87,7 +97,7 @@ pub fn pick_label(
         .unwrap_or_default()
 }
 
-pub fn get_label(item: &ConsumableItem, locale: &str) -> String {
-    let labels = labels_from_item(item);
+/// The text in the host's language only — what the host form edits, one language at a time.
+pub fn in_lang(labels: &BTreeMap<String, String>, locale: &str) -> String {
     labels.get(&lang_code(locale)).cloned().unwrap_or_default()
 }

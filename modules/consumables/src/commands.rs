@@ -16,8 +16,13 @@ use crate::storage;
 #[portaki_sdk::params]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConsumableItemInput {
+    /// La ligne du tableau. Une ligne jamais ouverte n'envoie que lui : le produit garde alors
+    /// tout ce qu'il avait. Sans id (API, ancien formulaire), la ligne se lit à son rang.
     #[serde(default)]
-    pub label: String,
+    pub id: Option<Uuid>,
+    /// Le nom, dans la langue de l'hôte. Absent : inchangé ; vide sur une ligne à id : effacé.
+    #[serde(default)]
+    pub label: Option<String>,
     #[serde(default, alias = "labelFr")]
     pub label_fr: String,
     #[serde(default, alias = "labelEn")]
@@ -28,6 +33,22 @@ pub struct ConsumableItemInput {
     pub low_threshold: i32,
     #[serde(default)]
     pub emoji: String,
+    /// « Où le trouver », dans la langue de l'hôte. Absent : inchangé ; vide : effacé.
+    #[serde(default)]
+    pub location: Option<String>,
+}
+
+impl ConsumableItemInput {
+    fn typed_label(&self) -> Option<&str> {
+        self.label.as_deref().map(str::trim)
+    }
+
+    /// Rien de nommé : ni nom dans la langue de l'hôte, ni nom par langue (API).
+    fn unnamed(&self) -> bool {
+        self.typed_label().unwrap_or_default().is_empty()
+            && self.label_fr.trim().is_empty()
+            && self.label_en.trim().is_empty()
+    }
 }
 
 /// Arguments for `replaceItems`.
@@ -47,15 +68,16 @@ impl ReplaceItemsArgs {
             .iter()
             .enumerate()
             .filter_map(|(index, item)| {
-                let empty = item.label.trim().is_empty()
-                    && item.label_fr.trim().is_empty()
-                    && item.label_en.trim().is_empty();
-                if empty {
+                // Sans id, une ligne sans nom est une case laissée vide : elle tombe. Avec id,
+                // c'est une ligne du tableau, que `replace_items` lit contre l'enregistré.
+                if item.id.is_none() && item.unnamed() {
                     return None;
                 }
                 Some(ConsumableItemInput {
+                    id: item.id,
+                    location: item.location.clone(),
                     emoji: item.emoji.trim().to_string(),
-                    label: item.label.trim().to_string(),
+                    label: item.typed_label().map(str::to_string),
                     label_fr: item.label_fr.trim().to_string(),
                     label_en: item.label_en.trim().to_string(),
                     sort_order: if item.sort_order == 0 {
@@ -91,14 +113,42 @@ pub struct UpdateConfigArgs {
     /// Le délai de réapprovisionnement annoncé au voyageur : « sous 24 h », « le lendemain
     /// matin » (§2.5). Du texte et non un nombre d'heures — « le lendemain matin » n'en est pas
     /// un, et c'est ce qu'un hôte écrit.
+    ///
+    /// Absent quand le champ est masqué (demandes fermées) : le délai enregistré reste. Envoyé
+    /// vide, il s'efface.
     #[serde(default, alias = "restockDelay")]
-    pub restock_delay: I18nText,
+    pub restock_delay: Option<I18nText>,
     /// « Le voyageur peut demander » : un booléen, ou `"true"` / `"false"` selon le formulaire.
     #[serde(default, alias = "requestsEnabled")]
     pub requests_enabled: Option<serde_json::Value>,
     /// « Demandes par séjour » : un nombre, le `NumberInput` n'envoie pas d'entier.
     #[serde(default, alias = "maxRequests")]
     pub max_requests: Option<f64>,
+    /// « Prévenir par » : un tableau, ou du JSON / une liste à virgules d'un ancien formulaire.
+    #[serde(default)]
+    pub notify: Option<serde_json::Value>,
+}
+
+/// Les canaux cochés, quelle que soit la forme reçue ; `None` quand le formulaire n'en dit rien.
+fn channels(value: &serde_json::Value) -> Option<Vec<String>> {
+    let list: Vec<String> = match value {
+        serde_json::Value::Array(items) => items
+            .iter()
+            .filter_map(|item| item.as_str().map(str::to_string))
+            .collect(),
+        serde_json::Value::String(text) => serde_json::from_str::<Vec<String>>(text)
+            .unwrap_or_else(|_| text.split(',').map(str::to_string).collect()),
+        _ => return None,
+    };
+    let mut out: Vec<String> = Vec::new();
+    for channel in list.iter().map(|c| c.trim()) {
+        if [storage::settings::EMAIL, storage::settings::APP].contains(&channel)
+            && !out.iter().any(|known| known == channel)
+        {
+            out.push(channel.to_string());
+        }
+    }
+    Some(out)
 }
 
 /// Persists catalog items from the host workspace Save chrome.
@@ -112,7 +162,9 @@ pub struct UpdateConfigArgs {
 pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
     // Le délai d'abord : si le catalogue échoue, l'hôte voit son erreur sans avoir perdu sa
     // promesse de réapprovisionnement, qui n'y est pour rien.
-    storage::restock_delay::write(&args.restock_delay)?;
+    if let Some(delay) = &args.restock_delay {
+        storage::restock_delay::write(delay)?;
+    }
     let mut settings = storage::settings::read();
     if let Some(enabled) = args
         .requests_enabled
@@ -129,6 +181,11 @@ pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
     // la publication, et la lecture reste bornée pour le voyageur.
     if let Some(max) = args.max_requests.filter(|n| n.is_finite()) {
         settings.max_requests = Some(max.round().max(0.0) as u32);
+    }
+    // Aucun canal coché est gardé tel quel : « Choisissez au moins un canal. » bloque la
+    // publication, jamais l'enregistrement.
+    if let Some(notify) = args.notify.as_ref().and_then(channels) {
+        settings.notify = Some(notify);
     }
     storage::settings::write(&settings)?;
     replace_items(
@@ -153,47 +210,63 @@ pub fn replace_items(ctx: Context, args: ReplaceItemsArgs) -> Result<()> {
     let existing = storage::list_items()?;
     let mut next = Vec::new();
     for (index, input) in items.into_iter().enumerate() {
-        let mut labels_map = existing
-            .get(index)
-            .map(labels::labels_from_item)
-            .unwrap_or_default();
-        if !input.label.trim().is_empty() {
-            labels_map.insert(lang.clone(), input.label.trim().to_string());
-        } else {
-            if !input.label_fr.trim().is_empty() {
-                labels_map.insert("fr".into(), input.label_fr.trim().to_string());
+        // La ligne du tableau par son id ; une ligne sans id, à son rang.
+        let base = match input.id {
+            Some(id) => existing.iter().find(|item| item.id == id),
+            None => existing.get(index),
+        };
+        let mut labels_map = base.map(labels::labels_from_item).unwrap_or_default();
+        match input.typed_label() {
+            Some("") if input.id.is_some() => {
+                labels_map.remove(&lang);
             }
-            if !input.label_en.trim().is_empty() {
-                labels_map.insert("en".into(), input.label_en.trim().to_string());
+            Some("") | None => {}
+            Some(label) => {
+                labels_map.insert(lang.clone(), label.to_string());
+            }
+        }
+        if !input.label_fr.trim().is_empty() {
+            labels_map.insert("fr".into(), input.label_fr.trim().to_string());
+        }
+        if !input.label_en.trim().is_empty() {
+            labels_map.insert("en".into(), input.label_en.trim().to_string());
+        }
+        let mut location_map = base.map(labels::location_from_item).unwrap_or_default();
+        if let Some(location) = input.location.as_deref().map(str::trim) {
+            if location.is_empty() {
+                location_map.remove(&lang);
+            } else {
+                location_map.insert(lang.clone(), location.to_string());
             }
         }
         let (label_fr, label_en) = labels::encode_labels(&labels_map);
-        let id = existing.get(index).map(|item| item.id);
-        let low_threshold = existing
-            .get(index)
-            .map(|item| item.low_threshold)
-            .unwrap_or(input.low_threshold);
         // L'emoji suit la ligne, et un champ vide ne l'efface pas : l'hôte qui renomme un
         // produit dans une autre langue ne doit pas perdre le pictogramme qu'il avait choisi.
-        let emoji = if input.emoji.trim().is_empty() {
-            existing
-                .get(index)
-                .map(|item| item.emoji.clone())
-                .unwrap_or_default()
-        } else {
-            input.emoji.trim().to_string()
+        let emoji = match input.emoji.trim() {
+            "" => base.map(|item| item.emoji.clone()).unwrap_or_default(),
+            emoji => emoji.to_string(),
+        };
+        let low_threshold = match input.low_threshold {
+            n if n > 0 => n,
+            _ => base.map(|item| item.low_threshold).unwrap_or_default(),
         };
         next.push(storage::ItemDraft {
-            id,
+            id: base.map(|item| item.id).or(input.id),
             label_fr,
             label_en,
-            sort_order: input.sort_order,
-            low_threshold: if input.low_threshold > 0 {
-                input.low_threshold
+            // Le rang du tableau : déplacer une ligne la déplace dans le livret.
+            sort_order: if input.id.is_some() {
+                next.len() as i32
             } else {
-                low_threshold
+                input.sort_order
             },
+            low_threshold,
             emoji,
+            location: if location_map.is_empty() {
+                String::new()
+            } else {
+                labels::encode_labels(&location_map).0
+            },
         });
     }
     storage::replace_items_preserving_ids(next)
@@ -215,27 +288,27 @@ pub fn seed_defaults(ctx: Context, _args: EmptyArgs) -> Result<()> {
 }
 
 fn default_catalog() -> Vec<ConsumableItemInput> {
-    // Chacun avec son emoji : la grille du voyageur se lit alors d'un coup d'œil, et un hôte qui
-    // clique « Partir de la liste courante » n'a pas huit colis identiques à distinguer.
+    // La liste de départ de la spec (§4), chacun avec son emoji : la grille du voyageur se lit
+    // alors d'un coup d'œil.
     [
-        ("Papier toilette", "Toilet paper", "🧻"),
-        ("Savon", "Hand soap", "🧼"),
-        ("Gel douche", "Shower gel", "🚿"),
-        ("Shampoing", "Shampoo", "🧴"),
         ("Café", "Coffee", "☕"),
-        ("Tablettes lave-vaisselle", "Dishwasher tablets", "🍽️"),
-        ("Essuie-tout", "Paper towels", "🧽"),
-        ("Lessive", "Laundry detergent", "🧺"),
+        ("Thé", "Tea", "🍵"),
+        ("Papier toilette", "Toilet paper", "🧻"),
+        ("Liquide vaisselle", "Dish soap", "🧽"),
+        ("Sel", "Salt", "🧂"),
+        ("Huile", "Oil", "🫒"),
     ]
     .into_iter()
     .enumerate()
     .map(|(index, (fr, en, emoji))| ConsumableItemInput {
-        label: String::new(),
+        id: None,
+        label: None,
         label_fr: fr.into(),
         label_en: en.into(),
         sort_order: index as i32,
         low_threshold: 0,
         emoji: emoji.into(),
+        location: None,
     })
     .collect()
 }
@@ -299,6 +372,17 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
     if selected.is_empty() {
         return Err(PortakiError::Host("item_not_found".to_string()));
     }
+    let guest = storage::GuestSnapshot {
+        name: ctx
+            .guest
+            .as_ref()
+            .and_then(|guest| guest.display_name.as_deref())
+            .map(str::trim)
+            .unwrap_or_default()
+            .to_string(),
+        check_in: ctx.stay.as_ref().and_then(|stay| stay.checkin_at),
+        check_out: ctx.stay.as_ref().and_then(|stay| stay.checkout_at),
+    };
 
     // Un signalement par produit, et non un pour le lot : l'hôte coche « Papier toilette » sans
     // clore « Café », et chaque e-mail garde le lien vers son propre signalement.
@@ -320,8 +404,14 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
             item_label.clone(),
             level.clone(),
             note.clone(),
+            &guest,
         )?;
 
+        // ponytail: sent at once, day or night — the platform has no account quiet hours to
+        // group a 2 am request into a wake-up notification (spec §9 n° 6).
+        if !settings.notifies_by_email() {
+            continue;
+        }
         // The report is saved: a refused email is logged, it does not fail the guest's submit.
         if let Err(error) = email_send::notify_host_submitted(
             ctx.property_id,
@@ -348,6 +438,13 @@ pub struct UpdateStatusArgs {
     pub host_reply: Option<String>,
 }
 
+/// « Répondre » : la réponse de l'hôte part au voyageur (`host-reply-<uuid>`).
+#[portaki_sdk::email(
+    id = "host-reply",
+    audience = EmailAudience::Guest,
+    requires_guest_email,
+    description_key = "email.host-reply.description"
+)]
 #[portaki_sdk::command(
     name = "updateStatus",
     example(
@@ -365,7 +462,21 @@ pub fn update_status(ctx: Context, args: UpdateStatusArgs) -> Result<()> {
     }
 
     let status = status::parse_status(&args.status)?;
-    let _ = storage::update_status(args.report_id, status, args.host_reply)?;
+    let before = storage::find_report(args.report_id)?
+        .and_then(|report| report.host_reply)
+        .unwrap_or_default();
+    let report = storage::update_status(args.report_id, status, args.host_reply)?;
+    // « Répondre » : une réponse nouvelle part au voyageur par e-mail. Celle déjà envoyée ne
+    // repart pas quand l'hôte passe ensuite la demande « Livré ».
+    if let Some(reply) = report
+        .host_reply
+        .as_deref()
+        .filter(|reply| *reply != before)
+    {
+        if let Err(error) = email_send::reply_to_guest(&report, reply) {
+            email_text::log_send_failure("consumables_guest_reply_email_failed", &error);
+        }
+    }
     Ok(())
 }
 

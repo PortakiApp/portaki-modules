@@ -1,3 +1,8 @@
 {
-  "email.cta.seeMore": "See more"
+  "email.cta.seeMore": "See more",
+  "email.hostReply.subject": "Your host replied",
+  "email.hostReply.eyebrow": "Supplies",
+  "email.hostReply.title": "Reply to your request: {item}",
+  "email.hostReply.body": "You asked for: {item}.\n\nYour host replied:\n\n“{reply}”",
+  "email.hostReply.cta": "Open the guidebook"
 }

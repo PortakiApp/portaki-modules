@@ -133,6 +133,9 @@ mod tests {
             created_at: at(created),
             restocked_at: None,
             host_reply: None,
+            guest_name: String::new(),
+            stay_check_in: None,
+            stay_check_out: None,
         }
     }
 

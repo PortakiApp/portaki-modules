@@ -10,7 +10,8 @@ pub struct GuestConsumablesData {
     pub reports: Vec<ConsumableReport>,
     pub locale: String,
     pub property_locale: String,
-    /// Le délai que l'hôte annonce, dans la langue du voyageur. `None` quand il n'a rien promis.
+    /// Le délai que l'hôte annonce, dans la langue du voyageur ; « dans la journée » quand il n'a
+    /// rien écrit.
     pub restock_delay: Option<String>,
     /// Le prénom de l'hôte, pour « Claire réapprovisionne sous 24 h ». Vide quand il est inconnu.
     pub host_name: String,
@@ -46,9 +47,11 @@ pub fn load_guest_consumables(ctx: &GuestContext) -> Result<Option<GuestConsumab
         reports,
         locale: ctx.locale.clone(),
         property_locale: ctx.property.locale.clone(),
+        // Rien d'écrit par l'hôte : « dans la journée », le défaut de la spec (§2.2).
         restock_delay: storage::restock_delay::read()
             .map(|text| text.get(&ctx.locale).trim().to_string())
-            .filter(|delay| !delay.is_empty()),
+            .filter(|delay| !delay.is_empty())
+            .or_else(|| t!("form.restockDelay.default").ok()),
         host_name: ctx
             .host
             .as_ref()

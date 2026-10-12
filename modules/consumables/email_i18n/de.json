@@ -1,0 +1,8 @@
+{
+  "email.cta.seeMore": "Mehr anzeigen",
+  "email.hostReply.subject": "Ihr Gastgeber hat geantwortet",
+  "email.hostReply.eyebrow": "Verbrauchsartikel",
+  "email.hostReply.title": "Antwort auf Ihre Anfrage: {item}",
+  "email.hostReply.body": "Sie hatten angefragt: {item}.\n\nIhr Gastgeber antwortet:\n\n„{reply}“",
+  "email.hostReply.cta": "Gästemappe öffnen"
+}

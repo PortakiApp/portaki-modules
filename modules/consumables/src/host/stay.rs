@@ -1,7 +1,7 @@
 //! Stay-scoped host surface — shortage reports for one stay.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Card, EmptyState, List, Page, Text};
+use portaki_sdk::sdui::primitives::{Button, Card, EmptyState, List, Page, Text};
 use portaki_sdk::sdui::surface::Surface;
 use uuid::Uuid;
 
@@ -49,10 +49,35 @@ pub fn render_host_stay(ctx: HostContext) -> Surface {
                     .iter()
                     .map(|report| build_report_block(report, now, locale))
                     .collect();
+                // « 2 demandes · 1 à traiter », puis le lien vers toutes les demandes du logement.
+                let open = reports
+                    .iter()
+                    .filter(|report| report.status == crate::status::DEFAULT)
+                    .count();
+                let summary =
+                    t!("host.stay.summary", count = reports.len(), open = open).unwrap_or_default();
+                let see_all = Action::navigate(
+                    NavigateTarget::path(format!(
+                        "/listings/{}/modules/consumables",
+                        ctx.property_id
+                    )),
+                    None,
+                );
                 vec![Card::new()
                     .title("i18n:host.stay.listTitle")
                     .icon(IconName::Package)
-                    .children(vec![Component::List(List::new().children(items))])
+                    .children(vec![
+                        Text::new()
+                            .text(summary)
+                            .variant(TextVariant::Caption)
+                            .into(),
+                        Component::List(List::new().children(items)),
+                        Button::new()
+                            .label("i18n:host.stay.seeAll")
+                            .variant(ButtonVariant::Outline)
+                            .action(see_all)
+                            .into(),
+                    ])
                     .into()]
             }
         }

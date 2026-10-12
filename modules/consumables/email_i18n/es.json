@@ -1,0 +1,8 @@
+{
+  "email.cta.seeMore": "Ver más",
+  "email.hostReply.subject": "Tu anfitrión te responde",
+  "email.hostReply.eyebrow": "Consumibles",
+  "email.hostReply.title": "Respuesta a tu solicitud: {item}",
+  "email.hostReply.body": "Pediste: {item}.\n\nTu anfitrión te responde:\n\n«{reply}»",
+  "email.hostReply.cta": "Abrir la guía"
+}

@@ -149,20 +149,28 @@ fn item_choice_list(data: &GuestConsumablesData) -> ChoiceList {
                 &data.locale,
                 &data.property_locale,
             );
+            // L'emoji de l'hôte, sinon celui que le nom propose, sinon le colis du vocabulaire :
+            // une grille de colis identiques ne se lit pas d'un coup d'œil (§2.5).
+            let emoji = crate::suggest::shown(&item.emoji, &label);
             let mut option = ChoiceOption::new(item.id.to_string(), label);
             // Déjà signalé pendant ce séjour : la tuile le dit (§2.5). Sans cela, le voyageur
             // qui rouvre le formulaire ne voit aucune différence, le resignale, et l'hôte se
-            // déplace deux fois pour le même paquet de café.
+            // déplace deux fois pour le même paquet de café. Sinon, où le trouver : le voyageur
+            // regarde avant de demander.
+            let location = labels::pick_label(
+                &labels::location_from_item(item),
+                &data.locale,
+                &data.property_locale,
+            );
             if let Some(level) = open_report_level(data, item.id) {
                 option = option.description(level);
+            } else if !location.is_empty() {
+                option = option.description(location);
             }
-            // L'emoji de l'hôte quand il en a choisi un, le colis du vocabulaire sinon : une
-            // grille de huit colis identiques ne se lit pas d'un coup d'œil (§2.5).
-            let emoji = item.emoji.trim();
             if emoji.is_empty() {
                 option.icon(IconName::Package)
             } else {
-                option.emoji(emoji.to_string())
+                option.emoji(emoji)
             }
         })
         .collect();

@@ -14,13 +14,17 @@
     "en": "A form to report that a supply is out or running low (toilet paper, coffee, soap…), with an optional note, then the list of reports sent during the stay."
   },
   "hostSurface": {
-    "fr": "Un onglet Consommables pour gérer la liste et marquer les signalements comme réapprovisionnés, les signalements dans le détail de chaque séjour, une carte de suivi des stocks et un e-mail à chaque signalement.",
-    "en": "A Consumables tab to manage the list and mark reports as restocked, reports on each stay's detail page, a stock card, and an email for every report."
+    "fr": "Une page Consommables : un tableau des produits (où les trouver, dernière demande), les réglages des demandes, et les demandes reçues, avec réponse par e-mail au voyageur et « Livré » ; les demandes aussi dans le détail de chaque séjour et dans À venir.",
+    "en": "A Consumables page: a table of products (where to find them, last request), request settings, and the requests received, with an email reply to the guest and « Delivered »; requests also show on each stay's detail page and in Upcoming."
   },
   "configItems": [
     {
-      "fr": "Liste des consommables du logement (préremplissage possible)",
-      "en": "Property supplies list (can be prefilled)"
+      "fr": "Produits : nom, emoji et où les trouver (liste de départ proposée)",
+      "en": "Products: name, emoji and where to find them (starter list offered)"
+    },
+    {
+      "fr": "Demandes : ouvertes ou non, délai annoncé, canal de notification, nombre par séjour",
+      "en": "Requests: on or off, announced restock time, notification channel, number per stay"
     }
   ],
   "capabilities": [],

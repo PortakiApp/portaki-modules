@@ -28,15 +28,17 @@ Properties pin a digest — bump semver on every runtime change before republish
 
 `ConsumableItem` (schema v1): bilingual labels (`label_fr` JSON map + legacy `label_en`), `sort_order`, optional `low_threshold` (0 = unused in v0.1 UI).
 
-`ConsumableReport` (schema v2): `stay_id`, `item_id`, `item_label` snapshot, `level` (`missing` \| `low`), optional `note`, `status` (`open` \| `restocked`), `restocked_at`.
+`ConsumableItem` (schema v5) adds `location` — « Où le trouver », a JSON map of every language like `label_fr`.
+
+`ConsumableReport` (schema v5): `stay_id`, `item_id`, `item_label` snapshot, `level` (`missing` \| `low`), optional `note`, `status` (`open` \| `planned` \| `restocked`), `restocked_at`, `host_reply`, and the guest name and stay dates snapshotted at submit (`guest_name`, `stay_check_in`, `stay_check_out`).
 
 ## Surfaces
 
 | Shell | Surface id | Description |
 |-------|------------|-------------|
 | guest | `home.card` | Catalog ChoiceList + missing/low + note; stay report list |
-| host | `main` | Catalog editor (Save → `updateConfig`), seed defaults, open reports + mark restocked |
-| host | `stay` | Stay-detail reports when any exist (empty tree otherwise) |
+| host | `main` | Settings page (`property-workspace-tab`, page mode): the products table (`DataTable`, `rowName = "items"`, one side panel per row, rows keyed by id), the request settings, then the requests received (table + reply / Prévu / Livré) |
+| host | `stay` | Stay-detail: « N demande(s) · M à traiter », the reports, « Voir les demandes » |
 | host | `stock` | `property-stats-detail`: tracked, to buy, reported, last restock, reports per item and stock status (`FeedItem`, click opens the config). The `property-stats-card` tile of the same key is served by `statsSummary` |
 
 Host apps only embed `HostSurfacePanel` / stats registry. No module-named React feature.
@@ -48,8 +50,8 @@ Host apps only embed `HostSurfacePanel` / stats registry. No module-named React 
 - `listOpenCount` — open report count (stats)
 - `replaceItems` / `updateConfig` — host catalog replace
 - `seedDefaults` — fill empty catalog with common consumables (FR/EN)
-- `submit` — guest report; `host::email::send` → host notify
-- `updateStatus` — host `open` \| `restocked`
+- `submit` — guest report; `host::email::send` → host notify when « E-mail » is checked
+- `updateStatus` — host `open` \| `planned` \| `restocked`; a new `hostReply` is emailed to the guest (`host-reply`, declared guest email)
 
 ## UX notes (v0.1)
 

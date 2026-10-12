@@ -113,6 +113,15 @@ pub fn count_open() -> Result<usize> {
     Ok(list_open()?.len())
 }
 
+/// Who sent a request, as the booklet knew it then: the host's table shows it without asking the
+/// platform again.
+#[derive(Debug, Clone, Default)]
+pub struct GuestSnapshot {
+    pub name: String,
+    pub check_in: Option<DateTime<Utc>>,
+    pub check_out: Option<DateTime<Utc>>,
+}
+
 /// Inserts a guest shortage report.
 pub fn create_report(
     stay_id: Uuid,
@@ -120,6 +129,7 @@ pub fn create_report(
     item_label: String,
     level: String,
     note: Option<String>,
+    guest: &GuestSnapshot,
 ) -> Result<ConsumableReport> {
     let now = time::now()?;
     let row = ConsumableReport {
@@ -133,6 +143,9 @@ pub fn create_report(
         created_at: now,
         restocked_at: None,
         host_reply: None,
+        guest_name: guest.name.clone(),
+        stay_check_in: guest.check_in,
+        stay_check_out: guest.check_out,
     };
     persist_report(row.clone())?;
     Ok(row)
@@ -187,6 +200,7 @@ pub struct ItemDraft {
     pub sort_order: i32,
     pub low_threshold: i32,
     pub emoji: String,
+    pub location: String,
 }
 
 /// Replace items while keeping IDs when provided (preserves reports + other langs).
@@ -219,6 +233,7 @@ pub fn replace_items_preserving_ids(items: Vec<ItemDraft>) -> Result<()> {
             sort_order: order,
             low_threshold: draft.low_threshold,
             emoji: draft.emoji,
+            location: draft.location,
             created_at,
         })?;
     }
@@ -281,6 +296,7 @@ pub fn seed_test_items(now: DateTime<Utc>, labels: &[(&str, &str)]) -> Vec<Uuid>
             sort_order: index as i32,
             low_threshold: 0,
             emoji: String::new(),
+            location: String::new(),
             created_at: now,
         });
     }
@@ -330,6 +346,10 @@ pub mod settings {
     pub const MIN_MAX_REQUESTS: u32 = 1;
     pub const MAX_MAX_REQUESTS: u32 = 20;
 
+    /// « Prévenir par » : les canaux que l'hôte peut choisir (§2.2).
+    pub const EMAIL: &str = "email";
+    pub const APP: &str = "app";
+
     #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
     pub struct Settings {
         /// Absent : oui, comme avant ce réglage.
@@ -337,11 +357,25 @@ pub mod settings {
         pub requests_enabled: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub max_requests: Option<u32>,
+        /// Absent : e-mail et notification, le défaut de la spec — et l'e-mail qu'un hôte d'avant
+        /// ce réglage recevait déjà.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub notify: Option<Vec<String>>,
     }
 
     impl Settings {
         pub fn requests_enabled(&self) -> bool {
             self.requests_enabled.unwrap_or(true)
+        }
+
+        pub fn notify(&self) -> Vec<String> {
+            self.notify
+                .clone()
+                .unwrap_or_else(|| vec![EMAIL.to_string(), APP.to_string()])
+        }
+
+        pub fn notifies_by_email(&self) -> bool {
+            self.notify().iter().any(|channel| channel == EMAIL)
         }
 
         pub fn max_requests(&self) -> u32 {

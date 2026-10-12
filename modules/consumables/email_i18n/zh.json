@@ -1,0 +1,8 @@
+{
+  "email.cta.seeMore": "查看更多",
+  "email.hostReply.subject": "您的房东已回复",
+  "email.hostReply.eyebrow": "消耗品",
+  "email.hostReply.title": "关于您的请求的回复：{item}",
+  "email.hostReply.body": "您请求了：{item}。\n\n您的房东回复：\n\n“{reply}”",
+  "email.hostReply.cta": "打开入住指南"
+}
