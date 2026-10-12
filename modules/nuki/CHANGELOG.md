@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/nuki-v1.7.0...nuki-v1.8.0) (2026-10-12)
+
+
+### Features
+
+* **appliances:** settings page and devices table ([5843ee5](https://github.com/PortakiApp/portaki-modules/commit/5843ee56ef9828fde785e7b7f9b73ed03144bfb0))
+* **nuki:** add stay-action regenerate ([5449d03](https://github.com/PortakiApp/portaki-modules/commit/5449d0307d8bace62d6d615849fb252d40e9fbfc))
+* **nuki:** align host drawer with the board ([1fa7515](https://github.com/PortakiApp/portaki-modules/commit/1fa75152ff486e08ba674d2fde335fbfdc38f0c8))
+* **nuki:** flag offline lock and low battery ([2073e5c](https://github.com/PortakiApp/portaki-modules/commit/2073e5c7ee9a9c654a862710cec92fde7ca2b203))
+* **trails:** upload GPX as a file, not an image ([9b3db9e](https://github.com/PortakiApp/portaki-modules/commit/9b3db9e15fbe337724635ec0d7b3bd8999581822))
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.4.0 ([909824e](https://github.com/PortakiApp/portaki-modules/commit/909824eef489e66ca1cb61740c730ef4e569e4ee))
+* **deps:** bump portaki-sdk to 10.5.0 ([1e3d5b3](https://github.com/PortakiApp/portaki-modules/commit/1e3d5b3fc254ba1456d55d7a87c3c282fdbc4483))
+* **deps:** bump portaki-sdk to 10.6.0 ([0b8302f](https://github.com/PortakiApp/portaki-modules/commit/0b8302fdc7f973fd5ea779c01271ca53fbec4927))
+* **deps:** bump portaki-sdk to 10.7.0 ([54469bc](https://github.com/PortakiApp/portaki-modules/commit/54469bc8460caea3ee5939ee40c513fbb1c81b42))
+* **deps:** bump portaki-sdk to 10.8.0 ([2ae3d86](https://github.com/PortakiApp/portaki-modules/commit/2ae3d86ab23aefd75de5979d1015ea9b28c33252))
+* **deps:** bump portaki-sdk to 10.9.0 ([1ecf14d](https://github.com/PortakiApp/portaki-modules/commit/1ecf14de162d25ded36a6a82ef6a6176a9c24e03))
+* **nuki:** delete expired per-stay keypad codes ([63e497d](https://github.com/PortakiApp/portaki-modules/commit/63e497dc02dffec0198ac7cee0c29902802b19f1))
+* **nuki:** fall back to the keypad code while the lock is offline ([c0ed074](https://github.com/PortakiApp/portaki-modules/commit/c0ed07443b02dc777a3678ee3faa49b36d3906b7))
+
 ## [1.7.0](https://github.com/PortakiApp/portaki-modules/compare/nuki-v1.6.0...nuki-v1.7.0) (2026-10-09)
 
 

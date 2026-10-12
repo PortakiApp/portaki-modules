@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.10.0](https://github.com/PortakiApp/portaki-modules/compare/events-v1.9.0...events-v1.10.0) (2026-10-12)
+
+
+### Features
+
+* **appliances:** settings page and devices table ([5843ee5](https://github.com/PortakiApp/portaki-modules/commit/5843ee56ef9828fde785e7b7f9b73ed03144bfb0))
+* **events:** add events-viewed stats tile ([0842a7f](https://github.com/PortakiApp/portaki-modules/commit/0842a7f8d15a18ea98f97c94dde91c52b3ceaf2a))
+* **events:** calendar workspace tab ([0d60ca8](https://github.com/PortakiApp/portaki-modules/commit/0d60ca8fcc5fd68bfafb5e2c839dde267d93f725))
+* **events:** redesign host settings ([4ccdb8c](https://github.com/PortakiApp/portaki-modules/commit/4ccdb8c408919062168936b9663089052e7b7a18))
+* **trails:** upload GPX as a file, not an image ([9b3db9e](https://github.com/PortakiApp/portaki-modules/commit/9b3db9e15fbe337724635ec0d7b3bd8999581822))
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.4.0 ([909824e](https://github.com/PortakiApp/portaki-modules/commit/909824eef489e66ca1cb61740c730ef4e569e4ee))
+* **deps:** bump portaki-sdk to 10.5.0 ([1e3d5b3](https://github.com/PortakiApp/portaki-modules/commit/1e3d5b3fc254ba1456d55d7a87c3c282fdbc4483))
+* **deps:** bump portaki-sdk to 10.6.0 ([0b8302f](https://github.com/PortakiApp/portaki-modules/commit/0b8302fdc7f973fd5ea779c01271ca53fbec4927))
+* **deps:** bump portaki-sdk to 10.7.0 ([54469bc](https://github.com/PortakiApp/portaki-modules/commit/54469bc8460caea3ee5939ee40c513fbb1c81b42))
+* **deps:** bump portaki-sdk to 10.8.0 ([2ae3d86](https://github.com/PortakiApp/portaki-modules/commit/2ae3d86ab23aefd75de5979d1015ea9b28c33252))
+* **deps:** bump portaki-sdk to 10.9.0 ([1ecf14d](https://github.com/PortakiApp/portaki-modules/commit/1ecf14de162d25ded36a6a82ef6a6176a9c24e03))
+* **events:** dedupe imports on every stay date ([b5ba9fd](https://github.com/PortakiApp/portaki-modules/commit/b5ba9fdb988bc3e8486aa3c4b2c169a47d159afb))
+* **events:** show guest times at property timezone ([ccf0788](https://github.com/PortakiApp/portaki-modules/commit/ccf0788b34d4edb318912f8df232d956eb63da09))
+
 ## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/events-v1.8.0...events-v1.9.0) (2026-10-09)
 
 
