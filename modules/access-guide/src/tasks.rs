@@ -21,7 +21,18 @@ use crate::reveal::reveal_at;
 pub fn timeline_tasks(ctx: Context, args: TimelineTasksArgs) -> Result<TimelineTasks> {
     let config = ModuleConfig::read(&ctx)?;
     let now = time::now()?;
-    let mut tasks = missing_code_tasks(&config, &args, now, &ctx.property.timezone);
+    let mut tasks = if config.code_per_stay {
+        // Les séjours qui ont leur code ; illisible (un bac à sable) : aucune tâche plutôt qu'une
+        // alerte sur chaque séjour.
+        match portaki_sdk::host::stay_secrets::list(crate::stay_code::KEY) {
+            Ok(with_code) => {
+                missing_stay_code_tasks(&config, &args, now, &ctx.property.timezone, &with_code)
+            }
+            Err(_) => Vec::new(),
+        }
+    } else {
+        missing_code_tasks(&config, &args, now, &ctx.property.timezone)
+    };
     tasks.extend(rotate_code_tasks(&config, &args, &ctx.property.timezone));
     Ok(TimelineTasks { tasks })
 }
@@ -68,9 +79,37 @@ pub fn missing_code_tasks(
     if !config.entry_code_missing() {
         return Vec::new();
     }
+    code_tasks(config, args, now, timezone, |_| true)
+}
+
+/// « À chaque séjour » : une tâche par arrivée à venir dont le séjour n'a pas son code
+/// (`with_code`, les séjours qui l'ont).
+pub fn missing_stay_code_tasks(
+    config: &ModuleConfig,
+    args: &TimelineTasksArgs,
+    now: DateTime<Utc>,
+    timezone: &str,
+    with_code: &[Uuid],
+) -> Vec<TimelineTask> {
+    if !config.code_per_stay {
+        return Vec::new();
+    }
+    code_tasks(config, args, now, timezone, |stay| {
+        !with_code.contains(&stay)
+    })
+}
+
+fn code_tasks(
+    config: &ModuleConfig,
+    args: &TimelineTasksArgs,
+    now: DateTime<Utc>,
+    timezone: &str,
+    missing: impl Fn(Uuid) -> bool,
+) -> Vec<TimelineTask> {
     args.stays
         .iter()
         .filter(|stay| stay.check_in > now && (args.from..=args.to).contains(&stay.check_in))
+        .filter(|stay| missing(stay.id))
         .map(|stay| {
             let at = reveal_at(
                 config.reveal_policy,

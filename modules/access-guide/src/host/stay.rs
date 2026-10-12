@@ -1,13 +1,13 @@
 //! L'encart du séjour (spec Accès §1) : « Boîte à clés · codes révélés le 23/08/2026 à 16:00 »,
-//! ou « Code manquant » quand la méthode en demande un et que l'hôte ne l'a pas saisi. Jamais le
-//! code lui-même : l'encart dit quand le voyageur le voit.
+//! ou « Code manquant » quand la méthode en demande un et que l'hôte ne l'a pas saisi. Le code
+//! fixe n'y est jamais ; le code « À chaque séjour » oui — c'est ici que l'hôte le retrouve.
 
 use chrono::{DateTime, Utc};
 use portaki_sdk::host::i18n::{translate, Vars};
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::Tone;
-use portaki_sdk::sdui::primitives::{Card, InlineNotice, Page, Text};
+use portaki_sdk::sdui::primitives::{Card, InlineNotice, KeyValue, Page, Text};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{ModuleConfig, RevealPolicy};
@@ -26,7 +26,27 @@ pub fn render_host_stay(ctx: HostContext) -> Result<Surface> {
     let mut card = Card::new()
         .icon(IconName::Key)
         .title("i18n:host.stay.title");
-    if config.entry_code_missing() {
+    // « À chaque séjour » : le code de ce séjour, ou l'avertissement s'il manque (§9 cas 2).
+    let stay_code = match stay_id(&ctx) {
+        Some(stay) if config.code_per_stay => Some(crate::stay_code::read(stay)?),
+        _ => None,
+    };
+    if let Some(Some(code)) = &stay_code {
+        card = card.child(
+            KeyValue::new()
+                .key("i18n:host.stay.code")
+                .value(code.as_str())
+                .mono(true)
+                .copy(true),
+        );
+    }
+    if matches!(stay_code, Some(None)) {
+        card = card.child(
+            InlineNotice::new()
+                .message("i18n:host.stay.missingStayCode")
+                .tone(Tone::Warning),
+        );
+    } else if config.entry_code_missing() {
         card = card.child(
             InlineNotice::new()
                 .message("i18n:host.stay.missing")
@@ -35,7 +55,8 @@ pub fn render_host_stay(ctx: HostContext) -> Result<Surface> {
     } else {
         let method = method_key(config.primary_method);
         let method = translate(method, &Vars::new()).unwrap_or_else(|_| method.to_string());
-        let line = match (config.has_any_code(), window(&ctx)) {
+        let has_code = config.has_any_code() || matches!(stay_code, Some(Some(_)));
+        let line = match (has_code, window(&ctx)) {
             (false, _) => method,
             (true, Some((checkin, checkout))) => format!(
                 "{method} · {}",
@@ -55,8 +76,15 @@ pub fn render_host_stay(ctx: HostContext) -> Result<Surface> {
     Ok(Surface::new(Page::new().child(card)).with_id(STAY))
 }
 
+/// `input.stayId` : le séjour de la fiche. La plateforme vérifie, à chaque lecture de son code,
+/// qu'il est bien de ce logement.
+pub(crate) fn stay_id(ctx: &HostContext) -> Option<Uuid> {
+    ctx.input_str("stayId")
+        .and_then(|raw| Uuid::parse_str(raw).ok())
+}
+
 /// `input.stay` : la fenêtre que la plateforme joint à une surface de fiche séjour.
-fn window(ctx: &HostContext) -> Option<(DateTime<Utc>, DateTime<Utc>)> {
+pub(crate) fn window(ctx: &HostContext) -> Option<(DateTime<Utc>, DateTime<Utc>)> {
     let stay = ctx.input.get("stay")?;
     let parse = |key: &str| {
         stay.get(key)

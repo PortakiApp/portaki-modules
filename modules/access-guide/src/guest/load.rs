@@ -58,7 +58,8 @@ pub enum GuestLoad {
 
 pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestLoad> {
     let host_config = HostConfig::load(ctx)?;
-    let config = host_config.to_model(&ctx.locale);
+    let mut config = host_config.to_model(&ctx.locale);
+    crate::stay_code::fill(&mut config, ctx.stay.as_ref().map(|s| s.stay_id));
     let texts = host_config.texts(&ctx.locale);
     if !has_content(&config, &texts) {
         return Ok(GuestLoad::Empty);
