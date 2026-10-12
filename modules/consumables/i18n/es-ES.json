@@ -2,6 +2,7 @@
   "catalog.host.main": "Consumibles",
   "catalog.host.stay": "Consumibles",
   "catalog.host.stock": "Consumibles",
+  "catalog.host.tasks": "Solicitudes pendientes",
   "email.host-reply.description": "Respuesta del anfitrión a una solicitud de reposición",
   "form.head.lead": "Dígaselo a su anfitrión, él lo repone.",
   "form.head.title": "¿Falta algo?",

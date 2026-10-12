@@ -2,6 +2,7 @@
   "catalog.host.main": "المستلزمات",
   "catalog.host.stay": "المستلزمات",
   "catalog.host.stock": "المستلزمات",
+  "catalog.host.tasks": "طلبات قيد المعالجة",
   "email.host-reply.description": "ردّ المضيف على طلب إعادة تزويد",
   "form.head.lead": "أخبر مضيفك، وسيوفّره لك.",
   "form.head.title": "هل ينقصك شيء؟",

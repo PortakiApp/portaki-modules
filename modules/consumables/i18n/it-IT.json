@@ -2,6 +2,7 @@
   "catalog.host.main": "Consumabili",
   "catalog.host.stay": "Consumabili",
   "catalog.host.stock": "Consumabili",
+  "catalog.host.tasks": "Richieste da gestire",
   "email.host-reply.description": "Risposta dell'host a una richiesta di rifornimento",
   "form.head.lead": "Ditelo al vostro host, provvede lui.",
   "form.head.title": "Manca qualcosa?",
