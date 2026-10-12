@@ -16,6 +16,7 @@ fn seed(ctx: &portaki_sdk::Context) {
         ctx.clone(),
         CreateChecklistArgs {
             template: "departure".into(),
+            id: None,
         },
     )
     .expect("create");

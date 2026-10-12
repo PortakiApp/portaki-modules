@@ -12,7 +12,6 @@ use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 
 use crate::email_i18n;
-use crate::lists;
 use crate::show_when::is_checklist_available;
 use crate::storage;
 
@@ -51,9 +50,8 @@ pub fn send_departure_reminder(ctx: Context, _args: EmptyArgs) -> Result<()> {
         .map(|row| row.item_id)
         .collect();
     let mut unfinished = false;
-    for list in storage::list_checklists()? {
-        if list.audience != lists::GUEST
-            || !storage::display::read(list.id).remind()
+    for list in storage::booklet_lists()? {
+        if !storage::display::read(list.id).remind()
             || !is_checklist_available(
                 &list.trigger,
                 now,

@@ -33,6 +33,24 @@ struct HostRow {
     description: Option<String>,
 }
 
+/// Une ligne du tableau des étapes (`steps.N.*`), dans l'ordre affiché. Un champ absent garde la
+/// valeur enregistrée de l'étape de même `id` : une ligne jamais ouverte n'envoie que son id.
+#[derive(Debug, Clone, Default, Deserialize)]
+struct StepSlot {
+    #[serde(default)]
+    id: String,
+    /// Dans la langue de l'hôte.
+    #[serde(default)]
+    label: Option<String>,
+    #[serde(default)]
+    detail: Option<String>,
+    #[serde(default)]
+    zone: Option<String>,
+    /// « Photo obligatoire », listes d'équipe seulement.
+    #[serde(default)]
+    photo: Option<Value>,
+}
+
 /// Workspace header Save → the list selected in the editor.
 ///
 /// `items` is the `EditableList` value: a JSON string (or array) of
@@ -57,8 +75,13 @@ pub struct UpdateConfigArgs {
     pub notify_assignee: Option<Value>,
     #[serde(default)]
     pub alert_host: Option<Value>,
+    /// Ancien formulaire (`EditableList`) : `[{ id?, label, labelEn?, photo?, group?, description? }]`.
     #[serde(default)]
     pub items: Option<Value>,
+    /// Le tableau des étapes : `[{ id, label?, detail?, zone?, photo? }]`, dans l'ordre affiché.
+    /// Prime sur `items`.
+    #[serde(default)]
+    pub steps: Option<Value>,
     /// Guest lists only: « Étapes visibles » (3 à 10), a number or its text.
     #[serde(default)]
     pub visible_limit: Option<Value>,
@@ -105,7 +128,10 @@ pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
         list.alert_host = flag(args.alert_host.as_ref(), list.alert_host);
     } else {
         list.trigger = lists::pick(&args.trigger, lists::GUEST_TRIGGERS).to_string();
-        list.placement = lists::pick(&args.placement, lists::PLACEMENTS).to_string();
+        // Plus dans le formulaire (jamais lu) : un envoi sans lui garde la valeur enregistrée.
+        if !args.placement.trim().is_empty() {
+            list.placement = lists::pick(&args.placement, lists::PLACEMENTS).to_string();
+        }
     }
     let lang = labels::lang_code(&ctx.locale);
     if !host {
@@ -126,9 +152,21 @@ pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
         }
         storage::display::write(list.id, &display)?;
     }
-    let items = parse_items(args.items.as_ref())?;
     let existing_items = storage::all_items_of(list.id)?;
+    if let Some(steps) = args.steps.as_ref() {
+        let slots: Vec<StepSlot> = parse_rows(Some(steps))?;
+        storage::save_checklist(list.clone())?;
+        let rows = slots
+            .into_iter()
+            .map(|slot| merge_step(slot, &existing_items, host, &lang))
+            .collect();
+        return storage::replace_items(list.id, rows);
+    }
     storage::save_checklist(list.clone())?;
+    let Some(raw_items) = args.items.as_ref() else {
+        return Ok(());
+    };
+    let items: Vec<HostRow> = parse_rows(Some(raw_items))?;
     // A blank step is kept: `publishReadiness` asks for it (« Écrivez l'étape. »), and the readers
     // skip it until it is written (`storage::list_items`).
     let rows = items
@@ -167,6 +205,50 @@ pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
     storage::replace_items(list.id, rows)
 }
 
+/// One row of the steps table over the stored step of the same id: an absent field keeps its value.
+fn merge_step(
+    slot: StepSlot,
+    existing: &[crate::entities::ChecklistItem],
+    host: bool,
+    lang: &str,
+) -> storage::ItemDraft {
+    let id = Uuid::parse_str(slot.id.trim()).ok();
+    let previous = id.and_then(|id| existing.iter().find(|row| row.id == id));
+    let stored_labels = previous.map(labels::labels_from_item).unwrap_or_default();
+    let labels = match slot.label.map(|label| label.trim().to_string()) {
+        // Une liste d'équipe s'écrit dans une seule langue : le même texte sert partout.
+        Some(label) if host => {
+            Labels::from([("fr".to_string(), label.clone()), ("en".to_string(), label)])
+        }
+        // Le livret : la langue de l'hôte, les autres gardées.
+        Some(label) => {
+            let mut map = stored_labels;
+            if label.is_empty() {
+                map.remove(lang);
+            } else {
+                map.insert(lang.to_string(), label);
+            }
+            map
+        }
+        None => stored_labels,
+    };
+    storage::ItemDraft {
+        id,
+        labels,
+        group: merge_lang(lang, slot.zone, previous.map(|row| row.group_i18n.as_str())),
+        description: merge_lang(
+            lang,
+            slot.detail,
+            previous.map(|row| row.description_i18n.as_str()),
+        ),
+        photo_required: host
+            && flag(
+                slot.photo.as_ref(),
+                previous.is_some_and(|row| row.photo_required),
+            ),
+    }
+}
+
 /// Writes the text typed in `lang` over the stored language map and keeps the other languages:
 /// the form edits one language at a time, and switching to English to fix a typo must not wipe
 /// the French. `None` leaves the map untouched, a blank text removes `lang`.
@@ -194,7 +276,7 @@ fn number(raw: Option<&Value>) -> Option<f64> {
     .filter(|n: &f64| n.is_finite())
 }
 
-fn parse_items(raw: Option<&Value>) -> Result<Vec<HostRow>> {
+fn parse_rows<T: serde::de::DeserializeOwned>(raw: Option<&Value>) -> Result<Vec<T>> {
     let invalid = |error: serde_json::Error| PortakiError::Host(format!("invalid_items: {error}"));
     match raw {
         None | Some(Value::Null) => Ok(Vec::new()),
@@ -227,6 +309,10 @@ fn split_assignee(raw: &str) -> (Option<String>, Option<String>) {
 pub struct CreateChecklistArgs {
     /// One of [`lists::TEMPLATES`].
     pub template: String,
+    /// The id the editor picked for the new list, so it opens selected. Already taken = nothing
+    /// to do (a second click on the same card).
+    #[serde(default)]
+    pub id: Option<Uuid>,
 }
 
 #[portaki_sdk::command(
@@ -240,7 +326,12 @@ pub struct CreateChecklistArgs {
 pub fn create_checklist(_ctx: Context, args: CreateChecklistArgs) -> Result<()> {
     let template = lists::template(&args.template)
         .ok_or_else(|| PortakiError::Host(format!("unknown_template:{}", args.template)))?;
-    storage::create_from_template(template).map(|_| ())
+    if let Some(id) = args.id {
+        if storage::list_checklists()?.iter().any(|list| list.id == id) {
+            return Ok(());
+        }
+    }
+    storage::create_from_template(template, args.id).map(|_| ())
 }
 
 /// Arguments for `deleteChecklist`.
@@ -429,11 +520,14 @@ mod tests {
     #[test]
     fn items_parse_from_a_json_string_or_an_array() {
         let json = Value::String(r#"[{"label":"Clés","labelEn":"Keys","photo":true}]"#.into());
-        let items = parse_items(Some(&json)).unwrap();
+        let items: Vec<HostRow> = parse_rows(Some(&json)).unwrap();
         assert_eq!(items[0].label_en.as_deref(), Some("Keys"));
         assert_eq!(items[0].photo, Some(true));
         let array = serde_json::json!([{ "id": "x", "label": "Sols" }]);
-        assert_eq!(parse_items(Some(&array)).unwrap()[0].label, "Sols");
+        assert_eq!(
+            parse_rows::<HostRow>(Some(&array)).unwrap()[0].label,
+            "Sols"
+        );
         assert!(flag(Some(&Value::String("true".into())), false));
     }
 }

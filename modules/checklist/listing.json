@@ -6,16 +6,16 @@
     "en": "Several lists to tick: guest departure, cleaning, inspections."
   },
   "description": {
-    "fr": "Le voyageur coche sa checklist de départ dans son livret. Côté hôte, le ménage et les états des lieux deviennent des tâches datées autour de chaque séjour, avec une personne assignée, une échéance et, si besoin, une photo obligatoire pour cocher. Quatre modèles pour démarrer.",
-    "en": "Guests tick their checkout checklist in the booklet. On the host side, cleaning and inspections become dated tasks around each stay, with an assignee, a deadline and, when needed, a photo required to tick. Four templates to start from."
+    "fr": "Le voyageur coche sa checklist de départ dans son livret. Côté hôte, le ménage et les états des lieux deviennent des tâches datées autour de chaque séjour, avec une personne assignée, une échéance et, si besoin, une photo obligatoire pour cocher. Six modèles pour démarrer.",
+    "en": "Guests tick their checkout checklist in the booklet. On the host side, cleaning and inspections become dated tasks around each stay, with an assignee, a deadline and, when needed, a photo required to tick. Six templates to start from."
   },
   "guestSurface": {
     "fr": "Une carte avec les listes voyageur à cocher, au moment choisi par l’hôte ; la liste de départ reste sur l’écran de fin de séjour.",
     "en": "A card with the guest lists to tick, at the time chosen by the host; the departure list stays on the end-of-stay screen."
   },
   "hostSurface": {
-    "fr": "Un éditeur de checklists, des tâches dans À venir et deux suivis dans Statistiques : Checklist et Ménage.",
-    "en": "A checklist editor, tasks in Upcoming and two views in Statistics: Checklist and Cleaning."
+    "fr": "Un éditeur de checklists aux étapes ordonnables, des tâches dans À venir et deux suivis dans Statistiques : Checklist et Ménage.",
+    "en": "A checklist editor with sortable steps, tasks in Upcoming and two views in Statistics: Checklist and Cleaning."
   },
   "configItems": [
     {

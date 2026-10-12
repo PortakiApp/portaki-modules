@@ -35,13 +35,11 @@ impl From<ChecklistItem> for ChecklistItemDto {
     }
 }
 
-/// Items of every guest list, list by list.
+/// Items of every list the booklet shows ([`storage::booklet_lists`]), list by list.
 pub fn guest_items() -> Result<Vec<ChecklistItem>> {
     let mut items = Vec::new();
-    for list in storage::list_checklists()? {
-        if list.audience == lists::GUEST {
-            items.extend(storage::items_of(list.id)?);
-        }
+    for list in storage::booklet_lists()? {
+        items.extend(storage::items_of(list.id)?);
     }
     Ok(items)
 }
@@ -154,7 +152,7 @@ pub fn list_problems(list: &Checklist, steps: &[&ChecklistItem]) -> Vec<(&'stati
     problems
 }
 
-fn step_problem(step: &ChecklistItem) -> Option<I18nText> {
+pub(crate) fn step_problem(step: &ChecklistItem) -> Option<I18nText> {
     let labels = crate::labels::labels_from_item(step);
     if labels.is_empty() {
         return Some(text("publish.step.required", &[]));
@@ -183,7 +181,7 @@ pub const DONE_MESSAGE_MAX: usize = 120;
 ///
 /// ponytail: heuristique — un numéro de rue à quatre chiffres déclenche aussi l'avertissement,
 /// qui ne bloque pas ; un code en lettres passe. Assez pour le cas que la spec décrit.
-fn looks_like_code(text: &str) -> bool {
+pub(crate) fn looks_like_code(text: &str) -> bool {
     let lower = text.to_lowercase();
     if lower.contains("code") {
         return true;

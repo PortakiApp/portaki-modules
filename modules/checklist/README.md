@@ -24,7 +24,7 @@ Host workspace tab: `pathSegment = checklist` (surface `main`).
 |-------|------------|-------------|
 | guest | `home.card` | Open guest lists — progress + inline toggles |
 | guest | `post-stay.card` | Departure lists on the end-of-stay screen |
-| host | `main` | « Vos checklists » + selected list → workspace Save → `updateConfig` |
+| host | `main` | Lists by audience + selected list (« Affichage » / « Tâche », sortable « Étapes » table, row dialog) → autosave → `updateConfig` |
 | host | `checklist` | Stats detail « Checklist » (guest lists) |
 | host | `cleaning` | Stats detail « Ménage » (host cleaning lists) |
 
@@ -34,7 +34,7 @@ Manifest also declares the `checklist` / `cleaning` stats tiles and `workspace-t
 
 - `listItems` — guest items; `listCompletions` — completed item ids for the current stay
 - `completeItem` / `uncompleteItem` — guest toggles (`itemId`)
-- `updateConfig` — saves the selected list; `createChecklist { template }`, `deleteChecklist { id }`
+- `updateConfig` — saves the selected list (`steps.N.*` merged by id, in the order shown); `createChecklist { template, id? }`, `deleteChecklist { id }`
 - `timelineTasks` — host lists as dated tasks for the stays the platform passes (`<checklistId>:<stayId>`)
 - `taskToggle` / `taskComplete` — refused with `photo_required` when a photo item has no photo;
   emit `checklist.task-updated`, `workspace-activity.record`, and `checklist.consumables-restocked` when
