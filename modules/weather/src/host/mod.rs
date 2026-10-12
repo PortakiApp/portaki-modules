@@ -6,11 +6,14 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Card, Field, Form, InlineNotice, Page, Text, TextInput, ToggleRow,
+    AddressMapPicker, Card, Field, FieldHint, Form, InlineNotice, Page, Pill, TextInput, ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::ModuleConfig;
+
+/// Le repli ouvert dans le brouillon.
+const OVERRIDE_ON: &str = "location_override=true";
 
 #[portaki_sdk::surface(
     host,
@@ -39,10 +42,21 @@ fn location_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         .filter(|a| !a.is_empty());
     children.push(match (address, ctx.property.coordinates) {
         // Lecture seule : sans `name`, le formulaire ne l'envoie pas.
-        (Some(address), Some(_)) => Field::new()
-            .label("i18n:host.location.label")
-            .child(Text::new().text(address))
-            .into(),
+        (Some(address), Some(_)) => {
+            let place = match commune(address) {
+                Some(commune) => t!("host.location.fromAddress", commune = commune),
+                None => t!("host.location.fromAddressOnly"),
+            };
+            Field::new()
+                .label("i18n:host.location.label")
+                .child(
+                    InlineNotice::new()
+                        .tone(Tone::Neutral)
+                        .message(place.unwrap_or_default()),
+                )
+                .child(FieldHint::new().text("i18n:host.location.help"))
+                .into()
+        }
         // Cas 4 : sans adresse géocodée, pas de prévisions — sauf position corrigée.
         _ => InlineNotice::new()
             .tone(Tone::Warning)
@@ -53,36 +67,40 @@ fn location_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         ToggleRow::new()
             .name("location_override")
             .label("i18n:host.locationOverride.label")
-            .description("i18n:host.location.help")
             .checked(config.location_override)
             .into(),
     );
-    if config.location_override {
-        let mut picker = AddressMapPicker::new()
-            .addressName("location_address")
-            .latName("location_lat")
-            .lngName("location_lng")
-            .address(config.location_address.clone());
-        // La position enregistrée, ou aucune — jamais 0, 0 : chaque enregistrement l'effacerait.
-        if let (Some(lat), Some(lng)) = (config.location_lat, config.location_lng) {
-            picker = picker.lat(lat).lng(lng);
-        }
-        let mut field = Field::new()
-            .name("location_lat")
-            .label("i18n:host.locationOverride.position")
-            .child(picker);
-        if let Some(error) = config.pin_error() {
-            field = field.error(error.get(&ctx.locale).to_string());
-        }
-        children.push(field.into());
-        if config.override_is_far(ctx.property.coordinates) {
-            children.push(
-                InlineNotice::new()
-                    .tone(Tone::Warning)
-                    .message("i18n:host.locationOverride.far")
-                    .into(),
-            );
-        }
+    // Le sélecteur suit l'interrupteur du brouillon (masqué, pas grisé) ; masqué, il n'est pas
+    // envoyé et la position enregistrée reste.
+    let mut picker = AddressMapPicker::new()
+        .addressName("location_address")
+        .latName("location_lat")
+        .lngName("location_lng")
+        .address(config.location_address.clone());
+    // La position enregistrée, ou aucune — jamais 0, 0 : chaque enregistrement l'effacerait.
+    if let (Some(lat), Some(lng)) = (config.location_lat, config.location_lng) {
+        picker = picker.lat(lat).lng(lng);
+    }
+    let mut field = Field::new()
+        .name("location_lat")
+        .label("i18n:host.locationOverride.position")
+        .visibleWhen(OVERRIDE_ON)
+        .child(picker);
+    if let Some(error) = config.pin_error() {
+        field = field.error(error.get(&ctx.locale).to_string());
+    }
+    children.push(field.into());
+    if config.override_is_far(ctx.property.coordinates) {
+        children.push(
+            Field::new()
+                .visibleWhen(OVERRIDE_ON)
+                .child(
+                    InlineNotice::new()
+                        .tone(Tone::Warning)
+                        .message("i18n:host.locationOverride.far"),
+                )
+                .into(),
+        );
     }
     let mut label = Field::new()
         .name("location_label")
@@ -105,7 +123,18 @@ fn location_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         .into()
 }
 
-/// §2.2 Affichage.
+/// La commune, d'après le segment « 56000 Vannes » de l'adresse (la règle du dashboard). Sans code
+/// postal, rien : le dernier segment est souvent le pays (« …, France »), pas la commune.
+fn commune(address: &str) -> Option<&str> {
+    address.split(',').map(str::trim).find_map(|segment| {
+        let (code, rest) = segment.split_once(char::is_whitespace)?;
+        let rest = rest.trim();
+        (code.len() == 5 && code.bytes().all(|b| b.is_ascii_digit()) && !rest.is_empty())
+            .then_some(rest)
+    })
+}
+
+/// §2.2 Affichage. La vigilance est annoncée, pas proposée : aucune source officielle encore.
 fn display_card(config: &ModuleConfig) -> Component {
     Card::new()
         .title("i18n:host.section.display")
@@ -116,6 +145,13 @@ fn display_card(config: &ModuleConfig) -> Component {
                 .description("i18n:host.showUpcoming.help")
                 .checked(config.show_upcoming),
         )
+        .child(
+            Field::new()
+                .label("i18n:host.alerts.label")
+                .child(Pill::new().label("i18n:host.alerts.soon"))
+                .child(FieldHint::new().text("i18n:host.alerts.help")),
+        )
+        .child(FieldHint::new().text("i18n:host.display.hint"))
         .into()
 }
 
@@ -137,4 +173,17 @@ fn public_card(config: &ModuleConfig) -> Component {
                 .checked(config.public_monthly_averages),
         )
         .into()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::commune;
+
+    #[test]
+    fn the_commune_is_the_segment_after_the_postal_code() {
+        assert_eq!(commune("3 quai X, 45000 Orléans, France"), Some("Orléans"));
+        assert_eq!(commune("12 rue du Lac, 74000 Annecy"), Some("Annecy"));
+        assert_eq!(commune("Cannes, France"), None, "pas le pays");
+        assert_eq!(commune("12 rue des Lilas"), None, "pas la rue");
+    }
 }

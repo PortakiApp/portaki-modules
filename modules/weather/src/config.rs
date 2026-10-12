@@ -16,22 +16,23 @@ pub const LABEL_MAX: usize = 40;
 pub const OVERRIDE_RADIUS_KM: f64 = 200.0;
 
 /// Owner-configurable module settings. The keys are the names of the host form fields: the
-/// platform takes `updateConfig`, and a missing key reads as its [`Default`].
+/// platform takes `updateConfig`, and a missing key reads as its [`Default`]. Le lieu et le nom
+/// affiché sont propres au logement (`local`) : copiés ailleurs, ils y sont marqués « À vérifier ».
 #[portaki_sdk::config]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ModuleConfig {
     /// Sous-titre du livret ; vide, la commune du logement.
-    #[field(label = "host.locationLabel.label")]
+    #[field(local, label = "host.locationLabel.label")]
     pub location_label: String,
     /// Prévoir ailleurs qu'à l'adresse du logement (montagne, île), en repli.
-    #[field(label = "host.locationOverride.label")]
+    #[field(local, label = "host.locationOverride.label")]
     pub location_override: bool,
     /// L'adresse cherchée dans le sélecteur ; seule la position compte pour les prévisions.
-    #[field(label = "host.locationOverride.address")]
+    #[field(local, label = "host.locationOverride.address")]
     pub location_address: String,
-    #[field(label = "host.locationOverride.lat")]
+    #[field(local, label = "host.locationOverride.lat")]
     pub location_lat: Option<f64>,
-    #[field(label = "host.locationOverride.lng")]
+    #[field(local, label = "host.locationOverride.lng")]
     pub location_lng: Option<f64>,
     /// La carte du fil avant l'arrivée, à partir de J-5.
     #[field(label = "host.showUpcoming.label")]
