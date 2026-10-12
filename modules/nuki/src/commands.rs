@@ -46,10 +46,22 @@ struct UnlockConnectorArgs {
 pub fn get_guest_credential(ctx: Context, _args: StayArgs) -> Result<GuestCredentialResponse> {
     require_stay_window(&ctx)?;
     let config = ModuleConfig::load(&ctx)?;
-    let code = guest_code(&ctx, &config)?;
+    // Hors ligne, la serrure n'a pas reçu un code par séjour tout juste créé sur Nuki Web : le
+    // code de secours, comme quand `unlock` n'obtient pas de réponse. État inconnu : chemin normal.
+    let offline = stay_code::wanted(&ctx, &config)
+        && crate::tasks::lock_offline(config.smartlock_id_trimmed());
+    let (code, notice) = if offline {
+        let code = require_keypad_code(&config)?;
+        let notice = t!("guest.unlock.offline", code = &code)?;
+        (code, notice)
+    } else {
+        let code = guest_code(&ctx, &config)?;
+        let notice = t!("guest.credential.keypad", code = &code)?;
+        (code, notice)
+    };
     Ok(GuestCredentialResponse {
         credential_type: "keypad",
-        guest_notice: t!("guest.credential.keypad", code = &code)?,
+        guest_notice: notice,
         code,
         smartlock_id: config.smartlock_id_trimmed().to_string(),
     })

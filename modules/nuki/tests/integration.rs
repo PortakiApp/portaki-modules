@@ -449,7 +449,11 @@ fn expired_portaki_codes_are_deleted_before_the_stays_code_is_created() {
                 .into_iter()
                 .map(|call| call.operation)
                 .collect();
-            assert_eq!(order, ["list_auths", "delete_auth", "create_auth"]);
+            // L'état de la serrure d'abord : hors ligne, aucun code ne serait créé.
+            assert_eq!(
+                order,
+                ["get_smartlock", "list_auths", "delete_auth", "create_auth"]
+            );
         });
 }
 
@@ -905,4 +909,83 @@ fn timeline_tasks_are_declared_to_the_dashboard() {
     assert_eq!(nav["placement"], "HostPlacement::WorkspaceTimelineTask");
     assert_eq!(nav["path"], "tasks");
     assert_eq!(nav["label_key"], "catalog.host.tasks");
+}
+
+// --- Serrure hors ligne côté livret : le code de secours, pas un code tout juste créé --------
+
+#[test]
+#[serial]
+fn an_offline_lock_gives_the_keypad_code_never_a_fresh_stay_code() {
+    byok_guest()
+        .with_connector_response("nuki", "get_smartlock", r#"{"serverState":4}"#)
+        .with_connector_response("nuki", "list_auths", "[]")
+        .with_connector_response("nuki", "create_auth", "{}")
+        .with_translation(
+            "guest.unlock.offline",
+            "La serrure n’a pas répondu. Tapez le code {code} sur le clavier.",
+        )
+        .run_with(|ctx, host| {
+            let cred = get_guest_credential(ctx, StayArgs::default()).expect("credential");
+            assert_eq!(cred.code, "482910");
+            assert_eq!(
+                cred.guest_notice,
+                "La serrure n’a pas répondu. Tapez le code 482910 sur le clavier."
+            );
+            assert!(calls_of(host, "list_auths").is_empty());
+            assert!(calls_of(host, "create_auth").is_empty());
+        });
+}
+
+#[test]
+#[serial]
+fn an_offline_lock_without_a_keypad_code_has_no_code() {
+    byok_guest()
+        .with_config(&ModuleConfig {
+            keypad_code: String::new(),
+            ..sample_config()
+        })
+        .with_connector_response("nuki", "get_smartlock", r#"{"serverState":4}"#)
+        .run_with(|ctx, host| {
+            let err = get_guest_credential(ctx, StayArgs::default()).expect_err("no code");
+            assert!(err.to_string().contains("keypad_code"), "{err}");
+            assert!(calls_of(host, "create_auth").is_empty());
+        });
+}
+
+/// En ligne, ou Nuki muet sur l'état (inconnu, pas hors ligne) : le code du séjour.
+#[test]
+#[serial]
+fn an_online_or_unknown_lock_gives_the_stays_code() {
+    let online =
+        byok_guest().with_connector_response("nuki", "get_smartlock", r#"{"serverState":0}"#);
+    let unknown =
+        byok_guest().with_connector_error("nuki", "get_smartlock", "connector_egress_failed");
+    for builder in [online, unknown] {
+        builder
+            .with_connector_response("nuki", "list_auths", "[]")
+            .with_connector_response("nuki", "create_auth", "{}")
+            .run_with(|ctx, host| {
+                let cred = get_guest_credential(ctx, StayArgs::default()).expect("credential");
+                assert_ne!(cred.code, "482910");
+                assert_eq!(calls_of(host, "create_auth").len(), 1);
+                assert_eq!(calls_of(host, "get_smartlock").len(), 1);
+            });
+    }
+}
+
+/// Sans « un code par séjour », le livret ne lit pas l'état de la serrure.
+#[test]
+#[serial]
+fn without_code_per_stay_the_guest_path_never_reads_the_lock_state() {
+    byok_guest()
+        .with_config(&ModuleConfig {
+            code_per_stay: false,
+            ..sample_config()
+        })
+        .with_connector_response("nuki", "get_smartlock", r#"{"serverState":4}"#)
+        .run_with(|ctx, host| {
+            let cred = get_guest_credential(ctx, StayArgs::default()).expect("credential");
+            assert_eq!(cred.code, "482910");
+            assert!(calls_of(host, "get_smartlock").is_empty());
+        });
 }

@@ -6,6 +6,7 @@
 //! 1 non enregistrée, 2–3 autorisation invalide, 4 hors ligne — toutes injoignables par Nuki Web,
 //! donc toutes « hors ligne » ici), `state.batteryCritical`, `state.batteryCharge` (en %, pack
 //! Nuki seulement). Le catalogue rend l'objet entier ; on n'en garde que ces trois champs.
+//! Le même état sert au livret : hors ligne, `getGuestCredential` donne le code de secours.
 
 use portaki_sdk::contracts::timeline::{self, TimelineTask, TimelineTasks, TimelineTasksArgs};
 use portaki_sdk::host;
@@ -126,6 +127,11 @@ fn tasks(
         ));
     }
     tasks
+}
+
+/// Nuki Web dit la serrure hors ligne. Nuki qui ne répond pas : inconnu, donc `false`.
+pub(crate) fn lock_offline(smartlock_id: &str) -> bool {
+    health(smartlock_id).is_some_and(|health| health.offline())
 }
 
 /// L'état de la serrure, du cache ou de Nuki Web. Nuki qui ne répond pas : pas de tâche, un log.
