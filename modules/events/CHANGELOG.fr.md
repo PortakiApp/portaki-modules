@@ -1,23 +1,13 @@
 # Changelog
 
-## 1.11.0
-
-Un calendrier des événements, mois par mois.
-
-* Nouvel onglet « Calendrier des événements » : vos événements et ceux d'OpenAgenda, mois par mois, répétitions comprises.
-* Filtre Tous, Les vôtres, OpenAgenda ; un clic ouvre l'événement, et le vôtre mène à ses réglages.
-* Un doublon (même nom à une heure près, même lieu) est signalé en tête de l'onglet ; le livret ne garde que le vôtre.
-* Les événements passés restent grisés 30 jours dans l'onglet ; un agenda OpenAgenda injoignable y est signalé.
-* Le livret puise désormais dans les 100 prochains événements d'OpenAgenda, au lieu de 12.
-
 ## 1.10.0
 
-Vos événements en tableau, et un lieu toujours sur la carte.
+Vos événements en tableau et en calendrier, et un lieu toujours sur la carte.
 
-* Vos événements se rangent dans un tableau trié par date ; chacun s'ouvre dans un panneau, et les passés portent un badge « Passé ».
-* « Quand » se saisit par un jour et des heures de début et de fin ; les jours ou les dates n'apparaissent qu'avec leur répétition.
-* Un événement doit être placé sur la carte, dans le rayon ; un rayon hors de 1 à 50 km bloque désormais la publication.
-* « Ajouter les événements publics » ajoute ou retire d'un geste les événements d'OpenAgenda autour du logement.
+* Vos événements se rangent dans un tableau trié par date ; l'onglet « Calendrier des événements » les montre mois par mois, avec ceux d'OpenAgenda.
+* « Quand » se saisit par un jour et des heures de début et de fin ; un événement doit être placé sur la carte, dans un rayon de 1 à 50 km.
+* « Ajouter les événements publics » ajoute ou retire d'un geste ceux d'OpenAgenda ; le livret puise dans les 100 prochains, au lieu de 12.
+* Un doublon (même nom à une heure près, même lieu) est signalé en tête du calendrier ; le livret ne garde que le vôtre.
 * Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
 
 ## 1.9.0
