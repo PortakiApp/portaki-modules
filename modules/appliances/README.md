@@ -43,6 +43,7 @@ OCI image: `oci.portaki.app/modules/appliances:<semver>`
 | guest | `explore.detail` | Full list (page) |
 | guest | `explore.item` | Device how-to detail |
 | host | `main` | Settings page (`property-workspace-tab`, page mode): home card, then the appliances table |
+| host | `appliances-views` | Stats tile « Modes d'emploi ouverts » (`property-stats-card` + `-detail`): guest opens of `explore.item`, list opens and outbound taps from `views` |
 
 The table is an editable `DataTable` (`rowName = "devices"`): each row opens its form in a side
 panel, and every edit autosaves through `updateConfig`. Storage still keeps `content_fr` /
@@ -52,6 +53,7 @@ panel, and every edit autosaves through `updateConfig`. Storage still keeps `con
 
 - `getContent`
 - `saveContent`
+- `statsSummary` — `explore.item` opens over the period (`views`), `—` without booklet statistics
 
 ## Known gap
 

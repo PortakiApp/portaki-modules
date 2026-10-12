@@ -1,4 +1,5 @@
 {
+  "catalog.host.appliances-views": "Manuales abiertos",
   "catalog.host.main": "Aparatos",
   "explore.detail.empty.description": "No hay ninguna guía de aparatos para esta estancia.",
   "explore.detail.empty.title": "Ningún aparato",
@@ -99,6 +100,14 @@
   "module.displayName": "Aparatos",
   "nav.appliance": "Aparato",
   "nav.appliances": "Aparatos",
+  "stats.tile": "manuales abiertos",
+  "stats.views.clicks.call": "Llamadas",
+  "stats.views.clicks.directions": "Rutas solicitadas",
+  "stats.views.clicks.link": "Enlaces abiertos",
+  "stats.views.clicks.mail": "Correos",
+  "stats.views.empty": "Ningún manual abierto en este periodo.",
+  "stats.views.list": "Lista de aparatos abierta",
+  "stats.views.unavailable": "Todavía no hay consultas de huéspedes que mostrar.",
   "surface.host.main.subtitle": "Configure las instrucciones para los huéspedes",
   "surface.host.main.title": "Aparatos"
 }

@@ -10,6 +10,10 @@
 //! `updateConfig`; a rule broken shows under its field and blocks « Publier »
 //! (`publishReadiness`), never the save.
 
+mod stats;
+
+pub use stats::{render_host_stats, stats_summary};
+
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
 use portaki_sdk::sdui::common::Tone;

@@ -1,4 +1,5 @@
 {
+  "catalog.host.appliances-views": "Modes d’emploi ouverts",
   "catalog.host.main": "Appareils",
   "explore.detail.empty.description": "Aucun guide appareil n'est disponible pour ce séjour.",
   "explore.detail.empty.title": "Aucun appareil",
@@ -99,6 +100,14 @@
   "module.displayName": "Appareils",
   "nav.appliance": "Appareil",
   "nav.appliances": "Appareils",
+  "stats.tile": "modes d’emploi ouverts",
+  "stats.views.clicks.call": "Appels",
+  "stats.views.clicks.directions": "Itinéraires demandés",
+  "stats.views.clicks.link": "Liens ouverts",
+  "stats.views.clicks.mail": "E-mails",
+  "stats.views.empty": "Aucun mode d’emploi ouvert sur la période.",
+  "stats.views.list": "Liste des appareils ouverte",
+  "stats.views.unavailable": "Pas encore de consultations des voyageurs à afficher.",
   "surface.host.main.subtitle": "Configurez les modes d’emploi pour les voyageurs",
   "surface.host.main.title": "Appareils"
 }

@@ -1,4 +1,5 @@
 {
+  "catalog.host.appliances-views": "Geopende handleidingen",
   "catalog.host.main": "Apparaten",
   "explore.detail.empty.description": "Er is geen handleiding voor apparaten bij dit verblijf.",
   "explore.detail.empty.title": "Geen apparaten",
@@ -99,6 +100,14 @@
   "module.displayName": "Apparaten",
   "nav.appliance": "Apparaat",
   "nav.appliances": "Apparaten",
+  "stats.tile": "geopende handleidingen",
+  "stats.views.clicks.call": "Oproepen",
+  "stats.views.clicks.directions": "Routes opgevraagd",
+  "stats.views.clicks.link": "Geopende links",
+  "stats.views.clicks.mail": "E-mails",
+  "stats.views.empty": "Geen handleiding geopend in deze periode.",
+  "stats.views.list": "Apparatenlijst geopend",
+  "stats.views.unavailable": "Nog geen weergaven door gasten om te tonen.",
   "surface.host.main.subtitle": "Stel de bedieningsinstructies voor gasten in",
   "surface.host.main.title": "Apparaten"
 }

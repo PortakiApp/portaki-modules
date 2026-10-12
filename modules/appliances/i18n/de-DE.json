@@ -1,4 +1,5 @@
 {
+  "catalog.host.appliances-views": "Geöffnete Anleitungen",
   "catalog.host.main": "Geräte",
   "explore.detail.empty.description": "Für diesen Aufenthalt gibt es keine Geräteanleitung.",
   "explore.detail.empty.title": "Keine Geräte",
@@ -99,6 +100,14 @@
   "module.displayName": "Geräte",
   "nav.appliance": "Gerät",
   "nav.appliances": "Geräte",
+  "stats.tile": "geöffnete Anleitungen",
+  "stats.views.clicks.call": "Anrufe",
+  "stats.views.clicks.directions": "Angefragte Routen",
+  "stats.views.clicks.link": "Geöffnete Links",
+  "stats.views.clicks.mail": "E-Mails",
+  "stats.views.empty": "In diesem Zeitraum wurde keine Anleitung geöffnet.",
+  "stats.views.list": "Geräteliste geöffnet",
+  "stats.views.unavailable": "Noch keine Gästeaufrufe anzuzeigen.",
   "surface.host.main.subtitle": "Legen Sie die Bedienungshinweise für Gäste fest",
   "surface.host.main.title": "Geräte"
 }
