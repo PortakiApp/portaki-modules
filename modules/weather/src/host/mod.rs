@@ -11,6 +11,7 @@ use portaki_sdk::sdui::primitives::{
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::ModuleConfig;
+use crate::weather::city_from_address;
 
 /// Le repli ouvert dans le brouillon.
 const OVERRIDE_ON: &str = "location_override=true";
@@ -43,7 +44,7 @@ fn location_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
     children.push(match (address, ctx.property.coordinates) {
         // Lecture seule : sans `name`, le formulaire ne l'envoie pas.
         (Some(address), Some(_)) => {
-            let place = match commune(address) {
+            let place = match city_from_address(address) {
                 Some(commune) => t!("host.location.fromAddress", commune = commune),
                 None => t!("host.location.fromAddressOnly"),
             };
@@ -123,17 +124,6 @@ fn location_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         .into()
 }
 
-/// La commune, d'après le segment « 56000 Vannes » de l'adresse (la règle du dashboard). Sans code
-/// postal, rien : le dernier segment est souvent le pays (« …, France »), pas la commune.
-fn commune(address: &str) -> Option<&str> {
-    address.split(',').map(str::trim).find_map(|segment| {
-        let (code, rest) = segment.split_once(char::is_whitespace)?;
-        let rest = rest.trim();
-        (code.len() == 5 && code.bytes().all(|b| b.is_ascii_digit()) && !rest.is_empty())
-            .then_some(rest)
-    })
-}
-
 /// §2.2 Affichage. La vigilance est annoncée, pas proposée : aucune source officielle encore.
 fn display_card(config: &ModuleConfig) -> Component {
     Card::new()
@@ -173,17 +163,4 @@ fn public_card(config: &ModuleConfig) -> Component {
                 .checked(config.public_monthly_averages),
         )
         .into()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::commune;
-
-    #[test]
-    fn the_commune_is_the_segment_after_the_postal_code() {
-        assert_eq!(commune("3 quai X, 45000 Orléans, France"), Some("Orléans"));
-        assert_eq!(commune("12 rue du Lac, 74000 Annecy"), Some("Annecy"));
-        assert_eq!(commune("Cannes, France"), None, "pas le pays");
-        assert_eq!(commune("12 rue des Lilas"), None, "pas la rue");
-    }
 }

@@ -11,8 +11,8 @@ pub use api::{
 };
 pub use condition::{description_key_for_condition, icon_name_for_condition, uv_label_key};
 pub use format::{
-    convert_temp, format_day_strip_label, format_temp_label, format_wind_kmh, resolve_city_label,
-    tone_for_temp_c,
+    city_from_address, convert_temp, format_day_strip_label, format_temp_label, format_wind_kmh,
+    resolve_city_label, tone_for_temp_c,
 };
 pub use model::{
     CachedCurrentPayload, CachedForecastPayload, ForecastDayView, WeatherCurrent, WeatherForecast,
