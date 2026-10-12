@@ -1,8 +1,9 @@
 //! Integration-style unit tests with `portaki-test-utils`.
 
 use nuki::{
-    get_guest_credential, publish_readiness, render_host_main, render_host_stay, unlock,
-    ModuleConfig, StayArgs, SMART_LOCK,
+    get_guest_credential, publish_readiness, regenerate_code, render_host_main,
+    render_host_regenerate, render_host_stay, unlock, ModuleConfig, RegenerateArgs, StayArgs,
+    SMART_LOCK,
 };
 use portaki_sdk::capability;
 use portaki_sdk::contracts::smart_lock;
@@ -625,4 +626,140 @@ fn the_lock_and_its_name_belong_to_the_property() {
         .filter_map(|field| field["key"].as_str())
         .collect();
     assert_eq!(local, ["smartlock_id", "device_name"]);
+}
+
+// --- « Régénérer le code » (spec Nuki §1, `stay-action`) ---------------------------------------
+
+/// Two codes under the stay's name — Nuki lists the older last: the newest is the guest's.
+#[test]
+#[serial]
+fn after_a_regeneration_the_newest_code_is_the_guests() {
+    let booking = Booking::default();
+    let name = format!("Portaki {}", &booking.id.simple().to_string()[..8]);
+    let auths = format!(
+        r#"[{{"name":"{name}","type":13,"code":654321,"creationDate":"2026-06-02T09:00:00.000Z"}},
+            {{"name":"{name}","type":13,"code":482913,"creationDate":"2026-05-20T09:00:00.000Z"}}]"#
+    );
+    byok_guest()
+        .with_stay(booking)
+        .with_connector_response("nuki", "list_auths", auths)
+        .run(|ctx| {
+            let cred = get_guest_credential(ctx, StayArgs::default()).expect("credential");
+            assert_eq!(cred.code, "654321");
+        });
+}
+
+fn regenerate_args() -> RegenerateArgs {
+    RegenerateArgs {
+        stay_id: "1a2b3c4d-0000-4000-8000-000000000000".parse().unwrap(),
+        check_in: at("2026-08-24T14:00:00Z"),
+        check_out: at("2026-08-29T08:00:00Z"),
+    }
+}
+
+#[test]
+#[serial]
+fn regenerating_creates_a_new_code_for_the_stay_window_even_with_one_on_the_lock() {
+    host_stay(&[capability::core::STORAGE, capability::external::NUKI_BYOK])
+        .with_now(at("2026-08-25T10:00:00Z"))
+        .with_connector_response(
+            "nuki",
+            "list_auths",
+            r#"[{"name":"Portaki 1a2b3c4d","type":13,"code":482913}]"#,
+        )
+        .with_connector_response("nuki", "create_auth", "{}")
+        .run_with(|ctx, host| {
+            regenerate_code(ctx, regenerate_args()).expect("regenerated");
+            let created = calls_of(host, "create_auth");
+            assert_eq!(created.len(), 1);
+            assert_eq!(created[0]["name"], "Portaki 1a2b3c4d");
+            assert_ne!(created[0]["code"], 482913);
+            assert_eq!(created[0]["allowedFromDate"], "2026-08-24T14:00:00.000Z");
+            assert_eq!(created[0]["allowedUntilDate"], "2026-08-29T08:00:00.000Z");
+        });
+}
+
+#[test]
+#[serial]
+fn regenerating_is_refused_to_guests_without_per_stay_codes_and_after_departure() {
+    // `with_capabilities` rebuilds the context: the guest identity is set back here.
+    byok_guest().run_with(|mut ctx, host| {
+        ctx.guest = Some(portaki_test_utils::GuestIdentityFixture::default().into());
+        assert!(regenerate_code(ctx, regenerate_args()).is_err());
+        assert!(host.connector_calls().is_empty());
+    });
+    host_stay(&[capability::core::STORAGE])
+        .with_now(at("2026-08-25T10:00:00Z"))
+        .run_with(|ctx, host| {
+            assert!(regenerate_code(ctx, regenerate_args()).is_err());
+            assert!(host.connector_calls().is_empty());
+        });
+    host_stay(&[capability::core::STORAGE, capability::external::NUKI_BYOK])
+        .with_now(at("2026-08-29T09:00:00Z"))
+        .run_with(|ctx, host| {
+            assert!(regenerate_code(ctx, regenerate_args()).is_err());
+            assert!(host.connector_calls().is_empty());
+        });
+}
+
+fn render_regenerate(builder: MockContextBuilder, input: serde_json::Value) -> serde_json::Value {
+    builder.run(|mut ctx| {
+        ctx.input = input;
+        serde_json::to_value(render_host_regenerate(ctx).expect("regenerate")).unwrap()
+    })
+}
+
+/// The guest on site: the modal warns, says until when the old code works, and its one button
+/// sends the stay and its window.
+#[test]
+#[serial]
+fn the_regenerate_modal_warns_when_the_guest_is_there_and_sends_the_window() {
+    let byok = &[capability::core::STORAGE, capability::external::NUKI_BYOK];
+    let tree = render_regenerate(
+        host_stay(byok)
+            .with_now(at("2026-08-25T10:00:00Z"))
+            .with_translation(
+                "host.regenerate.body",
+                "L’ancien reste valable jusqu’au {until}.",
+            ),
+        stay_input("1a2b3c4d-0000-4000-8000-000000000000"),
+    );
+    let json = tree.to_string();
+    assert!(
+        json.contains("L’ancien reste valable jusqu’au 29/08 10:00."),
+        "{json}"
+    );
+    assert!(json.contains("i18n:host.regenerate.present"), "{json}");
+    assert!(json.contains(r#""name":"regenerateCode""#), "{json}");
+    assert!(
+        json.contains(r#""checkOut":"2026-08-29T08:00:00Z""#),
+        "{json}"
+    );
+
+    let before = render_regenerate(
+        host_stay(byok).with_now(at("2026-08-20T10:00:00Z")),
+        stay_input("1a2b3c4d-0000-4000-8000-000000000000"),
+    )
+    .to_string();
+    assert!(!before.contains("host.regenerate.present"), "{before}");
+    assert!(before.contains("regenerateCode"), "{before}");
+}
+
+#[test]
+#[serial]
+fn the_regenerate_modal_says_why_it_cannot() {
+    let input = || stay_input("1a2b3c4d-0000-4000-8000-000000000000");
+    let shared = render_regenerate(host_stay(&[capability::core::STORAGE]), input()).to_string();
+    assert!(shared.contains("host.regenerate.unavailable"), "{shared}");
+    assert!(!shared.contains("regenerateCode"), "{shared}");
+    let byok = &[capability::core::STORAGE, capability::external::NUKI_BYOK];
+    let ended = render_regenerate(
+        host_stay(byok).with_now(at("2026-08-30T10:00:00Z")),
+        input(),
+    )
+    .to_string();
+    assert!(ended.contains("host.regenerate.ended"), "{ended}");
+    assert!(!ended.contains("regenerateCode"), "{ended}");
+    let unknown = render_regenerate(host_stay(byok), serde_json::json!({})).to_string();
+    assert!(unknown.contains("host.stay.unknown"), "{unknown}");
 }

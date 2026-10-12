@@ -1,7 +1,9 @@
 //! Host dashboard surfaces — design `editorNuki` / `nuki-editor-v1`, and the stay encart.
 
+mod regenerate;
 mod stay;
 
+pub use regenerate::render_host_regenerate;
 pub use stay::render_host_stay;
 
 use portaki_sdk::prelude::*;
