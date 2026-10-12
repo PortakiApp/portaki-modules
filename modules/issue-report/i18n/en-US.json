@@ -102,7 +102,7 @@
   "host.urgent.hint": "Guests can call you directly for an emergency.",
   "host.urgent.label": "« Right now » option",
   "host.urgent.off": "Without this option, the booklet only points to 112 for life-threatening emergencies.",
-  "host.urgentNumber.hint": "Never copied to another property.",
+  "host.urgentNumber.hint": "Marked « To check » after a copy from another property.",
   "host.urgentNumber.label": "Emergency number",
   "module.description": "Guests report a problem from the booklet. Nothing to configure: follow-up is in Statistics.",
   "module.displayName": "Report an issue",

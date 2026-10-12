@@ -5,7 +5,7 @@
 Des réglages en deux cartes, Formulaire et Réception.
 
 * Catégories et périodes se choisissent en pastilles ; vos réglages précédents sont repris.
-* Le numéro d'urgence n'apparaît que si l'option « Tout de suite » est ouverte, et il n'est jamais copié vers un autre logement.
+* Le numéro d'urgence n'apparaît que si l'option « Tout de suite » est ouverte ; copié depuis un autre logement, il est marqué « À vérifier ».
 * Le tiroir indique combien de signalements sont en cours sur le logement.
 * Les e-mails restent le canal d'alerte ; la notification de l'app et le SMS sont annoncés.
 * Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.

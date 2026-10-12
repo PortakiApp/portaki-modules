@@ -102,7 +102,7 @@
   "host.urgent.hint": "Der Gast kann Sie im Notfall direkt anrufen.",
   "host.urgent.label": "Option „Sofort“",
   "host.urgent.off": "Ohne diese Option verweist das Gästebuch nur bei lebensbedrohlichen Notfällen auf die 112.",
-  "host.urgentNumber.hint": "Wird nie in eine andere Unterkunft kopiert.",
+  "host.urgentNumber.hint": "Nach dem Kopieren aus einer anderen Unterkunft als „Zu prüfen“ markiert.",
   "host.urgentNumber.label": "Notfallnummer",
   "module.description": "Gäste melden ein Problem direkt aus der Gästemappe. Nichts einzurichten: die Nachverfolgung steht unter Statistiken.",
   "module.displayName": "Problem melden",

@@ -102,7 +102,7 @@
   "host.urgent.hint": "De gast kan je in een noodgeval direct bellen.",
   "host.urgent.label": "Optie „Nu meteen”",
   "host.urgent.off": "Zonder deze optie wijst het gastenboek alleen bij levensbedreigende noodgevallen op 112.",
-  "host.urgentNumber.hint": "Wordt nooit naar een andere accommodatie gekopieerd.",
+  "host.urgentNumber.hint": "Gemarkeerd als „Te controleren” na kopiëren vanuit een andere accommodatie.",
   "host.urgentNumber.label": "Noodnummer",
   "module.description": "Gasten melden een probleem vanuit de gids. Niets in te stellen: de opvolging staat bij Statistieken.",
   "module.displayName": "Probleem melden",

@@ -102,7 +102,7 @@
   "host.urgent.hint": "緊急時にゲストがあなたに直接電話できます。",
   "host.urgent.label": "「今すぐ」オプション",
   "host.urgent.off": "このオプションがない場合、ガイドは生命に関わる緊急時にのみ112を案内します。",
-  "host.urgentNumber.hint": "他の物件にはコピーされません。",
+  "host.urgentNumber.hint": "他の物件からコピーした後は「要確認」と表示されます。",
   "host.urgentNumber.label": "緊急連絡先",
   "module.description": "ゲストがガイドから問題を知らせます。設定は不要です。対応状況は「統計」で確認できます。",
   "module.displayName": "問題を知らせる",
