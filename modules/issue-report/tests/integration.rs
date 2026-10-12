@@ -165,7 +165,7 @@ fn host_stats_list_recent_after_guest_submit() {
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("host.main.recentTitle"));
             assert!(json.contains("status.new"));
-            assert!(json.contains("i18n:stats.category.cleanliness"));
+            assert!(json.contains("i18n:host.category.cleanliness"));
         });
 }
 
@@ -256,9 +256,9 @@ fn host_stats_reflect_resolution_and_period() {
     assert!(text
         .contains(r#""icon":"clock-circle","label":"i18n:stats.open","type":"Stat","value":"2""#));
     assert!(text.contains(
-        r#""display":"2 signalements","label":"i18n:stats.category.appliance","value":2.0"#
+        r#""display":"2 signalements","label":"i18n:host.category.appliance","value":2.0"#
     ));
-    assert!(text.find("stats.category.appliance") < text.find("stats.category.access"));
+    assert!(text.find("host.category.appliance") < text.find("host.category.access"));
     // 30 days → five weekly slices; the oven, reported and resolved in the last one, took 6 h.
     assert!(
         text.contains(r#""display":"6 h","label":"S5","value":6.0"#),
