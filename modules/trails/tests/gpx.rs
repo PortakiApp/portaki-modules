@@ -199,3 +199,31 @@ fn les_messages_de_refus_sont_ceux_de_la_spec() {
     );
     assert_eq!(fr["host.trails.gpx.tooLarge"], "5 Mo au maximum.");
 }
+
+#[test]
+fn une_trace_propose_son_nom_et_sait_si_elle_a_une_altitude() {
+    let track = gpx::read(TRACK).expect("une trace");
+    assert_eq!(track.name.as_deref(), Some("Cap Garoupe"));
+    assert!(track.has_elevation);
+
+    let flat = gpx::read(
+        r#"<gpx><metadata><name>Sentier &amp; phare</name></metadata><trk><trkseg>
+        <trkpt lat="43.55" lon="6.94"><name>Point 1</name></trkpt>
+        <trkpt lat="43.56" lon="6.94"></trkpt></trkseg></trk></gpx>"#,
+    )
+    .expect("une trace");
+    assert_eq!(flat.name.as_deref(), Some("Sentier & phare"));
+    // Pas d'altitude : zéro de montée, qui ne mesure rien.
+    assert!(!flat.has_elevation);
+
+    let unnamed = gpx::read(&TRACK.replace("<name>Cap Garoupe</name>", "")).expect("une trace");
+    assert_eq!(unnamed.name, None);
+}
+
+#[test]
+fn la_duree_se_calcule_a_4_km_h_plus_une_heure_par_600_m() {
+    let mut track = gpx::read(TRACK).expect("une trace");
+    track.distance_km = 8.0;
+    track.elevation_m = 600.0;
+    assert!((track.duration_min() - 180.0).abs() < 0.01);
+}

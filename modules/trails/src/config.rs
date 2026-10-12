@@ -15,6 +15,10 @@ pub const DURATION_MIN: (f64, f64) = (5.0, 1_440.0);
 pub const DISTANCE_KM: (f64, f64) = (0.1, 100.0);
 pub const ELEVATION_M: (f64, f64) = (0.0, 5_000.0);
 
+/// « Avant de partir » : cinq conseils au plus, de 120 caractères chacun (§2.1).
+pub const MAX_TIPS: usize = 5;
+pub const TIP_CHARS: usize = 120;
+
 /// Les trois niveaux, figés et traduits (§2.23). Pas de texte libre : « assez sportif » ne se
 /// compare à rien, et un niveau sert à choisir entre deux randonnées.
 ///
@@ -55,7 +59,10 @@ pub const PUBLIC_MAX: usize = 4;
 pub struct ModuleConfig {
     /// Les itinéraires. La porte de publication vit dans `publishReadiness`, qui sait compter les
     /// lignes complètes — ce qu'un `required` sur une liste ne fait pas.
-    #[field(label = "config.trails")]
+    ///
+    /// `local` : copiés vers un autre logement avec leurs traces, mais marqués « À vérifier » —
+    /// les départs et leurs distances sont à revoir là-bas.
+    #[field(local, label = "config.trails")]
     pub trails: Vec<TrailRow>,
     /// Le lien « tous les sentiers de la commune », en bas de la liste.
     #[field(label = "host.commune.label")]
@@ -129,7 +136,7 @@ impl ModuleConfig {
                 ),
                 (
                     "duration_min",
-                    out_of(trail.duration_min, DURATION_MIN)
+                    out_of(trail.duration_total(), DURATION_MIN)
                         .then(|| text("host.trails.duration.range")),
                 ),
                 (
@@ -154,6 +161,7 @@ impl ModuleConfig {
                     "lat",
                     start_misplaced.then(|| text("host.trails.start.required")),
                 ),
+                ("tips", trail.tips_problem()),
                 ("season_from", season(season_from, season_to)),
                 ("season_to", season(season_to, season_from)),
             ] {
@@ -274,11 +282,19 @@ pub struct TrailRow {
     /// à partir du premier enregistrement. Les accesseurs arrondissent à l'affichage.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub duration_min: Option<f64>,
+    /// La durée telle que le formulaire la saisit, en heures et minutes (§2.1). Présentes, elles
+    /// l'emportent sur `duration_min`, la clé d'avant, qui reste lue pour les lignes anciennes.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub duration_h: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub duration_m: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub distance_km: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub elevation_m: Option<f64>,
     pub description: I18nText,
+    /// « Avant de partir » : un conseil par ligne. Vide, le livret montre l'eau et la météo.
+    pub tips: I18nText,
     /// Le départ, tel que le sélecteur l'a résolu.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub address: Option<String>,
@@ -308,7 +324,8 @@ pub struct TrailRow {
         skip_serializing_if = "Option::is_none"
     )]
     pub starts_at_property: Option<bool>,
-    /// La saison, en `MM-JJ` sans année — « 04-01 » au « 10-31 ». Vides : toute l'année.
+    /// La saison, sans année : `JJ/MM` comme le formulaire la saisit, ou `MM-JJ` comme avant —
+    /// « 01/04 » ou « 04-01 » pour le 1er avril. Vides : toute l'année.
     /// Hors saison, l'itinéraire reste listé, avec un badge « Hors saison ».
     #[serde(skip_serializing_if = "String::is_empty")]
     pub season_from: String,
@@ -316,10 +333,15 @@ pub struct TrailRow {
     pub season_to: String,
 }
 
-/// `MM-JJ` en un nombre comparable (`0415` pour le 15 avril), ou `None` quand ce n'est pas une
-/// date du calendrier. Copié de `facility-hours` (`schedule::parse_month_day`).
+/// `JJ/MM` (le formulaire) ou `MM-JJ` (les saisons d'avant) en un nombre comparable (`0415` pour
+/// le 15 avril), ou `None` quand ce n'est pas une date du calendrier. Copié de `facility-hours`
+/// (`schedule::parse_month_day`).
 pub fn parse_month_day(raw: &str) -> Option<u32> {
-    let (month, day) = raw.trim().split_once('-')?;
+    let raw = raw.trim();
+    let (month, day) = match raw.split_once('/') {
+        Some((day, month)) => (month, day),
+        None => raw.split_once('-')?,
+    };
     let month: u32 = month.trim().parse().ok()?;
     let day: u32 = day.trim().parse().ok()?;
     // 31 partout : refuser le 31 janvier parce qu'un mois voisin est plus court serait pire.
@@ -425,9 +447,46 @@ impl TrailRow {
         Some((self.lat?, self.lng?))
     }
 
+    /// La durée saisie, en minutes : heures et minutes quand le formulaire les a envoyées, sinon
+    /// `duration_min`.
+    ///
+    /// ponytail: vider les deux cases ne vide pas `duration_min` d'une ligne ancienne, qui revient
+    /// alors — rien ne distingue « vidé » de « jamais saisi » sans une clé de plus.
+    pub fn duration_total(&self) -> Option<f64> {
+        match (self.duration_h, self.duration_m) {
+            (None, None) => self.duration_min,
+            (hours, minutes) => Some(hours.unwrap_or(0.0) * 60.0 + minutes.unwrap_or(0.0)),
+        }
+    }
+
     /// La durée de marche, en minutes entières. Une durée nulle ou négative n'est pas une mesure.
     pub fn duration(&self) -> Option<u32> {
-        positive(self.duration_min).map(|minutes| minutes.round() as u32)
+        positive(self.duration_total()).map(|minutes| minutes.round() as u32)
+    }
+
+    /// Les conseils « Avant de partir » dans `locale`, une ligne chacun, vides retirées.
+    pub fn tip_lines(&self, locale: &str) -> Vec<String> {
+        self.tips
+            .get(locale)
+            .lines()
+            .map(str::trim)
+            .filter(|line| !line.is_empty())
+            .map(str::to_string)
+            .collect()
+    }
+
+    /// Plus de [`MAX_TIPS`] conseils, ou un conseil de plus de [`TIP_CHARS`] caractères.
+    fn tips_problem(&self) -> Option<I18nText> {
+        self.tips.by_language().find_map(|(_, text)| {
+            let lines: Vec<&str> = text.lines().filter(|l| !l.trim().is_empty()).collect();
+            if lines.len() > MAX_TIPS {
+                Some(crate::i18n::text("host.trails.tips.tooMany"))
+            } else {
+                lines
+                    .iter()
+                    .find_map(|line| check::max_chars(line, TIP_CHARS))
+            }
+        })
     }
 
     /// La distance, au dixième de kilomètre près à l'affichage.
@@ -704,5 +763,43 @@ mod tests {
         // Sans saison, ou une saison illisible : toute l'année.
         assert!(row("", "").in_season(115));
         assert!(row("avril", "10-31").in_season(115));
+        // Le formulaire saisit `JJ/MM` : la même saison d'été.
+        let typed = row("01/04", "31/10");
+        assert!(typed.in_season(415));
+        assert!(!typed.in_season(115));
+        assert_eq!(parse_month_day("31/10"), parse_month_day("10-31"));
+        assert_eq!(parse_month_day("10/31"), None);
+    }
+
+    /// Heures et minutes l'emportent ; sans elles, la durée d'avant reste lue.
+    #[test]
+    fn a_duration_composes_hours_and_minutes() {
+        let config = parsed(json!({
+            "trails": [
+                { "title": "A", "level": "easy", "duration_min": 90, "duration_h": 1, "duration_m": 45 },
+                { "title": "B", "level": "easy", "duration_min": 90 },
+                { "title": "C", "level": "easy", "duration_m": 40 },
+                { "title": "D", "level": "easy", "duration_h": 30 }
+            ]
+        }));
+        let durations: Vec<_> = config.trails.iter().map(TrailRow::duration).collect();
+        assert_eq!(durations, [Some(105), Some(90), Some(40), Some(1_800)]);
+        assert!(config.error_of("trails.3.duration_min", None).is_some());
+        assert!(config.error_of("trails.0.duration_min", None).is_none());
+    }
+
+    /// Cinq conseils au plus, de 120 caractères chacun ; les lignes vides ne comptent pas.
+    #[test]
+    fn tips_are_five_short_lines() {
+        let problem = |tips: &str| {
+            parsed(json!({ "trails": [{ "title": "A", "level": "easy", "tips": tips }] }))
+                .error_of("trails.0.tips", None)
+                .is_some()
+        };
+        assert!(!problem("Prenez de l'eau\n\nVérifiez la météo"));
+        assert!(problem("a\nb\nc\nd\ne\nf"));
+        assert!(problem(&"x".repeat(121)));
+        let row = &parsed(json!({ "trails": [{ "tips": " eau \n\n météo " }] })).trails[0];
+        assert_eq!(row.tip_lines("fr"), ["eau", "météo"]);
     }
 }

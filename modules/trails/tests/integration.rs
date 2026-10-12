@@ -280,27 +280,40 @@ fn the_host_form_draws_the_rows_the_host_has() {
         });
 }
 
-/// Rien de stocké : une ligne, et « Ajouter » en demande une de plus — bornée à douze.
+/// Rien de stocké : un tableau vide et « Ajouter » ; une ligne ajoutée s'ouvre et reste d'un
+/// rendu à l'autre ; à trente, plus d'« Ajouter ».
 #[test]
 #[serial]
-fn the_form_grows_one_row_at_a_time_up_to_the_bound() {
+fn the_table_grows_one_row_at_a_time_up_to_the_bound() {
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&json!({}))
         .run(|ctx| {
             let json = tree(&render_host_main(ctx).expect("host main"));
+            assert!(!json.contains("trails.0.title"), "{json}");
+            assert!(json.contains(r#""newTrails":"#), "{json}");
+            assert!(json.contains("Ajoutez au moins un itinéraire."), "{json}");
+        });
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({}))
+        .run(|mut ctx| {
+            ctx.input = json!({ "newTrails": "n1" });
+            let json = tree(&render_host_main(ctx).expect("host main"));
             assert!(json.contains("trails.0.title"), "{json}");
             assert!(!json.contains("trails.1.title"), "{json}");
-            assert!(json.contains(r#""trails_count":2"#), "{json}");
+            // La prochaine « Ajouter » garde `n1` et en demande une autre.
+            assert!(json.contains(r#""newTrails":"n1,"#), "{json}");
         });
 
     let rows: Vec<Value> = (0..MAX_TRAILS)
-        .map(|i| json!({ "title": format!("Sentier {i}"), "level": "easy" }))
+        .map(|i| json!({ "id": format!("s{i}"), "title": format!("Sentier {i}"), "level": "easy" }))
         .collect();
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&json!({ "trails": rows }))
-        .run(|ctx| {
+        .run(|mut ctx| {
+            ctx.input = json!({ "newTrails": "n1" });
             let json = tree(&render_host_main(ctx).expect("host main"));
             let last = MAX_TRAILS - 1;
             assert!(json.contains(&format!("trails.{last}.title")), "{json}");
@@ -308,10 +321,108 @@ fn the_form_grows_one_row_at_a_time_up_to_the_bound() {
                 !json.contains(&format!("trails.{}.title", last + 1)),
                 "{json}"
             );
+            assert!(!json.contains("addLabel"), "{json}");
+            assert!(json.contains("30 / 30"), "{json}");
+        });
+}
+
+/// Une ligne d'avant les id prend son identifiant de route : le choix de la page publique, qui
+/// le désigne déjà, la retrouve après l'enregistrement.
+#[test]
+#[serial]
+fn a_row_without_an_id_keeps_its_route_id() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({
+            "trails": [
+                { "title": "A", "level": "easy" },
+                {},
+                { "id": "b", "title": "B", "level": "hard" }
+            ],
+            "public_trails": ["t0", "b"]
+        }))
+        .run(|ctx| {
+            let surface = render_host_main(ctx).expect("host main");
+            let json: Value = serde_json::to_value(&surface).expect("json");
+            let text = json.to_string();
+            let rows = text_rows(&json);
+            // Une ligne sans id : toutes les lignes gardent leur rang, la vide comprise.
+            assert_eq!(rows, ["t0", "t1", "b"], "{text}");
+            // Et pas de glisser-déposer tant qu'une ligne n'a pas d'id : le rang la désigne.
+            assert!(text.contains(r#""sortable":false"#), "{text}");
+        });
+}
+
+fn text_rows(node: &Value) -> Vec<String> {
+    if node["type"] == "DataTable" {
+        return node["rows"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .map(|row| row["id"].as_str().unwrap_or_default().to_string())
+            .collect();
+    }
+    node.as_object()
+        .into_iter()
+        .flat_map(|object| object.values())
+        .flat_map(|value| match value {
+            Value::Array(items) => items.iter().flat_map(text_rows).collect::<Vec<_>>(),
+            Value::Object(_) => text_rows(value),
+            _ => Vec::new(),
+        })
+        .collect()
+}
+
+/// « Avant de partir » : les conseils de l'hôte remplacent l'eau et la météo ; sans eux, ces deux-là.
+#[test]
+#[serial]
+fn before_you_go_shows_the_host_s_tips() {
+    let detail = |tips: &str| {
+        guest()
+            .with_config(&json!({
+                "trails": [{ "id": "a", "title": "A", "level": "easy", "tips": tips }]
+            }))
+            .run(|mut ctx| {
+                ctx.input = json!({ "trailId": "a" });
+                tree(&render_explore_item(ctx).expect("fiche"))
+            })
+    };
+    let own = detail("Chaussures fermées\nLampe frontale");
+    assert!(own.contains("Chaussures fermées"), "{own}");
+    assert!(own.contains("Lampe frontale"), "{own}");
+    assert!(!own.contains("guest.before.water"), "{own}");
+    let none = detail("");
+    assert!(none.contains("guest.before.water"), "{none}");
+    assert!(none.contains("guest.before.weather"), "{none}");
+}
+
+/// La table : le départ sous le nom, le niveau, les mesures au format du livret.
+#[test]
+#[serial]
+fn the_table_reads_like_the_board() {
+    with_fr(MockContext::host())
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_coordinates(Some(GeoPoint::new(HOME.0, HOME.1)))
+        .with_config(&sample_config())
+        .run(|ctx| {
+            let json = tree(&render_host_main(ctx).expect("host main"));
             assert!(
-                json.contains(&format!(r#""trails_count":{MAX_TRAILS}"#)),
+                json.contains(r#""start":"Départ : Saint-Jeannet""#),
                 "{json}"
             );
+            assert!(
+                json.contains(r#""level":"i18n:host.level.label.hard""#),
+                "{json}"
+            );
+            assert!(json.contains(r#""duration":"4 h""#), "{json}");
+            assert!(json.contains(r#""ascent":"600 m""#), "{json}");
+            // Le Fort Carré n'a pas de dénivelé : un tiret, pas une case vide.
+            assert!(json.contains(r#""ascent":"—""#), "{json}");
+            // La durée se saisit en heures et minutes, au rang de la ligne.
+            assert!(json.contains("trails.0.duration_h"), "{json}");
+            assert!(json.contains("trails.0.duration_m"), "{json}");
+            assert!(json.contains(r#""panel":"sheet""#), "{json}");
+            assert!(json.contains(r#""sortable":true"#), "{json}");
         });
 }
 
@@ -341,14 +452,16 @@ fn saving_in_english_keeps_the_french_text() {
             // français. Une ligne qui disparaît d'ici est une traduction perdue.
             assert_eq!(
                 config_save::localized_paths(EMISSIONS),
-                ["trails.description", "trails.title"]
+                ["trails.description", "trails.tips", "trails.title"]
             );
             let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
             assert_eq!(saved["trails"][0]["title"]["fr"], "Phare de la Garoupe");
             assert_eq!(saved["trails"][0]["title"]["en"], "La Garoupe lighthouse");
             // Les mesures et les listes figées traversent l'enregistrement.
             assert_eq!(saved["trails"][0]["level"], "easy");
-            assert_eq!(saved["trails"][0]["duration_min"], 60.0);
+            // La durée repart en heures et minutes.
+            assert_eq!(saved["trails"][0]["duration_h"], 1.0);
+            assert_eq!(saved["trails"][0]["duration_m"], 0.0);
             assert_eq!(saved["trails"][0]["distance_km"], 2.6);
             assert_eq!(saved["commune_url"], stored["commune_url"]);
             // Et surtout : ce que l'enregistrement a écrit se relit. Les mesures reviennent en

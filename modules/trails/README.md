@@ -24,7 +24,7 @@ OCI image: `oci.portaki.app/modules/trails:<semver>`
 | guest | `home.card` | Level badges with counts + the first two walks |
 | guest | `explore.detail` | The list, one section per level, plus the town link |
 | guest | `explore.item` | One walk: level, trailhead, four measures, map, before you go |
-| host | `main` | Up to twelve dynamic rows + the town link |
+| host | `main` | Sortable routes table (side panel per row, GPX prefill), the town link, the public page choice |
 
 ## Queries and commands
 

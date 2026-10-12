@@ -42,6 +42,12 @@ fn km_value(km: f64) -> String {
     }
 }
 
+/// Au dixième de kilomètre : une distance de randonnée au millième dit une précision que ni le
+/// GPS ni le pas n'ont.
+pub fn round_tenth(km: f64) -> f64 {
+    (km * 10.0).round() / 10.0
+}
+
 /// Le dénivelé positif : « 600 m ».
 pub fn elevation(metres: u32) -> String {
     text("guest.elevation.metres", &[("value", &metres.to_string())])

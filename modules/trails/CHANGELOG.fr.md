@@ -1,9 +1,13 @@
 # Changelog
 
-## 0.8.1
+## 0.9.0
 
-Montée technique.
+Vos itinéraires en tableau, et une trace qui remplit le reste.
 
+* Vos itinéraires se rangent dans un tableau à glisser : les deux premiers vont sur la carte d'accueil, chacun s'ouvre dans un panneau.
+* La trace GPX propose le nom, la distance, le dénivelé, la durée et le départ ; « Recalculer depuis la trace » les reprend.
+* La durée se saisit en heures et minutes, la saison en JJ/MM ; une trace sans altitude demande le dénivelé.
+* « Avant de partir » prend vos conseils, cinq au plus ; des mesures corrigées à la main sont signalées au voyageur.
 * Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
 
 ## 0.8.0
