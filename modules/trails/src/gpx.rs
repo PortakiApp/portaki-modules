@@ -30,6 +30,18 @@ pub struct Track {
     /// Une trace qui s'arrête loin du départ est le plus souvent l'aller d'un aller-retour ; un
     /// aller simple ne s'en distingue pas, l'hôte le choisit lui-même.
     pub shape: &'static str,
+    /// Au moins un point porte son altitude. Sans elle, `elevation_m` vaut zéro sans rien
+    /// mesurer : le dénivelé reste à saisir (§3).
+    pub has_elevation: bool,
+    /// Le nom que la trace se donne (`<name>`), proposé comme titre (§4).
+    pub name: Option<String>,
+}
+
+impl Track {
+    /// La durée de marche estimée, en minutes : 4 km/h, plus une heure par 600 m de montée (§4).
+    pub fn duration_min(&self) -> f64 {
+        (self.distance_km / 4.0 + self.elevation_m / 600.0) * 60.0
+    }
 }
 
 /// Une boucle se referme : moins de cette distance entre le départ et l'arrivée.
@@ -111,6 +123,21 @@ fn element(xml: &str, name: &str) -> Option<f64> {
     let open_end = xml[at..].find('>')? + at + 1;
     let close = xml[open_end..].find('<')? + open_end;
     xml[open_end..close].trim().parse().ok()
+}
+
+/// Le texte du premier `<name>…</name>`, entités XML de base décodées, ou `None` s'il est vide.
+fn name(xml: &str) -> Option<String> {
+    let at = find_tag(xml, "name")?;
+    let open_end = xml[at..].find('>')? + at + 1;
+    let close = xml[open_end..].find('<')? + open_end;
+    let text = xml[open_end..close]
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", "\"")
+        .replace("&apos;", "'")
+        .replace("&amp;", "&");
+    let text = text.trim();
+    (!text.is_empty()).then(|| text.chars().take(60).collect())
 }
 
 /// Distance orthodromique entre deux points, en mètres.
@@ -236,7 +263,13 @@ pub fn read(xml: &str) -> Option<Track> {
     };
 
     let points: Vec<GeoPoint> = raw.iter().map(|(point, _)| *point).collect();
+    // Le nom avant le premier point : celui de la trace ou de ses métadonnées, pas d'un point.
+    let head = find_tag(xml, "trkpt")
+        .or_else(|| find_tag(xml, "rtept"))
+        .unwrap_or(xml.len());
     Some(Track {
+        has_elevation: raw.iter().any(|(_, elevation)| elevation.is_some()),
+        name: name(&xml[..head]),
         points: simplify_to_budget(&points),
         distance_km: distance_m / 1000.0,
         elevation_m: climb,

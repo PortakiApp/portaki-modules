@@ -132,8 +132,19 @@ pub fn build_trail_detail(data: &GuestData, trail: &TrailRow) -> Surface {
 
     children.push(trail_header(data, trail));
 
+    // La trace, lue une fois : le tracé du plan, et de quoi savoir si l'hôte a corrigé ses mesures.
+    let track = read_track(trail);
     if let Some(tiles) = measures(trail) {
         children.push(tiles);
+        if track.as_ref().is_some_and(|track| overridden(trail, track)) {
+            children.push(
+                Text::new()
+                    .text(entered_by(data))
+                    .variant(TextVariant::Caption)
+                    .emphasis(Emphasis::Subtle)
+                    .into(),
+            );
+        }
     }
 
     // Un aller simple ne ramène pas au départ : le voyageur doit le savoir avant de partir.
@@ -156,11 +167,11 @@ pub fn build_trail_detail(data: &GuestData, trail: &TrailRow) -> Surface {
         );
     }
 
-    if let Some(map) = start_map(data, trail) {
+    if let Some(map) = start_map(data, trail, track) {
         children.push(map);
     }
 
-    children.push(before_you_go());
+    children.push(before_you_go(data, trail));
     children.extend(actions(data, trail));
 
     Surface::new(Stack::new().gap(14.0).children(children)).with_id(crate::guest::EXPLORE_ITEM)
@@ -286,7 +297,11 @@ fn tile(icon: IconName, label: &str, value: String) -> Component {
 ///
 /// Un seul repère quand la randonnée part du logement : deux épingles au même endroit disent qu'il
 /// y a deux endroits. Le tracé attend `Map.path` et le dépôt du GPX.
-fn start_map(data: &GuestData, trail: &TrailRow) -> Option<Component> {
+fn start_map(
+    data: &GuestData,
+    trail: &TrailRow,
+    track: Option<crate::gpx::Track>,
+) -> Option<Component> {
     let start = trail.coordinates();
     let (center_lat, center_lng) = start.or(data.property)?;
 
@@ -307,7 +322,6 @@ fn start_map(data: &GuestData, trail: &TrailRow) -> Option<Component> {
         );
     }
     // Le tracé, et pour un aller simple son arrivée : le seul cas où elle n'est pas le départ.
-    let track = read_track(trail);
     if let Some(finish) = track
         .as_ref()
         .filter(|_| trail.shape_key() == Some("one_way"))
@@ -351,16 +365,49 @@ fn read_track(trail: &TrailRow) -> Option<crate::gpx::Track> {
     crate::gpx::read(&String::from_utf8_lossy(&bytes))
 }
 
-/// « Avant de partir » : l'eau et la météo (§2.23).
+/// L'hôte a-t-il changé une mesure que la trace calcule (§3, §9 n° 5) ? Comparé aux valeurs
+/// telles que le formulaire les propose : la distance au dixième, le dénivelé et la durée arrondis.
+fn overridden(trail: &TrailRow, track: &crate::gpx::Track) -> bool {
+    let distance = trail
+        .distance()
+        .is_some_and(|km| (km - format::round_tenth(track.distance_km)).abs() > 0.05);
+    let elevation = track.has_elevation
+        && trail
+            .elevation()
+            .is_some_and(|metres| f64::from(metres) != track.elevation_m.round());
+    let duration = trail
+        .duration()
+        .is_some_and(|minutes| f64::from(minutes) != track.duration_min().round());
+    distance || elevation || duration
+}
+
+/// « Mesures saisies par Claire », ou « par votre hôte » sans prénom.
+fn entered_by(data: &GuestData) -> String {
+    if data.host_name.is_empty() {
+        return t!("guest.measures.byHost").unwrap_or_else(|_| "i18n:guest.measures.byHost".into());
+    }
+    t!("guest.measures.byHostNamed", host = data.host_name.as_str())
+        .unwrap_or_else(|_| "i18n:guest.measures.byHost".into())
+}
+
+/// « Avant de partir » : les conseils de l'hôte, sinon l'eau et la météo (§2.1).
 ///
-/// Deux lignes écrites par le module, pas par l'hôte : elles valent pour tout sentier, et un hôte
-/// qui les oublierait ne rendrait pas la randonnée moins exposée.
-fn before_you_go() -> Component {
-    Card::new()
-        .surface(SurfaceLevel::Elevated)
-        .icon(IconName::InfoCircle)
-        .title("i18n:guest.before.title")
-        .children(vec![
+/// Sans conseil saisi, deux lignes écrites par le module : elles valent pour tout sentier, et un
+/// hôte qui les oublierait ne rendrait pas la randonnée moins exposée.
+fn before_you_go(data: &GuestData, trail: &TrailRow) -> Component {
+    let tips: Vec<Component> = trail
+        .tip_lines(&data.locale)
+        .into_iter()
+        .take(crate::config::MAX_TIPS)
+        .map(|tip| {
+            ListItem::new()
+                .title(tip)
+                .leading(Leading::Icon("info-circle".into()))
+                .into()
+        })
+        .collect();
+    let children = if tips.is_empty() {
+        vec![
             ListItem::new()
                 .title("i18n:guest.before.water")
                 .leading(Leading::Icon("droplet".into()))
@@ -369,7 +416,15 @@ fn before_you_go() -> Component {
                 .title("i18n:guest.before.weather")
                 .leading(Leading::Icon("cloud-sun".into()))
                 .into(),
-        ])
+        ]
+    } else {
+        tips
+    };
+    Card::new()
+        .surface(SurfaceLevel::Elevated)
+        .icon(IconName::InfoCircle)
+        .title("i18n:guest.before.title")
+        .children(children)
         .into()
 }
 
@@ -429,4 +484,55 @@ fn count_subtitle(count: usize) -> String {
         "guest.page.subtitle"
     };
     t!(key, count = count).unwrap_or_else(|_| format!("i18n:{key}"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn track() -> crate::gpx::Track {
+        crate::gpx::Track {
+            points: Vec::new(),
+            distance_km: 5.83,
+            elevation_m: 120.4,
+            shape: "loop",
+            has_elevation: true,
+            name: None,
+        }
+    }
+
+    /// Les valeurs proposées par la trace ne sont pas « saisies par l'hôte » ; une correction l'est.
+    #[test]
+    fn a_corrected_measure_is_the_host_s() {
+        // 5,83 km à 4 km/h, plus 120 m : 87 + 12 = 99 min.
+        let proposed = TrailRow {
+            distance_km: Some(5.8),
+            elevation_m: Some(120.0),
+            duration_min: Some(99.0),
+            ..TrailRow::default()
+        };
+        assert!(!overridden(&proposed, &track()));
+        let corrected = TrailRow {
+            distance_km: Some(6.5),
+            ..proposed.clone()
+        };
+        assert!(overridden(&corrected, &track()));
+        let longer = TrailRow {
+            duration_h: Some(2.0),
+            duration_m: Some(0.0),
+            ..proposed.clone()
+        };
+        assert!(overridden(&longer, &track()));
+        // Sans altitude dans la trace, le dénivelé ne peut être que celui de l'hôte : pas une
+        // correction.
+        let flat = crate::gpx::Track {
+            has_elevation: false,
+            ..track()
+        };
+        let typed = TrailRow {
+            elevation_m: Some(300.0),
+            ..proposed
+        };
+        assert!(!overridden(&typed, &flat));
+    }
 }

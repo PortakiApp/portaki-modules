@@ -1,20 +1,31 @@
-//! Host dashboard surface — l'onglet « Randonnées » de l'espace du logement.
+//! Host dashboard surface — les réglages « Randonnées » (spec Randonnées §2), mode page.
+//!
+//! Trois `Section`s, dans l'ordre de la planche : « Itinéraires », un tableau ordonnable (l'ordre
+//! du livret, les deux premiers sur la carte d'accueil) dont chaque ligne s'ouvre dans le panneau
+//! latéral (`panel: "sheet"`), ses champs nommés `trails.<rang>.<clé>` ; « Pour aller plus loin »,
+//! le lien de la commune ; « Sur votre page publique ». Une erreur s'affiche sous son champ et
+//! bloque « Publier » (`publishReadiness`), jamais l'enregistrement.
 
+use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui;
+use portaki_sdk::sdui::common::{ChoiceListLayout, Tone};
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Button, Card, ChoiceList, Field, FieldHint, FileUpload, Form, ImageUpload,
-    NumberInput, Page, Select, Stack, StepList, Text, TextArea, TextInput, ToggleRow,
+    AddressMapPicker, Button, ChoiceList, DataTable, Field, FieldHint, FileUpload, Form,
+    ImageUpload, InlineNotice, NumberInput, Page, Section, Stack, Text, TextArea, TextInput,
+    ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
-use serde::Serialize;
+use serde_json::{json, Map, Value};
 
-use crate::config::{ModuleConfig, TrailRow, LEVELS, MAX_TRAILS, PUBLIC_MAX, PUBLIC_MIN, SHAPES};
+use crate::config::{
+    ModuleConfig, TrailRow, FAR_START_METRES, LEVELS, MAX_TRAILS, PUBLIC_MAX, PUBLIC_MIN, SHAPES,
+};
+use crate::gpx::Track;
 
-/// Les bornes d'une mesure de randonnée : au-delà, c'est une faute de frappe.
-const MAX_DURATION_MIN: f64 = crate::config::DURATION_MIN.1;
-const MAX_DISTANCE_KM: f64 = crate::config::DISTANCE_KM.1;
-const MAX_ELEVATION_M: f64 = crate::config::ELEVATION_M.1;
+/// Les itinéraires ajoutés pas encore enregistrés : leurs id, séparés par des virgules.
+const NEW_TRAILS: &str = "newTrails";
+/// L'id de la ligne dont l'hôte demande « Recalculer depuis la trace ».
+const RECOMPUTE: &str = "recomputeTrail";
 
 #[portaki_sdk::surface(
     host,
@@ -24,86 +35,223 @@ const MAX_ELEVATION_M: f64 = crate::config::ELEVATION_M.1;
     icon = IconName::Mountain
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
-    let config = ModuleConfig::load(&ctx)?;
+    let view = View::load(&ctx)?;
 
-    // No Save button — the modules drawer owns the footer Save.
+    // No Save button — the dashboard autosaves and owns « Publier ».
     Ok(Surface::new(
-        Page::new().child(Form::new().child(Stack::new().gap(16.0).children(vec![
-                    Text::new()
-                        .text("i18n:host.intro")
-                        .variant(TextVariant::Caption)
-                        .into(),
-                    trails_card(&config, &ctx),
-                    commune_card(&config, &ctx),
-                    public_card(&config, &ctx),
-                ]))),
+        Page::new().child(
+            Form::new()
+                .child(trails_section(&view, &ctx))
+                .child(commune_section(&view, &ctx))
+                .child(public_section(&view.config, &ctx)),
+        ),
     )
     .with_id(MAIN))
 }
 
-/// Les itinéraires, en lignes dynamiques bornées — le motif de `rules` et `ical-sync`.
-fn trails_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let rows_count = draft_rows(ctx, config.parse_trails().len());
-    let rows: Vec<Component> = (0..rows_count)
-        .map(|index| trail_row(index, config, ctx))
-        .collect();
+/// Ce que la page lit : la config, ses erreurs, le logement, et les lignes du tableau.
+struct View {
+    config: ModuleConfig,
+    problems: Vec<(String, I18nText)>,
+    home: Option<(f64, f64)>,
+    /// Aujourd'hui en `MMJJ`, pour le badge « Hors saison ».
+    today: Option<u32>,
+    /// Les lignes, dans l'ordre stocké : `(rang stocké, itinéraire)`, `None` pour une ajoutée.
+    rows: Vec<(Option<usize>, TrailRow)>,
+    /// Les ajoutées pas encore enregistrées, pour les garder d'un rendu à l'autre.
+    added: Vec<String>,
+    /// Une ligne remplie sans id : la plateforme ne la retrouve que par son rang, donc pas de
+    /// glisser-déposer tant qu'elle existe — une ligne déplacée jamais ouverte n'envoie que son id,
+    /// et le rang désignerait une autre ligne. Le premier enregistrement donne les id.
+    legacy: bool,
+}
 
-    Card::new()
+impl View {
+    fn load(ctx: &HostContext) -> Result<Self> {
+        let config = ModuleConfig::load(ctx)?;
+        let home = ctx.property.coordinates.map(|point| (point.lat, point.lng));
+        let stored = &config.trails;
+
+        // La plateforme fusionne une ligne reçue avec la ligne stockée de même id, sinon de même
+        // rang. Une ligne remplie sans id ne se retrouve que par son rang : tant qu'il y en a une,
+        // le tableau garde toutes les lignes enregistrées, vides comprises. L'id qu'elle reçoit
+        // est son identifiant de route (`t<rang>`), celui que `public_trails` désigne déjà.
+        let legacy = stored
+            .iter()
+            .any(|t| !t.is_blank() && t.id.trim().is_empty());
+        let mut rows: Vec<(Option<usize>, TrailRow)> = stored
+            .iter()
+            .enumerate()
+            .filter(|(_, t)| legacy || !t.is_blank())
+            .map(|(index, t)| {
+                let mut t = t.clone();
+                t.id = t.route_id(index);
+                (Some(index), t)
+            })
+            .collect();
+        let added: Vec<String> = ctx
+            .input_str(NEW_TRAILS)
+            .unwrap_or_default()
+            .split(',')
+            .map(str::trim)
+            .filter(|id| !id.is_empty() && !rows.iter().any(|(_, t)| t.id == *id))
+            .map(str::to_string)
+            .collect();
+        for id in &added {
+            if rows.len() >= MAX_TRAILS {
+                break;
+            }
+            rows.push((
+                None,
+                TrailRow {
+                    id: id.clone(),
+                    ..TrailRow::default()
+                },
+            ));
+        }
+        Ok(Self {
+            problems: config.problems(home),
+            config,
+            home,
+            today: portaki_sdk::host::time::now()
+                .ok()
+                .and_then(|now| now.format("%m%d").to_string().parse().ok()),
+            rows,
+            added,
+            legacy,
+        })
+    }
+
+    /// Le message sous `field`, dans la langue de l'hôte.
+    fn error(&self, field: &str, ctx: &HostContext) -> Option<String> {
+        self.problems
+            .iter()
+            .find(|(name, _)| name == field)
+            .map(|(_, error)| error.get(&ctx.locale).to_string())
+    }
+}
+
+fn emit_input(input: Map<String, Value>) -> Action {
+    Action::emit(contracts::shell::SURFACE_INPUT, Some(Value::Object(input)))
+}
+
+fn added_input(added: &[String]) -> Map<String, Value> {
+    let mut input = Map::new();
+    input.insert(NEW_TRAILS.into(), Value::String(added.join(",")));
+    input
+}
+
+/// §2.1 Itinéraires : le tableau ordonnable et le panneau de chaque ligne.
+fn trails_section(view: &View, ctx: &HostContext) -> Component {
+    let mut children: Vec<Component> = vec![Text::new()
+        .text(format!("{} / {MAX_TRAILS}", view.rows.len()))
+        .variant(TextVariant::Caption)
+        .into()];
+    // « Ajoutez au moins un itinéraire. » tant qu'aucun n'est complet ; « 30 au maximum » vient
+    // de `problems`.
+    let error = view.error("trails", ctx).or_else(|| {
+        view.config.parse_trails().is_empty().then(|| {
+            crate::i18n::text("publish.trails.hint")
+                .get(&ctx.locale)
+                .to_string()
+        })
+    });
+    if let Some(error) = error {
+        children.push(InlineNotice::new().tone(Tone::Danger).message(error).into());
+    }
+
+    let mut table = DataTable::new()
+        .rowName("trails")
+        .sortable(!view.legacy)
+        .panel("sheet")
+        .columns(json!([
+            { "key": "name", "label": "i18n:host.column.trail", "sub": "start" },
+            { "key": "level", "label": "i18n:host.level.label" },
+            { "key": "duration", "label": "i18n:host.column.duration", "mono": true },
+            { "key": "distance", "label": "i18n:host.column.distance", "mono": true },
+            { "key": "ascent", "label": "i18n:host.column.ascent", "mono": true },
+            { "key": "badge", "label": "i18n:host.column.season", "kind": "pill" },
+        ]))
+        .rows(Value::Array(
+            view.rows
+                .iter()
+                .map(|(_, trail)| row(view, trail, ctx))
+                .collect(),
+        ))
+        .children(
+            view.rows
+                .iter()
+                .enumerate()
+                .map(|(rank, (stored, trail))| trail_panel(view, rank, *stored, trail, ctx))
+                .collect(),
+        );
+    if view.rows.len() < MAX_TRAILS {
+        let mut added = view.added.clone();
+        added.push(Uuid::new_v4().to_string());
+        table = table
+            .addLabel("i18n:host.trails.add")
+            .addAction(emit_input(added_input(&added)));
+    }
+    children.push(table.into());
+    children.push(FieldHint::new().text("i18n:host.trails.add.hint").into());
+
+    Section::new()
         .title("i18n:host.trails.title")
         .subtitle("i18n:host.trails.subtitle")
-        .icon(IconName::Mountain)
-        .child(
-            StepList::new()
-                .addLabel("i18n:host.trails.add")
-                .removeLabel("i18n:host.trails.remove")
-                .emptyTitle("i18n:host.trails.emptyTitle")
-                .emptyDescription("i18n:host.trails.emptyDescription")
-                .itemKeyPrefix("trails")
-                .addAction(emit_input(RowCount {
-                    trails_count: (rows_count + 1).min(MAX_TRAILS),
-                }))
-                .children(rows),
-        )
+        .children(children)
         .into()
 }
 
-/// Combien de lignes dessiner : ce que « Ajouter » a demandé, sinon ce qui est stocké, borné.
-fn draft_rows(ctx: &HostContext, stored: usize) -> usize {
-    match ctx.input_u64("trails_count") {
-        Some(asked) => (asked as usize).clamp(1, MAX_TRAILS),
-        None => stored.clamp(1, MAX_TRAILS),
-    }
+/// Une ligne du tableau : Itinéraire (départ dessous) · Niveau · Durée · Distance · D+ · saison.
+fn row(view: &View, trail: &TrailRow, ctx: &HostContext) -> Value {
+    let dash = || "—".to_string();
+    let start = if trail.coordinates().is_some() && at_property(view, trail) {
+        t!("guest.start.atProperty").unwrap_or_default()
+    } else {
+        match trail.address.as_deref().map(str::trim) {
+            Some(place) if !place.is_empty() => {
+                t!("guest.start", place = place).unwrap_or_default()
+            }
+            _ => String::new(),
+        }
+    };
+    let off_season = view.today.is_some_and(|today| !trail.in_season(today));
+    json!({
+        "id": trail.id,
+        "name": trail.title.host_value(ctx),
+        "start": start,
+        "level": trail.level_key().map(|level| format!("i18n:host.level.label.{level}")).unwrap_or_default(),
+        "duration": trail.duration().map_or_else(dash, crate::format::duration),
+        "distance": trail.distance().map_or_else(dash, crate::format::distance),
+        "ascent": trail.elevation().map_or_else(dash, crate::format::elevation),
+        "badge": if off_season { "i18n:guest.offSeason" } else { "" },
+    })
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "snake_case")]
-struct RowCount {
-    trails_count: usize,
+/// Le départ est-il au logement : la réponse enregistrée, sinon ce que la position suggère.
+fn at_property(view: &View, trail: &TrailRow) -> bool {
+    trail
+        .starts_at_property
+        .unwrap_or_else(|| trail.near_property(view.home))
 }
 
-/// Quelle ligne demande à être pré-remplie depuis sa trace.
-#[derive(Serialize)]
-#[serde(rename_all = "snake_case")]
-struct PrefillRow {
-    prefill_trail: usize,
-}
-
-/// Les mesures lues dans la trace de cette ligne, quand l'hôte vient de les demander.
+/// Ce que la trace de la ligne propose, quand il faut la lire.
 ///
-/// Lues à ce rendu-là seulement : relire le fichier à chaque ouverture du formulaire coûterait un
-/// appel par ligne, et écraserait sans le dire une mesure que l'hôte aurait corrigée à la main.
-/// Une trace refusée rend la clé de son message, sous le champ : le formulaire garde ce qui est
-/// enregistré, et l'hôte sait pourquoi rien n'a changé. Une trace que la plateforme ne sert pas
-/// rend `None`, comme avant.
-fn prefill(
-    ctx: &HostContext,
-    index: usize,
-    trail: Option<&TrailRow>,
-) -> Option<std::result::Result<crate::gpx::Track, &'static str>> {
-    if ctx.input_u64("prefill_trail") != Some(index as u64) {
+/// Lue sur demande (« Recalculer depuis la trace ») ou tant qu'une valeur qu'elle calcule manque
+/// encore — juste après le dépôt. Pas à chaque rendu : ce serait un appel par ligne, pour des
+/// valeurs déjà là. Une trace refusée rend la clé de son message ; une trace que la plateforme ne
+/// sert pas rend `None`.
+fn read_track(trail: &TrailRow, forced: bool) -> Option<std::result::Result<Track, &'static str>> {
+    let reference = trail.gpx_ref()?;
+    let missing = trail.title.is_blank()
+        || trail.distance().is_none()
+        || trail.elevation().is_none()
+        || trail.duration().is_none()
+        || trail.shape_key().is_none()
+        || trail.coordinates().is_none();
+    if !forced && !missing {
         return None;
     }
-    let reference = trail?.gpx_ref()?;
     let bytes = portaki_sdk::host::files::read(reference).ok()?;
     Some(match crate::gpx::refusal(&bytes) {
         Some(refusal) => Err(refusal),
@@ -111,364 +259,434 @@ fn prefill(
     })
 }
 
-fn emit_input(payload: impl Serialize) -> Action {
-    Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
+/// Les valeurs du panneau : celles de la ligne, complétées — ou remplacées sur « Recalculer » —
+/// par ce que la trace calcule. Le titre et le départ ne sont jamais remplacés, seulement
+/// proposés quand ils manquent ; le type de l'hôte reste le sien (une trace ne distingue pas un
+/// aller-retour d'un aller simple).
+struct Values {
+    title: String,
+    duration: Option<f64>,
+    distance: Option<f64>,
+    elevation: Option<f64>,
+    shape: &'static str,
+    start: Option<(f64, f64)>,
 }
 
-fn trail_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let trail: Option<&TrailRow> = config.trails.get(index);
-    // Les mesures de la trace, si l'hôte vient de cliquer « pré-remplir ». Elles remplacent ce
-    // qu'il avait saisi dans ces trois champs, et il peut encore les corriger avant d'enregistrer.
-    let prefilled = prefill(ctx, index, trail);
-    let measured = prefilled.as_ref().and_then(|read| read.as_ref().ok());
-    let gpx_refusal = prefilled.as_ref().and_then(|read| read.as_ref().err());
-    let title = trail
-        .map(|t| t.title.host_value(ctx))
-        .unwrap_or_default()
-        .to_string();
-    let description = trail
-        .map(|t| t.description.host_value(ctx))
-        .unwrap_or_default()
-        .to_string();
-    let address = trail.and_then(|t| t.address.as_deref()).unwrap_or("");
-    let id = trail
-        .filter(|t| !t.is_blank())
-        .map(|t| sdui::row_id("trails", index, Some(&t.id)));
+fn values(trail: &TrailRow, title: &str, track: Option<&Track>, forced: bool) -> Values {
+    let pick = |stored: Option<f64>, computed: Option<f64>| {
+        if forced {
+            computed.or(stored)
+        } else {
+            stored.or(computed)
+        }
+    };
+    Values {
+        title: match track.and_then(|t| t.name.clone()) {
+            Some(name) if title.trim().is_empty() => name,
+            _ => title.to_string(),
+        },
+        duration: pick(
+            trail
+                .duration_total()
+                .filter(|_| trail.duration().is_some()),
+            track.map(|t| t.duration_min().round()),
+        ),
+        distance: pick(
+            trail.distance(),
+            track.map(|t| crate::format::round_tenth(t.distance_km)),
+        ),
+        elevation: pick(
+            trail.elevation().map(f64::from),
+            track
+                .filter(|t| t.has_elevation)
+                .map(|t| t.elevation_m.round()),
+        ),
+        shape: trail
+            .shape_key()
+            .or_else(|| track.map(|t| t.shape))
+            .unwrap_or(""),
+        start: trail.coordinates().or_else(|| {
+            track
+                .and_then(|t| t.points.first())
+                .map(|point| (point.lat, point.lng))
+        }),
+    }
+}
 
-    let mut children: Vec<Component> = id.into_iter().collect();
-    children.push(text_field(
-        config,
-        ctx,
-        index,
-        "title",
-        "i18n:host.trails.rowTitle",
-        "i18n:host.trails.rowTitle.placeholder",
-        title,
-    ));
-    children.push(choice_field(
-        config,
-        ctx,
-        index,
-        "level",
-        "i18n:host.level.label",
-        LEVELS,
-        trail.and_then(TrailRow::level_key).unwrap_or(""),
-    ));
-    children.push(FieldHint::new().text("i18n:host.level.hint").into());
-    children.push(number_field(
-        config,
-        ctx,
-        index,
-        "duration_min",
-        "i18n:host.trails.duration",
-        MAX_DURATION_MIN,
-        trail.and_then(|t| t.duration_min),
-    ));
-    children.push(number_field(
-        config,
-        ctx,
-        index,
-        "distance_km",
-        "i18n:host.trails.distance",
-        MAX_DISTANCE_KM,
-        measured
-            .map(|track| round_tenth(track.distance_km))
-            .or_else(|| trail.and_then(|t| t.distance_km)),
-    ));
-    children.push(number_field(
-        config,
-        ctx,
-        index,
-        "elevation_m",
-        "i18n:host.trails.elevation",
-        MAX_ELEVATION_M,
-        measured
-            .map(|track| track.elevation_m.round())
-            .or_else(|| trail.and_then(|t| t.elevation_m)),
-    ));
-    children.push(choice_field(
-        config,
-        ctx,
-        index,
-        "shape",
-        "i18n:host.shape.label",
-        SHAPES,
-        shape_value(trail, measured),
-    ));
-    if measured.is_some() {
+/// Le panneau d'une ligne, dans l'ordre de la planche. Les champs sont nommés au rang affiché ;
+/// les erreurs se lisent au rang stocké, celui de `problems`.
+fn trail_panel(
+    view: &View,
+    rank: usize,
+    stored: Option<usize>,
+    trail: &TrailRow,
+    ctx: &HostContext,
+) -> Component {
+    let name = |key: &str| format!("trails.{rank}.{key}");
+    let error =
+        |key: &str| stored.and_then(|index| view.error(&format!("trails.{index}.{key}"), ctx));
+    let field = |key: &str, label: &str| {
+        let field = Field::new().name(name(key)).label(label);
+        match error(key) {
+            Some(error) => field.error(error),
+            None => field,
+        }
+    };
+
+    let forced = ctx.input_str(RECOMPUTE) == Some(trail.id.as_str());
+    let read = read_track(trail, forced);
+    let track = read.as_ref().and_then(|read| read.as_ref().ok());
+    let values = values(trail, trail.title.host_value(ctx), track, forced);
+
+    let mut children: Vec<Component> = Vec::new();
+
+    // La trace en premier : elle calcule le reste.
+    let mut gpx = field("gpx_file", "i18n:host.trails.gpx");
+    if let Some(Err(refusal)) = &read {
+        gpx = gpx.error(crate::i18n::text(refusal).get(&ctx.locale).to_string());
+    }
+    children.push(
+        gpx.child(
+            // `.gpx` en plus du type : la plupart des navigateurs n'en connaissent pas le MIME.
+            // ponytail: plafonné à ce que le module peut relire (2 Mo), pas aux 5 Mo de la spec —
+            // au-delà, la trace serait déposée mais illisible ; à monter avec `files::read`.
+            FileUpload::new()
+                .name(name("gpx_file"))
+                .value(trail.gpx_file.as_str())
+                .accept("application/gpx+xml,.gpx")
+                .maxBytes(portaki_sdk::limits::HOST_FILE_READ_MAX_BYTES as u32),
+        )
+        .child(FieldHint::new().text("i18n:host.trails.gpx.hint"))
+        .into(),
+    );
+
+    children.push(
+        field("title", "i18n:host.trails.rowTitle")
+            .required(true)
+            .child(
+                TextInput::new()
+                    .name(name("title"))
+                    .value(values.title.as_str())
+                    .placeholder("i18n:host.trails.rowTitle.placeholder"),
+            )
+            .into(),
+    );
+
+    children.push(
+        field("level", "i18n:host.level.label")
+            .required(true)
+            .child(segmented(
+                name("level"),
+                "i18n:host.level.label",
+                LEVELS,
+                trail.level_key().unwrap_or(""),
+            ))
+            .into(),
+    );
+
+    // Durée en heures et minutes, distance, dénivelé : côte à côte, l'unité après la case.
+    let (hours, minutes) = values
+        .duration
+        .map(|total| ((total / 60.0).floor(), (total % 60.0).round()))
+        .unzip();
+    let mut elevation = field("elevation_m", "i18n:host.trails.elevation");
+    if track.is_some_and(|t| !t.has_elevation) && values.elevation.is_none() {
+        elevation = elevation.error(
+            crate::i18n::text("host.trails.gpx.noElevation")
+                .get(&ctx.locale)
+                .to_string(),
+        );
+    }
+    children.push(
+        Stack::new()
+            .direction(StackDirection::Horizontal)
+            .gap(10.0)
+            .children(vec![
+                field("duration_min", "i18n:host.trails.duration")
+                    .child(
+                        Stack::new()
+                            .direction(StackDirection::Horizontal)
+                            .gap(6.0)
+                            .children(vec![
+                                number(name("duration_h"), 0.0, 24.0, hours),
+                                unit("i18n:host.unit.hours"),
+                                number(name("duration_m"), 0.0, 59.0, minutes),
+                                unit("i18n:host.unit.minutes"),
+                            ]),
+                    )
+                    .child(FieldHint::new().text("i18n:host.trails.duration.hint"))
+                    .into(),
+                field("distance_km", "i18n:host.trails.distance")
+                    .child(with_unit(
+                        number(
+                            name("distance_km"),
+                            0.0,
+                            crate::config::DISTANCE_KM.1,
+                            values.distance,
+                        ),
+                        "i18n:host.unit.km",
+                    ))
+                    .into(),
+                elevation
+                    .child(with_unit(
+                        number(
+                            name("elevation_m"),
+                            0.0,
+                            crate::config::ELEVATION_M.1,
+                            values.elevation,
+                        ),
+                        "i18n:host.unit.metres",
+                    ))
+                    .into(),
+            ])
+            .into(),
+    );
+    if forced && track.is_some() {
         children.push(
             FieldHint::new()
                 .text("i18n:host.trails.prefill.done")
                 .into(),
         );
     }
-
-    let mut picker = AddressMapPicker::new()
-        .addressName(format!("trails.{index}.address"))
-        .latName(format!("trails.{index}.lat"))
-        .lngName(format!("trails.{index}.lng"))
-        .address(address)
-        .label("i18n:host.trails.start")
-        .hint("i18n:host.trails.start.hint");
-    if let Some((lat, lng)) = trail.and_then(TrailRow::coordinates) {
-        picker = picker.lat(lat).lng(lng);
-    }
-    // Sous le plan : un départ trop loin bloque, un départ absent avertit (même message).
-    let mut start_field = named(config, ctx, &format!("trails.{index}.lat"));
-    if trail.is_some_and(TrailRow::start_missing) {
-        start_field = start_field.error(
-            crate::i18n::text("host.trails.start.required")
-                .get(&ctx.locale)
-                .to_string(),
-        );
-    }
-    children.push(start_field.child(picker).into());
-    // Pour la page publique, sur une ligne déjà enregistrée : pas sur un créneau vide, qu'il ferait
-    // compter comme rempli.
-    if let Some(trail) = trail.filter(|t| !t.is_blank()) {
-        // Le départ au logement : la position réelle n'est connue qu'ici, côté hôte, et le
-        // formulaire propose la réponse tant que l'hôte n'en a pas enregistré une. Seulement une
-        // fois le départ posé : un « non » enregistré avant resterait après.
-        if trail.coordinates().is_some() {
-            let property = ctx.property.coordinates.map(|point| (point.lat, point.lng));
-            let at_property = trail
-                .starts_at_property
-                .unwrap_or_else(|| trail.near_property(property));
-            children.push(
-                ToggleRow::new()
-                    .name(format!("trails.{index}.starts_at_property"))
-                    .label("i18n:host.trails.startsAtProperty")
-                    .checked(at_property)
-                    .into(),
-            );
-        }
-    }
-
-    children.push(
-        named(config, ctx, &format!("trails.{index}.description"))
-            .label("i18n:host.trails.description")
-            .child(
-                TextArea::new()
-                    .name(format!("trails.{index}.description"))
-                    .value(description)
-                    .rows(3)
-                    .placeholder("i18n:host.trails.description.placeholder"),
-            )
-            .into(),
-    );
-    children.push(text_field(
-        config,
-        ctx,
-        index,
-        "link_url",
-        "i18n:host.trails.link",
-        "i18n:host.trails.link.placeholder",
-        trail.map(|t| t.link_url.clone()).unwrap_or_default(),
-    ));
-    children.push(FieldHint::new().text("i18n:host.trails.link.hint").into());
-    let mut gpx_field = Field::new()
-        .name(format!("trails.{index}.gpx_file"))
-        .label("i18n:host.trails.gpx");
-    if let Some(refusal) = gpx_refusal {
-        gpx_field = gpx_field.error(crate::i18n::text(refusal).get(&ctx.locale).to_string());
-    }
-    children.push(
-        gpx_field
-            .child(
-                // `.gpx` en plus du type : la plupart des navigateurs n'en connaissent pas le MIME.
-                FileUpload::new()
-                    .name(format!("trails.{index}.gpx_file"))
-                    .value(trail.map(|t| t.gpx_file.clone()).unwrap_or_default())
-                    .accept("application/gpx+xml,.gpx")
-                    .maxBytes(portaki_sdk::limits::HOST_FILE_READ_MAX_BYTES as u32),
-            )
-            .into(),
-    );
-    children.push(FieldHint::new().text("i18n:host.trails.gpx.hint").into());
-    // « Lire les mesures de la trace » : la distance, le dénivelé et le type s'en déduisent, et
-    // les recopier d'une application de randonnée à la main invite la faute de frappe (§2.23).
-    if trail.and_then(TrailRow::gpx_ref).is_some() {
+    // ponytail: offert dès qu'il y a une trace, pas seulement quand une valeur a été corrigée —
+    // le savoir demanderait de relire chaque trace à chaque rendu.
+    if trail.gpx_ref().is_some() {
+        let mut input = added_input(&view.added);
+        input.insert(RECOMPUTE.into(), Value::String(trail.id.clone()));
         children.push(
             Button::new()
                 .label("i18n:host.trails.prefill")
                 .variant(ButtonVariant::Outline)
-                .action(emit_input(PrefillRow {
-                    prefill_trail: index,
-                }))
+                .action(emit_input(input))
                 .into(),
         );
     }
+
     children.push(
-        Field::new()
-            .name(format!("trails.{index}.photo"))
-            .label("i18n:host.trails.photo")
-            .child(
-                ImageUpload::new()
-                    .name(format!("trails.{index}.photo"))
-                    .value(trail.map(|t| t.photo.clone()).unwrap_or_default()),
-            )
+        field("shape", "i18n:host.shape.label")
+            .child(segmented(
+                name("shape"),
+                "i18n:host.shape.label",
+                SHAPES,
+                values.shape,
+            ))
             .into(),
     );
 
-    for (name, label, placeholder) in [
-        ("season_from", "i18n:host.trails.season.from", "04-01"),
-        ("season_to", "i18n:host.trails.season.to", "10-31"),
-    ] {
-        let value = trail
-            .map(|t| {
-                if name == "season_from" {
-                    &t.season_from
-                } else {
-                    &t.season_to
-                }
-            })
-            .cloned()
-            .unwrap_or_default();
-        children.push(text_field(
-            config,
-            ctx,
-            index,
-            name,
-            label,
-            placeholder,
-            value,
-        ));
-    }
-    children.push(FieldHint::new().text("i18n:host.trails.season.hint").into());
+    children.push(start_field(view, trail, &values, &name, error("lat"), ctx));
 
-    Stack::new()
-        .id(format!("trail-{index}"))
-        .gap(10.0)
-        .children(children)
-        .into()
-}
+    children.push(
+        field("description", "i18n:host.trails.description")
+            .child(
+                TextArea::new()
+                    .name(name("description"))
+                    .value(trail.description.host_value(ctx))
+                    .rows(4)
+                    .placeholder("i18n:host.trails.description.placeholder"),
+            )
+            .into(),
+    );
+    children.push(
+        field("photo", "i18n:host.trails.photo")
+            .child(
+                ImageUpload::new()
+                    .name(name("photo"))
+                    .value(trail.photo.as_str()),
+            )
+            .into(),
+    );
+    children.push(
+        field("link_url", "i18n:host.trails.link")
+            .child(
+                TextInput::new()
+                    .name(name("link_url"))
+                    .value(trail.link_url.as_str())
+                    .placeholder("i18n:host.trails.link.placeholder"),
+            )
+            .child(FieldHint::new().text("i18n:host.trails.link.hint"))
+            .into(),
+    );
+    children.push(
+        field("tips", "i18n:host.trails.tips")
+            .child(
+                TextArea::new()
+                    .name(name("tips"))
+                    .value(trail.tips.host_value(ctx))
+                    .rows(3)
+                    .placeholder("i18n:host.trails.tips.placeholder"),
+            )
+            .child(FieldHint::new().text("i18n:host.trails.tips.hint"))
+            .into(),
+    );
 
-fn text_field(
-    config: &ModuleConfig,
-    ctx: &HostContext,
-    index: usize,
-    name: &str,
-    label: &str,
-    placeholder: &str,
-    value: String,
-) -> Component {
-    let field = format!("trails.{index}.{name}");
-    named(config, ctx, &field)
-        .label(label)
+    // La saison, du JJ/MM au JJ/MM ; une saison d'avant (`MM-JJ`) s'affiche dans ce format.
+    let season = |key: &str, placeholder: &str, value: &str| -> Component {
+        field(
+            key,
+            &format!("i18n:host.trails.season.{}", &key["season_".len()..]),
+        )
         .child(
             TextInput::new()
-                .name(field)
-                .value(value)
+                .name(name(key))
+                .value(day_month(value))
                 .placeholder(placeholder),
         )
         .into()
+    };
+    children.push(
+        Stack::new()
+            .direction(StackDirection::Horizontal)
+            .gap(10.0)
+            .children(vec![
+                season("season_from", "01/04", &trail.season_from),
+                season("season_to", "31/10", &trail.season_to),
+            ])
+            .into(),
+    );
+    children.push(FieldHint::new().text("i18n:host.trails.season.hint").into());
+
+    Stack::new().gap(14.0).children(children).into()
+}
+
+/// Le départ : son libellé et le plan, sa distance au logement, et « le départ est au logement ».
+fn start_field(
+    view: &View,
+    trail: &TrailRow,
+    values: &Values,
+    name: &dyn Fn(&str) -> String,
+    error: Option<String>,
+    ctx: &HostContext,
+) -> Component {
+    let mut picker = AddressMapPicker::new()
+        .addressName(name("address"))
+        .latName(name("lat"))
+        .lngName(name("lng"))
+        .address(trail.address.as_deref().unwrap_or(""))
+        .hint("i18n:host.trails.start.hint");
+    if let Some((lat, lng)) = values.start {
+        picker = picker.lat(lat).lng(lng);
+    }
+    let mut field = Field::new()
+        .name(name("lat"))
+        .label("i18n:host.trails.start")
+        .required(true);
+    // Trop loin bloque ; absent avertit, avec le même message.
+    let error = error.or_else(|| {
+        (values.start.is_none() && !trail.is_blank()).then(|| {
+            crate::i18n::text("host.trails.start.required")
+                .get(&ctx.locale)
+                .to_string()
+        })
+    });
+    if let Some(error) = error {
+        field = field.error(error);
+    }
+    field = field.child(picker);
+    if let Some(metres) = view
+        .home
+        .zip(values.start)
+        .map(|(home, start)| crate::format::haversine_metres(home, start))
+    {
+        let key = if metres >= FAR_START_METRES {
+            "host.trails.start.distance.far"
+        } else {
+            "host.trails.start.distance"
+        };
+        if let Ok(text) = t!(key, distance = crate::format::walking(metres)) {
+            field = field.child(FieldHint::new().text(text));
+        }
+    }
+    // Pour la page publique, une fois le départ posé : la position réelle n'est connue qu'ici,
+    // et le formulaire propose la réponse tant que l'hôte n'en a pas enregistré une.
+    if trail.coordinates().is_some() {
+        field = field.child(
+            ToggleRow::new()
+                .name(name("starts_at_property"))
+                .label("i18n:host.trails.startsAtProperty")
+                .checked(at_property(view, trail)),
+        );
+    }
+    field.into()
+}
+
+/// « 04-01 » (une saison d'avant) → « 01/04 » ; le reste tel quel.
+fn day_month(value: &str) -> String {
+    let value = value.trim();
+    match value.split_once('-') {
+        Some((month, day)) if crate::config::parse_month_day(value).is_some() => {
+            format!("{day:0>2}/{month:0>2}")
+        }
+        _ => value.to_string(),
+    }
+}
+
+/// Un choix figé en contrôle segmenté : le niveau et la forme ne sont pas du texte libre (§2.23).
+fn segmented(name: String, label: &str, values: &[&str], chosen: &str) -> ChoiceList {
+    ChoiceList::new()
+        .name(name)
+        .layout(ChoiceListLayout::Segmented)
+        .choices(
+            values
+                .iter()
+                .map(|value| ChoiceOption::new(*value, format!("{label}.{value}")))
+                .collect(),
+        )
+        .value(chosen)
 }
 
 /// Une mesure : vide vaut « pas renseigné », et la tuile disparaît chez le voyageur.
-fn number_field(
-    config: &ModuleConfig,
-    ctx: &HostContext,
-    index: usize,
-    name: &str,
-    label: &str,
-    max: f64,
-    value: Option<f64>,
-) -> Component {
-    let field = format!("trails.{index}.{name}");
-    let mut input = NumberInput::new().name(field.clone()).min(0.0).max(max);
+fn number(name: String, min: f64, max: f64, value: Option<f64>) -> Component {
+    let mut input = NumberInput::new().name(name).min(min).max(max);
     if let Some(value) = value {
         input = input.value(value);
     }
-    named(config, ctx, &field).label(label).child(input).into()
+    input.into()
 }
 
-/// Une liste figée : le niveau et la forme ne sont pas du texte libre (§2.23).
-fn choice_field(
-    config: &ModuleConfig,
-    ctx: &HostContext,
-    index: usize,
-    name: &str,
-    label: &str,
-    values: &[&str],
-    chosen: &str,
-) -> Component {
-    let field = format!("trails.{index}.{name}");
-    let options = values
-        .iter()
-        .map(|value| ChoiceOption::new(*value, format!("{label}.{value}")))
-        .collect();
-    named(config, ctx, &field)
-        .label(label)
-        .child(
-            Select::new()
-                .name(field)
-                .options(options)
-                .value(chosen.to_string()),
-        )
-        .into()
+fn unit(label: &str) -> Component {
+    Text::new().text(label).variant(TextVariant::Caption).into()
 }
 
-/// Le champ `name`, avec le message de [`ModuleConfig::error_of`] sous lui s'il y en a un.
-fn named(config: &ModuleConfig, ctx: &HostContext, name: &str) -> Field {
-    let field = Field::new().name(name);
-    let property = ctx.property.coordinates.map(|point| (point.lat, point.lng));
-    match config.error_of(name, property) {
-        Some(error) => field.error(error.get(&ctx.locale).to_string()),
-        None => field,
+fn with_unit(input: Component, label: &str) -> Stack {
+    Stack::new()
+        .direction(StackDirection::Horizontal)
+        .gap(6.0)
+        .children(vec![input, unit(label)])
+}
+
+/// §2.2 Pour aller plus loin : le lien de la commune, sous la liste du voyageur.
+fn commune_section(view: &View, ctx: &HostContext) -> Component {
+    let mut field = Field::new()
+        .name("commune_url")
+        .label("i18n:host.commune.label");
+    if let Some(error) = view.error("commune_url", ctx) {
+        field = field.error(error);
     }
-}
-
-/// Le type de la ligne : celui que l'hôte a choisi, sinon celui que la trace suggère (§9 n° 5).
-///
-/// Une trace ne distingue pas un aller-retour d'un aller simple : elle ne remplit qu'un champ vide.
-fn shape_value(trail: Option<&TrailRow>, measured: Option<&crate::gpx::Track>) -> &'static str {
-    trail
-        .and_then(TrailRow::shape_key)
-        .or_else(|| measured.map(|track| track.shape))
-        .unwrap_or("")
-}
-
-/// Au dixième de kilomètre : une distance de randonnée au millième dit une précision que ni le
-/// GPS ni le pas n'ont.
-fn round_tenth(value: f64) -> f64 {
-    (value * 10.0).round() / 10.0
-}
-
-/// Le lien de la commune, sous la liste du voyageur.
-fn commune_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
-    Card::new()
+    Section::new()
         .title("i18n:host.commune.title")
-        .icon(IconName::Link)
         .child(
-            named(config, ctx, "commune_url")
-                .label("i18n:host.commune.label")
+            field
                 .child(
                     TextInput::new()
                         .name("commune_url")
-                        .value(config.commune_url.clone())
+                        .value(view.config.commune_url.as_str())
                         .placeholder("i18n:host.commune.placeholder"),
-                ),
+                )
+                .child(FieldHint::new().text("i18n:host.commune.hint")),
         )
-        .child(FieldHint::new().text("i18n:host.commune.hint"))
         .into()
 }
 
-/// « Page publique » : l'interrupteur du bloc, puis le choix de 2 à 4 itinéraires affichables.
+/// « Sur votre page publique » : l'interrupteur du bloc, puis 2 à 4 itinéraires en pastilles.
 ///
 /// Le choix reste rendu sans itinéraire à choisir : le formulaire envoie toujours les clés
 /// déclarées.
-fn public_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+fn public_section(config: &ModuleConfig, ctx: &HostContext) -> Component {
     let enabled = ctx.input_bool("public_enabled", config.public_enabled);
     let routed = config.routed_trails();
     let choices: Vec<ChoiceOption> = routed
         .iter()
-        .map(|(id, trail)| {
-            let option = ChoiceOption::new(id.clone(), trail.title.host_value(ctx).to_string());
-            match trail.level_key() {
-                Some(level) => option.description(crate::format::level(level)),
-                None => option,
-            }
-        })
+        .map(|(id, trail)| ChoiceOption::new(id.clone(), trail.title.host_value(ctx).to_string()))
         .collect();
     let hint = if routed.is_empty() {
         "i18n:host.public.none".to_string()
@@ -481,10 +699,9 @@ fn public_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         )
         .unwrap_or_else(|_| "i18n:host.public.count".into())
     };
-    Card::new()
+    Section::new()
         .title("i18n:host.public.title")
         .subtitle("i18n:host.public.subtitle")
-        .icon(IconName::Home)
         .children(vec![
             ToggleRow::new()
                 .name("public_enabled")
@@ -495,16 +712,16 @@ fn public_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
             Field::new()
                 .name("public_trails")
                 .label("i18n:host.public.trails")
-                .child(Stack::new().children(vec![
-                    FieldHint::new().text(hint).into(),
+                .child(
                     ChoiceList::new()
                         .name("public_trails")
                         .multi(true)
+                        .layout(ChoiceListLayout::Compact)
                         .limit(PUBLIC_MAX as u32)
                         .choices(choices)
-                        .value(serde_json::to_string(&config.public_trails).unwrap_or_default())
-                        .into(),
-                ]))
+                        .value(serde_json::to_string(&config.public_trails).unwrap_or_default()),
+                )
+                .child(FieldHint::new().text(hint))
                 .into(),
         ])
         .into()
@@ -513,7 +730,6 @@ fn public_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gpx::Track;
 
     fn track(shape: &'static str) -> Track {
         Track {
@@ -521,7 +737,40 @@ mod tests {
             distance_km: 3.0,
             elevation_m: 100.0,
             shape,
+            has_elevation: true,
+            name: Some("Cap".into()),
         }
+    }
+
+    fn shape_of(row: &TrailRow, track: Option<&Track>) -> &'static str {
+        values(row, "", track, true).shape
+    }
+
+    /// Une trace propose ce qui manque ; « Recalculer » remplace les mesures, jamais le titre.
+    #[test]
+    fn the_trace_fills_the_gaps_and_recompute_replaces_the_measures() {
+        let row = TrailRow {
+            distance_km: Some(9.0),
+            ..TrailRow::default()
+        };
+        let proposed = values(&row, "", Some(&track("loop")), false);
+        assert_eq!(proposed.title, "Cap");
+        assert_eq!(proposed.distance, Some(9.0));
+        assert_eq!(proposed.elevation, Some(100.0));
+        // 3 km à 4 km/h, plus 100 m de montée : 45 + 10 min.
+        assert_eq!(proposed.duration, Some(55.0));
+        let recomputed = values(&row, "Garoupe", Some(&track("loop")), true);
+        assert_eq!(recomputed.title, "Garoupe");
+        assert_eq!(recomputed.distance, Some(3.0));
+        // Sans altitude, la trace ne propose pas de dénivelé.
+        let flat = Track {
+            has_elevation: false,
+            ..track("loop")
+        };
+        assert_eq!(
+            values(&TrailRow::default(), "", Some(&flat), true).elevation,
+            None
+        );
     }
 
     #[test]
@@ -530,18 +779,21 @@ mod tests {
             shape: "one_way".into(),
             ..TrailRow::default()
         };
-        assert_eq!(
-            shape_value(Some(&row), Some(&track("round_trip"))),
-            "one_way"
-        );
+        assert_eq!(shape_of(&row, Some(&track("round_trip"))), "one_way");
     }
 
     #[test]
     fn the_trace_fills_an_empty_shape_with_a_known_one() {
-        let row = TrailRow::default();
-        let shape = shape_value(Some(&row), Some(&track("round_trip")));
+        let shape = shape_of(&TrailRow::default(), Some(&track("round_trip")));
         assert_eq!(shape, "round_trip");
         assert!(SHAPES.contains(&shape));
-        assert_eq!(shape_value(None, None), "");
+        assert_eq!(shape_of(&TrailRow::default(), None), "");
+    }
+
+    #[test]
+    fn a_legacy_season_reads_as_day_month() {
+        assert_eq!(day_month("04-01"), "01/04");
+        assert_eq!(day_month("01/04"), "01/04");
+        assert_eq!(day_month("avril"), "avril");
     }
 }

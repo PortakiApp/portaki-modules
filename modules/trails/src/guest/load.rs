@@ -11,6 +11,8 @@ pub struct GuestData {
     pub locale: String,
     /// Aujourd'hui en `MMJJ` (voir [`crate::config::parse_month_day`]), `None` sans horloge.
     pub today: Option<u32>,
+    /// Le prénom de l'hôte, pour « Mesures saisies par … ». Vide quand le livret ne l'a pas.
+    pub host_name: String,
 }
 
 pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestData> {
@@ -25,6 +27,11 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestData> {
         today: portaki_sdk::host::time::now()
             .ok()
             .and_then(|now| now.format("%m%d").to_string().parse().ok()),
+        host_name: ctx
+            .host
+            .as_ref()
+            .map(|host| host.name.trim().to_string())
+            .unwrap_or_default(),
     })
 }
 

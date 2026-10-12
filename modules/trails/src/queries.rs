@@ -108,6 +108,7 @@ fn field_label(field: &str) -> &'static str {
         "distance_km" => "host.trails.distance",
         "elevation_m" => "host.trails.elevation",
         "link_url" => "host.trails.link",
+        "tips" => "host.trails.tips",
         "description" => "host.trails.description",
         "commune_url" => "host.commune.label",
         "lat" => "host.trails.start",
