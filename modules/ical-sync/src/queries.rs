@@ -4,7 +4,7 @@ use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::config::{CalendarFormat, ModuleConfig};
+use crate::config::{CalendarFormat, MissingEmail, ModuleConfig};
 use crate::email_send;
 use crate::ics::{is_calendar, parse_stay_rows, FeedParseContext, StayImportRow};
 use crate::sync_state::{self, SyncDiff};
@@ -156,6 +156,17 @@ pub fn apply_feeds(ctx: Context, args: ApplyFeedsArgs) -> Result<ApplyFeedsRespo
             primary_source = Some((format, feed_label));
         }
         rows.extend(parsed);
+    }
+    // « Ne pas créer » : un séjour encore inconnu sans e-mail n'est pas rendu, donc pas créé, ni
+    // retenu dans l'instantané — il reviendra le jour où le flux portera l'e-mail. Un séjour déjà
+    // créé reste suivi : la plateforme n'annule rien de ce qui manque au relevé.
+    if config.missing_email == MissingEmail::Skip {
+        rows.retain(|row| {
+            row.guest_email
+                .as_deref()
+                .is_some_and(|e| !e.trim().is_empty())
+                || previous_state.uids.contains_key(&row.ical_uid)
+        });
     }
 
     let now = time::now()

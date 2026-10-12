@@ -1,9 +1,13 @@
 # Changelog
 
-## 1.7.1
+## 1.8.0
 
-Montée technique.
+Vos calendriers en tableau, leurs liens gardés secrets.
 
+* Vos calendriers dans un tableau, dix au plus : nom, lien masqué, état du flux et plateforme ; chacun s'ouvre dans une fenêtre.
+* Le lien d'un calendrier est chiffré et ne s'affiche plus jamais en entier ; la plateforme est détectée depuis le lien.
+* Séjours sans e-mail : créez-les et soyez prévenu, ou ne les créez pas tant que le flux ne porte pas l'e-mail.
+* La carte Import donne la fréquence de votre plan, la dernière synchro et le nombre de séjours importés.
 * Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
 
 ## 1.7.0

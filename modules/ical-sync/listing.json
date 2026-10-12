@@ -19,12 +19,12 @@
       "en": "Export link for each calendar"
     },
     {
-      "fr": "Plateforme de réservation de chaque calendrier",
-      "en": "Booking platform for each calendar"
+      "fr": "Séjours sans e-mail : les créer et vous prévenir, ou ne pas les créer",
+      "en": "Stays without email: create them and notify you, or don't create them"
     },
     {
-      "fr": "Libellé (facultatif)",
-      "en": "Label (optional)"
+      "fr": "Nom de chaque calendrier (facultatif)",
+      "en": "Name of each calendar (optional)"
     }
   ],
   "capabilities": [
