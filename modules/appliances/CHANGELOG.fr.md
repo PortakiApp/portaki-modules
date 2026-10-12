@@ -6,8 +6,8 @@ Les appareils en tableau, avec leur notice PDF.
 
 * Les appareils se gèrent dans un tableau : recherche, filtre par pièce, cases « mis en avant » et « actif » ; chaque ligne s'ouvre dans un panneau.
 * Chaque appareil reçoit sa notice PDF (20 Mo au plus) et chaque étape son schéma ; dans le livret, le PDF passe avant le lien.
-* L'ordre des pièces se règle par glisser-déposer, « Autres » en dernier ; un appareil sans mode d'emploi le dit, à l'hôte comme au voyageur.
-* L'emoji est proposé d'après le nom de l'appareil, et la consigne de sécurité s'affiche en tête de fiche.
+* Pièces à glisser-déposer, emoji proposé d'après le nom, consigne de sécurité en tête de fiche ; un appareil sans mode d'emploi le dit.
+* Les statistiques du logement comptent les modes d'emploi ouverts par vos voyageurs sur la période.
 * Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
 
 ## 1.11.0

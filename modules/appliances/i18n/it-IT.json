@@ -1,4 +1,5 @@
 {
+  "catalog.host.appliances-views": "Manuali aperti",
   "catalog.host.main": "Elettrodomestici",
   "explore.detail.empty.description": "Non c'è nessuna guida agli elettrodomestici per questo soggiorno.",
   "explore.detail.empty.title": "Nessun elettrodomestico",
@@ -99,6 +100,14 @@
   "module.displayName": "Elettrodomestici",
   "nav.appliance": "Elettrodomestico",
   "nav.appliances": "Elettrodomestici",
+  "stats.tile": "manuali aperti",
+  "stats.views.clicks.call": "Chiamate",
+  "stats.views.clicks.directions": "Indicazioni richieste",
+  "stats.views.clicks.link": "Link aperti",
+  "stats.views.clicks.mail": "E-mail",
+  "stats.views.empty": "Nessun manuale aperto nel periodo.",
+  "stats.views.list": "Elenco apparecchi aperto",
+  "stats.views.unavailable": "Ancora nessuna consultazione degli ospiti da mostrare.",
   "surface.host.main.subtitle": "Configura le istruzioni per gli ospiti",
   "surface.host.main.title": "Elettrodomestici"
 }

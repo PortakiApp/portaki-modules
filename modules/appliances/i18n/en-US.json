@@ -1,4 +1,5 @@
 {
+  "catalog.host.appliances-views": "Manuals opened",
   "catalog.host.main": "Appliances",
   "explore.detail.empty.description": "No appliance guide is available for this stay.",
   "explore.detail.empty.title": "No appliances",
@@ -99,6 +100,14 @@
   "module.displayName": "Appliances",
   "nav.appliance": "Appliance",
   "nav.appliances": "Appliances",
+  "stats.tile": "manuals opened",
+  "stats.views.clicks.call": "Calls",
+  "stats.views.clicks.directions": "Directions requested",
+  "stats.views.clicks.link": "Links opened",
+  "stats.views.clicks.mail": "Emails",
+  "stats.views.empty": "No manual opened in this period.",
+  "stats.views.list": "Appliance list opened",
+  "stats.views.unavailable": "No guest views to show yet.",
   "surface.host.main.subtitle": "Configure device how-tos for guests",
   "surface.host.main.title": "Appliances"
 }

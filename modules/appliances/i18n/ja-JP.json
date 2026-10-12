@@ -1,4 +1,5 @@
 {
+  "catalog.host.appliances-views": "開かれた取扱説明",
   "catalog.host.main": "設備・家電",
   "explore.detail.empty.description": "この滞在に家電の使い方はありません。",
   "explore.detail.empty.title": "家電なし",
@@ -99,6 +100,14 @@
   "module.displayName": "設備・家電",
   "nav.appliance": "家電",
   "nav.appliances": "設備・家電",
+  "stats.tile": "開かれた取扱説明",
+  "stats.views.clicks.call": "通話",
+  "stats.views.clicks.directions": "経路案内",
+  "stats.views.clicks.link": "開かれたリンク",
+  "stats.views.clicks.mail": "メール",
+  "stats.views.empty": "この期間に開かれた取扱説明はありません。",
+  "stats.views.list": "家電一覧の表示",
+  "stats.views.unavailable": "表示できるゲストの閲覧はまだありません。",
   "surface.host.main.subtitle": "ゲスト向けの使い方を設定します",
   "surface.host.main.title": "設備・家電"
 }

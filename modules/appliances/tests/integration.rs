@@ -8,9 +8,9 @@ use serde_json::json;
 
 use appliances::{
     get_content, publish_readiness, render_explore_detail, render_explore_item, render_home_card,
-    render_host_main, replace_devices, reset_test_store, save_appliance, save_safety_notice,
-    ApplianceStatus, GetContentArgs, ReplaceDeviceSlot, ReplaceDevicesArgs, SaveApplianceArgs,
-    SaveSafetyNoticeArgs,
+    render_host_main, render_host_stats, replace_devices, reset_test_store, save_appliance,
+    save_safety_notice, stats_summary, ApplianceStatus, GetContentArgs, ReplaceDeviceSlot,
+    ReplaceDevicesArgs, SaveApplianceArgs, SaveSafetyNoticeArgs,
 };
 
 fn seed_two_devices(ctx: portaki_sdk::prelude::Context) {
@@ -848,4 +848,47 @@ fn the_safety_note_has_its_field_and_is_saved_per_language() {
             let en = host_form(&ctx, "en-US");
             assert!(en.contains(r#""value":"No laundry after 10 pm.""#), "{en}");
         });
+}
+
+/// « Modes d'emploi ouverts » : les fiches d'appareil ouvertes sur la période ; « — » sans
+/// statistiques du livret, « 0 » quand personne n'a rien ouvert.
+#[test]
+fn the_stats_tile_counts_the_manuals_opened() {
+    let tile = |views: serde_json::Value| {
+        let mut args =
+            json!({ "propertyId": uuid::Uuid::nil(), "period": 30, "key": "appliances-views" });
+        if !views.is_null() {
+            args["views"] = views;
+        }
+        let mut value = String::new();
+        MockContext::host().run(|ctx| {
+            value = stats_summary(ctx, serde_json::from_value(args).expect("args"))
+                .expect("summary")
+                .value;
+        });
+        value
+    };
+    assert_eq!(tile(serde_json::Value::Null), "—");
+    assert_eq!(tile(json!({ "opens": 0 })), "0");
+    assert_eq!(
+        tile(json!({ "opens": 9, "surfaces": { "explore.item": 7, "explore.detail": 2 } })),
+        "7"
+    );
+
+    let detail = |input: serde_json::Value| {
+        let mut out = String::new();
+        MockContext::host().run(|mut ctx| {
+            ctx.input = input;
+            out = serde_json::to_string(&render_host_stats(ctx)).expect("json");
+        });
+        out
+    };
+    assert!(detail(json!({ "periodDays": 30 })).contains("stats.views.unavailable"));
+    assert!(detail(json!({ "views": { "opens": 0 } })).contains("stats.views.empty"));
+    let full = detail(json!({ "periodDays": 90, "views": {
+        "opens": 9, "surfaces": { "explore.item": 7, "explore.detail": 2 }, "clicks": { "link": 3 }
+    } }));
+    assert!(full.contains(r#""value":"7""#), "{full}");
+    assert!(full.contains("stats.views.clicks.link"), "{full}");
+    assert!(!full.contains("stats.views.clicks.call"), "{full}");
 }

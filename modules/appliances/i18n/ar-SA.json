@@ -1,4 +1,5 @@
 {
+  "catalog.host.appliances-views": "أدلة الاستخدام المفتوحة",
   "catalog.host.main": "الأجهزة",
   "explore.detail.empty.description": "لا يوجد دليل للأجهزة في هذه الإقامة.",
   "explore.detail.empty.title": "لا توجد أجهزة",
@@ -99,6 +100,14 @@
   "module.displayName": "الأجهزة",
   "nav.appliance": "جهاز",
   "nav.appliances": "الأجهزة",
+  "stats.tile": "أدلة الاستخدام المفتوحة",
+  "stats.views.clicks.call": "المكالمات",
+  "stats.views.clicks.directions": "طلبات الاتجاهات",
+  "stats.views.clicks.link": "الروابط المفتوحة",
+  "stats.views.clicks.mail": "رسائل البريد",
+  "stats.views.empty": "لم يُفتح أي دليل خلال هذه الفترة.",
+  "stats.views.list": "فتح قائمة الأجهزة",
+  "stats.views.unavailable": "لا توجد مشاهدات للضيوف لعرضها بعد.",
   "surface.host.main.subtitle": "اضبط إرشادات الاستخدام للضيوف",
   "surface.host.main.title": "الأجهزة"
 }
