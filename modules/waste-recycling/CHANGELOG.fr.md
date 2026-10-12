@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.12.0
+
+Les réglages Tri & déchets redessinés.
+
+* La page tient en cinq cartes : Collecte, Bacs, Local poubelles, Points d'apport, Composteur ; ce qui dépend d'un interrupteur se masque avec lui.
+* Chaque bac choisit sa couleur parmi huit, nommées ; sans nom, il s'appelle « Bac jaune », et le livret écrit la couleur à côté de la pastille.
+* Le code du local suit le calendrier de révélation d'Accès ; ses horaires se saisissent en plage, 07:00 – 21:00.
+* Les points d'apport s'affichent sur une carte ; le composteur propose ses listes « À mettre » et « À ne pas mettre ».
+* La tâche « Sortir les bacs » nomme les bacs ramassés le lendemain : « Bac jaune · collecte demain matin ».
+
 ## 1.11.1
 
 Montée technique.

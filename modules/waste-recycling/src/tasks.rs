@@ -7,6 +7,7 @@
 //! lui-même au titre.
 
 use chrono::{DateTime, Datelike, Days, NaiveDate, Utc};
+use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::contracts::timeline::{
     self, TaskCompleteArgs, TaskToggleArgs, TimelineTask, TimelineTaskItem, TimelineTasks,
     TimelineTasksArgs,
@@ -41,7 +42,7 @@ pub fn timeline_tasks(ctx: Context, args: TimelineTasksArgs) -> Result<TimelineT
     let tz = PropertyTz::parse(&ctx.property.timezone);
     let mut tasks = Vec::new();
     for (date, at) in evenings(&config.collection_days(), args.from, args.to, tz.as_ref()) {
-        tasks.push(task(args.property_id, date, at)?);
+        tasks.push(task(args.property_id, date, at, context(&config, date))?);
     }
     Ok(TimelineTasks { tasks })
 }
@@ -80,19 +81,44 @@ pub fn evenings(
         .collect()
 }
 
-fn task(property_id: Uuid, collection: NaiveDate, at: DateTime<Utc>) -> Result<TimelineTask> {
+/// « Bac jaune · collecte demain matin » : les bacs ramassés ce jour-là, quand l'hôte les a dits.
+fn context(config: &ModuleConfig, collection: NaiveDate) -> I18nText {
+    let names: Vec<I18nText> = config
+        .parse_bins()
+        .iter()
+        .filter(|bin| {
+            bin.days
+                .iter()
+                .any(|day| parse_day(day) == Some(collection.weekday()))
+        })
+        .map(|bin| bin.name_text())
+        .collect();
+    if names.is_empty() {
+        return i18n::text("task.context");
+    }
+    let in_language = |language: &str| {
+        let bins: Vec<&str> = names.iter().map(|name| name.get(language)).collect();
+        i18n::text_with("task.context.bins", &[("bins", &bins.join(", "))])
+            .get(language)
+            .to_string()
+    };
+    I18nText::new(in_language("fr"), in_language("en"))
+}
+
+fn task(
+    property_id: Uuid,
+    collection: NaiveDate,
+    at: DateTime<Utc>,
+    context: I18nText,
+) -> Result<TimelineTask> {
     let id = task_id(collection);
     let mut item = TimelineTaskItem::new(ITEM, i18n::text("task.item"));
     item.done = kv::get(&kv_key(&id))?.is_some();
-    Ok(timeline::task(
-        id,
-        at,
-        property_id,
-        i18n::text("task.title"),
-        i18n::text("task.context"),
+    Ok(
+        timeline::task(id, at, property_id, i18n::text("task.title"), context)
+            .due_at(at)
+            .items(vec![item]),
     )
-    .due_at(at)
-    .items(vec![item]))
 }
 
 pub fn task_id(collection: NaiveDate) -> String {

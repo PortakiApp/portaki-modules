@@ -6,7 +6,7 @@ use portaki_sdk::sdui::common::{Leading, LeadingVisual, SecretState};
 use portaki_sdk::sdui::primitives::{Card, Eyebrow, KeyValue, ListItem, Map, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
-use super::body::{bin_rows, build_collection_banner, dropoff_row, takeout_note};
+use super::body::{bin_name, bin_rows, build_collection_banner, dropoff_row, takeout_note};
 use super::load::GuestData;
 
 /// Body-only tree for the bottom sheet (shell supplies header chrome).
@@ -69,10 +69,11 @@ fn inside_card(data: &GuestData) -> Option<Component> {
                 .leading(Leading::Icon("home".into()));
             // L'endroit est le titre, le bac le sous-titre : on cherche « sous l'évier », on y
             // trouve « ordures ménagères ». L'inverse fait lire la consigne avant l'endroit.
+            let name = bin_name(data, bin);
             let subtitle = if items.is_empty() {
-                bin.title.get(&data.locale).to_string()
+                name
             } else {
-                format!("{} · {items}", bin.title.get(&data.locale))
+                format!("{name} · {items}")
             };
             item = item.subtitle(subtitle);
             Some(Component::ListItem(item))

@@ -1,9 +1,10 @@
 //! Load config for guest surfaces.
 
-use chrono::{DateTime, Utc};
-use portaki_sdk::host::time;
+use chrono::{DateTime, Duration, Utc};
+use portaki_sdk::host::time::{self, PropertyTz};
 use portaki_sdk::prelude::*;
 use portaki_sdk::reveal::RevealPolicy;
+use serde_json::{Map, Value};
 
 use crate::config::{BinRow, DropoffRow, ModuleConfig};
 
@@ -62,17 +63,17 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         return Ok(None);
     }
 
-    // ponytail: le calendrier par défaut d'Accès (veille 16 h), sans réglage propre — la spec
-    // n'en prévoit pas (§2.3, §7) ; un champ `reveal_policy` le jour où un hôte en demande un.
+    // Le calendrier d'Accès (§2.3, §7), sans réglage propre : la spec n'en prévoit pas.
     let now = time::now()?;
     let checkout_at = ctx.stay.as_ref().and_then(|stay| stay.checkout_at);
-    let decision = RevealPolicy::default().evaluate_for(ctx, now);
+    let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at);
+    let (revealed, available_from) = reveal(&shared_schedule(), now, checkin_at, ctx.property_tz());
     // Jamais après le départ : un ancien voyageur ne lit pas le code du suivant.
     let ended = checkout_at.is_some_and(|checkout| now > checkout);
     // En aperçu, la plateforme remplace les secrets par `***` : rien à copier.
     let masked_by_platform = config.bin_room_code.trim() == "***";
-    let code_revealed = decision.revealed && !ended && !masked_by_platform;
-    let code_reveal_at = match (code_revealed || ended, decision.available_from) {
+    let code_revealed = revealed && !ended && !masked_by_platform;
+    let code_reveal_at = match (code_revealed || ended, available_from) {
         (false, Some(from)) => {
             let local = ctx.property_tz().map(|tz| tz.to_local(from));
             Some(match local {
@@ -116,6 +117,90 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         bin_room_code: config.bin_room_code.trim().to_string(),
         code_revealed,
         code_reveal_at,
-        bin_room_hours: config.bin_room_hours.get(&ctx.locale).trim().to_string(),
+        bin_room_hours: config.bin_room_hours(&ctx.locale),
     }))
+}
+
+/// Ce que partage le premier module qui fournit `access.reveal_schedule` sur ce logement (ses
+/// valeurs publiées, jamais un secret) ; rien sans lui, ou si l'hôte ne répond pas : le livret ne
+/// se bloque pas là-dessus.
+fn shared_schedule() -> Map<String, Value> {
+    host::module::list_by_capability(portaki_sdk::capability::access::REVEAL_SCHEDULE)
+        .ok()
+        .and_then(|peers| peers.into_iter().next())
+        .map(|peer| peer.shared)
+        .unwrap_or_default()
+}
+
+/// Le code se montre-t-il à `now`, et à partir de quand, selon le calendrier partagé : `custom`
+/// compte `reveal_hours` avant l'arrivée (24 sans valeur), une valeur inconnue ou absente vaut le
+/// défaut d'Accès (la veille à 16 h). Sans arrivée, verrouillé — sauf `always`.
+fn reveal(
+    shared: &Map<String, Value>,
+    now: DateTime<Utc>,
+    checkin_at: Option<DateTime<Utc>>,
+    tz: Option<PropertyTz>,
+) -> (bool, Option<DateTime<Utc>>) {
+    let policy = shared.get("reveal_policy").and_then(Value::as_str);
+    if policy == Some("custom") {
+        let hours = shared
+            .get("reveal_hours")
+            .and_then(|h| h.as_u64().or_else(|| h.as_str()?.trim().parse().ok()))
+            .unwrap_or(24);
+        let from = checkin_at.map(|checkin| checkin - Duration::hours(hours as i64));
+        return (from.is_some_and(|from| now >= from), from);
+    }
+    let policy = policy
+        .and_then(|raw| serde_json::from_value(Value::String(raw.into())).ok())
+        .unwrap_or_default();
+    let decision = RevealPolicy::evaluate(policy, now, checkin_at, tz);
+    (decision.revealed, decision.available_from)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn at(raw: &str) -> DateTime<Utc> {
+        DateTime::parse_from_rfc3339(raw)
+            .unwrap()
+            .with_timezone(&Utc)
+    }
+
+    fn shared(value: Value) -> Map<String, Value> {
+        value.as_object().cloned().unwrap_or_default()
+    }
+
+    /// Le calendrier d'Accès quand il le partage, `custom` compris ; le défaut sinon.
+    #[test]
+    fn the_code_follows_the_shared_schedule() {
+        let checkin = Some(at("2026-07-20T14:00:00Z"));
+        let now = at("2026-07-20T09:00:00Z");
+        // Six heures avant l'arrivée : ouvert à 8 h.
+        let custom = shared(json!({ "reveal_policy": "custom", "reveal_hours": "6" }));
+        assert_eq!(
+            reveal(&custom, now, checkin, None),
+            (true, Some(at("2026-07-20T08:00:00Z")))
+        );
+        let at_checkin = shared(json!({ "reveal_policy": "at_checkin" }));
+        assert_eq!(reveal(&at_checkin, now, checkin, None), (false, checkin));
+        // Rien de partagé, ou une valeur inconnue : la veille à 16 h.
+        for silent in [json!({}), json!({ "reveal_policy": "weekly" })] {
+            assert_eq!(
+                reveal(&shared(silent), now, checkin, None),
+                (true, Some(at("2026-07-19T16:00:00Z")))
+            );
+        }
+        assert_eq!(
+            reveal(
+                &shared(json!({ "reveal_policy": "always" })),
+                now,
+                None,
+                None
+            ),
+            (true, None)
+        );
+        assert_eq!(reveal(&custom, now, None, None), (false, None));
+    }
 }

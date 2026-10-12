@@ -14,17 +14,25 @@
     "en": "Each bin with its colour and what goes in it, plus collection days."
   },
   "hostSurface": {
-    "fr": "Un onglet Tri pour décrire jusqu’à douze bacs et les jours de collecte.",
-    "en": "A Recycling tab to describe up to twelve bins and the collection days."
+    "fr": "Une page Tri en cinq cartes : la collecte, les bacs, le local poubelles, les points d’apport et le composteur.",
+    "en": "A Recycling page in five cards: collection, bins, bin room, drop-off points and compost."
   },
   "configItems": [
     {
-      "fr": "Jusqu’à douze bacs : titre, couleur, contenu",
-      "en": "Up to twelve bins: title, colour, contents"
+      "fr": "Ramassage devant le logement, quand sortir les bacs, message de collecte et rappel « Sortir les bacs »",
+      "en": "Kerbside collection, when to put the bins out, collection message and a “Put the bins out” reminder"
     },
     {
-      "fr": "Jours de collecte",
-      "en": "Collection days"
+      "fr": "Jusqu’à douze bacs : nom, couleur, contenu, jours de collecte, consigne",
+      "en": "Up to twelve bins: name, colour, contents, collection days, note"
+    },
+    {
+      "fr": "Local poubelles : emplacement, épingle, code, horaires et chemin",
+      "en": "Bin room: location, pin, code, hours and the way there"
+    },
+    {
+      "fr": "Jusqu’à dix points d’apport sur la carte, et le composteur",
+      "en": "Up to ten drop-off points on the map, and the compost bin"
     }
   ],
   "capabilities": [],
