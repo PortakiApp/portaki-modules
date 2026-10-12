@@ -1,4 +1,5 @@
 {
+  "catalog.host.guide-views": "Consigli consultati",
   "catalog.host.main": "Consigli",
   "config.hostActivities": "Le tue attività",
   "config.spots": "Luoghi",
@@ -226,6 +227,16 @@
   "public.title": "I nostri indirizzi preferiti",
   "public.walk": "~{count} min a piedi",
   "publish.public.hint": "Seleziona da 3 a 6 indirizzi per la pagina pubblica o disattiva il blocco. Sotto i 3 non viene mostrato.",
+  "stats.tile": "consigli consultati",
+  "stats.views.activities": "Attività consultate",
+  "stats.views.clicks.call": "Chiamate",
+  "stats.views.clicks.directions": "Indicazioni richieste",
+  "stats.views.clicks.link": "Link aperti",
+  "stats.views.clicks.mail": "E-mail",
+  "stats.views.empty": "Nessun consiglio consultato nel periodo.",
+  "stats.views.list": "Elenco consigli aperto",
+  "stats.views.spots": "Indirizzi consultati",
+  "stats.views.unavailable": "Ancora nessuna consultazione degli ospiti da mostrare.",
   "surface.host.main.subtitle": "Aggiungi i tuoi indirizzi e consigli per gli ospiti",
   "surface.host.main.title": "Consigli"
 }

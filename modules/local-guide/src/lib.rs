@@ -25,7 +25,7 @@ pub use guest::{
     render_explore_activity, render_explore_detail, render_explore_item, render_explore_link,
     render_home_card, render_property_public, render_upcoming_card,
 };
-pub use host::{render_host_main, MAX_SPOTS};
+pub use host::{render_host_main, render_host_stats, stats_summary, MAX_SPOTS};
 pub use map_markers::{map_markers, MapMarkersResponse, MAX_MARKERS};
 pub use readiness::publish_readiness;
 pub use tiqets::{FRESH_SECS, MAX_PRODUCTS, STALE_MAX_SECS};

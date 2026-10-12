@@ -1,4 +1,5 @@
 {
+  "catalog.host.guide-views": "浏览的推荐",
   "catalog.host.main": "好去处",
   "config.hostActivities": "你的活动",
   "config.spots": "地点",
@@ -226,6 +227,16 @@
   "public.title": "我们推荐的好去处",
   "public.walk": "步行约 {count} 分钟",
   "publish.public.hint": "为公开页面勾选 3 至 6 个地点，或关闭此区块。少于 3 个时不显示。",
+  "stats.tile": "浏览的推荐",
+  "stats.views.activities": "浏览的活动项目",
+  "stats.views.clicks.call": "通话",
+  "stats.views.clicks.directions": "导航请求",
+  "stats.views.clicks.link": "打开的链接",
+  "stats.views.clicks.mail": "邮件",
+  "stats.views.empty": "此期间没有浏览的推荐。",
+  "stats.views.list": "推荐列表打开次数",
+  "stats.views.spots": "浏览的地点",
+  "stats.views.unavailable": "暂无住客浏览数据。",
   "surface.host.main.subtitle": "添加您想推荐给房客的地址和建议",
   "surface.host.main.title": "好去处"
 }

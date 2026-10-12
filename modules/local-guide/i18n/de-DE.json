@@ -1,4 +1,5 @@
 {
+  "catalog.host.guide-views": "Angesehene Tipps",
   "catalog.host.main": "Empfehlungen",
   "config.hostActivities": "Ihre Aktivitäten",
   "config.spots": "Orte",
@@ -226,6 +227,16 @@
   "public.title": "Unsere Lieblingsadressen",
   "public.walk": "~{count} Min. zu Fuß",
   "publish.public.hint": "Wählen Sie 3 bis 6 Adressen für die öffentliche Seite oder schalten Sie den Block aus. Unter 3 wird er nicht angezeigt.",
+  "stats.tile": "angesehene Tipps",
+  "stats.views.activities": "Angesehene Aktivitäten",
+  "stats.views.clicks.call": "Anrufe",
+  "stats.views.clicks.directions": "Angefragte Routen",
+  "stats.views.clicks.link": "Geöffnete Links",
+  "stats.views.clicks.mail": "E-Mails",
+  "stats.views.empty": "In diesem Zeitraum wurde kein Tipp angesehen.",
+  "stats.views.list": "Tippliste geöffnet",
+  "stats.views.spots": "Angesehene Orte",
+  "stats.views.unavailable": "Noch keine Gästeaufrufe anzuzeigen.",
   "surface.host.main.subtitle": "Tragen Sie Ihre Adressen und Tipps für die Gäste ein",
   "surface.host.main.title": "Empfehlungen"
 }

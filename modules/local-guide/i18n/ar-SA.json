@@ -1,4 +1,5 @@
 {
+  "catalog.host.guide-views": "التوصيات المعروضة",
   "catalog.host.main": "أماكن مختارة",
   "config.hostActivities": "أنشطتك",
   "config.spots": "الأماكن",
@@ -226,6 +227,16 @@
   "public.title": "عناويننا المفضلة",
   "public.walk": "~{count} دقيقة سيرًا",
   "publish.public.hint": "اختر من 3 إلى 6 عناوين للصفحة العامة أو أوقف الكتلة. إذا كانت أقل من 3 فلن تظهر.",
+  "stats.tile": "التوصيات المعروضة",
+  "stats.views.activities": "الأنشطة المعروضة",
+  "stats.views.clicks.call": "المكالمات",
+  "stats.views.clicks.directions": "طلبات الاتجاهات",
+  "stats.views.clicks.link": "الروابط المفتوحة",
+  "stats.views.clicks.mail": "رسائل البريد",
+  "stats.views.empty": "لم تُعرض أي توصية خلال هذه الفترة.",
+  "stats.views.list": "فتح قائمة التوصيات",
+  "stats.views.spots": "الأماكن المعروضة",
+  "stats.views.unavailable": "لا توجد مشاهدات للضيوف لعرضها بعد.",
   "surface.host.main.subtitle": "أضِف عناوينك ونصائحك للضيوف",
   "surface.host.main.title": "أماكن مختارة"
 }
