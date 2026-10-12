@@ -32,6 +32,16 @@ pub const KINDS: &[(&str, IconName)] = &[
 /// qu'un glyphe d'éclair sur une vanne d'eau se lit faux.
 pub const KIND_OTHER: &str = "other";
 
+/// Les lignes proposées à la première ouverture (§2.2) : une par type, sauf « autre ». L'id de la
+/// ligne est son type : une ligne jamais ouverte n'envoie que son id, et garde ainsi son type.
+pub const PROPOSED: [&str; 5] = [
+    "electricity",
+    "water",
+    "gas",
+    "extinguisher",
+    "smoke_detector",
+];
+
 /// The keys are the names of the host form fields: the platform takes `updateConfig` itself.
 #[portaki_sdk::config]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
@@ -39,21 +49,30 @@ pub struct ModuleConfig {
     /// Les organes de coupure. Pas de `required` : la porte de publication est dans
     /// `publishReadiness`, qui sait dire « au moins un organe complet » — ce qu'un champ
     /// obligatoire sur une liste ne dit pas (une ligne vide la remplit).
-    #[field(label = "config.shutoffs")]
-    pub shutoffs: Vec<ShutoffRow>,
+    ///
+    /// `None` : jamais enregistrée, le formulaire propose ses cinq lignes ; `Some([])` : l'hôte
+    /// les a toutes retirées, elles ne reviennent pas. `local` : copiée d'un autre logement, la
+    /// liste est « À vérifier » (photos comprises, la copie ne sait pas en exclure une sous-clé).
+    #[field(local, label = "config.shutoffs")]
+    pub shutoffs: Option<Vec<ShutoffRow>>,
     /// La consigne générale de l'hôte, affichée en bandeau d'information au-dessus des organes.
-    #[field(label = "host.note.label")]
+    #[field(local, label = "host.note.label")]
     pub general_note: I18nText,
 }
 
 impl ModuleConfig {
+    /// Les lignes enregistrées, dans l'ordre de l'hôte.
+    pub fn rows(&self) -> &[ShutoffRow] {
+        self.shutoffs.as_deref().unwrap_or_default()
+    }
+
     /// Les organes que le voyageur voit : ceux dont le titre et l'emplacement sont écrits.
     ///
     /// Un organe sans emplacement est la seule chose que ce module existe pour dire — sous
     /// stress, « Vanne d'arrêt d'eau » sans l'endroit ne sert à rien. Il reste dans la
     /// configuration, il ne s'affiche pas.
     pub fn parse_shutoffs(&self) -> Vec<ShutoffRow> {
-        self.shutoffs
+        self.rows()
             .iter()
             .filter(|row| row.is_complete())
             .take(MAX_SHUTOFFS)
@@ -61,12 +80,9 @@ impl ModuleConfig {
             .collect()
     }
 
-    /// Les lignes commencées mais incomplètes : sans emplacement.
+    /// Les lignes sans emplacement, proposées comme commencées : elles ne seront pas publiées.
     pub fn shutoffs_incomplete(&self) -> usize {
-        self.shutoffs
-            .iter()
-            .filter(|row| !row.is_blank() && !row.is_complete())
-            .count()
+        self.rows().iter().filter(|row| !row.is_complete()).count()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -86,14 +102,14 @@ impl ModuleConfig {
         if let Some(error) = too_long(&self.general_note, TEXT_MAX) {
             problems.push(("general_note".into(), error));
         }
-        let filled = self.shutoffs.iter().filter(|row| !row.is_blank()).count();
+        let filled = self.rows().iter().filter(|row| !row.is_blank()).count();
         if filled > MAX_SHUTOFFS {
             problems.push((
                 "shutoffs".into(),
                 crate::i18n::text("host.shutoffs.tooMany"),
             ));
         }
-        for (index, row) in self.shutoffs.iter().enumerate() {
+        for (index, row) in self.rows().iter().enumerate() {
             if row.is_blank() {
                 continue;
             }
@@ -102,8 +118,19 @@ impl ModuleConfig {
             } else {
                 too_long(&row.location, LOCATION_MAX)
             };
+            // Sans nom, le type le donne (§4) — sauf « autre », qui ne nomme rien.
+            let title = if row.title.is_blank() && row.kind_raw() == KIND_OTHER {
+                Some(crate::i18n::text("host.shutoffs.title.required"))
+            } else {
+                too_long(&row.title, TITLE_MAX)
+            };
+            let kind = row
+                .kind_raw()
+                .is_empty()
+                .then(|| crate::i18n::text("host.shutoffs.kind.required"));
             for (key, error) in [
-                ("title", too_long(&row.title, TITLE_MAX)),
+                ("kind", kind),
+                ("title", title),
                 ("location", location),
                 ("instruction", too_long(&row.instruction, TEXT_MAX)),
             ] {
@@ -172,9 +199,17 @@ impl ShutoffRow {
         }
     }
 
+    /// Le type écrit, sinon celui d'une ligne proposée (son id), sinon rien.
+    pub fn kind_raw(&self) -> &str {
+        match self.kind.trim() {
+            "" if PROPOSED.contains(&self.id.as_str()) => &self.id,
+            kind => kind,
+        }
+    }
+
     /// Le type retenu, ramené à une valeur connue.
     pub fn kind_key(&self) -> &str {
-        let kind = self.kind.trim();
+        let kind = self.kind_raw();
         if KINDS.iter().any(|(wire, _)| *wire == kind) {
             kind
         } else {
@@ -214,8 +249,8 @@ mod tests {
         let shown = config.parse_shutoffs();
         assert_eq!(shown.len(), 1);
         assert_eq!(shown[0].title.get("fr"), "Vanne d'eau");
-        // La ligne du gaz est commencée, pas la troisième : une seule est à finir.
-        assert_eq!(config.shutoffs_incomplete(), 1);
+        // Le gaz et la ligne vide n'ont pas d'emplacement : ni l'un ni l'autre n'est publié.
+        assert_eq!(config.shutoffs_incomplete(), 2);
     }
 
     #[test]
@@ -247,7 +282,7 @@ mod tests {
     fn a_row_needs_its_location_not_its_name() {
         let config = config(json!({ "shutoffs": [
             { "kind": "gas", "location": "Sous l'évier" },
-            { "title": "Disjoncteur" },
+            { "kind": "electricity", "title": "Disjoncteur" },
             { "title": "", "location": "" }
         ] }));
         assert_eq!(config.parse_shutoffs().len(), 1);
@@ -257,5 +292,38 @@ mod tests {
         );
         let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
         assert_eq!(fields, ["shutoffs.1.location"]);
+    }
+
+    /// Une ligne proposée jamais ouverte n'envoie que son id : elle garde son type.
+    #[test]
+    fn a_proposed_row_keeps_its_kind_from_its_id() {
+        let row: ShutoffRow = serde_json::from_value(json!({ "id": "gas" })).unwrap();
+        assert_eq!(row.kind_key(), "gas");
+        assert_eq!(row.title_for("fr"), "i18n:host.kind.label.gas");
+        // Un id quelconque ne donne pas de type.
+        let added: ShutoffRow = serde_json::from_value(json!({ "id": "a1b2" })).unwrap();
+        assert_eq!(added.kind_raw(), "");
+        assert_eq!(added.kind_key(), "other");
+    }
+
+    /// Commencée sans type : « Choisissez un type. » ; « autre » sans nom : « Donnez un nom. ».
+    #[test]
+    fn a_started_row_needs_a_type_and_other_needs_a_name() {
+        let config = config(json!({ "shutoffs": [
+            { "id": "a1", "location": "Garage" },
+            { "id": "a2", "kind": "other", "location": "Cave" }
+        ] }));
+        let problems = config.problems();
+        let fields: Vec<&str> = problems.iter().map(|(f, _)| f.as_str()).collect();
+        assert_eq!(fields, ["shutoffs.0.kind", "shutoffs.1.title"]);
+        assert_eq!(problems[0].1.get("fr"), "Choisissez un type.");
+        assert_eq!(problems[1].1.get("fr"), "Donnez un nom.");
+    }
+
+    /// Jamais enregistrée n'est pas vidée : seule la première propose des lignes.
+    #[test]
+    fn never_saved_differs_from_emptied() {
+        assert_eq!(config(json!({})).shutoffs, None);
+        assert_eq!(config(json!({ "shutoffs": [] })).shutoffs, Some(vec![]));
     }
 }

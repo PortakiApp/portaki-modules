@@ -1,15 +1,26 @@
-//! Host dashboard surface — l'onglet « Coupures & sécurité » de l'espace du logement.
+//! Host dashboard surface — les réglages « Coupures et sécurité » (spec Sécurité §2), mode page.
+//!
+//! Deux `Section`s : « Consigne générale », puis « Emplacements », un tableau ordonnable (l'ordre
+//! du livret) dont chaque ligne s'ouvre dans un dialogue (`panel: "dialog"`), ses champs nommés
+//! `shutoffs.<i>.<clé>`. Chaque saisie s'enregistre par `updateConfig` ; une erreur s'affiche sous
+//! son champ et bloque « Publier » (`publishReadiness`), jamais l'enregistrement.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui;
+use portaki_sdk::sdui::common::{ChoiceListLayout, Tone};
 use portaki_sdk::sdui::primitives::{
-    Card, Field, FieldHint, Form, ImageUpload, Page, Select, Stack, StepList, Text, TextArea,
-    TextInput,
+    ChoiceList, DataTable, Field, FieldHint, Form, ImageUpload, InlineNotice, Page, Section, Stack,
+    TextArea, TextInput,
 };
 use portaki_sdk::sdui::surface::Surface;
-use serde::Serialize;
+use serde_json::{json, Map, Value};
 
-use crate::config::{ModuleConfig, ShutoffRow, KINDS, MAX_SHUTOFFS};
+use crate::config::{ModuleConfig, ShutoffRow, KINDS, KIND_OTHER, MAX_SHUTOFFS, PROPOSED};
+
+/// Les lignes ajoutées pas encore enregistrées : leurs id, séparés par des virgules.
+const NEW_SHUTOFFS: &str = "newShutoffs";
+
+/// La consigne générale : 280 caractères (§2.1).
+const NOTE_MAX: usize = 280;
 
 #[portaki_sdk::surface(
     host,
@@ -20,208 +31,251 @@ use crate::config::{ModuleConfig, ShutoffRow, KINDS, MAX_SHUTOFFS};
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let config = ModuleConfig::load(&ctx)?;
+    let rows = rows(&config, &ctx);
 
-    // No Save button — the modules drawer owns the footer Save.
+    // No Save button — the dashboard autosaves and owns « Publier ».
     Ok(Surface::new(
-        Page::new().child(Form::new().child(Stack::new().gap(16.0).children(vec![
-                    Text::new()
-                        .text("i18n:host.intro")
-                        .variant(TextVariant::Caption)
-                        .into(),
-                    shutoffs_card(&config, &ctx),
-                    note_card(&config, &ctx),
-                ]))),
+        Page::new().child(
+            Form::new()
+                .child(note_section(&config, &ctx))
+                .child(shutoffs_section(&config, &rows, &ctx)),
+        ),
     )
     .with_id(MAIN))
 }
 
-/// Les organes, en lignes dynamiques bornées — le motif de `rules` et `ical-sync`.
-///
-/// Pas de six emplacements figés : la plupart des logements n'ont ni extincteur ni détecteur à
-/// déclarer, et six cartes vides font passer un formulaire de deux minutes pour un formulaire de
-/// dix (§2.22).
-fn shutoffs_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let rows_count = draft_rows(ctx, config.parse_shutoffs().len());
-    let rows: Vec<Component> = (0..rows_count)
-        .map(|index| shutoff_row(index, config, ctx))
-        .collect();
+/// Les lignes du tableau : celles enregistrées — à la première ouverture, les cinq proposées
+/// (§2.2) —, puis celles qu'« Ajouter » a ouvertes.
+fn rows(config: &ModuleConfig, ctx: &HostContext) -> Vec<ShutoffRow> {
+    let mut rows: Vec<ShutoffRow> = match &config.shutoffs {
+        Some(rows) => rows.clone(),
+        None => PROPOSED
+            .iter()
+            .map(|kind| ShutoffRow {
+                id: (*kind).to_string(),
+                ..ShutoffRow::default()
+            })
+            .collect(),
+    };
+    for id in ctx.input_str(NEW_SHUTOFFS).unwrap_or_default().split(',') {
+        let id = id.trim();
+        if !id.is_empty() && !rows.iter().any(|row| row.id == id) {
+            rows.push(ShutoffRow {
+                id: id.to_string(),
+                ..ShutoffRow::default()
+            });
+        }
+    }
+    rows
+}
 
-    // Sous la liste, ce que dit la porte de publication : « Ajoutez au moins un emplacement. »
-    // tant qu'aucun organe n'est complet ; « 20 au maximum » vient de `problems`.
-    let error = config.error_of("shutoffs").or_else(|| {
-        config
-            .parse_shutoffs()
-            .is_empty()
-            .then(|| crate::i18n::text("host.shutoffs.required"))
-    });
-    let mut field = Field::new().name("shutoffs");
-    if let Some(error) = error {
+/// §2.1 La consigne générale : le bandeau « Le mot de {hôte} » en tête du détail.
+fn note_section(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let value = config.general_note.host_value(ctx);
+    let mut field = Field::new()
+        .name("general_note")
+        .label("i18n:host.note.label");
+    if let Some(error) = config.error_of("general_note") {
         field = field.error(error.get(&ctx.locale).to_string());
     }
-
-    Card::new()
-        .title("i18n:host.shutoffs.title")
-        .subtitle("i18n:host.shutoffs.subtitle")
-        .icon(IconName::Shield)
+    let hint = ctx
+        .host
+        .as_ref()
+        .map(|host| host.name.trim())
+        .filter(|name| !name.is_empty())
+        .and_then(|name| t!("host.note.hint.named", host = name).ok())
+        .unwrap_or_else(|| "i18n:host.note.hint".to_string());
+    Section::new()
+        .title("i18n:host.note.title")
         .child(
-            field.child(
-                StepList::new()
-                    .addLabel("i18n:host.shutoffs.add")
-                    .removeLabel("i18n:host.shutoffs.remove")
-                    .emptyTitle("i18n:host.shutoffs.emptyTitle")
-                    .emptyDescription("i18n:host.shutoffs.emptyDescription")
-                    .itemKeyPrefix("shutoffs")
-                    .addAction(emit_input(RowCount {
-                        shutoffs_count: (rows_count + 1).min(MAX_SHUTOFFS),
-                    }))
-                    .children(rows),
-            ),
+            field
+                .child(
+                    TextArea::new()
+                        .name("general_note")
+                        .value(value)
+                        .rows(3)
+                        .placeholder("i18n:host.note.placeholder"),
+                )
+                .child(FieldHint::new().text(hint))
+                // ponytail: compté au rendu, pas à la frappe — `TextArea` n'a pas de compteur.
+                .child(FieldHint::new().text(format!("{} / {NOTE_MAX}", value.chars().count()))),
         )
         .into()
 }
 
-/// Combien de lignes dessiner : ce que « Ajouter » a demandé, sinon ce qui est stocké, borné.
-fn draft_rows(ctx: &HostContext, stored: usize) -> usize {
-    match ctx.input_u64("shutoffs_count") {
-        Some(asked) => (asked as usize).clamp(1, MAX_SHUTOFFS),
-        None => stored.clamp(1, MAX_SHUTOFFS),
+/// §2.2 Les emplacements : le tableau ordonnable et le dialogue de chaque ligne.
+fn shutoffs_section(config: &ModuleConfig, rows: &[ShutoffRow], ctx: &HostContext) -> Component {
+    let mut children: Vec<Component> =
+        vec![FieldHint::new().text("i18n:host.shutoffs.hint").into()];
+
+    // « Ajoutez au moins un emplacement. » tant qu'aucune ligne n'a d'emplacement ; « 20 au
+    // maximum » vient de `problems`.
+    let error = config.error_of("shutoffs").or_else(|| {
+        (!rows.iter().any(ShutoffRow::is_complete))
+            .then(|| crate::i18n::text("host.shutoffs.required"))
+    });
+    if let Some(error) = error {
+        children.push(
+            InlineNotice::new()
+                .tone(Tone::Danger)
+                .message(error.get(&ctx.locale))
+                .into(),
+        );
     }
-}
 
-#[derive(Serialize)]
-#[serde(rename_all = "snake_case")]
-struct RowCount {
-    shutoffs_count: usize,
-}
+    let mut table = DataTable::new()
+        .rowName("shutoffs")
+        .sortable(true)
+        .panel("dialog")
+        .columns(json!([
+            { "key": "kind", "label": "i18n:host.kind.label", "kind": "pill" },
+            { "key": "title", "label": "i18n:host.shutoffs.rowTitle", "sub": "location" },
+            { "key": "status", "label": "i18n:host.column.status", "kind": "pill" },
+            { "key": "photo", "label": "i18n:host.shutoffs.photo.pill", "kind": "pill" },
+        ]))
+        .rows(Value::Array(
+            rows.iter().map(|shutoff| row(shutoff, ctx)).collect(),
+        ))
+        .children(
+            rows.iter()
+                .enumerate()
+                .map(|(index, shutoff)| shutoff_panel(index, shutoff, config, ctx))
+                .collect(),
+        );
+    if rows.len() < MAX_SHUTOFFS {
+        let mut added: Vec<String> = rows
+            .iter()
+            .skip(config.rows().len())
+            .filter(|row| !PROPOSED.contains(&row.id.as_str()))
+            .map(|row| row.id.clone())
+            .collect();
+        added.push(Uuid::new_v4().to_string());
+        let mut input = Map::new();
+        input.insert(NEW_SHUTOFFS.into(), Value::String(added.join(",")));
+        table = table
+            .addLabel("i18n:host.shutoffs.add")
+            .addAction(Action::emit(
+                contracts::shell::SURFACE_INPUT,
+                Some(Value::Object(input)),
+            ));
+    }
+    children.push(table.into());
 
-fn emit_input(payload: impl Serialize) -> Action {
-    Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
-}
+    // §3 : les lignes sans emplacement sont retirées à la publication — on le dit, sans bloquer.
+    let empty = rows.iter().filter(|row| !row.is_complete()).count();
+    if empty > 0 {
+        children.push(
+            InlineNotice::new()
+                .tone(Tone::Warning)
+                .message(crate::i18n::empty_rows(empty).get(&ctx.locale))
+                .into(),
+        );
+    }
 
-fn shutoff_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let row: Option<&ShutoffRow> = config.shutoffs.get(index);
-    // Le champ, avec le message de `problems` sous lui s'il y en a un.
-    let named = |key: &str| {
-        let name = format!("shutoffs.{index}.{key}");
-        let field = Field::new().name(name.clone());
-        match config.error_of(&name) {
-            Some(error) => field.error(error.get(&ctx.locale).to_string()),
-            None => field,
-        }
-    };
-    let kind = row.map(ShutoffRow::kind_key).unwrap_or("other");
-    let title = row.map(|r| r.title.host_value(ctx)).unwrap_or_default();
-    let location = row.map(|r| r.location.host_value(ctx)).unwrap_or_default();
-    let instruction = row
-        .map(|r| r.instruction.host_value(ctx))
-        .unwrap_or_default();
-    let photo = row.map(|r| r.photo.clone()).unwrap_or_default();
-    let id = row
-        .filter(|r| !r.is_blank())
-        .map(|r| sdui::row_id("shutoffs", index, Some(&r.id)));
-
-    let mut children: Vec<Component> = id.into_iter().collect();
-    children.push(
-        Field::new()
-            .name(format!("shutoffs.{index}.kind"))
-            .label("i18n:host.kind.label")
-            .child(
-                Select::new()
-                    .name(format!("shutoffs.{index}.kind"))
-                    .options(
-                        KINDS
-                            .iter()
-                            .map(|(wire, _)| {
-                                ChoiceOption::new(*wire, format!("i18n:host.kind.label.{wire}"))
-                            })
-                            .collect(),
-                    )
-                    .value(kind),
-            )
-            .into(),
-    );
-    children.push(
-        named("title")
-            .label("i18n:host.shutoffs.rowTitle")
-            .child(
-                TextInput::new()
-                    .name(format!("shutoffs.{index}.title"))
-                    .value(title)
-                    .placeholder("i18n:host.shutoffs.rowTitle.placeholder"),
-            )
-            .into(),
-    );
-    children.push(
-        named("location")
-            .label("i18n:host.shutoffs.location")
-            .child(
-                TextInput::new()
-                    .name(format!("shutoffs.{index}.location"))
-                    .value(location)
-                    .placeholder("i18n:host.shutoffs.location.placeholder"),
-            )
-            .into(),
-    );
-    children.push(
-        FieldHint::new()
-            .text("i18n:host.shutoffs.location.hint")
-            .into(),
-    );
-    children.push(
-        named("instruction")
-            .label("i18n:host.shutoffs.instruction")
-            .child(
-                TextArea::new()
-                    .name(format!("shutoffs.{index}.instruction"))
-                    .value(instruction)
-                    .rows(2)
-                    .placeholder("i18n:host.shutoffs.instruction.placeholder"),
-            )
-            .into(),
-    );
-
-    children.push(
-        Field::new()
-            .name(format!("shutoffs.{index}.photo"))
-            .label("i18n:host.shutoffs.photo")
-            .child(
-                ImageUpload::new()
-                    .name(format!("shutoffs.{index}.photo"))
-                    .value(photo),
-            )
-            .into(),
-    );
-    children.push(
-        FieldHint::new()
-            .text("i18n:host.shutoffs.photo.hint")
-            .into(),
-    );
-
-    Stack::new()
-        .id(format!("shutoff-{index}"))
-        .gap(10.0)
+    Section::new()
+        .title("i18n:host.shutoffs.title")
+        .subtitle(format!("{} / {MAX_SHUTOFFS}", rows.len()))
         .children(children)
         .into()
 }
 
-/// La consigne générale : ce que l'hôte veut dire avant la liste.
-fn note_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let mut field = Field::new().name("general_note");
-    if let Some(error) = config.error_of("general_note") {
-        field = field.error(error.get(&ctx.locale).to_string());
-    }
-    Card::new()
-        .title("i18n:host.note.title")
-        .icon(IconName::MessageCircle)
-        .child(
-            field.label("i18n:host.note.label").child(
-                TextArea::new()
-                    .name("general_note")
-                    .value(config.general_note.host_value(ctx))
-                    .rows(3)
-                    .placeholder("i18n:host.note.placeholder"),
-            ),
-        )
-        .child(FieldHint::new().text("i18n:host.note.hint"))
+/// Une ligne du tableau : type, nom (l'emplacement dessous), « À compléter », « Photo ».
+fn row(shutoff: &ShutoffRow, ctx: &HostContext) -> Value {
+    let location = shutoff.location.host_value(ctx);
+    json!({
+        "id": shutoff.id,
+        "kind": if shutoff.kind_raw().is_empty() {
+            String::new()
+        } else {
+            format!("i18n:host.kind.label.{}", shutoff.kind_key())
+        },
+        "title": shutoff.title_for(&ctx.locale),
+        "location": if location.trim().is_empty() {
+            "i18n:host.shutoffs.location.proposed".to_string()
+        } else {
+            location.to_string()
+        },
+        "status": if shutoff.is_complete() { "" } else { "i18n:host.shutoffs.todo" },
+        "photo": if shutoff.photo_ref().is_some() { "i18n:host.shutoffs.photo.pill" } else { "" },
+    })
+}
+
+/// Le dialogue d'une ligne : Type, Nom, Où, Comment couper, Photo (§2.2).
+fn shutoff_panel(
+    index: usize,
+    shutoff: &ShutoffRow,
+    config: &ModuleConfig,
+    ctx: &HostContext,
+) -> Component {
+    let name = |key: &str| format!("shutoffs.{index}.{key}");
+    let field = |key: &str, label: &str| {
+        let field = Field::new().name(name(key)).label(label);
+        match config.error_of(&name(key)) {
+            Some(error) => field.error(error.get(&ctx.locale).to_string()),
+            None => field,
+        }
+    };
+    // Le nom suit le type : c'est lui que le voyageur lit quand le champ reste vide (§4).
+    let kind = shutoff.kind_key();
+    let title_placeholder = if shutoff.kind_raw().is_empty() || kind == KIND_OTHER {
+        "i18n:host.shutoffs.rowTitle.placeholder".to_string()
+    } else {
+        format!("i18n:host.kind.label.{kind}")
+    };
+
+    Stack::new()
+        .gap(14.0)
+        .children(vec![
+            field("kind", "i18n:host.kind.label")
+                .child(
+                    ChoiceList::new()
+                        .name(name("kind"))
+                        .layout(ChoiceListLayout::Cards)
+                        .value(shutoff.kind_raw())
+                        .choices(
+                            KINDS
+                                .iter()
+                                .map(|(wire, icon)| {
+                                    ChoiceOption::new(*wire, format!("i18n:host.kind.label.{wire}"))
+                                        .icon(*icon)
+                                })
+                                .collect(),
+                        ),
+                )
+                .into(),
+            field("title", "i18n:host.shutoffs.rowTitle")
+                .child(
+                    TextInput::new()
+                        .name(name("title"))
+                        .value(shutoff.title.host_value(ctx))
+                        .placeholder(title_placeholder),
+                )
+                .into(),
+            field("location", "i18n:host.shutoffs.location")
+                .child(
+                    TextInput::new()
+                        .name(name("location"))
+                        .value(shutoff.location.host_value(ctx))
+                        .placeholder("i18n:host.shutoffs.location.placeholder"),
+                )
+                .into(),
+            field("instruction", "i18n:host.shutoffs.instruction")
+                .child(
+                    TextArea::new()
+                        .name(name("instruction"))
+                        .value(shutoff.instruction.host_value(ctx))
+                        .rows(2)
+                        .placeholder("i18n:host.shutoffs.instruction.placeholder"),
+                )
+                .into(),
+            field("photo", "i18n:host.shutoffs.photo")
+                .child(
+                    ImageUpload::new()
+                        .name(name("photo"))
+                        .value(shutoff.photo.as_str()),
+                )
+                .child(FieldHint::new().text("i18n:host.shutoffs.photo.hint"))
+                .into(),
+        ])
         .into()
 }
