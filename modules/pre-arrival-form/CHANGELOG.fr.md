@@ -6,14 +6,8 @@ La page Avant l’arrivée refaite.
 
 * Choisissez le pas des créneaux (15 min, 30 min ou 1 h) et l’heure d’une arrivée tardive : elle crée une tâche dans À venir.
 * Vos questions dans un tableau : glissez pour les réordonner, ouvrez-en une pour la modifier.
-* Besoins particuliers et allergies ne font plus qu’un interrupteur ; l’heure d’arrivée est toujours demandée.
-* Le formulaire ne demande plus de pièce d’identité : la fiche de police (Formalités) la recueille.
+* Un seul interrupteur pour besoins et allergies ; plus de pièce d’identité, que recueille la fiche de police (Formalités).
 * La date limite, la relance et le moment d’affichage se règlent dans « Envoi et relances ».
-
-## 1.10.1
-
-Montée technique.
-
 * Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
 
 ## 1.10.0
