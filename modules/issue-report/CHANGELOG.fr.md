@@ -2,12 +2,12 @@
 
 ## 1.9.0
 
-Des réglages en deux cartes, Formulaire et Réception.
+Un onglet Signalements, et des réglages en deux cartes.
 
-* Catégories et périodes se choisissent en pastilles ; vos réglages précédents sont repris.
-* Le numéro d'urgence n'apparaît que si l'option « Tout de suite » est ouverte ; copié depuis un autre logement, il est marqué « À vérifier ».
-* Le tiroir indique combien de signalements sont en cours sur le logement.
-* Les e-mails restent le canal d'alerte ; la notification de l'app et le SMS sont annoncés.
+* Un onglet Signalements : À traiter, Résolus ou Tous ; chaque signalement avec sa photo, son séjour et son historique.
+* Passez un signalement de Nouveau à En cours puis Résolu ; votre réponse part par e-mail au voyageur et s'affiche dans son livret.
+* Catégories et périodes en pastilles ; le numéro d'urgence n'apparaît qu'avec « Tout de suite », marqué « À vérifier » après une copie.
+* Le tiroir compte les signalements en cours ; l'e-mail reste le canal d'alerte, l'app et le SMS sont annoncés.
 * Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
 
 ## 1.8.0

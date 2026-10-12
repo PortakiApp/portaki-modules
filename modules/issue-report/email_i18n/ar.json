@@ -1,0 +1,8 @@
+{
+  "email.cta.seeMore": "عرض المزيد",
+  "email.hostReply.subject": "ردّ عليك مضيفك",
+  "email.hostReply.eyebrow": "بلاغ عن مشكلة",
+  "email.hostReply.title": "ردّ على بلاغك: {summary}",
+  "email.hostReply.body": "أبلغت عن: {summary}.\n\nيردّ مضيفك:\n\n«{reply}»",
+  "email.hostReply.cta": "فتح الدليل"
+}

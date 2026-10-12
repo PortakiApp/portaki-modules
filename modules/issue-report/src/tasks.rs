@@ -127,6 +127,10 @@ mod tests {
             created_at: at(created),
             resolved_at: resolved.map(at),
             photo: None,
+            status: String::new(),
+            guest_name: String::new(),
+            stay_check_in: None,
+            stay_check_out: None,
         }
     }
 

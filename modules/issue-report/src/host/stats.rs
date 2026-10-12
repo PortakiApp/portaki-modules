@@ -13,8 +13,6 @@ use portaki_sdk::sdui::primitives::{Card, Chart, EmptyState, Grid, Page, Stack, 
 use portaki_sdk::sdui::surface::Surface;
 use portaki_sdk::sdui::{ChartKind, ChartPoint};
 
-use uuid::Uuid;
-
 use crate::category;
 use crate::entities::IssueReport;
 use crate::{i18n, storage};
@@ -66,12 +64,8 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
     let days = period_days(&ctx);
     let now = super::host_now();
     // The dashboard re-renders this surface in its detail modal with the row's `issueId`.
-    if let Some(report) = ctx
-        .input_str("issueId")
-        .and_then(|id| Uuid::parse_str(id).ok())
-        .and_then(|id| storage::find_by_id(id).ok().flatten())
-    {
-        return Surface::new(super::report_detail(&report, &ctx.locale)).with_id(ISSUE_STATS);
+    if let Some(detail) = super::detail_from_input(&ctx) {
+        return Surface::new(detail).with_id(ISSUE_STATS);
     }
     let reports = storage::list_since(now - Duration::days(days)).unwrap_or_default();
 
@@ -299,6 +293,10 @@ mod tests {
             created_at: DateTime::<Utc>::UNIX_EPOCH,
             resolved_at: None,
             photo: None,
+            status: String::new(),
+            guest_name: String::new(),
+            stay_check_in: None,
+            stay_check_out: None,
         }
     }
 

@@ -1,0 +1,8 @@
+{
+  "email.cta.seeMore": "もっと見る",
+  "email.hostReply.subject": "ホストから返信がありました",
+  "email.hostReply.eyebrow": "不具合の報告",
+  "email.hostReply.title": "ご報告への返信：{summary}",
+  "email.hostReply.body": "ご報告の内容：{summary}\n\nホストからの返信：\n\n「{reply}」",
+  "email.hostReply.cta": "ガイドブックを開く"
+}

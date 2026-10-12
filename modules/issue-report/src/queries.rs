@@ -21,10 +21,13 @@ pub struct IssueReportRow {
     pub resolved_at: Option<DateTime<Utc>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub photo: Option<String>,
+    /// `new` · `in_progress` · `resolved`.
+    pub status: String,
 }
 
 impl From<crate::entities::IssueReport> for IssueReportRow {
     fn from(row: crate::entities::IssueReport) -> Self {
+        let status = crate::status::of(&row).to_string();
         Self {
             id: row.id,
             stay_id: row.stay_id,
@@ -34,6 +37,7 @@ impl From<crate::entities::IssueReport> for IssueReportRow {
             created_at: row.created_at,
             resolved_at: row.resolved_at,
             photo: row.photo,
+            status,
         }
     }
 }

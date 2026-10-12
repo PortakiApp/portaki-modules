@@ -7,11 +7,18 @@ use portaki_sdk::sdui::primitives::{Card, ListItem, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::category;
-use crate::entities::IssueReport;
+use crate::entities::{IssueReport, IssueReportEvent};
+use crate::status;
 
 /// `open` : le formulaire est proposé à cette période du séjour ; sinon la carte renvoie vers
-/// l'hôte. `auto_reply` : la confirmation de l'hôte, ou celle du module.
-pub fn build_home_card(reports: &[IssueReport], open: bool, auto_reply: Option<String>) -> Surface {
+/// l'hôte. `auto_reply` : la confirmation de l'hôte, ou celle du module. `history` : les lignes
+/// d'historique du séjour, dont les réponses de l'hôte.
+pub fn build_home_card(
+    reports: &[IssueReport],
+    history: &[IssueReportEvent],
+    open: bool,
+    auto_reply: Option<String>,
+) -> Surface {
     let open_form = Action::open_overlay(
         OverlayPresentation::BottomSheet,
         crate::guest::form::GUEST_FORM,
@@ -43,7 +50,7 @@ pub fn build_home_card(reports: &[IssueReport], open: bool, auto_reply: Option<S
                 .into(),
         );
         for report in reports {
-            children.push(report_list_item(report).into());
+            children.push(report_list_item(report, history).into());
         }
     }
 
@@ -83,21 +90,41 @@ pub fn build_home_card(reports: &[IssueReport], open: bool, auto_reply: Option<S
     .with_id(crate::guest::HOME_CARD)
 }
 
-/// Une ligne de l'historique, marquée « Résolu » dès que l'hôte l'a clos (§9 #5).
-fn report_list_item(report: &IssueReport) -> ListItem {
+/// Une ligne de l'historique : son statut dès que l'hôte l'a pris en charge (« En cours »,
+/// « Résolu », §9 #5), puis les réponses de l'hôte.
+fn report_list_item(report: &IssueReport, history: &[IssueReportEvent]) -> ListItem {
     let subtitle = category::category_label_key(report.category.as_str());
-    let item = ListItem::new()
+    let mut item = ListItem::new()
         .title(report.summary.clone())
         .subtitle(format!("i18n:{subtitle}"));
-    if report.resolved_at.is_none() {
-        return item;
+    let badge = match status::of(report) {
+        status::IN_PROGRESS => Some(("i18n:home.card.inProgress", Tone::Info)),
+        status::RESOLVED => Some(("i18n:home.card.resolved", Tone::Success)),
+        _ => None,
+    };
+    if let Some((label, tone)) = badge {
+        item = item.trailing(Trailing::Visual(Box::new(TrailingVisual {
+            badge: Some(BadgeSpec {
+                label: label.to_string(),
+                tone,
+                dot: false,
+            }),
+            ..TrailingVisual::default()
+        })));
     }
-    item.trailing(Trailing::Visual(Box::new(TrailingVisual {
-        badge: Some(BadgeSpec {
-            label: "i18n:home.card.resolved".to_string(),
-            tone: Tone::Success,
-            dot: false,
-        }),
-        ..TrailingVisual::default()
-    })))
+    for reply in history
+        .iter()
+        .filter(|event| event.report_id == report.id && event.kind == "reply")
+        .filter_map(|event| event.text.as_deref())
+    {
+        item = item.child(
+            Text::new()
+                .text(
+                    t!("home.card.reply", reply = reply.to_string())
+                        .unwrap_or_else(|_| reply.to_string()),
+                )
+                .variant(TextVariant::Caption),
+        );
+    }
+    item
 }

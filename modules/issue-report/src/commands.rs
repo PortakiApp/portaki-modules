@@ -1,4 +1,4 @@
-//! Module commands — guest submit, host add and resolve.
+//! Module commands — guest submit; host add, setStatus, resolve and reply.
 
 use portaki_sdk::files::FileRef;
 use portaki_sdk::host::email::{
@@ -12,7 +12,8 @@ use uuid::Uuid;
 use crate::category::Category;
 use crate::email_text;
 use crate::entities::IssueReport;
-use crate::storage;
+use crate::storage::{self, Actor, GuestSnapshot};
+use crate::{email_i18n, status};
 
 /// Arguments for `submit`.
 #[portaki_sdk::wire]
@@ -66,12 +67,25 @@ pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
         None
     };
 
+    let guest = GuestSnapshot {
+        name: ctx
+            .guest
+            .as_ref()
+            .and_then(|guest| guest.display_name.as_deref())
+            .map(str::trim)
+            .unwrap_or_default()
+            .to_string(),
+        check_in: stay.and_then(|stay| stay.checkin_at),
+        check_out: stay.and_then(|stay| stay.checkout_at),
+    };
     let _ = storage::create(
         stay_id,
         category.to_string(),
         summary.clone(),
         details.clone(),
         photo,
+        Actor::Guest,
+        guest,
     )?;
 
     // Guest text is quoted within a fixed length; the stored report keeps it whole.
@@ -156,10 +170,41 @@ pub fn resolve(ctx: Context, args: ResolveArgs) -> Result<()> {
     resolve_report(&ctx, args.report_id).map(|_| ())
 }
 
-/// Clôt un signalement et l'inscrit au journal — `resolve` et la tâche « non traité ».
+/// Clôt un signalement — `resolve` et la tâche « non traité ».
 pub(crate) fn resolve_report(ctx: &Context, report_id: Uuid) -> Result<IssueReport> {
+    change_status(ctx, report_id, status::RESOLVED)
+}
+
+/// Arguments for host `setStatus`.
+#[portaki_sdk::wire]
+#[portaki_sdk::params]
+pub struct SetStatusArgs {
+    pub report_id: Uuid,
+    /// `new` · `in_progress` · `resolved`.
+    pub status: String,
+}
+
+/// Le statut du détail (Nouveau · En cours · Résolu) ; repasser un signalement résolu à Nouveau
+/// ou En cours le rouvre.
+#[portaki_sdk::command(
+    name = "setStatus",
+    example(
+        label = "Pris en charge",
+        input = r#"{"reportId":"9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a","status":"in_progress"}"#
+    )
+)]
+pub fn set_status(ctx: Context, args: SetStatusArgs) -> Result<()> {
+    let to = status::parse(&args.status)?;
+    change_status(&ctx, args.report_id, to).map(|_| ())
+}
+
+/// Change le statut, et inscrit au journal un signalement qui vient d'être résolu.
+fn change_status(ctx: &Context, report_id: Uuid, to: &'static str) -> Result<IssueReport> {
     require_host(ctx)?;
-    let report = storage::resolve(report_id)?;
+    let (report, changed) = storage::set_status(report_id, to)?;
+    if !changed || to != status::RESOLVED {
+        return Ok(report);
+    }
     // Activity log of the workspace (journal).
     events::emit(
         crate::ids::WORKSPACE_ACTIVITY_RECORD,
@@ -196,12 +241,22 @@ pub struct AddArgs {
 pub fn add(ctx: Context, args: AddArgs) -> Result<()> {
     require_host(&ctx)?;
     let summary = require_summary(&args.summary)?;
+    let stay = ctx
+        .stay
+        .as_ref()
+        .filter(|stay| stay.stay_id == args.stay_id);
     let report = storage::create(
         args.stay_id,
         args.category.as_str().to_string(),
         summary,
         normalize_optional(args.details),
         None,
+        Actor::Host,
+        GuestSnapshot {
+            check_in: stay.and_then(|stay| stay.checkin_at),
+            check_out: stay.and_then(|stay| stay.checkout_at),
+            ..GuestSnapshot::default()
+        },
     )?;
     events::emit(
         crate::ids::WORKSPACE_ACTIVITY_RECORD,
@@ -212,6 +267,80 @@ pub fn add(ctx: Context, args: AddArgs) -> Result<()> {
             "display": { "chips": [{ "label": "Signalement", "value": report.summary }] },
         }),
     )
+}
+
+/// Arguments for host `reply`.
+#[portaki_sdk::wire]
+#[portaki_sdk::params]
+pub struct ReplyArgs {
+    pub report_id: Uuid,
+    /// Le champ du détail.
+    #[serde(default)]
+    pub reply: String,
+}
+
+/// « Répondre au voyageur » : la réponse entre dans l'historique, que le voyageur lit dans son
+/// livret, et part au voyageur principal du séjour par e-mail (`host-reply-<uuid>`).
+#[portaki_sdk::email(
+    id = "host-reply",
+    audience = EmailAudience::Guest,
+    requires_guest_email,
+    description_key = "email.host-reply.description"
+)]
+#[portaki_sdk::command(
+    name = "reply",
+    example(
+        label = "Le chauffagiste passe demain",
+        input = r#"{"reportId":"9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a","reply":"Le chauffagiste passe demain à 9 h."}"#
+    )
+)]
+pub fn reply(ctx: Context, args: ReplyArgs) -> Result<()> {
+    require_host(&ctx)?;
+    let text = normalize_optional(Some(args.reply))
+        .ok_or_else(|| PortakiError::Host("reply_required".to_string()))?;
+    let report = storage::find_by_id(args.report_id)?
+        .ok_or_else(|| PortakiError::Host("report_not_found".to_string()))?;
+    let event = storage::add_reply(&report, text.clone())?;
+    // La réponse est enregistrée : un e-mail refusé est journalisé, il ne fait pas échouer l'envoi.
+    if let Err(error) = email_reply(&report, &text, event.id) {
+        email_text::log_send_failure("issue_report_guest_reply_email_failed", &error);
+    }
+    Ok(())
+}
+
+/// Longest report summary quoted in the reply e-mail, in chars.
+const SUMMARY_EMAIL_MAX_CHARS: usize = 120;
+
+fn email_reply(report: &IssueReport, text: &str, event_id: Uuid) -> Result<()> {
+    let reply = email_text::quote_guest_text(text);
+    let summary = email_text::clip_chars(&report.summary, SUMMARY_EMAIL_MAX_CHARS);
+    let vars = [
+        ("summary", summary.text.as_str()),
+        ("reply", reply.text.as_str()),
+    ];
+    email::send(&SendEmailArgs {
+        // One e-mail per reply: a second answer is not a duplicate of the first.
+        email_id: format!("host-reply-{event_id}"),
+        audience: EmailAudience::Guest,
+        content: ModuleEmailSdui {
+            subject: email_i18n::text("email.hostReply.subject"),
+            eyebrow: Some(email_i18n::text("email.hostReply.eyebrow")),
+            title: Some(email_i18n::text_with("email.hostReply.title", &vars)),
+            body: email_i18n::text_with("email.hostReply.body", &vars),
+            cta: Some(ModuleEmailCta {
+                label: email_text::cta_label(
+                    reply.truncated,
+                    email_i18n::text("email.hostReply.cta"),
+                ),
+                url: None,
+                portaki_action: Some("open-module:issue-report:default".into()),
+            }),
+            ..Default::default()
+        },
+        stay_id: Some(report.stay_id),
+        property_id: None,
+        action_url: None,
+    })
 }
 
 fn require_host(ctx: &Context) -> Result<()> {
