@@ -459,6 +459,36 @@ fn the_host_form_sends_the_declared_keys() {
         });
 }
 
+/// La planche : la commune lue dans l'adresse, le sélecteur suivant l'interrupteur du brouillon,
+/// la vigilance annoncée sans champ enregistré.
+#[test]
+#[serial]
+fn the_drawer_follows_the_board() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({}))
+        .with_translation(
+            "host.location.fromAddress",
+            "{commune} · d'après l'adresse du logement",
+        )
+        .run(|mut ctx| {
+            ctx.property.address = Some("3 quai X, 56000 Vannes, France".into());
+            let surface = weather::render_host_main(ctx).expect("host main");
+            let json = serde_json::to_string(&surface).expect("surface json");
+            assert!(
+                json.contains("Vannes · d'après l'adresse du logement"),
+                "{json}"
+            );
+            // Rendu même repli fermé : le dashboard l'ouvre sans recharger.
+            assert!(
+                json.contains(r#""visibleWhen":"location_override=true""#),
+                "{json}"
+            );
+            assert!(json.contains("i18n:host.alerts.soon"), "{json}");
+            assert!(!json.contains(r#""name":"alerts""#), "{json}");
+        });
+}
+
 /// §2.3 : l'erreur sous le champ, celle-là même qui bloque « Publier ».
 #[test]
 #[serial]

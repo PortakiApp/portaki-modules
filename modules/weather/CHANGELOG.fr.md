@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.0
+
+Les réglages Météo, à l'image des autres modules.
+
+* Le lieu des prévisions affiche la commune lue dans l'adresse du logement, avec l'aide juste en dessous.
+* La carte pour choisir une autre position apparaît dès que l'option est cochée, sans enregistrer d'abord.
+* La vigilance météo est annoncée « Bientôt » : aucune source officielle n'est encore branchée.
+* Copiés vers un autre logement, le lieu et le nom affiché sont marqués « À vérifier ».
+
 ## 1.6.1
 
 Montée technique.
