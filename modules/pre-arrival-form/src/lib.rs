@@ -29,7 +29,7 @@ pub use host::{
 };
 pub use queries::{get_status, publish_readiness, PreArrivalStatus};
 pub use storage::reset_test_store;
-pub use tasks::{late_arrival_tasks, timeline_tasks};
+pub use tasks::{late_arrival_tasks, timeline_tasks, unfilled_form_tasks};
 
 portaki_sdk::portaki_module!(
     id = "pre-arrival-form",

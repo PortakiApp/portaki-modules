@@ -148,5 +148,12 @@
   "surface.host.main.title": "Formular vor der Anreise",
   "surface.host.stay.title": "Formular vor der Anreise",
   "task.lateArrival.title": "Späte Ankunft · {guest} · {time}",
-  "task.lateArrival.title.anonymous": "Späte Ankunft · {time}"
+  "task.lateArrival.title.anonymous": "Späte Ankunft · {time}",
+  "task.unfilled.title": "Voranreise-Formular nicht ausgefüllt",
+  "task.unfilled.context.today": "{guest} · Ankunft heute",
+  "task.unfilled.context.today.anonymous": "Ankunft heute",
+  "task.unfilled.context.tomorrow": "{guest} · Ankunft morgen",
+  "task.unfilled.context.tomorrow.anonymous": "Ankunft morgen",
+  "task.unfilled.context.date": "{guest} · Ankunft am {day}.{month}.",
+  "task.unfilled.context.date.anonymous": "Ankunft am {day}.{month}."
 }

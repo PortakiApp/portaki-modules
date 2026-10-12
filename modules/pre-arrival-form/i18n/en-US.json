@@ -148,5 +148,12 @@
   "surface.host.main.title": "Pre-arrival form",
   "surface.host.stay.title": "Pre-arrival form",
   "task.lateArrival.title": "Late arrival · {guest} · {time}",
-  "task.lateArrival.title.anonymous": "Late arrival · {time}"
+  "task.lateArrival.title.anonymous": "Late arrival · {time}",
+  "task.unfilled.title": "Pre-arrival form not filled in",
+  "task.unfilled.context.today": "{guest} · arriving today",
+  "task.unfilled.context.today.anonymous": "Arriving today",
+  "task.unfilled.context.tomorrow": "{guest} · arriving tomorrow",
+  "task.unfilled.context.tomorrow.anonymous": "Arriving tomorrow",
+  "task.unfilled.context.date": "{guest} · arriving {month}/{day}",
+  "task.unfilled.context.date.anonymous": "Arriving {month}/{day}"
 }

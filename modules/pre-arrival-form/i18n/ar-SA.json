@@ -148,5 +148,12 @@
   "surface.host.main.title": "استمارة ما قبل الوصول",
   "surface.host.stay.title": "استمارة ما قبل الوصول",
   "task.lateArrival.title": "وصول متأخر · {guest} · {time}",
-  "task.lateArrival.title.anonymous": "وصول متأخر · {time}"
+  "task.lateArrival.title.anonymous": "وصول متأخر · {time}",
+  "task.unfilled.title": "نموذج ما قبل الوصول غير مكتمل",
+  "task.unfilled.context.today": "{guest} · الوصول اليوم",
+  "task.unfilled.context.today.anonymous": "الوصول اليوم",
+  "task.unfilled.context.tomorrow": "{guest} · الوصول غدًا",
+  "task.unfilled.context.tomorrow.anonymous": "الوصول غدًا",
+  "task.unfilled.context.date": "{guest} · الوصول في {day}/{month}",
+  "task.unfilled.context.date.anonymous": "الوصول في {day}/{month}"
 }

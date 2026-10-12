@@ -148,5 +148,12 @@
   "surface.host.main.title": "Modulo pre-arrivo",
   "surface.host.stay.title": "Modulo pre-arrivo",
   "task.lateArrival.title": "Arrivo tardivo · {guest} · {time}",
-  "task.lateArrival.title.anonymous": "Arrivo tardivo · {time}"
+  "task.lateArrival.title.anonymous": "Arrivo tardivo · {time}",
+  "task.unfilled.title": "Modulo pre-arrivo non compilato",
+  "task.unfilled.context.today": "{guest} · arrivo oggi",
+  "task.unfilled.context.today.anonymous": "Arrivo oggi",
+  "task.unfilled.context.tomorrow": "{guest} · arrivo domani",
+  "task.unfilled.context.tomorrow.anonymous": "Arrivo domani",
+  "task.unfilled.context.date": "{guest} · arrivo il {day}/{month}",
+  "task.unfilled.context.date.anonymous": "Arrivo il {day}/{month}"
 }
