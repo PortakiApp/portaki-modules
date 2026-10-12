@@ -9,6 +9,7 @@ mod host;
 mod i18n;
 mod queries;
 mod stay_code;
+mod tasks;
 
 pub use commands::{
     get_guest_credential, regenerate_code, unlock, GuestCredentialResponse, RegenerateArgs,
@@ -17,6 +18,7 @@ pub use commands::{
 pub use config::ModuleConfig;
 pub use host::{render_host_main, render_host_regenerate, render_host_stay};
 pub use queries::publish_readiness;
+pub use tasks::timeline_tasks;
 
 portaki_sdk::portaki_module!(
     id = "nuki",

@@ -4,6 +4,7 @@
   "catalog.host.main": "Nuki",
   "catalog.host.regenerate": "Code opnieuw aanmaken",
   "catalog.host.stay": "Nuki-toegang",
+  "catalog.host.tasks": "Status van het slot",
   "connector.nuki.name": "Nuki Web-account",
   "feeds.access-guide": "de toetscode",
   "guest.credential.keypad": "Toetsenblokcode: {code}",
@@ -47,5 +48,11 @@
   "module.description": "Nuki slim slot — toetscodes voor toegang van de gast",
   "module.displayName": "Nuki",
   "publish.access.hint": "Voeg een toetscode toe, of het slot-ID samen met de sleutel van je Nuki Web-account bij Integraties.",
-  "publish.access.label": "Toetscode of openen op afstand"
+  "publish.access.label": "Toetscode of openen op afstand",
+  "task.battery.context": "Nog {charge}%",
+  "task.battery.context.critical": "Kritiek niveau",
+  "task.battery.title": "Batterij bijna leeg",
+  "task.offline.context": "De gast krijgt de reservecode van het toetsenpaneel",
+  "task.offline.context.noFallback": "Geen reservecode: de gast kan niet naar binnen",
+  "task.offline.title": "Slot offline"
 }

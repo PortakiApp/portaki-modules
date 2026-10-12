@@ -4,6 +4,7 @@
   "catalog.host.main": "Nuki",
   "catalog.host.regenerate": "Rigenera il codice",
   "catalog.host.stay": "Accesso Nuki",
+  "catalog.host.tasks": "Stato della serratura",
   "connector.nuki.name": "Account Nuki Web",
   "feeds.access-guide": "il codice tastierino",
   "guest.credential.keypad": "Codice della tastiera: {code}",
@@ -47,5 +48,11 @@
   "module.description": "Serratura smart Nuki — codici tastierino per l'accesso dell'ospite",
   "module.displayName": "Nuki",
   "publish.access.hint": "Aggiungi un codice tastierino, oppure l'identificativo della serratura insieme alla chiave del tuo account Nuki Web in Integrazioni.",
-  "publish.access.label": "Codice tastierino o apertura da remoto"
+  "publish.access.label": "Codice tastierino o apertura da remoto",
+  "task.battery.context": "{charge}% rimanente",
+  "task.battery.context.critical": "Livello critico",
+  "task.battery.title": "Batteria scarica",
+  "task.offline.context": "L'ospite riceve il codice di riserva del tastierino",
+  "task.offline.context.noFallback": "Nessun codice di riserva: l'ospite non può entrare",
+  "task.offline.title": "Serratura offline"
 }
