@@ -11,9 +11,9 @@ use portaki_sdk::sdui::surface::Surface;
 use crate::content::{RuleItem, RuleStatus, RulesPayload};
 
 pub fn build_home_card(payload: &RulesPayload) -> Surface {
-    // Les essentielles d'abord : important → autorisé → neutres (§2.8). Le tri décide donc *quelles*
-    // quatre règles le voyageur voit, pas seulement dans quel ordre.
-    let ranked = payload.by_weight();
+    // Les premières, dans l'ordre que l'hôte a posé (spec Règlement §2.2 : « Les premières sont
+    // affichées sur la carte ») — le tableau hôte trace la limite au même endroit.
+    let ranked: Vec<&RuleItem> = payload.named().collect();
     let total = ranked.len();
     // `card_limit` vient du bundle ; un payload construit sans lui (0) garde le défaut.
     let limit = if payload.card_limit == 0 {
@@ -73,16 +73,13 @@ pub fn build_home_card(payload: &RulesPayload) -> Surface {
 }
 
 pub fn rule_list_item(item: &RuleItem) -> Component {
-    let icon_name = if item.icon.trim().is_empty() {
-        "check-circle".to_string()
-    } else {
-        normalize_guest_icon(&item.icon)
-    };
+    let icon_name = normalize_guest_icon(item.shown_icon());
     let mut list = ListItem::new()
         .title(item.title.clone())
         .leading(Leading::Icon(icon_name));
     // « Merci pour le voisinage · 22:00 – 08:00 » : les heures suivent la précision.
-    let subtitle = [item.subtitle.trim(), item.hours.trim()]
+    let hours = item.hours_label();
+    let subtitle = [item.subtitle.trim(), hours.as_str()]
         .into_iter()
         .filter(|part| !part.is_empty())
         .collect::<Vec<_>>()

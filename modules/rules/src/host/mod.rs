@@ -1,28 +1,31 @@
-//! Host dashboard surface — design `rules-editor-v1` (Wasm SDUI).
+//! Host dashboard surface — the settings page (spec Règlement §2), mode « page ».
 //!
-//! Dashboard: section « Règles du logement » + dynamic rule rows (StepList).
-//! Save chrome is owned by the workspace tab (`updateConfig`).
+//! Two `Section`s: « Affichage » (rules on the home card, where signing is set), then « Règles »,
+//! an ordered table (drag = booklet order) with a rule « Sur la carte d'accueil » after the first
+//! `card_limit` rows. A row opens in a centered dialog (`panel: "dialog"`), its fields named
+//! `rules.<i>.<key>`. Every edit autosaves through `updateConfig`; a broken rule shows under its
+//! field and blocks « Publier » (`publishReadiness`), never the save.
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
+use portaki_sdk::sdui::common::{ChoiceListLayout, Tone};
 use portaki_sdk::sdui::primitives::{
-    Card, Field, FieldHint, Form, NumberInput, Page, Select, Stack, StepList, TextInput,
+    Button, ChoiceList, DataTable, Field, FieldHint, Form, InlineNotice, NumberInput, Page,
+    Section, Select, Stack, Text, TextArea, TextInput, TimeRange,
 };
 use portaki_sdk::sdui::surface::Surface;
-use serde::Serialize;
+use serde_json::{json, Map, Value};
 
 use crate::content::{
-    RuleItem, RuleStatus, RulesBundle, RulesPayload, MAX_CARD_LIMIT, MAX_RULES, MIN_CARD_LIMIT,
-    THEMES,
+    range_wire, RuleItem, RuleStatus, RulesBundle, RulesPayload, MAX_CARD_LIMIT, MAX_RULES,
+    MIN_CARD_LIMIT, THEMES,
 };
 use crate::store;
 
-/// Design / mobile upper bound — « ajoutez-en autant que nécessaire », capped.
-const ITEM_SLOTS: usize = MAX_RULES;
+/// Les règles ajoutées pas encore enregistrées : leurs id, séparés par des virgules.
+const NEW_RULES: &str = "newRules";
 
-/// Host editor — dynamic bilingual rule rows for the active `ctx.locale`.
-///
-/// No in-form Save — workspace header owns Enregistrer → `updateConfig`.
+/// Réglages du module (page) : affichage, puis règles.
 #[portaki_sdk::surface(
     host,
     id = "main",
@@ -32,70 +35,45 @@ const ITEM_SLOTS: usize = MAX_RULES;
     icon = IconName::Scale
 )]
 pub fn render_host_main(ctx: HostContext) -> Surface {
-    let lang = RulesBundle::lang_code(&ctx.locale);
-    let row = store::load_content().ok().flatten();
-    let bundle = row
-        .as_ref()
+    let bundle = store::load_content()
+        .ok()
+        .flatten()
         .map(|r| RulesBundle::from_row(&r.content_fr, &r.content_en))
         .unwrap_or_default();
-    let payload = {
-        let current = bundle.get(&lang);
-        if current.items.is_empty() {
-            default_for_lang(&lang)
-        } else {
-            current
-        }
-    };
-
-    let items_count = draft_items_count(&ctx, &payload);
-    let mut rows: Vec<Component> = Vec::new();
-    for index in 0..items_count {
-        rows.push(rule_row(index, payload.items.get(index), &ctx));
-    }
-
+    let payload = bundle.get(&RulesBundle::lang_code(&ctx.locale));
+    let rows = rows(&payload, &ctx);
     Surface::new(
         Page::new().child(
-            Form::new().child(
-                Stack::new()
-                    .gap(16.0)
-                    .child(display_card(&bundle, &ctx))
-                    .child(
-                        Card::new()
-                            .title("i18n:host.section.title")
-                            .subtitle("i18n:host.section.subtitle")
-                            .icon(IconName::Scale)
-                            .child(
-                                StepList::new()
-                                    .addLabel("i18n:host.rules.add")
-                                    .removeLabel("i18n:host.rules.remove")
-                                    .emptyTitle("i18n:host.rules.emptyTitle")
-                                    .emptyDescription("i18n:host.rules.emptyDescription")
-                                    .itemKeyPrefix("items")
-                                    .addAction(emit_input(ItemsCountInput {
-                                        items_count: (items_count + 1).min(ITEM_SLOTS),
-                                    }))
-                                    .children(rows),
-                            ),
-                    ),
-            ),
+            Form::new()
+                .child(display_section(&bundle, &ctx))
+                .child(rules_section(&bundle, &rows, &ctx)),
         ),
     )
     .with_id(MAIN)
 }
 
+/// Les lignes du tableau : les règles enregistrées, puis celles qu'« Ajouter » a ouvertes.
+fn rows(payload: &RulesPayload, ctx: &HostContext) -> Vec<RuleItem> {
+    let mut rows = payload.items.clone();
+    for id in ctx.input_str(NEW_RULES).unwrap_or_default().split(',') {
+        let id = id.trim();
+        if !id.is_empty() && payload.find(id).is_none() {
+            rows.push(RuleItem {
+                id: id.to_string(),
+                ..RuleItem::default()
+            });
+        }
+    }
+    rows
+}
+
 /// §2.1 Affichage : combien de règles sur la carte, et où se règle la signature.
-fn display_card(bundle: &RulesBundle, ctx: &HostContext) -> Component {
+fn display_section(bundle: &RulesBundle, ctx: &HostContext) -> Component {
     let stored = bundle.card_limit;
     let mut field = Field::new()
         .name("card_limit")
         .label("i18n:host.cardLimit.label")
-        .child(
-            NumberInput::new()
-                .name("card_limit")
-                .min(f64::from(MIN_CARD_LIMIT))
-                .max(f64::from(MAX_CARD_LIMIT))
-                .value(stored.map_or(bundle.card_limit() as f64, f64::from)),
-        );
+        .required(true);
     // La valeur saisie, même hors bornes : c'est elle que l'erreur désigne.
     if let Some(error) = stored.and_then(|n| {
         portaki_sdk::config::check::between(
@@ -106,244 +84,217 @@ fn display_card(bundle: &RulesBundle, ctx: &HostContext) -> Component {
     }) {
         field = field.error(error.get(&ctx.locale).to_string());
     }
-    Card::new()
+    let card_limit = field
+        .child(
+            NumberInput::new()
+                .name("card_limit")
+                .min(f64::from(MIN_CARD_LIMIT))
+                .max(f64::from(MAX_CARD_LIMIT))
+                .value(stored.map_or(bundle.card_limit() as f64, f64::from)),
+        )
+        .child(FieldHint::new().text("i18n:host.cardLimit.hint"));
+    // Faire accepter le règlement ne se règle pas ici : on le dit, en lecture seule.
+    // ponytail: pas de lien — aucune page « Formalités » du logement n'existe encore côté tableau
+    // de bord ; ajouter un `Link` vers sa route quand elle existera.
+    let acceptance = Field::new()
+        .name("acceptance")
+        .label("i18n:host.acceptance.label")
+        .child(
+            Text::new()
+                .text("i18n:host.acceptance.hint")
+                .variant(TextVariant::Body),
+        );
+    Section::new()
         .title("i18n:host.display.title")
-        .icon(IconName::Home)
-        .child(field)
-        .child(FieldHint::new().text("i18n:host.cardLimit.hint"))
-        // Faire accepter le règlement se règle dans Formalités : on le dit ici, sans le dupliquer.
-        .child(FieldHint::new().text("i18n:host.acceptance.hint"))
+        .child(card_limit)
+        .child(acceptance)
         .into()
 }
 
-fn draft_items_count(ctx: &HostContext, payload: &RulesPayload) -> usize {
-    if let Some(n) = ctx.input_u64("items_count") {
-        return (n as usize).clamp(1, ITEM_SLOTS);
+/// §2.2 Règles : le tableau ordonnable, le dialogue de chaque ligne, « Partir d'un modèle ».
+fn rules_section(bundle: &RulesBundle, rows: &[RuleItem], ctx: &HostContext) -> Component {
+    let mut children: Vec<Component> = vec![FieldHint::new().text("i18n:host.rules.hint").into()];
+    if rows.len() > MAX_RULES {
+        children.push(
+            InlineNotice::new()
+                .tone(Tone::Danger)
+                .message("i18n:host.rules.tooMany")
+                .into(),
+        );
     }
-    let existing = payload.items.iter().filter(|item| !item.is_blank()).count();
-    if existing == 0 {
-        // Empty store → seed the four design defaults in the form.
-        default_for_lang("fr").items.len().min(ITEM_SLOTS)
-    } else {
-        existing.min(ITEM_SLOTS)
+
+    let mut table = DataTable::new()
+        .rowName("rules")
+        .sortable(true)
+        .dividerAfter(bundle.card_limit() as u32)
+        .dividerLabel("i18n:host.rules.divider")
+        .panel("dialog")
+        .columns(json!([
+            { "key": "glyph", "label": "i18n:host.column.status", "kind": "pill" },
+            { "key": "title", "label": "i18n:host.rule.title", "sub": "detail" },
+            { "key": "theme", "label": "i18n:host.rule.theme" },
+            { "key": "hours", "label": "i18n:host.rule.hours", "mono": true },
+        ]))
+        .rows(Value::Array(rows.iter().map(row).collect()))
+        .children(
+            rows.iter()
+                .enumerate()
+                .map(|(index, rule)| rule_panel(index, rule, ctx))
+                .collect(),
+        );
+    if rows.len() < MAX_RULES {
+        let mut added: Vec<String> = rows
+            .iter()
+            .filter(|r| r.title.is_empty() && r.subtitle.is_empty())
+            .map(|r| r.id.clone())
+            .collect();
+        added.push(uuid::Uuid::new_v4().to_string());
+        let mut input = Map::new();
+        input.insert(NEW_RULES.into(), Value::String(added.join(",")));
+        table = table
+            .addLabel("i18n:host.rules.add")
+            .addAction(Action::emit(
+                contracts::shell::SURFACE_INPUT,
+                Some(Value::Object(input)),
+            ));
     }
+    children.push(table.into());
+
+    // §4 : un règlement vide part d'un modèle (silence, animaux, tabac, fêtes, visiteurs).
+    if rows.is_empty() {
+        children.push(
+            Button::new()
+                .label("i18n:host.rules.template")
+                .variant(ButtonVariant::Outline)
+                .action(crate::ids::module_id().command(
+                    crate::commands::APPLY_TEMPLATE,
+                    crate::commands::ApplyTemplateArgs {},
+                ))
+                .into(),
+        );
+    }
+
+    Section::new()
+        .title("i18n:host.rules.title")
+        .subtitle(format!("{} / {MAX_RULES}", rows.len()))
+        .children(children)
+        .into()
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "snake_case")]
-struct ItemsCountInput {
-    items_count: usize,
-}
-
-fn emit_input(payload: impl Serialize) -> Action {
-    Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
-}
-
-/// Design defaults — Portaki Dashboard `editorRules` / Guest `rules` block.
-pub(crate) fn default_for_lang(lang: &str) -> RulesPayload {
-    // Le modèle de la spec (§4) : silence, tabac, animaux, fêtes.
-    let rule =
-        |icon: &str, title: &str, subtitle: &str, status, theme: &str, hours: &str| RuleItem {
-            icon: icon.into(),
-            title: title.into(),
-            subtitle: subtitle.into(),
-            status,
-            theme: theme.into(),
-            hours: hours.into(),
-        };
-    let items = if lang == "en" {
-        vec![
-            rule(
-                "clock-circle",
-                "Quiet hours",
-                "Please respect neighbours",
-                RuleStatus::Important,
-                "noise",
-                "22:00 – 08:00",
-            ),
-            rule(
-                "x",
-                "Non-smoking property",
-                "Terrace allowed",
-                RuleStatus::Forbidden,
-                "smoking",
-                "",
-            ),
-            rule(
-                "gift",
-                "Pets on request",
-                "Let us know before arrival",
-                RuleStatus::Allowed,
-                "pets",
-                "",
-            ),
-            rule(
-                "users",
-                "No parties",
-                "Respect the guest count",
-                RuleStatus::Forbidden,
-                "parties",
-                "",
-            ),
-        ]
-    } else {
-        vec![
-            rule(
-                "clock-circle",
-                "Silence",
-                "Merci pour le voisinage",
-                RuleStatus::Important,
-                "noise",
-                "22:00 – 08:00",
-            ),
-            rule(
-                "x",
-                "Logement non-fumeur",
-                "Terrasse autorisée",
-                RuleStatus::Forbidden,
-                "smoking",
-                "",
-            ),
-            rule(
-                "gift",
-                "Animaux sur demande",
-                "Prévenez-nous avant l'arrivée",
-                RuleStatus::Allowed,
-                "pets",
-                "",
-            ),
-            rule(
-                "users",
-                "Pas de fête",
-                "Respect du nombre de voyageurs",
-                RuleStatus::Forbidden,
-                "parties",
-                "",
-            ),
-        ]
+/// Une ligne du tableau : glyphe, règle (précision dessous), thème, horaires.
+fn row(rule: &RuleItem) -> Value {
+    let theme = match rule.theme_key() {
+        Some(key) => format!("i18n:rule.theme.{key}"),
+        None => rule.theme.trim().to_string(),
     };
-    RulesPayload {
-        items,
-        ..RulesPayload::default()
-    }
+    let hours = rule.hours_label();
+    json!({
+        "id": rule.id,
+        "glyph": if rule.title.is_empty() { "" } else { rule.status.glyph() },
+        "title": rule.title,
+        "detail": rule.subtitle,
+        "theme": theme,
+        "hours": if hours.is_empty() { "—".to_string() } else { hours },
+    })
 }
 
-fn rule_row(index: usize, item: Option<&RuleItem>, ctx: &HostContext) -> Component {
-    let problems = item.map(RuleItem::problems).unwrap_or_default();
-    let named = |key: &str| {
-        let field = Field::new().name(format!("items.{index}.{key}"));
+/// Le dialogue d'une ligne : Règle, Précision, Type, Thème, Horaires (§2.2).
+fn rule_panel(index: usize, rule: &RuleItem, ctx: &HostContext) -> Component {
+    let name = |key: &str| format!("rules.{index}.{key}");
+    let problems = rule.problems();
+    let field = |key: &str, label: &str| {
+        let field = Field::new().name(name(key)).label(label);
         match problems.iter().find(|(name, _)| *name == key) {
             Some((_, error)) => field.error(error.get(&ctx.locale).to_string()),
             None => field,
         }
     };
-    let icon = item
-        .map(|r| r.icon.as_str())
-        .filter(|s| !s.is_empty())
-        .map(normalize_icon)
-        .unwrap_or("check-circle");
+
+    // Le thème : celui de la liste ; un ancien texte libre, ou rien, prend celui que le texte
+    // suggère (§4). Une suggestion qui diffère du thème choisi s'affiche dessous, sans rien forcer.
+    let theme = rule
+        .theme_key()
+        .or_else(|| rule.suggested_theme())
+        .unwrap_or("other");
+    let mut theme_field = field("theme", "i18n:host.rule.theme").child(
+        Select::new()
+            .name(name("theme"))
+            .options(
+                THEMES
+                    .iter()
+                    .map(|key| ChoiceOption::new(*key, format!("i18n:rule.theme.{key}")))
+                    .collect(),
+            )
+            .value(theme),
+    );
+    if let Some(suggested) = rule.suggested_theme().filter(|s| *s != theme) {
+        let label = t!(&format!("rule.theme.{suggested}")).unwrap_or_default();
+        if let Ok(hint) = t!("host.rule.theme.suggested", theme = label.as_str()) {
+            theme_field = theme_field.child(FieldHint::new().text(hint));
+        }
+    }
+
+    // Les heures : la plage du `TimeRange`. Un ancien texte illisible n'entre pas dans le champ ; il
+    // reste affiché dessous, et s'efface au premier choix d'une plage.
+    let wire = range_wire(&rule.hours);
+    let readable = portaki_sdk::sdui::hours::parse_range(&wire).is_some();
+    let mut hours_field = field("hours", "i18n:host.rule.hours").child(
+        TimeRange::new()
+            .name(name("hours"))
+            .value(if readable { wire.as_str() } else { "" }),
+    );
+    if !readable && !rule.hours.trim().is_empty() {
+        hours_field = hours_field.child(FieldHint::new().text(rule.hours.trim()));
+    }
+
+    let statuses = [
+        (RuleStatus::Forbidden, IconName::X),
+        (RuleStatus::Important, IconName::TriangleAlert),
+        (RuleStatus::Allowed, IconName::Check),
+        (RuleStatus::Neutral, IconName::Info),
+    ];
 
     Stack::new()
-        .id(format!("rule-{index}"))
-        .gap(10.0)
+        .gap(14.0)
         .children(vec![
-            Field::new()
-                .name(format!("items.{index}.icon"))
-                .label("i18n:host.rule.icon")
-                .child(
-                    Select::new()
-                        .name(format!("items.{index}.icon"))
-                        .options(rule_icon_options())
-                        .value(icon),
-                )
-                .into(),
-            named("title")
-                .label("i18n:host.rule.title")
+            field("title", "i18n:host.rule.title")
+                .required(true)
                 .child(
                     TextInput::new()
-                        .name(format!("items.{index}.title"))
-                        .value(item.map(|r| r.title.as_str()).unwrap_or("")),
+                        .name(name("title"))
+                        .value(rule.title.as_str())
+                        .placeholder("i18n:host.rule.title.placeholder"),
                 )
                 .into(),
-            named("subtitle")
-                .label("i18n:host.rule.subtitle")
+            field("detail", "i18n:host.rule.detail")
                 .child(
-                    TextInput::new()
-                        .name(format!("items.{index}.subtitle"))
-                        .value(item.map(|r| r.subtitle.as_str()).unwrap_or("")),
+                    TextArea::new()
+                        .name(name("detail"))
+                        .value(rule.subtitle.as_str()),
                 )
                 .into(),
-            Field::new()
-                .name(format!("items.{index}.status"))
-                .label("i18n:host.rule.status")
+            field("status", "i18n:host.rule.status")
                 .child(
-                    Select::new()
-                        .name(format!("items.{index}.status"))
-                        .options(rule_status_options())
-                        .value(item.map(|r| r.status).unwrap_or_default().as_wire()),
-                )
-                .into(),
-            // Thème : texte libre, pas une liste fermée. Le mockup groupe « Voisinage »,
-            // « Piscine », « Extérieur » — un hôte sait nommer ses propres rubriques mieux
-            // qu'une énumération écrite ici, et le détail se groupe sur ce qu'il a écrit.
-            Field::new()
-                .name(format!("items.{index}.theme"))
-                .label("i18n:host.rule.theme")
-                .child(
-                    Select::new()
-                        .name(format!("items.{index}.theme"))
-                        .options(
-                            THEMES
+                    ChoiceList::new()
+                        .name(name("status"))
+                        .layout(ChoiceListLayout::Cards)
+                        .value(rule.status.as_wire())
+                        .choices(
+                            statuses
                                 .iter()
-                                .map(|key| {
-                                    ChoiceOption::new(*key, format!("i18n:rule.theme.{key}"))
+                                .map(|(status, icon)| {
+                                    ChoiceOption::new(
+                                        status.as_wire(),
+                                        format!("i18n:rule.status.{}", status.as_wire()),
+                                    )
+                                    .icon(*icon)
                                 })
                                 .collect(),
-                        )
-                        .value(item.and_then(RuleItem::theme_key).unwrap_or("other")),
+                        ),
                 )
                 .into(),
-            Field::new()
-                .name(format!("items.{index}.hours"))
-                .label("i18n:host.rule.hours")
-                .child(
-                    TextInput::new()
-                        .name(format!("items.{index}.hours"))
-                        .placeholder("22:00 – 08:00")
-                        .value(item.map(|r| r.hours.as_str()).unwrap_or("")),
-                )
-                .into(),
+            theme_field.into(),
+            hours_field.into(),
         ])
         .into()
-}
-
-/// Design `ruleIcons()` — clock-circle, x, users, check-circle, gift, minus.
-fn rule_icon_options() -> Vec<ChoiceOption> {
-    vec![
-        ChoiceOption::new("clock-circle", "i18n:host.rule.icon.quiet"),
-        ChoiceOption::new("x", "i18n:host.rule.icon.no"),
-        ChoiceOption::new("users", "i18n:host.rule.icon.guests"),
-        ChoiceOption::new("check-circle", "i18n:host.rule.icon.ok"),
-        ChoiceOption::new("gift", "i18n:host.rule.icon.pets"),
-        ChoiceOption::new("minus", "i18n:host.rule.icon.noise"),
-    ]
-}
-
-/// Type d'une règle (spec Règlement §2.2) : Interdit · Important · Autorisé · Information.
-fn rule_status_options() -> Vec<ChoiceOption> {
-    vec![
-        ChoiceOption::new("forbidden", "i18n:rule.status.forbidden"),
-        ChoiceOption::new("important", "i18n:rule.status.important"),
-        ChoiceOption::new("allowed", "i18n:rule.status.allowed"),
-        ChoiceOption::new("neutral", "i18n:rule.status.neutral"),
-    ]
-}
-
-/// Map legacy stored icons onto the design set.
-fn normalize_icon(icon: &str) -> &str {
-    match icon {
-        "paw-print" | "pets" => "gift",
-        "volume-x" | "volume-2" | "noise" => "minus",
-        other => other,
-    }
 }

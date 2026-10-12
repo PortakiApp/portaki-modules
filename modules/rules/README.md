@@ -32,18 +32,19 @@ OCI image: `oci.portaki.app/modules/rules:<semver>`
 
 | Shell | Surface id | Description |
 |-------|------------|-------------|
-| guest | `home.card` | Séjour glance (up to 4 icon rows) → fullscreen |
+| guest | `home.card` | Séjour glance (the first `card_limit` rules, 2–6, default 4) → fullscreen |
 | guest | `explore.detail` | Full rules list in elevated card (page body) |
-| host | `main` | « Règles du logement » StepList (`rules-editor-v1`) |
+| host | `main` | Page: « Affichage » (`card_limit`) + « Règles », a sortable `DataTable` whose rows open in a dialog (`rules-editor-v1`) |
 
 Host workspace tab: `pathSegment = "rules"` (the `main` surface's `#[surface]`).
 
-Host edits fields (icon, titles, subtitles). Storage still keeps `content_fr` / `content_en` as structured JSON internally.
+Each rule has a stable `id` shared by every language (legacy rules get `r{index}` on read); the host order is the booklet order in every language. Host edits title, detail (`subtitle` in storage), type, theme and hours (`HH:MM-HH:MM`). Storage still keeps `content_fr` / `content_en` as structured JSON internally.
 
 ## Queries and commands
 
 - `getContent` — locale-aware items + raw FR/EN JSON
-- `updateConfig` — workspace Save chrome → upsert `RulesContent` (`items[]`)
+- `updateConfig` — autosave → upsert `RulesContent` (`rules[]` by id, in display order; legacy `items[]` by index)
+- `applyTemplate` — « Partir d'un modèle » on an empty rulebook (silence, pets, smoking, parties, visitors)
 - `saveContent` — same payload (legacy / direct command)
 
 ## Development

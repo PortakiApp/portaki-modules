@@ -14,13 +14,17 @@
     "en": "House rules as short points with an icon (quiet hours, pets, noise…), as a preview and then as a full list."
   },
   "hostSurface": {
-    "fr": "Un onglet Règlement pour ajouter, modifier et retirer les règles.",
-    "en": "A House rules tab to add, edit and remove rules."
+    "fr": "Un onglet Règlement : un tableau ordonnable pour ajouter, modifier, réordonner et retirer les règles, et le nombre de règles sur la carte.",
+    "en": "A House rules tab: a sortable table to add, edit, reorder and remove rules, and how many rules the card shows."
   },
   "configItems": [
     {
-      "fr": "Chaque règle : icône, titre et sous-titre",
-      "en": "Each rule: icon, title and subtitle"
+      "fr": "Chaque règle : règle, précision, type, thème et horaires",
+      "en": "Each rule: rule, detail, type, theme and hours"
+    },
+    {
+      "fr": "Règles sur la carte d'accueil (2 à 6)",
+      "en": "Rules on the home card (2 to 6)"
     }
   ],
   "capabilities": [],

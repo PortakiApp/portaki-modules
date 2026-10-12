@@ -43,12 +43,13 @@ impl RuleStatus {
         }
     }
 
-    /// Ordre du tri de la carte : interdit et important, puis autorisé, puis le reste (§2.8).
-    pub fn rank(self) -> u8 {
+    /// Le glyphe du tableau hôte et des cartes « Type » : ×, !, ✓, i — ton neutre partout.
+    pub fn glyph(self) -> &'static str {
         match self {
-            Self::Forbidden | Self::Important => 0,
-            Self::Allowed => 1,
-            Self::Neutral => 2,
+            Self::Forbidden => "×",
+            Self::Important => "!",
+            Self::Allowed => "✓",
+            Self::Neutral => "i",
         }
     }
 }
@@ -56,6 +57,11 @@ impl RuleStatus {
 /// One rule row shown in the guest booklet.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct RuleItem {
+    /// Identifiant stable, le même dans chaque langue : c'est lui qui aligne les langues et que
+    /// le tableau hôte renvoie. Une règle d'avant les identifiants reçoit `r{rang}` à la lecture
+    /// ([`RulesBundle::from_row`]), gardé au premier enregistrement.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub id: String,
     /// Lucide / design icon name (`clock-circle`, `x`, …).
     #[serde(default)]
     pub icon: String,
@@ -90,7 +96,99 @@ pub const THEMES: [&str; 8] = [
     "noise", "pets", "smoking", "parties", "visitors", "cleaning", "safety", "other",
 ];
 
+/// Les mots qui font proposer un thème (§4), en minuscules, sans accents à respecter : on cherche
+/// une sous-chaîne du titre et de la précision. Français et anglais, les deux langues des modèles.
+const THEME_WORDS: [(&str, &[&str]); 7] = [
+    (
+        "noise",
+        &[
+            "silence", "bruit", "calme", "musique", "noise", "quiet", "music",
+        ],
+    ),
+    (
+        "pets",
+        &["animal", "animaux", "chien", "chat", "pet", "dog", "cat"],
+    ),
+    ("smoking", &["fum", "tabac", "cigarette", "smok", "vap"]),
+    (
+        "parties",
+        &[
+            "fête",
+            "fete",
+            "soirée",
+            "party",
+            "parties",
+            "événement",
+            "event",
+        ],
+    ),
+    ("visitors", &["visiteur", "invité", "visitor", "guest"]),
+    (
+        "cleaning",
+        &[
+            "ménage",
+            "poubelle",
+            "déchet",
+            "vaisselle",
+            "clean",
+            "trash",
+            "rubbish",
+            "dishes",
+        ],
+    ),
+    (
+        "safety",
+        &[
+            "sécurité",
+            "feu",
+            "bougie",
+            "piscine",
+            "safety",
+            "fire",
+            "candle",
+            "pool",
+        ],
+    ),
+];
+
+/// Le thème que le texte d'une règle suggère, ou `None`.
+pub fn suggest_theme(text: &str) -> Option<&'static str> {
+    let text = text.to_lowercase();
+    THEME_WORDS
+        .iter()
+        .find(|(_, words)| words.iter().any(|word| text.contains(word)))
+        .map(|(key, _)| *key)
+}
+
 impl RuleItem {
+    /// Le thème proposé depuis le titre et la précision (§4), s'il diffère de « autre ».
+    pub fn suggested_theme(&self) -> Option<&'static str> {
+        suggest_theme(&format!("{} {}", self.title, self.subtitle))
+    }
+
+    /// Les heures pour le livret : `22:00 – 08:00` ; un ancien texte libre reste tel quel.
+    pub fn hours_label(&self) -> String {
+        let raw = self.hours.trim();
+        match portaki_sdk::sdui::hours::parse_range(&range_wire(raw)) {
+            Some((start, end)) => format!("{start} – {end}"),
+            None => raw.to_string(),
+        }
+    }
+
+    /// L'icône du livret : celle de la règle, sinon celle de son thème (§9 cas 4).
+    pub fn shown_icon(&self) -> &str {
+        if !self.icon.trim().is_empty() {
+            return self.icon.trim();
+        }
+        match self.theme_key() {
+            Some("noise") => "clock-circle",
+            Some("pets") => "gift",
+            Some("smoking") => "x",
+            Some("parties" | "visitors") => "users",
+            _ => "check-circle",
+        }
+    }
+
     /// Le thème dans la liste, ou `None` pour un ancien texte libre (ou rien).
     pub fn theme_key(&self) -> Option<&'static str> {
         THEMES
@@ -115,7 +213,7 @@ impl RuleItem {
         };
         [
             ("title", title),
-            ("subtitle", max_chars(&self.subtitle, DETAIL_MAX)),
+            ("detail", max_chars(&self.subtitle, DETAIL_MAX)),
         ]
         .into_iter()
         .filter_map(|(field, error)| Some((field, error?)))
@@ -129,6 +227,13 @@ impl RuleItem {
             None => self.theme.trim().to_string(),
         }
     }
+}
+
+/// Une plage d'heures au format du `TimeRange` (`22:00-08:00`), depuis ce qui est stocké — les
+/// règles d'avant écrivaient `22:00 – 08:00`. Illisible : la chaîne telle quelle.
+pub fn range_wire(raw: &str) -> String {
+    let compact: String = raw.chars().filter(|c| !c.is_whitespace()).collect();
+    compact.replace(['–', '—'], "-")
 }
 
 /// Locale payload for one language.
@@ -165,12 +270,19 @@ impl RulesPayload {
             .filter(|item| !item.title.trim().is_empty())
     }
 
-    /// Triées important → autorisé → neutres (§2.8). Tri **stable** : à statut égal, l'ordre que
-    /// l'hôte a choisi tient. Ne sert qu'au coup d'œil de la carte ; le détail garde l'ordre brut.
-    pub fn by_weight(&self) -> Vec<&RuleItem> {
-        let mut out: Vec<&RuleItem> = self.named().collect();
-        out.sort_by_key(|item| item.status.rank());
-        out
+    /// La règle d'identifiant `id`.
+    pub fn find(&self, id: &str) -> Option<&RuleItem> {
+        self.items.iter().find(|item| item.id == id)
+    }
+
+    /// Donne `r{rang}` aux règles d'avant les identifiants : les langues étaient alignées par rang,
+    /// le même rang donne donc le même identifiant d'une langue à l'autre.
+    fn backfill_ids(&mut self) {
+        for (index, item) in self.items.iter_mut().enumerate() {
+            if item.id.trim().is_empty() {
+                item.id = format!("r{index}");
+            }
+        }
     }
 
     /// Groupées par thème, dans l'ordre où l'hôte a posé les règles — c'est ce que fait le mockup
@@ -231,6 +343,14 @@ impl RulesBundle {
     }
 
     pub fn from_row(content_fr: &str, content_en: &str) -> Self {
+        let mut bundle = Self::parse_row(content_fr, content_en);
+        for payload in bundle.by_lang.values_mut() {
+            payload.backfill_ids();
+        }
+        bundle
+    }
+
+    fn parse_row(content_fr: &str, content_en: &str) -> Self {
         if let Ok(value) = serde_json::from_str::<Value>(content_fr.trim()) {
             if value.get("by_lang").is_some() {
                 if let Ok(bundle) = serde_json::from_value::<RulesBundle>(value.clone()) {
@@ -293,20 +413,16 @@ impl RulesBundle {
     }
 
     /// Recopie dans chaque langue ce qui n'appartient pas à une langue : l'icône, le statut, le
-    /// thème (une clé de la liste) et les heures.
+    /// thème (une clé de la liste) et les heures — d'une règle à celle de même identifiant.
     ///
     /// L'icône ne s'écrase que si la source en porte une — une langue éditée sans icône ne doit pas
     /// effacer celle qui existe. Le statut, lui, se recopie toujours : « neutre » est une valeur que
     /// l'hôte a choisie, et la sauter laisserait une règle importante en français et neutre en
-    /// anglais. Le thème n'est pas ici : c'est un texte, il reste dans sa langue.
-    ///
-    /// ponytail: l'alignement se fait par index, après que `build_payload_for_lang` ait écarté les
-    /// lignes vides — vider la règle 2 en français décale donc l'anglais. Défaut antérieur, à
-    /// corriger en donnant un identifiant stable à chaque règle.
+    /// anglais. Un ancien thème libre reste dans sa langue.
     pub fn sync_shared_from(&mut self, source: &RulesPayload) {
         for payload in self.by_lang.values_mut() {
-            for (index, item) in payload.items.iter_mut().enumerate() {
-                if let Some(src) = source.items.get(index) {
+            for item in payload.items.iter_mut() {
+                if let Some(src) = source.find(&item.id) {
                     if !src.icon.trim().is_empty() {
                         item.icon = src.icon.clone();
                     }
@@ -318,6 +434,26 @@ impl RulesBundle {
                 }
             }
         }
+    }
+
+    /// Après un enregistrement dans une langue : l'ordre reçu vaut pour toutes, et une règle que
+    /// l'hôte voyait (`seen`) et n'a pas renvoyée est supprimée partout. Une règle qui n'existe que
+    /// dans une autre langue, l'hôte ne la voyait pas : elle reste, après les autres.
+    pub fn follow_order(&mut self, source: &RulesPayload, seen: &[String]) {
+        let rank = |id: &str| {
+            source
+                .items
+                .iter()
+                .position(|item| item.id == id)
+                .unwrap_or(usize::MAX)
+        };
+        for payload in self.by_lang.values_mut() {
+            payload
+                .items
+                .retain(|item| source.find(&item.id).is_some() || !seen.contains(&item.id));
+            payload.items.sort_by_key(|item| rank(&item.id));
+        }
+        self.by_lang.retain(|_, payload| !payload.items.is_empty());
     }
 
     pub fn pick(&self, guest_locale: &str, property_locale: &str) -> RulesPayload {
