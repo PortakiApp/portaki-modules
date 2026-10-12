@@ -548,6 +548,36 @@ fn the_sheet_says_when_a_set_is_empty() {
         });
 }
 
+/// Le tiroir : les ensembles en tableau, l'aide d'une catégorie seule, et en tête le nombre de
+/// signalements en cours — rien quand il n'y en a pas.
+#[test]
+#[serial]
+fn the_drawer_shows_the_sets_and_the_open_reports() {
+    reset_test_store();
+    let render = || {
+        MockContext::host()
+            .with_property(Property::default())
+            .with_config(&json!({ "categories": ["wifi"], "phases": ["before", "during"] }))
+            .with_translation("host.open.many", "{count} en cours")
+            .run(|ctx| serde_json::to_string(&render_host_main(ctx).expect("host surface")))
+            .expect("surface json")
+    };
+    let empty = render();
+    assert!(!empty.contains("en cours"), "{empty}");
+    assert!(empty.contains(r#"[\"wifi\"]"#), "{empty}");
+    assert!(empty.contains(r#"[\"before\",\"during\"]"#), "{empty}");
+    assert!(empty.contains("host.category.one"), "{empty}");
+    assert!(empty.contains("urgent_phone=true"), "{empty}");
+
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            host_add(ctx.clone(), Uuid::new_v4(), "Volet bloqué");
+            host_add(ctx, Uuid::new_v4(), "Plus d'eau chaude");
+        });
+    assert!(render().contains("2 en cours"));
+}
+
 fn host_add(ctx: portaki_sdk::prelude::Context, stay_id: Uuid, summary: &str) {
     add(
         ctx,

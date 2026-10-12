@@ -2,14 +2,15 @@
 //! réception. Le chrome du tiroir (titre, interrupteur, Publier) est au dashboard.
 
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
-    Card, Field, FieldHint, Form, Page, Select, Stack, TextInput, Toggle,
+    Card, ChoiceList, Field, FieldHint, Form, InlineNotice, Page, PhoneInput, Pill, Stack,
+    TextArea, ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{ModuleConfig, PHASES, RESPONSE_TIMES};
 
-// « Signalement non traité depuis 24 h » dans À venir : `crate::tasks`.
 #[portaki_sdk::nav(
     placement = HostPlacement::WorkspaceTimelineTask,
     path = "tasks",
@@ -25,12 +26,14 @@ use crate::config::{ModuleConfig, PHASES, RESPONSE_TIMES};
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let config = ModuleConfig::load(&ctx)?;
+    let mut page = Stack::new().gap(16.0);
+    if let Some(note) = open_reports_note() {
+        page = page.child(note);
+    }
     Ok(Surface::new(
         Page::new().child(
             Form::new().child(
-                Stack::new()
-                    .gap(16.0)
-                    .child(form_card(&config, &ctx))
+                page.child(form_card(&config, &ctx))
                     .child(reception_card(&config, &ctx)),
             ),
         ),
@@ -38,96 +41,145 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     .with_id(MAIN))
 }
 
-/// §2.1 Le formulaire : catégories, photo, urgence, périodes.
+/// « 2 signalements en cours sur ce logement. » en tête du tiroir ; rien quand tout est résolu.
+fn open_reports_note() -> Option<Component> {
+    let epoch = chrono::DateTime::<chrono::Utc>::UNIX_EPOCH;
+    let open = crate::storage::list_since(epoch)
+        .unwrap_or_default()
+        .iter()
+        .filter(|report| report.resolved_at.is_none())
+        .count();
+    let message = match open {
+        0 => return None,
+        1 => t!("host.open.one"),
+        count => t!("host.open.many", count = count),
+    };
+    Some(
+        InlineNotice::new()
+            .tone(Tone::Neutral)
+            .message(message.unwrap_or_default())
+            .into(),
+    )
+}
+
+/// §2.1 Le formulaire : catégories, périodes, photo, urgence.
 fn form_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let mut card = Card::new()
-        .title("i18n:host.category.title")
-        .subtitle("i18n:host.category.subtitle")
-        .icon(IconName::MessageCircle);
-    // Les cases telles qu'enregistrées, pas l'ensemble de repli : tout décoché reste décoché,
-    // avec « Choisissez au moins une catégorie. » sous la dernière.
-    let ticks = config.category_ticks();
-    for (index, wire) in crate::category::WIRE_VALUES.iter().enumerate() {
-        let field = toggle(
-            &format!("category_{wire}"),
-            &format!("i18n:host.category.{wire}"),
-            ticks[index],
-        );
-        card = card.child(if index + 1 == ticks.len() {
-            with_error(field, config, ctx, "categories")
-        } else {
-            field
-        });
+    // L'ensemble tel qu'enregistré, pas celui de repli : tout décoché reste décoché, avec
+    // « Choisissez au moins une catégorie. » sous le champ.
+    let categories = config.chosen_categories();
+    let mut category_field = named(config, ctx, "categories")
+        .label("i18n:host.category.title")
+        .child(multi_choice(
+            "categories",
+            crate::category::WIRE_VALUES
+                .iter()
+                .map(|wire| ChoiceOption::new(*wire, format!("i18n:host.category.{wire}")))
+                .collect(),
+            &categories,
+        ));
+    if categories.len() == 1 {
+        category_field = category_field.child(FieldHint::new().text("i18n:host.category.one"));
     }
-    card = card
-        .child(FieldHint::new().text("i18n:host.category.hint"))
-        .child(toggle(
-            "photo_allowed",
-            "i18n:host.photo.label",
-            config.photo_allowed(),
-        ))
-        .child(toggle(
-            "urgent_phone",
-            "i18n:host.urgent.label",
-            config.urgent_phone(),
-        ))
-        .child(FieldHint::new().text("i18n:host.urgent.hint"));
-    // Le numéro n'a d'objet que si l'option est ouverte (règles communes : masqué, pas grisé).
-    if config.urgent_phone() {
-        card = card
-            .child(
-                named(config, ctx, "urgent_number")
-                    .label("i18n:host.urgentNumber.label")
-                    .child(
-                        TextInput::new()
-                            .name("urgent_number")
-                            .value(config.urgent_number.clone())
-                            .placeholder("+33 6 12 34 56 78"),
-                    ),
-            )
-            .child(FieldHint::new().text("i18n:host.urgentNumber.hint"));
-    }
-    let ticks = config.phase_ticks();
-    for (index, phase) in PHASES.iter().enumerate() {
-        let field = toggle(
-            &format!("phase_{phase}"),
-            &format!("i18n:host.phase.{phase}"),
-            ticks[index],
-        );
-        card = card.child(if index + 1 == PHASES.len() {
-            with_error(field, config, ctx, "phases")
-        } else {
-            field
-        });
-    }
-    card.child(FieldHint::new().text("i18n:host.phase.hint"))
+    Card::new()
+        .title("i18n:host.form.title")
+        .child(category_field)
+        .child(
+            named(config, ctx, "phases")
+                .label("i18n:host.phase.title")
+                .child(multi_choice(
+                    "phases",
+                    PHASES
+                        .iter()
+                        .map(|phase| ChoiceOption::new(*phase, format!("i18n:host.phase.{phase}")))
+                        .collect(),
+                    &config.chosen_phases(),
+                ))
+                .child(FieldHint::new().text("i18n:host.phase.hint")),
+        )
+        .child(
+            ToggleRow::new()
+                .name("photo_allowed")
+                .label("i18n:host.photo.label")
+                .description("i18n:host.photo.help")
+                .checked(config.photo_allowed()),
+        )
+        .child(
+            ToggleRow::new()
+                .name("urgent_phone")
+                .label("i18n:host.urgent.label")
+                .description("i18n:host.urgent.hint")
+                .checked(config.urgent_phone()),
+        )
+        // Le numéro n'a d'objet que si l'option est ouverte (règles communes : masqué, pas grisé).
+        .child(
+            named(config, ctx, "urgent_number")
+                .label("i18n:host.urgentNumber.label")
+                .visibleWhen("urgent_phone=true")
+                .child(
+                    PhoneInput::new()
+                        .name("urgent_number")
+                        .value(crate::config::compact(&config.urgent_number)),
+                )
+                .child(FieldHint::new().text("i18n:host.urgentNumber.hint")),
+        )
+        .child(
+            Field::new().visibleWhen("urgent_phone=false").child(
+                InlineNotice::new()
+                    .tone(Tone::Neutral)
+                    .message("i18n:host.urgent.off"),
+            ),
+        )
         .into()
 }
 
-/// §2.2 La réception : la confirmation et le délai annoncé.
+/// §2.2 La réception : les canaux, la confirmation et le délai annoncé.
 fn reception_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    // Le délai du brouillon d'abord : le choisir re-rend le tiroir, et l'aide suit.
+    let response_time = ctx
+        .input_str("response_time")
+        .and_then(|raw| {
+            RESPONSE_TIMES
+                .iter()
+                .copied()
+                .find(|key| *key == raw.trim())
+        })
+        .unwrap_or_else(|| config.response_time());
     Card::new()
         .title("i18n:host.reception.title")
-        .icon(IconName::Bell)
+        // Seul l'e-mail part aujourd'hui : les deux autres canaux sont annoncés, pas proposés.
+        .child(
+            Field::new().label("i18n:host.notify.label").child(
+                Stack::new()
+                    .direction(StackDirection::Horizontal)
+                    .gap(6.0)
+                    .child(Pill::new().label("i18n:host.notify.email"))
+                    .child(Pill::new().label("i18n:host.notify.app"))
+                    .child(Pill::new().label("i18n:host.notify.sms")),
+            ),
+        )
         .child(
             named(config, ctx, "auto_reply")
                 .label("i18n:host.autoReply.label")
                 .child(
-                    TextInput::new()
+                    TextArea::new()
                         .name("auto_reply")
+                        .rows(2)
                         .value(config.auto_reply.host_value(ctx))
                         .placeholder("i18n:host.autoReply.placeholder"),
-                ),
+                )
+                .child(FieldHint::new().text("i18n:host.autoReply.hint")),
         )
         .child(
             Field::new()
                 .name("response_time")
                 .label("i18n:host.responseTime.label")
                 .child(
-                    Select::new()
+                    ChoiceList::new()
                         .name("response_time")
-                        .options(
-                            RESPONSE_TIMES
+                        .layout(ChoiceListLayout::Segmented)
+                        .emitOnChange(true)
+                        .choices(
+                            ["within_hour", "within_day", "none"]
                                 .iter()
                                 .map(|key| {
                                     ChoiceOption::new(
@@ -137,27 +189,29 @@ fn reception_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
                                 })
                                 .collect(),
                         )
-                        .value(config.response_time()),
+                        .value(response_time),
+                )
+                .child(
+                    FieldHint::new().text(format!("i18n:host.responseTime.hint.{response_time}")),
                 ),
         )
         .into()
 }
 
-fn toggle(name: &str, label: &str, checked: bool) -> Field {
-    Field::new()
+/// Un choix multiple en pastilles ; la valeur est le tableau coché, en JSON.
+fn multi_choice(name: &str, choices: Vec<ChoiceOption>, chosen: &[&str]) -> ChoiceList {
+    ChoiceList::new()
         .name(name)
-        .label(label)
-        .child(Toggle::new().name(name).checked(checked))
+        .multi(true)
+        .layout(ChoiceListLayout::Compact)
+        .choices(choices)
+        .value(serde_json::to_string(chosen).unwrap_or_default())
 }
 
 /// Le champ `name`, avec le message de [`ModuleConfig::error_of`] sous lui s'il y en a un.
 fn named(config: &ModuleConfig, ctx: &HostContext, name: &str) -> Field {
-    with_error(Field::new().name(name), config, ctx, name)
-}
-
-/// `field`, avec le message de [`ModuleConfig::error_of`] pour `problem` sous lui s'il y en a un.
-fn with_error(field: Field, config: &ModuleConfig, ctx: &HostContext, problem: &str) -> Field {
-    match config.error_of(problem) {
+    let field = Field::new().name(name);
+    match config.error_of(name) {
         Some(error) => field.error(error.get(&ctx.locale).to_string()),
         None => field,
     }
