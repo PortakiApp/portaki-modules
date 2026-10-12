@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.1
+
+La version 1.9.0 s'installe.
+
+* La mise à jour de la base refusée à la publication de la 1.9.0 est corrigée ; les signalements existants gardent leur statut.
+
 ## 1.9.0
 
 Un onglet Signalements, et des réglages en deux cartes.

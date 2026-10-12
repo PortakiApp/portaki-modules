@@ -1,16 +1,12 @@
 -- issue-report @ schema v2 — idempotent (module_issue_report)
 --
--- status: new · in_progress · resolved. Rows written before it read resolved when resolved_at is
--- set, new otherwise.
+-- status: new · in_progress · resolved. Rows written before it keep '' and read resolved when
+-- resolved_at is set, new otherwise (status::of) — the platform refuses UPDATE in a migration.
 -- guest_name, stay_check_in, stay_check_out: the guest and the stay's dates at submit time.
 -- issue_report_event: each report's history (sent, status changed, reply sent).
 
 ALTER TABLE module_issue_report.issue_report
     ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT '';
-
-UPDATE module_issue_report.issue_report
-    SET status = CASE WHEN resolved_at IS NULL THEN 'new' ELSE 'resolved' END
-    WHERE status = '';
 
 ALTER TABLE module_issue_report.issue_report
     ADD COLUMN IF NOT EXISTS guest_name TEXT NOT NULL DEFAULT '';
