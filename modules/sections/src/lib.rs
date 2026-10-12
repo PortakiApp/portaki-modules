@@ -1,24 +1,25 @@
-//! Portaki sections module — editorial title + markdown blocks.
+//! Portaki sections module — the host's word of welcome and the booklet's long texts.
+//!
+//! A core module of the booklet: installed on every property, always active, no switch. The host
+//! writes in the listing's « Fiche & coordonnées » card ([`render_host_main`]).
 
-mod commands;
+mod config;
 mod content;
 mod entities;
 mod guest;
 mod host;
-mod ids;
+mod i18n;
 mod model;
 mod queries;
 mod store;
 
-pub use commands::{
-    delete_section, reorder, save_section, DeleteSectionArgs, ReorderArgs, SaveSectionArgs,
-};
+pub use config::{ModuleConfig, SectionRow, ShowFrom};
 pub use entities::{SectionItem, SectionItemLocale};
-pub use guest::{render_explore_sheet, render_home_card};
+pub use guest::{opens_by, render_explore_sheet, render_home_card};
 pub use host::render_host_main;
-pub use model::{SectionLocaleInput, SectionView};
-pub use queries::{list_sections, ListSectionsArgs};
-pub use store::reset_test_store;
+pub use model::SectionView;
+pub use queries::{list_sections, publish_readiness, ListSectionsArgs};
+pub use store::{reset_test_store, seed_legacy_section};
 
 portaki_sdk::portaki_module!(
     id = "sections",
@@ -30,6 +31,7 @@ portaki_sdk::portaki_module!(
     icon = IconName::Home,
     maturity = Maturity::Stable,
     sort_order = 40,
+    core,
 );
 
 #[portaki_sdk::capability(required, id = "core.storage")]

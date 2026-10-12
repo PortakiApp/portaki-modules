@@ -4,37 +4,23 @@
 mod previews;
 
 use portaki_sdk::capability;
-use sections::{
-    render_explore_sheet, render_home_card, reset_test_store, save_section, SaveSectionArgs,
-    SectionLocaleInput,
-};
+use sections::{render_explore_sheet, render_home_card, reset_test_store};
+use serde_json::json;
 use serial_test::serial;
 
 /// Le mot que l'hôte écrit à ses voyageurs, sur le logement d'exemple du livret.
-fn seed(ctx: portaki_sdk::Context) {
-    save_section(
-        ctx,
-        SaveSectionArgs {
-            id: None,
-            sort_order: Some(0),
-            locales: vec![
-                SectionLocaleInput {
-                    lang: "fr".into(),
-                    title: "Bienvenue à L'Islette".into(),
-                    body_markdown: "Nous sommes heureux de vous accueillir.\n\nFaites comme chez vous : le café est dans le placard au-dessus de la machine, et les serviettes de plage sont dans le coffre de l'entrée.".into(),
-                },
-                SectionLocaleInput {
-                    lang: "en".into(),
-                    title: "Welcome to L'Islette".into(),
-                    body_markdown: "We are glad to have you.\n\nMake yourself at home: the coffee is in the cupboard above the machine, and the beach towels are in the hallway chest.".into(),
-                },
-            ],
-            title: String::new(),
-            body_markdown: String::new(),
-            lang: String::new(),
-        },
-    )
-    .expect("save");
+fn sample_config() -> serde_json::Value {
+    json!({
+        "show_from": "booking",
+        "sections": [{
+            "id": "welcome",
+            "title": { "fr": "Bienvenue à L'Islette", "en": "Welcome to L'Islette" },
+            "body": {
+                "fr": "Nous sommes heureux de vous accueillir.\n\nFaites comme chez vous : le café est dans le placard au-dessus de la machine, et les serviettes de plage sont dans le coffre de l'entrée.",
+                "en": "We are glad to have you.\n\nMake yourself at home: the coffee is in the cupboard above the machine, and the beach towels are in the hallway chest."
+            }
+        }]
+    })
 }
 
 /// Aucune surface n'a de chemin : le module n'entre pas au catalogue des aperçus, mais le livret
@@ -44,9 +30,10 @@ fn seed(ctx: portaki_sdk::Context) {
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
     reset_test_store();
-    let context = previews::guest(root).with_capabilities(&[capability::core::STORAGE]);
+    let context = previews::guest(root)
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&sample_config());
     let (card, sheet) = context.run(|ctx| {
-        seed(ctx.clone());
         (
             render_home_card(ctx.clone()).expect("card"),
             render_explore_sheet(ctx).expect("sheet"),

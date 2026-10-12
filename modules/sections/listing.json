@@ -14,13 +14,17 @@
     "en": "A preview of the first sections on the booklet's home page, then the full text of each one, with headings, lists and quotes."
   },
   "hostSurface": {
-    "fr": "Un onglet Sections pour créer, modifier et supprimer des sections avec un éditeur de texte riche.",
-    "en": "A Sections tab to create, edit and delete sections with a rich text editor."
+    "fr": "Une carte « Message d'accueil » dans la fiche du logement : quand le mot s'affiche, et jusqu'à dix sections avec titre, texte riche et photo.",
+    "en": "A « Welcome message » card on the listing page: when the note shows, and up to ten sections with a title, rich text and a photo."
   },
   "configItems": [
     {
-      "fr": "Titre et contenu de chaque section",
-      "en": "Title and content of each section"
+      "fr": "Titre, texte et photo de chaque section",
+      "en": "Title, text and photo of each section"
+    },
+    {
+      "fr": "Moment où le mot d'accueil s'affiche",
+      "en": "When the welcome note shows"
     }
   ],
   "capabilities": [],
