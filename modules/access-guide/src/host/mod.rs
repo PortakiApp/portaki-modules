@@ -22,8 +22,10 @@ use crate::config::{
     LIFT_CHOICES, PARKING_KINDS,
 };
 
+mod change_code;
 mod stay;
 
+pub use change_code::render_host_change_code;
 pub use stay::render_host_stay;
 
 const STEP_SLOTS: usize = crate::config::MAX_STEPS;
@@ -174,12 +176,22 @@ fn method_section(method: PrimaryMethod, config: &HostConfig, ctx: &HostContext)
 
 fn codes_section(method: PrimaryMethod, config: &HostConfig, ctx: &HostContext) -> Component {
     let mut children: Vec<Component> = Vec::new();
-    // « À chaque séjour » attend un coffre par séjour : pas encore offert.
-    let mut scopes = vec![ChoiceOption::new("fixed", "i18n:host.codeScope.fixed")];
+    // « À chaque séjour » : le code se saisit dans la fiche du séjour (`crate::stay_code`). Le
+    // code fixe n'apparaît qu'avec « Le même pour tous les séjours » (`visibleWhen`).
+    let mut scopes = vec![
+        ChoiceOption::new("fixed", "i18n:host.codeScope.fixed"),
+        ChoiceOption::new("stay", "i18n:host.codeScope.stay"),
+    ];
     if method == PrimaryMethod::SmartLock {
         scopes.push(ChoiceOption::new("lock", "i18n:host.codeScope.lock"));
     }
-    let by_lock = method == PrimaryMethod::SmartLock && config.code_by_lock();
+    let saved = if method == PrimaryMethod::SmartLock && config.code_by_lock() {
+        "lock"
+    } else if config.code_scope.trim() == "stay" {
+        "stay"
+    } else {
+        "fixed"
+    };
     children.push(
         field(
             "code_scope",
@@ -187,15 +199,17 @@ fn codes_section(method: PrimaryMethod, config: &HostConfig, ctx: &HostContext) 
             RadioGroup::new()
                 .name("code_scope")
                 .options(scopes)
-                .value(if by_lock { "lock" } else { "fixed" }),
-            None,
+                .value(saved),
+            Some("i18n:host.codeScope.stay.hint"),
         )
         .into(),
     );
     match method {
         PrimaryMethod::Keybox => {
             children.push(
-                secret_field("keybox_code", "i18n:host.code", &config.keybox_code, None).into(),
+                secret_field("keybox_code", "i18n:host.code", &config.keybox_code, None)
+                    .visibleWhen("code_scope=fixed")
+                    .into(),
             );
             children.push(
                 field(
@@ -240,8 +254,11 @@ fn codes_section(method: PrimaryMethod, config: &HostConfig, ctx: &HostContext) 
                 )
                 .into(),
             );
-            children
-                .push(secret_field("door_code", "i18n:host.code", &config.door_code, None).into());
+            children.push(
+                secret_field("door_code", "i18n:host.code", &config.door_code, None)
+                    .visibleWhen("code_scope=fixed")
+                    .into(),
+            );
         }
         // One stored code: the code itself when it is the same for every stay, the backup code
         // when the lock generates them (§2.2).

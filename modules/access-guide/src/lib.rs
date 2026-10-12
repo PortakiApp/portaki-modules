@@ -10,11 +10,12 @@ mod host;
 mod i18n;
 mod queries;
 mod reveal;
+mod stay_code;
 mod tasks;
 mod texts;
 
 pub use amenities::amenities_list;
-pub use commands::{on_config_updated, ConfigUpdatedArgs};
+pub use commands::{on_config_updated, set_stay_code, ConfigUpdatedArgs, StayCodeArgs};
 pub use config::{
     ArrivalGuide, BuildingAccess, HostConfig, MethodFields, ModuleConfig, ParkingLayer,
     PrimaryMethod, RevealPolicy, StepRow,
@@ -23,9 +24,9 @@ pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use guest::{
     render_explore_detail, render_home_card, render_status_cell, render_upcoming_card,
 };
-pub use host::{render_host_main, render_host_stay};
+pub use host::{render_host_change_code, render_host_main, render_host_stay};
 pub use queries::{map_markers, publish_readiness, MapMarkersResponse};
-pub use tasks::{missing_code_tasks, rotate_code_tasks, timeline_tasks};
+pub use tasks::{missing_code_tasks, missing_stay_code_tasks, rotate_code_tasks, timeline_tasks};
 pub use texts::{lang_code, ModuleTexts, StepText};
 
 portaki_sdk::portaki_module!(

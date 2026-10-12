@@ -342,6 +342,10 @@ pub struct ModuleConfig {
     /// n'est alors qu'un code de secours.
     #[serde(default)]
     pub code_by_lock: bool,
+    /// « À chaque séjour » (§2.2) : le code d'entrée vient du séjour (`crate::stay_code`), jamais
+    /// du code fixe.
+    #[serde(default)]
+    pub code_per_stay: bool,
     /// « Personnalisé » : combien d'heures avant l'arrivée les codes s'affichent (§2.3).
     #[serde(default = "default_reveal_hours")]
     pub reveal_hours: u32,
@@ -386,6 +390,7 @@ impl Default for ModuleConfig {
             desk_hours: String::new(),
             method_other: None,
             code_by_lock: false,
+            code_per_stay: false,
             reveal_hours: DEFAULT_REVEAL_HOURS,
             rotate_reminder: false,
         }
@@ -476,6 +481,8 @@ impl ModuleConfig {
     /// un module émet ses codes elle-même ; le code de secours n'est qu'un repli.
     pub fn entry_code_missing(&self) -> bool {
         match &self.method {
+            // Le code fixe n'est pas attendu : chaque séjour a le sien (tâche « Code manquant »).
+            _ if self.code_per_stay => false,
             MethodFields::Keybox { .. } => self.keybox_code().is_none(),
             MethodFields::DoorCode { code, .. } => code.trim().is_empty(),
             // Généré par la serrure : il faut la serrure ; le code saisi n'est qu'un secours.
@@ -484,6 +491,16 @@ impl ModuleConfig {
             }
             MethodFields::SmartLock { .. } => self.smart_lock_manual_code().is_none(),
             _ => false,
+        }
+    }
+
+    /// Le code d'entrée de la méthode remplacé par `code` — celui du séjour (`crate::stay_code`).
+    pub fn set_entry_code(&mut self, code: Option<String>) {
+        match &mut self.method {
+            MethodFields::Keybox { code: slot, .. } => *slot = code,
+            MethodFields::DoorCode { code: slot, .. } => *slot = code.unwrap_or_default(),
+            MethodFields::SmartLock { manual_code } => *manual_code = code,
+            _ => {}
         }
     }
 
@@ -552,11 +569,12 @@ pub struct HostConfig {
     /// « Autre » : comment le voyageur récupère les clés, ≤ 80 (§2.1).
     #[field(label = "host.methodOther")]
     pub method_other: I18nText,
-    /// `fixed` : le même code pour tous les séjours ; `lock` : généré par la serrure (§2.2).
+    /// `fixed` : le même code pour tous les séjours ; `stay` : un code par séjour, saisi dans la
+    /// fiche du séjour ; `lock` : généré par la serrure (§2.2).
     /// Vide : `lock` pour une serrure liée à un module, `fixed` sinon.
     #[field(
         kind = "select",
-        options = ["fixed", "lock"],
+        options = ["fixed", "stay", "lock"],
         label = "host.codeScope"
     )]
     pub code_scope: String,
@@ -926,9 +944,17 @@ impl HostConfig {
         self.method() == Some(PrimaryMethod::SmartLock)
             && match self.code_scope.trim() {
                 "lock" => true,
-                "fixed" => false,
+                "fixed" | "stay" => false,
                 _ => !self.smart_lock_provider_module_id.trim().is_empty(),
             }
+    }
+
+    /// « À chaque séjour » (§2.2), pour une méthode à code.
+    pub fn code_per_stay(&self) -> bool {
+        self.code_scope.trim() == "stay"
+            && self
+                .method()
+                .is_some_and(PrimaryMethod::involves_access_code)
     }
 
     /// Le créneau tel que le formulaire l'envoie, `16:00-19:00` ; à défaut l'ancienne paire.
@@ -1110,6 +1136,7 @@ impl HostConfig {
                 .then(|| text(&self.method_other))
                 .flatten(),
             code_by_lock: self.code_by_lock(),
+            code_per_stay: self.code_per_stay(),
             reveal_hours: self
                 .reveal_hours
                 .filter(|hours| (1..=168).contains(hours))
@@ -2772,6 +2799,24 @@ mod tests {
             serde_json::from_value(json!({ "primary_method": "keybox", "code_scope": "lock" }))
                 .unwrap();
         assert!(!keybox.code_by_lock());
+        // « À chaque séjour » : le code fixe n'est plus attendu, et c'est celui du séjour qu'on lit.
+        assert!(!missing(
+            json!({ "primary_method": "keybox", "code_scope": "stay" })
+        ));
+        let mut per_stay = serde_json::from_value::<HostConfig>(
+            json!({ "primary_method": "door_code", "code_scope": "stay", "door_code": "1111" }),
+        )
+        .unwrap()
+        .to_model("fr");
+        assert!(per_stay.code_per_stay && !per_stay.code_by_lock);
+        per_stay.set_entry_code(Some("4821".into()));
+        assert_eq!(per_stay.gate_code(), Some("4821"));
+        // Sans méthode à code, le choix ne vaut rien.
+        let staff: HostConfig = serde_json::from_value(
+            json!({ "primary_method": "building_staff", "code_scope": "stay" }),
+        )
+        .unwrap();
+        assert!(!staff.code_per_stay());
     }
 
     #[test]

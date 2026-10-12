@@ -70,7 +70,8 @@ pub fn email_context(ctx: Context, args: EmailContextArgs) -> Result<EmailContex
 
 /// Build reveal-aware email snippets from config + stay context.
 pub fn build_email_context(ctx: &Context, args: &EmailContextArgs) -> Result<EmailContextResponse> {
-    let config = ModuleConfig::read(ctx)?;
+    let mut config = ModuleConfig::read(ctx)?;
+    crate::stay_code::fill(&mut config, ctx.stay.as_ref().map(|s| s.stay_id));
     let property_timezone = property_timezone(ctx);
     let checkin_at = ctx.stay.as_ref().and_then(|s| s.checkin_at);
     let checkout_at = ctx.stay.as_ref().and_then(|s| s.checkout_at);

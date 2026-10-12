@@ -106,3 +106,47 @@ pub fn on_config_updated(ctx: Context, args: ConfigUpdatedArgs) -> Result<()> {
         action_url: None,
     })
 }
+
+/// « Changer le code de ce séjour » (`stay-action`) : le code saisi, ou six chiffres tirés au
+/// hasard. `code` vient du formulaire de la modale.
+#[portaki_sdk::wire]
+#[portaki_sdk::params]
+pub struct StayCodeArgs {
+    pub stay_id: Uuid,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
+    #[serde(default)]
+    pub generate: bool,
+}
+
+/// Le code d'entrée d'un séjour, « À chaque séjour » (spec Accès §1, §2.2). Hôte seulement ; la
+/// plateforme vérifie que le séjour est de ce logement. Le voyageur le lit à sa prochaine visite,
+/// sans « Publier ».
+#[portaki_sdk::command(
+    name = "setStayCode",
+    example(
+        label = "Code saisi par l'hôte",
+        input = r#"{"stayId":"1a2b3c4d-0000-4000-8000-000000000000","code":"4821"}"#
+    ),
+    example(
+        label = "Code généré",
+        input = r#"{"stayId":"1a2b3c4d-0000-4000-8000-000000000000","generate":true}"#
+    )
+)]
+pub fn set_stay_code(ctx: Context, args: StayCodeArgs) -> Result<()> {
+    if ctx.guest.is_some() {
+        return Err(PortakiError::Host("host_only".into()));
+    }
+    if !crate::config::ModuleConfig::read(&ctx)?.code_per_stay {
+        return Err(PortakiError::Host("code_per_stay_off".into()));
+    }
+    let code = if args.generate {
+        crate::stay_code::generate()?
+    } else {
+        args.code
+            .as_deref()
+            .and_then(crate::stay_code::normalize)
+            .ok_or_else(|| PortakiError::Host("stay_code_invalid".into()))?
+    };
+    portaki_sdk::host::stay_secrets::set(args.stay_id, crate::stay_code::KEY, &code)
+}
