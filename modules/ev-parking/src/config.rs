@@ -43,7 +43,8 @@ impl RevealPolicy {
 // Pas d'`Eq` : la puissance est un flottant.
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct ModuleConfig {
-    #[field(required, label = "host.spotLabel.label")]
+    /// L'emplacement (spec `spot`) : propre au lieu, à vérifier après une copie.
+    #[field(required, local, label = "host.spotLabel.label")]
     pub spot_label: I18nText,
     #[field(
         secret,
@@ -57,6 +58,11 @@ pub struct ModuleConfig {
         label = "host.parkingCode.label"
     )]
     pub parking_code: String,
+    /// Le code de la barrière est celui du parking d'Accès : le livret renvoie à la carte Accès
+    /// au lieu d'afficher `parking_code`, qui reste enregistré mais n'est plus lu.
+    #[field(label = "host.barrierSame.label")]
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub barrier_same_as_access: bool,
     #[field(kind = "url", label = "host.mapUrl.label")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub map_url: Option<String>,
@@ -78,9 +84,10 @@ pub struct ModuleConfig {
     )]
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub charger_type: String,
-    /// La puissance en kW ; `0` : non renseignée. Flottant : le `NumberInput` envoie un nombre.
+    /// La puissance en kW ; `0` : non renseignée. Un nombre, ou un texte d'un ancien
+    /// enregistrement.
     #[field(label = "host.power.label")]
-    #[serde(default, skip_serializing_if = "is_zero")]
+    #[serde(default, deserialize_with = "power", skip_serializing_if = "is_zero")]
     pub power_kw: f64,
     /// Câble fourni. Absent : oui.
     #[field(label = "host.cable.label")]
@@ -109,26 +116,26 @@ pub struct ModuleConfig {
     pub booking_note: Option<I18nText>,
     /// La position de la borne (spec Parking VE §2.1) : un repère ⚡ sur la Carte du livret. Le
     /// sélecteur de carte l'envoie en texte (`"43.5"`) ou en nombre.
-    #[field(label = "host.position.label")]
+    #[field(local, label = "host.position.label")]
     #[serde(
         default,
         deserialize_with = "coord",
         skip_serializing_if = "Option::is_none"
     )]
     pub charger_lat: Option<f64>,
-    #[field(label = "host.position.label")]
+    #[field(local, label = "host.position.label")]
     #[serde(
         default,
         deserialize_with = "coord",
         skip_serializing_if = "Option::is_none"
     )]
     pub charger_lng: Option<f64>,
-    #[field(label = "host.position.address")]
+    #[field(local, label = "host.position.address")]
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub charger_address: String,
     /// La photo de la place, en référence `portaki-file:` : la plateforme l'échange contre une
     /// URL signée au rendu.
-    #[field(label = "host.photo.label")]
+    #[field(local, label = "host.photo.label")]
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub photo: String,
 }
@@ -146,6 +153,13 @@ where
     })
 }
 
+fn power<'de, D>(deserializer: D) -> std::result::Result<f64, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Ok(coord(deserializer)?.unwrap_or_default())
+}
+
 fn is_zero(value: &f64) -> bool {
     *value == 0.0
 }
@@ -156,6 +170,13 @@ pub const CHARGER_TYPES: [&str; 4] = ["type2", "ccs", "domestic", "other"];
 pub const PRICINGS: [&str; 4] = ["included", "per_kwh", "per_stay", "on_site"];
 /// Les bornes de la puissance (§2.2).
 pub const POWER_KW: (f64, f64) = (2.3, 350.0);
+/// Les bornes d'un code, barrière ou borne (§2.1, §2.2).
+pub const CODE_CHARS: std::ops::RangeInclusive<usize> = 3..=12;
+
+/// « Environ 6 h pour 40 kWh » : l'ordre de grandeur, pas une promesse (§4).
+pub fn charge_hours(kw: f64) -> u32 {
+    (40.0 / kw).round().max(1.0) as u32
+}
 
 /// The old KV blob spelled two policies the pre-rename way (`hours_before24`, `day_before16h`),
 /// which are not options of the select: the platform would not import them.
@@ -181,6 +202,25 @@ impl ModuleConfig {
             .iter()
             .find(|key| **key == self.pricing.trim())
             .unwrap_or(&PRICINGS[0])
+    }
+
+    /// Une épingle à plus de 2 km du logement : sans doute posée au mauvais endroit (§2.1).
+    pub fn far_from(&self, home: Option<(f64, f64)>) -> bool {
+        match (home, self.charger_lat, self.charger_lng) {
+            (Some((home_lat, home_lng)), Some(lat), Some(lng)) => {
+                !portaki_sdk::config::check::within_km(lat, lng, home_lat, home_lng, 2.0)
+            }
+            _ => false,
+        }
+    }
+
+    /// Le code de la barrière que ce module affiche : aucun quand il est celui d'Accès.
+    pub fn barrier_code(&self) -> &str {
+        if self.barrier_same_as_access {
+            ""
+        } else {
+            self.parking_code.trim()
+        }
     }
 
     pub fn cable_provided(&self) -> bool {
@@ -219,6 +259,11 @@ impl ModuleConfig {
                 too_long(Some(&self.spot_label), 60)
             },
         );
+        let code = |code: &str| {
+            let length = code.trim().chars().count();
+            (length != 0 && !CODE_CHARS.contains(&length)).then(|| text("host.code.length"))
+        };
+        push("parking_code", code(self.barrier_code()));
         push(
             "power_kw",
             (self.power_kw != 0.0)
@@ -226,15 +271,19 @@ impl ModuleConfig {
                 .flatten()
                 .map(|_| text("host.power.range")),
         );
-        push(
-            "price",
-            if self.pricing() != "included" && self.price.trim().is_empty() {
-                Some(text("host.price.required"))
-            } else {
-                check::max_chars(&self.price, 30)
-            },
-        );
+        push("charger_pin", code(&self.charger_pin));
         push("instructions", too_long(self.instructions.as_ref(), 280));
+        // Masqué tant que la recharge est incluse : un prix resté là ne bloque rien.
+        if self.pricing() != "included" {
+            push(
+                "price",
+                if self.price.trim().is_empty() {
+                    Some(text("host.price.required"))
+                } else {
+                    check::max_chars(&self.price, 30)
+                },
+            );
+        }
         if self.booking_required {
             push("booking_note", too_long(self.booking_note.as_ref(), 120));
         }
@@ -252,7 +301,7 @@ impl ModuleConfig {
     pub fn is_empty(&self) -> bool {
         self.spot_label.is_blank()
             && self.charger_pin.trim().is_empty()
-            && self.parking_code.trim().is_empty()
+            && self.barrier_code().is_empty()
     }
 
     /// The map link, `https` only: a guest never gets a link in clear, nor a `javascript:` one.
@@ -417,5 +466,28 @@ mod tests {
         assert_eq!(empty[0].1.get("en"), "Say where the spot is.");
         assert_eq!(config(json!({})).charger_type(), "type2");
         assert!(config(json!({})).cable_provided());
+    }
+
+    /// Les enregistrements d'avant la refonte se relisent : câble en booléen, puissance en texte,
+    /// pas d'interrupteur Accès (le code de la barrière reste le sien).
+    #[test]
+    fn legacy_saves_read_as_before() {
+        let config: ModuleConfig = serde_json::from_value(json!({
+            "spot_label": "P2", "parking_code": "1234", "cable_provided": false, "power_kw": "7,4"
+        }))
+        .unwrap();
+        assert!(!config.cable_provided());
+        assert!(!config.barrier_same_as_access);
+        assert_eq!(config.barrier_code(), "1234");
+        // « 7,4 » n'est pas un nombre pour serde : non renseignée plutôt que refusée.
+        assert_eq!(config.power(), None);
+        let config: ModuleConfig = serde_json::from_value(
+            json!({ "power_kw": "7.4", "barrier_same_as_access": true, "parking_code": "1234" }),
+        )
+        .unwrap();
+        assert_eq!(config.power(), Some(7.4));
+        assert_eq!(config.barrier_code(), "");
+        assert_eq!(charge_hours(7.0), 6);
+        assert_eq!(charge_hours(350.0), 1);
     }
 }

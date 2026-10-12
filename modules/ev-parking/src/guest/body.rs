@@ -117,7 +117,7 @@ pub fn build_ev_parking_body(data: &GuestData, enriched: bool) -> Vec<Component>
         // Une barrière est une affaire de voiture, pas de cadenas : c'est l'icône de la maquette,
         // et elle se distingue de l'éclair de la borne à côté.
         IconName::Car,
-        &data.config.parking_code,
+        data.config.barrier_code(),
     );
     push_secret_tile(
         &mut tiles,
@@ -134,6 +134,16 @@ pub fn build_ev_parking_body(data: &GuestData, enriched: bool) -> Vec<Component>
                 .plain(true)
                 .children(tiles),
         ));
+    }
+    // Même code que le parking d'Accès : pas de seconde tuile, pas de second secret — le voyageur
+    // le lit dans la carte Accès, et ce module ne lit jamais la config d'un autre.
+    if data.config.barrier_same_as_access {
+        children.push(
+            Text::new()
+                .text("i18n:guest.barrier.inAccess")
+                .variant(TextVariant::Caption)
+                .into(),
+        );
     }
 
     // Le plan après les codes : on ouvre une carte quand on cherche la place, pas le code.
@@ -171,7 +181,7 @@ pub fn build_ev_parking_body(data: &GuestData, enriched: bool) -> Vec<Component>
         if let Some(kw) = config.power() {
             children.push(kv_row("i18n:guest.power", &format!("{kw} kW"), true));
             // « environ 6 h pour 40 kWh » : l'ordre de grandeur, pas une promesse.
-            let hours = (40.0 / kw).round().max(1.0) as u32;
+            let hours = crate::config::charge_hours(kw);
             if let Ok(estimate) = t!("guest.power.estimate", hours = hours) {
                 children.push(
                     Text::new()
@@ -184,7 +194,7 @@ pub fn build_ev_parking_body(data: &GuestData, enriched: bool) -> Vec<Component>
     }
     if !config.cable_provided() {
         children.push(Component::InfoBanner(
-            InfoBanner::new().message("i18n:guest.cable.bring"),
+            InfoBanner::new().message(bring_cable(config.charger_type())),
         ));
     }
     if config.booking_required {
@@ -210,4 +220,18 @@ pub fn build_ev_parking_body(data: &GuestData, enriched: bool) -> Vec<Component>
     }
 
     children
+}
+
+/// « Apportez votre câble Type 2 » : la prise nommée quand elle se nomme ; « Prise domestique » ou
+/// « Autre » ne font pas un nom de câble.
+fn bring_cable(charger_type: &str) -> String {
+    if matches!(charger_type, "type2" | "ccs") {
+        let plug = t!(&format!("host.chargerType.label.{charger_type}")).unwrap_or_default();
+        if let Ok(text) = t!("guest.cable.bringPlug", plug = &plug) {
+            if !plug.is_empty() && text.contains(&plug) {
+                return text;
+            }
+        }
+    }
+    "i18n:guest.cable.bring".to_string()
 }

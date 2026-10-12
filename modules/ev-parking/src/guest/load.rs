@@ -47,7 +47,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
 }
 
 pub fn has_any_secret(config: &ModuleConfig) -> bool {
-    !config.charger_pin.trim().is_empty() || !config.parking_code.trim().is_empty()
+    !config.charger_pin.trim().is_empty() || !config.barrier_code().is_empty()
 }
 
 pub fn secret_display(data: &GuestData, plaintext: &str) -> String {

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.0
+
+Les réglages Parking VE redessinés.
+
+* La page tient en trois cartes : La place, La borne, Tarif et réservation ; le prix n'apparaît que si la recharge est payante.
+* Choisissez la prise parmi quatre cartes et réglez la puissance en − / + ; l'aide estime le temps pour 40 kWh.
+* Si la barrière s'ouvre avec le code du parking d'Accès, cochez-le : le livret renvoie à la carte Accès, sans second code.
+* Câble non fourni : le livret affiche « Apportez votre câble Type 2 », avec la vraie prise.
+* Les codes de la barrière et de la borne comptent de 3 à 12 caractères ; l'épingle part de l'adresse du logement.
+
 ## 1.8.1
 
 Montée technique.
