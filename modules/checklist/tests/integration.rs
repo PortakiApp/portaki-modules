@@ -28,6 +28,7 @@ fn create(ctx: &Context, template: &str) {
         ctx.clone(),
         CreateChecklistArgs {
             template: template.into(),
+            id: None,
         },
     )
     .expect("create");
@@ -150,9 +151,14 @@ fn host_editor_lists_checklists_and_offers_templates() {
             let surface = render_host_main(ctx);
             let assertions = SurfaceAssertions::new(&surface);
             assert!(assertions.contains_type("SelectableCard"));
-            assert!(assertions.contains_type("EditableList"));
+            assert!(assertions.contains_type("DataTable"));
+            // « Photo obligatoire » : un interrupteur par étape, dans sa fenêtre.
             assert!(assertions.contains_type("ToggleRow"));
             let json = json_of(&surface);
+            assert!(json.contains(r#""sortable":true"#) && json.contains(r#""panel":"dialog""#));
+            assert!(json.contains("7 / 40"));
+            // Pas de canal pour les deux alertes : annoncées, pas proposées.
+            assert!(json.contains("host.soon") && !json.contains(r#""name":"notify_assignee""#));
             assert!(json.contains("Consommables réassortis"));
             assert!(json.contains("host.deadline.nextArrivalMinus2h"));
         });
@@ -763,6 +769,23 @@ fn the_stay_detail_tells_the_stay_progress() {
                 complete_item(ctx.clone(), ItemIdArgs { item_id: item.id }).expect("tick");
             }
             assert!(stay(&host).contains("Terminée le"), "{}", stay(&host));
+            // Une liste d'équipe a sa ligne dès que sa tâche sur ce séjour a commencé.
+            assert!(!stay(&host).contains("Ménage"));
+            let cleaning = list_checklists().expect("lists")[1].id;
+            let mut team = host.clone();
+            team.guest = None;
+            task_toggle(
+                team,
+                TaskToggleArgs {
+                    property_id: Uuid::nil(),
+                    task_id: checklist::task_id(cleaning, stay_id),
+                    item_id: items_of(cleaning).expect("items")[0].id.to_string(),
+                    done: true,
+                    photo: None,
+                },
+            )
+            .expect("toggle");
+            assert!(stay(&host).contains("Ménage · 1 / 7"), "{}", stay(&host));
 
             host.input = json!({});
             assert!(stay(&host).contains("host.stay.missingStay"));
@@ -843,20 +866,22 @@ fn step_group_and_detail_render_and_persist_per_language() {
             json_of(&render_host_main(ctx))
         };
         let fr = editor("fr-FR", guest);
-        assert!(fr.contains(r#""groupField":true"#), "{fr}");
         assert!(
-            fr.contains(r#""group":"Cuisine""#) && !fr.contains("Kitchen"),
+            fr.contains(r#""zone":"Cuisine""#) && !fr.contains("Kitchen"),
             "{fr}"
         );
-        assert!(fr.contains(r#""description":"Porte entrouverte""#), "{fr}");
+        assert!(fr.contains(r#""detail":"Porte entrouverte""#), "{fr}");
         let en = editor("en-US", guest);
         assert!(
-            en.contains(r#""group":"Kitchen""#) && !en.contains("Cuisine"),
+            en.contains(r#""zone":"Kitchen""#) && !en.contains("Cuisine"),
             "{en}"
         );
-        // Une tâche d'équipe ne lit ni rubrique ni précision : pas de champ mort.
-        let team = editor("fr-FR", host);
-        assert!(!team.contains(r#""groupField":true"#), "{team}");
+        // « Photo obligatoire » : seulement pour une liste d'équipe.
+        assert!(!fr.contains("steps.0.photo"), "{fr}");
+        create(&ctx, "cleaning");
+        let team = editor("fr-FR", list_checklists().expect("lists")[2].id);
+        assert!(team.contains("steps.0.photo"), "{team}");
+        let _ = host;
     });
 }
 
@@ -966,4 +991,141 @@ fn a_before_arrival_list_keeps_opening_before_arrival() {
             let json = json_of(&render_home_card(ctx).expect("render"));
             assert!(json.contains("setCompleted"), "{json}");
         });
+}
+
+/// Le tableau des étapes : l'ordre reçu fait l'ordre, une ligne jamais ouverte (son id seul) garde
+/// tout, la langue de l'hôte s'écrit sans effacer les autres, une ligne ajoutée garde l'id que
+/// l'éditeur lui a donné, et une liste vide efface tout.
+#[test]
+#[serial]
+fn the_steps_table_saves_by_id_in_the_order_shown() {
+    reset_test_store();
+    MockContext::host().run(|ctx| {
+        create(&ctx, "departure");
+        create(&ctx, "emptyGuest");
+        let lists = list_checklists().expect("lists");
+        let (list, other) = (lists[0].id, lists[1].id);
+        let before = items_of(list).expect("items");
+        let added = Uuid::new_v4();
+        let save = |locale: &str, list: Uuid, steps: Value| {
+            let mut ctx = ctx.clone();
+            ctx.locale = locale.into();
+            update_config(
+                ctx,
+                UpdateConfigArgs {
+                    id: list.to_string(),
+                    steps: Some(steps),
+                    ..UpdateConfigArgs::default()
+                },
+            )
+            .expect("save");
+            items_of(list).expect("items")
+        };
+
+        let after = save(
+            "en-US",
+            list,
+            json!([
+                { "id": before[1].id, "label": "Turn off the boiler", "zone": "Utility room" },
+                { "id": before[0].id },
+                { "id": added, "label": "Water the plants" },
+            ]),
+        );
+        let ids: Vec<Uuid> = after.iter().map(|item| item.id).collect();
+        assert_eq!(ids, vec![before[1].id, before[0].id, added]);
+        assert!(
+            after[0].label_fr.contains("Éteindre le chauffe-eau"),
+            "{}",
+            after[0].label_fr
+        );
+        assert!(after[0].label_fr.contains("Turn off the boiler"));
+        assert!(after[0].group_i18n.contains("Utility room"));
+        assert!(after[0].group_i18n.contains("Dans le logement"));
+        assert_eq!(after[1], before[0].clone().with_order(1));
+
+        // An id another list owns is not taken over.
+        let theirs = save(
+            "fr-FR",
+            other,
+            json!([{ "id": before[0].id, "label": "Vol" }]),
+        );
+        assert_ne!(theirs[0].id, before[0].id);
+        assert!(items_of(list)
+            .expect("items")
+            .iter()
+            .any(|i| i.id == before[0].id));
+
+        // Every row deleted: the table sends an empty list.
+        assert!(save("fr-FR", list, Value::String("[]".into())).is_empty());
+    });
+}
+
+trait WithOrder {
+    fn with_order(self, order: i32) -> Self;
+}
+
+impl WithOrder for checklist::ChecklistItem {
+    fn with_order(mut self, order: i32) -> Self {
+        self.sort_order = order;
+        self
+    }
+}
+
+/// Une seule checklist « Voyageur · Départ » dans le livret : la première ; l'éditeur le dit.
+#[test]
+#[serial]
+fn only_the_first_departure_list_reaches_the_booklet() {
+    reset_test_store();
+    MockContext::host().run(|ctx| {
+        create(&ctx, "departure");
+        create(&ctx, "departure");
+        create(&ctx, "arrival");
+        assert_eq!(list_items(ctx.clone()).expect("items").len(), 5 + 3);
+        let editor = json_of(&render_host_main(ctx));
+        assert_eq!(
+            editor.matches("host.lists.meta.live").count(),
+            2,
+            "{editor}"
+        );
+        assert_eq!(
+            editor.matches("host.lists.meta.steps").count(),
+            1,
+            "{editor}"
+        );
+    });
+}
+
+/// « Nouvelle checklist » : les modèles dans une fenêtre, la liste créée sous l'id que l'éditeur a
+/// choisi — sélectionnée au rendu suivant, et un second clic ne la double pas.
+#[test]
+#[serial]
+fn a_new_checklist_is_picked_in_a_dialog_and_lands_selected() {
+    reset_test_store();
+    MockContext::host().run(|ctx| {
+        let first = SurfaceAssertions::new(&render_host_main(ctx.clone())).contains_type("Modal");
+        assert!(!first, "nothing to edit yet: the templates sit in the page");
+        create(&ctx, "departure");
+
+        let id = Uuid::new_v4();
+        let mut picking = ctx.clone();
+        picking.input = json!({ "selectedId": id.to_string() });
+        let surface = render_host_main(picking.clone());
+        assert!(SurfaceAssertions::new(&surface).contains_type("Modal"));
+        assert!(json_of(&surface).contains(&format!(r#""id":"{id}""#)));
+
+        for _ in 0..2 {
+            create_checklist(
+                ctx.clone(),
+                CreateChecklistArgs {
+                    template: "cleaning".into(),
+                    id: Some(id),
+                },
+            )
+            .expect("create");
+        }
+        assert_eq!(list_checklists().expect("lists").len(), 2);
+        let surface = render_host_main(picking);
+        assert!(!SurfaceAssertions::new(&surface).contains_type("Modal"));
+        assert!(json_of(&surface).contains("i18n:host.task.title"));
+    });
 }

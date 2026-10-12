@@ -1,5 +1,5 @@
-//! Stay detail encart (spec Checklist §1) : « 8 / 12 étapes · non terminée » ou « Terminée le
-//! 29/08 à 09:12 », d'après ce que le voyageur de ce séjour a coché.
+//! Stay detail encart (spec Checklist §1) : une ligne par liste — « Départ · 8 / 12 étapes · non
+//! terminée », « Ménage · Terminée le 29/08 à 13:40 » — d'après ce qui est coché pour ce séjour.
 
 use chrono::{DateTime, Datelike, Timelike, Utc};
 use portaki_sdk::prelude::*;
@@ -8,6 +8,7 @@ use portaki_sdk::sdui::surface::Surface;
 use uuid::Uuid;
 
 use crate::guest::depart::offset_for_iana;
+use crate::lists;
 use crate::storage;
 
 #[portaki_sdk::surface(
@@ -18,26 +19,59 @@ use crate::storage;
     icon = IconName::ListChecks
 )]
 pub fn render_host_stay(ctx: HostContext) -> Result<Surface> {
-    let line = match ctx
+    let mut card = Card::new()
+        .icon(IconName::ListChecks)
+        .title("i18n:host.stay.title");
+    let Some(stay_id) = ctx
         .input_str("stayId")
         .and_then(|raw| Uuid::parse_str(raw).ok())
-    {
-        None => "i18n:host.stay.missingStay".to_string(),
-        Some(stay_id) => {
-            let items = crate::queries::guest_items()?;
-            let ticks: Vec<DateTime<Utc>> = storage::list_completions(Some(stay_id))?
+    else {
+        card = card.child(body("i18n:host.stay.missingStay".to_string()));
+        return Ok(Surface::new(Page::new().child(card)).with_id(STAY));
+    };
+    let fr = crate::labels::lang_code(&ctx.locale) == "fr";
+    let completions = storage::list_completions(Some(stay_id))?;
+    let booklet: Vec<Uuid> = storage::booklet_lists()?.iter().map(|l| l.id).collect();
+    let mut lines = Vec::new();
+    // Une ligne par liste : celles du livret d'après ce que le voyageur a coché, celles de
+    // l'équipe d'après leur tâche sur ce séjour — quand elle a commencé.
+    for list in storage::list_checklists()? {
+        let items = storage::items_of(list.id)?;
+        let ticks: Vec<DateTime<Utc>> = if list.audience == lists::HOST {
+            storage::task_states(Some(&crate::tasks::task_id(list.id, stay_id)))?
                 .into_iter()
+                .filter(|state| state.done && items.iter().any(|item| item.id == state.item_id))
+                .filter_map(|state| state.done_at)
+                .collect()
+        } else if booklet.contains(&list.id) {
+            completions
+                .iter()
                 .filter(|row| items.iter().any(|item| item.id == row.item_id))
                 .map(|row| row.completed_at)
-                .collect();
-            line(items.len(), &ticks, &ctx.property.timezone)
+                .collect()
+        } else {
+            continue;
+        };
+        if items.is_empty() || (list.audience == lists::HOST && ticks.is_empty()) {
+            continue;
         }
-    };
-    let card = Card::new()
-        .icon(IconName::ListChecks)
-        .title("i18n:host.stay.title")
-        .child(Text::new().text(line).variant(TextVariant::Body));
+        let name = if fr { &list.name_fr } else { &list.name_en };
+        lines.push(format!(
+            "{name} · {}",
+            line(items.len(), &ticks, &ctx.property.timezone)
+        ));
+    }
+    if lines.is_empty() {
+        lines.push("i18n:host.stay.noList".to_string());
+    }
+    for text in lines {
+        card = card.child(body(text));
+    }
     Ok(Surface::new(Page::new().child(card)).with_id(STAY))
+}
+
+fn body(text: String) -> Component {
+    Text::new().text(text).variant(TextVariant::Body).into()
 }
 
 /// `ticks`: when each ticked guest step was ticked.

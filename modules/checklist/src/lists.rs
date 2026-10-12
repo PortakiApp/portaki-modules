@@ -1,4 +1,4 @@
-//! Checklist wire values and the four templates a new list starts from.
+//! Checklist wire values and the templates a new list starts from.
 
 use crate::i18n;
 
@@ -80,6 +80,15 @@ pub const TEMPLATES: &[Template] = &[
         trigger: AT_DEPARTURE,
         deadline: None,
         items: 5,
+        photo: None,
+    },
+    Template {
+        id: "arrival",
+        audience: GUEST,
+        icon: portaki_sdk::vocab::IconName::Key,
+        trigger: DURING_STAY,
+        deadline: None,
+        items: 3,
         photo: None,
     },
     Template {
@@ -197,6 +206,7 @@ mod tests {
                 assert!(!fr.is_empty() && !en.is_empty(), "{}", template.id);
             }
         }
+        assert_eq!(template("arrival").unwrap().item_labels().len(), 3);
         let cleaning = template("cleaning").unwrap().item_labels();
         assert_eq!(cleaning.len(), 7);
         assert!(cleaning[6].2);

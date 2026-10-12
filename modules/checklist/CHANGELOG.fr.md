@@ -1,9 +1,13 @@
 # Changelog
 
-## 1.8.1
+## 1.9.0
 
-Montée technique.
+Des checklists rangées par public, des étapes qu'on réordonne.
 
+* Les checklists se rangent sous « Voyageur » et « Hôte et équipe » ; « Dans le livret » marque celles que le voyageur voit.
+* Une nouvelle checklist se choisit dans une fenêtre, parmi six modèles dont « Arrivée » ; une seule liste de départ va au livret à la fois.
+* Les étapes se gèrent dans un tableau qu'on réordonne par glisser-déposer ; chacune s'ouvre dans une fenêtre : étape, précision, zone, photo.
+* La fiche d'un séjour donne une ligne par checklist, ménage compris dès que la tâche a commencé.
 * Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
 
 ## 1.8.0
