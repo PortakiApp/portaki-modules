@@ -2,6 +2,7 @@
   "catalog.host.main": "Consumables",
   "catalog.host.stay": "Consumables",
   "catalog.host.stock": "Consumables",
+  "catalog.host.tasks": "Requests to handle",
   "email.host-reply.description": "The host's reply to a restock request",
   "form.head.lead": "Tell your host — they'll restock it.",
   "form.head.title": "Something missing?",

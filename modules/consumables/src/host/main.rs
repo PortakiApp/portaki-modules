@@ -45,6 +45,14 @@ fn host_now() -> DateTime<Utc> {
 }
 
 /// Réglages du module (page) : produits, demandes, puis les demandes reçues.
+///
+/// La nav dit au dashboard d'appeler `timelineTasks` : « Café demandé · Marie » dans À venir.
+#[portaki_sdk::nav(
+    placement = HostPlacement::WorkspaceTimelineTask,
+    path = "tasks",
+    label_key = "catalog.host.tasks",
+    icon = IconName::Package
+)]
 #[portaki_sdk::surface(
     host,
     id = "main",

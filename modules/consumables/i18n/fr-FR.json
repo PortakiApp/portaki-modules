@@ -2,6 +2,7 @@
   "catalog.host.main": "Consommables",
   "catalog.host.stay": "Consommables",
   "catalog.host.stock": "Consommables",
+  "catalog.host.tasks": "Demandes à traiter",
   "email.host-reply.description": "Réponse de l'hôte à une demande de réassort",
   "form.head.lead": "Dites-le à votre hôte, il réapprovisionne.",
   "form.head.title": "Il manque quelque chose ?",

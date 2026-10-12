@@ -1156,3 +1156,18 @@ fn planned_with_a_reply_reaches_the_guest_and_ends_the_task() {
             assert_eq!(list_open_count(ctx).expect("open").open_count, 0);
         });
 }
+
+/// L'orchestrateur n'appelle `timelineTasks` que pour un module qui déclare la nav
+/// `WorkspaceTimelineTask` : sans elle, « Café demandé · Marie » n'atteint jamais À venir.
+#[test]
+fn timeline_tasks_are_declared_to_the_dashboard() {
+    let path = concat!(
+        env!("OUT_DIR"),
+        "/portaki-emissions/nav-tasks_HostPlacement__WorkspaceTimelineTask.json"
+    );
+    let raw = std::fs::read_to_string(path).expect("the tasks nav is emitted");
+    let nav: serde_json::Value = serde_json::from_str(&raw).expect("nav json");
+    assert_eq!(nav["placement"], "HostPlacement::WorkspaceTimelineTask");
+    assert_eq!(nav["path"], "tasks");
+    assert_eq!(nav["label_key"], "catalog.host.tasks");
+}

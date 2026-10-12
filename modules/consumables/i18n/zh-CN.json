@@ -2,6 +2,7 @@
   "catalog.host.main": "易耗品",
   "catalog.host.stay": "易耗品",
   "catalog.host.stock": "易耗品",
+  "catalog.host.tasks": "待处理的请求",
   "email.host-reply.description": "房东对补货请求的回复",
   "form.head.lead": "告诉房东，他会补上。",
   "form.head.title": "缺什么了吗？",

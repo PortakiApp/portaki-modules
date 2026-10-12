@@ -2,6 +2,7 @@
   "catalog.host.main": "消耗品",
   "catalog.host.stay": "消耗品",
   "catalog.host.stock": "消耗品",
+  "catalog.host.tasks": "未対応のリクエスト",
   "email.host-reply.description": "補充リクエストへのホストの返信",
   "form.head.lead": "ホストにお知らせください。補充します。",
   "form.head.title": "足りないものはありますか？",

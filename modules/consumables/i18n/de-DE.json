@@ -2,6 +2,7 @@
   "catalog.host.main": "Verbrauchsmaterial",
   "catalog.host.stay": "Verbrauchsmaterial",
   "catalog.host.stock": "Verbrauchsmaterial",
+  "catalog.host.tasks": "Offene Anfragen",
   "email.host-reply.description": "Antwort des Gastgebers auf eine Nachfüllanfrage",
   "form.head.lead": "Sagen Sie es Ihren Gastgebern, sie füllen auf.",
   "form.head.title": "Fehlt etwas?",
