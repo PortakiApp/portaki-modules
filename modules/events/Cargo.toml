@@ -17,6 +17,7 @@ portaki-sdk-macros = { workspace = true }
 portaki-connectors = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+uuid = { workspace = true }
 chrono = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

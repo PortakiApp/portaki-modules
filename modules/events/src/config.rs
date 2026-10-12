@@ -11,7 +11,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 
 /// Le rayon d'un hôte qui n'en a jamais choisi (§2.1). Un rayon déjà enregistré n'est jamais
-/// réécrit : hors de `MIN..=MAX`, il est signalé sous le champ (sans bloquer la publication) et
+/// réécrit : hors de `MIN..=MAX`, il est signalé sous le champ, bloque la publication, et reste
 /// borné à la lecture.
 const DEFAULT_RADIUS_KM: u32 = 15;
 const MIN_RADIUS_KM: u32 = 1;
@@ -53,15 +53,16 @@ impl ModuleConfig {
         self.parse_events().is_empty() && !self.nearby_enabled && self.disclaimer.is_blank()
     }
 
-    /// The filled rows, for the guest, in form order. A row without an id takes its slot's
-    /// (`evt-1`…), as the module's own `updateConfig` used to give it.
+    /// The filled rows, for the guest, in form order, their date and hours read
+    /// ([`EventRow::timed`]). A row without an id takes its slot's (`evt-1`…), as the module's own
+    /// `updateConfig` used to give it.
     pub fn parse_events(&self) -> Vec<EventRow> {
         self.events
             .iter()
             .enumerate()
             .filter(|(_, e)| !e.title.is_blank())
             .map(|(index, e)| {
-                let mut e = e.clone();
+                let mut e = e.timed();
                 if e.id.trim().is_empty() {
                     e.id = format!("evt-{}", index + 1);
                 }
@@ -75,8 +76,9 @@ impl ModuleConfig {
     }
 
     /// Ce qui ne va pas, champ par champ (`events.<i>.title`…) — sous le champ dans le formulaire,
-    /// et dans `publishReadiness`. Le lieu sans position n'y est pas : il avertit, il ne bloque pas.
-    pub fn problems(&self) -> Vec<(String, I18nText)> {
+    /// et dans `publishReadiness`, qui bloque dessus. `home`, le repère du logement : sans lui, la
+    /// distance au rayon ne se mesure pas.
+    pub fn problems(&self, home: Option<(f64, f64)>) -> Vec<(String, I18nText)> {
         let text = crate::i18n::text;
         let too_long = |value: &I18nText, max: usize| {
             value
@@ -108,14 +110,15 @@ impl ModuleConfig {
                     too_long(&event.title, TITLE_MAX)
                 },
             );
-            let ends_before = event
+            let timed = event.timed();
+            let ends_before = timed
                 .ends_at
                 .as_deref()
                 .and_then(crate::time_format::parse_starts_at)
-                .zip(crate::time_format::parse_starts_at(&event.starts_at))
+                .zip(crate::time_format::parse_starts_at(&timed.starts_at))
                 .is_some_and(|(ends, starts)| ends < starts);
             push(
-                "ends_at",
+                "end_time",
                 ends_before.then(|| text("host.event.ends.beforeStart")),
             );
             push("url", event.url.as_deref().and_then(check::https_url));
@@ -139,6 +142,21 @@ impl ModuleConfig {
                     .note
                     .as_ref()
                     .and_then(|note| too_long(note, NOTE_MAX)),
+            );
+            // §2.2 : un lieu placé, et dans le rayon. Le rayon borne la recherche automatique et
+            // vos événements : « Les événements plus loin sont ignorés. »
+            let radius = f64::from(self.normalized_radius_km());
+            push(
+                "lat",
+                match (event.lat, event.lng, home) {
+                    _ if !event.has_coords() => Some(text("host.event.where.required")),
+                    (Some(lat), Some(lng), Some((home_lat, home_lng)))
+                        if !check::within_km(lat, lng, home_lat, home_lng, radius) =>
+                    {
+                        Some(text("host.event.where.tooFar"))
+                    }
+                    _ => None,
+                },
             );
         }
         problems
@@ -179,8 +197,8 @@ impl ModuleConfig {
     }
 
     /// Le message à afficher sous `field`, s'il y en a un : l'erreur d'abord, sinon l'avertissement.
-    pub fn error_of(&self, field: &str) -> Option<I18nText> {
-        self.problems()
+    pub fn error_of(&self, field: &str, home: Option<(f64, f64)>) -> Option<I18nText> {
+        self.problems(home)
             .into_iter()
             .chain(self.warnings())
             .find(|(name, _)| name == field)
@@ -254,6 +272,15 @@ pub struct EventRow {
     /// Annulé : badge « Annulé », plus de bouton de réservation (§2.2).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub cancelled: bool,
+    /// « Quand » : le jour (`AAAA-MM-JJ`), l'heure de début et de fin (`HH:MM`), tels que les
+    /// sélecteurs du formulaire les envoient. Ils priment sur `starts_at` / `ends_at` dès que le
+    /// jour est lisible ([`Self::timed`]) ; une ligne d'avant les sélecteurs n'a que ceux-là.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub date: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub start_time: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub end_time: String,
 }
 
 /// Une date choisie, `AAAA-MM-JJ` — une ligne de liste du formulaire (`events.0.dates.1.date`).
@@ -415,6 +442,61 @@ impl EventRow {
         event
     }
 
+    /// L'événement avec `starts_at` / `ends_at` tirés du jour et des heures du formulaire, quand le
+    /// jour est lisible ; tel quel sinon. Toute la journée : minuit, sans fin.
+    ///
+    /// L'heure du mur, sans fuseau (`2026-08-15T22:30:00`) : c'est ce que l'ancien champ texte
+    /// demandait, et le livret l'affiche telle quelle.
+    pub fn timed(&self) -> EventRow {
+        let Ok(date) = chrono::NaiveDate::parse_from_str(self.date.trim(), "%Y-%m-%d") else {
+            return self.clone();
+        };
+        let time = |raw: &str| {
+            let raw = raw.trim();
+            chrono::NaiveTime::parse_from_str(raw, "%H:%M")
+                .or_else(|_| chrono::NaiveTime::parse_from_str(raw, "%H:%M:%S"))
+                .ok()
+                .filter(|_| !self.all_day)
+        };
+        let wall =
+            |at: chrono::NaiveTime| date.and_time(at).format("%Y-%m-%dT%H:%M:%S").to_string();
+        let mut event = self.clone();
+        event.starts_at = wall(time(&self.start_time).unwrap_or_default());
+        event.ends_at = time(&self.end_time).map(wall);
+        event
+    }
+
+    /// Le jour et les heures à montrer dans le formulaire : ceux enregistrés, sinon ceux de
+    /// `starts_at` / `ends_at` pour une ligne d'avant les sélecteurs.
+    pub fn when_fields(&self) -> (String, String, String) {
+        if !self.date.trim().is_empty() {
+            return (
+                self.date.clone(),
+                self.start_time.clone(),
+                self.end_time.clone(),
+            );
+        }
+        let starts = crate::time_format::parse_starts_at(&self.starts_at);
+        let ends = self
+            .ends_at
+            .as_deref()
+            .and_then(crate::time_format::parse_starts_at);
+        let format = |at: Option<chrono::DateTime<chrono::Utc>>, pattern: &str| {
+            at.map(|at| at.format(pattern).to_string())
+                .unwrap_or_default()
+        };
+        let start_time = if self.all_day {
+            String::new()
+        } else {
+            format(starts, "%H:%M")
+        };
+        (
+            format(starts, "%Y-%m-%d"),
+            start_time,
+            format(ends, "%H:%M"),
+        )
+    }
+
     /// La photo déposée, en référence, ou `None` quand il n'y en a pas.
     pub fn photo_ref(&self) -> Option<&str> {
         let photo = self.photo.trim();
@@ -426,6 +508,7 @@ impl EventRow {
         self.title.is_blank()
             && self.place.is_blank()
             && self.starts_at.trim().is_empty()
+            && self.date.trim().is_empty()
             && self.url.is_none()
             && self.lat.is_none()
             && self.lng.is_none()
@@ -628,20 +711,20 @@ mod tests {
         ] {
             let config: ModuleConfig = serde_json::from_value(unset).unwrap();
             assert_eq!(config.radius_km, 15);
-            assert!(config.error_of("radius_km").is_none());
+            assert!(config.error_of("radius_km", None).is_none());
         }
         let stored: ModuleConfig = serde_json::from_value(json!({ "radius_km": "60" })).unwrap();
         assert_eq!(stored.radius_km, 60);
         assert_eq!(stored.normalized_radius_km(), 50);
         assert_eq!(
-            stored.error_of("radius_km").unwrap().get("fr"),
+            stored.error_of("radius_km", None).unwrap().get("fr"),
             "Entre 1 et 50 km."
         );
         let below: ModuleConfig = serde_json::from_value(json!({ "radius_km": -3 })).unwrap();
         assert_eq!(below.normalized_radius_km(), 1);
-        assert!(below.error_of("radius_km").is_some());
+        assert!(below.error_of("radius_km", None).is_some());
         let fine: ModuleConfig = serde_json::from_value(json!({ "radius_km": 50 })).unwrap();
-        assert!(fine.error_of("radius_km").is_none());
+        assert!(fine.error_of("radius_km", None).is_none());
     }
 
     /// Un conseil par ligne, 120 caractères chacun (§2.2).
@@ -650,12 +733,13 @@ mod tests {
         let long = "x".repeat(121);
         let config: ModuleConfig = serde_json::from_value(json!({
             "events": [
-                { "title": "Concert", "tips": format!("{}\n{}", "y".repeat(120), "z".repeat(120)) },
-                { "title": "Marché", "tips": { "fr": "Court", "en": long } }
+                { "title": "Concert", "lat": 43.5, "lng": 7.1,
+                  "tips": format!("{}\n{}", "y".repeat(120), "z".repeat(120)) },
+                { "title": "Marché", "lat": 43.5, "lng": 7.1, "tips": { "fr": "Court", "en": long } }
             ]
         }))
         .unwrap();
-        let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
+        let fields: Vec<String> = config.problems(None).into_iter().map(|(f, _)| f).collect();
         assert_eq!(fields, ["events.1.tips"]);
     }
 
@@ -717,14 +801,19 @@ mod tests {
                 { "title": "" },
                 { "title": "", "place": "Port" },
                 { "title": "Concert", "starts_at": "2026-07-14T21:00:00Z",
-                  "ends_at": "2026-07-14T20:00:00Z", "url": "http://x.fr" }
+                  "ends_at": "2026-07-14T20:00:00Z", "url": "http://x.fr", "lat": 43.5, "lng": 7.1 }
             ]
         }))
         .unwrap();
-        let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
+        let fields: Vec<String> = config.problems(None).into_iter().map(|(f, _)| f).collect();
         assert_eq!(
             fields,
-            ["events.1.title", "events.2.ends_at", "events.2.url"]
+            [
+                "events.1.title",
+                "events.1.lat",
+                "events.2.end_time",
+                "events.2.url"
+            ]
         );
     }
 
@@ -901,31 +990,40 @@ mod tests {
     fn missing_days_and_too_many_tips_only_warn() {
         let config: ModuleConfig = serde_json::from_value(json!({
             "events": [
-                { "title": "Marché", "recurrence": "weekly", "starts_at": "2026-07-07T08:00:00Z" },
-                { "title": "Festival", "recurrence": "dates", "dates": [{ "date": "" }] },
+                { "title": "Marché", "recurrence": "weekly", "starts_at": "2026-07-07T08:00:00Z",
+                  "lat": 43.5, "lng": 7.1 },
+                { "title": "Festival", "recurrence": "dates", "dates": [{ "date": "" }],
+                  "lat": 43.5, "lng": 7.1 },
                 { "title": "Concert", "recurrence": "weekly", "weekdays": ["tue"],
-                  "tips": "1\n2\n3\n4\n5\n6" },
+                  "tips": "1\n2\n3\n4\n5\n6", "lat": 43.5, "lng": 7.1 },
                 { "title": "Brocante", "recurrence": "dates", "dates": ["2026-08-02"],
-                  "tips": "1\n2\n3\n4\n5" }
+                  "tips": "1\n2\n3\n4\n5", "lat": 43.5, "lng": 7.1 }
             ]
         }))
         .unwrap();
-        assert!(config.problems().is_empty(), "{:?}", config.problems());
+        assert!(
+            config.problems(None).is_empty(),
+            "{:?}",
+            config.problems(None)
+        );
         let fields: Vec<String> = config.warnings().into_iter().map(|(f, _)| f).collect();
         assert_eq!(
             fields,
             ["events.0.weekdays", "events.1.dates", "events.2.tips"]
         );
         assert_eq!(
-            config.error_of("events.0.weekdays").unwrap().get("fr"),
+            config
+                .error_of("events.0.weekdays", None)
+                .unwrap()
+                .get("fr"),
             "Choisissez au moins un jour."
         );
         assert_eq!(
-            config.error_of("events.1.dates").unwrap().get("fr"),
+            config.error_of("events.1.dates", None).unwrap().get("fr"),
             "Choisissez au moins un jour."
         );
         assert_eq!(
-            config.error_of("events.2.tips").unwrap().get("fr"),
+            config.error_of("events.2.tips", None).unwrap().get("fr"),
             "5 conseils au maximum."
         );
     }
@@ -942,5 +1040,84 @@ mod tests {
         let round: EventRow =
             serde_json::from_value(serde_json::to_value(&event).unwrap()).unwrap();
         assert_eq!(round, event);
+    }
+
+    /// « Quand » : le jour et les heures des sélecteurs priment sur `starts_at`, à l'heure du mur ;
+    /// toute la journée, minuit sans fin ; une fin avant le début est signalée sous la fin.
+    #[test]
+    fn the_date_and_hours_make_the_start_and_end() {
+        let event: EventRow = serde_json::from_value(json!({
+            "title": "Feu d'artifice", "starts_at": "2020-01-01T10:00:00Z",
+            "date": "2026-08-15", "start_time": "22:30", "end_time": "23:15"
+        }))
+        .unwrap();
+        let timed = event.timed();
+        assert_eq!(timed.starts_at, "2026-08-15T22:30:00");
+        assert_eq!(timed.ends_at.as_deref(), Some("2026-08-15T23:15:00"));
+        assert_eq!(timed.duration_minutes(), Some(45));
+        let all_day = EventRow {
+            all_day: true,
+            ..event.clone()
+        }
+        .timed();
+        assert_eq!(all_day.starts_at, "2026-08-15T00:00:00");
+        assert_eq!(all_day.ends_at, None);
+        // Une ligne d'avant les sélecteurs : rien ne bouge, et le formulaire montre ses valeurs.
+        let legacy = EventRow {
+            date: String::new(),
+            start_time: String::new(),
+            end_time: String::new(),
+            ends_at: Some("2020-01-01T12:00:00Z".into()),
+            ..event.clone()
+        };
+        assert_eq!(legacy.timed(), legacy);
+        assert_eq!(
+            legacy.when_fields(),
+            ("2020-01-01".into(), "10:00".into(), "12:00".into())
+        );
+        let config: ModuleConfig = serde_json::from_value(json!({ "events": [{
+            "title": "Concert", "date": "2026-08-15", "start_time": "21:00", "end_time": "20:00",
+            "lat": 43.5, "lng": 7.1
+        }] }))
+        .unwrap();
+        assert_eq!(
+            config
+                .error_of("events.0.end_time", None)
+                .unwrap()
+                .get("fr"),
+            "La fin doit être après le début."
+        );
+        assert_eq!(config.parse_events()[0].starts_at, "2026-08-15T21:00:00");
+    }
+
+    /// Le lieu : placé sur la carte, et dans le rayon autour du logement (§2.2) — deux erreurs.
+    #[test]
+    fn the_place_must_be_pinned_and_within_the_radius() {
+        let config: ModuleConfig = serde_json::from_value(json!({
+            "radius_km": 15,
+            "events": [
+                { "title": "Sans lieu" },
+                { "title": "Marché", "lat": 43.56, "lng": 7.02 },
+                { "title": "Carnaval", "lat": 43.70, "lng": 7.27 }
+            ]
+        }))
+        .unwrap();
+        let cannes = Some((43.55, 7.01));
+        let fields: Vec<String> = config
+            .problems(cannes)
+            .into_iter()
+            .map(|(f, _)| f)
+            .collect();
+        assert_eq!(fields, ["events.0.lat", "events.2.lat"]);
+        assert_eq!(
+            config.error_of("events.0.lat", cannes).unwrap().get("fr"),
+            "Placez le lieu sur la carte."
+        );
+        assert_eq!(
+            config.error_of("events.2.lat", cannes).unwrap().get("fr"),
+            "Ce lieu est plus loin que le rayon choisi."
+        );
+        // Sans repère du logement, la distance ne se mesure pas.
+        assert!(config.error_of("events.2.lat", None).is_none());
     }
 }
