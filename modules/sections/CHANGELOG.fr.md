@@ -1,15 +1,5 @@
 # Changelog
 
-## 1.7.0
-
-Le mot d'accueil redessiné, au cœur du livret.
-
-* Le mot d'accueil se règle dans la fiche du logement et se publie avec elle : rien à installer ni à activer.
-* L'hôte choisit quand le mot apparaît : dès la réservation, la veille ou le jour de l'arrivée.
-* Jusqu'à dix sections, chacune avec un titre, un texte mis en forme et une photo d'ouverture.
-* Un bouton « Partir d'un modèle » propose un premier mot au nom de l'hôte et du logement.
-* Les sections déjà écrites restent lisibles telles quelles jusqu'au premier enregistrement.
-
 ## 1.6.1
 
 Montée technique.
