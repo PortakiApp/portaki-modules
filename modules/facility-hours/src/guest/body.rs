@@ -11,58 +11,23 @@ use portaki_sdk::sdui::primitives::{
 
 use chrono::Datelike;
 
-use crate::schedule::{State, WEEK};
+use crate::schedule::{local_time, spans_text, State, WEEK};
 
 use super::load::GuestData;
 
-/// L'état d'une ligne, dit comme le §2.6 le demande : « Ouvert », « Ouvre à HH:MM », « Fermé ».
-///
-/// Rien n'est rendu sans horaires structurés : une ligne qui n'a qu'une phrase garde sa phrase, et
-/// n'affiche pas un état qu'on aurait deviné.
-fn state_badge(state: &State, locale: &str) -> Trailing {
-    let (label, tone) = match state {
-        State::AlwaysOpen | State::Open => ("i18n:guest.state.open".to_string(), Tone::Success),
-        // « Ferme dans 40 min » (§9 #7) : ouvert, mais plus pour longtemps.
-        State::ClosesSoon(minutes) => (
-            t!("guest.state.closesSoon", minutes = minutes)
-                .unwrap_or_else(|_| "i18n:guest.state.open".to_string()),
-            Tone::Warning,
-        ),
-        State::OpensAt(minutes) => (
-            t!("guest.state.opensAt", time = format_minutes(*minutes))
-                .unwrap_or_else(|_| "i18n:guest.state.opensAtPlain".to_string()),
-            Tone::Neutral,
-        ),
-        State::Closed => ("i18n:guest.state.closed".to_string(), Tone::Neutral),
-        // Hors saison : « Fermé » ferait croire à une fermeture du jour, et le voyageur
-        // reviendrait demain devant la même porte.
-        // « Fermé jusqu'au 1 juin » (§9 #4) : quand revenir, et pas seulement que c'est fermé.
-        State::OutOfSeason(reopens) => (
-            reopens
-                .and_then(|date| {
-                    t!(
-                        "guest.state.closedUntil",
-                        date = time::short_date(date, locale)
-                    )
-                    .ok()
-                })
-                .unwrap_or_else(|| "i18n:guest.state.outOfSeason".to_string()),
-            Tone::Neutral,
-        ),
-    };
-    Trailing::Visual(Box::new(TrailingVisual {
+/// Le badge d'une ligne : l'état calculé, en avertissement le jour d'une fermeture exceptionnelle
+/// (§9 #5). `None` 24 h/24 : « 24 h/24 » se lit dans la ligne, sans statut (§9 #1).
+fn state_badge(state: &State, locale: &str, exception_today: bool) -> Option<Trailing> {
+    let (label, tone) = crate::schedule::state_label(state, locale)?;
+    let tone = if exception_today { Tone::Warning } else { tone };
+    Some(Trailing::Visual(Box::new(TrailingVisual {
         badge: Some(BadgeSpec {
             label,
             tone,
             dot: false,
         }),
         ..TrailingVisual::default()
-    }))
-}
-
-/// `HH:MM` depuis des minutes après minuit.
-fn format_minutes(minutes: u32) -> String {
-    format!("{:02}:{:02}", minutes / 60, minutes % 60)
+    })))
 }
 
 /// Les sept jours d'une ligne, lundi en tête, le jour courant marqué (§2.6).
@@ -84,17 +49,7 @@ fn week_rows(
                     "i18n:guest.state.closed".to_string()
                 } else {
                     // Deux plages se lisent comme l'hôte les écrit : « 08:30 – 12:00 · 14:00 – 18:00 ».
-                    spans
-                        .iter()
-                        .map(|span| {
-                            format!(
-                                "{} – {}",
-                                format_minutes(span.opens),
-                                format_minutes(span.closes)
-                            )
-                        })
-                        .collect::<Vec<_>>()
-                        .join(" · ")
+                    spans_text(&spans)
                 }
             };
             DetailRow {
@@ -114,11 +69,8 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
     // « Ouvert » tiré d'une heure inventée.
     let now = time::now().ok();
     let tz = PropertyTz::parse(&data.timezone);
-    let today = now.and_then(|now| {
-        tz.as_ref()
-            .map(|tz| tz.to_local(now).naive_local().weekday())
-            .or_else(|| Some(now.naive_utc().weekday()))
-    });
+    let today_date = now.map(|now| local_time(now, tz.as_ref()).date());
+    let today = today_date.map(|date| date.weekday());
 
     if !data.general_note.is_empty() {
         children.push(Component::InfoBanner(
@@ -140,6 +92,7 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
     for facility in shown {
         let title = facility.title.get(&data.locale);
         let lines = facility.lines(&data.locale);
+        let schedule = facility.schedule();
         let hours = facility
             .hours
             .as_deref()
@@ -147,11 +100,21 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
             .filter(|s| !s.is_empty())
             .map(|s| s.to_string())
             .or_else(|| (!lines.is_empty()).then(|| lines.join(" · ")))
-            .or_else(|| {
-                (facility.mode() == crate::config::MODE_ON_REQUEST)
-                    .then(|| "i18n:guest.onRequest".to_string())
+            .or_else(|| match facility.mode() {
+                crate::config::MODE_ON_REQUEST => Some("i18n:guest.onRequest".to_string()),
+                crate::config::MODE_ALWAYS => Some("i18n:guest.allDay".to_string()),
+                _ => None,
             })
+            // Les plages du jour, en mono comme l'hôte les saisit (§2.2) ; le reste de la semaine
+            // se déplie.
+            .or_else(|| today_date.map(|date| spans_text(&schedule.spans_at(date))))
+            .filter(|text| !text.is_empty())
             .unwrap_or_default();
+        // La fermeture exceptionnelle du jour : le badge passe en avertissement, le motif suit.
+        let exception = today_date.and_then(|date| facility.exception_on(date));
+        let reason = exception
+            .map(|entry| entry.reason.get(&data.locale).trim().to_string())
+            .filter(|reason| !reason.is_empty());
 
         if enriched {
             let mut item = ListItem::new().title(title);
@@ -162,10 +125,20 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
                 item = item.subtitle(hours.clone());
             }
             // L'état en direct et la semaine dépliable, pour les lignes qui portent des heures.
-            let schedule = facility.schedule();
             if let Some(state) = now.and_then(|now| schedule.state_at(now, tz.as_ref())) {
-                item = item.trailing(state_badge(&state, &data.locale));
-                item = item.details(week_rows(facility, &data.locale, today));
+                if let Some(badge) = state_badge(&state, &data.locale, exception.is_some()) {
+                    item = item.trailing(badge);
+                }
+                if schedule.is_structured() {
+                    item = item.details(week_rows(facility, &data.locale, today));
+                }
+            }
+            if let Some(reason) = &reason {
+                item = item.child(
+                    Text::new()
+                        .text(reason.clone())
+                        .variant(TextVariant::Caption),
+                );
             }
             for line in lines {
                 item = item.child(Text::new().text(line).variant(TextVariant::Caption));
@@ -176,7 +149,6 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
             }
             rows.push((group_title(facility), Component::ListItem(item)));
         } else {
-            let schedule = facility.schedule();
             let row = match now.and_then(|now| schedule.state_at(now, tz.as_ref())) {
                 /*
                  * Sur la carte aussi : l'horaire, l'état, et la semaine dépliable.
@@ -194,9 +166,19 @@ pub fn build_hours_body(data: &GuestData, enriched: bool) -> Vec<Component> {
                     if !hours.is_empty() {
                         item = item.subtitle(hours.clone());
                     }
-                    item = item
-                        .trailing(state_badge(&state, &data.locale))
-                        .details(week_rows(facility, &data.locale, today));
+                    if let Some(badge) = state_badge(&state, &data.locale, exception.is_some()) {
+                        item = item.trailing(badge);
+                    }
+                    if schedule.is_structured() {
+                        item = item.details(week_rows(facility, &data.locale, today));
+                    }
+                    if let Some(reason) = &reason {
+                        item = item.child(
+                            Text::new()
+                                .text(reason.clone())
+                                .variant(TextVariant::Caption),
+                        );
+                    }
                     Component::ListItem(item)
                 }
                 None => Component::KeyValue(KeyValue::new().key(title).value(hours)),

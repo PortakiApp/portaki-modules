@@ -1,19 +1,43 @@
-//! Host dashboard surface — design `facility-editor-v1` (Wasm SDUI).
+//! Host dashboard surface — the settings page (spec Horaires §2), mode « page ».
+//!
+//! A `PropertyWorkspaceTab` surface: the dashboard lays it out as a settings page because it holds
+//! `Section`s. Two of them, in the spec's order: « Affichage », then « Équipements ».
+//!
+//! The facilities are a table (règles communes §2.4 bis), the way `appliances` draws its devices:
+//! each row opens its form in a side panel, `children[i]` of the `DataTable`, its fields named
+//! `facilities.<i>.<clé>`. The dashboard sends each row's `id` itself; `updateConfig` merges a row
+//! that only sends its id, so a row never opened keeps everything.
+//!
+//! The blocks that depend on the mode hide with `Field.visibleWhen` on the row's `mode`: the
+//! `RadioGroup` seeds its value, so the condition holds from the first render.
 
+use portaki_sdk::contracts::i18n::I18nText;
+use portaki_sdk::host::time::{self, PropertyTz};
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui;
+use portaki_sdk::sdui::action::Action;
+use portaki_sdk::sdui::common::Tone;
+use portaki_sdk::sdui::hours::format_week;
 use portaki_sdk::sdui::primitives::{
-    Card, ChoiceList, Field, FieldHint, Form, NumberInput, Page, Select, Stack, StepList, Text,
-    TextArea, TextInput,
+    ChoiceList, DataTable, DatePicker, Field, FieldHint, Form, InlineNotice, NumberInput, Page,
+    RadioGroup, Section, Select, Stack, StepList, Text, TextArea, TextInput, TimeRange, Toggle,
+    WeeklyHours,
 };
 use portaki_sdk::sdui::surface::Surface;
+use serde_json::{json, Map, Value};
 
 pub use crate::config::MAX_FACILITIES;
 use crate::config::{
-    FacilityRow, ModuleConfig, GROUPS, ICONS, MAX_CARD_LIMIT, MIN_CARD_LIMIT, MODES, MODE_BY_DAY,
-    MODE_SAME,
+    suggest_icon, FacilityRow, ModuleConfig, GROUPS, ICONS, MAX_CARD_LIMIT, MAX_EXCEPTIONS,
+    MAX_RANGES, MIN_CARD_LIMIT, MODES, MODE_ALWAYS, MODE_BY_DAY, MODE_ON_REQUEST, MODE_SAME,
 };
+use crate::schedule::{local_time, season_display, state_label};
 
+/// Les équipements ajoutés pas encore enregistrés : leurs id, séparés par des virgules.
+const NEW_FACILITIES: &str = "newFacilities";
+/// La plage d'un équipement tout juste ajouté (§2.2, « défaut 9:00 – 19:00 »).
+const DEFAULT_RANGE: &str = "09:00-19:00";
+
+/// Réglages du module (page) : affichage, puis équipements.
 #[portaki_sdk::surface(
     host,
     id = "main",
@@ -23,419 +47,626 @@ use crate::config::{
     icon = IconName::ClockCircle
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
-    let config = ModuleConfig::load(&ctx)?;
-
-    let mut cards: Vec<Component> =
-        vec![display_card(&config, &ctx), facilities_card(&config, &ctx)];
-    cards.push(
-        Card::new()
-            .title("i18n:host.section.note")
-            .icon(IconName::InfoCircle)
-            .children(vec![Field::new()
-                .name("general_note")
-                .label("i18n:host.note.label")
-                .child(
-                    TextArea::new()
-                        .name("general_note")
-                        .value(config.general_note.host_value(&ctx))
-                        .placeholder("i18n:host.note.placeholder"),
-                )
-                .into()])
-            .into(),
-    );
-
-    // No Save button — the modules drawer owns the footer Save.
-    Ok(Surface::new(
-        Page::new().child(Form::new().child(Stack::new().gap(16.0).children(vec![
-                    Text::new()
-                        .text("i18n:surface.host.main.subtitle")
-                        .variant(TextVariant::Body)
-                        .into(),
-                    Component::Stack(Stack::new().gap(16.0).children(cards)),
-                ]))),
-    )
-    .with_id(MAIN))
+    let view = View::load(&ctx)?;
+    let form = Form::new()
+        .child(display_section(&view, &ctx))
+        .child(facilities_section(&view, &ctx));
+    Ok(Surface::new(Page::new().child(form)).with_id(MAIN))
 }
 
-/// §2.1 Affichage : combien de lignes sur la carte d'accueil.
-fn display_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
+/// Ce que la page lit : l'enregistré, les lignes qu'« Ajouter » a ouvertes, et l'heure du lieu.
+struct View {
+    config: ModuleConfig,
+    /// Les équipements ajoutés depuis l'entrée de surface, pas encore enregistrés.
+    added: Vec<String>,
+    /// Les erreurs, puis les avertissements, par champ (`facilities.<i stocké>.<clé>`).
+    messages: Vec<(String, I18nText)>,
+    now: Option<DateTime<Utc>>,
+    tz: Option<PropertyTz>,
+}
+
+/// Une ligne du tableau : sa place dans le formulaire, et dans la config stockée.
+struct Row<'a> {
+    /// L'index du formulaire, `facilities.<index>.…`.
+    index: usize,
+    /// L'index stocké, celui des messages ; `None` pour une ligne ajoutée.
+    stored: Option<usize>,
+    facility: &'a FacilityRow,
+}
+
+impl View {
+    fn load(ctx: &HostContext) -> Result<Self> {
+        let config = ModuleConfig::load(ctx)?;
+        let tz = PropertyTz::parse(&ctx.property.timezone);
+        // Sans horloge (un aperçu), la colonne « Aujourd'hui » reste vide plutôt que d'inventer.
+        let now = time::now().ok();
+        let today = now.map(|now| local_time(now, tz.as_ref()).date());
+        let messages = config
+            .problems()
+            .into_iter()
+            .chain(config.warnings(today))
+            .collect();
+        let added = ctx
+            .input_str(NEW_FACILITIES)
+            .unwrap_or_default()
+            .split(',')
+            .map(str::trim)
+            .filter(|id| !id.is_empty() && !config.facilities.iter().any(|f| f.id == *id))
+            .map(str::to_string)
+            .collect();
+        Ok(Self {
+            config,
+            added,
+            messages,
+            now,
+            tz,
+        })
+    }
+
+    /// Les lignes du tableau : les équipements enregistrés, sans les emplacements vides de l'ancien
+    /// formulaire, puis les ajoutés (30 au plus). Une ligne d'avant les id en reçoit un fixe : le
+    /// tableau écarte une ligne sans id, et la plateforme retombe alors sur la position.
+    fn rows(&self) -> Vec<(Option<usize>, FacilityRow)> {
+        let mut rows: Vec<(Option<usize>, FacilityRow)> = self
+            .config
+            .facilities
+            .iter()
+            .enumerate()
+            .filter(|(_, facility)| !facility.is_blank())
+            .map(|(stored, facility)| {
+                let mut facility = facility.clone();
+                if facility.id.trim().is_empty() {
+                    facility.id = format!("legacy-{stored}");
+                }
+                (Some(stored), facility)
+            })
+            .collect();
+        for id in &self.added {
+            if rows.len() >= MAX_FACILITIES {
+                break;
+            }
+            rows.push((
+                None,
+                FacilityRow {
+                    id: id.clone(),
+                    ..FacilityRow::default()
+                },
+            ));
+        }
+        rows
+    }
+
+    fn message(&self, key: &str, ctx: &HostContext) -> Option<String> {
+        self.messages
+            .iter()
+            .find(|(name, _)| name == key)
+            .map(|(_, text)| text.get(&ctx.locale).to_string())
+    }
+
+    /// Le champ `name`, libellé, avec le message de `key` (l'index stocké) sous lui.
+    fn field(&self, name: &str, key: Option<&str>, label: &str, ctx: &HostContext) -> Field {
+        let field = Field::new().name(name).label(label);
+        match key.and_then(|key| self.message(key, ctx)) {
+            Some(message) => field.error(message),
+            None => field,
+        }
+    }
+}
+
+impl Row<'_> {
+    fn name(&self, key: &str) -> String {
+        format!("facilities.{}.{key}", self.index)
+    }
+
+    fn field(&self, view: &View, key: &str, label: &str, ctx: &HostContext) -> Field {
+        let stored = self
+            .stored
+            .map(|stored| format!("facilities.{stored}.{key}"));
+        view.field(&self.name(key), stored.as_deref(), label, ctx)
+    }
+
+    /// `visibleWhen` du mode `mode`.
+    fn when(&self, mode: &str) -> String {
+        format!("{}={mode}", self.name("mode"))
+    }
+}
+
+/// §2.1 Affichage.
+fn display_section(view: &View, ctx: &HostContext) -> Component {
+    let config = &view.config;
+    // La valeur saisie, même hors bornes : « Entre 1 et 6. » sous un 3 bien sage serait un faux
+    // positif.
     let shown = if config.card_limit.is_finite() && config.card_limit != 0.0 {
         config.card_limit
     } else {
         config.card_limit() as f64
     };
-    Card::new()
-        .title("i18n:host.display.title")
-        .icon(IconName::Home)
+    let mut children: Vec<Component> = vec![view
+        .field(
+            "card_limit",
+            Some("card_limit"),
+            "i18n:host.cardLimit.label",
+            ctx,
+        )
+        .required(true)
         .child(
-            named(config, ctx, "card_limit")
-                .label("i18n:host.cardLimit.label")
-                .child(
-                    NumberInput::new()
-                        .name("card_limit")
-                        .min(MIN_CARD_LIMIT as f64)
-                        .max(MAX_CARD_LIMIT as f64)
-                        .value(shown),
-                ),
+            NumberInput::new()
+                .name("card_limit")
+                .min(MIN_CARD_LIMIT as f64)
+                .max(MAX_CARD_LIMIT as f64)
+                .value(shown),
         )
         .child(FieldHint::new().text("i18n:host.cardLimit.hint"))
+        .into()];
+    // L'ancienne note générale, hors spec : montrée tant qu'elle porte un texte, pour que l'hôte
+    // puisse la vider — le livret la lit encore.
+    let note = config.general_note.host_value(ctx);
+    if !note.trim().is_empty() {
+        children.push(
+            Field::new()
+                .name("general_note")
+                .label("i18n:host.note.label")
+                .child(
+                    TextArea::new()
+                        .name("general_note")
+                        .value(note)
+                        .placeholder("i18n:host.note.placeholder"),
+                )
+                .into(),
+        );
+    }
+    Section::new()
+        .title("i18n:host.display.title")
+        .children(children)
         .into()
 }
 
-/// Les jours de fermeture, en choix multiple : sans objet pour un service « sur demande », ni
-/// « selon le jour », où un jour sans plage est déjà fermé.
-fn closed_days_field(
-    index: usize,
-    facility: Option<&FacilityRow>,
-    mode: &str,
-) -> Option<Component> {
-    if mode == crate::config::MODE_ON_REQUEST || mode == MODE_BY_DAY {
-        return None;
+/// §2.2 Équipements : le tableau, ses lignes, et le panneau de chacune.
+fn facilities_section(view: &View, ctx: &HostContext) -> Component {
+    let rows = view.rows();
+    let mut children: Vec<Component> = Vec::new();
+    if let Some(error) = view.message("facilities", ctx) {
+        children.push(InlineNotice::new().tone(Tone::Danger).message(error).into());
     }
-    let chosen = facility.map(|f| f.closed_days.clone()).unwrap_or_default();
-    Some(
-        Field::new()
-            .name(format!("facilities.{index}.closed_days"))
-            .label("i18n:host.facility.closedDays")
+
+    let mut table = DataTable::new()
+        .rowName("facilities")
+        .columns(json!([
+            { "key": "name", "label": "i18n:host.column.facility" },
+            { "key": "group", "label": "i18n:host.column.group" },
+            { "key": "hours", "label": "i18n:host.column.hours" },
+            { "key": "today", "label": "i18n:host.column.today", "kind": "pill" },
+        ]))
+        .rows(Value::Array(
+            rows.iter()
+                .map(|(_, facility)| table_row(view, facility, ctx))
+                .collect(),
+        ))
+        .searchPlaceholder("i18n:host.search.placeholder")
+        .filterKey("group")
+        .children(
+            rows.iter()
+                .enumerate()
+                .map(|(index, (stored, facility))| {
+                    let row = Row {
+                        index,
+                        stored: *stored,
+                        facility,
+                    };
+                    facility_panel(view, &row, ctx)
+                })
+                .collect(),
+        );
+    if rows.len() < MAX_FACILITIES {
+        let mut added = view.added.clone();
+        added.push(Uuid::new_v4().to_string());
+        let mut input = Map::new();
+        input.insert(NEW_FACILITIES.into(), Value::String(added.join(",")));
+        table = table
+            .addLabel("i18n:host.facilities.add")
+            .addAction(Action::emit(
+                contracts::shell::SURFACE_INPUT,
+                Some(Value::Object(input)),
+            ));
+    } else {
+        children.push(
+            Text::new()
+                .text("i18n:host.facilities.tooMany")
+                .variant(TextVariant::Caption)
+                .into(),
+        );
+    }
+    children.push(table.into());
+
+    Section::new()
+        .title("i18n:host.facilities.title")
+        .subtitle(format!("{} / {MAX_FACILITIES}", rows.len()))
+        .children(children)
+        .into()
+}
+
+/// Équipement · Groupe · Horaires · Aujourd'hui.
+fn table_row(view: &View, facility: &FacilityRow, ctx: &HostContext) -> Value {
+    json!({
+        "id": facility.id,
+        "name": facility.title.host_value(ctx),
+        "group": format!("i18n:host.facility.group.{}", facility.group_key()),
+        "hours": hours_summary(facility),
+        "today": today_label(view, facility, ctx),
+    })
+}
+
+/// Les horaires d'une ligne en une cellule : les plages en mono, ou ce que le mode dit.
+fn hours_summary(facility: &FacilityRow) -> String {
+    match facility.mode() {
+        MODE_BY_DAY => "i18n:host.facility.mode.by_day".to_string(),
+        MODE_ALWAYS => "i18n:host.facility.mode.always".to_string(),
+        MODE_ON_REQUEST => "i18n:host.facility.mode.on_request".to_string(),
+        _ => {
+            let ranges = facility.same_ranges();
+            if ranges.is_empty() {
+                facility.hours.as_deref().unwrap_or("").trim().to_string()
+            } else {
+                ranges
+                    .iter()
+                    .map(|(start, end)| format!("{start} – {end}"))
+                    .collect::<Vec<_>>()
+                    .join(" · ")
+            }
+        }
+    }
+}
+
+/// « Ouvert · ferme à 19:00 », « Ferme dans 40 min », « Fermé », « 24 h/24 », « Sur demande »,
+/// « Fermé jusqu'au 1er juin » — au fuseau du logement, jamais à celui du navigateur.
+fn today_label(view: &View, facility: &FacilityRow, ctx: &HostContext) -> String {
+    let state = view
+        .now
+        .and_then(|now| facility.schedule().state_at(now, view.tz.as_ref()));
+    match state {
+        Some(state) => state_label(&state, &ctx.locale)
+            .map(|(label, _)| label)
+            .unwrap_or_else(|| "i18n:host.facility.mode.always".to_string()),
+        None if facility.mode() == MODE_ON_REQUEST => {
+            "i18n:host.facility.mode.on_request".to_string()
+        }
+        None => String::new(),
+    }
+}
+
+/// Le panneau d'une ligne : tous ses champs, nommés `facilities.<i>.<clé>`.
+fn facility_panel(view: &View, row: &Row, ctx: &HostContext) -> Component {
+    let facility = row.facility;
+    let title = facility.title.host_value(ctx);
+    let mode = facility.mode();
+    // Jamais choisie : celle que le nom appelle (§4). « Aucune » enregistrée reste aucune.
+    let icon = match &facility.icon {
+        Some(icon) => icon.trim().to_string(),
+        None => suggest_icon(title).unwrap_or("").to_string(),
+    };
+
+    let mut children: Vec<Component> = vec![
+        row.field(view, "icon", "i18n:host.facility.icon", ctx)
             .child(
-                ChoiceList::new()
-                    .name(format!("facilities.{index}.closed_days"))
-                    .multi(true)
-                    .layout(ChoiceListLayout::Compact)
-                    .choices(
-                        crate::schedule::WEEK
+                Select::new()
+                    .name(row.name("icon"))
+                    .options(
+                        std::iter::once(ChoiceOption::new("", "i18n:host.facility.icon.none"))
+                            .chain(ICONS.iter().map(|icon| {
+                                ChoiceOption::new(*icon, format!("i18n:host.icon.{icon}"))
+                            }))
+                            .collect(),
+                    )
+                    .value(icon),
+            )
+            .into(),
+        row.field(view, "title", "i18n:host.facility.name", ctx)
+            .required(true)
+            .child(
+                TextInput::new()
+                    .name(row.name("title"))
+                    .value(title)
+                    .placeholder("i18n:host.facility.name.placeholder"),
+            )
+            .into(),
+        row.field(view, "group", "i18n:host.facility.group", ctx)
+            .required(true)
+            .child(
+                RadioGroup::new()
+                    .name(row.name("group"))
+                    .options(
+                        GROUPS
                             .iter()
-                            .map(|day| {
-                                let key = crate::schedule::day_key(*day);
-                                ChoiceOption::new(key, format!("i18n:host.day.{key}"))
+                            .map(|key| {
+                                ChoiceOption::new(*key, format!("i18n:host.facility.group.{key}"))
                             })
                             .collect(),
                     )
-                    .value(serde_json::to_string(&chosen).unwrap_or_default()),
+                    .value(facility.group_key()),
             )
             .into(),
-    )
+        row.field(view, "mode", "i18n:host.facility.mode", ctx)
+            .required(true)
+            .child(
+                RadioGroup::new()
+                    .name(row.name("mode"))
+                    .options(
+                        MODES
+                            .iter()
+                            .map(|key| {
+                                ChoiceOption::new(*key, format!("i18n:host.facility.mode.{key}"))
+                            })
+                            .collect(),
+                    )
+                    .value(mode),
+            )
+            .into(),
+    ];
+    children.extend(same_ranges_fields(view, row, ctx));
+    children.push(week_field(view, row, ctx));
+    children.push(note_field(view, row, ctx));
+    children.push(closed_days_field(row));
+    children.extend(season_fields(view, row, ctx));
+    children.push(exceptions_field(view, row, ctx));
+    children.extend(legacy_fields(view, row, ctx));
+
+    Stack::new().gap(14.0).children(children).into()
 }
 
-/// « Selon le jour » : une ouverture et une fermeture par jour, lundi en tête. La ligne `d` est
-/// le jour `d` ; un jour laissé vide est fermé.
-fn by_day_rows(
-    index: usize,
-    facility: Option<&FacilityRow>,
-    config: &ModuleConfig,
-    ctx: &HostContext,
-) -> Vec<Component> {
-    crate::schedule::WEEK
-        .iter()
-        .enumerate()
-        .flat_map(|(d, day)| {
-            let key = crate::schedule::day_key(*day);
-            let entry = facility.and_then(|f| {
-                f.by_day_entries()
-                    .into_iter()
-                    .find_map(|(at, entry)| (at == d).then_some(entry))
-            });
-            let time = |key: &str, label: &str, value: Option<&String>, placeholder: &str| {
-                let name = format!("facilities.{index}.exceptions.{d}.{key}");
-                Component::from(
-                    named(config, ctx, name.clone())
-                        .label(format!("i18n:host.facility.{label}"))
-                        .child(
-                            TextInput::new()
-                                .name(name)
-                                .value(value.map(String::as_str).unwrap_or(""))
-                                .placeholder(placeholder),
-                        ),
-                )
+/// « Même horaire tous les jours » : trois plages, la première remplie. Une ligne d'avant les
+/// plages montre son ouverture, sa fermeture et sa coupure, migrées.
+fn same_ranges_fields(view: &View, row: &Row, ctx: &HostContext) -> Vec<Component> {
+    let facility = row.facility;
+    let fields = facility.range_fields();
+    let typed = fields.iter().any(|(_, raw)| !raw.trim().is_empty());
+    let migrated = facility.same_ranges();
+    let added = row.stored.is_none();
+    (0..MAX_RANGES)
+        .map(|k| {
+            let (key, raw) = fields[k];
+            let value = if typed {
+                raw.trim().to_string()
+            } else if let Some((start, end)) = migrated.get(k) {
+                format!("{start}-{end}")
+            } else if k == 0 && added {
+                DEFAULT_RANGE.to_string()
+            } else {
+                String::new()
             };
-            [
-                // Le jour de la ligne, en champ caché : le formulaire resserre les index, et
-                // une ligne sans lui glisserait au jour d'après.
-                sdui::row_id(&format!("facilities.{index}.exceptions"), d, Some(key)),
-                Text::new()
-                    .text(format!("i18n:host.day.{key}"))
-                    .variant(TextVariant::Body)
-                    .into(),
-                time(
-                    "opens_at",
-                    "opensAt",
-                    entry.and_then(|e| e.opens_at.as_ref()),
-                    "08:00",
-                ),
-                time(
-                    "closes_at",
-                    "closesAt",
-                    entry.and_then(|e| e.closes_at.as_ref()),
-                    "20:00",
-                ),
-            ]
+            let label = format!("i18n:host.facility.range.{}", k + 1);
+            let mut field = row
+                .field(view, key, &label, ctx)
+                .visibleWhen(row.when(MODE_SAME))
+                .child(TimeRange::new().name(row.name(key)).value(value));
+            if k == 0 {
+                field = field.child(FieldHint::new().text("i18n:host.facility.ranges.hint"));
+            }
+            field.into()
         })
         .collect()
 }
 
-/// Le champ `name`, avec le message de [`ModuleConfig::error_of`] sous lui s'il y en a un.
-fn named(config: &ModuleConfig, ctx: &HostContext, name: impl Into<String>) -> Field {
-    let name = name.into();
-    let field = Field::new().name(name.clone());
-    match config.error_of(&name) {
-        Some(error) => field.error(error.get(&ctx.locale).to_string()),
-        None => field,
-    }
-}
-
-/// Les équipements, en lignes dynamiques bornées.
-fn facilities_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let rows_count = draft_rows(ctx, config.facilities.len());
-    let rows: Vec<Component> = (0..rows_count)
-        .map(|index| facility_row(index, config, ctx))
-        .collect();
-
-    Card::new()
-        .title("i18n:host.facilities.title")
-        .subtitle("i18n:host.facilities.subtitle")
-        .icon(IconName::ClockCircle)
-        .child(
-            StepList::new()
-                .addLabel("i18n:host.facilities.add")
-                .removeLabel("i18n:host.facilities.remove")
-                .emptyTitle("i18n:host.facilities.emptyTitle")
-                .emptyDescription("i18n:host.facilities.emptyDescription")
-                .itemKeyPrefix("facilities")
-                .addAction(emit_input(RowCount {
-                    facilities_count: (rows_count + 1).min(MAX_FACILITIES),
-                }))
-                .children(rows),
-        )
-        .into()
-}
-
-/// Combien de lignes dessiner : ce que « Ajouter » a demandé, sinon ce qui est stocké, borné.
-fn draft_rows(ctx: &HostContext, stored: usize) -> usize {
-    match ctx.input_u64("facilities_count") {
-        Some(asked) => (asked as usize).clamp(1, MAX_FACILITIES),
-        None => stored.clamp(1, MAX_FACILITIES),
-    }
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "snake_case")]
-struct RowCount {
-    facilities_count: usize,
-}
-
-fn emit_input(payload: impl serde::Serialize) -> Action {
-    Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
-}
-
-fn facility_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let facility = config.facilities.get(index);
-    let title = facility
-        .map(|f| f.title.host_value(ctx))
-        .unwrap_or_default();
-    let hours = facility.and_then(|f| f.hours.as_deref()).unwrap_or("");
-    let group = facility.map_or(crate::config::DEFAULT_GROUP, FacilityRow::group_key);
-    let mode = facility.map_or(MODE_SAME, FacilityRow::mode);
-    let season_from = facility.map(|f| f.season_from.as_str()).unwrap_or("");
-    let season_to = facility.map(|f| f.season_to.as_str()).unwrap_or("");
-    let icon = facility.and_then(FacilityRow::icon_name).unwrap_or("");
-    let opens_at = facility.map(|f| f.opens_at.as_str()).unwrap_or("");
-    let closes_at = facility.map(|f| f.closes_at.as_str()).unwrap_or("");
-    let break_from = facility.map(|f| f.break_from.as_str()).unwrap_or("");
-    let break_to = facility.map(|f| f.break_to.as_str()).unwrap_or("");
-    let lines = facility
-        .map(|f| f.lines.host_value(ctx))
-        .unwrap_or_default();
-    let note = facility.map(|f| f.note.host_value(ctx)).unwrap_or_default();
-    // A filled row sends its id, so a save merges into it (and keeps its other languages). A blank slot has nothing to keep — and an id would make it count as filled.
-    let id = facility
-        .filter(|f| !f.is_blank())
-        .map(|f| sdui::row_id("facilities", index, Some(&f.id)));
-
-    // Les heures ne se demandent que pour « Même horaire tous les jours » : 24 h/24 et sur
-    // demande n'en ont pas (règles communes : masqué, pas grisé).
-    let times: Vec<Component> = if mode == MODE_BY_DAY {
-        by_day_rows(index, facility, config, ctx)
-    } else if mode == MODE_SAME {
-        vec![
-            // Les heures structurées, à côté de la phrase et non à sa place : un hôte qui
-            // les remplit gagne l'état en direct, un hôte qui ne les remplit pas garde
-            // exactement ce qu'il avait écrit.
-            named(config, ctx, format!("facilities.{index}.opens_at"))
-                .label("i18n:host.facility.opensAt")
-                .children(vec![
-                    FieldHint::new()
-                        .text("i18n:host.facility.opensAt.desc")
-                        .into(),
-                    TextInput::new()
-                        .name(format!("facilities.{index}.opens_at"))
-                        .value(opens_at)
-                        .placeholder("08:00")
-                        .into(),
-                ])
-                .into(),
-            named(config, ctx, format!("facilities.{index}.closes_at"))
-                .label("i18n:host.facility.closesAt")
-                .child(
-                    TextInput::new()
-                        .name(format!("facilities.{index}.closes_at"))
-                        .value(closes_at)
-                        .placeholder("20:00"),
-                )
-                .into(),
-            // La coupure du midi : la deuxième plage de loin la plus courante, et la
-            // seule que l'hôte écrivait jusqu'ici dans sa phrase libre pendant que les
-            // heures structurées l'ignoraient.
-            named(config, ctx, format!("facilities.{index}.break_from"))
-                .label("i18n:host.facility.breakFrom")
-                .children(vec![
-                    FieldHint::new()
-                        .text("i18n:host.facility.break.desc")
-                        .into(),
-                    TextInput::new()
-                        .name(format!("facilities.{index}.break_from"))
-                        .value(break_from)
-                        .placeholder("12:00")
-                        .into(),
-                ])
-                .into(),
-            named(config, ctx, format!("facilities.{index}.break_to"))
-                .label("i18n:host.facility.breakTo")
-                .child(
-                    TextInput::new()
-                        .name(format!("facilities.{index}.break_to"))
-                        .value(break_to)
-                        .placeholder("14:00"),
-                )
-                .into(),
-        ]
-    } else {
-        Vec::new()
+/// « Selon le jour » : la semaine, trois plages par jour au plus.
+fn week_field(view: &View, row: &Row, ctx: &HostContext) -> Component {
+    let facility = row.facility;
+    let week = match facility.week.trim() {
+        "" => format_week(&facility.week_ranges()),
+        week => week.to_string(),
     };
+    // ponytail: « Copier le lundi sur toute la semaine » attend le dashboard — une valeur déjà
+    // semée ne se remplace pas depuis le module (`useSduiValue` garde la valeur du formulaire).
+    row.field(view, "week", "i18n:host.facility.week", ctx)
+        .visibleWhen(row.when(MODE_BY_DAY))
+        .child(
+            WeeklyHours::new()
+                .name(row.name("week"))
+                .value(week)
+                .maxRanges(MAX_RANGES as u32),
+        )
+        .child(FieldHint::new().text("i18n:host.facility.week.hint"))
+        .into()
+}
 
-    Stack::new()
-        .id(format!("facility-{index}"))
-        .gap(10.0)
-        .children(
-            id.into_iter()
-                .chain([
-                    named(config, ctx, format!("facilities.{index}.title"))
-                        .label("i18n:host.facility.name")
-                        .child(
-                            TextInput::new()
-                                .name(format!("facilities.{index}.title"))
-                                .value(title),
-                        )
-                        .into(),
-                    named(config, ctx, format!("facilities.{index}.group"))
-                        .label("i18n:host.facility.group")
-                        .child(
-                            Select::new()
-                                .name(format!("facilities.{index}.group"))
-                                .options(
-                                    GROUPS
-                                        .iter()
-                                        .map(|key| {
-                                            ChoiceOption::new(
-                                                *key,
-                                                format!("i18n:host.facility.group.{key}"),
-                                            )
-                                        })
-                                        .collect(),
-                                )
-                                .value(group.to_string()),
-                        )
-                        .into(),
-                    named(config, ctx, format!("facilities.{index}.mode"))
-                        .label("i18n:host.facility.mode")
-                        .child(
-                            Select::new()
-                                .name(format!("facilities.{index}.mode"))
-                                .options(
-                                    MODES
-                                        .iter()
-                                        .map(|key| {
-                                            ChoiceOption::new(
-                                                *key,
-                                                format!("i18n:host.facility.mode.{key}"),
-                                            )
-                                        })
-                                        .collect(),
-                                )
-                                .value(mode.to_string()),
-                        )
-                        .into(),
-                    named(config, ctx, format!("facilities.{index}.icon"))
-                        .label("i18n:host.facility.icon")
-                        .child(
-                            Select::new()
-                                .name(format!("facilities.{index}.icon"))
-                                .options(
-                                    std::iter::once(ChoiceOption::new(
-                                        "",
-                                        "i18n:host.facility.icon.none",
-                                    ))
-                                    .chain(ICONS.iter().map(|icon| {
-                                        ChoiceOption::new(*icon, format!("i18n:host.icon.{icon}"))
-                                    }))
-                                    .collect(),
-                                )
-                                .value(icon.to_string()),
-                        )
-                        .into(),
-                    named(config, ctx, format!("facilities.{index}.season_from"))
-                        .label("i18n:host.facility.season.from")
-                        .child(
-                            TextInput::new()
-                                .name(format!("facilities.{index}.season_from"))
-                                .value(season_from)
-                                .placeholder("04-01"),
-                        )
-                        .into(),
-                    named(config, ctx, format!("facilities.{index}.season_to"))
-                        .label("i18n:host.facility.season.to")
-                        .child(
-                            TextInput::new()
-                                .name(format!("facilities.{index}.season_to"))
-                                .value(season_to)
-                                .placeholder("10-31"),
-                        )
-                        .into(),
-                    FieldHint::new()
-                        .text("i18n:host.facility.season.hint")
-                        .into(),
-                ])
-                .chain(closed_days_field(index, facility, mode))
-                .chain([named(config, ctx, format!("facilities.{index}.hours"))
-                    .label("i18n:host.facility.hours")
-                    .child(
-                        TextInput::new()
-                            .name(format!("facilities.{index}.hours"))
-                            .value(hours)
-                            .placeholder("i18n:host.facility.hours.placeholder"),
-                    )
-                    .into()])
-                .chain(times)
-                .chain([
-                    // One schedule per line.
-                    named(config, ctx, format!("facilities.{index}.lines"))
-                        .label("i18n:host.facility.lines")
-                        .child(
-                            TextArea::new()
-                                .name(format!("facilities.{index}.lines"))
-                                .value(lines)
-                                .placeholder("i18n:host.facility.lines.placeholder"),
-                        )
-                        .into(),
-                    named(config, ctx, format!("facilities.{index}.note"))
-                        .label("i18n:host.facility.note")
-                        .child(
-                            TextInput::new()
-                                .name(format!("facilities.{index}.note"))
-                                .value(note),
-                        )
-                        .into(),
-                ])
-                .collect(),
+/// « Comment réserver » : obligatoire sur demande, masqué ailleurs — sauf une note déjà écrite,
+/// que le livret montre encore et que l'hôte doit pouvoir vider.
+fn note_field(view: &View, row: &Row, ctx: &HostContext) -> Component {
+    let facility = row.facility;
+    let note = facility.note.host_value(ctx);
+    let mut field = row
+        .field(view, "note", "i18n:host.facility.note", ctx)
+        .child(
+            TextInput::new()
+                .name(row.name("note"))
+                .value(note)
+                .placeholder("i18n:host.facility.note.placeholder"),
+        );
+    if note.trim().is_empty() || facility.mode() == MODE_ON_REQUEST {
+        field = field.visibleWhen(row.when(MODE_ON_REQUEST));
+    }
+    field.into()
+}
+
+/// Les jours de fermeture, en choix multiple : ils ferment la ligne ces jours-là, quel que soit le
+/// mode.
+fn closed_days_field(row: &Row) -> Component {
+    Field::new()
+        .name(row.name("closed_days"))
+        .label("i18n:host.facility.closedDays")
+        .child(
+            ChoiceList::new()
+                .name(row.name("closed_days"))
+                .multi(true)
+                .layout(ChoiceListLayout::Compact)
+                .choices(
+                    crate::schedule::WEEK
+                        .iter()
+                        .map(|day| {
+                            let key = crate::schedule::day_key(*day);
+                            ChoiceOption::new(key, format!("i18n:host.day.{key}"))
+                        })
+                        .collect(),
+                )
+                .value(serde_json::to_string(&row.facility.closed_days).unwrap_or_default()),
         )
         .into()
+}
+
+/// La saison, du `JJ/MM` au `JJ/MM`.
+fn season_fields(view: &View, row: &Row, ctx: &HostContext) -> Vec<Component> {
+    let facility = row.facility;
+    let date = |key: &str, label: &str, raw: &str, placeholder: &str| -> Component {
+        let value = if raw.trim().is_empty() {
+            String::new()
+        } else {
+            season_display(raw)
+        };
+        row.field(view, key, label, ctx)
+            .child(
+                TextInput::new()
+                    .name(row.name(key))
+                    .value(value)
+                    .placeholder(placeholder),
+            )
+            .into()
+    };
+    vec![
+        date(
+            "season_from",
+            "i18n:host.facility.season.from",
+            &facility.season_from,
+            "01/06",
+        ),
+        date(
+            "season_to",
+            "i18n:host.facility.season.to",
+            &facility.season_to,
+            "30/09",
+        ),
+        FieldHint::new()
+            .text("i18n:host.facility.season.hint")
+            .into(),
+    ]
+}
+
+/// Les fermetures exceptionnelles : une date, fermé ou une plage, un motif. « Ajouter » rend une
+/// rangée de plus ; une rangée laissée vide ne compte pas.
+fn exceptions_field(view: &View, row: &Row, ctx: &HostContext) -> Component {
+    let facility = row.facility;
+    let prefix = row.name("exceptions");
+    let count_key = format!("exceptions.{}", facility.id);
+    let dated: Vec<_> = facility.dated().cloned().collect();
+    let count = ctx
+        .input_u64(&count_key)
+        .map(|n| n as usize)
+        .unwrap_or(0)
+        .max(dated.len())
+        .min(MAX_EXCEPTIONS);
+    let rows: Vec<Component> = (0..count)
+        .map(|n| {
+            let entry = dated.get(n).cloned().unwrap_or_default();
+            let key = |sub: &str| format!("exceptions.{n}.{sub}");
+            Stack::new()
+                .gap(8.0)
+                .children(vec![
+                    row.field(view, &key("date"), "i18n:host.exception.date", ctx)
+                        .child(
+                            DatePicker::new()
+                                .name(row.name(&key("date")))
+                                .value(entry.date),
+                        )
+                        .into(),
+                    row.field(view, &key("closed"), "i18n:host.exception.closed", ctx)
+                        .child(
+                            Toggle::new()
+                                .name(row.name(&key("closed")))
+                                .checked(entry.closed),
+                        )
+                        .into(),
+                    row.field(view, &key("range"), "i18n:host.exception.range", ctx)
+                        .visibleWhen(format!("{prefix}.{n}.closed=false"))
+                        .child(
+                            TimeRange::new()
+                                .name(row.name(&key("range")))
+                                .value(entry.range),
+                        )
+                        .into(),
+                    row.field(view, &key("reason"), "i18n:host.exception.reason", ctx)
+                        .child(
+                            TextInput::new()
+                                .name(row.name(&key("reason")))
+                                .value(entry.reason.host_value(ctx))
+                                .placeholder("i18n:host.exception.reason.placeholder"),
+                        )
+                        .into(),
+                ])
+                .into()
+        })
+        .collect();
+    let mut list = StepList::new()
+        .itemKeyPrefix(prefix.clone())
+        .hint("i18n:host.exception.hint")
+        .addLabel("i18n:host.exception.add")
+        .children(rows);
+    let mut children: Vec<Component> = Vec::new();
+    if count < MAX_EXCEPTIONS {
+        let mut input = Map::new();
+        input.insert(count_key, Value::from(count + 1));
+        list = list.addAction(Action::emit(
+            contracts::shell::SURFACE_INPUT,
+            Some(Value::Object(input)),
+        ));
+    }
+    children.push(list.into());
+    if count >= MAX_EXCEPTIONS {
+        children.push(
+            Text::new()
+                .text("i18n:host.exception.tooMany")
+                .variant(TextVariant::Caption)
+                .into(),
+        );
+    }
+    Field::new()
+        .name(prefix)
+        .label("i18n:host.exception.title")
+        .children(children)
+        .into()
+}
+
+/// Les anciens champs en texte libre, tant qu'ils portent une valeur : le livret les lit encore,
+/// l'hôte doit pouvoir les vider. Un avertissement dit pourquoi ils ne calculent rien.
+fn legacy_fields(view: &View, row: &Row, ctx: &HostContext) -> Vec<Component> {
+    let facility = row.facility;
+    let mut children: Vec<Component> = Vec::new();
+    if let Some(warning) = row
+        .stored
+        .and_then(|stored| view.message(&format!("facilities.{stored}.hours"), ctx))
+    {
+        children.push(
+            InlineNotice::new()
+                .tone(Tone::Warning)
+                .message(warning)
+                .into(),
+        );
+    }
+    let hours = facility.hours.as_deref().unwrap_or("");
+    if !hours.trim().is_empty() {
+        children.push(
+            Field::new()
+                .name(row.name("hours"))
+                .label("i18n:host.facility.hours")
+                .child(TextInput::new().name(row.name("hours")).value(hours))
+                .into(),
+        );
+    }
+    let lines = facility.lines.host_value(ctx);
+    if !lines.trim().is_empty() {
+        children.push(
+            Field::new()
+                .name(row.name("lines"))
+                .label("i18n:host.facility.lines")
+                .child(TextArea::new().name(row.name("lines")).value(lines))
+                .into(),
+        );
+    }
+    children
 }
