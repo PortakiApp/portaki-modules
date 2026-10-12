@@ -18,12 +18,15 @@ mod tasks;
 
 pub use answers::{Answer, CustomAnswer};
 pub use commands::{
-    send_form_available, send_reminder_j0, send_reminder_j1, send_reminder_j3, submit, SubmitArgs,
+    resend_form, send_form_available, send_reminder_j0, send_reminder_j1, send_reminder_j3, submit,
+    ResendFormArgs, SubmitArgs,
 };
 pub use config::{CustomQuestion, Deadline, ModuleConfig, QuestionKind, QuestionOption, ShowWhen};
 pub use entities::PreArrivalResponse;
 pub use guest::{render_guest_form, render_home_card};
-pub use host::{render_host_main, render_host_stay};
+pub use host::{
+    render_host_main, render_host_resend, render_host_stats, render_host_stay, stats_summary,
+};
 pub use queries::{get_status, publish_readiness, PreArrivalStatus};
 pub use storage::reset_test_store;
 pub use tasks::{late_arrival_tasks, timeline_tasks};

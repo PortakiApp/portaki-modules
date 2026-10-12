@@ -12,8 +12,9 @@ use portaki_sdk::prelude::StayContext;
 use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use pre_arrival_form::{
     get_status, publish_readiness, render_guest_form, render_home_card, render_host_main,
-    render_host_stay, reset_test_store, send_form_available, send_reminder_j0, send_reminder_j1,
-    send_reminder_j3, submit, ModuleConfig, ShowWhen, SubmitArgs,
+    render_host_resend, render_host_stats, render_host_stay, resend_form, reset_test_store,
+    send_form_available, send_reminder_j0, send_reminder_j1, send_reminder_j3, stats_summary,
+    submit, ModuleConfig, ResendFormArgs, ShowWhen, SubmitArgs,
 };
 use serde_json::json;
 
@@ -1022,4 +1023,132 @@ fn a_late_arrival_is_a_task() {
             };
             assert!(late_arrival_tasks(&cleared, &args, "Europe/Paris", "L'Islette").is_empty());
         });
+}
+
+/// Le voyageur du séjour `stay_id` répond au formulaire.
+fn answer(stay_id: Uuid) {
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|mut ctx| {
+            if let Some(guest) = ctx.guest.as_mut() {
+                guest.session_id = stay_id;
+            }
+            submit(ctx, sample_submit()).expect("submit");
+        });
+}
+
+/// « Renvoyer le formulaire » : le canal, l'aperçu et le bouton tant que le formulaire attend une
+/// réponse ; une phrase seulement une fois rempli, ou fermé par l'arrivée.
+#[test]
+#[serial]
+fn the_resend_action_offers_the_form_until_it_is_answered_or_closed() {
+    reset_test_store();
+    let stay_id = Uuid::new_v4();
+    let render = |check_in: chrono::DateTime<Utc>| {
+        let mut out = String::new();
+        MockContext::host()
+            .with_property(Property::default())
+            .with_config(&json!({ "show_when": "confirm" }))
+            .run(|mut ctx| {
+                ctx.input = json!({
+                    "stayId": stay_id.to_string(),
+                    "stay": { "id": stay_id.to_string(), "checkIn": check_in.to_rfc3339() },
+                });
+                out =
+                    serde_json::to_string(&render_host_resend(ctx).expect("resend")).expect("json");
+            });
+        out
+    };
+
+    let open = render(Utc::now() + Duration::days(5));
+    assert!(open.contains("host.resend.channel.email"), "{open}");
+    assert!(open.contains("host.resend.preview.label"), "{open}");
+    assert!(open.contains(r#""name":"resendForm""#), "{open}");
+    assert!(open.contains(&stay_id.to_string()), "{open}");
+
+    let closed = render(Utc::now() - Duration::hours(1));
+    assert!(closed.contains("host.resend.closed"), "{closed}");
+    assert!(!closed.contains("resendForm"), "{closed}");
+
+    answer(stay_id);
+    let done = render(Utc::now() + Duration::days(5));
+    assert!(done.contains("host.resend.done"), "{done}");
+    assert!(!done.contains("resendForm"), "{done}");
+}
+
+/// Chaque renvoi part sous un identifiant neuf (la plateforme dédoublonne par identifiant) ; plus
+/// rien une fois le formulaire rempli.
+#[test]
+#[serial]
+fn resending_mails_the_guest_each_time_until_answered() {
+    reset_test_store();
+    let stay_id = Uuid::new_v4();
+    let resend = || {
+        let mut out = (Ok(()), Vec::new());
+        MockContext::host()
+            .with_property(Property::default())
+            .run_with(|ctx, host| {
+                let result = resend_form(ctx, ResendFormArgs { stay_id });
+                let ids = host
+                    .sent_emails()
+                    .into_iter()
+                    .map(|mail| mail.email_id)
+                    .collect();
+                out = (result, ids);
+            });
+        out
+    };
+
+    let (first, first_ids) = resend();
+    let (second, second_ids) = resend();
+    first.expect("first resend");
+    second.expect("second resend");
+    assert_eq!(first_ids.len(), 1);
+    assert_eq!(second_ids.len(), 1);
+    assert!(first_ids[0].starts_with("form-resend-"), "{first_ids:?}");
+    assert_ne!(first_ids, second_ids);
+
+    answer(stay_id);
+    let (refused, none) = resend();
+    assert!(refused.is_err());
+    assert!(none.is_empty());
+}
+
+/// « Formulaires remplis · N » : les réponses de la période ; l'état vide sans réponse.
+#[test]
+#[serial]
+fn the_stats_tile_counts_the_forms_filled_in_the_period() {
+    reset_test_store();
+    let summary = || {
+        let mut value = String::new();
+        MockContext::host()
+            .with_property(Property::default())
+            .run(|ctx| {
+                let args = serde_json::from_value(json!({
+                    "propertyId": Uuid::nil(),
+                    "period": 30,
+                    "key": "forms",
+                }))
+                .expect("args");
+                value = stats_summary(ctx, args).expect("summary").value;
+            });
+        value
+    };
+    let card = || {
+        let mut out = String::new();
+        MockContext::host()
+            .with_property(Property::default())
+            .run(|ctx| {
+                out = serde_json::to_string(&render_host_stats(ctx).expect("card")).expect("json");
+            });
+        out
+    };
+
+    assert_eq!(summary(), "0");
+    assert!(card().contains("stats.empty"));
+
+    answer(Uuid::new_v4());
+    answer(Uuid::new_v4());
+    assert_eq!(summary(), "2");
+    assert!(card().contains(r#""value":"2""#), "{}", card());
 }

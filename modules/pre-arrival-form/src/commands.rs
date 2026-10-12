@@ -129,6 +129,48 @@ pub fn send_reminder_j0(ctx: Context, _args: EmptyArgs) -> Result<()> {
     email_send::send_reminder(&ctx, Deadline::J0At12, "reminder-j0-12h")
 }
 
+/// Arguments for host `resendForm`.
+#[portaki_sdk::wire]
+#[portaki_sdk::params]
+pub struct ResendFormArgs {
+    pub stay_id: Uuid,
+}
+
+/// « Renvoyer le formulaire » (bouton du séjour) : l'e-mail d'invitation, de nouveau, au voyageur
+/// principal du séjour. Refusé une fois le formulaire rempli, ou fermé par l'arrivée.
+#[portaki_sdk::email(
+    id = "form-resend",
+    audience = EmailAudience::Guest,
+    requires_guest_email,
+    description_key = "email.form-resend.description",
+    skip_when = SkipWhen::GuestEmailMissing,
+    skip_when = SkipWhen::StayCancelled
+)]
+#[portaki_sdk::command(
+    name = "resendForm",
+    example(
+        label = "Renvoyer le formulaire",
+        input = r#"{"stayId":"5d1a7e3c-2b9f-4c8d-a6e0-7f3b1c9d2e54"}"#
+    )
+)]
+pub fn resend_form(ctx: Context, args: ResendFormArgs) -> Result<()> {
+    if ctx.guest.is_some() {
+        return Err(PortakiError::Host("host_only".to_string()));
+    }
+    if storage::find_by_stay(args.stay_id)?.is_some() {
+        return Err(PortakiError::Host("already_completed".to_string()));
+    }
+    let checkin_at = ctx
+        .stay
+        .as_ref()
+        .filter(|stay| stay.stay_id == args.stay_id)
+        .and_then(|stay| stay.checkin_at);
+    if !is_editable_until_checkin(time::now()?, checkin_at) {
+        return Err(PortakiError::Host("form_closed".to_string()));
+    }
+    email_send::resend_form(args.stay_id, &ModuleConfig::load(&ctx)?)
+}
+
 #[portaki_sdk::command(
     name = "submit",
     guest,
