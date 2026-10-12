@@ -646,3 +646,47 @@ fn one_level_wears_no_pill() {
             assert!(json.contains("▲ Facile"), "{json}");
         });
 }
+
+/// « Itinéraires consultés » : les fiches d'itinéraire ouvertes sur la période ; « — » sans
+/// statistiques du livret, « 0 » quand personne n'a rien ouvert.
+#[test]
+fn the_stats_tile_counts_the_trails_viewed() {
+    let tile = |views: serde_json::Value| {
+        let mut args = json!({
+            "propertyId": "00000000-0000-0000-0000-000000000000", "period": 30, "key": "trails-views"
+        });
+        if !views.is_null() {
+            args["views"] = views;
+        }
+        let mut value = String::new();
+        MockContext::host().run(|ctx| {
+            value = trails::stats_summary(ctx, serde_json::from_value(args).expect("args"))
+                .expect("summary")
+                .value;
+        });
+        value
+    };
+    assert_eq!(tile(serde_json::Value::Null), "—");
+    assert_eq!(tile(json!({ "opens": 0 })), "0");
+    assert_eq!(
+        tile(json!({ "opens": 9, "surfaces": { "explore.item": 7, "explore.detail": 2 } })),
+        "7"
+    );
+
+    let detail = |input: serde_json::Value| {
+        let mut out = String::new();
+        MockContext::host().run(|mut ctx| {
+            ctx.input = input;
+            out = serde_json::to_string(&trails::render_host_stats(ctx)).expect("json");
+        });
+        out
+    };
+    assert!(detail(json!({ "periodDays": 30 })).contains("stats.views.unavailable"));
+    assert!(detail(json!({ "views": { "opens": 0 } })).contains("stats.views.empty"));
+    let full = detail(json!({ "periodDays": 90, "views": {
+        "opens": 9, "surfaces": { "explore.item": 7, "explore.detail": 2 }, "clicks": { "directions": 3 }
+    } }));
+    assert!(full.contains(r#""value":"7""#), "{full}");
+    assert!(full.contains("stats.views.clicks.directions"), "{full}");
+    assert!(!full.contains("stats.views.clicks.call"), "{full}");
+}

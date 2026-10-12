@@ -12,7 +12,7 @@ pub use config::{ModuleConfig, TrailRow, LEVELS, MAX_TRAILS, SHAPES};
 pub use guest::{
     render_explore_detail, render_explore_item, render_home_card, render_property_public,
 };
-pub use host::render_host_main;
+pub use host::{render_host_main, render_host_stats, stats_summary};
 pub use queries::{map_markers, publish_readiness, MapMarkersResponse};
 
 portaki_sdk::portaki_module!(

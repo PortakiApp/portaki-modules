@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "Wanderungen",
+  "catalog.host.trails-views": "Angesehene Wanderwege",
   "config.trails": "Wanderungen",
   "guest.before.title": "Vor dem Aufbruch",
   "guest.before.water": "Nehmen Sie 1,5 L Wasser pro Person mit",
@@ -131,5 +132,13 @@
   "publish.measures.label": "Wanderungen ohne Maße",
   "publish.public.hint": "Wählen Sie 2 bis 4 Wanderungen für die öffentliche Seite oder schalten Sie den Block aus. Unter 2 wird er nicht angezeigt.",
   "publish.trails.hint": "Fügen Sie mindestens eine Route hinzu.",
-  "publish.trails.label": "Mindestens eine Wanderung"
+  "publish.trails.label": "Mindestens eine Wanderung",
+  "stats.tile": "angesehene Wanderwege",
+  "stats.views.clicks.call": "Anrufe",
+  "stats.views.clicks.directions": "Angefragte Routen",
+  "stats.views.clicks.link": "Geöffnete Links",
+  "stats.views.clicks.mail": "E-Mails",
+  "stats.views.empty": "In diesem Zeitraum wurde kein Wanderweg angesehen.",
+  "stats.views.list": "Wanderliste geöffnet",
+  "stats.views.unavailable": "Noch keine Gästeaufrufe anzuzeigen."
 }

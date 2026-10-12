@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "Caminhadas",
+  "catalog.host.trails-views": "Percursos consultados",
   "config.trails": "Caminhadas",
   "guest.before.title": "Antes de partir",
   "guest.before.water": "Leve 1,5 L de água por pessoa",
@@ -131,5 +132,13 @@
   "publish.measures.label": "Caminhadas sem medidas",
   "publish.public.hint": "Marque 2 a 4 percursos para a página pública ou desative o bloco. Abaixo de 2, não é mostrado.",
   "publish.trails.hint": "Adicione pelo menos um percurso.",
-  "publish.trails.label": "Pelo menos uma caminhada"
+  "publish.trails.label": "Pelo menos uma caminhada",
+  "stats.tile": "percursos consultados",
+  "stats.views.clicks.call": "Chamadas",
+  "stats.views.clicks.directions": "Direções pedidas",
+  "stats.views.clicks.link": "Ligações abertas",
+  "stats.views.clicks.mail": "E-mails",
+  "stats.views.empty": "Nenhum percurso consultado neste período.",
+  "stats.views.list": "Lista de percursos aberta",
+  "stats.views.unavailable": "Ainda não há consultas dos hóspedes para mostrar."
 }

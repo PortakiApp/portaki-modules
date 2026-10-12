@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "徒步路线",
+  "catalog.host.trails-views": "浏览的路线",
   "config.trails": "路线",
   "guest.before.title": "出发前",
   "guest.before.water": "每人带 1.5 升水",
@@ -131,5 +132,13 @@
   "publish.measures.label": "有路线未填数据",
   "publish.public.hint": "为公开页面勾选 2 至 4 条路线，或关闭此区块。少于 2 条时不显示。",
   "publish.trails.hint": "请至少添加一条路线。",
-  "publish.trails.label": "至少一条路线"
+  "publish.trails.label": "至少一条路线",
+  "stats.tile": "浏览的路线",
+  "stats.views.clicks.call": "通话",
+  "stats.views.clicks.directions": "导航请求",
+  "stats.views.clicks.link": "打开的链接",
+  "stats.views.clicks.mail": "邮件",
+  "stats.views.empty": "此期间没有浏览的路线。",
+  "stats.views.list": "路线列表打开次数",
+  "stats.views.unavailable": "暂无住客浏览数据。"
 }

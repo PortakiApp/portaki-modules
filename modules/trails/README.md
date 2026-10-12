@@ -25,12 +25,14 @@ OCI image: `oci.portaki.app/modules/trails:<semver>`
 | guest | `explore.detail` | The list, one section per level, plus the town link |
 | guest | `explore.item` | One walk: level, trailhead, four measures, map, before you go |
 | host | `main` | Sortable routes table (side panel per row, GPX prefill), the town link, the public page choice |
+| host | `trails-views` | Stats tile « Itinéraires consultés » (`property-stats-card` + `-detail`): guest opens of `explore.item`, list opens and outbound taps from `views` |
 
 ## Queries and commands
 
 - `publishReadiness` — refuses to publish without one complete walk; recommends a level and
   measures on the rows that lack them
 - `mapMarkers` — the trailheads, for the booklet's Map
+- `statsSummary` — `explore.item` opens over the period (`views`), `—` without booklet statistics
 - `updateConfig` — the platform persists the host form itself
 
 ## Design notes
