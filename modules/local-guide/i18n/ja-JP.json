@@ -1,4 +1,5 @@
 {
+  "catalog.host.guide-views": "閲覧されたおすすめ",
   "catalog.host.main": "おすすめ",
   "config.hostActivities": "あなたのアクティビティ",
   "config.spots": "場所",
@@ -226,6 +227,16 @@
   "public.title": "おすすめスポット",
   "public.walk": "徒歩約{count}分",
   "publish.public.hint": "公開ページ用に3〜6件のスポットを選ぶか、ブロックをオフにしてください。3件未満では表示されません。",
+  "stats.tile": "閲覧されたおすすめ",
+  "stats.views.activities": "閲覧されたアクティビティ",
+  "stats.views.clicks.call": "通話",
+  "stats.views.clicks.directions": "経路案内",
+  "stats.views.clicks.link": "開かれたリンク",
+  "stats.views.clicks.mail": "メール",
+  "stats.views.empty": "この期間に閲覧されたおすすめはありません。",
+  "stats.views.list": "おすすめ一覧の表示",
+  "stats.views.spots": "閲覧されたスポット",
+  "stats.views.unavailable": "表示できるゲストの閲覧はまだありません。",
   "surface.host.main.subtitle": "ゲストに教えたい場所やコツを追加します",
   "surface.host.main.title": "おすすめ"
 }

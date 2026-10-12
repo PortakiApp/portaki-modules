@@ -1,4 +1,5 @@
 {
+  "catalog.host.guide-views": "Recommendations viewed",
   "catalog.host.main": "Local picks",
   "config.hostActivities": "Your activities",
   "config.spots": "Places",
@@ -226,6 +227,16 @@
   "public.title": "Our favourite places",
   "public.walk": "~{count} min on foot",
   "publish.public.hint": "Tick 3 to 6 places for the public page, or switch the block off. Below 3, it is not shown.",
+  "stats.tile": "recommendations viewed",
+  "stats.views.activities": "Activities viewed",
+  "stats.views.clicks.call": "Calls",
+  "stats.views.clicks.directions": "Directions requested",
+  "stats.views.clicks.link": "Links opened",
+  "stats.views.clicks.mail": "Emails",
+  "stats.views.empty": "No recommendation viewed in this period.",
+  "stats.views.list": "Recommendation list opened",
+  "stats.views.spots": "Places viewed",
+  "stats.views.unavailable": "No guest views to show yet.",
   "surface.host.main.subtitle": "Add addresses and tips for guests",
   "surface.host.main.title": "Local picks"
 }

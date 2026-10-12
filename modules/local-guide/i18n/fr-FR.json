@@ -1,4 +1,5 @@
 {
+  "catalog.host.guide-views": "Bons plans consultés",
   "catalog.host.main": "Bons plans",
   "config.hostActivities": "Vos activités",
   "config.spots": "Lieux",
@@ -226,6 +227,16 @@
   "public.title": "Nos bonnes adresses",
   "public.walk": "~{count} min à pied",
   "publish.public.hint": "Cochez de 3 à 6 adresses pour la page publique, ou éteignez le bloc. En dessous de 3, il ne s’affiche pas.",
+  "stats.tile": "bons plans consultés",
+  "stats.views.activities": "Activités consultées",
+  "stats.views.clicks.call": "Appels",
+  "stats.views.clicks.directions": "Itinéraires demandés",
+  "stats.views.clicks.link": "Liens ouverts",
+  "stats.views.clicks.mail": "E-mails",
+  "stats.views.empty": "Aucun bon plan consulté sur la période.",
+  "stats.views.list": "Liste des bons plans ouverte",
+  "stats.views.spots": "Adresses consultées",
+  "stats.views.unavailable": "Pas encore de consultations des voyageurs à afficher.",
   "surface.host.main.subtitle": "Ajoutez vos adresses et bons plans pour les voyageurs",
   "surface.host.main.title": "Bons plans"
 }

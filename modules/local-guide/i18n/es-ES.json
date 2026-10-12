@@ -1,4 +1,5 @@
 {
+  "catalog.host.guide-views": "Recomendaciones consultadas",
   "catalog.host.main": "Recomendaciones",
   "config.hostActivities": "Tus actividades",
   "config.spots": "Lugares",
@@ -226,6 +227,16 @@
   "public.title": "Nuestros sitios favoritos",
   "public.walk": "~{count} min a pie",
   "publish.public.hint": "Marque de 3 a 6 lugares para la página pública o desactive el bloque. Con menos de 3, no se muestra.",
+  "stats.tile": "recomendaciones consultadas",
+  "stats.views.activities": "Actividades consultadas",
+  "stats.views.clicks.call": "Llamadas",
+  "stats.views.clicks.directions": "Rutas solicitadas",
+  "stats.views.clicks.link": "Enlaces abiertos",
+  "stats.views.clicks.mail": "Correos",
+  "stats.views.empty": "Ninguna recomendación consultada en este periodo.",
+  "stats.views.list": "Lista de recomendaciones abierta",
+  "stats.views.spots": "Lugares consultados",
+  "stats.views.unavailable": "Todavía no hay consultas de huéspedes que mostrar.",
   "surface.host.main.subtitle": "Añada sus direcciones y consejos para los huéspedes",
   "surface.host.main.title": "Recomendaciones"
 }

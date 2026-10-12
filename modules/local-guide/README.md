@@ -185,6 +185,7 @@ the host sheet says so.
 | guest | `explore.detail` | Enriched spots + activities section + Tiqets and Viator products (bottom sheet) |
 | guest | `upcoming.card` | Compact spot count |
 | host | `main` | Spot slots + activities + Tiqets + Viator + disclaimer form |
+| host | `guide-views` | Stats tile « Bons plans consultés » (`statsSummary`, `property-stats-card` + `-detail`): guest opens of `explore.item` + `explore.activity` + `explore.link`, list opens and outbound taps from `views`; `—` without booklet statistics |
 
 ## Development
 

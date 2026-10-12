@@ -1,4 +1,5 @@
 {
+  "catalog.host.guide-views": "Bekeken tips",
   "catalog.host.main": "Aanraders",
   "config.hostActivities": "Jouw activiteiten",
   "config.spots": "Plekken",
@@ -226,6 +227,16 @@
   "public.title": "Onze favoriete adressen",
   "public.walk": "~{count} min lopen",
   "publish.public.hint": "Vink 3 tot 6 adressen aan voor de openbare pagina of zet het blok uit. Onder de 3 wordt het niet getoond.",
+  "stats.tile": "bekeken tips",
+  "stats.views.activities": "Bekeken activiteiten",
+  "stats.views.clicks.call": "Oproepen",
+  "stats.views.clicks.directions": "Routes opgevraagd",
+  "stats.views.clicks.link": "Geopende links",
+  "stats.views.clicks.mail": "E-mails",
+  "stats.views.empty": "Geen tip bekeken in deze periode.",
+  "stats.views.list": "Tipslijst geopend",
+  "stats.views.spots": "Bekeken adressen",
+  "stats.views.unavailable": "Nog geen weergaven door gasten om te tonen.",
   "surface.host.main.subtitle": "Voeg je adressen en tips voor de gasten toe",
   "surface.host.main.title": "Aanraders"
 }
