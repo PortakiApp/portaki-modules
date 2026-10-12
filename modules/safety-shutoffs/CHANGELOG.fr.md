@@ -1,9 +1,13 @@
 # Changelog
 
-## 0.7.1
+## 0.8.0
 
-Montée technique.
+Les emplacements en tableau, et cinq proposés d'emblée.
 
+* Les emplacements se rangent dans un tableau qu'on réordonne en glissant ; chaque ligne s'ouvre dans une fenêtre : type, nom, où, comment couper, photo.
+* À la première ouverture, électricité, eau, gaz, extincteur et détecteur de fumée sont proposés ; « À compléter » tant que « Où » est vide.
+* « 2 emplacements vides ne seront pas publiés. » prévient sans bloquer ; un type manquant ou un emplacement « Autre » sans nom bloque.
+* Copiés depuis un autre logement, les emplacements et la consigne générale arrivent « À vérifier ».
 * Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
 
 ## 0.7.0

@@ -21,15 +21,16 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         hint: crate::i18n::text("host.shutoffs.required"),
     }];
 
-    // Une ligne commencée sans emplacement ne s'affiche pas : « N emplacements vides ne seront
-    // pas publiés » (§3). Avertit ; l'erreur bloquante est sous le champ, plus bas.
-    if config.shutoffs_incomplete() > 0 {
+    // Une ligne sans emplacement ne s'affiche pas : « N emplacements vides ne seront pas
+    // publiés. » (§3). Avertit, ne bloque pas.
+    let incomplete = config.shutoffs_incomplete();
+    if incomplete > 0 {
         items.push(PublishCheck {
             id: "incomplete".into(),
             level: PublishLevel::Recommended,
             ok: false,
             label: crate::i18n::text("publish.incomplete.label"),
-            hint: crate::i18n::text("publish.incomplete.hint"),
+            hint: crate::i18n::empty_rows(incomplete),
         });
     }
 
@@ -40,7 +41,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             .strip_prefix("shutoffs.")
             .and_then(|rest| rest.strip_suffix(".location"))
             .and_then(|index| index.parse::<usize>().ok())
-            .and_then(|index| config.shutoffs.get(index))
+            .and_then(|index| config.rows().get(index))
             .is_some_and(|row| row.location.is_blank())
     };
     let blocking: Vec<_> = config
@@ -63,6 +64,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
 fn field_label(field: &str) -> &'static str {
     match field.rsplit('.').next().unwrap_or_default() {
         "general_note" => "host.note.label",
+        "kind" => "host.kind.label",
         "title" => "host.shutoffs.rowTitle",
         "location" => "host.shutoffs.location",
         "instruction" => "host.shutoffs.instruction",

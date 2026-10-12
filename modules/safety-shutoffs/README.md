@@ -23,7 +23,7 @@ OCI image: `oci.portaki.app/modules/safety-shutoffs:<semver>`
 |-------|------------|-------------|
 | guest | `home.card` | A discreet card in the Help section — no content, opens the detail |
 | guest | `explore.detail` | Fullscreen: the 112 banner, the host note, one block per shutoff |
-| host | `main` | Up to eight dynamic rows + the general instruction |
+| host | `main` | The general instruction, then a sortable table of up to 20 locations, each edited in a dialog (five proposed on first open) |
 
 ## Queries and commands
 
@@ -40,7 +40,8 @@ OCI image: `oci.portaki.app/modules/safety-shutoffs:<semver>`
 - The call button reads the host's phone from `context.host`, never from a field of this module.
   The runtime does not serve `context.host` yet, so today the button does not render — which is
   what the SDK prescribes for `HostProfile::phone`.
-- Photos wait for the file-storage lot: `core.images` has no host API in the SDK.
+- Photos ride on `ImageUpload` (`portaki-file:` refs). Both fields are `local`: a copy from another
+  property arrives « À vérifier », photos included (the copy cannot exclude a row sub-key).
 
 ## Development
 
