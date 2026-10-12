@@ -45,3 +45,8 @@ pub const STORAGE: &str = "core.storage";
 
 #[portaki_sdk::capability(provided, id = "amenities.provide")]
 pub const AMENITIES: &str = "amenities.provide";
+
+/// Le calendrier de révélation des codes, partagé avec les modules qui le suivent (Wi-Fi) :
+/// la plateforme leur passe les valeurs publiées de ces deux clés.
+#[portaki_sdk::capability(provided, id = "access.reveal_schedule", shares = ["reveal_policy", "reveal_hours"])]
+pub const REVEAL_SCHEDULE: &str = "access.reveal_schedule";

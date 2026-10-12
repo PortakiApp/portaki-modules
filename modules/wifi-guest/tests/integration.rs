@@ -454,3 +454,27 @@ fn custom_reveal_takes_1_to_168_hours() {
     .problems()
     .is_empty());
 }
+
+/// Spec §3 : le pair qui fournit `access.reveal_schedule` (Accès) donne son calendrier publié ;
+/// le tiroir le montre en lecture seule au lieu du choix propre au Wi-Fi.
+#[test]
+#[serial]
+fn a_peer_sharing_its_reveal_schedule_replaces_the_own_choice() {
+    let peer = portaki_sdk::host::module::ModulePeer {
+        module_id: portaki_sdk::ids::ModuleId::new("access-guide"),
+        display_name: "Accès et parking".into(),
+        shared: serde_json::json!({ "reveal_policy": "day_before_16h" })
+            .as_object()
+            .cloned()
+            .unwrap(),
+    };
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&sample_config())
+        .with_peers(capability::access::REVEAL_SCHEDULE, vec![peer])
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_host_main(ctx).expect("host main")).unwrap();
+            assert!(json.contains("/modules/access-guide"), "{json}");
+            assert!(!json.contains(r#""name":"reveal_policy""#), "{json}");
+        });
+}
