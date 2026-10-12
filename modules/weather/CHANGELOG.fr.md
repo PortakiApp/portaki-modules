@@ -8,6 +8,7 @@ Les réglages Météo, à l'image des autres modules.
 * La carte pour choisir une autre position apparaît dès que l'option est cochée, sans enregistrer d'abord.
 * La vigilance météo est annoncée « Bientôt » : aucune source officielle n'est encore branchée.
 * Copiés vers un autre logement, le lieu et le nom affiché sont marqués « À vérifier ».
+* Sous les prévisions et dans les e-mails, la commune du logement s'affiche, et non plus le pays (« Orléans », pas « France »).
 
 ## 1.6.1
 
