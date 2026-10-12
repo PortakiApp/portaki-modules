@@ -12,14 +12,32 @@ use serde_json::{Map, Value};
 /// `Manual` (default) keeps the historical behaviour: platforms are shown per the host toggles.
 /// `Auto` derives Airbnb availability from the stay's actual booking platform
 /// (`ctx.stay.booking_channel`), so the Airbnb CTA only appears for stays booked on Airbnb.
-#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
+///
+/// Stored as the drawer's toggle « Selon la plateforme de réservation » (`true` = `Auto`); the
+/// `"auto"` / `"manual"` strings written before still read.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum ChannelMode {
     /// Follow the host platform toggles exactly (today's behaviour).
     #[default]
     Manual,
     /// Derive Airbnb availability from the stay's `booking_channel`.
     Auto,
+}
+
+impl Serialize for ChannelMode {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_bool(*self == Self::Auto)
+    }
+}
+
+impl<'de> Deserialize<'de> for ChannelMode {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        Ok(match Value::deserialize(deserializer)? {
+            Value::Bool(true) => Self::Auto,
+            Value::String(raw) if matches!(raw.trim(), "auto" | "true") => Self::Auto,
+            _ => Self::Manual,
+        })
+    }
 }
 
 /// Legacy exclusive channel — mapped onto the platform toggles by [`legacy`].
@@ -57,9 +75,14 @@ pub struct ModuleConfig {
     #[field(kind = "select", options = ["checkout", "next_day_10h"], label = "host.askFrom.label")]
     pub ask_from: AskFrom,
     /// La page d'avis publique de l'hôte, sur n'importe quelle plateforme : Airbnb, Booking,
-    /// Google, Abritel… Vide : la note seule.
-    #[field(kind = "url", label = "host.reviewUrl.label")]
+    /// Google, Abritel… Vide : la note seule. Propre à chaque annonce : copié ailleurs, il y est
+    /// marqué « À vérifier ».
+    #[field(local, kind = "url", label = "host.reviewUrl.label")]
     pub review_url: String,
+    /// « Selon la plateforme de réservation » : le lien d'une plateforme de réservation ne se
+    /// propose qu'aux séjours réservés sur elle ([`ModuleConfig::shows_link`]).
+    #[field(kind = "toggle", label = "host.channelMode.label")]
+    pub channel_mode: ChannelMode,
     /// Le voyageur peut écrire à l'hôte, sans le publier.
     #[field(label = "host.privateComment.label")]
     pub private_comment: bool,
@@ -78,9 +101,6 @@ pub struct ModuleConfig {
     #[serde(deserialize_with = "id_list")]
     pub public_reviews: Vec<String>,
 
-    /// How the booking-platform link is decided against the stay's channel (`auto`). No host
-    /// form sets it: left out of the declared config.
-    pub channel_mode: ChannelMode,
     /// Le lien Airbnb d'avant `review_url` : lu tant que `review_url` est vide.
     #[serde(skip_serializing_if = "String::is_empty")]
     pub airbnb_review_url: String,
@@ -236,6 +256,11 @@ fn legacy(old: Value) -> Value {
         .filter(|_| airbnb)
     {
         old.insert("review_url".into(), url.into());
+    }
+    // Le mode d'avant, en texte (`"auto"`) : un interrupteur déclaré n'adopte qu'un booléen.
+    if let Some(mode) = old.remove("channel_mode") {
+        let mode: ChannelMode = serde_json::from_value(mode).unwrap_or_default();
+        old.insert("channel_mode".into(), (mode == ChannelMode::Auto).into());
     }
     match old.remove("thank_you_message") {
         Some(Value::Object(texts)) => {
@@ -506,6 +531,29 @@ mod tests {
         assert_eq!(config.channel_mode, ChannelMode::Manual);
         let config = from_legacy(json!({ "channel_mode": "auto" }));
         assert_eq!(config.channel_mode, ChannelMode::Auto);
+    }
+
+    /// L'interrupteur envoie un booléen ; le texte d'avant se relit, et `legacy` le rend booléen.
+    #[test]
+    fn channel_mode_is_a_toggle_that_reads_the_old_strings() {
+        let read = |raw: Value| -> ChannelMode {
+            serde_json::from_value::<ModuleConfig>(json!({ "channel_mode": raw }))
+                .unwrap()
+                .channel_mode
+        };
+        assert_eq!(read(json!(true)), ChannelMode::Auto);
+        assert_eq!(read(json!(false)), ChannelMode::Manual);
+        assert_eq!(read(json!("auto")), ChannelMode::Auto);
+        assert_eq!(read(json!("manual")), ChannelMode::Manual);
+        assert_eq!(read(json!(null)), ChannelMode::Manual);
+        assert_eq!(
+            serde_json::to_value(with_link("", ChannelMode::Auto)).unwrap()["channel_mode"],
+            json!(true)
+        );
+        assert_eq!(
+            legacy(json!({ "channel_mode": "auto" })),
+            json!({ "channel_mode": true })
+        );
     }
 
     #[test]

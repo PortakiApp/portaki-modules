@@ -450,8 +450,55 @@ fn the_host_form_sends_the_declared_keys() {
             assert!(assertions.contains_type("TextInput"));
             assert!(assertions.contains_type("Card"));
             config_form::assert_form_matches_config(EMISSIONS, &surface, &[]);
-            // The detected platform, read-only.
-            assert!(to_json(&surface).contains("\"Airbnb\""));
+            // The detected platform, read-only, under the link.
+            let text = to_json(&surface);
+            assert!(text.contains("\"Airbnb\""), "{text}");
+            assert!(text.contains("i18n:host.reviewUrl.detected"), "{text}");
+            assert!(text.contains("i18n:host.reviewUrl.anyRating"), "{text}");
+        });
+}
+
+/// La planche : « Demander à partir de » en segmenté, l'interrupteur « Selon la plateforme de
+/// réservation » sur `channel_mode` (un booléen enregistré relu en `auto`), et le lien d'avis
+/// propre à l'annonce — copié ailleurs, il y est marqué « À vérifier ».
+#[test]
+#[serial]
+fn the_host_form_follows_the_board() {
+    let declared = config_save::declared_fields(EMISSIONS);
+    let field = |key: &str| {
+        declared
+            .iter()
+            .find(|f| f["key"] == key)
+            .unwrap_or_else(|| panic!("{key} declared"))
+            .clone()
+    };
+    assert_eq!(field("review_url")["local"], true);
+    assert_eq!(field("channel_mode")["type"], "toggle");
+    assert!(field("ask_from").get("local").is_none());
+
+    let stored = json!({ "review_url": "https://example.com/avis", "channel_mode": true });
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&stored)
+        .run(|ctx| {
+            let surface = render_host_main(ctx).expect("host main");
+            let tree = serde_json::to_value(&surface).expect("tree");
+            assert_eq!(config_save::form_args(&surface)["channel_mode"], true);
+            let text = tree.to_string();
+            assert!(text.contains("\"layout\":\"segmented\""), "{text}");
+            assert!(text.contains("i18n:host.platform.other"), "{text}");
+            let saved = config_save::save(EMISSIONS, &surface, &stored, "fr");
+            let reread: guest_reviews::ModuleConfig = serde_json::from_value(saved).unwrap();
+            assert_eq!(reread.channel_mode, guest_reviews::ChannelMode::Auto);
+        });
+    // Sans lien : l'aide seule, pas de plateforme.
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({}))
+        .run(|ctx| {
+            let text = to_json(&render_host_main(ctx).expect("host main"));
+            assert!(text.contains("i18n:host.reviewUrl.help"), "{text}");
+            assert!(!text.contains("i18n:host.reviewUrl.detected"), "{text}");
         });
 }
 
