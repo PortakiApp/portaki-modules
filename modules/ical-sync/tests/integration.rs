@@ -605,11 +605,12 @@ fn the_host_form_sends_the_declared_keys() {
     let config = Config {
         calendars: vec![CalendarRow {
             id: "airbnb".into(),
-            url: "https://www.airbnb.com/calendar/ical/1.ics".into(),
+            url: "https://www.airbnb.com/calendar/ical/41872301.ics?s=8f2c".into(),
             label: Some("Airbnb".into()),
             channel: "airbnb".into(),
             ..CalendarRow::default()
         }],
+        ..Config::default()
     };
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
@@ -621,7 +622,61 @@ fn the_host_form_sends_the_declared_keys() {
                 &surface,
                 &[],
             );
+            // Le lien est un secret de ligne : masqué dans le tableau, jamais renvoyé par la fenêtre.
             let json = serde_json::to_string(&surface).expect("surface json");
-            assert!(json.contains("https://www.airbnb.com/calendar/ical/1.ics"));
+            assert!(!json.contains("41872301"), "{json}");
+            assert!(!json.contains("8f2c"), "{json}");
+            assert!(json.contains("https://www.airbnb.com/calendar/ical/•••••.ics"));
+        });
+}
+
+/// « Ne pas créer » : un séjour nouveau sans e-mail n'est pas rendu à la plateforme ; un séjour
+/// déjà importé reste suivi.
+#[test]
+#[serial]
+fn skip_leaves_out_new_stays_without_an_email() {
+    let ics = |uids: &[&str]| {
+        let events: String = uids
+            .iter()
+            .enumerate()
+            .map(|(i, uid)| {
+                format!(
+                    "BEGIN:VEVENT\nUID:{uid}\nDTSTART;VALUE=DATE:2026080{}\nDTEND;VALUE=DATE:2026080{}\nSUMMARY:Reserved\nEND:VEVENT\n",
+                    i + 1,
+                    i + 2
+                )
+            })
+            .collect();
+        format!("BEGIN:VCALENDAR\n{events}END:VCALENDAR\n")
+    };
+    let run = |ctx: &portaki_sdk::prelude::Context, body: String| {
+        apply_feeds(
+            ctx.clone(),
+            ApplyFeedsArgs {
+                guest_lang: "fr".into(),
+                feeds: vec![FeedBody {
+                    id: "primary".into(),
+                    provider: Some("airbnb".into()),
+                    ics_body: body,
+                }],
+            },
+        )
+        .expect("apply")
+    };
+    // `old` importé du temps de « Créer le séjour et me prévenir ».
+    let seen = json!({ "uids": { "old@airbnb.com": {
+        "checkInAt": "2026-08-01T00:00:00Z", "checkOutAt": "2026-08-02T00:00:00Z"
+    }}});
+    MockContext::host()
+        .with_kv("sync_state", serde_json::to_vec(&seen).unwrap())
+        .with_config(&json!({
+            "calendars": [{"id": "primary", "url": "https://www.airbnb.com/calendar/ical/1.ics"}],
+            "missing_email": "skip"
+        }))
+        .run(|ctx| {
+            let result = run(&ctx, ics(&["old@airbnb.com", "new@airbnb.com"]));
+            let uids: Vec<&str> = result.rows.iter().map(|r| r.ical_uid.as_str()).collect();
+            assert_eq!(uids, ["old@airbnb.com"]);
+            assert_eq!(result.items_total, 2);
         });
 }

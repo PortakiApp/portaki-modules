@@ -77,6 +77,9 @@ pub struct SyncState {
     /// Feed id → its current failure streak.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub feed_failures: BTreeMap<String, FeedFailure>,
+    /// Feed id → its last successful read (RFC 3339): « À jour · il y a 12 min » per calendar.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub feed_read_at: BTreeMap<String, String>,
 }
 
 impl SyncState {
@@ -84,6 +87,7 @@ impl SyncState {
     pub fn record_feed(&mut self, id: &str, ok: bool, now: &str) {
         if ok {
             self.feed_failures.remove(id);
+            self.feed_read_at.insert(id.to_string(), now.to_string());
             return;
         }
         let failure = self

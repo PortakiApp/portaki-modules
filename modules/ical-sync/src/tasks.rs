@@ -190,6 +190,7 @@ mod tests {
         .unwrap();
         let config = ModuleConfig {
             calendars: crate::config::feeds(&config.calendars),
+            ..ModuleConfig::default()
         };
         let mut state = SyncState::default();
         state.record_feed("booking", false, "2026-08-18T06:00:00Z");

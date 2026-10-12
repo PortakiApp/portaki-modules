@@ -52,10 +52,15 @@ Copy lives in `email_i18n/{fr,en}.json`. Dedup is orchestrator-side (module + st
 
 ## Config
 
-Held by the platform (`#[portaki_sdk::config]`, one `structured` field `calendars`, recommended);
-the platform takes `updateConfig`. The host form sends each row as strings
-(`calendars.N.id|channel|label|url`); `format` and `channel_signal` are resolved on read.
-Rows saved by earlier versions keep theirs:
+Held by the platform (`#[portaki_sdk::config]`); the platform takes `updateConfig`.
+`calendars` is `structured` (recommended, `local`, rows matched by `id`): the host form — a
+`DataTable` with one dialog per row — sends `calendars.N.id|label|url|active`. `url` is a row
+secret (`item.secret`): sealed at rest, decrypted for the module (host surfaces, `listSources`),
+shown masked in the table and never sent back by the dialog (blank keeps it). The platform is no
+longer picked: `channel` is detected from the URL, a stored choice is kept; `format` and
+`channel_signal` are resolved on read. `missing_email` (`notify` | `skip`) decides whether
+`applyFeeds` returns a new stay whose feed carries no guest email. Rows saved by earlier
+versions keep their keys:
 
 ```json
 {

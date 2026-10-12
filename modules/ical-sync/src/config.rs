@@ -101,6 +101,32 @@ impl CalendarFeed {
     pub fn trimmed_url(&self) -> Option<&str> {
         trim_url(&self.url)
     }
+
+    /// Le lien tel que le tableau le montre : l'hôte, puis les segments de chemin faits de lettres
+    /// seules (`/calendar/ical`) ; le reste — identifiant d'annonce, jeton, requête — masqué.
+    pub fn masked_url(&self) -> String {
+        const MASK: &str = "•••••";
+        let Some((scheme, rest)) = self.url.trim().split_once("://") else {
+            return MASK.to_string();
+        };
+        let path = rest.split(['?', '#']).next().unwrap_or_default();
+        let mut segments = path.split('/');
+        let host = segments.next().unwrap_or_default();
+        let mut shown = format!("{scheme}://{host}");
+        for segment in segments.by_ref() {
+            if segment.is_empty() || !segment.chars().all(|c| c.is_ascii_alphabetic()) {
+                break;
+            }
+            shown.push('/');
+            shown.push_str(segment);
+        }
+        let ext = if path.to_ascii_lowercase().ends_with(".ics") {
+            ".ics"
+        } else {
+            ""
+        };
+        format!("{shown}/{MASK}{ext}")
+    }
 }
 
 /// Resolves the persisted platform declaration for a feed.
@@ -129,13 +155,19 @@ fn resolve_format(raw: &str, url: &str, channel: BookingChannel) -> CalendarForm
         .unwrap_or(CalendarFormat::Generic)
 }
 
-/// One calendar row as stored: what the host form sends (`calendars.N.id|channel|label|url`,
-/// all strings — a removed row comes back with every field blank), or a row the module saved
-/// itself before the platform held the config (plus `format` and `channel_signal`).
+/// One calendar row as stored: what the host form sends (`calendars.N.id|label|url|active`), or
+/// a row saved before (plus `channel`, `format` and `channel_signal`, kept by the platform's
+/// per-row merge since the form no longer sends them).
+///
+/// `url` is a row secret: an iCal export link gives read access to the bookings. The platform
+/// seals it at rest and decrypts it for the module (host surfaces, `listSources`); the dialog
+/// never sends it back, so a blank `url` on save keeps the stored one (matched by `id`).
+#[portaki_sdk::params]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]
 pub struct CalendarRow {
     pub id: String,
+    #[field(secret)]
     pub url: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
@@ -163,24 +195,61 @@ fn active(raw: Option<&Value>) -> bool {
 ///
 /// Only recommended: the platform warns while no row was ever saved. A saved list keeps its
 /// blank rows (the form never drops one), so it no longer warns once saved — even empty.
+///
+/// `calendars` is `local`: each listing exports its own links. A copy never carries the row secret
+/// (`url`), so copied rows arrive without a link and the host adds this listing's.
 #[portaki_sdk::config(legacy = legacy)]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Config {
-    #[field(structured, recommended, label = "host.calendars.label")]
+    #[field(
+        structured,
+        recommended,
+        local,
+        item_id = "id",
+        label = "host.calendars.label"
+    )]
     pub calendars: Vec<CalendarRow>,
+    /// « Séjours sans e-mail » (§2.2).
+    #[field(kind = "select", options = ["notify", "skip"], label = "host.missingEmail.label")]
+    pub missing_email: MissingEmail,
+}
+
+/// What an import does with a new stay whose feed carries no guest e-mail.
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum MissingEmail {
+    /// Create the stay and tell the host (`stay-imported` e-mail).
+    #[default]
+    Notify,
+    /// Leave it out until the feed carries an e-mail.
+    Skip,
+}
+
+impl MissingEmail {
+    pub const ALL: [MissingEmail; 2] = [MissingEmail::Notify, MissingEmail::Skip];
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            MissingEmail::Notify => "notify",
+            MissingEmail::Skip => "skip",
+        }
+    }
 }
 
 /// The calendars of this install, normalized: blank rows dropped, format and channel resolved.
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ModuleConfig {
     pub calendars: Vec<CalendarFeed>,
+    pub missing_email: MissingEmail,
 }
 
 impl ModuleConfig {
     /// The calendars of this install, from the platform (or the old KV blob through [`legacy`]).
     pub fn load(ctx: &Context) -> Result<Self> {
+        let config = Config::load(ctx)?;
         Ok(Self {
-            calendars: feeds(&Config::load(ctx)?.calendars),
+            calendars: feeds(&config.calendars),
+            missing_email: config.missing_email,
         })
     }
 
@@ -433,6 +502,7 @@ mod tests {
         .expect("form rows");
         let config = ModuleConfig {
             calendars: feeds(&config.calendars),
+            ..ModuleConfig::default()
         };
         assert_eq!(config.connected_calendars().len(), 1);
         assert!(config.has_any_feed());
@@ -629,12 +699,40 @@ mod tests {
         .unwrap();
         let config = ModuleConfig {
             calendars: feeds(&rows),
+            ..ModuleConfig::default()
         };
         assert_eq!(config.calendars.len(), 2);
         assert!(!config.calendars[0].active);
         assert_eq!(config.connected_calendars().len(), 1);
         let fields: Vec<String> = config.problems().into_iter().map(|(f, _)| f).collect();
         assert_eq!(fields, ["calendars.1.url"]);
+    }
+
+    /// Le tableau montre l'hôte et le chemin générique, jamais l'identifiant ni le jeton.
+    #[test]
+    fn the_masked_link_hides_ids_and_tokens() {
+        let masked = |url: &str| {
+            feeds(&[CalendarRow {
+                url: url.into(),
+                ..CalendarRow::default()
+            }])[0]
+                .masked_url()
+        };
+        assert_eq!(
+            masked("https://www.airbnb.com/calendar/ical/41872301.ics?s=8f2c"),
+            "https://www.airbnb.com/calendar/ical/•••••.ics"
+        );
+        assert_eq!(
+            masked("https://admin.booking.com/hotel/hoteladmin/ical.html?t=5b1e9d"),
+            "https://admin.booking.com/hotel/hoteladmin/•••••"
+        );
+        assert_eq!(
+            masked(
+                "https://calendar.google.com/calendar/ical/me%40gmail.com/private-ab12/basic.ics"
+            ),
+            "https://calendar.google.com/calendar/ical/•••••.ics"
+        );
+        assert_eq!(masked("webcal-without-scheme"), "•••••");
     }
 
     #[test]
@@ -661,6 +759,7 @@ mod tests {
                     ..CalendarRow::default()
                 },
             ]),
+            ..ModuleConfig::default()
         };
         let mut state = SyncState::default();
         for _ in 0..FEED_ERROR_RUNS - 1 {
