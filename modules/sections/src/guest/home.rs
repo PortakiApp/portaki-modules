@@ -1,7 +1,7 @@
 //! Guest home booklet card — teaser + first sections.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Card, Divider, Image, Markdown, RichText, Stack, Text};
+use portaki_sdk::sdui::primitives::{Card, Divider, Markdown, RichText, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::content::is_tiptap_doc;
@@ -22,13 +22,12 @@ pub fn build_home_card(sections: &[SectionView], host_byline: &str) -> Surface {
                     .icon(IconName::Home)
                     .title("i18n:home.card.title"),
             ))
-            .children(section_blocks(sections, CARD_SECTION_LIMIT, false)),
+            .children(section_blocks(sections, CARD_SECTION_LIMIT)),
     )
     .with_id(crate::guest::HOME_CARD)
 }
 
-/// `photos`: the panel opens each section on its photo (§2.2) ; the home card stays text only.
-pub fn section_blocks(sections: &[SectionView], limit: usize, photos: bool) -> Vec<Component> {
+pub fn section_blocks(sections: &[SectionView], limit: usize) -> Vec<Component> {
     let mut children = Vec::new();
     // The card header already shows a title, so only repeat a per-section title
     // when several sections share the block; a lone section renders body-only.
@@ -36,14 +35,6 @@ pub fn section_blocks(sections: &[SectionView], limit: usize, photos: bool) -> V
     for (index, section) in sections.iter().take(limit).enumerate() {
         if index > 0 {
             children.push(Component::Divider(Divider::new()));
-        }
-        if let Some(photo) = section.photo.as_deref().filter(|_| photos) {
-            children.push(Component::Image(
-                Image::new()
-                    .url(photo)
-                    .alt(section.title.trim())
-                    .aspectRatio("4/3"),
-            ));
         }
         if show_titles && !section.title.trim().is_empty() {
             children.push(Component::Text(
@@ -67,11 +58,11 @@ pub fn section_blocks(sections: &[SectionView], limit: usize, photos: bool) -> V
 }
 
 pub fn full_sections_stack(sections: &[SectionView]) -> Component {
-    Component::Stack(Stack::new().gap(12.0).children(section_blocks(
-        sections,
-        sections.len(),
-        true,
-    )))
+    Component::Stack(
+        Stack::new()
+            .gap(12.0)
+            .children(section_blocks(sections, sections.len())),
+    )
 }
 
 fn body_component(body: &str) -> Option<Component> {
