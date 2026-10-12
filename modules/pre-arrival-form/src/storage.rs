@@ -1,6 +1,7 @@
 //! Pre-arrival response persistence via `host::repo`.
 
-use portaki_sdk::host::repo::{self, eq, find, Query};
+use chrono::{DateTime, Utc};
+use portaki_sdk::host::repo::{self, eq, find, gte, Query};
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
@@ -38,6 +39,26 @@ pub fn find_by_stay(stay_id: Uuid) -> Result<Option<PreArrivalResponse>> {
             .limit(1),
     )?;
     Ok(page.items.into_iter().next())
+}
+
+/// Responses completed since `since` — the stats tile.
+pub fn list_since(since: DateTime<Utc>) -> Result<Vec<PreArrivalResponse>> {
+    if in_memory_enabled() {
+        return Ok(TEST_ROWS.with(|rows| {
+            rows.borrow()
+                .iter()
+                .filter(|row| row.completed_at >= since)
+                .cloned()
+                .collect()
+        }));
+    }
+    // ponytail: one 1000-row page caps the window; move to a count query if a property outgrows it.
+    let page = find::<PreArrivalResponse, PreArrivalResponse>(
+        Query::<PreArrivalResponse>::new()
+            .r#where(gte("completed_at", since))
+            .limit(1000),
+    )?;
+    Ok(page.items)
 }
 
 /// Upserts the response for a stay.

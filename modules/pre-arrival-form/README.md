@@ -23,8 +23,10 @@ OCI image: `oci.portaki.app/modules/pre-arrival-form:<semver>`
 | guest | `home.card` | Inline form when available; thank-you when done; hidden when gated |
 | host | `main` | Config editor (`show_when` + question toggles) |
 | host | `stay` | Stay-detail embed — read-only responses (`input.stayId`) |
+| host | `resend` | Stay action « Renvoyer le formulaire » — channel, e-mail preview, `resendForm` |
+| host | `forms` | Stats tile « Formulaires remplis » (`statsSummary`, count over the period) |
 
-Host entries (`#[surface]` placements): `property-workspace-tab` + `stay-detail` (`pathSegment`: `stay`).
+Host entries (`#[surface]` placements): `property-workspace-tab`, `stay-detail` (`stay`), `stay-action` (`resend`), `property-stats-card` (`forms`).
 
 ## Queries and commands
 
@@ -32,6 +34,8 @@ Host entries (`#[surface]` placements): `property-workspace-tab` + `stay-detail`
 - `submit` — upsert response; emits `pre-arrival.completed`
 - `updateConfig` — persist `show_when` + question flags
 - `sendFormAvailable` — daily tick + manifest catch-up (`emails[].catchUpOnPropertyPublish` / `catchUpOnConfigUpdate` / `dispatchOnStayCreated`); `host::email::send` when form is available (dedup `form-available`)
+- `resendForm` — host, `{ stayId }`: the `form-available` e-mail again, as `form-resend-<uuid>`; refused once answered or after check-in
+- `statsSummary` — forms completed over the period
 
 ## Development
 

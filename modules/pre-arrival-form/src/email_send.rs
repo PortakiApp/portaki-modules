@@ -16,6 +16,9 @@ use crate::storage;
 /// Stable delivery id — orchestrator dedups per stay + module + email_id.
 pub const FORM_AVAILABLE_EMAIL_ID: &str = "form-available";
 
+/// The host's resend, suffixed per send ([`resend_form`]).
+pub const FORM_RESEND_EMAIL_ID: &str = "form-resend";
+
 /// Scheduled / stay-created / property-publish / config-update catch-up — send guest
 /// mail only when the form is available and not yet completed. Orchestrator
 /// re-dispatches after draft publish and after host `updateConfig` (KV promote) so a
@@ -29,23 +32,42 @@ pub fn send_form_available(ctx: &Context) -> Result<()> {
     email::send(&SendEmailArgs {
         email_id: FORM_AVAILABLE_EMAIL_ID.into(),
         audience: EmailAudience::Guest,
-        content: ModuleEmailSdui {
-            subject: email_i18n::text("email.formAvailable.subject"),
-            eyebrow: Some(email_i18n::text("email.formAvailable.eyebrow")),
-            title: Some(email_i18n::text("email.formAvailable.title")),
-            body: email_i18n::text("email.formAvailable.body"),
-            cta: Some(ModuleEmailCta {
-                label: email_i18n::text("email.formAvailable.cta"),
-                url: None,
-                portaki_action: Some("open-module:pre-arrival-form:default".into()),
-            }),
-            blocks: form_preview(&config),
-            ..Default::default()
-        },
+        content: form_available_content(&config),
         stay_id: Some(stay_id),
         property_id: None,
         action_url: None,
     })
+}
+
+/// « Renvoyer le formulaire » (bouton du séjour) : le même e-mail que `form-available`, sous un
+/// identifiant neuf à chaque envoi — la plateforme dédoublonne par séjour et identifiant, et un
+/// renvoi n'est pas un doublon.
+pub fn resend_form(stay_id: Uuid, config: &ModuleConfig) -> Result<()> {
+    email::send(&SendEmailArgs {
+        email_id: format!("{FORM_RESEND_EMAIL_ID}-{}", Uuid::new_v4()),
+        audience: EmailAudience::Guest,
+        content: form_available_content(config),
+        stay_id: Some(stay_id),
+        property_id: None,
+        action_url: None,
+    })
+}
+
+/// L'e-mail « formulaire disponible » : envoyé à l'ouverture, renvoyé par l'hôte.
+pub fn form_available_content(config: &ModuleConfig) -> ModuleEmailSdui {
+    ModuleEmailSdui {
+        subject: email_i18n::text("email.formAvailable.subject"),
+        eyebrow: Some(email_i18n::text("email.formAvailable.eyebrow")),
+        title: Some(email_i18n::text("email.formAvailable.title")),
+        body: email_i18n::text("email.formAvailable.body"),
+        cta: Some(ModuleEmailCta {
+            label: email_i18n::text("email.formAvailable.cta"),
+            url: None,
+            portaki_action: Some("open-module:pre-arrival-form:default".into()),
+        }),
+        blocks: form_preview(config),
+        ..Default::default()
+    }
 }
 
 /// The stay and config when the form is open, editable and still unanswered — `None` otherwise.

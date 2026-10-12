@@ -5,9 +5,9 @@
 La page Avant l’arrivée refaite.
 
 * Choisissez le pas des créneaux (15 min, 30 min ou 1 h) et l’heure d’une arrivée tardive : elle crée une tâche dans À venir.
-* Vos questions dans un tableau : glissez pour les réordonner, ouvrez-en une pour la modifier.
-* Un seul interrupteur pour besoins et allergies ; plus de pièce d’identité, que recueille la fiche de police (Formalités).
-* La date limite, la relance et le moment d’affichage se règlent dans « Envoi et relances ».
+* Vos questions dans un tableau à réordonner ; un seul interrupteur pour besoins et allergies, plus de pièce d’identité (Formalités).
+* Date limite, relance et affichage se règlent dans « Envoi et relances » ; « Renvoyer le formulaire » le renvoie au voyageur depuis le séjour.
+* Les statistiques du logement comptent les formulaires remplis sur la période.
 * Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
 
 ## 1.10.0
