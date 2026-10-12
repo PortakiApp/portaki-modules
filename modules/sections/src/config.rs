@@ -199,21 +199,22 @@ impl ModuleConfig {
         }
         problems
     }
+}
 
-    /// The blocking problem of one field, for its `Field::error`.
-    pub fn error_of(&self, id: &str, locale: &str) -> Option<String> {
-        self.problems()
-            .into_iter()
-            .find(|p| p.id == id && p.blocking)
-            .map(|p| p.message.get(locale).to_string())
-    }
+/// The blocking problem of one field, for its `Field::error`. Takes the problems computed once:
+/// before the first save each computation reads the legacy tables.
+pub fn error_of(problems: &[Problem], id: &str, locale: &str) -> Option<String> {
+    problems
+        .iter()
+        .find(|p| p.id == id && p.blocking)
+        .map(|p| p.message.get(locale).to_string())
+}
 
-    /// Whether the first section's first sentence is past [`TEASER_MAX`].
-    pub fn teaser_too_long(&self) -> bool {
-        self.problems()
-            .iter()
-            .any(|p| p.id == "config.sections[0].body" && !p.blocking)
-    }
+/// Whether the first section's first sentence is past [`TEASER_MAX`].
+pub fn teaser_too_long(problems: &[Problem]) -> bool {
+    problems
+        .iter()
+        .any(|p| p.id == "config.sections[0].body" && !p.blocking)
 }
 
 /// Up to the first `.`, `!`, `?` or `…` followed by a space or the end — the booklet's teaser.
@@ -333,8 +334,10 @@ mod tests {
                 false
             )]
         );
-        assert!(config.teaser_too_long());
-        assert!(!saved(vec![row("Bienvenue", "Court. Puis long.")]).teaser_too_long());
+        assert!(teaser_too_long(&config.problems()));
+        assert!(!teaser_too_long(
+            &saved(vec![row("Bienvenue", "Court. Puis long.")]).problems()
+        ));
     }
 
     #[test]
