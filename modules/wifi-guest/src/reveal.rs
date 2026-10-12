@@ -20,7 +20,84 @@ use chrono::{
 };
 use portaki_sdk::prelude::*;
 
-use crate::config::RevealPolicy;
+use serde_json::{Map, Value};
+
+use crate::config::{ModuleConfig, RevealPolicy, DEFAULT_REVEAL_HOURS};
+
+/// When the passwords open, and whose choice it is.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Schedule {
+    pub policy: RevealPolicy,
+    /// « Personnalisé » : hours before check-in.
+    pub hours: u32,
+    pub source: Source,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Source {
+    /// Wi-Fi's own `reveal_policy`.
+    Own,
+    /// The schedule a peer publishes (`access.reveal_schedule`), read-only in the drawer.
+    Peer {
+        module_id: String,
+        display_name: String,
+    },
+}
+
+/// A provider of the schedule, as the platform lists it: its id, its name, and the values it
+/// shares (`ModulePeer.shared` — published values only, never a secret).
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Peer {
+    pub module_id: String,
+    pub display_name: String,
+    pub shared: Map<String, Value>,
+}
+
+impl Schedule {
+    /// The peer's published `reveal_policy` / `reveal_hours` when it shares them, else Wi-Fi's
+    /// own. A peer that shares nothing readable leaves Wi-Fi's own choice in force (spec §9 cas 8).
+    pub fn resolve(config: &ModuleConfig, peer: Option<&Peer>) -> Self {
+        let shared = peer.and_then(|peer| {
+            let policy = peer.shared.get("reveal_policy")?.clone();
+            let policy = serde_json::from_value::<RevealPolicy>(policy).ok()?;
+            let hours = peer
+                .shared
+                .get("reveal_hours")
+                .and_then(|h| h.as_u64().or_else(|| h.as_str()?.trim().parse().ok()))
+                .and_then(|h| u32::try_from(h).ok());
+            Some((peer, policy, hours))
+        });
+        match shared {
+            Some((peer, policy, hours)) => Self {
+                policy,
+                hours: hours.unwrap_or(DEFAULT_REVEAL_HOURS),
+                source: Source::Peer {
+                    module_id: peer.module_id.clone(),
+                    display_name: peer.display_name.clone(),
+                },
+            },
+            None => Self {
+                policy: config.reveal_policy,
+                hours: config.reveal_hours.unwrap_or(DEFAULT_REVEAL_HOURS),
+                source: Source::Own,
+            },
+        }
+    }
+
+    /// The schedule in force for this property.
+    pub fn load(config: &ModuleConfig) -> Self {
+        Self::resolve(config, reveal_schedule_peer().as_ref())
+    }
+}
+
+/// The first module that provides `access.reveal_schedule` on this property.
+///
+/// ponytail: always `None` on portaki-sdk 10.5.0 — `CapabilityId` is a closed enum without
+/// `access.reveal_schedule`, and `ModulePeer` has no `shared`. Once the SDK has both, this is
+/// `host::module::list_by_capability(…)?.into_iter().next()` mapped onto [`Peer`].
+fn reveal_schedule_peer() -> Option<Peer> {
+    None
+}
 
 /// Placeholder written into SDUI when the password is not yet revealable.
 pub const SECRET_MASK: &str = "••••••";
@@ -35,6 +112,7 @@ pub struct RevealDecision {
 
 pub fn evaluate_reveal(
     policy: RevealPolicy,
+    custom_hours: u32,
     now: DateTime<Utc>,
     checkin_at: Option<DateTime<Utc>>,
     checkout_at: Option<DateTime<Utc>>,
@@ -64,7 +142,7 @@ pub fn evaluate_reveal(
         };
     };
 
-    let Some(available_from) = reveal_at(policy, checkin, property_timezone) else {
+    let Some(available_from) = reveal_at(policy, custom_hours, checkin, property_timezone) else {
         return RevealDecision {
             revealed: false,
             available_from: None,
@@ -81,6 +159,7 @@ pub fn evaluate_reveal(
 
 pub fn reveal_at(
     policy: RevealPolicy,
+    custom_hours: u32,
     checkin_at: DateTime<Utc>,
     property_timezone: &str,
 ) -> Option<DateTime<Utc>> {
@@ -89,6 +168,7 @@ pub fn reveal_at(
         RevealPolicy::HoursBefore24 => Some(checkin_at - Duration::hours(24)),
         RevealPolicy::AtCheckin => Some(checkin_at),
         RevealPolicy::DayBefore16h => day_before_16h(checkin_at, property_timezone),
+        RevealPolicy::Custom => Some(checkin_at - Duration::hours(i64::from(custom_hours))),
     }
 }
 
@@ -274,7 +354,14 @@ mod tests {
 
     #[test]
     fn always_reveals_without_checkin() {
-        let d = evaluate_reveal(RevealPolicy::Always, Utc::now(), None, None, "Europe/Paris");
+        let d = evaluate_reveal(
+            RevealPolicy::Always,
+            24,
+            Utc::now(),
+            None,
+            None,
+            "Europe/Paris",
+        );
         assert!(d.revealed);
         assert!(d.available_from.is_none());
     }
@@ -286,7 +373,7 @@ mod tests {
             RevealPolicy::DayBefore16h,
             RevealPolicy::AtCheckin,
         ] {
-            let d = evaluate_reveal(policy, Utc::now(), None, None, "Europe/Paris");
+            let d = evaluate_reveal(policy, 24, Utc::now(), None, None, "Europe/Paris");
             assert!(!d.revealed, "{policy:?}");
             assert!(d.available_from.is_none());
         }
@@ -295,14 +382,14 @@ mod tests {
     #[test]
     fn hours_before_24() {
         let checkin = utc("2026-07-20T14:00:00Z");
-        let at = reveal_at(RevealPolicy::HoursBefore24, checkin, "Europe/Paris").unwrap();
+        let at = reveal_at(RevealPolicy::HoursBefore24, 24, checkin, "Europe/Paris").unwrap();
         assert_eq!(at, utc("2026-07-19T14:00:00Z"));
     }
 
     #[test]
     fn day_before_16h_paris_summer() {
         let checkin = utc("2026-07-20T14:00:00Z");
-        let at = reveal_at(RevealPolicy::DayBefore16h, checkin, "Europe/Paris").unwrap();
+        let at = reveal_at(RevealPolicy::DayBefore16h, 24, checkin, "Europe/Paris").unwrap();
         assert_eq!(at, utc("2026-07-19T14:00:00Z"));
     }
 
@@ -315,11 +402,70 @@ mod tests {
             RevealPolicy::HoursBefore24,
             RevealPolicy::DayBefore16h,
             RevealPolicy::AtCheckin,
+            RevealPolicy::Custom,
         ] {
-            let at = |now| evaluate_reveal(policy, utc(now), Some(checkin), Some(checkout), "UTC");
+            let at =
+                |now| evaluate_reveal(policy, 24, utc(now), Some(checkin), Some(checkout), "UTC");
             assert!(at("2026-07-25T10:00:00Z").revealed, "{policy:?}");
             let after = at("2026-07-25T10:00:01Z");
             assert!(!after.revealed && after.ended, "{policy:?}");
+        }
+    }
+
+    #[test]
+    fn custom_is_that_many_hours_before_checkin() {
+        let checkin = utc("2026-07-20T14:00:00Z");
+        assert_eq!(
+            reveal_at(RevealPolicy::Custom, 6, checkin, "Europe/Paris"),
+            Some(utc("2026-07-20T08:00:00Z"))
+        );
+    }
+
+    fn peer(shared: serde_json::Value) -> Peer {
+        Peer {
+            module_id: "access".into(),
+            display_name: "Accès".into(),
+            shared: shared.as_object().cloned().unwrap_or_default(),
+        }
+    }
+
+    /// Spec §2.2 / §9 cas 8 : le calendrier d'Accès quand il le partage, sinon celui du Wi-Fi.
+    #[test]
+    fn the_peer_schedule_wins_when_it_shares_one() {
+        let config = ModuleConfig {
+            reveal_policy: RevealPolicy::Always,
+            ..ModuleConfig::default()
+        };
+        let own = Schedule::resolve(&config, None);
+        assert_eq!(
+            (own.policy, &own.source),
+            (RevealPolicy::Always, &Source::Own)
+        );
+
+        let shared = Schedule::resolve(
+            &config,
+            Some(&peer(
+                serde_json::json!({ "reveal_policy": "custom", "reveal_hours": 6 }),
+            )),
+        );
+        assert_eq!((shared.policy, shared.hours), (RevealPolicy::Custom, 6));
+        assert!(
+            matches!(shared.source, Source::Peer { ref module_id, .. } if module_id == "access")
+        );
+
+        // L'ancienne graphie d'Accès se lit aussi ; un pair muet laisse le choix du Wi-Fi.
+        let legacy = Schedule::resolve(
+            &config,
+            Some(&peer(
+                serde_json::json!({ "reveal_policy": "day_before16h" }),
+            )),
+        );
+        assert_eq!(legacy.policy, RevealPolicy::DayBefore16h);
+        for silent in [
+            serde_json::json!({}),
+            serde_json::json!({ "reveal_policy": "weekly" }),
+        ] {
+            assert_eq!(Schedule::resolve(&config, Some(&peer(silent))), own);
         }
     }
 }

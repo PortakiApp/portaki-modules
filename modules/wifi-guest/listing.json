@@ -27,8 +27,8 @@
       "en": "Connection QR code and a message for the guest"
     },
     {
-      "fr": "Moment d’affichage du mot de passe (dès la réservation, 24 h avant, la veille à 16 h ou à l’arrivée)",
-      "en": "When the password appears (from booking, 24 h before, the day before at 4 pm, or at check-in)"
+      "fr": "Moment d’affichage du mot de passe : celui des codes d’accès quand le module Accès le partage, sinon dès la réservation, la veille à 16 h, 24 h avant, à l’arrivée ou un nombre d’heures choisi",
+      "en": "When the password appears: the access codes' schedule when the Access module shares it, otherwise from booking, the day before at 4 pm, 24 h before, at check-in, or a chosen number of hours"
     }
   ],
   "capabilities": [],

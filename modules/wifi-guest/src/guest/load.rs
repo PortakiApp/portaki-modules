@@ -5,7 +5,7 @@ use portaki_sdk::prelude::*;
 
 use crate::config::{ModuleConfig, Network};
 use crate::reveal::{
-    evaluate_reveal, format_available_from, locked_message, RevealDecision, SECRET_MASK,
+    evaluate_reveal, format_available_from, locked_message, RevealDecision, Schedule, SECRET_MASK,
 };
 
 pub struct GuestData {
@@ -31,8 +31,10 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
     let checkin_at = ctx.stay.as_ref().and_then(|s| s.checkin_at);
     let checkout_at = ctx.stay.as_ref().and_then(|s| s.checkout_at);
     let now = time::now()?;
+    let schedule = Schedule::load(&config);
     let decision = evaluate_reveal(
-        config.reveal_policy,
+        schedule.policy,
+        schedule.hours,
         now,
         checkin_at,
         checkout_at,
