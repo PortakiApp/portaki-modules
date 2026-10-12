@@ -11,10 +11,11 @@ mod queries;
 mod stay_code;
 
 pub use commands::{
-    get_guest_credential, unlock, GuestCredentialResponse, StayArgs, UnlockResponse,
+    get_guest_credential, regenerate_code, unlock, GuestCredentialResponse, RegenerateArgs,
+    StayArgs, UnlockResponse,
 };
 pub use config::ModuleConfig;
-pub use host::{render_host_main, render_host_stay};
+pub use host::{render_host_main, render_host_regenerate, render_host_stay};
 pub use queries::publish_readiness;
 
 portaki_sdk::portaki_module!(

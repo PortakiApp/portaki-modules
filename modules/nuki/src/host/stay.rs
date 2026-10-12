@@ -59,7 +59,7 @@ fn lines(ctx: &HostContext, config: &ModuleConfig) -> Result<Vec<String>> {
 }
 
 /// `input.stay` : la fenêtre que la plateforme joint à une surface de fiche séjour.
-fn window(ctx: &HostContext) -> Option<(DateTime<Utc>, DateTime<Utc>)> {
+pub(super) fn window(ctx: &HostContext) -> Option<(DateTime<Utc>, DateTime<Utc>)> {
     let stay = ctx.input.get("stay")?;
     let parse = |key: &str| {
         stay.get(key)

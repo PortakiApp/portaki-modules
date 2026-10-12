@@ -110,6 +110,49 @@ pub fn unlock(ctx: Context, _args: StayArgs) -> Result<UnlockResponse> {
     })
 }
 
+/// What « Régénérer le code » sends: the stay and its window, as the stay-action surface read
+/// them from `input.stay`. A host command has no `ctx.stay`; dates edited by hand only bound a
+/// code on the host's own lock.
+#[portaki_sdk::wire]
+#[portaki_sdk::params]
+pub struct RegenerateArgs {
+    pub stay_id: Uuid,
+    pub check_in: DateTime<Utc>,
+    pub check_out: DateTime<Utc>,
+}
+
+/// « Régénérer le code » (spec Nuki §1, `stay-action`) : a new code for the stay, from check-in to
+/// check-out. The previous one is not revoked — it ends at check-out like every per-stay code.
+/// Host only, and only when the module creates per-stay codes (option on, lock, Nuki Web key).
+#[portaki_sdk::command(
+    name = "regenerateCode",
+    example(
+        label = "Nouveau code pour le séjour",
+        input = r#"{"stayId":"1a2b3c4d-0000-4000-8000-000000000000","checkIn":"2026-08-24T14:00:00Z","checkOut":"2026-08-29T08:00:00Z"}"#
+    )
+)]
+pub fn regenerate_code(ctx: Context, args: RegenerateArgs) -> Result<()> {
+    if ctx.guest.is_some() {
+        return Err(PortakiError::Host("host_only".into()));
+    }
+    let config = ModuleConfig::load(&ctx)?;
+    if !stay_code::wanted(&ctx, &config) {
+        return Err(PortakiError::Host("code_per_stay_unavailable".into()));
+    }
+    let now = host::time::now()?;
+    if args.check_out <= now || args.check_in >= args.check_out {
+        return Err(PortakiError::Host("stay_ended".into()));
+    }
+    stay_code::create(
+        config.smartlock_id_trimmed(),
+        &args.stay_id,
+        args.check_in,
+        args.check_out,
+        now,
+    )?;
+    Ok(())
+}
+
 /// How long before check-in the lock answers. access-guide's reveal policy is not readable
 /// from here; its default (J-1 16:00, property time) always falls at least 8 h before check-in,
 /// whatever the check-in hour — so 8 h never opens earlier than it.

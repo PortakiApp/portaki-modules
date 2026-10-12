@@ -47,6 +47,9 @@ struct NukiAuth {
     code: Option<u64>,
     #[serde(default)]
     allowed_until_date: Option<String>,
+    /// Nuki's ISO date of creation: a regenerated code shares its stay's name, the newest wins.
+    #[serde(default)]
+    creation_date: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -88,21 +91,34 @@ fn list(smartlock_id: &str) -> Result<Vec<NukiAuth>> {
     )
 }
 
-/// The stay's code on the lock, if Nuki holds one.
+/// The stay's code on the lock, if Nuki holds one — the newest when « Régénérer le code » left
+/// several under the stay's name (the older ones stay valid until check-out).
 pub(crate) fn find(smartlock_id: &str, stay_id: &Uuid) -> Result<Option<String>> {
     find_in(list(smartlock_id)?, stay_id)
 }
 
 fn find_in(auths: Vec<NukiAuth>, stay_id: &Uuid) -> Result<Option<String>> {
     let name = auth_name(stay_id);
-    match auths
+    let newest = auths
         .into_iter()
-        .find(|auth| auth.auth_type == KEYPAD_CODE && auth.name == name)
-    {
+        .enumerate()
+        .filter(|(_, auth)| auth.auth_type == KEYPAD_CODE && auth.name == name)
+        // Undated or unreadable dates sort first; ties go to the later one in Nuki's list.
+        .max_by_key(|(index, auth)| {
+            let created = auth
+                .creation_date
+                .as_deref()
+                .and_then(|at| DateTime::parse_from_rfc3339(at).ok());
+            (created, *index)
+        });
+    match newest {
         None => Ok(None),
-        Some(NukiAuth {
-            code: Some(code), ..
-        }) => Ok(Some(code.to_string())),
+        Some((
+            _,
+            NukiAuth {
+                code: Some(code), ..
+            },
+        )) => Ok(Some(code.to_string())),
         // Une autorisation à ce nom mais sans code lisible : en créer une seconde donnerait deux
         // codes au même séjour. Le code de secours vaut mieux.
         Some(_) => Err(PortakiError::Host("nuki_auth_without_code".into())),
@@ -123,6 +139,18 @@ pub(crate) fn ensure(
     if let Some(code) = find_in(auths, stay_id)? {
         return Ok(code);
     }
+    create(smartlock_id, stay_id, checkin, checkout, now)
+}
+
+/// A new code for the stay, from check-in to check-out, whatever the lock already holds.
+/// « Régénérer le code » : the previous one is not revoked — it ends at check-out.
+pub(crate) fn create(
+    smartlock_id: &str,
+    stay_id: &Uuid,
+    checkin: DateTime<Utc>,
+    checkout: DateTime<Utc>,
+    now: DateTime<Utc>,
+) -> Result<String> {
     let code = generate(stay_id, now);
     let _: serde_json::Value = host::connectors::call(
         "nuki",
