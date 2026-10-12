@@ -14,8 +14,8 @@
     "en": "Upcoming events near the rental, found automatically and topped up with the host's picks, with a map when venues are known."
   },
   "hostSurface": {
-    "fr": "Une fiche Événements : recherche automatique et rayon, jusqu’à six événements saisis à la main et une mention affichée sous la liste.",
-    "en": "An Events sheet: automatic search and radius, up to six hand-entered events, and a notice shown under the list."
+    "fr": "Une fiche Événements : recherche automatique et rayon, jusqu’à six événements saisis à la main et une mention affichée sous la liste ; un onglet Calendrier des événements, mois par mois, doublons signalés.",
+    "en": "An Events sheet: automatic search and radius, up to six hand-entered events, and a notice shown under the list; an Events calendar tab, month by month, with duplicates flagged."
   },
   "configItems": [
     {
