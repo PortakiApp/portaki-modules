@@ -115,10 +115,11 @@ fn the_host_form_sends_the_declared_keys() {
         })
         .run(|ctx| {
             let surface = render_host_main(ctx).expect("host main");
+            // Les deux champs d'avant `host_hours` : lus, plus dessinés.
             config_form::assert_form_matches_config(
                 concat!(env!("OUT_DIR"), "/portaki-emissions"),
                 &surface,
-                &[],
+                &["host_hours_from", "host_hours_to"],
             );
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains("+33 6 12 34 56 78"));
@@ -145,26 +146,53 @@ fn an_inactive_module_shows_the_sdk_state() {
         });
 }
 
-/// Les lignes suivent ce que l'hôte a saisi, et « Ajouter » en demande une de plus.
-///
-/// Six emplacements figés gelaient la liste à six : l'hôte voyait quatre cartes vides quand il
-/// avait saisi deux contacts, et ne pouvait pas en saisir un septième.
+/// La ligne `rows` du tableau des contacts.
+fn table_rows(surface: &portaki_sdk::sdui::surface::Surface) -> Vec<Value> {
+    fn find(value: &Value) -> Option<Vec<Value>> {
+        match value {
+            Value::Object(o) if o.get("type") == Some(&json!("DataTable")) => {
+                o.get("rows")?.as_array().cloned()
+            }
+            Value::Object(o) => o.values().find_map(find),
+            Value::Array(items) => items.iter().find_map(find),
+            _ => None,
+        }
+    }
+    find(&serde_json::to_value(surface).unwrap()).expect("a DataTable")
+}
+
+/// Les contacts sont un tableau ordonnable : une ligne par contact saisi (les emplacements vides
+/// de l'ancien formulaire n'en sont pas), « N / 20 », une fenêtre par ligne, et « Ajouter » tant
+/// qu'on est sous 20 — la ligne demandée par « Ajouter » apparaît avec son id.
 #[test]
 #[serial]
-fn the_form_draws_the_contacts_the_host_has() {
+fn the_contacts_are_a_sortable_table() {
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&json!({}))
-        .run(|ctx| {
-            let json =
-                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
-            assert!(json.contains("contacts.0.label"), "{json}");
-            assert!(!json.contains("contacts.1.label"), "{json}");
-            assert!(json.contains(r#""contacts_count":2"#), "{json}");
+        .with_config(&json!({
+            "contacts": [
+                { "id": "paulette", "label": "Paulette", "phone": "+33698765432", "note": "Double des clés" },
+                { "label": "", "phone": "" }
+            ]
+        }))
+        .run(|mut ctx| {
+            ctx.input = json!({ "newContacts": "neuf" });
+            let surface = render_host_main(ctx).expect("host main");
+            let rows = table_rows(&surface);
+            assert_eq!(rows.len(), 2, "{rows:?}");
+            assert_eq!(rows[0]["id"], "paulette");
+            assert_eq!(rows[0]["note"], "Double des clés");
+            assert_eq!(rows[1]["id"], "neuf");
+            let json = serde_json::to_string(&surface).unwrap();
+            assert!(json.contains(r#""sortable":true"#), "{json}");
+            assert!(json.contains(r#""panel":"dialog""#), "{json}");
+            assert!(json.contains(r#""subtitle":"2 / 20""#), "{json}");
+            assert!(json.contains("contacts.1.phone"), "{json}");
+            assert!(json.contains("newContacts"), "{json}");
         });
 
     let rows: Vec<Value> = (0..emergency_contacts::MAX_CONTACTS)
-        .map(|i| json!({ "label": format!("Contact {i}"), "phone": "18" }))
+        .map(|i| json!({ "id": format!("c{i}"), "label": format!("Contact {i}"), "phone": "18" }))
         .collect();
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
@@ -172,17 +200,61 @@ fn the_form_draws_the_contacts_the_host_has() {
         .run(|ctx| {
             let json =
                 serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
-            let last = emergency_contacts::MAX_CONTACTS - 1;
-            assert!(json.contains(&format!("contacts.{last}.label")), "{json}");
+            assert!(json.contains(r#""subtitle":"20 / 20""#), "{json}");
             assert!(
-                !json.contains(&format!("contacts.{}.label", last + 1)),
+                !json.contains("newContacts"),
+                "plus d'« Ajouter » à 20 : {json}"
+            );
+        });
+}
+
+/// « Même numéro que vous » : une pastille sur le contact qui répète le numéro affiché, sans rien
+/// bloquer ; aucune quand l'hôte ne montre pas son numéro.
+#[test]
+#[serial]
+fn a_contact_with_the_host_number_wears_a_pill() {
+    for (show, expected) in [(true, "i18n:host.contact.duplicate"), (false, "")] {
+        MockContext::host()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&json!({
+                "show_host": show,
+                "host_visible_phone": "+33 6 12 34 56 78",
+                "contacts": [
+                    { "id": "julie", "label": "Julie", "phone": "+33612345678" },
+                    { "id": "paulette", "label": "Paulette", "phone": "+33698765432" }
+                ]
+            }))
+            .run(|ctx| {
+                let rows = table_rows(&render_host_main(ctx).expect("host main"));
+                assert_eq!(rows[0]["duplicate"], expected, "{rows:?}");
+                assert_eq!(rows[1]["duplicate"], "", "{rows:?}");
+            });
+    }
+}
+
+/// Le bloc de l'hôte se masque avec « Afficher mon numéro », la plage avec « 24 h/24 » ; la
+/// plage d'avant (deux champs) remplit le `TimeRange`.
+#[test]
+#[serial]
+fn the_host_block_hides_with_its_switch() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({
+            "host_availability": "hours",
+            "host_hours_from": "09:00",
+            "host_hours_to": "20:00"
+        }))
+        .run(|ctx| {
+            let json =
+                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            assert!(json.contains(r#""visibleWhen":"show_host=true""#), "{json}");
+            assert!(
+                json.contains(r#""visibleWhen":"host_availability=hours""#),
                 "{json}"
             );
+            assert!(json.contains(r#""layout":"segmented""#), "{json}");
             assert!(
-                json.contains(&format!(
-                    r#""contacts_count":{}"#,
-                    emergency_contacts::MAX_CONTACTS
-                )),
+                json.contains(r#""name":"host_hours","value":"09:00-20:00""#),
                 "{json}"
             );
         });
@@ -212,18 +284,20 @@ fn a_save_in_english_keeps_the_french() {
         .run(|mut ctx| {
             ctx.locale = "en-US".into();
             let surface = render_host_main(ctx).expect("host main");
+            // Stored order; the blank slot is not a row. The table carries the ids (the dashboard
+            // sends `contacts.N.id` itself), the dialogs the fields.
+            let rows = table_rows(&surface);
+            assert_eq!(rows.len(), 2);
+            assert_eq!(rows[0]["id"], "samu");
+            assert_eq!(rows[1]["id"], "pompiers");
             let sent = config_save::form_args(&surface);
-            // Stored order, the blank row where it was; ids on the filled rows only.
-            assert_eq!(sent["contacts"][0]["id"], "samu");
             assert_eq!(sent["contacts"][0]["label"], "Ambulance");
-            assert!(sent["contacts"][1].get("id").is_none());
-            assert_eq!(sent["contacts"][2]["id"], "pompiers");
-            // Trois lignes stockées, trois dessinées : plus d'emplacements vides en bout de liste.
-            assert_eq!(sent["contacts"].as_array().unwrap().len(), 3);
+            assert_eq!(sent["contacts"][1]["phone"], "18");
 
+            let stored = json!({ "contacts": [stored["contacts"][0], stored["contacts"][2]] });
             let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
             assert_eq!(saved["contacts"][0], stored["contacts"][0]);
-            assert_eq!(saved["contacts"][2]["label"]["fr"], "Pompiers");
+            assert_eq!(saved["contacts"][1]["label"]["fr"], "Pompiers");
         });
 }
 
@@ -410,4 +484,59 @@ fn placed_places_show_their_distance_from_the_property() {
     let unplaced = render(None);
     assert!(!unplaced.contains("guest.distance"), "{unplaced}");
     assert!(!unplaced.contains(" · "), "{unplaced}");
+}
+
+/// Les horaires de la pharmacie se lisent dans le livret : « Ouverte jusqu'à … » dans une plage,
+/// « Fermée » en dehors, à l'heure du logement ; sans horaires, rien.
+#[test]
+#[serial]
+fn the_pharmacy_hours_say_whether_it_is_open() {
+    use chrono::TimeZone;
+    let render = |hours: &str, now: chrono::DateTime<chrono::Utc>| {
+        let mut json = String::new();
+        MockContext::guest()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(&json!({
+                "pharmacy": "Pharmacie du Port",
+                "pharmacy_phone": "+33297412210",
+                "pharmacy_hours": hours
+            }))
+            .with_now(now)
+            .run(|ctx| {
+                json = serde_json::to_string(&render_explore_detail(ctx).expect("detail")).unwrap();
+            });
+        json
+    };
+    // Lundi 12 octobre 2026.
+    let monday = |h| chrono::Utc.with_ymd_and_hms(2026, 10, 12, h, 0, 0).unwrap();
+    let week = "mon=09:00-19:30;tue=09:00-19:30";
+    let open = render(week, monday(9));
+    assert!(open.contains("guest.pharmacy.openUntil"), "{open}");
+    let closed = render(week, monday(20));
+    assert!(closed.contains("guest.pharmacy.closed"), "{closed}");
+    let none = render("", monday(9));
+    assert!(!none.contains("guest.pharmacy."), "{none}");
+}
+
+/// La pharmacie de garde (le 3237) est une rangée en France, même sans pharmacie saisie ; ailleurs,
+/// rien. Le 114 se joint par SMS.
+#[test]
+#[serial]
+fn the_on_duty_pharmacy_and_the_sms_number_follow_the_country() {
+    for (locale, french) in [("fr-FR", true), ("es-ES", false)] {
+        MockContext::guest()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_property(Property {
+                locale: locale.into(),
+                ..Property::default()
+            })
+            .run(|ctx| {
+                let json =
+                    serde_json::to_string(&render_explore_detail(ctx).expect("detail")).unwrap();
+                assert_eq!(json.contains("guest.health.onDuty"), french, "{json}");
+                assert_eq!(json.contains("tel:3237"), french, "{json}");
+                assert_eq!(json.contains("sms:114"), french, "{json}");
+                assert_eq!(json.contains("\"17\""), french, "{json}");
+            });
+    }
 }

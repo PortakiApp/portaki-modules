@@ -7,15 +7,21 @@ use emergency_contacts::{render_explore_detail, render_home_card};
 
 use serde_json::json;
 
-/// Des numéros d'exemple : les services nationaux, et un cabinet et un hôte fictifs, aux numéros des plages réservées à la fiction.
+/// Des contacts, une pharmacie, un médecin et un hôte fictifs, aux numéros des plages réservées à la fiction.
 fn sample_config() -> serde_json::Value {
     json!({
         "contacts": [
-            { "id": "pharmacie", "label": { "fr": "Pharmacie de garde", "en": "On-call pharmacy" }, "phone": "3237", "note": { "fr": "Service national", "en": "National service" } },
-            { "id": "medecin", "label": { "fr": "Médecin généraliste", "en": "General practitioner" }, "phone": "01 99 00 12 34", "note": { "fr": "Cabinet du centre, sur rendez-vous", "en": "Town centre practice, by appointment" } },
-            { "id": "samu", "label": { "fr": "SAMU", "en": "Ambulance" }, "phone": "15" }
+            { "id": "paulette", "label": { "fr": "Paulette, la voisine", "en": "Paulette, the neighbour" }, "phone": "+33639980012", "note": { "fr": "Elle a un double des clés.", "en": "She has a spare key." } },
+            { "id": "plombier", "label": { "fr": "Plombier", "en": "Plumber" }, "phone": "+33199001234", "note": { "fr": "Pour une fuite d'eau", "en": "For a water leak" } }
         ],
-        "host_visible_phone": "06 39 98 12 34"
+        "host_visible_phone": "+33639981234",
+        "host_availability": "hours",
+        "host_hours": "08:00-21:00",
+        "pharmacy": "Pharmacie du Port",
+        "pharmacy_phone": "+33199005678",
+        "pharmacy_hours": "mon=09:00-19:30;tue=09:00-19:30;wed=09:00-19:30;thu=09:00-19:30;fri=09:00-19:30;sat=09:00-19:30",
+        "doctor": "Dr Le Gall",
+        "doctor_phone": "+33199009012"
     })
 }
 

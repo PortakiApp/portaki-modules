@@ -15,25 +15,37 @@ pub struct EmergencyNumber {
     pub label_key: &'static str,
     /// Le numéro à composer quand on ne sait pas lequel : il passe en ton danger.
     pub primary: bool,
+    /// Un numéro qu'on joint par SMS, pas par la voix (le 114, pour qui ne peut pas parler).
+    pub sms: bool,
 }
 
 const EU_GENERAL: EmergencyNumber = EmergencyNumber {
     number: "112",
     label_key: "guest.numbers.general",
     primary: true,
+    sms: false,
 };
 
+const fn national(number: &'static str, label_key: &'static str) -> EmergencyNumber {
+    EmergencyNumber {
+        number,
+        label_key,
+        primary: false,
+        sms: false,
+    }
+}
+
+/// Spec Urgences §2.1 : « France : 112, 15, 17, 18, 114 ».
 const FRANCE: &[EmergencyNumber] = &[
     EU_GENERAL,
+    national("15", "guest.numbers.medical"),
+    national("17", "guest.numbers.police"),
+    national("18", "guest.numbers.fire"),
     EmergencyNumber {
-        number: "15",
-        label_key: "guest.numbers.medical",
+        number: "114",
+        label_key: "guest.numbers.sms",
         primary: false,
-    },
-    EmergencyNumber {
-        number: "18",
-        label_key: "guest.numbers.fire",
-        primary: false,
+        sms: true,
     },
 ];
 
@@ -50,12 +62,25 @@ fn region_of(locale: &str) -> Option<&str> {
     locale.split(['-', '_']).nth(1).filter(|r| r.len() == 2)
 }
 
+/// Le pays du logement quand cette table le connaît (`FR`), sinon `None` : 112 seul.
+pub fn country_of(locale: &str) -> Option<&'static str> {
+    match region_of(locale).map(str::to_ascii_uppercase).as_deref() {
+        Some("FR") => Some("FR"),
+        _ => None,
+    }
+}
+
 /// Les numéros à afficher pour ce logement.
 pub fn for_locale(locale: &str) -> &'static [EmergencyNumber] {
-    match region_of(locale).map(str::to_ascii_uppercase).as_deref() {
+    match country_of(locale) {
         Some("FR") => FRANCE,
         _ => std::slice::from_ref(&EU_GENERAL),
     }
+}
+
+/// La pharmacie de garde du pays (spec §2.3) : le 3237 en France, rien ailleurs.
+pub fn on_duty_pharmacy(locale: &str) -> Option<&'static str> {
+    country_of(locale).map(|_| "3237")
 }
 
 #[cfg(test)]
@@ -63,9 +88,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn la_france_porte_ses_trois_numeros() {
+    fn la_france_porte_ses_cinq_numeros() {
         let numbers = for_locale("fr-FR");
-        assert_eq!(numbers.len(), 3);
+        let dialled: Vec<&str> = numbers.iter().map(|n| n.number).collect();
+        assert_eq!(dialled, ["112", "15", "17", "18", "114"]);
+        assert!(numbers[4].sms, "le 114 se joint par SMS");
+        assert_eq!(on_duty_pharmacy("fr-FR"), Some("3237"));
+        assert_eq!(on_duty_pharmacy("es-ES"), None);
         assert_eq!(numbers[0].number, "112");
         assert!(
             numbers[0].primary,
@@ -85,7 +114,7 @@ mod tests {
 
     #[test]
     fn la_region_se_lit_quel_que_soit_le_separateur() {
-        assert_eq!(for_locale("fr_FR").len(), 3);
-        assert_eq!(for_locale("fr-fr").len(), 3);
+        assert_eq!(for_locale("fr_FR").len(), 5);
+        assert_eq!(for_locale("fr-fr").len(), 5);
     }
 }

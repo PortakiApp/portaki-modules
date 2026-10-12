@@ -72,8 +72,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
 /// Le libellé du champ en défaut : celui du formulaire, sans l'index de la ligne.
 fn field_label(field: &str) -> &'static str {
     match field.rsplit('.').next().unwrap_or_default() {
-        "host_hours_from" => "host.hours.from",
-        "host_hours_to" => "host.hours.to",
+        "host_hours" => "host.hours.label",
         "label" => "host.contact.label",
         "phone" => "host.contact.phone",
         "note" => "host.contact.note",

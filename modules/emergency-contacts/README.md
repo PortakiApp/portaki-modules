@@ -20,7 +20,7 @@ Part of the [`portaki-modules`](https://github.com/PortakiApp/portaki-modules) m
 |-------|------------|-------------|
 | guest | `home.card` | Phone rows |
 | guest | `explore.detail` | Rows + 112 banner (bottom sheet) |
-| host | `main` | Host phone + contact slots |
+| host | `main` | Settings page: country numbers, host number and hours, contacts table, health places |
 
 ## Development
 

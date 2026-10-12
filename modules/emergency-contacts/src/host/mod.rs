@@ -1,15 +1,27 @@
-//! Host dashboard surface — design `emergency-editor-v1` (Wasm SDUI).
+//! Host dashboard surface — the settings page (spec Urgences §2), mode « page ».
+//!
+//! Three `Section`s, the shell's cards, in the spec's order: the country's numbers (read only),
+//! your contacts, health. A block that depends on a choice hides with `visibleWhen` — the host's
+//! number under « Afficher mon numéro », the hours under « Plages horaires ». The other contacts
+//! are a sortable `DataTable` whose row opens in a dialog (`panel: "dialog"`), its fields named
+//! `contacts.<i>.<key>`. A rule broken shows under its field, the same one `publishReadiness`
+//! blocks on; no Save button — the shell autosaves through `updateConfig`.
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui;
+use portaki_sdk::sdui::common::{ChoiceListLayout, Tone};
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Card, Field, FieldHint, Form, Page, Select, Stack, StepList, Text, TextInput,
-    Toggle,
+    AddressMapPicker, ChoiceList, DataTable, Field, FieldHint, Form, Grid, InlineNotice, Page,
+    PhoneInput, Section, Stack, Stat, TextInput, TimeRange, ToggleRow, WeeklyHours,
 };
 use portaki_sdk::sdui::surface::Surface;
+use serde_json::{json, Map, Value};
 
 pub use crate::config::MAX_CONTACTS;
-use crate::config::{ModuleConfig, AVAILABILITY, DEFAULT_HOURS};
+use crate::config::{compact, ContactRow, ModuleConfig, AVAILABILITY};
+use crate::numbers;
+
+/// Les contacts ajoutés pas encore enregistrés : leurs id, séparés par des virgules.
+const NEW_CONTACTS: &str = "newContacts";
 
 #[portaki_sdk::surface(
     host,
@@ -21,55 +33,74 @@ use crate::config::{ModuleConfig, AVAILABILITY, DEFAULT_HOURS};
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let config = ModuleConfig::load(&ctx)?;
-
-    // L'ordre de la spec (§2) : les numéros du pays, vos contacts, la santé.
-    let mut cards: Vec<Component> = vec![Card::new()
-        .title("i18n:host.section.country")
-        .icon(IconName::Phone)
-        .child(FieldHint::new().text("i18n:host.section.country.help"))
-        .into()];
-    cards.push(host_card(&config, &ctx));
-    cards.push(contacts_card(&config, &ctx));
-    cards.push(useful_card(&config, &ctx));
-
-    // No Save button — the modules drawer owns the footer Save.
     Ok(Surface::new(
-        Page::new().child(Form::new().child(Stack::new().gap(16.0).children(vec![
-                    Text::new()
-                        .text("i18n:surface.host.main.subtitle")
-                        .variant(TextVariant::Body)
-                        .into(),
-                    Component::Stack(Stack::new().gap(16.0).children(cards)),
-                ]))),
+        Page::new().child(
+            Form::new()
+                .child(country_section(&ctx))
+                .child(contacts_section(&config, &ctx))
+                .child(health_section(&config, &ctx)),
+        ),
     )
     .with_id(MAIN))
 }
 
-/// §2.2 L'hôte : son numéro affiché ou non, et quand on peut l'appeler.
-fn host_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let mut children: Vec<Component> = vec![
-        Field::new()
-            .name("show_host")
-            .label("i18n:host.showHost.label")
-            .child(Toggle::new().name("show_host").checked(config.show_host()))
-            .into(),
-        FieldHint::new().text("i18n:host.showHost.hint").into(),
-    ];
-    // Masqué, le numéro ne demande ni disponibilité ni surcharge (règles communes).
-    if config.show_host() {
-        let availability = if config.host_hours().is_some() {
-            "hours"
-        } else {
-            "always"
-        };
-        children.push(
+// ── 2.1 Numéros du pays ──────────────────────────────────────────────────────
+
+/// Les numéros que le livret affiche en tête, en lecture seule : le 112 d'abord.
+fn country_section(ctx: &HostContext) -> Component {
+    let locale = &ctx.property.locale;
+    let help = numbers::country_of(locale)
+        .and_then(|code| {
+            let country = t!(&format!("host.country.{code}")).ok()?;
+            t!("host.section.country.help", country = country).ok()
+        })
+        .unwrap_or_else(|| "i18n:host.section.country.helpUnknown".into());
+    let tiles: Vec<Component> = numbers::for_locale(locale)
+        .iter()
+        .map(|number| {
+            Stat::new()
+                .value(number.number)
+                .label(format!("i18n:{}", number.label_key))
+                .into()
+        })
+        .collect();
+    Section::new()
+        .title("i18n:host.section.country")
+        .subtitle(help)
+        .child(Grid::new().minColumnWidth(120.0).gap(8.0).children(tiles))
+        .child(FieldHint::new().text("i18n:host.section.country.hint"))
+        .into()
+}
+
+// ── 2.2 Vos contacts ─────────────────────────────────────────────────────────
+
+fn contacts_section(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let host = Section::new()
+        .visibleWhen("show_host=true")
+        .child(
+            named(config, ctx, "host_visible_phone")
+                .label("i18n:host.phone.label")
+                .child(
+                    PhoneInput::new()
+                        .name("host_visible_phone")
+                        .value(config.host_visible_phone.trim())
+                        .defaultCountry(default_country(ctx)),
+                ),
+        )
+        .child(
             Field::new()
                 .name("host_availability")
                 .label("i18n:host.availability.label")
                 .child(
-                    Select::new()
+                    ChoiceList::new()
                         .name("host_availability")
-                        .options(
+                        .layout(ChoiceListLayout::Segmented)
+                        .value(if config.host_hours().is_some() {
+                            "hours"
+                        } else {
+                            "always"
+                        })
+                        .choices(
                             AVAILABILITY
                                 .iter()
                                 .map(|key| {
@@ -79,57 +110,302 @@ fn host_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
                                     )
                                 })
                                 .collect(),
-                        )
-                        .value(availability),
-                )
-                .into(),
-        );
-        if let Some((from, to)) = config.host_hours() {
-            for (name, label, value, placeholder) in [
-                (
-                    "host_hours_from",
-                    "i18n:host.hours.from",
-                    from,
-                    DEFAULT_HOURS.0,
+                        ),
                 ),
-                ("host_hours_to", "i18n:host.hours.to", to, DEFAULT_HOURS.1),
-            ] {
-                children.push(
-                    named(config, ctx, name)
-                        .label(label)
-                        .child(
-                            TextInput::new()
-                                .name(name)
-                                .value(value)
-                                .placeholder(placeholder),
-                        )
-                        .into(),
-                );
-            }
-        }
-        children.push(
-            named(config, ctx, "host_visible_phone")
-                .label("i18n:host.phone.label")
+        )
+        .child(
+            named(config, ctx, "host_hours")
+                .label("i18n:host.hours.label")
+                .visibleWhen("host_availability=hours")
                 .child(
-                    TextInput::new()
-                        .name("host_visible_phone")
-                        .value(config.host_visible_phone.clone())
-                        .placeholder("i18n:host.phone.placeholder"),
+                    TimeRange::new()
+                        .name("host_hours")
+                        .value(config.host_hours_wire()),
                 )
-                .into(),
+                .child(FieldHint::new().text("i18n:host.hours.hint")),
         );
+
+    Section::new()
+        .title("i18n:host.contacts.title")
+        .child(
+            ToggleRow::new()
+                .name("show_host")
+                .label("i18n:host.showHost.label")
+                .description("i18n:host.showHost.hint")
+                .checked(config.show_host()),
+        )
+        .child(host)
+        .child(others(config, ctx))
+        .into()
+}
+
+/// « Autres contacts » : le tableau ordonnable, « N / 20 », et la fenêtre de chaque ligne.
+fn others(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let rows = rows(config, ctx);
+    let host = host_number(config);
+    let mut children: Vec<Component> =
+        vec![FieldHint::new().text("i18n:host.contacts.hint").into()];
+    if let Some(error) = config.error_of("contacts") {
         children.push(
-            FieldHint::new()
-                .text("i18n:host.section.hostPhone.help")
+            InlineNotice::new()
+                .tone(Tone::Danger)
+                .message(error.get(&ctx.locale).to_string())
                 .into(),
         );
     }
-    Card::new()
-        .title("i18n:host.section.hostPhone")
-        .icon(IconName::Users)
+    let mut table = DataTable::new()
+        .rowName("contacts")
+        .sortable(true)
+        .panel("dialog")
+        .columns(json!([
+            { "key": "label", "label": "i18n:host.contact.label", "sub": "note" },
+            { "key": "duplicate", "label": "", "kind": "pill" },
+            { "key": "phone", "label": "i18n:host.contact.phone", "mono": true },
+        ]))
+        .rows(Value::Array(
+            rows.iter()
+                .map(|(id, contact)| row(id, contact, &host, ctx))
+                .collect(),
+        ))
+        .children(
+            rows.iter()
+                .enumerate()
+                .map(|(index, (_, contact))| contact_panel(index, contact, ctx))
+                .collect(),
+        );
+    if rows.len() < MAX_CONTACTS {
+        let mut added: Vec<String> = rows
+            .iter()
+            .filter(|(_, c)| c.is_blank())
+            .map(|(id, _)| id.clone())
+            .collect();
+        added.push(Uuid::new_v4().to_string());
+        let mut input = Map::new();
+        input.insert(NEW_CONTACTS.into(), Value::String(added.join(",")));
+        table = table
+            .addLabel("i18n:host.contacts.add")
+            .addAction(Action::emit(
+                contracts::shell::SURFACE_INPUT,
+                Some(Value::Object(input)),
+            ));
+    }
+    children.push(table.into());
+    Section::new()
+        .title("i18n:host.contacts.others")
+        .subtitle(format!("{} / {MAX_CONTACTS}", rows.len()))
         .children(children)
         .into()
 }
+
+/// Les lignes : les contacts enregistrés, puis ceux qu'« Ajouter » a ouverts. Un contact sans id
+/// (enregistré avant le tableau) en reçoit un, stable d'un rendu à l'autre (`contact-<rang>`) :
+/// la plateforme le rapproche par sa position au premier enregistrement, et l'id reste.
+fn rows(config: &ModuleConfig, ctx: &HostContext) -> Vec<(String, ContactRow)> {
+    // Les emplacements vides de l'ancien formulaire ne sont pas des lignes.
+    let mut rows: Vec<(String, ContactRow)> = config
+        .contacts
+        .iter()
+        .enumerate()
+        .filter(|(_, contact)| !contact.is_blank())
+        .map(|(index, contact)| {
+            let id = match contact.id.trim() {
+                "" => format!("contact-{index}"),
+                id => id.to_string(),
+            };
+            (id, contact.clone())
+        })
+        .collect();
+    for id in ctx.input_str(NEW_CONTACTS).unwrap_or_default().split(',') {
+        let id = id.trim();
+        if !id.is_empty() && !rows.iter().any(|(known, _)| known == id) {
+            rows.push((id.to_string(), ContactRow::default()));
+        }
+    }
+    rows
+}
+
+/// Le numéro de l'hôte, pour la pastille « Même numéro que vous ». Une surface hôte ne reçoit pas
+/// le profil (`ctx.host` n'est rempli que côté voyageur) : seul le numéro saisi ici compte.
+fn host_number(config: &ModuleConfig) -> String {
+    if config.show_host() {
+        compact(config.host_visible_phone.trim())
+    } else {
+        String::new()
+    }
+}
+
+/// Une ligne du tableau : nom (« Quand l'appeler » dessous), la pastille de doublon, le numéro.
+fn row(id: &str, contact: &ContactRow, host: &str, ctx: &HostContext) -> Value {
+    let phone = contact.phone.trim();
+    let duplicate = !host.is_empty() && compact(phone) == host;
+    json!({
+        "id": id,
+        "label": contact.label.host_value(ctx),
+        "note": contact.note.host_value(ctx),
+        "duplicate": if duplicate { "i18n:host.contact.duplicate" } else { "" },
+        "phone": phone,
+    })
+}
+
+/// La fenêtre d'une ligne : Nom ou rôle, Téléphone, Quand l'appeler (§2.2).
+fn contact_panel(index: usize, contact: &ContactRow, ctx: &HostContext) -> Component {
+    let name = |key: &str| format!("contacts.{index}.{key}");
+    let problems = contact.problems();
+    let field = |key: &str| {
+        let field = Field::new().name(name(key));
+        match problems.iter().find(|(name, _)| *name == key) {
+            Some((_, error)) => field.error(error.get(&ctx.locale).to_string()),
+            None => field,
+        }
+    };
+    Stack::new()
+        .gap(14.0)
+        .children(vec![
+            field("label")
+                .label("i18n:host.contact.label")
+                .required(true)
+                .child(
+                    TextInput::new()
+                        .name(name("label"))
+                        .value(contact.label.host_value(ctx))
+                        .placeholder("i18n:host.contact.label.placeholder"),
+                )
+                .into(),
+            field("phone")
+                .label("i18n:host.contact.phone")
+                .required(true)
+                .child(
+                    PhoneInput::new()
+                        .name(name("phone"))
+                        .value(contact.phone.trim())
+                        .defaultCountry(default_country(ctx)),
+                )
+                .into(),
+            field("note")
+                .label("i18n:host.contact.note")
+                .child(
+                    TextInput::new()
+                        .name(name("note"))
+                        .value(contact.note.host_value(ctx))
+                        .placeholder("i18n:host.contact.note.placeholder"),
+                )
+                .into(),
+        ])
+        .into()
+}
+
+// ── 2.3 Santé ────────────────────────────────────────────────────────────────
+
+fn health_section(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let pharmacy = place(
+        config,
+        ctx,
+        "pharmacy",
+        (&config.pharmacy, &config.pharmacy_phone),
+        (
+            &config.pharmacy_address,
+            config.pharmacy_lat,
+            config.pharmacy_lng,
+        ),
+    )
+    .child(
+        Field::new()
+            .name("pharmacy_hours")
+            .label("i18n:host.pharmacyHours.label")
+            .child(
+                WeeklyHours::new()
+                    .name("pharmacy_hours")
+                    .value(config.pharmacy_hours.trim()),
+            ),
+    );
+    let mut children: Vec<Component> = vec![pharmacy.into()];
+    // La pharmacie de garde : lecture seule, le numéro du pays (le 3237 en France), rien ailleurs.
+    let locale = &ctx.property.locale;
+    if let (Some(number), Some(code)) = (
+        numbers::on_duty_pharmacy(locale),
+        numbers::country_of(locale),
+    ) {
+        if let Some(line) = t!(&format!("host.country.{code}"))
+            .ok()
+            .and_then(|country| t!("host.onDuty", number = number, country = country).ok())
+        {
+            children.push(InlineNotice::new().message(line).into());
+        }
+    }
+    children.push(
+        place(
+            config,
+            ctx,
+            "hospital",
+            (&config.hospital, &config.hospital_phone),
+            (
+                &config.hospital_address,
+                config.hospital_lat,
+                config.hospital_lng,
+            ),
+        )
+        .into(),
+    );
+    children.push(
+        place(
+            config,
+            ctx,
+            "doctor",
+            (&config.doctor, &config.doctor_phone),
+            (&config.doctor_address, config.doctor_lat, config.doctor_lng),
+        )
+        .into(),
+    );
+    Section::new()
+        .title("i18n:host.section.health")
+        .subtitle("i18n:host.section.health.help")
+        .children(children)
+        .into()
+}
+
+/// Un lieu de santé : nom, téléphone, position. Ses champs s'appellent `{key}`, `{key}_phone`,
+/// `{key}_address` / `_lat` / `_lng`.
+fn place(
+    config: &ModuleConfig,
+    ctx: &HostContext,
+    key: &str,
+    (name, phone): (&str, &str),
+    (address, lat, lng): (&str, Option<f64>, Option<f64>),
+) -> Section {
+    let phone_key = format!("{key}_phone");
+    let mut picker = AddressMapPicker::new()
+        .addressName(format!("{key}_address"))
+        .latName(format!("{key}_lat"))
+        .lngName(format!("{key}_lng"))
+        .address(address)
+        .label("i18n:host.place.position");
+    if let (Some(lat), Some(lng)) = (lat, lng) {
+        picker = picker.lat(lat).lng(lng);
+    }
+    Section::new()
+        .title(format!("i18n:host.{key}.label"))
+        .child(
+            Field::new().name(key).label("i18n:host.place.name").child(
+                TextInput::new()
+                    .name(key)
+                    .value(name)
+                    .placeholder(format!("i18n:host.{key}.placeholder")),
+            ),
+        )
+        .child(
+            named(config, ctx, phone_key.clone())
+                .label("i18n:host.place.phone")
+                .child(
+                    PhoneInput::new()
+                        .name(phone_key)
+                        .value(phone.trim())
+                        .defaultCountry(default_country(ctx)),
+                ),
+        )
+        .child(picker)
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 /// Le champ `name`, avec le message de [`ModuleConfig::error_of`] sous lui s'il y en a un.
 fn named(config: &ModuleConfig, ctx: &HostContext, name: impl Into<String>) -> Field {
@@ -141,172 +417,7 @@ fn named(config: &ModuleConfig, ctx: &HostContext, name: impl Into<String>) -> F
     }
 }
 
-/// Les contacts de l'hôte, en lignes dynamiques bornées.
-fn contacts_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let rows_count = draft_rows(ctx, config.contacts.len());
-    let rows: Vec<Component> = (0..rows_count)
-        .map(|index| contact_row(index, config, ctx))
-        .collect();
-
-    Card::new()
-        .title("i18n:host.contacts.title")
-        .subtitle("i18n:host.contacts.subtitle")
-        .icon(IconName::Users)
-        .child(
-            StepList::new()
-                .addLabel("i18n:host.contacts.add")
-                .removeLabel("i18n:host.contacts.remove")
-                .emptyTitle("i18n:host.contacts.emptyTitle")
-                .emptyDescription("i18n:host.contacts.emptyDescription")
-                .itemKeyPrefix("contacts")
-                .addAction(emit_input(RowCount {
-                    contacts_count: (rows_count + 1).min(MAX_CONTACTS),
-                }))
-                .children(rows),
-        )
-        .into()
-}
-
-/// Combien de lignes dessiner : ce que « Ajouter » a demandé, sinon ce qui est stocké, borné.
-fn draft_rows(ctx: &HostContext, stored: usize) -> usize {
-    match ctx.input_u64("contacts_count") {
-        Some(asked) => (asked as usize).clamp(1, MAX_CONTACTS),
-        None => stored.clamp(1, MAX_CONTACTS),
-    }
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "snake_case")]
-struct RowCount {
-    contacts_count: usize,
-}
-
-fn emit_input(payload: impl serde::Serialize) -> Action {
-    Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
-}
-
-fn contact_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let contact = config.contacts.get(index);
-    let label = contact.map(|c| c.label.host_value(ctx)).unwrap_or_default();
-    let note = contact.map(|c| c.note.host_value(ctx)).unwrap_or_default();
-    let phone = contact.map(|c| c.phone.as_str()).unwrap_or("");
-    // A filled row sends its id, so a save merges into it (and keeps its note, its category, its
-    // other languages). A blank slot has nothing to keep — and an id would make it count as filled.
-    let id = contact
-        .filter(|c| !c.is_blank())
-        .map(|c| sdui::row_id("contacts", index, Some(&c.id)));
-
-    Stack::new()
-        .id(format!("contact-{index}"))
-        .gap(10.0)
-        .children(
-            id.into_iter()
-                .chain([
-                    named(config, ctx, format!("contacts.{index}.label"))
-                        .label("i18n:host.contact.label")
-                        .child(
-                            TextInput::new()
-                                .name(format!("contacts.{index}.label"))
-                                .value(label)
-                                .placeholder("i18n:host.contact.label.placeholder"),
-                        )
-                        .into(),
-                    named(config, ctx, format!("contacts.{index}.phone"))
-                        .label("i18n:host.contact.phone")
-                        .child(
-                            TextInput::new()
-                                .name(format!("contacts.{index}.phone"))
-                                .value(phone)
-                                .placeholder("+33 6 12 34 56 78"),
-                        )
-                        .into(),
-                    named(config, ctx, format!("contacts.{index}.note"))
-                        .label("i18n:host.contact.note")
-                        .child(
-                            TextInput::new()
-                                .name(format!("contacts.{index}.note"))
-                                .value(note)
-                                .placeholder("i18n:host.contact.note.placeholder"),
-                        )
-                        .into(),
-                ])
-                .collect(),
-        )
-        .into()
-}
-
-/// §2.3 Santé : la pharmacie, l'hôpital et le médecin — un nom et un numéro chacun.
-fn useful_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let mut children: Vec<Component> = Vec::new();
-    for (name_key, name, phone_key, phone) in [
-        (
-            "pharmacy",
-            &config.pharmacy,
-            "pharmacy_phone",
-            &config.pharmacy_phone,
-        ),
-        (
-            "hospital",
-            &config.hospital,
-            "hospital_phone",
-            &config.hospital_phone,
-        ),
-        (
-            "doctor",
-            &config.doctor,
-            "doctor_phone",
-            &config.doctor_phone,
-        ),
-    ] {
-        let camel = |key: &str| key.replace("_phone", "Phone");
-        children.push(
-            Field::new()
-                .name(name_key)
-                .label(format!("i18n:host.{name_key}.label"))
-                .child(
-                    TextInput::new()
-                        .name(name_key)
-                        .value(name.clone())
-                        .placeholder(format!("i18n:host.{name_key}.placeholder")),
-                )
-                .into(),
-        );
-        children.push(
-            named(config, ctx, phone_key)
-                .label(format!("i18n:host.{}.label", camel(phone_key)))
-                .child(TextInput::new().name(phone_key).value(phone.clone()))
-                .into(),
-        );
-        // La pharmacie et l'hôpital se placent sur la carte : un repère sur la Carte du livret.
-        if let Some((address, lat, lng)) = match name_key {
-            "pharmacy" => Some((
-                &config.pharmacy_address,
-                config.pharmacy_lat,
-                config.pharmacy_lng,
-            )),
-            "hospital" => Some((
-                &config.hospital_address,
-                config.hospital_lat,
-                config.hospital_lng,
-            )),
-            _ => None,
-        } {
-            let mut picker = AddressMapPicker::new()
-                .addressName(format!("{name_key}_address"))
-                .latName(format!("{name_key}_lat"))
-                .lngName(format!("{name_key}_lng"))
-                .address(address.clone())
-                .label(format!("i18n:host.{name_key}.position"));
-            if let (Some(lat), Some(lng)) = (lat, lng) {
-                picker = picker.lat(lat).lng(lng);
-            }
-            children.push(picker.into());
-        }
-    }
-    Card::new()
-        .title("i18n:host.section.useful")
-        .subtitle("i18n:host.section.useful.help")
-        .icon(IconName::InfoCircle)
-        .children(children)
-        .into()
+/// L'indicatif proposé d'abord : celui du pays du logement, la France sinon.
+fn default_country(ctx: &HostContext) -> &'static str {
+    numbers::country_of(&ctx.property.locale).unwrap_or("FR")
 }

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.0
+
+La page Urgences refaite.
+
+* Vos contacts dans un tableau : glissez pour les réordonner, ouvrez-en un pour le modifier ; une pastille signale votre propre numéro.
+* Votre numéro, l’indicatif à part, et vos plages horaires ne s’affichent que si vous les choisissez.
+* Donnez les horaires de la pharmacie : le livret dit si elle est ouverte, et jusqu’à quand.
+* En France, le livret montre aussi le 17, le 114 par SMS et la pharmacie de garde (3237).
+* Placez aussi le médecin sur la carte : le livret affiche sa distance.
+
 ## 1.8.1
 
 Montée technique.
