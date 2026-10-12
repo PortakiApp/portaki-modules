@@ -110,6 +110,36 @@ fn the_detail_lists_the_recorded_products_with_their_affiliate_links() {
         });
 }
 
+/// Le catalogue de la nouvelle carte : un seul rayon, et le prix maximum filtré au rendu.
+#[test]
+#[serial]
+fn the_common_radius_and_the_max_price_apply_to_tiqets() {
+    let config = |max: u32| {
+        json!({
+            "partners_enabled": true, "providers": ["tiqets"],
+            "partner_radius_km": 15, "partner_max_price": max
+        })
+    };
+    guest(&pool())
+        .with_config(&config(30))
+        .with_connector_response("tiqets", "nearby_products", RECORDED)
+        .run_with(|ctx, host| {
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
+            assert!(json.contains("Musée Van Gogh"), "{json}");
+            let args: Value =
+                serde_json::from_str(&host.connector_calls()[0].args_json).expect("args");
+            assert_eq!(args["max_distance"], 15);
+        });
+    // 22 € au-dessus de 20 € : plus de produit, plus de section.
+    guest(&pool())
+        .with_config(&config(20))
+        .with_connector_response("tiqets", "nearby_products", RECORDED)
+        .run(|ctx| {
+            let json = surface_json(&render_explore_detail(ctx).expect("surface"));
+            assert!(!json.contains("Musée Van Gogh"), "{json}");
+        });
+}
+
 #[test]
 #[serial]
 fn price_and_rating_read_in_the_guest_language() {
@@ -331,22 +361,23 @@ fn the_host_sheet_says_why_nothing_would_show() {
         .with_kv("tiqets_key_missing", b"1".to_vec())
         .run(|ctx| {
             let json = surface_json(&render_host_main(ctx).expect("host main"));
-            assert!(json.contains("i18n:host.section.tiqets"), "{json}");
+            assert!(json.contains("i18n:host.partners.title"), "{json}");
             assert!(
                 json.contains("i18n:host.tiqets.status.missingKey"),
                 "{json}"
             );
         });
+    // Prêt, ou pas choisi : rien à dire.
     MockContext::host()
         .with_capabilities(&pool())
         .with_config(&enabled())
         .run(|ctx| {
             let json = surface_json(&render_host_main(ctx).expect("host main"));
-            assert!(json.contains("i18n:host.tiqets.status.ready"), "{json}");
+            assert!(!json.contains("host.tiqets.status"), "{json}");
         });
     MockContext::host().with_capabilities(&pool()).run(|ctx| {
         let json = surface_json(&render_host_main(ctx).expect("host main"));
-        assert!(json.contains("i18n:host.tiqets.status.off"), "{json}");
+        assert!(!json.contains("host.tiqets.status"), "{json}");
     });
 }
 

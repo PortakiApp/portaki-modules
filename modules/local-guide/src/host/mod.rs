@@ -1,33 +1,39 @@
-//! Host dashboard surface — design `guide-editor-v1` (Wasm SDUI).
+//! Host dashboard surface — the settings page (spec Bons plans et activités §2), mode « page ».
+//!
+//! Three `Section`s, the shell's cards, in the board's order: your picks, the partners' activities,
+//! the public page. Your picks are two lists behind a segmented switch (`Tabs`): the addresses and
+//! your activities, each a sortable `DataTable` (order = carousel order) whose row opens in a side
+//! panel (`panel: "sheet"`), its fields named `<list>.<i>.<key>` at the rank the row is drawn. A
+//! block that depends on a choice hides with `visibleWhen`. A rule broken shows under its field,
+//! the same one `publishReadiness` reports; no Save button — the shell autosaves through
+//! `updateConfig`.
 
+use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui;
-use portaki_sdk::sdui::common::Tone;
+use portaki_sdk::sdui::common::{TabItem, Tone};
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Card, ChoiceList, Field, FieldHint, Form, ImageUpload, InfoBanner, Page,
-    Select, Stack, StepList, Text, TextArea, TextInput, ToggleRow,
+    AddressMapPicker, ChoiceList, DataTable, Field, FieldHint, Form, ImageUpload, InlineNotice,
+    NumberInput, Page, PhoneInput, Section, Select, Stack, Tabs, TextArea, TextInput, Toggle,
+    ToggleRow, WeeklyHours,
 };
 use portaki_sdk::sdui::surface::Surface;
+use serde_json::{json, Map, Value};
 
-use crate::affiliate::{looks_like_url, normalize_curated_url, CuratedUrlError, MAX_CURATED_LINKS};
+use crate::affiliate::MAX_CURATED_LINKS;
 use crate::config::{
-    ActivityRow, HostActivityRow, ModuleConfig, SpotRow, MAX_GALLERY, MAX_HOST_ACTIVITIES,
-    PUBLIC_MAX, PUBLIC_MIN, TIQETS_RADIUS_CHOICES_KM, WEEKDAYS,
+    ActivityRow, HostActivityRow, ModuleConfig, SpotRow, CATEGORIES, MAX_GALLERY,
+    MAX_HOST_ACTIVITIES, PARTNER_MAX_PRICE, PARTNER_RADIUS_KM, PRICE_LEVELS, PROVIDERS, PUBLIC_MAX,
+    PUBLIC_MIN, SPOT_MAX_KM,
 };
 use crate::tiqets::TiqetsStatus;
 use crate::viator::ViatorStatus;
 
 pub use crate::config::MAX_SPOTS;
 
-/// Créneaux d'activités affichés : les lignes stockées, plus un libre.
-///
-/// Deux au minimum pour que la section ait l'air d'une liste, [`MAX_CURATED_LINKS`] au
-/// maximum — la même borne que celle appliquée au rendu voyageur, pour que le formulaire
-/// ne propose jamais un créneau qui ne s'afficherait pas. Une ligne stockée au-delà reste
-/// affichée : le formulaire ne la retire pas en silence.
-fn activity_slots(stored: usize) -> usize {
-    (stored + 1).clamp(2, MAX_CURATED_LINKS).max(stored)
-}
+/// Les lignes ajoutées pas encore enregistrées, par liste : leurs id, séparés par des virgules.
+const NEW_SPOTS: &str = "newSpots";
+const NEW_ACTIVITIES: &str = "newActivities";
+const NEW_LINKS: &str = "newLinks";
 
 #[portaki_sdk::surface(
     host,
@@ -39,713 +45,516 @@ fn activity_slots(stored: usize) -> usize {
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let config = ModuleConfig::load(&ctx)?;
-    let disclaimer = config.disclaimer.host_value(&ctx);
-    let activities = config.activities();
-    let tiqets = config.tiqets();
-    let viator = config.viator();
-
-    let activities_enabled = ctx.input_bool("activities_enabled", activities.enabled);
-    let activities_destination = ctx
-        .input_str("activities_destination")
-        .map(str::to_string)
-        .unwrap_or_else(|| activities.destination.clone());
-    let activities_intro = ctx
-        .input_str("activities_intro")
-        .map(str::to_string)
-        .unwrap_or_else(|| activities.intro.host_value(&ctx).to_string());
-
-    let tiqets_enabled = ctx.input_bool("tiqets_enabled", tiqets.enabled);
-    let tiqets_radius = ctx
-        .input_str("tiqets_radius_km")
-        .map(str::to_string)
-        .unwrap_or_else(|| tiqets.normalized_radius_km().to_string());
-    let tiqets_min_rating = ctx
-        .input_str("tiqets_min_rating")
-        .map(str::to_string)
-        .unwrap_or_else(|| tiqets.min_rating.to_string());
-    let tiqets_status = crate::tiqets::status(
-        &ctx,
-        &crate::config::TiqetsConfig {
-            enabled: tiqets_enabled,
-            ..tiqets
-        },
-    );
-
-    let viator_enabled = ctx.input_bool("viator_enabled", viator.enabled);
-    let viator_min_rating = ctx
-        .input_str("viator_min_rating")
-        .map(str::to_string)
-        .unwrap_or_else(|| viator.min_rating.to_string());
-    let viator_status = crate::viator::status(
-        &ctx,
-        &crate::config::ViatorConfig {
-            enabled: viator_enabled,
-            ..viator
-        },
-    );
-
-    let mut cards: Vec<Component> = vec![spots_card(&config, &ctx)];
-    // Les activités que l'hôte propose lui-même, avant les sections partenaires : ce sont les
-    // seules dont il se porte garant (§2.13).
-    cards.push(host_activities_card(&config, &ctx));
-    cards.push(activities_card(
-        &ctx,
-        activities_enabled,
-        &activities_destination,
-        &activities_intro,
-        &config.activities,
-    ));
-    cards.push(tiqets_card(
-        tiqets_enabled,
-        &tiqets_radius,
-        &tiqets_min_rating,
-        tiqets_status,
-    ));
-    cards.push(viator_card(
-        viator_enabled,
-        &viator_min_rating,
-        viator_status,
-    ));
-    cards.push(public_card(&config, &ctx));
-    cards.push(
-        Card::new()
-            .title("i18n:host.section.disclaimer")
-            .icon(IconName::InfoCircle)
-            .children(vec![Field::new()
-                .name("disclaimer")
-                .label("i18n:host.disclaimer.label")
-                .child(
-                    TextArea::new()
-                        .name("disclaimer")
-                        .value(disclaimer)
-                        .placeholder("i18n:host.disclaimer.placeholder"),
-                )
-                .into()])
-            .into(),
-    );
-    // Pas de bouton Enregistrer : le tableau de bord enregistre le formulaire à la saisie.
     Ok(Surface::new(
-        Page::new().child(Form::new().child(Stack::new().gap(16.0).children(vec![
-                    Text::new()
-                        .text("i18n:surface.host.main.subtitle")
-                        .variant(TextVariant::Body)
-                        .into(),
-                    Component::Stack(Stack::new().gap(16.0).children(cards)),
-                ]))),
+        Page::new().child(
+            Form::new()
+                .child(picks_section(&config, &ctx))
+                .child(partners_section(&config, &ctx))
+                .child(public_section(&config, &ctx)),
+        ),
     )
     .with_id(MAIN))
 }
 
-/// Carte « Activités & billets ».
-///
-/// Tous les champs sont facultatifs : sans rien, la section tourne déjà sur la ville de
-/// l'adresse du logement.
-fn activities_card(
+// ── 2.1 Vos bons plans ───────────────────────────────────────────────────────
+
+/// « Adresses N / 30 » | « Vos activités N / 6 » : deux listes, un tableau chacune.
+fn picks_section(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let spots = rows(
+        ctx,
+        NEW_SPOTS,
+        &config.spots,
+        SpotRow::is_blank,
+        |i, spot| fallback_id(&spot.id, || format!("spot-{}", i + 1)),
+    );
+    let activities = rows(
+        ctx,
+        NEW_ACTIVITIES,
+        &config.host_activities,
+        HostActivityRow::is_blank,
+        |i, activity| activity.route_id(i),
+    );
+    let tab = |id: &str, key: &str, count: usize, max: usize, content: Component| TabItem {
+        id: Some(id.into()),
+        label: Some(t!(key, count = count, max = max).unwrap_or_else(|_| format!("i18n:{key}"))),
+        content: Some(Box::new(content)),
+    };
+    Section::new()
+        .title("i18n:host.picks.title")
+        .subtitle("i18n:host.picks.help")
+        .child(Tabs::new().id("picks").tabs(vec![
+            tab(
+                "spots",
+                "host.picks.tab.spots",
+                spots.len(),
+                MAX_SPOTS,
+                spots_table(config, ctx, &spots),
+            ),
+            tab(
+                "activities",
+                "host.picks.tab.activities",
+                activities.len(),
+                MAX_HOST_ACTIVITIES,
+                activities_table(config, ctx, &activities),
+            ),
+        ]))
+        .into()
+}
+
+/// Les lignes d'une liste : celles enregistrées, puis celles qu'« Ajouter » a ouvertes. Une ligne
+/// sans id (enregistrée avant le tableau) en reçoit un, stable d'un rendu à l'autre : la plateforme
+/// la rapproche par sa position au premier enregistrement, et l'id reste. Les emplacements vides
+/// de l'ancien formulaire ne sont pas des lignes.
+fn rows<T: Clone + Default>(
     ctx: &HostContext,
-    enabled: bool,
-    destination: &str,
-    intro: &str,
-    links: &[ActivityRow],
-) -> Component {
-    let slots = activity_slots(links.len());
-    let mut children: Vec<Component> = vec![ToggleRow::new()
-        .name("activities_enabled")
-        .label("i18n:host.activities.enabled")
-        .icon(IconName::Ticket)
-        .checked(enabled)
-        .into()];
-
-    let mut rows: Vec<Component> = Vec::new();
-    let mut has_rejected_url = false;
-    for index in 0..slots {
-        let stored = links.get(index);
-        let url = ctx
-            .input_str(&format!("activities.{index}.url"))
-            .map(str::to_string)
-            .unwrap_or_else(|| stored.map(|row| row.url.clone()).unwrap_or_default());
-        let label = ctx
-            .input_str(&format!("activities.{index}.label"))
-            .map(str::to_string)
-            .unwrap_or_else(|| {
-                stored
-                    .map(|row| row.label.host_value(ctx).to_string())
-                    .unwrap_or_default()
-            });
-
-        if matches!(
-            normalize_curated_url(&url),
-            Err(CuratedUrlError::NotGetYourGuide)
-        ) {
-            has_rejected_url = true;
+    added: &str,
+    stored: &[T],
+    blank: impl Fn(&T) -> bool,
+    id_of: impl Fn(usize, &T) -> String,
+) -> Vec<(String, T)> {
+    let mut rows: Vec<(String, T)> = stored
+        .iter()
+        .enumerate()
+        .filter(|(_, row)| !blank(row))
+        .map(|(index, row)| (id_of(index, row), row.clone()))
+        .collect();
+    for id in ctx.input_str(added).unwrap_or_default().split(',') {
+        let id = id.trim();
+        if !id.is_empty() && !rows.iter().any(|(known, _)| known == id) {
+            rows.push((id.to_string(), T::default()));
         }
-
-        // A filled row sends its id, so a save merges into it (and keeps its label's other
-        // languages). A blank slot has nothing to keep — and an id would make it count as filled.
-        rows.extend(
-            stored
-                .filter(|row| !row.is_blank())
-                .map(|row| sdui::row_id("activities", index, Some(&row.id))),
-        );
-        rows.push(
-            Field::new()
-                .name(format!("activities.{index}.url"))
-                .label("i18n:host.activities.link.url")
-                .child(
-                    TextInput::new()
-                        .name(format!("activities.{index}.url"))
-                        .value(url)
-                        .placeholder("i18n:host.activities.link.url.placeholder"),
-                )
-                .into(),
-        );
-        rows.push(
-            Field::new()
-                .name(format!("activities.{index}.label"))
-                .label("i18n:host.activities.link.label")
-                .child(
-                    TextInput::new()
-                        .name(format!("activities.{index}.label"))
-                        .value(label)
-                        .placeholder("i18n:host.activities.link.label.placeholder"),
-                )
-                .into(),
-        );
-        // Le conseil que l'hôte ajoute au lien (§2.13) : le fournisseur donne la note et le
-        // prix, lui donne la raison.
-        rows.push(
-            Field::new()
-                .name(format!("activities.{index}.tip"))
-                .label("i18n:host.activities.link.tip")
-                .child(
-                    TextArea::new()
-                        .name(format!("activities.{index}.tip"))
-                        .value(
-                            stored
-                                .map(|row| row.tip.host_value(ctx))
-                                .unwrap_or_default(),
-                        )
-                        .rows(2)
-                        .placeholder("i18n:host.activities.link.tip.placeholder"),
-                )
-                .into(),
-        );
     }
-
-    // La destination accepte une URL : quand c'en est une, elle est relevée ici comme les
-    // liens de la liste, avec le même message.
-    if looks_like_url(destination)
-        && matches!(
-            normalize_curated_url(destination),
-            Err(CuratedUrlError::NotGetYourGuide)
-        )
-    {
-        has_rejected_url = true;
-    }
-
-    // Même formulation que le refus de la commande, mais lisible avant d'avoir cliqué
-    // sur Enregistrer.
-    if has_rejected_url {
-        children.push(
-            InfoBanner::new()
-                .tone(Tone::Warning)
-                .message("i18n:host.activities.error.badUrl")
-                .into(),
-        );
-    }
-
-    children.push(
-        Field::new()
-            .name("activities_destination")
-            .label("i18n:host.activities.destination")
-            .child(
-                TextInput::new()
-                    .name("activities_destination")
-                    .value(destination.to_string())
-                    .placeholder("i18n:host.activities.destination.placeholder"),
-            )
-            .into(),
-    );
-    children.push(
-        Field::new()
-            .name("activities_intro")
-            .label("i18n:host.activities.intro")
-            .child(
-                TextArea::new()
-                    .name("activities_intro")
-                    .value(intro.to_string())
-                    .placeholder("i18n:host.activities.intro.placeholder"),
-            )
-            .into(),
-    );
-    children.extend(rows);
-    children.push(
-        Text::new()
-            .text("i18n:host.activities.help")
-            .variant(TextVariant::Caption)
-            .into(),
-    );
-
-    Card::new()
-        .title("i18n:host.section.activities")
-        .subtitle("i18n:host.section.activities.help")
-        .icon(IconName::Ticket)
-        .children(children)
-        .into()
+    rows
 }
 
-/// Carte « Billets & activités (Tiqets) ».
-///
-/// L'état dit à l'hôte pourquoi rien ne s'afficherait : section éteinte, pas de clé (ni
-/// incluse à l'offre, ni la sienne), ou logement sans position sur la carte.
-fn tiqets_card(enabled: bool, radius: &str, min_rating: &str, status: TiqetsStatus) -> Component {
-    let status_key = match status {
-        TiqetsStatus::Off => "i18n:host.tiqets.status.off",
-        TiqetsStatus::MissingKey => "i18n:host.tiqets.status.missingKey",
-        TiqetsStatus::MissingCoordinates => "i18n:host.tiqets.status.missingCoordinates",
-        TiqetsStatus::Ready => "i18n:host.tiqets.status.ready",
-    };
-    let radius_options = TIQETS_RADIUS_CHOICES_KM
+fn fallback_id(id: &str, fallback: impl FnOnce() -> String) -> String {
+    match id.trim() {
+        "" => fallback(),
+        id => id.to_string(),
+    }
+}
+
+/// « Ajouter » : une ligne de plus, avec un id neuf, que le tableau de bord ouvre aussitôt.
+fn add_row<T>(
+    table: DataTable,
+    rows: &[(String, T)],
+    blank: impl Fn(&T) -> bool,
+    key: &str,
+    label: &str,
+) -> DataTable {
+    let mut added: Vec<String> = rows
         .iter()
-        .map(|km| ChoiceOption::new(km.to_string(), format!("i18n:host.tiqets.radius.{km}")))
+        .filter(|(_, row)| blank(row))
+        .map(|(id, _)| id.clone())
         .collect();
-
-    let mut children: Vec<Component> = vec![
-        ToggleRow::new()
-            .name("tiqets_enabled")
-            .label("i18n:host.tiqets.enabled")
-            .icon(IconName::Ticket)
-            .checked(enabled)
-            .into(),
-        Field::new()
-            .name("tiqets_radius_km")
-            .label("i18n:host.tiqets.radius")
-            .child(
-                Select::new()
-                    .name("tiqets_radius_km")
-                    .options(radius_options)
-                    .value(radius.to_string()),
-            )
-            .into(),
-        Field::new()
-            .name("tiqets_min_rating")
-            .label("i18n:host.tiqets.minRating")
-            .child(
-                Select::new()
-                    .name("tiqets_min_rating")
-                    .options(vec![
-                        ChoiceOption::new("0", "i18n:host.tiqets.minRating.0"),
-                        ChoiceOption::new("3", "i18n:host.tiqets.minRating.3"),
-                        ChoiceOption::new("4", "i18n:host.tiqets.minRating.4"),
-                    ])
-                    .value(min_rating.to_string()),
-            )
-            .into(),
-    ];
-    if matches!(
-        status,
-        TiqetsStatus::MissingKey | TiqetsStatus::MissingCoordinates
-    ) {
-        children.push(
-            InfoBanner::new()
-                .tone(Tone::Warning)
-                .message(status_key)
-                .into(),
-        );
-    } else {
-        children.push(
-            Text::new()
-                .text(status_key)
-                .variant(TextVariant::Caption)
-                .into(),
-        );
-    }
-    children.push(
-        Text::new()
-            .text("i18n:host.tiqets.help")
-            .variant(TextVariant::Caption)
-            .into(),
-    );
-
-    Card::new()
-        .title("i18n:host.section.tiqets")
-        .subtitle("i18n:host.section.tiqets.help")
-        .icon(IconName::Ticket)
-        .children(children)
-        .into()
+    added.push(Uuid::new_v4().to_string());
+    let mut input = Map::new();
+    input.insert(key.into(), Value::String(added.join(",")));
+    table.addLabel(label).addAction(Action::emit(
+        contracts::shell::SURFACE_INPUT,
+        Some(Value::Object(input)),
+    ))
 }
 
-/// Carte « Activités (Viator) ».
-///
-/// L'état dit à l'hôte pourquoi rien ne s'afficherait : section éteinte, clé de Portaki
-/// indisponible (l'hôte ne peut pas en poser une, la licence Viator l'interdit), ou adresse
-/// sans ville lisible.
-fn viator_card(enabled: bool, min_rating: &str, status: ViatorStatus) -> Component {
-    let status_key = match status {
-        ViatorStatus::Off => "i18n:host.viator.status.off",
-        ViatorStatus::MissingKey => "i18n:host.viator.status.missingKey",
-        ViatorStatus::MissingCity => "i18n:host.viator.status.missingCity",
-        ViatorStatus::Ready => "i18n:host.viator.status.ready",
-    };
-
-    let mut children: Vec<Component> = vec![
-        ToggleRow::new()
-            .name("viator_enabled")
-            .label("i18n:host.viator.enabled")
-            .icon(IconName::Ticket)
-            .checked(enabled)
-            .into(),
-        Field::new()
-            .name("viator_min_rating")
-            .label("i18n:host.viator.minRating")
-            .child(
-                Select::new()
-                    .name("viator_min_rating")
-                    .options(vec![
-                        ChoiceOption::new("0", "i18n:host.viator.minRating.0"),
-                        ChoiceOption::new("3", "i18n:host.viator.minRating.3"),
-                        ChoiceOption::new("4", "i18n:host.viator.minRating.4"),
-                    ])
-                    .value(min_rating.to_string()),
-            )
-            .into(),
-    ];
-    if matches!(status, ViatorStatus::MissingKey | ViatorStatus::MissingCity) {
-        children.push(
-            InfoBanner::new()
-                .tone(Tone::Warning)
-                .message(status_key)
-                .into(),
-        );
-    } else {
-        children.push(
-            Text::new()
-                .text(status_key)
-                .variant(TextVariant::Caption)
-                .into(),
-        );
-    }
-    children.push(
-        Text::new()
-            .text("i18n:host.viator.help")
-            .variant(TextVariant::Caption)
-            .into(),
-    );
-
-    Card::new()
-        .title("i18n:host.section.viator")
-        .subtitle("i18n:host.section.viator.help")
-        .icon(IconName::Ticket)
-        .children(children)
-        .into()
-}
-
-/// Les adresses de l'hôte, en lignes dynamiques bornées.
-fn spots_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let rows_count = draft_rows(ctx, config.spots.len());
-    let rows: Vec<Component> = (0..rows_count)
-        .map(|index| spot_row(index, config, ctx))
-        .collect();
-
-    Card::new()
-        .title("i18n:host.spots.title")
-        .subtitle("i18n:host.spots.subtitle")
-        .icon(IconName::MapPin)
-        .child(
-            StepList::new()
-                .addLabel("i18n:host.spots.add")
-                .removeLabel("i18n:host.spots.remove")
-                .emptyTitle("i18n:host.spots.emptyTitle")
-                .emptyDescription("i18n:host.spots.emptyDescription")
-                .itemKeyPrefix("spots")
-                .addAction(emit_input(RowCount {
-                    spots_count: (rows_count + 1).min(MAX_SPOTS),
-                }))
-                .children(rows),
-        )
-        .into()
-}
-
-/// « Page publique » : l'interrupteur du bloc, puis le choix de 3 à 6 adresses publiées.
-///
-/// Le choix reste rendu sans adresse à choisir : le formulaire envoie toujours les clés déclarées.
-fn public_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let enabled = ctx.input_bool("public_enabled", config.public_enabled);
-    let spots = config.parse_spots();
-    let choices: Vec<ChoiceOption> = spots
-        .iter()
-        .map(|spot| {
-            let option = ChoiceOption::new(spot.id.clone(), spot.title.host_value(ctx).to_string());
-            match spot.category.as_deref() {
-                Some(category) => option.description(category.to_string()),
-                None => option,
-            }
-        })
-        .collect();
-    let hint = if spots.is_empty() {
-        "i18n:host.public.none".to_string()
-    } else {
-        t!(
-            "host.public.count",
-            count = config.public_chosen().len(),
-            min = PUBLIC_MIN,
-            max = PUBLIC_MAX
-        )
-        .unwrap_or_else(|_| "i18n:host.public.count".into())
-    };
-    Card::new()
-        .title("i18n:host.public.title")
-        .subtitle("i18n:host.public.subtitle")
-        .icon(IconName::Home)
-        .children(vec![
-            ToggleRow::new()
-                .name("public_enabled")
-                .label("i18n:host.public.enabled")
-                .icon(IconName::Home)
-                .checked(enabled)
-                .into(),
-            Field::new()
-                .name("public_spots")
-                .label("i18n:host.public.spots")
-                .child(Stack::new().children(vec![
-                    FieldHint::new().text(hint).into(),
-                    ChoiceList::new()
-                        .name("public_spots")
-                        .multi(true)
-                        .limit(PUBLIC_MAX as u32)
-                        .choices(choices)
-                        .value(serde_json::to_string(&config.public_spots).unwrap_or_default())
-                        .into(),
-                ]))
-                .into(),
-        ])
-        .into()
-}
-
-/// Les activités de l'hôte, en lignes dynamiques bornées — le motif de `spots`.
-fn host_activities_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let rows_count = draft_activity_rows(ctx, config.host_activities.len());
-    let rows: Vec<Component> = (0..rows_count)
-        .map(|index| host_activity_row(index, config, ctx))
-        .collect();
-
-    Card::new()
-        .title("i18n:host.hostActivities.title")
-        .subtitle("i18n:host.hostActivities.subtitle")
-        .icon(IconName::Sparkles)
-        .child(
-            StepList::new()
-                .addLabel("i18n:host.hostActivities.add")
-                .removeLabel("i18n:host.hostActivities.remove")
-                .emptyTitle("i18n:host.hostActivities.emptyTitle")
-                .emptyDescription("i18n:host.hostActivities.emptyDescription")
-                .itemKeyPrefix("host_activities")
-                .addAction(emit_input(ActivityCount {
-                    host_activities_count: (rows_count + 1).min(MAX_HOST_ACTIVITIES),
-                }))
-                .children(rows),
-        )
-        .into()
-}
-
-fn draft_activity_rows(ctx: &HostContext, stored: usize) -> usize {
-    match ctx.input_u64("host_activities_count") {
-        Some(asked) => (asked as usize).clamp(1, MAX_HOST_ACTIVITIES),
-        None => stored.clamp(1, MAX_HOST_ACTIVITIES),
-    }
-}
-
-/// Une activité : le nom, le prestataire, ce qu'elle coûte et dure, et comment on la réserve.
-fn host_activity_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let activity: Option<&HostActivityRow> = config.host_activities.get(index);
-    let id = activity
-        .filter(|row| !row.is_blank())
-        .map(|row| sdui::row_id("host_activities", index, Some(&row.id)));
-
-    let text = |name: &str, label: &str, value: &str| -> Component {
-        let field = format!("host_activities.{index}.{name}");
-        named(config, ctx, field.clone())
-            .label(label)
-            .child(TextInput::new().name(field).value(value))
+/// Le message de « N au maximum », au-dessus du tableau.
+fn list_error(config: &ModuleConfig, ctx: &HostContext, field: &str) -> Option<Component> {
+    config.error_of(field).map(|error| {
+        InlineNotice::new()
+            .tone(Tone::Danger)
+            .message(error.get(&ctx.locale).to_string())
             .into()
-    };
-    let area = |name: &str, label: &str, value: &str, placeholder: &str| -> Component {
-        let field = format!("host_activities.{index}.{name}");
-        Field::new()
-            .name(field.clone())
-            .label(label)
-            .child(
-                TextArea::new()
-                    .name(field)
-                    .value(value)
-                    .rows(2)
-                    .placeholder(placeholder),
-            )
-            .into()
-    };
+    })
+}
 
-    let mut children: Vec<Component> = id.into_iter().collect();
-    children.push(text(
-        "title",
-        "i18n:host.hostActivities.name",
-        activity
-            .map(|a| a.title.host_value(ctx))
-            .unwrap_or_default(),
-    ));
-    children.push(text(
-        "provider",
-        "i18n:host.hostActivities.provider",
-        activity.and_then(|a| a.provider.as_deref()).unwrap_or(""),
-    ));
-    children.push(
-        FieldHint::new()
-            .text("i18n:host.hostActivities.provider.hint")
-            .into(),
-    );
-    children.push(text(
-        "price",
-        "i18n:host.hostActivities.price",
-        activity.and_then(|a| a.price.as_deref()).unwrap_or(""),
-    ));
-    children.push(text(
-        "duration",
-        "i18n:host.hostActivities.duration",
-        activity.and_then(|a| a.duration.as_deref()).unwrap_or(""),
-    ));
-    children.push(text(
-        "meet",
-        "i18n:host.hostActivities.meet",
-        activity.and_then(|a| a.meet.as_deref()).unwrap_or(""),
-    ));
-    children.push(text(
-        "languages",
-        "i18n:host.hostActivities.languages",
-        activity.and_then(|a| a.languages.as_deref()).unwrap_or(""),
-    ));
-    children.push(area(
-        "cancel",
-        "i18n:host.hostActivities.cancel",
-        activity
-            .map(|a| a.cancel.host_value(ctx))
-            .unwrap_or_default(),
-        "i18n:host.hostActivities.cancel.placeholder",
-    ));
-    children.push(area(
-        "included",
-        "i18n:host.hostActivities.included",
-        activity
-            .map(|a| a.included.host_value(ctx))
-            .unwrap_or_default(),
-        "i18n:host.hostActivities.included.placeholder",
-    ));
-    children.push(
-        FieldHint::new()
-            .text("i18n:host.hostActivities.included.hint")
-            .into(),
-    );
-    children.push(area(
-        "tip",
-        "i18n:host.hostActivities.tip",
-        activity.map(|a| a.tip.host_value(ctx)).unwrap_or_default(),
-        "i18n:host.hostActivities.tip.placeholder",
-    ));
-    children.push(text(
-        "phone",
-        "i18n:host.hostActivities.phone",
-        activity.and_then(|a| a.phone.as_deref()).unwrap_or(""),
-    ));
-    children.push(
-        FieldHint::new()
-            .text("i18n:host.hostActivities.phone.hint")
-            .into(),
-    );
-    children.push(text(
-        "url",
-        "i18n:host.hostActivities.url",
-        activity.and_then(|a| a.url.as_deref()).unwrap_or(""),
-    ));
-    children.push(
-        Field::new()
-            .name(format!("host_activities.{index}.photo"))
-            .label("i18n:host.hostActivities.photo")
-            .child(
-                ImageUpload::new()
-                    .name(format!("host_activities.{index}.photo"))
-                    .value(activity.map(|a| a.photo.clone()).unwrap_or_default()),
-            )
-            .into(),
-    );
-
+fn spots_table(config: &ModuleConfig, ctx: &HostContext, rows: &[(String, SpotRow)]) -> Component {
+    let today = portaki_sdk::host::time::now()
+        .ok()
+        .map(|now| now.date_naive());
+    let home = home(ctx);
+    let mut table = DataTable::new()
+        .rowName("spots")
+        .sortable(true)
+        .panel("sheet")
+        .columns(json!([
+            { "key": "title", "label": "i18n:host.spot.name", "sub": "sub" },
+            { "key": "category", "label": "i18n:host.spot.category" },
+            { "key": "distance", "label": "i18n:host.spot.distance", "mono": true },
+            { "key": "badge", "label": "", "kind": "pill" },
+        ]))
+        .rows(Value::Array(
+            rows.iter()
+                .map(|(id, spot)| {
+                    let off_season = today.is_some_and(|day| !spot.in_season(day));
+                    let badge = if off_season {
+                        "i18n:host.spot.offSeason"
+                    } else if spot.perk.is_blank() {
+                        ""
+                    } else {
+                        "i18n:host.spot.badge.perk"
+                    };
+                    let perk = spot.perk.host_value(ctx);
+                    let sub = if perk.trim().is_empty() {
+                        spot.note
+                            .as_ref()
+                            .map(|note| short(note.host_value(ctx), 60))
+                            .unwrap_or_default()
+                    } else {
+                        perk.to_string()
+                    };
+                    json!({
+                        "id": id,
+                        "title": spot.title.host_value(ctx),
+                        "sub": sub,
+                        "category": spot.category.as_deref().map(category_label).unwrap_or_default(),
+                        "distance": distance_label(spot, home, &ctx.locale).unwrap_or_default(),
+                        "badge": badge,
+                    })
+                })
+                .collect(),
+        ))
+        .children(
+            rows.iter()
+                .enumerate()
+                .map(|(index, (_, spot))| spot_panel(index, spot, ctx, home, today))
+                .collect(),
+        );
+    if rows.len() < MAX_SPOTS {
+        table = add_row(
+            table,
+            rows,
+            SpotRow::is_blank,
+            NEW_SPOTS,
+            "i18n:host.spots.add",
+        );
+    }
     Stack::new()
-        .id(format!("host-activity-{index}"))
-        .gap(10.0)
-        .children(children)
+        .gap(12.0)
+        .children(
+            list_error(config, ctx, "spots")
+                .into_iter()
+                .chain([table.into()])
+                .collect(),
+        )
         .into()
 }
 
-/// Combien de lignes dessiner : ce que « Ajouter » a demandé, sinon ce qui est stocké, borné.
-fn draft_rows(ctx: &HostContext, stored: usize) -> usize {
-    match ctx.input_u64("spots_count") {
-        Some(asked) => (asked as usize).clamp(1, MAX_SPOTS),
-        None => stored.clamp(1, MAX_SPOTS),
-    }
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "snake_case")]
-struct RowCount {
-    spots_count: usize,
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "snake_case")]
-struct ActivityCount {
-    host_activities_count: usize,
-}
-
-fn emit_input(payload: impl serde::Serialize) -> Action {
-    Action::emit(contracts::shell::SURFACE_INPUT, Some(json_value(payload)))
-}
-
-/// Une ligne de texte d'une adresse — le motif se répète six fois, autant le nommer une fois.
-fn text_field(
+fn activities_table(
     config: &ModuleConfig,
     ctx: &HostContext,
-    index: usize,
-    name: &str,
-    label: &str,
-    value: &str,
+    rows: &[(String, HostActivityRow)],
 ) -> Component {
-    let field = format!("spots.{index}.{name}");
-    named(config, ctx, field.clone())
-        .label(label)
-        .child(TextInput::new().name(field).value(value))
+    let mut table = DataTable::new()
+        .rowName("host_activities")
+        .sortable(true)
+        .panel("sheet")
+        .columns(json!([
+            { "key": "title", "label": "i18n:host.hostActivities.name", "sub": "sub" },
+            { "key": "duration", "label": "i18n:host.hostActivities.duration", "mono": true },
+            { "key": "book", "label": "i18n:host.hostActivities.book" },
+        ]))
+        .rows(Value::Array(
+            rows.iter()
+                .map(|(id, activity)| {
+                    let sub: Vec<&str> = [activity.provider.as_deref(), activity.price.as_deref()]
+                        .into_iter()
+                        .flatten()
+                        .collect();
+                    // Comment on réserve, tel que le livret le fera : le téléphone fait le bouton
+                    // « Réserver », le site un lien ; sans eux, on passe par l'hôte.
+                    let book = if activity.phone.is_some() {
+                        "i18n:host.hostActivities.book.phone"
+                    } else if activity.url.is_some() {
+                        "i18n:host.hostActivities.book.link"
+                    } else {
+                        "i18n:host.hostActivities.book.host"
+                    };
+                    json!({
+                        "id": id,
+                        "title": activity.title.host_value(ctx),
+                        "sub": sub.join(" · "),
+                        "duration": activity.duration.as_deref().unwrap_or_default(),
+                        "book": book,
+                    })
+                })
+                .collect(),
+        ))
+        .children(
+            rows.iter()
+                .enumerate()
+                .map(|(index, (_, activity))| activity_panel(index, activity, ctx))
+                .collect(),
+        );
+    if rows.len() < MAX_HOST_ACTIVITIES {
+        table = add_row(
+            table,
+            rows,
+            HostActivityRow::is_blank,
+            NEW_ACTIVITIES,
+            "i18n:host.hostActivities.add",
+        );
+    }
+    Stack::new()
+        .gap(12.0)
+        .children(
+            list_error(config, ctx, "host_activities")
+                .into_iter()
+                .chain([FieldHint::new()
+                    .text("i18n:host.hostActivities.subtitle")
+                    .into()])
+                .chain([table.into()])
+                .collect(),
+        )
         .into()
 }
 
-/// « Ouvert tous les jours », puis les sept jours : la valeur vide est une réponse, pas un trou.
-fn closed_day_options() -> Vec<ChoiceOption> {
-    let mut options = vec![ChoiceOption::new("", "i18n:host.spot.closedDay.none")];
-    options.extend(
-        WEEKDAYS
+/// Un champ de ligne, avec l'erreur de sa sous-clé sous lui s'il y en a une.
+fn row_field(
+    list: &str,
+    index: usize,
+    key: &str,
+    problems: &[(&'static str, I18nText)],
+    ctx: &HostContext,
+) -> Field {
+    let field = Field::new().name(format!("{list}.{index}.{key}"));
+    match problems.iter().find(|(name, _)| *name == key) {
+        Some((_, error)) => field.error(error.get(&ctx.locale).to_string()),
+        None => field,
+    }
+}
+
+/// Le panneau d'une adresse (§2.1), dans l'ordre de la planche.
+fn spot_panel(
+    index: usize,
+    spot: &SpotRow,
+    ctx: &HostContext,
+    home: Option<(f64, f64)>,
+    today: Option<chrono::NaiveDate>,
+) -> Component {
+    let name = |key: &str| format!("spots.{index}.{key}");
+    let problems = spot.problems();
+    let field = |key: &str| row_field("spots", index, key, &problems, ctx);
+    let text = |value: &Option<String>| value.as_deref().unwrap_or_default().to_string();
+
+    // La catégorie et le prix en liste fermée ; une ancienne saisie libre reste choisie et
+    // affichée telle quelle, plutôt que de disparaître au premier enregistrement.
+    let category = text(&spot.category);
+    let mut categories: Vec<ChoiceOption> = CATEGORIES
+        .iter()
+        .map(|(token, value)| ChoiceOption::new(*value, format!("i18n:host.category.{token}")))
+        .collect();
+    if !category.is_empty() && !CATEGORIES.iter().any(|(_, value)| *value == category) {
+        categories.push(ChoiceOption::new(category.clone(), category.clone()));
+    }
+    let price = text(&spot.price);
+    let mut prices = vec![ChoiceOption::new("", "i18n:host.spot.price.none")];
+    prices.extend(
+        PRICE_LEVELS
             .iter()
-            .map(|(token, _)| ChoiceOption::new(*token, format!("i18n:host.day.{token}"))),
+            .map(|level| ChoiceOption::new(*level, *level)),
     );
-    options
+    if !price.is_empty() && !PRICE_LEVELS.contains(&price.as_str()) {
+        prices.push(ChoiceOption::new(price.clone(), price.clone()));
+    }
+
+    // La position : sans elle, ni repère ni distance ; trop loin, sans doute mal placée.
+    let mut picker = AddressMapPicker::new()
+        .addressName(name("address"))
+        .latName(name("lat"))
+        .lngName(name("lng"))
+        .address(text(&spot.address))
+        .label("i18n:host.spot.address");
+    if let Some(line) = distance_label(spot, home, &ctx.locale) {
+        picker = picker.hint(line);
+    }
+    if let Some((lat, lng)) = spot.coords() {
+        picker = picker.lat(lat).lng(lng);
+    }
+    let mut position = Field::new().name(name("lat")).child(picker);
+    if let Some((lat, lng)) = spot.coords() {
+        let far = home.is_some_and(|(home_lat, home_lng)| {
+            !portaki_sdk::config::check::within_km(lat, lng, home_lat, home_lng, SPOT_MAX_KM)
+        });
+        if far {
+            position = position.child(
+                InlineNotice::new()
+                    .tone(Tone::Warning)
+                    .message("i18n:host.spot.position.far"),
+            );
+        }
+    } else if !spot.is_blank() {
+        position = position.error(
+            crate::i18n::text("host.spot.position.required")
+                .get(&ctx.locale)
+                .to_string(),
+        );
+    }
+
+    let mut perk = field("perk")
+        .label("i18n:host.spot.perk")
+        .child(
+            TextInput::new()
+                .name(name("perk"))
+                .value(spot.perk.host_value(ctx))
+                .placeholder("i18n:host.spot.perk.placeholder"),
+        )
+        .child(
+            Toggle::new()
+                .name(name("perk_agreement"))
+                .label("i18n:host.spot.perkAgreement")
+                .checked(spot.perk_agreement),
+        );
+    if spot.perk_without_agreement() {
+        perk = perk.child(
+            InlineNotice::new()
+                .tone(Tone::Warning)
+                .message("i18n:host.spot.perkAgreement.warning"),
+        );
+    }
+
+    // Les anciens horaires en texte libre restent affichés au voyageur tant que l'hôte n'a pas
+    // saisi les nouveaux : on les lui rappelle sous le champ.
+    let mut hours = Field::new()
+        .name(name("weekly_hours"))
+        .label("i18n:host.spot.hours")
+        .child(
+            WeeklyHours::new()
+                .name(name("weekly_hours"))
+                .value(spot.weekly_hours.trim()),
+        );
+    let legacy: Vec<&str> = [spot.hours.as_deref(), spot.opening.as_deref()]
+        .into_iter()
+        .flatten()
+        .collect();
+    if !spot.has_weekly_hours() && !legacy.is_empty() {
+        if let Ok(line) = t!("host.spot.hours.legacy", hours = legacy.join(" · ")) {
+            hours = hours.child(FieldHint::new().text(line));
+        }
+    }
+
+    let off_season = today.is_some_and(|day| !spot.in_season(day));
+    let mut children: Vec<Component> = vec![
+        field("title")
+            .label("i18n:host.spot.name")
+            .required(true)
+            .child(
+                TextInput::new()
+                    .name(name("title"))
+                    .value(spot.title.host_value(ctx))
+                    .placeholder("i18n:host.spot.name.placeholder"),
+            )
+            .into(),
+        field("category")
+            .label("i18n:host.spot.category")
+            .required(true)
+            .child(
+                Select::new()
+                    .name(name("category"))
+                    .options(categories)
+                    .value(category),
+            )
+            .into(),
+        field("price")
+            .label("i18n:host.spot.price")
+            .child(
+                ChoiceList::new()
+                    .name(name("price"))
+                    .layout(ChoiceListLayout::Compact)
+                    .choices(prices)
+                    .value(price),
+            )
+            .into(),
+        position.into(),
+    ];
+    children.extend(photo_fields(index, spot));
+    children.extend([
+        perk.into(),
+        field("note")
+            .label("i18n:host.spot.note")
+            .child(
+                TextArea::new()
+                    .name(name("note"))
+                    .value(
+                        spot.note
+                            .as_ref()
+                            .map(|note| note.host_value(ctx))
+                            .unwrap_or_default(),
+                    )
+                    .rows(3)
+                    .placeholder("i18n:host.spot.note.placeholder"),
+            )
+            .child(FieldHint::new().text("i18n:host.spot.note.hint"))
+            .into(),
+        hours.into(),
+        field("season_from")
+            .label("i18n:host.spot.seasonFrom")
+            .child(
+                TextInput::new()
+                    .name(name("season_from"))
+                    .value(text(&spot.season_from))
+                    .placeholder("01/04"),
+            )
+            .into(),
+        Field::new()
+            .name(name("season_to"))
+            .label("i18n:host.spot.seasonTo")
+            .child(
+                TextInput::new()
+                    .name(name("season_to"))
+                    .value(text(&spot.season_to))
+                    .placeholder("30/09"),
+            )
+            .child(FieldHint::new().text(if off_season {
+                "i18n:host.spot.offSeason"
+            } else {
+                "i18n:host.spot.season.hint"
+            }))
+            .into(),
+        field("parking")
+            .label("i18n:host.spot.parking")
+            .child(
+                TextInput::new()
+                    .name(name("parking"))
+                    .value(text(&spot.parking))
+                    .placeholder("i18n:host.spot.parking.placeholder"),
+            )
+            .into(),
+        field("phone")
+            .label("i18n:host.spot.phone")
+            .child(
+                PhoneInput::new()
+                    .name(name("phone"))
+                    .value(text(&spot.phone))
+                    .defaultCountry(default_country(ctx)),
+            )
+            .into(),
+        field("url")
+            .label("i18n:host.spot.url")
+            .child(
+                TextInput::new()
+                    .name(name("url"))
+                    .value(text(&spot.url))
+                    .placeholder("https://"),
+            )
+            .into(),
+        field("warning")
+            .label("i18n:host.spot.warning")
+            .child(
+                TextInput::new()
+                    .name(name("warning"))
+                    .value(spot.warning.host_value(ctx))
+                    .placeholder("i18n:host.spot.warning.placeholder"),
+            )
+            .into(),
+    ]);
+    Stack::new().gap(14.0).children(children).into()
 }
 
 /// Les dépôts de photos d'une adresse : celles déjà là, plus une case libre (§2.12).
 ///
-/// Une case de plus et non cinq : une rangée de cinq champs vides sur douze adresses serait un
-/// formulaire qu'on ne lit plus. C'est le même procédé que les créneaux d'activités.
-fn photo_fields(index: usize, spot: Option<&SpotRow>) -> Vec<Component> {
-    let stored: Vec<String> = spot
-        .map(|s| {
-            s.photo_refs()
-                .into_iter()
-                .map(str::to_string)
-                .collect::<Vec<_>>()
-        })
-        .unwrap_or_default();
+/// Une case de plus et non cinq : une rangée de cinq champs vides par adresse serait un formulaire
+/// qu'on ne lit plus.
+fn photo_fields(index: usize, spot: &SpotRow) -> Vec<Component> {
+    let stored: Vec<String> = spot.photo_refs().into_iter().map(str::to_string).collect();
     let slots = (stored.len() + 1).clamp(1, MAX_GALLERY).max(stored.len());
     (0..slots)
         .map(|slot| {
@@ -768,210 +577,486 @@ fn photo_fields(index: usize, spot: Option<&SpotRow>) -> Vec<Component> {
         .collect()
 }
 
-fn spot_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let spot: Option<&SpotRow> = config.spots.get(index);
-    let title = spot.map(|s| s.title.host_value(ctx)).unwrap_or_default();
-    let category = spot.and_then(|s| s.category.as_deref()).unwrap_or("");
-    let distance = spot.and_then(|s| s.distance.as_deref()).unwrap_or("");
-    let tag = spot.and_then(|s| s.tag.as_deref()).unwrap_or("");
-    let detail = spot.map(|s| s.detail.host_value(ctx)).unwrap_or_default();
-    let address = spot.and_then(|s| s.address.as_deref()).unwrap_or("");
-    let perk = spot.map(|s| s.perk.host_value(ctx)).unwrap_or_default();
-    let note = spot
-        .and_then(|s| s.note.as_ref())
-        .map(|note| note.host_value(ctx))
-        .unwrap_or_default();
-    let price = spot.and_then(|s| s.price.as_deref()).unwrap_or("");
-    let hours = spot.and_then(|s| s.hours.as_deref()).unwrap_or("");
-    let closed_day = spot.and_then(|s| s.closed_day.as_deref()).unwrap_or("");
-    let opening = spot.and_then(|s| s.opening.as_deref()).unwrap_or("");
-    let parking = spot.and_then(|s| s.parking.as_deref()).unwrap_or("");
-    let phone = spot.and_then(|s| s.phone.as_deref()).unwrap_or("");
-    let url = spot.and_then(|s| s.url.as_deref()).unwrap_or("");
-    let emoji = spot.and_then(|s| s.emoji.as_deref()).unwrap_or("");
-    let season_from = spot.and_then(|s| s.season_from.as_deref()).unwrap_or("");
-    let season_to = spot.and_then(|s| s.season_to.as_deref()).unwrap_or("");
-    let warning = spot.map(|s| s.warning.host_value(ctx)).unwrap_or_default();
-    // « Hors saison » sous la saison, le jour où le livret la masque — le tiroir la montre encore.
-    let off_season = spot.is_some_and(|s| {
-        portaki_sdk::host::time::now().is_ok_and(|now| !s.in_season(now.date_naive()))
-    });
-
-    // Sans position, le sélecteur ne reçoit ni latitude ni longitude : il part vide.
-    let mut picker = AddressMapPicker::new()
-        .addressName(format!("spots.{index}.address"))
-        .latName(format!("spots.{index}.lat"))
-        .lngName(format!("spots.{index}.lng"))
-        .address(address)
-        .label("i18n:host.spot.address")
-        .hint("i18n:host.spot.address.hint");
-    if let Some((lat, lng)) = spot.and_then(SpotRow::coords) {
-        picker = picker.lat(lat).lng(lng);
-    }
-
-    // A filled row sends its id, so a save merges into it (and keeps its url, its note, its
-    // other languages). A blank slot has nothing to keep — and an id would make it count as filled.
-    let id = spot
-        .filter(|s| !s.is_blank())
-        .map(|s| sdui::row_id("spots", index, Some(&s.id)));
-
-    let mut fields: Vec<Component> = vec![
-        named(config, ctx, format!("spots.{index}.title"))
-            .label("i18n:host.spot.name")
-            .child(
-                TextInput::new()
-                    .name(format!("spots.{index}.title"))
-                    .value(title),
-            )
-            .into(),
-        named(config, ctx, format!("spots.{index}.category"))
-            .label("i18n:host.spot.category")
-            .child(
-                TextInput::new()
-                    .name(format!("spots.{index}.category"))
-                    .value(category),
-            )
-            .into(),
-        Field::new()
-            .name(format!("spots.{index}.distance"))
-            .label("i18n:host.spot.distance")
-            .child(
-                TextInput::new()
-                    .name(format!("spots.{index}.distance"))
-                    .value(distance),
-            )
-            .into(),
-        Field::new()
-            .name(format!("spots.{index}.tag"))
-            .label("i18n:host.spot.tag")
-            .child(
-                TextInput::new()
-                    .name(format!("spots.{index}.tag"))
-                    .value(tag),
-            )
-            .into(),
-        named(config, ctx, format!("spots.{index}.detail"))
-            .label("i18n:host.spot.description")
+/// Le panneau d'une activité : le modèle actuel, du nom à la photo.
+fn activity_panel(index: usize, activity: &HostActivityRow, ctx: &HostContext) -> Component {
+    let name = |key: &str| format!("host_activities.{index}.{key}");
+    let problems = activity.problems();
+    let field = |key: &str| row_field("host_activities", index, key, &problems, ctx);
+    let text = |value: &Option<String>| value.as_deref().unwrap_or_default().to_string();
+    let input = |key: &str, label: &str, value: String| -> Component {
+        field(key)
+            .label(label)
+            .child(TextInput::new().name(name(key)).value(value))
+            .into()
+    };
+    let area = |key: &str, label: &str, value: &str, placeholder: &str| -> Component {
+        field(key)
+            .label(label)
             .child(
                 TextArea::new()
-                    .name(format!("spots.{index}.detail"))
-                    .value(detail),
-            )
-            .into(),
-        // L'avantage en entier, à côté du badge : « −10 % » tient sur une tuile, « 10 % sur le
-        // menu du soir, sur présentation de cette page » demande une phrase.
-        named(config, ctx, format!("spots.{index}.perk"))
-            .label("i18n:host.spot.perk")
-            .child(
-                TextArea::new()
-                    .name(format!("spots.{index}.perk"))
-                    .value(perk)
+                    .name(name(key))
+                    .value(value)
                     .rows(2)
-                    .placeholder("i18n:host.spot.perk.placeholder"),
+                    .placeholder(placeholder),
             )
-            .into(),
-        Field::new()
-            .name(format!("spots.{index}.note"))
-            .label("i18n:host.spot.note")
-            .child(
-                TextArea::new()
-                    .name(format!("spots.{index}.note"))
-                    .value(note)
-                    .rows(2)
-                    .placeholder("i18n:host.spot.note.placeholder"),
-            )
-            .into(),
-        FieldHint::new().text("i18n:host.spot.note.hint").into(),
-        text_field(config, ctx, index, "price", "i18n:host.spot.price", price),
-        text_field(config, ctx, index, "hours", "i18n:host.spot.hours", hours),
-        // Le jour de fermeture en liste fermée, à côté de la phrase libre : c'est ce qui permet au
-        // livret de dire « fermé aujourd'hui » plutôt que de laisser le voyageur lire « Fermé le
-        // lundi » et compter les jours (§2.12).
-        Field::new()
-            .name(format!("spots.{index}.closed_day"))
-            .label("i18n:host.spot.closedDay")
-            .child(
-                Select::new()
-                    .name(format!("spots.{index}.closed_day"))
-                    .options(closed_day_options())
-                    .value(closed_day),
-            )
-            .into(),
-        text_field(
-            config,
-            ctx,
-            index,
-            "opening",
-            "i18n:host.spot.opening",
-            opening,
-        ),
-        text_field(
-            config,
-            ctx,
-            index,
-            "parking",
-            "i18n:host.spot.parking",
-            parking,
-        ),
-        text_field(config, ctx, index, "phone", "i18n:host.spot.phone", phone),
-        text_field(config, ctx, index, "url", "i18n:host.spot.url", url),
-        text_field(config, ctx, index, "emoji", "i18n:host.spot.emoji", emoji),
-        FieldHint::new().text("i18n:host.spot.emoji.hint").into(),
-        named(config, ctx, format!("spots.{index}.season_from"))
-            .label("i18n:host.spot.seasonFrom")
-            .child(
-                TextInput::new()
-                    .name(format!("spots.{index}.season_from"))
-                    .value(season_from)
-                    .placeholder("01/04"),
-            )
-            .into(),
-        Field::new()
-            .name(format!("spots.{index}.season_to"))
-            .label("i18n:host.spot.seasonTo")
-            .child(
-                TextInput::new()
-                    .name(format!("spots.{index}.season_to"))
-                    .value(season_to)
-                    .placeholder("30/09"),
-            )
-            .into(),
-        FieldHint::new()
-            .text(if off_season {
-                "i18n:host.spot.offSeason"
-            } else {
-                "i18n:host.spot.season.hint"
-            })
-            .into(),
-        named(config, ctx, format!("spots.{index}.warning"))
-            .label("i18n:host.spot.warning")
-            .child(
-                TextArea::new()
-                    .name(format!("spots.{index}.warning"))
-                    .value(warning)
-                    .rows(2)
-                    .placeholder("i18n:host.spot.warning.placeholder"),
-            )
-            .into(),
-        picker.into(),
-    ];
-    fields.extend(photo_fields(index, spot));
-
+            .into()
+    };
     Stack::new()
-        .id(format!("spot-{index}"))
-        .gap(10.0)
-        .children(id.into_iter().chain(fields).collect())
+        .gap(14.0)
+        .children(vec![
+            field("title")
+                .label("i18n:host.hostActivities.name")
+                .required(true)
+                .child(
+                    TextInput::new()
+                        .name(name("title"))
+                        .value(activity.title.host_value(ctx)),
+                )
+                .into(),
+            field("provider")
+                .label("i18n:host.hostActivities.provider")
+                .required(true)
+                .child(
+                    TextInput::new()
+                        .name(name("provider"))
+                        .value(text(&activity.provider)),
+                )
+                .child(FieldHint::new().text("i18n:host.hostActivities.provider.hint"))
+                .into(),
+            input(
+                "duration",
+                "i18n:host.hostActivities.duration",
+                text(&activity.duration),
+            ),
+            input(
+                "price",
+                "i18n:host.hostActivities.price",
+                text(&activity.price),
+            ),
+            field("phone")
+                .label("i18n:host.hostActivities.phone")
+                .child(
+                    PhoneInput::new()
+                        .name(name("phone"))
+                        .value(text(&activity.phone))
+                        .defaultCountry(default_country(ctx)),
+                )
+                .child(FieldHint::new().text("i18n:host.hostActivities.phone.hint"))
+                .into(),
+            field("url")
+                .label("i18n:host.hostActivities.url")
+                .child(
+                    TextInput::new()
+                        .name(name("url"))
+                        .value(text(&activity.url))
+                        .placeholder("https://"),
+                )
+                .into(),
+            input(
+                "meet",
+                "i18n:host.hostActivities.meet",
+                text(&activity.meet),
+            ),
+            input(
+                "languages",
+                "i18n:host.hostActivities.languages",
+                text(&activity.languages),
+            ),
+            area(
+                "cancel",
+                "i18n:host.hostActivities.cancel",
+                activity.cancel.host_value(ctx),
+                "i18n:host.hostActivities.cancel.placeholder",
+            ),
+            area(
+                "included",
+                "i18n:host.hostActivities.included",
+                activity.included.host_value(ctx),
+                "i18n:host.hostActivities.included.placeholder",
+            ),
+            FieldHint::new()
+                .text("i18n:host.hostActivities.included.hint")
+                .into(),
+            area(
+                "tip",
+                "i18n:host.hostActivities.tip",
+                activity.tip.host_value(ctx),
+                "i18n:host.hostActivities.tip.placeholder",
+            ),
+            Field::new()
+                .name(name("photo"))
+                .label("i18n:host.hostActivities.photo")
+                .child(
+                    ImageUpload::new()
+                        .name(name("photo"))
+                        .value(activity.photo.clone()),
+                )
+                .into(),
+        ])
         .into()
 }
 
+// ── 2.2 Activités des partenaires ────────────────────────────────────────────
+
+/// « Afficher le catalogue », puis, allumé, les fournisseurs, les filtres et « Vos choix ».
+fn partners_section(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let providers = config.providers();
+    let choices: Vec<ChoiceOption> = PROVIDERS
+        .iter()
+        .map(|provider| {
+            ChoiceOption::new(*provider, format!("i18n:host.partners.provider.{provider}"))
+        })
+        .collect();
+    let (radius_min, radius_max) = PARTNER_RADIUS_KM;
+    let (price_min, price_max) = PARTNER_MAX_PRICE;
+    let mut max_price = NumberInput::new()
+        .name("partner_max_price")
+        .min(f64::from(price_min))
+        .max(f64::from(price_max));
+    if let Some(price) = config.partner_max_price {
+        max_price = max_price.value(f64::from(price));
+    }
+    let rating = config
+        .partner_min_rating
+        .unwrap_or(config.viator().min_rating)
+        .to_string();
+
+    let mut catalogue = Section::new().visibleWhen("partners_enabled=true").child(
+        named(config, ctx, "providers")
+            .label("i18n:host.partners.providers")
+            .required(true)
+            .child(
+                ChoiceList::new()
+                    .name("providers")
+                    .multi(true)
+                    .layout(ChoiceListLayout::Compact)
+                    .choices(choices)
+                    .value(serde_json::to_string(&providers).unwrap_or_default()),
+            )
+            // GetYourGuide n'a pas encore de connecteur : il est annoncé, pas proposé.
+            .child(FieldHint::new().text("i18n:host.partners.provider.soon")),
+    );
+    for notice in status_notices(config, ctx, &providers) {
+        catalogue = catalogue.child(notice);
+    }
+    catalogue = catalogue
+        .child(
+            named(config, ctx, "partner_radius_km")
+                .label("i18n:host.partners.radius")
+                .child(
+                    NumberInput::new()
+                        .name("partner_radius_km")
+                        .min(f64::from(radius_min))
+                        .max(f64::from(radius_max))
+                        .value(f64::from(config.partner_radius())),
+                )
+                .child(FieldHint::new().text("i18n:host.partners.radius.hint")),
+        )
+        .child(
+            named(config, ctx, "partner_max_price")
+                .label("i18n:host.partners.maxPrice")
+                .child(max_price),
+        )
+        .child(
+            Field::new()
+                .name("partner_min_rating")
+                .label("i18n:host.partners.minRating")
+                .child(
+                    Select::new()
+                        .name("partner_min_rating")
+                        .options(
+                            ["0", "3", "4"]
+                                .iter()
+                                .map(|value| {
+                                    ChoiceOption::new(
+                                        *value,
+                                        format!("i18n:host.partners.minRating.{value}"),
+                                    )
+                                })
+                                .collect(),
+                        )
+                        .value(rating),
+                ),
+        )
+        .child(choices_section(config, ctx));
+
+    Section::new()
+        .title("i18n:host.partners.title")
+        .child(
+            ToggleRow::new()
+                .name("partners_enabled")
+                .label("i18n:host.partners.enabled")
+                .description("i18n:host.partners.enabled.help")
+                .checked(config.partners_on()),
+        )
+        .child(catalogue)
+        .into()
+}
+
+/// Pourquoi un fournisseur choisi ne montrera rien : pas de clé, logement sans position ou sans
+/// ville. Rien pour un fournisseur prêt.
+fn status_notices(config: &ModuleConfig, ctx: &HostContext, providers: &[&str]) -> Vec<Component> {
+    let mut keys: Vec<&str> = Vec::new();
+    if providers.contains(&"viator") {
+        let viator = crate::config::ViatorConfig {
+            enabled: true,
+            ..config.viator()
+        };
+        keys.extend(match crate::viator::status(ctx, &viator) {
+            ViatorStatus::MissingKey => Some("i18n:host.viator.status.missingKey"),
+            ViatorStatus::MissingCity => Some("i18n:host.viator.status.missingCity"),
+            ViatorStatus::Off | ViatorStatus::Ready => None,
+        });
+    }
+    if providers.contains(&"tiqets") {
+        let tiqets = crate::config::TiqetsConfig {
+            enabled: true,
+            ..config.tiqets()
+        };
+        keys.extend(match crate::tiqets::status(ctx, &tiqets) {
+            TiqetsStatus::MissingKey => Some("i18n:host.tiqets.status.missingKey"),
+            TiqetsStatus::MissingCoordinates => Some("i18n:host.tiqets.status.missingCoordinates"),
+            TiqetsStatus::Off | TiqetsStatus::Ready => None,
+        });
+    }
+    keys.into_iter()
+        .map(|key| InlineNotice::new().tone(Tone::Warning).message(key).into())
+        .collect()
+}
+
+/// « Vos choix dans le catalogue » : les liens collés par l'hôte, cinq au plus, chacun avec son
+/// conseil, ouverts dans une fenêtre (`panel: "dialog"`).
+fn choices_section(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let rows = rows(
+        ctx,
+        NEW_LINKS,
+        &config.activities,
+        ActivityRow::is_blank,
+        |i, link| fallback_id(&link.id, || format!("link-{}", i + 1)),
+    );
+    let mut table = DataTable::new()
+        .rowName("activities")
+        .sortable(true)
+        .panel("dialog")
+        .columns(json!([
+            { "key": "label", "label": "i18n:host.activities.link.label", "sub": "sub" },
+        ]))
+        .rows(Value::Array(
+            rows.iter()
+                .map(|(id, link)| {
+                    let label = link.label.host_value(ctx);
+                    let tip = link.tip.host_value(ctx);
+                    let mut sub = provider_name(&link.url).to_string();
+                    if !tip.trim().is_empty() {
+                        sub = format!("{sub} · « {} »", short(tip, 60));
+                    }
+                    json!({
+                        "id": id,
+                        "label": if label.trim().is_empty() { link.url.trim() } else { label },
+                        "sub": sub,
+                    })
+                })
+                .collect(),
+        ))
+        .children(
+            rows.iter()
+                .enumerate()
+                .map(|(index, (_, link))| link_panel(index, link, ctx))
+                .collect(),
+        );
+    if rows.len() < MAX_CURATED_LINKS {
+        table = add_row(
+            table,
+            &rows,
+            ActivityRow::is_blank,
+            NEW_LINKS,
+            "i18n:host.choices.add",
+        );
+    }
+    let mut section = Section::new()
+        .title("i18n:host.choices.title")
+        .subtitle(
+            t!(
+                "host.choices.count",
+                count = rows.len(),
+                max = MAX_CURATED_LINKS
+            )
+            .unwrap_or_else(|_| "i18n:host.choices.count".into()),
+        )
+        .child(FieldHint::new().text("i18n:host.choices.help"));
+    if let Some(error) = list_error(config, ctx, "activities") {
+        section = section.child(error);
+    }
+    section.child(table).into()
+}
+
+/// La fenêtre d'un lien : le lien, son intitulé, le conseil de l'hôte (≤ 200).
+fn link_panel(index: usize, link: &ActivityRow, ctx: &HostContext) -> Component {
+    let name = |key: &str| format!("activities.{index}.{key}");
+    let problems = link.problems();
+    let field = |key: &str| row_field("activities", index, key, &problems, ctx);
+    Stack::new()
+        .gap(14.0)
+        .children(vec![
+            field("url")
+                .label("i18n:host.activities.link.url")
+                .required(true)
+                .child(
+                    TextInput::new()
+                        .name(name("url"))
+                        .value(link.url.trim())
+                        .placeholder("i18n:host.activities.link.url.placeholder"),
+                )
+                .into(),
+            field("label")
+                .label("i18n:host.activities.link.label")
+                .child(
+                    TextInput::new()
+                        .name(name("label"))
+                        .value(link.label.host_value(ctx))
+                        .placeholder("i18n:host.activities.link.label.placeholder"),
+                )
+                .into(),
+            field("tip")
+                .label("i18n:host.activities.link.tip")
+                .child(
+                    TextArea::new()
+                        .name(name("tip"))
+                        .value(link.tip.host_value(ctx))
+                        .rows(3)
+                        .placeholder("i18n:host.activities.link.tip.placeholder"),
+                )
+                .into(),
+        ])
+        .into()
+}
+
+/// Le fournisseur d'un lien collé, par son domaine : des noms de marque, non traduits.
+fn provider_name(url: &str) -> &'static str {
+    let url = url.to_ascii_lowercase();
+    if url.contains("viator.com") {
+        "Viator"
+    } else if url.contains("tiqets.com") {
+        "Tiqets"
+    } else if url.contains("getyourguide.com") || url.contains("gyg.me") {
+        "GetYourGuide"
+    } else {
+        ""
+    }
+}
+
+// ── 2.3 Sur votre page publique ──────────────────────────────────────────────
+
+/// L'interrupteur du bloc (la page publique est sans séjour : rien n'y sort sans l'avoir décidé),
+/// puis le choix de 3 à 6 adresses, en pastilles.
+fn public_section(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let spots = config.parse_spots();
+    let choices: Vec<ChoiceOption> = spots
+        .iter()
+        .map(|spot| ChoiceOption::new(spot.id.clone(), spot.title.host_value(ctx).to_string()))
+        .collect();
+    let hint = if spots.is_empty() {
+        "i18n:host.public.none".to_string()
+    } else {
+        t!(
+            "host.public.count",
+            count = config.public_chosen().len(),
+            min = PUBLIC_MIN,
+            max = PUBLIC_MAX
+        )
+        .unwrap_or_else(|_| "i18n:host.public.count".into())
+    };
+    Section::new()
+        .title("i18n:host.public.title")
+        .subtitle("i18n:host.public.subtitle")
+        .child(
+            ToggleRow::new()
+                .name("public_enabled")
+                .label("i18n:host.public.enabled")
+                .checked(config.public_enabled),
+        )
+        .child(
+            Field::new()
+                .name("public_spots")
+                .label("i18n:host.public.spots")
+                .visibleWhen("public_enabled=true")
+                .child(
+                    ChoiceList::new()
+                        .name("public_spots")
+                        .multi(true)
+                        .layout(ChoiceListLayout::Compact)
+                        .limit(PUBLIC_MAX as u32)
+                        .choices(choices)
+                        .value(serde_json::to_string(&config.public_spots).unwrap_or_default()),
+                )
+                .child(FieldHint::new().text(hint)),
+        )
+        .into()
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
 /// Le champ `name`, avec le message de [`ModuleConfig::error_of`] sous lui s'il y en a un.
-fn named(config: &ModuleConfig, ctx: &HostContext, name: impl Into<String>) -> Field {
-    let name = name.into();
-    let field = Field::new().name(name.clone());
-    match config.error_of(&name) {
+fn named(config: &ModuleConfig, ctx: &HostContext, name: &str) -> Field {
+    let field = Field::new().name(name);
+    match config.error_of(name) {
         Some(error) => field.error(error.get(&ctx.locale).to_string()),
         None => field,
     }
+}
+
+/// La position du logement, `None` tant qu'il n'est pas géocodé.
+fn home(ctx: &HostContext) -> Option<(f64, f64)> {
+    let point = ctx.property.coordinates.as_ref()?;
+    crate::config::valid_coords(point.lat, point.lng)
+}
+
+/// « 800 m », « 3,2 km » : calculée depuis le logement, jamais saisie (§4).
+fn distance_label(spot: &SpotRow, home: Option<(f64, f64)>, locale: &str) -> Option<String> {
+    let (home_lat, home_lng) = home?;
+    let (lat, lng) = spot.coords()?;
+    let metres = crate::guest::item::haversine_m(home_lat, home_lng, lat, lng);
+    Some(if metres < 1_000.0 {
+        format!("{} m", ((metres / 10.0).round() as i64) * 10)
+    } else {
+        let km = format!("{:.1} km", metres / 1_000.0);
+        // La virgule décimale, sauf en anglais, chinois et japonais.
+        match locale.split(['-', '_']).next().unwrap_or_default() {
+            "en" | "zh" | "ja" => km,
+            _ => km.replace('.', ","),
+        }
+    })
+}
+
+/// Le libellé traduit d'une catégorie de la liste ; une ancienne saisie libre, telle quelle.
+fn category_label(category: &str) -> String {
+    CATEGORIES
+        .iter()
+        .find(|(_, value)| *value == category.trim())
+        .map(|(token, _)| format!("i18n:host.category.{token}"))
+        .unwrap_or_else(|| category.trim().to_string())
+}
+
+/// Les `max` premiers caractères, une ellipse au-delà.
+fn short(text: &str, max: usize) -> String {
+    let text = text.trim();
+    if text.chars().count() <= max {
+        text.to_string()
+    } else {
+        format!("{}…", text.chars().take(max).collect::<String>().trim_end())
+    }
+}
+
+/// L'indicatif proposé d'abord : la région de la langue du logement (`fr-FR` → `FR`), la France
+/// sinon.
+fn default_country(ctx: &HostContext) -> String {
+    ctx.property
+        .locale
+        .split(['-', '_'])
+        .nth(1)
+        .filter(|region| region.len() == 2 && region.chars().all(|c| c.is_ascii_alphabetic()))
+        .map(str::to_ascii_uppercase)
+        .unwrap_or_else(|| "FR".into())
 }
 
 #[cfg(test)]
@@ -979,13 +1064,28 @@ mod tests {
     use super::*;
 
     #[test]
-    fn slots_grow_with_the_list_and_stop_at_the_cap() {
-        assert_eq!(activity_slots(0), 2);
-        assert_eq!(activity_slots(1), 2);
-        assert_eq!(activity_slots(4), 5);
-        assert_eq!(activity_slots(MAX_CURATED_LINKS), MAX_CURATED_LINKS);
-        // Le formulaire ne propose jamais un créneau que le livret n'afficherait pas.
-        // Sauf une ligne déjà stockée au-delà : elle reste là où elle est.
-        assert_eq!(activity_slots(MAX_CURATED_LINKS + 5), MAX_CURATED_LINKS + 5);
+    fn a_long_text_is_cut_on_a_character() {
+        assert_eq!(
+            short("  Prenez la bouillabaisse  ", 60),
+            "Prenez la bouillabaisse"
+        );
+        assert_eq!(short("Crème brûlée", 5), "Crème…");
+    }
+
+    #[test]
+    fn a_category_from_the_list_is_translated_a_free_one_kept() {
+        assert_eq!(category_label("Bien-être"), "i18n:host.category.wellness");
+        assert_eq!(category_label(" Coup de cœur "), "Coup de cœur");
+    }
+
+    #[test]
+    fn a_link_names_its_provider() {
+        assert_eq!(
+            provider_name("https://www.viator.com/tours/x/d1-2P3"),
+            "Viator"
+        );
+        assert_eq!(provider_name("https://www.tiqets.com/fr/x-p1/"), "Tiqets");
+        assert_eq!(provider_name("https://gyg.me/aBcD12"), "GetYourGuide");
+        assert_eq!(provider_name("https://example.com"), "");
     }
 }

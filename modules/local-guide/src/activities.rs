@@ -10,7 +10,8 @@ use crate::config::ActivitiesConfig;
 pub struct ActivitiesView {
     /// Nom du lieu tel qu'affiché au voyageur. Vide = le libellé neutre prend le relais.
     pub destination: String,
-    /// Lien principal : recherche par destination, ou page GetYourGuide collée par l'hôte.
+    /// Lien principal : recherche par destination, ou page GetYourGuide collée par l'hôte. Vide
+    /// quand la section ne montre que les choix de l'hôte (pas de recherche).
     pub destination_url: String,
     /// Phrase d'introduction de l'hôte. Vide = pas de phrase.
     pub intro: String,
@@ -46,9 +47,18 @@ pub fn resolve(
     if !config.enabled {
         return None;
     }
-    let destination = destination(config, address)?;
+    // La recherche GetYourGuide ne vient que de l'ancienne section ; les choix de l'hôte
+    // s'affichent sans elle.
+    let destination = if config.search {
+        destination(config, address)?
+    } else {
+        ResolvedDestination {
+            label: String::new(),
+            url: String::new(),
+        }
+    };
 
-    let links = config
+    let links: Vec<ActivityLink> = config
         .links
         .iter()
         .filter_map(|row| {
@@ -73,6 +83,9 @@ pub fn resolve(
         })
         .take(MAX_CURATED_LINKS)
         .collect();
+    if destination.url.is_empty() && links.is_empty() {
+        return None;
+    }
 
     Some(ActivitiesView {
         destination: destination.label,
@@ -235,6 +248,7 @@ mod tests {
     fn activities(destination: &str) -> ActivitiesConfig {
         ActivitiesConfig {
             enabled: true,
+            search: true,
             destination: destination.into(),
             ..ActivitiesConfig::default()
         }
@@ -318,6 +332,7 @@ mod tests {
     fn nothing_renders_without_a_destination() {
         let config = ActivitiesConfig {
             enabled: true,
+            search: true,
             ..ActivitiesConfig::default()
         };
         assert!(resolve(&ctx(), &config, None, "fr-FR").is_none());
@@ -354,6 +369,7 @@ mod tests {
             .collect();
         let config = ActivitiesConfig {
             enabled: true,
+            search: true,
             links,
             ..ActivitiesConfig::default()
         };
@@ -379,6 +395,7 @@ mod tests {
     fn a_row_written_outside_the_form_is_dropped_at_render() {
         let config = ActivitiesConfig {
             enabled: true,
+            search: true,
             links: vec![
                 ActivityRow {
                     url: "https://example.com/paris".into(),
@@ -394,5 +411,31 @@ mod tests {
         let view = resolve(&ctx(), &config, Some("Cannes, France"), "fr-FR").expect("view");
         assert_eq!(view.links.len(), 1);
         assert_eq!(view.links[0].url, "https://gyg.me/aBcD12");
+    }
+
+    #[test]
+    fn without_the_search_only_the_hosts_choices_show() {
+        let link = |url: &str| ActivityRow {
+            url: url.into(),
+            ..ActivityRow::default()
+        };
+        let config = ActivitiesConfig {
+            enabled: true,
+            links: vec![link("https://www.tiqets.com/fr/musee-p974079/")],
+            ..ActivitiesConfig::default()
+        };
+        // Ni destination ni adresse : la section tient sur le choix de l'hôte, sans recherche.
+        let view = resolve(&ctx(), &config, None, "fr-FR").expect("view");
+        assert!(view.destination_url.is_empty());
+        assert_eq!(
+            view.links[0].url,
+            "https://www.tiqets.com/fr/musee-p974079/"
+        );
+        // Un lien refusé ne laisse pas une section vide.
+        let config = ActivitiesConfig {
+            links: vec![link("https://example.com/paris")],
+            ..config
+        };
+        assert!(resolve(&ctx(), &config, Some("Cannes, France"), "fr-FR").is_none());
     }
 }

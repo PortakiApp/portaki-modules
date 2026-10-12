@@ -35,6 +35,42 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             hint: crate::i18n::text("host.spot.position.required"),
         });
     }
+    // Loin du logement : sans doute mal placée (§2.1, 50 km). Un avertissement, pas un refus.
+    if let Some(home) = ctx.property.coordinates.as_ref() {
+        if let Some(index) = config.spots.iter().position(|spot| {
+            spot.coords().is_some_and(|(lat, lng)| {
+                !portaki_sdk::config::check::within_km(
+                    lat,
+                    lng,
+                    home.lat,
+                    home.lng,
+                    crate::config::SPOT_MAX_KM,
+                )
+            })
+        }) {
+            items.push(PublishCheck {
+                id: format!("config.spots.{index}.lat"),
+                level: PublishLevel::Recommended,
+                ok: false,
+                label: crate::i18n::text("host.spot.address"),
+                hint: crate::i18n::text("host.spot.position.far"),
+            });
+        }
+    }
+    // Un avantage sans accord avec le lieu (§3) : le voyageur le réclamera sur place.
+    if let Some(index) = config
+        .spots
+        .iter()
+        .position(|spot| !spot.is_blank() && spot.perk_without_agreement())
+    {
+        items.push(PublishCheck {
+            id: format!("config.spots.{index}.perk_agreement"),
+            level: PublishLevel::Recommended,
+            ok: false,
+            label: crate::i18n::text("host.spot.perk"),
+            hint: crate::i18n::text("host.spot.perkAgreement.warning"),
+        });
+    }
     // La page publique n'empêche jamais de publier le livret : hors bornes, son bloc se masque
     // (moins de trois) ou se coupe (plus de six), et l'hôte en est averti.
     let chosen = config.public_chosen().len();
@@ -52,13 +88,15 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
     Ok(PublishReadiness { items })
 }
 
-/// Bloquant, sauf la catégorie manquante et le téléphone d'une activité : des lignes saisies avant
-/// ces règles ne les suivent pas (adresse sans catégorie, numéro sans indicatif), et les bloquer
-/// enfermerait l'hôte hors de son livret. Ils avertissent, comme la position.
+/// Bloquant, sauf la catégorie manquante, le téléphone d'une activité et les choix du catalogue :
+/// des lignes saisies avant ces règles ne les suivent pas (adresse sans catégorie, numéro sans
+/// indicatif, dix liens GetYourGuide quand on en acceptait dix), et les bloquer enfermerait l'hôte
+/// hors de son livret. Ils avertissent, comme la position — un lien refusé ne s'affiche pas.
 fn level_of(field: &str) -> PublishLevel {
     let category = field.starts_with("spots.") && field.ends_with(".category");
     let activity_phone = field.starts_with("host_activities.") && field.ends_with(".phone");
-    if category || activity_phone {
+    let choice = field == "activities" || field.starts_with("activities.");
+    if category || activity_phone || choice {
         PublishLevel::Recommended
     } else {
         PublishLevel::Required
@@ -77,7 +115,14 @@ fn field_label(field: &str) -> &'static str {
             _ => "host.hostActivities.title",
         };
     }
+    if field.starts_with("activities") {
+        return "host.choices.title";
+    }
     match last {
+        "providers" => "host.partners.providers",
+        "partner_radius_km" => "host.partners.radius",
+        "partner_max_price" => "host.partners.maxPrice",
+        "note" => "host.spot.note",
         "title" => "host.spot.name",
         "category" => "host.spot.category",
         "warning" => "host.spot.warning",

@@ -4,7 +4,7 @@ mod activity;
 mod body;
 mod detail;
 mod home;
-mod item;
+pub(crate) mod item;
 mod link;
 mod load;
 mod public;

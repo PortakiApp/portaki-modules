@@ -395,23 +395,41 @@ fn the_host_form_sends_the_declared_keys() {
             "activities_destination": "Antibes",
             "activities_intro": "Les incontournables",
             "activities": [{ "url": "https://gyg.me/aBcD12", "label": "Court" }],
+            "host_activities": [{ "title": "Voilier", "provider": "Marc" }],
             "tiqets_enabled": true,
             "tiqets_radius_km": "20",
             "tiqets_min_rating": "4"
         }))
         .run(|ctx| {
             let surface = render_host_main(ctx).expect("host main");
-            config_form::assert_form_matches_config(EMISSIONS, &surface, &[]);
+            // Les réglages d'avant la planche : plus dessinés, toujours lus (repli des nouveaux
+            // champs, ancienne section GetYourGuide) ; `updateConfig` fusionne, ils restent.
+            config_form::assert_form_matches_config(
+                EMISSIONS,
+                &surface,
+                &[
+                    "activities_destination",
+                    "activities_enabled",
+                    "activities_intro",
+                    "disclaimer",
+                    "tiqets_enabled",
+                    "tiqets_min_rating",
+                    "tiqets_radius_km",
+                    "viator_enabled",
+                    "viator_min_rating",
+                ],
+            );
             let json = surface_json(&surface);
             assert!(json.contains("Plage du Midi, Cannes"), "{json}");
-            assert!(json.contains("Les incontournables"), "{json}");
+            assert!(json.contains("Court"), "{json}");
+            assert!(json.contains("host_activities.0.provider"), "{json}");
             // Pas de bouton Enregistrer : le tableau de bord enregistre à la saisie, et la
             // plateforme refuserait les arguments figés qu'il enverrait.
             assert!(!SurfaceAssertions::new(&surface).contains_type("Button"));
         });
 }
 
-/// Les lignes suivent ce que l'hôte a saisi, et « Ajouter » en demande une de plus.
+/// Les lignes suivent ce que l'hôte a saisi, et « Ajouter » en ouvre une de plus, jusqu'à trente.
 ///
 /// Six emplacements figés gelaient la liste à six : l'hôte voyait quatre cartes vides quand il
 /// avait saisi deux adresses, et ne pouvait pas en saisir une septième.
@@ -423,9 +441,19 @@ fn the_form_draws_the_spots_the_host_has() {
         .run(|ctx| {
             let json =
                 serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            assert!(!json.contains("spots.0.title"), "{json}");
+            assert!(json.contains(r#""newSpots""#), "{json}");
+        });
+
+    // Une ligne ouverte par « Ajouter » se dessine, avec l'id qu'on lui a donné.
+    MockContext::host()
+        .with_config(&serde_json::json!({}))
+        .run(|mut ctx| {
+            ctx.input = serde_json::json!({ "newSpots": "neuf" });
+            let json =
+                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            assert!(json.contains(r#""id":"neuf""#), "{json}");
             assert!(json.contains("spots.0.title"), "{json}");
-            assert!(!json.contains("spots.1.title"), "{json}");
-            assert!(json.contains(r#""spots_count":2"#), "{json}");
         });
 
     let rows: Vec<serde_json::Value> = (0..local_guide::MAX_SPOTS)
@@ -442,10 +470,84 @@ fn the_form_draws_the_spots_the_host_has() {
                 !json.contains(&format!("spots.{}.title", last + 1)),
                 "{json}"
             );
+            assert!(!json.contains(r#""newSpots""#), "{json}");
+        });
+}
+
+/// Les id des lignes du tableau `row_name`, dans l'ordre affiché.
+fn table_ids(surface: &Surface, row_name: &str) -> Vec<String> {
+    fn find(value: &serde_json::Value, row_name: &str) -> Option<Vec<String>> {
+        match value {
+            serde_json::Value::Object(object) => {
+                if object.get("rowName").and_then(|n| n.as_str()) == Some(row_name) {
+                    return Some(
+                        object["rows"]
+                            .as_array()?
+                            .iter()
+                            .filter_map(|row| row["id"].as_str().map(String::from))
+                            .collect(),
+                    );
+                }
+                object.values().find_map(|v| find(v, row_name))
+            }
+            serde_json::Value::Array(items) => items.iter().find_map(|v| find(v, row_name)),
+            _ => None,
+        }
+    }
+    find(&serde_json::to_value(surface).unwrap(), row_name).unwrap_or_default()
+}
+
+/// Une adresse au tableau : nom et avantage, catégorie traduite, distance calculée depuis le
+/// logement, pastille ; dans son panneau, l'ancienne catégorie libre reste choisie et l'avantage
+/// sans accord avertit.
+#[test]
+#[serial]
+fn a_spot_row_shows_its_computed_distance_and_its_sheet() {
+    MockContext::host()
+        .with_coordinates(Some(portaki_sdk::sdui::common::GeoPoint::new(
+            43.5513, 7.0128,
+        )))
+        .with_config(&json!({
+            "spots": [
+                { "id": "bacon", "title": { "fr": "Le Bacon" }, "category": "Restaurant",
+                  "perk": { "fr": "10 % sur le menu du soir" }, "distance": "à côté",
+                  "lat": 43.5513, "lng": 7.0228 },
+                { "id": "coeur", "title": { "fr": "La crique" }, "category": "Coup de cœur",
+                  "price": "dès 18 € / jour", "hours": "9:00 – 19:00" }
+            ]
+        }))
+        .run(|ctx| {
+            let surface = render_host_main(ctx).expect("host main");
+            let json = surface_json(&surface);
+            assert_eq!(table_ids(&surface, "spots"), ["bacon", "coeur"]);
             assert!(
-                json.contains(&format!(r#""spots_count":{}"#, local_guide::MAX_SPOTS)),
+                json.contains(r#""category":"i18n:host.category.restaurant""#),
                 "{json}"
             );
+            // 0,01° de longitude à cette latitude : 800 m environ, jamais le texte saisi.
+            assert!(json.contains(r#""distance":"810 m""#), "{json}");
+            assert!(!json.contains("à côté"), "{json}");
+            assert!(
+                json.contains(r#""badge":"i18n:host.spot.badge.perk""#),
+                "{json}"
+            );
+            assert!(
+                json.contains(r#""sub":"10 % sur le menu du soir""#),
+                "{json}"
+            );
+            assert!(
+                json.contains("i18n:host.spot.perkAgreement.warning"),
+                "{json}"
+            );
+            // La saisie libre d'avant reste une option, choisie.
+            assert!(
+                json.contains(r#"{"value":"Coup de cœur","label":"Coup de cœur"}"#),
+                "{json}"
+            );
+            assert!(json.contains(r#""value":"dès 18 € / jour""#), "{json}");
+            // Sans position, l'erreur sous la carte ; les anciens horaires sont rappelés.
+            assert!(json.contains("Placez le lieu sur la carte."), "{json}");
+            assert!(json.contains("spots.1.weekly_hours"), "{json}");
         });
 }
 
@@ -496,26 +598,29 @@ fn a_save_in_english_keeps_the_french() {
             ctx.locale = "en-US".into();
             let surface = render_host_main(ctx).expect("host main");
             let sent = config_save::form_args(&surface);
-            // Stored order, the blank row where it was; ids on the filled rows only.
-            assert_eq!(sent["spots"][0]["id"], "bike");
+            // Stored order, each row with its id (the table sends it); the blank slot of the old
+            // form is no row.
+            assert_eq!(table_ids(&surface, "spots"), ["bike", "beach"]);
             assert_eq!(sent["spots"][0]["title"], "Bikes");
-            assert!(sent["spots"][1].get("id").is_none());
-            assert_eq!(sent["spots"][2]["id"], "beach");
-            assert_eq!(sent["spots"][2]["title"], "Plage");
-            // Trois lignes stockées, trois dessinées : plus d'emplacements vides en bout de liste.
-            assert_eq!(sent["spots"].as_array().unwrap().len(), 3);
-            assert_eq!(sent["activities"][0]["id"], "suquet");
+            assert_eq!(sent["spots"][1]["title"], "Plage");
+            assert_eq!(sent["spots"].as_array().unwrap().len(), 2);
+            assert_eq!(table_ids(&surface, "activities"), ["suquet"]);
             assert_eq!(sent["activities"][0]["label"], "Old town");
-            assert!(sent["activities"][1].get("id").is_none());
-            assert_eq!(sent["activities_intro"], "Must-dos");
+            assert_eq!(sent["activities"].as_array().unwrap().len(), 1);
+            // L'ancienne section GetYourGuide n'est plus dessinée : rien n'en part.
+            assert!(sent.get("activities_intro").is_none());
 
+            // Le tableau envoie l'id de chaque ligne et la plateforme fusionne sur lui ; ce
+            // harnais fusionne par position : on lui donne les lignes dans l'ordre du tableau.
+            let mut stored = stored.clone();
+            stored["spots"] = json!([stored["spots"][0], stored["spots"][2]]);
             let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
             let bike = &saved["spots"][0];
             for key in ["title", "note", "detail", "url", "category"] {
                 assert_eq!(bike[key], stored["spots"][0][key], "{key}");
             }
-            assert_eq!(saved["spots"][2]["title"]["fr"], "Plage");
-            assert_eq!(saved["spots"][2]["detail"]["fr"], "Sable fin");
+            assert_eq!(saved["spots"][1]["title"]["fr"], "Plage");
+            assert_eq!(saved["spots"][1]["detail"]["fr"], "Sable fin");
             assert_eq!(
                 saved["activities"][0]["label"],
                 stored["activities"][0]["label"]
@@ -638,11 +743,11 @@ fn curated_links_render_normalized_capped_and_in_order() {
         .run(|ctx| {
             let json = surface_json(&render_explore_detail(ctx).expect("surface"));
             let first = json.find("tour-00").expect("first link");
-            let last = json.find("tour-09").expect("last kept link");
+            let last = json.find("tour-04").expect("last kept link");
             assert!(first < last, "l'ordre de l'hôte est conservé");
-            // Le cap coupe au-delà de dix, sans réordonner ce qui reste.
-            assert!(!json.contains("tour-10"), "{json}");
-            assert!(!json.contains("tour-11"), "{json}");
+            // Le cap coupe au-delà de cinq, sans réordonner ce qui reste.
+            assert!(!json.contains("tour-05"), "{json}");
+            assert!(!json.contains("tour-06"), "{json}");
         });
 }
 
@@ -688,8 +793,11 @@ fn the_host_sheet_flags_a_url_it_would_refuse() {
         }))
         .run(|ctx| {
             let json = surface_json(&render_host_main(ctx).expect("host main"));
-            assert!(json.contains("i18n:host.activities.error.badUrl"), "{json}");
-            assert!(json.contains("i18n:host.section.activities"));
+            assert!(
+                json.contains("Ce lien n’est pas une activité d’un fournisseur connecté."),
+                "{json}"
+            );
+            assert!(json.contains("i18n:host.choices.title"));
         });
 }
 
@@ -799,15 +907,19 @@ fn a_short_destination_link_without_an_address_gets_the_neutral_label() {
 
 #[test]
 #[serial]
-fn the_host_sheet_flags_a_destination_url_it_would_refuse() {
+fn the_host_sheet_takes_a_tiqets_link() {
+    // « Collez le lien d'une activité Viator ou Tiqets » : un lien Tiqets passe, sans erreur.
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&json!({
-            "activities_destination": "https://viator.com/paris"
+            "partners_enabled": true,
+            "providers": ["tiqets"],
+            "activities": [{ "url": "https://www.tiqets.com/fr/musee-p974079/" }]
         }))
         .run(|ctx| {
             let json = surface_json(&render_host_main(ctx).expect("host main"));
-            assert!(json.contains("i18n:host.activities.error.badUrl"), "{json}");
+            assert!(json.contains(r#""sub":"Tiqets""#), "{json}");
+            assert!(!json.contains("fournisseur connecté"), "{json}");
         });
 }
 
@@ -878,11 +990,20 @@ fn every_i18n_key_a_surface_uses_exists_in_every_locale() {
         });
 
     assert!(refs.contains("guest.activities.disclosure"));
-    assert!(refs.contains("host.section.activities"));
+    assert!(refs.contains("host.choices.title"));
 
     // Les clés passées par `t!` sont résolues avant sérialisation : elles ne portent pas
     // le préfixe `i18n:` et n'apparaissent donc pas dans `refs`.
-    let translated_at_runtime = ["guest.activities.searchLabel", "guest.upcoming.spotCount"];
+    let translated_at_runtime = [
+        "guest.activities.searchLabel",
+        "guest.upcoming.spotCount",
+        "host.picks.tab.spots",
+        "host.picks.tab.activities",
+        "host.choices.count",
+        "host.public.count",
+        "host.spot.hours.legacy",
+        "host.spot.photo.more",
+    ];
 
     for (locale, raw) in BUNDLES {
         let keys = bundle(raw);

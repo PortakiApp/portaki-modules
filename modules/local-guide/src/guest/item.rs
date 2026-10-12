@@ -1,5 +1,6 @@
 //! La fiche d'une adresse — la sous-page du §2.12.
 
+use chrono::Datelike;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::{
     Author, Emphasis, KeyValueLayout, RichTextVariant, StackDirection, SurfaceLevel, Tone,
@@ -230,9 +231,15 @@ fn gallery(data: &GuestData, spot: &SpotRow) -> Option<Component> {
 /// « Infos pratiques » : horaires, ouverture, parking, téléphone. Seules les lignes que l'hôte a
 /// remplies ; la carte ne sort pas si aucune ne l'est.
 fn practical(data: &GuestData, spot: &SpotRow) -> Option<Component> {
-    let _ = data;
     let mut rows: Vec<Component> = Vec::new();
-    if let Some(hours) = trimmed(spot.hours.as_deref()) {
+    // Les horaires par jour d'abord : ceux du jour, le bandeau « Fermé aujourd'hui » dit le reste.
+    // Sans eux, l'ancienne ligne libre.
+    let hours = if spot.has_weekly_hours() {
+        data.today.and_then(|day| spot.hours_on(day.weekday()))
+    } else {
+        trimmed(spot.hours.as_deref()).map(str::to_string)
+    };
+    if let Some(hours) = hours.as_deref() {
         rows.push(row("i18n:guest.practical.hours", hours, true));
     }
     if let Some(opening) = trimmed(spot.opening.as_deref()) {

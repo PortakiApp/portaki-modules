@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.14.0
+
+La page Bons plans et activités refaite.
+
+* Adresses et activités dans deux tableaux : glissez pour choisir l’ordre du carrousel, ouvrez une ligne pour la modifier.
+* Les distances se calculent depuis le logement ; une adresse à plus de 50 km ou un avantage sans accord avec le lieu sont signalés.
+* Catégorie et prix en liste, horaires jour par jour : le livret dit si l’adresse est ouverte aujourd’hui.
+* Un seul catalogue partenaires : Viator et Tiqets, un rayon commun, un prix maximum et une note minimale.
+* Collez jusqu’à 5 liens Viator ou Tiqets à mettre en avant, chacun avec votre conseil.
+
 ## 1.13.1
 
 Montée technique.
