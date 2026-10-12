@@ -493,3 +493,51 @@ fn a_station_beyond_thirty_km_warns_without_blocking() {
         assert!(publish_readiness(ctx).expect("readiness").items.is_empty());
     });
 }
+
+/// §2.2 : une destination que la source ne connaît pas porte l'erreur et bloque la publication.
+#[test]
+fn an_unknown_destination_blocks_publishing() {
+    let host = || {
+        MockContext::host()
+            .with_config(&json!({ "destinations": ["Nulle Part"] }))
+            .with_connector_response("sncf", "find_place", r#"{"places":[]}"#)
+    };
+    host().run(|ctx| {
+        let json = serde_json::to_string(&render_host_main(ctx).expect("host")).unwrap();
+        assert!(
+            json.contains("Choisissez une gare dans la liste."),
+            "{json}"
+        );
+        assert!(json.contains("1 / 6"), "{json}");
+    });
+    host().run(|ctx| {
+        let items = publish_readiness(ctx).expect("readiness").items;
+        let unknown = items
+            .iter()
+            .find(|i| i.id == "config.destinations.unknown")
+            .expect("blocking item");
+        assert_eq!(unknown.level, PublishLevel::Required);
+    });
+}
+
+/// §2.1 : sous le champ, la gare trouvée et le temps d'y aller, à pied et en voiture.
+#[test]
+fn the_resolved_station_shows_under_the_field_with_its_access_times() {
+    const PLACED: &str = r#"{"places":[{"id":"stop_area:SNCF:87756056","embedded_type":"stop_area",
+        "stop_area":{"id":"stop_area:SNCF:87756056","name":"Gare d'Antibes",
+        "coord":{"lat":"43.5859","lon":"7.1194"}}}]}"#;
+    MockContext::host()
+        .with_coordinates(Some(GeoPoint {
+            lat: 43.58,
+            lng: 7.125,
+        }))
+        .with_config(&json!({ "station": "Antibes" }))
+        .with_connector_response("sncf", "find_place", PLACED)
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_host_main(ctx).expect("host")).unwrap();
+            assert!(json.contains("Gare d'Antibes · "), "{json}");
+            assert!(json.contains("min en voiture"), "{json}");
+            assert!(json.contains("\"segmented\""), "{json}");
+            assert!(!json.contains("Choisissez une gare"), "{json}");
+        });
+}

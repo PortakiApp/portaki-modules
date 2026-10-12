@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.5.0
+
+Les réglages Trains, à l'image des autres modules.
+
+* Sous la gare de référence, la gare trouvée s'affiche avec le temps d'y aller à pied et en voiture.
+* Le sens par défaut se choisit d'un geste, Départs ou Arrivées, dans la carte Gare.
+* Une gare ou une destination introuvable bloque la publication : « Choisissez une gare dans la liste. »
+* Les destinations proposées affichent leur compte, six au plus, et votre conseil a sa propre carte.
+* Copiées vers un autre logement, la gare et les destinations sont marquées « À vérifier ».
+
 ## 2.4.1
 
 Montée technique.
