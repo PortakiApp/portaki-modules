@@ -13,7 +13,11 @@
 //! midnight: `22:00 – 02:00` is open at one in the morning, and saying otherwise would put a guest
 //! outside a door that is in fact open.
 
+use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::host::time::PropertyTz;
+use portaki_sdk::prelude::*;
+use portaki_sdk::sdui::common::Tone;
+use portaki_sdk::sdui::hours::parse_range;
 use serde::{Deserialize, Serialize};
 
 use chrono::{DateTime, Datelike, NaiveDate, Timelike, Utc, Weekday};
@@ -36,25 +40,67 @@ pub fn parse_hm(raw: &str) -> Option<u32> {
     Some(hours * 60 + minutes)
 }
 
-/// One day's exception — different hours, or closed (§2.6).
+/// Une fermeture exceptionnelle datée (§2.2) — et, sur une ligne d'avant, une dérogation d'un jour
+/// de semaine (`day`) ou une ligne « selon le jour » (`id`).
 #[portaki_sdk::params]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]
 pub struct DayHours {
-    /// `mon` … `sun`.
+    /// La date, `AAAA-MM-JJ`, celle qu'écrit le `DatePicker`.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub date: String,
+    /// Fermé ce jour-là, quelle que soit la plage.
+    pub closed: bool,
+    /// La plage de ce jour, `HH:MM-HH:MM`, quand il n'est pas fermé.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub range: String,
+    /// Le motif, montré au voyageur le jour même.
+    pub reason: I18nText,
+    /// Ancien : `mon` … `sun`, une dérogation hebdomadaire.
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub day: String,
-    /// Le jour d'une ligne « selon le jour », envoyé par le champ caché `….id` du formulaire.
-    ///
-    /// Pas `day` : le formulaire regroupe ses lignes par index en les resserrant, et seul ce
-    /// champ garde à chaque ligne son jour. Lu seulement selon le jour, où il devient `day`.
+    /// Ancien : le jour d'une ligne « selon le jour », envoyé par le champ caché `….id` de
+    /// l'ancien formulaire.
     #[serde(skip_serializing_if = "String::is_empty")]
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub opens_at: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub closes_at: Option<String>,
-    /// Closed that day, whatever the times say.
-    pub closed: bool,
+}
+
+impl DayHours {
+    /// Le jour de semaine d'une ancienne ligne (`id`, sinon `day`) ; `None` pour une fermeture
+    /// datée.
+    pub fn weekday(&self) -> Option<usize> {
+        week_index(&self.id).or_else(|| week_index(&self.day))
+    }
+
+    /// La date, quand elle en est une.
+    pub fn date(&self) -> Option<NaiveDate> {
+        NaiveDate::parse_from_str(self.date.trim(), "%Y-%m-%d").ok()
+    }
+
+    /// Les plages de ce jour : aucune s'il est fermé, ou sans plage lisible.
+    pub fn spans(&self) -> Vec<DaySpan> {
+        if self.closed {
+            return Vec::new();
+        }
+        parse_range(&self.range)
+            .and_then(|(start, end)| {
+                Some(DaySpan {
+                    opens: parse_hm(&start)?,
+                    closes: parse_hm(&end)?,
+                })
+            })
+            .into_iter()
+            .collect()
+    }
+
+    /// Rien de saisi : une ligne qu'« Ajouter » vient d'ouvrir.
+    pub fn is_blank(&self) -> bool {
+        self.date.trim().is_empty() && self.range.trim().is_empty() && self.reason.is_blank()
+    }
 }
 
 /// The seven days, in the order a week is read.
@@ -67,6 +113,12 @@ pub const WEEK: [Weekday; 7] = [
     Weekday::Sat,
     Weekday::Sun,
 ];
+
+/// L'index dans [`WEEK`] d'une clé `mon` … `sun`, la casse ignorée.
+pub fn week_index(raw: &str) -> Option<usize> {
+    WEEK.iter()
+        .position(|day| raw.trim().eq_ignore_ascii_case(day_key(*day)))
+}
 
 /// The `mon` … `sun` key for a weekday.
 pub fn day_key(day: Weekday) -> &'static str {
@@ -86,7 +138,8 @@ pub fn day_key(day: Weekday) -> &'static str {
 pub enum State {
     /// Open around the clock — no times to compare.
     AlwaysOpen,
-    Open,
+    /// Ouvert, et ferme à cette heure (minutes après minuit) : « Ouvert · ferme à 19:00 » (§9 #2).
+    Open(u32),
     /// Ouvert, mais ferme dans ce nombre de minutes ([`CLOSES_SOON`] au plus) : « Ferme dans
     /// 40 min » (spec Horaires §9 #7).
     ClosesSoon(u32),
@@ -105,11 +158,12 @@ pub enum State {
 pub const CLOSES_SOON: u32 = 60;
 
 /// « Ouvert », ou « Ferme dans N min » quand il reste [`CLOSES_SOON`] minutes ou moins.
-fn open_for(remaining: u32) -> State {
+fn open_for(span: &DaySpan, minutes: u32) -> State {
+    let remaining = span.remaining(minutes);
     if remaining <= CLOSES_SOON {
         State::ClosesSoon(remaining)
     } else {
-        State::Open
+        State::Open(span.closes)
     }
 }
 
@@ -156,96 +210,55 @@ impl DaySpan {
 #[derive(Debug, Clone, Default)]
 pub struct Schedule {
     pub all_day: bool,
-    pub opens_at: Option<u32>,
-    pub closes_at: Option<u32>,
-    pub exceptions: Vec<DayHours>,
-    /// La coupure du midi, quand l'équipement en a une : `12:00` → `14:00`.
-    ///
-    /// Une réception qui ferme pour déjeuner est la deuxième plage de loin la plus courante, et la
-    /// seule que l'hôte écrivait jusqu'ici dans sa phrase libre — « 8 h 30 – 12 h · 14 h – 18 h » —
-    /// pendant que les heures structurées disaient 08:30 – 18:00. La semaine dépliable contredisait
-    /// donc la ligne juste au-dessus, et le badge annonçait « Ouvert » à 13 h.
-    pub break_at: Option<(u32, u32)>,
-    /// La saison, en `MM-JJ` : hors de ces dates, la ligne est fermée quoi que disent ses heures.
-    ///
-    /// Sans année : une piscine ouvre « d'avril à octobre » chaque année, et demander les dates à
-    /// l'hôte tous les ans le ferait oublier une fois sur deux. L'intervalle peut passer l'hiver
-    /// (`11-15` → `03-15`) ; il se lit alors à l'envers.
+    /// « Sur demande » : pas d'heures, mais la saison, les jours de fermeture et les fermetures
+    /// exceptionnelles disent encore « Fermé ».
+    pub on_request: bool,
+    /// Des heures à calculer : sans elles, la ligne garde sa phrase et n'affiche pas d'état.
+    pub structured: bool,
+    /// Les plages de chaque jour, lundi d'abord — une, deux ou trois (§9 #3) ; vide, le jour est
+    /// fermé. Ignorées 24 h/24.
+    pub week: [Vec<DaySpan>; 7],
+    /// Les jours de fermeture cochés.
+    pub closed: [bool; 7],
+    /// Les fermetures exceptionnelles : leur date, et ses plages (aucune : fermé). Elles passent
+    /// avant l'horaire habituel (§2.2).
+    pub dated: Vec<(NaiveDate, Vec<DaySpan>)>,
+    /// La saison, en nombres `MMJJ` : hors de ces dates, la ligne est fermée quoi que disent ses
+    /// heures. Sans année, et elle peut passer l'hiver (`11-15` → `03-15`).
     pub season: Option<(u32, u32)>,
-    /// « Selon le jour » : les plages des jours suffisent à calculer la ligne.
-    pub by_day: bool,
 }
 
 impl Schedule {
     /// Whether anything here can be computed. A row without times keeps its sentence.
     pub fn is_structured(&self) -> bool {
-        self.all_day
-            || (self.opens_at.is_some() && self.closes_at.is_some())
-            // Selon le jour seulement : dans un autre mode, une dérogation sans heures habituelles
-            // ne doit pas faire afficher « Fermé » à la place de la phrase de l'hôte.
-            || (self.by_day
-                && self.exceptions.iter().any(|day| {
-                    day.opens_at.as_deref().and_then(parse_hm).is_some()
-                        && day.closes_at.as_deref().and_then(parse_hm).is_some()
-                }))
+        self.structured
     }
 
-    /// Les plages d'un jour : une, ou deux quand l'équipement coupe à midi.
-    ///
-    /// Vide quand le jour est fermé. La coupure ne s'applique pas à une plage qui passe minuit —
-    /// un bar ouvert de 22 h à 2 h ne déjeune pas.
+    /// Les plages habituelles d'un jour de semaine ; vide quand il est fermé.
     pub fn spans_on(&self, day: Weekday) -> Vec<DaySpan> {
-        let Some(span) = self.span_on(day) else {
-            return Vec::new();
-        };
-        match self.break_at {
-            Some((from, to)) if span.holds_break(from, to) => {
-                vec![
-                    DaySpan {
-                        opens: span.opens,
-                        closes: from,
-                    },
-                    DaySpan {
-                        opens: to,
-                        closes: span.closes,
-                    },
-                ]
-            }
-            _ => vec![span],
-        }
+        self.week[day.num_days_from_monday() as usize].clone()
     }
 
-    /// Ce jour est fermé, d'une exception qui le dit.
+    /// Ce jour est coché fermé.
     pub fn closed_on(&self, day: Weekday) -> bool {
-        let key = day_key(day);
-        self.exceptions
-            .iter()
-            .any(|entry| entry.closed && entry.day.trim().eq_ignore_ascii_case(key))
+        self.closed[day.num_days_from_monday() as usize]
     }
 
-    /// The span for one weekday, or `None` when that day is closed.
-    pub fn span_on(&self, day: Weekday) -> Option<DaySpan> {
-        let key = day_key(day);
-        let exception = self
-            .exceptions
+    /// La fermeture exceptionnelle de `date`, s'il y en a une.
+    pub fn exception_on(&self, date: NaiveDate) -> Option<&[DaySpan]> {
+        self.dated
             .iter()
-            .find(|entry| entry.day.trim().eq_ignore_ascii_case(key));
+            .find(|(day, _)| *day == date)
+            .map(|(_, spans)| spans.as_slice())
+    }
 
-        if let Some(exception) = exception {
-            if exception.closed {
-                return None;
-            }
-            let opens = exception.opens_at.as_deref().and_then(parse_hm);
-            let closes = exception.closes_at.as_deref().and_then(parse_hm);
-            if let (Some(opens), Some(closes)) = (opens, closes) {
-                return Some(DaySpan { opens, closes });
-            }
-            // An exception that names neither time only says "not closed": the usual hours apply.
-        }
-
-        match (self.opens_at, self.closes_at) {
-            (Some(opens), Some(closes)) => Some(DaySpan { opens, closes }),
-            _ => None,
+    /// Les plages d'une date : sa fermeture exceptionnelle d'abord, sinon son jour de semaine.
+    /// Vide 24 h/24 : il n'y a pas de plage, et rien ne déborde sur le lendemain.
+    pub fn spans_at(&self, date: NaiveDate) -> Vec<DaySpan> {
+        match self.exception_on(date) {
+            Some(spans) => spans.to_vec(),
+            None if self.all_day => Vec::new(),
+            None => self.spans_on(date.weekday()),
         }
     }
 
@@ -255,47 +268,55 @@ impl Schedule {
     /// still inside *yesterday's* span, and looking only at today would send the guest away from an
     /// open door.
     pub fn state_at(&self, now: DateTime<Utc>, tz: Option<&PropertyTz>) -> Option<State> {
-        if !self.all_day && !self.is_structured() {
+        if !self.structured && !self.on_request {
             return None;
         }
-
-        let local = match tz {
-            Some(tz) => tz.to_local(now).naive_local(),
-            None => now.naive_utc(),
-        };
+        let local = local_time(now, tz);
 
         // La saison d'abord : un sauna ouvert de 17 h à 21 h en juillet est fermé en janvier, et
         // annoncer « Ouvert » parce que l'heure colle envoie le voyageur devant une porte close.
         if !self.in_season(&local) {
             return Some(State::OutOfSeason(self.season_start_after(local.date())));
         }
-        if self.all_day {
-            // Ouvert 24 h/24, sauf le jour de fermeture que l'hôte a coché.
-            return Some(if self.closed_on(local.weekday()) {
-                State::Closed
-            } else {
-                State::AlwaysOpen
-            });
+        let date = local.date();
+        if self.exception_on(date).is_none() {
+            if self.on_request {
+                // Sur demande, rien à calculer — sauf un jour fermé.
+                return self.closed_on(date.weekday()).then_some(State::Closed);
+            }
+            if self.all_day {
+                // Ouvert 24 h/24, sauf le jour de fermeture que l'hôte a coché.
+                return Some(if self.closed_on(date.weekday()) {
+                    State::Closed
+                } else {
+                    State::AlwaysOpen
+                });
+            }
         }
         let minutes = local.hour() * 60 + local.minute();
-        let today = local.weekday();
 
-        if let Some(span) = self.span_on(today.pred()) {
-            if span.overnight() && minutes < span.closes {
-                return Some(open_for(span.closes - minutes));
+        if let Some(yesterday) = date.pred_opt() {
+            if let Some(span) = self
+                .spans_at(yesterday)
+                .iter()
+                .find(|span| span.overnight() && minutes < span.closes)
+            {
+                return Some(open_for(span, minutes));
             }
         }
 
-        let spans = self.spans_on(today);
-        if spans.is_empty() {
-            return Some(State::Closed);
-        }
+        let spans = self.spans_at(date);
         if let Some(span) = spans.iter().find(|span| span.covers(minutes)) {
-            return Some(open_for(span.remaining(minutes)));
+            return Some(open_for(span, minutes));
         }
         // La prochaine ouverture du jour : après le déjeuner, c'est la seconde plage qu'on
         // annonce, pas celle du matin qui vient de fermer.
-        if let Some(next) = spans.iter().map(|span| span.opens).find(|&o| minutes < o) {
+        if let Some(next) = spans
+            .iter()
+            .map(|span| span.opens)
+            .filter(|&opens| minutes < opens)
+            .min()
+        {
             return Some(State::OpensAt(next));
         }
         Some(State::Closed)
@@ -326,16 +347,28 @@ impl Schedule {
     }
 }
 
+/// `now` à l'heure du logement — à l'heure UTC sans fuseau connu.
+pub fn local_time(now: DateTime<Utc>, tz: Option<&PropertyTz>) -> chrono::NaiveDateTime {
+    match tz {
+        Some(tz) => tz.to_local(now).naive_local(),
+        None => now.naive_utc(),
+    }
+}
+
 /// `MM-JJ` en un nombre comparable : `0415` pour le 15 avril.
 fn month_day(local: &chrono::NaiveDateTime) -> u32 {
     use chrono::Datelike;
     local.month() * 100 + local.day()
 }
 
-/// `MM-JJ` → le même nombre comparable, ou `None` quand ce n'est pas une date du calendrier.
+/// `JJ/MM` (le formulaire) ou `MM-JJ` (une ligne d'avant) → le même nombre comparable, ou `None`
+/// quand ce n'est pas une date du calendrier.
 pub fn parse_month_day(raw: &str) -> Option<u32> {
     let raw = raw.trim();
-    let (month, day) = raw.split_once('-')?;
+    let (month, day) = match raw.split_once('/') {
+        Some((day, month)) => (month, day),
+        None => raw.split_once('-')?,
+    };
     let month: u32 = month.trim().parse().ok()?;
     let day: u32 = day.trim().parse().ok()?;
     // 31 partout : février à 31 jours ne ferme rien de travers, et refuser le 31 janvier parce
@@ -344,6 +377,78 @@ pub fn parse_month_day(raw: &str) -> Option<u32> {
         return None;
     }
     Some(month * 100 + day)
+}
+
+/// Ce qu'un état dit, et sur quel ton — le badge du livret et la colonne « Aujourd'hui » du
+/// tableau hôte. `None` 24 h/24 : « 24 h/24 » se lit ailleurs, sans statut (§9 #1).
+pub fn state_label(state: &State, locale: &str) -> Option<(String, Tone)> {
+    Some(match state {
+        State::AlwaysOpen => return None,
+        // « Ouvert · ferme à 02:00 » (§9 #2) : ouvert, et jusqu'à quand.
+        State::Open(closes) => (
+            t!("guest.state.openUntil", time = format_minutes(*closes))
+                .unwrap_or_else(|_| "i18n:guest.state.open".to_string()),
+            Tone::Success,
+        ),
+        // « Ferme dans 40 min » (§9 #7) : ouvert, mais plus pour longtemps.
+        State::ClosesSoon(minutes) => (
+            t!("guest.state.closesSoon", minutes = minutes)
+                .unwrap_or_else(|_| "i18n:guest.state.open".to_string()),
+            Tone::Warning,
+        ),
+        State::OpensAt(minutes) => (
+            t!("guest.state.opensAt", time = format_minutes(*minutes))
+                .unwrap_or_else(|_| "i18n:guest.state.opensAtPlain".to_string()),
+            Tone::Neutral,
+        ),
+        State::Closed => ("i18n:guest.state.closed".to_string(), Tone::Neutral),
+        // « Fermé jusqu'au 1er juin » (§9 #4) : quand revenir, et pas seulement que c'est fermé.
+        State::OutOfSeason(reopens) => (
+            reopens
+                .and_then(|date| {
+                    t!("guest.state.closedUntil", date = reopen_date(date, locale)).ok()
+                })
+                .unwrap_or_else(|| "i18n:guest.state.outOfSeason".to_string()),
+            Tone::Neutral,
+        ),
+    })
+}
+
+/// « 1er juin » en français, la date courte ailleurs.
+fn reopen_date(date: NaiveDate, locale: &str) -> String {
+    let short = portaki_sdk::host::time::short_date(date, locale);
+    match (locale.starts_with("fr"), short.strip_prefix("1 ")) {
+        (true, Some(rest)) if date.day() == 1 => format!("1er {rest}"),
+        _ => short,
+    }
+}
+
+/// « 08:30 – 12:00 · 14:00 – 18:00 » : les plages d'un jour, vide quand il est fermé.
+pub fn spans_text(spans: &[DaySpan]) -> String {
+    spans
+        .iter()
+        .map(|span| {
+            format!(
+                "{} – {}",
+                format_minutes(span.opens),
+                format_minutes(span.closes)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(" · ")
+}
+
+/// La saison au format du formulaire, `JJ/MM` ; une valeur illisible reste telle quelle.
+pub fn season_display(raw: &str) -> String {
+    match parse_month_day(raw) {
+        Some(value) => format!("{:02}/{:02}", value % 100, value / 100),
+        None => raw.trim().to_string(),
+    }
+}
+
+/// `HH:MM` depuis des minutes après minuit.
+pub fn format_minutes(minutes: u32) -> String {
+    format!("{:02}:{:02}", minutes / 60, minutes % 60)
 }
 
 #[cfg(test)]
@@ -375,8 +480,8 @@ mod tests {
             summer.state_at(january, None),
             Some(State::OutOfSeason(date(2026, 4, 1)))
         );
-        assert_eq!(summer.state_at(july, None), Some(State::Open));
-        assert_eq!(winter.state_at(january, None), Some(State::Open));
+        assert_eq!(summer.state_at(july, None), Some(State::Open(20 * 60)));
+        assert_eq!(winter.state_at(january, None), Some(State::Open(20 * 60)));
         assert_eq!(
             winter.state_at(july, None),
             Some(State::OutOfSeason(date(2026, 11, 15)))
@@ -403,7 +508,7 @@ mod tests {
     #[test]
     fn closing_within_the_hour_says_how_long_is_left() {
         let pool = day("08:00", "20:00");
-        assert_eq!(pool.state_at(at(18, 59), None), Some(State::Open));
+        assert_eq!(pool.state_at(at(18, 59), None), Some(State::Open(20 * 60)));
         assert_eq!(pool.state_at(at(19, 0), None), Some(State::ClosesSoon(60)));
         assert_eq!(pool.state_at(at(19, 20), None), Some(State::ClosesSoon(40)));
 
@@ -414,7 +519,7 @@ mod tests {
         );
 
         let bar = day("22:00", "02:00");
-        assert_eq!(bar.state_at(at(23, 30), None), Some(State::Open));
+        assert_eq!(bar.state_at(at(23, 30), None), Some(State::Open(2 * 60)));
         assert_eq!(bar.state_at(at(1, 30), None), Some(State::ClosesSoon(30)));
         let late = day("20:00", "00:30");
         assert_eq!(late.state_at(at(23, 45), None), Some(State::ClosesSoon(45)));
@@ -430,24 +535,29 @@ mod tests {
         assert_eq!(parse_month_day(""), None);
     }
 
-    fn day(opens: &str, closes: &str) -> Schedule {
+    /// Les mêmes plages tous les jours.
+    fn every_day(spans: &[(&str, &str)]) -> Schedule {
+        let spans: Vec<DaySpan> = spans
+            .iter()
+            .map(|(opens, closes)| DaySpan {
+                opens: parse_hm(opens).unwrap(),
+                closes: parse_hm(closes).unwrap(),
+            })
+            .collect();
         Schedule {
-            all_day: false,
-            opens_at: parse_hm(opens),
-            closes_at: parse_hm(closes),
-            exceptions: Vec::new(),
-            break_at: None,
-            season: None,
-            by_day: false,
+            structured: true,
+            week: std::array::from_fn(|_| spans.clone()),
+            ..Schedule::default()
         }
     }
 
-    /// La même journée, avec une coupure.
+    fn day(opens: &str, closes: &str) -> Schedule {
+        every_day(&[(opens, closes)])
+    }
+
+    /// La même journée, avec une coupure : deux plages.
     fn day_with_break(opens: &str, closes: &str, from: &str, to: &str) -> Schedule {
-        Schedule {
-            break_at: parse_hm(from).zip(parse_hm(to)),
-            ..day(opens, closes)
-        }
+        every_day(&[(opens, from), (to, closes)])
     }
 
     #[test]
@@ -474,7 +584,7 @@ mod tests {
     fn open_before_closing_and_shut_after() {
         let pool = day("08:00", "20:00");
         assert_eq!(pool.state_at(at(7, 0), None), Some(State::OpensAt(480)));
-        assert_eq!(pool.state_at(at(8, 0), None), Some(State::Open));
+        assert_eq!(pool.state_at(at(8, 0), None), Some(State::Open(20 * 60)));
         assert_eq!(pool.state_at(at(19, 59), None), Some(State::ClosesSoon(1)));
         assert_eq!(pool.state_at(at(20, 0), None), Some(State::Closed));
     }
@@ -482,7 +592,7 @@ mod tests {
     #[test]
     fn a_bar_that_closes_after_midnight_is_open_at_one() {
         let bar = day("22:00", "02:00");
-        assert_eq!(bar.state_at(at(23, 0), None), Some(State::Open));
+        assert_eq!(bar.state_at(at(23, 0), None), Some(State::Open(2 * 60)));
         // One in the morning belongs to yesterday's span, not to a day that has not opened.
         assert_eq!(bar.state_at(at(1, 0), None), Some(State::ClosesSoon(60)));
         // À trois heures il est fermé, et il rouvre ce soir : « Ouvre à 22:00 » en dit plus que
@@ -493,34 +603,29 @@ mod tests {
     #[test]
     fn a_closed_day_is_closed_whatever_the_usual_hours() {
         let mut gym = day("06:00", "22:00");
-        gym.exceptions.push(DayHours {
-            day: "wed".into(),
-            closed: true,
-            ..DayHours::default()
-        });
+        gym.week[2].clear();
+        gym.closed[2] = true;
         assert_eq!(gym.state_at(at(10, 0), None), Some(State::Closed));
-        assert!(gym.span_on(Weekday::Wed).is_none());
-        assert!(gym.span_on(Weekday::Thu).is_some());
+        assert!(gym.spans_on(Weekday::Wed).is_empty());
+        assert!(!gym.spans_on(Weekday::Thu).is_empty());
     }
 
     #[test]
     fn a_day_may_keep_its_own_hours() {
         let mut spa = day("10:00", "19:00");
-        spa.exceptions.push(DayHours {
-            day: "WED".into(),
-            opens_at: Some("14:00".into()),
-            closes_at: Some("18:00".into()),
-            ..DayHours::default()
-        });
-        // Case is the host's business, not the lookup's.
+        spa.week[2] = vec![DaySpan {
+            opens: 14 * 60,
+            closes: 18 * 60,
+        }];
         assert_eq!(spa.state_at(at(11, 0), None), Some(State::OpensAt(840)));
-        assert_eq!(spa.state_at(at(15, 0), None), Some(State::Open));
+        assert_eq!(spa.state_at(at(15, 0), None), Some(State::Open(18 * 60)));
     }
 
     #[test]
     fn around_the_clock_needs_no_times() {
         let parking = Schedule {
             all_day: true,
+            structured: true,
             ..Schedule::default()
         };
         assert!(parking.is_structured());
@@ -545,24 +650,74 @@ mod tests {
                 None,
             )
         };
-        assert_eq!(at(10, 0), Some(State::Open));
+        assert_eq!(at(10, 0), Some(State::Open(12 * 60)));
         assert_eq!(at(13, 0), Some(State::OpensAt(14 * 60)));
-        assert_eq!(at(15, 0), Some(State::Open));
+        assert_eq!(at(15, 0), Some(State::Open(18 * 60)));
         assert_eq!(at(19, 0), Some(State::Closed));
         assert_eq!(at(7, 0), Some(State::OpensAt(8 * 60 + 30)));
     }
 
-    /// Une coupure qui ne tient pas dans la journée est ignorée plutôt que d'inventer un trou :
-    /// bornes à l'envers, hors des heures, ou sur une plage qui passe minuit.
+    /// Trois plages le même jour (§9 #3) : ouvert dans chacune, la suivante annoncée entre deux.
     #[test]
-    fn a_break_that_makes_no_sense_is_ignored() {
-        for (opens, closes, from, to) in [
-            ("08:30", "18:00", "14:00", "12:00"),
-            ("08:30", "18:00", "19:00", "20:00"),
-            ("22:00", "02:00", "23:00", "23:30"),
-        ] {
-            let schedule = day_with_break(opens, closes, from, to);
-            assert_eq!(schedule.spans_on(Weekday::Mon).len(), 1, "{from} – {to}");
-        }
+    fn three_ranges_a_day() {
+        let shop = every_day(&[("08:00", "10:00"), ("12:00", "14:00"), ("18:00", "22:00")]);
+        assert_eq!(shop.state_at(at(9, 0), None), Some(State::ClosesSoon(60)));
+        assert_eq!(
+            shop.state_at(at(11, 0), None),
+            Some(State::OpensAt(12 * 60))
+        );
+        assert_eq!(
+            shop.state_at(at(15, 0), None),
+            Some(State::OpensAt(18 * 60))
+        );
+        assert_eq!(shop.state_at(at(19, 0), None), Some(State::Open(22 * 60)));
+        assert_eq!(shop.state_at(at(23, 0), None), Some(State::Closed));
+    }
+
+    /// Une fermeture exceptionnelle passe avant l'horaire habituel (§2.2), 24 h/24 compris ; une
+    /// plage exceptionnelle remplace celles du jour.
+    #[test]
+    fn a_dated_exception_wins_over_the_usual_hours() {
+        let wednesday = NaiveDate::from_ymd_opt(2026, 9, 30).unwrap();
+        let mut pool = day("08:00", "20:00");
+        pool.dated = vec![(wednesday, Vec::new())];
+        assert_eq!(pool.state_at(at(10, 0), None), Some(State::Closed));
+        let late = vec![DaySpan {
+            opens: 14 * 60,
+            closes: 16 * 60,
+        }];
+        pool.dated = vec![(wednesday, late.clone())];
+        assert_eq!(
+            pool.state_at(at(10, 0), None),
+            Some(State::OpensAt(14 * 60))
+        );
+        let parking = Schedule {
+            all_day: true,
+            structured: true,
+            dated: vec![(wednesday, Vec::new())],
+            ..Schedule::default()
+        };
+        assert_eq!(parking.state_at(at(10, 0), None), Some(State::Closed));
+        let desk = Schedule {
+            on_request: true,
+            dated: vec![(wednesday, Vec::new())],
+            ..Schedule::default()
+        };
+        assert_eq!(desk.state_at(at(10, 0), None), Some(State::Closed));
+        assert_eq!(
+            desk.state_at(at(10, 0) + chrono::Duration::days(1), None),
+            None
+        );
+    }
+
+    /// Le formulaire écrit `JJ/MM`, une ligne d'avant `MM-JJ` : les deux sont le 1er juin.
+    #[test]
+    fn a_season_reads_both_formats() {
+        assert_eq!(parse_month_day("01/06"), Some(601));
+        assert_eq!(parse_month_day("06-01"), Some(601));
+        assert_eq!(parse_month_day("31/12"), Some(1231));
+        assert_eq!(parse_month_day("32/01"), None);
+        assert_eq!(season_display("06-01"), "01/06");
+        assert_eq!(season_display("01/06"), "01/06");
     }
 }

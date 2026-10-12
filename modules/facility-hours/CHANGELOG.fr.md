@@ -1,9 +1,13 @@
 # Changelog
 
-## 1.13.1
+## 1.14.0
 
-Montée technique.
+Une page de réglages pour vos horaires.
 
+* Vos équipements en tableau, avec leurs horaires et leur état du jour au fuseau du logement ; chacun s’ouvre dans un panneau.
+* Jusqu’à trois plages par jour, les mêmes chaque jour ou selon le jour ; une plage peut passer minuit.
+* Des fermetures exceptionnelles datées, avec un motif : le livret les signale le jour même.
+* Le livret dit jusqu’à quand c’est ouvert : « Ouvert · ferme à 19:00 ».
 * Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
 
 ## 1.13.0

@@ -12,6 +12,7 @@ use serde_json::{json, Value};
 
 #[path = "../../../support/config_form.rs"]
 mod config_form;
+#[allow(dead_code)]
 #[path = "../../../support/config_save.rs"]
 mod config_save;
 
@@ -196,6 +197,9 @@ fn the_new_badges_are_in_every_bundle() {
             ("guest.state.closesSoon", "{minutes}"),
             ("guest.state.closedUntil", "{date}"),
             ("host.facility.ranges.overlap", ""),
+            ("guest.state.openUntil", "{time}"),
+            ("host.facility.ranges.overlapOn", "{day}"),
+            ("host.exception.past", ""),
         ] {
             let text = texts[key].as_str().unwrap_or_default();
             assert!(
@@ -324,51 +328,184 @@ fn an_inactive_module_shows_the_sdk_state() {
         });
 }
 
-/// Les lignes suivent ce que l'hôte a saisi, et « Ajouter » en demande une de plus.
+/// Les cas du §9 côté livret : 24 h/24 sans statut, une plage qui passe minuit ouverte à 1 h et
+/// « ferme à 02:00 », trois plages dans le détail, et la fermeture exceptionnelle du jour en
+/// avertissement avec son motif. Une fermeture passée ne change plus rien.
 #[test]
 #[serial]
-fn the_form_draws_the_facilities_the_host_has() {
-    MockContext::host().with_config(&json!({})).run(|ctx| {
+fn the_special_cases_reach_the_booklet() {
+    let fr: Value = serde_json::from_str(FR_BUNDLE).expect("bundle");
+    fr.as_object()
+        .expect("bundle object")
+        .iter()
+        .fold(MockContext::guest(), |builder, (key, text)| {
+            builder.with_translation(key, text.as_str().unwrap_or_default())
+        })
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_property(Property::default())
+        // Mercredi 15 juillet 2026, 1 h à Paris.
+        .with_now(at("2026-07-14T23:00:00Z"))
+        .with_config(&json!({ "facilities": [
+            { "title": "Parking", "mode": "always" },
+            { "title": "Bar", "range_1": "22:00-02:00" },
+            { "title": "Boutique", "range_1": "08:00-10:00", "range_2": "12:00-14:00",
+              "range_3": "18:00-22:00" },
+            { "title": "Piscine", "range_1": "09:00-19:00", "exceptions": [
+                { "date": "2026-07-15", "closed": true, "reason": "Entretien du bassin" },
+                { "date": "2026-07-01", "closed": true, "reason": "Ancienne fermeture" }
+            ] }
+        ] }))
+        .run(|mut ctx| {
+            ctx.locale = "fr-FR".into();
+            let json =
+                serde_json::to_string(&render_explore_detail(ctx).expect("detail")).expect("json");
+            assert!(json.contains("i18n:guest.allDay"), "{json}");
+            assert!(json.contains("Ferme dans 60 min"), "{json}");
+            assert!(
+                json.contains("08:00 – 10:00 · 12:00 – 14:00 · 18:00 – 22:00"),
+                "{json}"
+            );
+            assert!(json.contains("Entretien du bassin"), "{json}");
+            assert!(!json.contains("Ancienne fermeture"), "{json}");
+            assert!(json.contains(r#""tone":"warning""#), "{json}");
+            // 24 h/24 : pas de badge « Ouvert ».
+            assert!(!json.contains("Ouvert"), "{json}");
+        });
+}
+
+/// La page : deux sections, le tableau des équipements et le panneau de chaque ligne nommé
+/// `facilities.<i>.<clé>`. « Ajouter » ouvre une ligne de plus, sa plage par défaut remplie ; à
+/// trente lignes, plus de bouton.
+#[test]
+#[serial]
+fn the_settings_page_is_two_sections_and_a_table() {
+    MockContext::host()
+        .with_config(&json!({ "facilities": [
+            { "id": "pool", "title": "Piscine", "group": "equipment", "range_1": "09:00-19:00" },
+            { "title": "", "hours": "" },
+            { "id": "desk", "title": "Réception", "mode": "on_request", "note": "Appelez le 12" }
+        ] }))
+        .run(|ctx| {
+            let json =
+                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            assert_eq!(json.matches(r#""type":"Section""#).count(), 2, "{json}");
+            for needle in [
+                r#""rowName":"facilities""#,
+                r#""filterKey":"group""#,
+                r#""id":"pool""#,
+                r#""name":"facilities.0.range_1""#,
+                r#""visibleWhen":"facilities.0.mode=same""#,
+                r#""name":"facilities.1.week""#,
+                r#""visibleWhen":"facilities.1.mode=on_request""#,
+                r#""name":"facilities.1.exceptions""#,
+                r#""name":"card_limit""#,
+                "09:00 – 19:00",
+                "\"2 / 30\"",
+                "newFacilities",
+            ] {
+                assert!(json.contains(needle), "{needle} absent : {json}");
+            }
+            // L'emplacement vide de l'ancien formulaire n'est pas une ligne.
+            assert!(!json.contains("facilities.2.title"), "{json}");
+        });
+
+    MockContext::host().with_config(&json!({})).run(|mut ctx| {
+        ctx.input = json!({ "newFacilities": "abc" });
         let json = serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
-        assert!(json.contains("facilities.0.title"), "{json}");
-        assert!(!json.contains("facilities.1.title"), "{json}");
-        assert!(json.contains(r#""facilities_count":2"#), "{json}");
+        assert!(json.contains(r#""id":"abc""#), "{json}");
+        assert!(json.contains(r#""name":"facilities.0.title""#), "{json}");
+        assert!(json.contains(r#""value":"09:00-19:00""#), "{json}");
     });
 
-    let rows: Vec<serde_json::Value> = (0..facility_hours::MAX_FACILITIES)
-        .map(|i| json!({ "title": format!("Équipement {i}") }))
+    let rows: Vec<Value> = (0..facility_hours::MAX_FACILITIES)
+        .map(|i| json!({ "id": format!("f{i}"), "title": format!("Équipement {i}") }))
         .collect();
     MockContext::host()
         .with_config(&json!({ "facilities": rows }))
         .run(|ctx| {
             let json =
                 serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
-            assert!(
-                json.contains(&format!(
-                    "facilities.{}.title",
-                    facility_hours::MAX_FACILITIES - 1
-                )),
-                "{json}"
-            );
-            assert!(
-                !json.contains(&format!(
-                    "facilities.{}.title",
-                    facility_hours::MAX_FACILITIES
-                )),
-                "{json}"
-            );
-            assert!(
-                json.contains(&format!(
-                    r#""facilities_count":{}"#,
-                    facility_hours::MAX_FACILITIES
-                )),
-                "{json}"
-            );
+            assert!(json.contains("facilities.29.title"), "{json}");
+            assert!(!json.contains("newFacilities"), "{json}");
+            assert!(json.contains("host.facilities.tooMany"), "{json}");
         });
 }
 
-/// A host writing in English: the French title, lines and note stay, and so does the id; rows
-/// keep their place.
+/// Une ligne d'avant les plages : son ouverture, sa fermeture et sa coupure dans les plages, sa
+/// phrase dans un champ gardé avec un avertissement ; un mode sur demande montre sa note.
+#[test]
+#[serial]
+fn an_old_row_shows_its_hours_as_ranges_and_keeps_its_sentence() {
+    MockContext::host()
+        .with_config(&json!({ "facilities": [
+            { "title": "Accueil", "opens_at": "08:30", "closes_at": "18:00",
+              "break_from": "12:00", "break_to": "14:00", "season_from": "06-01", "season_to": "09-30" },
+            { "title": "Piscine", "hours": "9 h – 20 h" },
+            { "title": "Spa", "mode": "by_day", "exceptions": [
+                { "id": "mon", "opens_at": "09:00", "closes_at": "12:00" }
+            ] }
+        ] }))
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_host_main(ctx).expect("host main"))
+                .expect("json");
+            for needle in [
+                r#""value":"08:30-12:00""#,
+                r#""value":"14:00-18:00""#,
+                r#""value":"01/06""#,
+                r#""value":"30/09""#,
+                r#""name":"facilities.1.hours""#,
+                r#""value":"mon=09:00-12:00""#,
+                "08:30 – 12:00 · 14:00 – 18:00",
+            ] {
+                assert!(json.contains(needle), "{needle} absent : {json}");
+            }
+            // L'avertissement, pas une erreur : rien ne bloque la publication.
+            assert!(json.contains("InlineNotice"), "{json}");
+        });
+}
+
+/// « Aujourd'hui » au fuseau du logement : « Ouvert · ferme à 19:00 » à 10 h à Paris.
+#[test]
+#[serial]
+fn the_today_column_reads_the_property_clock() {
+    let fr: Value = serde_json::from_str(FR_BUNDLE).expect("bundle");
+    fr.as_object()
+        .expect("bundle object")
+        .iter()
+        .fold(MockContext::host(), |builder, (key, text)| {
+            builder.with_translation(key, text.as_str().unwrap_or_default())
+        })
+        .with_property(Property::default())
+        .with_now(at("2026-07-15T08:00:00Z"))
+        .with_config(&json!({ "facilities": [
+            { "id": "pool", "title": "Piscine", "range_1": "09:00-19:00" },
+            { "id": "spa", "title": "Spa", "range_1": "09:00-10:40" },
+            { "id": "sauna", "title": "Sauna", "season_from": "01/11", "season_to": "31/03",
+              "range_1": "17:00-21:00" },
+            { "id": "car", "title": "Parking", "mode": "always" },
+            { "id": "desk", "title": "Ménage", "mode": "on_request", "note": "La veille" },
+            { "id": "gym", "title": "Gym", "range_1": "09:00-19:00",
+              "exceptions": [{ "date": "2026-07-15", "closed": true, "reason": "Travaux" }] }
+        ] }))
+        .run(|mut ctx| {
+            ctx.locale = "fr-FR".into();
+            let json =
+                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            for needle in [
+                "Ouvert · ferme à 19:00",
+                "Ferme dans 40 min",
+                "Fermé jusqu’au 1er nov.",
+                "i18n:host.facility.mode.always",
+                "i18n:host.facility.mode.on_request",
+                "i18n:guest.state.closed",
+            ] {
+                assert!(json.contains(needle), "{needle} absent : {json}");
+            }
+        });
+}
+
+/// Une ligne jamais ouverte n'envoie que son id, que le tableau porte ; un hôte qui écrit en
+/// anglais envoie son anglais, et la plateforme garde le français (fusion par langue).
 #[test]
 #[serial]
 fn a_save_in_english_keeps_the_french() {
@@ -398,30 +535,20 @@ fn a_save_in_english_keeps_the_french() {
             ctx.locale = "en-US".into();
             let surface = render_host_main(ctx).expect("host main");
             let sent = config_save::form_args(&surface);
-            // Stored order, the blank row where it was; ids on the filled rows only.
-            assert_eq!(sent["facilities"][0]["id"], "pool");
             assert_eq!(sent["facilities"][0]["title"], "Pool");
             assert_eq!(
                 sent["facilities"][0]["lines"],
                 "Every day\nChildren with an adult"
             );
             assert_eq!(sent["facilities"][0]["note"], "Cap");
-            assert!(sent["facilities"][1].get("id").is_none());
-            assert_eq!(sent["facilities"][2]["id"], "spa");
-            // Trois lignes stockées, trois dessinées : plus d'emplacements vides en bout de liste.
-            assert_eq!(sent["facilities"].as_array().unwrap().len(), 3);
+            // Deux lignes : l'emplacement vide est tombé, le Spa le suit.
+            assert_eq!(sent["facilities"].as_array().unwrap().len(), 2);
+            assert_eq!(sent["facilities"][1]["title"], "Spa");
             assert_eq!(sent["general_note"], "Indicative hours");
-
-            let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
-            // Ce que ce test protège : une sauvegarde en anglais ne perd rien de ce qui était
-            // écrit. Chaque clé déjà stockée est comparée une à une, plutôt que l'objet entier —
-            // le formulaire renvoie aussi les champs d'horaires structurés, vides ici, et une
-            // égalité stricte se serait cassée pour tout module ajoutant un champ de ligne.
-            for (key, value) in stored["facilities"][0].as_object().expect("stored row") {
-                assert_eq!(&saved["facilities"][0][key], value, "clé {key}");
-            }
-            assert_eq!(saved["facilities"][2]["title"]["fr"], "Spa");
-            assert_eq!(saved["general_note"], stored["general_note"]);
+            // Les id viennent du tableau, ligne par ligne : la plateforme fusionne par id.
+            let tree = serde_json::to_value(&surface).unwrap().to_string();
+            assert!(tree.contains(r#""id":"pool""#), "{tree}");
+            assert!(tree.contains(r#""id":"spa""#), "{tree}");
         });
 }
 

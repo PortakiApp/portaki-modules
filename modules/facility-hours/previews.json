@@ -4,7 +4,6 @@
     {
       "i18n": {
         "guest.note.title": "À savoir",
-        "guest.state.open": "Ouvert",
         "nav.facility-hours": "Horaires & accès"
       },
       "surfaceId": "explore.detail",
@@ -79,7 +78,7 @@
                     "title": "Piscine",
                     "trailing": {
                       "badge": {
-                        "label": "i18n:guest.state.open",
+                        "label": "Ouvert · ferme à 20:00",
                         "tone": "success"
                       }
                     },
@@ -129,7 +128,7 @@
                     "title": "Laverie",
                     "trailing": {
                       "badge": {
-                        "label": "i18n:guest.state.open",
+                        "label": "Ouvert · ferme à 22:00",
                         "tone": "success"
                       }
                     },
