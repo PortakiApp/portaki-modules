@@ -235,3 +235,42 @@ fn the_booklet_keeps_yours_only() {
             );
         });
 }
+
+/// Un marché chaque mardi, importé aussi au deuxième mardi du séjour : le livret ne garde que le
+/// vôtre, comme le bandeau de l'onglet le promet.
+#[test]
+#[serial]
+fn the_booklet_drops_an_import_of_a_later_recurrence() {
+    use portaki_sdk::context::StayContext;
+    let market = json!({
+        "total": 1,
+        "events": [{
+            "uid": 77,
+            "title": "Marché du port",
+            "location": { "name": "Port", "city": "Cannes", "latitude": 43.55, "longitude": 7.0 },
+            "nextTiming": { "begin": "2099-07-14T08:30:00.000Z" }
+        }]
+    })
+    .to_string();
+    MockContext::guest()
+        .with_capabilities(&[
+            capability::core::STORAGE,
+            capability::external::OPEN_AGENDA_POOL,
+        ])
+        .with_connector_response("open-agenda", "nearby_events", market)
+        .with_now("2099-07-05T10:00:00Z".parse().unwrap())
+        .with_stay(StayContext {
+            checkin_at: Some("2099-07-06T15:00:00Z".parse().unwrap()),
+            checkout_at: Some("2099-07-16T10:00:00Z".parse().unwrap()),
+            ..StayContext::default()
+        })
+        .with_config(&config())
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_explore_detail(ctx).expect("detail")).unwrap();
+            assert!(json.contains("events/detail/market"), "{json}");
+            assert!(
+                !json.contains("oa-77"),
+                "l'import du deuxième mardi est écarté : {json}"
+            );
+        });
+}
