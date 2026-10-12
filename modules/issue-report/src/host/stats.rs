@@ -126,7 +126,7 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
                 by_category
                     .into_iter()
                     .map(|(wire, n)| {
-                        ChartPoint::new(format!("i18n:stats.category.{wire}"), n as f64)
+                        ChartPoint::new(format!("i18n:host.category.{wire}"), n as f64)
                             .display(reports_unit(n, fr))
                     })
                     .collect(),
@@ -312,6 +312,21 @@ mod tests {
             count_by_category(&rows),
             vec![("appliance", 2), ("noise", 1), ("other", 1)]
         );
+    }
+
+    /// Chaque catégorie du graphique a son libellé dans les dix langues — Wi-Fi et Extérieur
+    /// montraient leur clé.
+    #[test]
+    fn every_chart_category_has_a_label() {
+        for bundle in std::fs::read_dir(concat!(env!("CARGO_MANIFEST_DIR"), "/i18n")).unwrap() {
+            let path = bundle.unwrap().path();
+            let keys: serde_json::Map<String, serde_json::Value> =
+                serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+            for wire in category::WIRE_VALUES {
+                let key = format!("host.category.{wire}");
+                assert!(keys.contains_key(&key), "{} lacks {key}", path.display());
+            }
+        }
     }
 
     #[test]
