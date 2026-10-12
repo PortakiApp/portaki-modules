@@ -9,7 +9,7 @@
   "guest.unlock.keypad": "Voer code {code} in op het toetsenblok.",
   "guest.unlock.offline": "Het slot gaf geen antwoord. Voer code {code} in op het toetsenblok.",
   "guest.unlock.opened": "De deur is open.",
-  "host.codePerStay.help": "Voor elk verblijf wordt een code op het slot aangemaakt, geldig van aankomst tot vertrek.",
+  "host.codePerStay.help": "Voor elk verblijf wordt een code op het slot aangemaakt, geldig van aankomst tot vertrek, daarna verwijderd.",
   "host.codePerStay.label": "Eén code per verblijf",
   "host.codePerStay.warning": "Ingeschakeld schrijft Portaki via Nuki Web naar uw slot: dat beslist u zelf.",
   "host.deviceName.hint": "Interne naam.",

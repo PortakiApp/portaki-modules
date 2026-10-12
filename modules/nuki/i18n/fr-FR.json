@@ -9,7 +9,7 @@
   "guest.unlock.keypad": "Tapez le code {code} sur le clavier.",
   "guest.unlock.offline": "La serrure n’a pas répondu. Tapez le code {code} sur le clavier.",
   "guest.unlock.opened": "La porte est ouverte.",
-  "host.codePerStay.help": "Un code est créé sur la serrure à chaque séjour, valable de l’arrivée au départ.",
+  "host.codePerStay.help": "Un code est créé sur la serrure à chaque séjour, valable de l’arrivée au départ, puis supprimé.",
   "host.codePerStay.label": "Un code par séjour",
   "host.codePerStay.warning": "Activé, Portaki écrit sur votre serrure via Nuki Web : c’est à vous de le décider.",
   "host.deviceName.hint": "Libellé interne.",

@@ -47,7 +47,9 @@ With the Nuki Web key and a lock ID, the guest's first reveal looks for a keypad
 named `Portaki <first 8 chars of the stay id>` on the lock (`GET /smartlock/{id}/auth`) and, if
 none, creates one (`PUT /smartlock/{id}/auth`, type 13) valid from check-in to check-out. Nuki is
 the store: no KV (host-side writes would land in the draft layer the guest never reads). The
-catalogue opens no delete or update, so codes are only bounded by `allowedUntilDate`. Any Nuki
+same listing first deletes this module's expired codes (`DELETE /smartlock/{id}/auth/{authId}`):
+type 13, named exactly `Portaki <8 hex>`, `allowedUntilDate` past. The catalogue cannot see an
+auth's name, so that filter is the only guard; a refused delete is logged and retried. Any Nuki
 error, or a lock that did not answer `unlock`, falls back to `keypad_code` (spec §9 #1).
 
 ## Guest commands
