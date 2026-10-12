@@ -102,7 +102,7 @@
   "host.urgent.hint": "Le voyageur peut vous appeler directement pour une urgence.",
   "host.urgent.label": "Option « Tout de suite »",
   "host.urgent.off": "Sans cette option, le livret ne rappelle le 112 que pour les urgences vitales.",
-  "host.urgentNumber.hint": "Jamais copié vers un autre logement.",
+  "host.urgentNumber.hint": "Marqué « À vérifier » après une copie depuis un autre logement.",
   "host.urgentNumber.label": "Numéro d'urgence",
   "module.description": "Les voyageurs signalent un souci depuis le livret. Rien à configurer : le suivi est dans Statistiques.",
   "module.displayName": "Signaler un problème",

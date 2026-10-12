@@ -45,8 +45,8 @@ pub struct ModuleConfig {
     #[field(label = "host.urgent.label")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub urgent_phone: Option<bool>,
-    /// Le numéro appelé ; vide : celui du profil de l'hôte, côté livret. Propre au logement :
-    /// jamais copié vers un autre (§6).
+    /// Le numéro appelé ; vide : celui du profil de l'hôte, côté livret. Propre au logement
+    /// (`local`) : une copie depuis un autre logement le marque « À vérifier ».
     #[field(local, label = "host.urgentNumber.label")]
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub urgent_number: String,

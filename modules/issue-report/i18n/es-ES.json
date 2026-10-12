@@ -102,7 +102,7 @@
   "host.urgent.hint": "El huésped puede llamarle directamente en caso de urgencia.",
   "host.urgent.label": "Opción «Ahora mismo»",
   "host.urgent.off": "Sin esta opción, la guía solo recuerda el 112 para las urgencias vitales.",
-  "host.urgentNumber.hint": "Nunca se copia a otro alojamiento.",
+  "host.urgentNumber.hint": "Marcado «Por revisar» tras copiarlo desde otro alojamiento.",
   "host.urgentNumber.label": "Número de urgencia",
   "module.description": "Los huéspedes informan de un problema desde la guía. Nada que configurar: el seguimiento está en Estadísticas.",
   "module.displayName": "Informar de un problema",
