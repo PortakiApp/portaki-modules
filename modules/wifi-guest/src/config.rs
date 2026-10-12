@@ -16,6 +16,8 @@ pub enum RevealPolicy {
     #[serde(rename = "day_before_16h", alias = "day_before16h")]
     DayBefore16h,
     AtCheckin,
+    /// « Personnalisé » : `reveal_hours` heures avant l'arrivée, comme dans Accès.
+    Custom,
 }
 
 impl RevealPolicy {
@@ -25,19 +27,42 @@ impl RevealPolicy {
             Self::HoursBefore24 => "hours_before_24",
             Self::DayBefore16h => "day_before_16h",
             Self::AtCheckin => "at_checkin",
+            Self::Custom => "custom",
         }
     }
 
-    pub const CHOICE_LIST_WIRE_VALUES: &[&str] =
-        &["always", "hours_before_24", "day_before_16h", "at_checkin"];
+    /// The options of Accès, in its order: the two drawers read alike.
+    pub const CHOICE_LIST_WIRE_VALUES: &[&str] = &[
+        "always",
+        "day_before_16h",
+        "hours_before_24",
+        "at_checkin",
+        "custom",
+    ];
 
     pub const ALL: &[RevealPolicy] = &[
         Self::Always,
-        Self::HoursBefore24,
         Self::DayBefore16h,
+        Self::HoursBefore24,
         Self::AtCheckin,
+        Self::Custom,
     ];
+
+    /// The i18n key suffix of the option (`host.reveal.{key}`).
+    pub const fn i18n_key(self) -> &'static str {
+        match self {
+            Self::Always => "always",
+            Self::HoursBefore24 => "hoursBefore24",
+            Self::DayBefore16h => "dayBefore16h",
+            Self::AtCheckin => "atCheckin",
+            Self::Custom => "custom",
+        }
+    }
 }
+
+/// « Personnalisé » : de 1 à 168 heures avant l'arrivée ; 24 tant que l'hôte n'a rien saisi.
+pub const REVEAL_HOURS: std::ops::RangeInclusive<u32> = 1..=168;
+pub const DEFAULT_REVEAL_HOURS: u32 = 24;
 
 /// How the network is secured — what the Wi-Fi QR code has to announce.
 ///
@@ -122,10 +147,14 @@ pub struct ModuleConfig {
     pub note: Option<I18nText>,
     #[field(
         kind = "select",
-        options = ["always", "hours_before_24", "day_before_16h", "at_checkin"],
+        options = ["always", "day_before_16h", "hours_before_24", "at_checkin", "custom"],
         label = "config.revealPolicy"
     )]
     pub reveal_policy: RevealPolicy,
+    /// « Personnalisé » seulement.
+    #[field(label = "host.reveal.hours")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reveal_hours: Option<u32>,
 
     // ── Avant la liste de réseaux : un seul réseau, à plat. Lu tant que `networks` est vide ;
     // le prochain enregistrement de l'hôte écrit `networks`. `password` reste déclaré secret :
@@ -156,6 +185,7 @@ impl Default for ModuleConfig {
             show_qr: true,
             note: None,
             reveal_policy: RevealPolicy::default(),
+            reveal_hours: None,
             legacy_password: String::new(),
             legacy_ssid: String::new(),
             legacy_security: None,
@@ -317,6 +347,16 @@ impl ModuleConfig {
                     false,
                 ));
             }
+        }
+        if self.reveal_policy == RevealPolicy::Custom
+            && !REVEAL_HOURS.contains(&self.reveal_hours.unwrap_or(DEFAULT_REVEAL_HOURS))
+        {
+            problems.push(problem(
+                "config.reveal_hours",
+                "host.reveal.hours",
+                "host.reveal.hours.invalid",
+                true,
+            ));
         }
         if let Some(message) = self.note.as_ref().and_then(|n| {
             n.by_language()

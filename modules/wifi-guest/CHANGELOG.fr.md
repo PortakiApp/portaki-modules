@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.10.0
+
+Les réglages Wi-Fi redessinés.
+
+* Les réglages tiennent en deux cartes, Réseaux et Affichage, avec le nombre de réseaux sur trois.
+* Le libellé n'est demandé qu'à partir de deux réseaux ; le premier s'appelle « Principal » d'office.
+* Choisir un réseau ouvert retire aussitôt le champ du mot de passe.
+* Le mot de passe peut s'afficher un nombre d'heures choisi avant l'arrivée, de 1 à 168.
+
 ## 1.9.1
 
 Montée technique.

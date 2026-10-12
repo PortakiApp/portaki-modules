@@ -148,9 +148,14 @@ fn an_open_network_is_announced_as_open() {
 #[test]
 #[serial]
 fn the_host_form_sends_the_declared_keys() {
+    // « Personnalisé », pour que le nombre d'heures soit dans le formulaire.
+    let config = ModuleConfig {
+        reveal_policy: RevealPolicy::Custom,
+        ..sample_config()
+    };
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
-        .with_config(&sample_config())
+        .with_config(&config)
         .run(|ctx| {
             let surface = render_host_main(ctx).expect("host main");
             // `password` : la clé à plat d'avant la liste, lue seulement — le formulaire écrit `networks`.
@@ -366,4 +371,86 @@ fn the_stay_encart_says_when_never_what() {
             assert!(!json.contains("soleil2026"));
             assert!(json.contains("23/08") && json.contains("16:00"), "{json}");
         });
+}
+
+/// Spec §3 : le libellé n'apparaît qu'à partir de deux réseaux, « Principal » pour le premier.
+#[test]
+#[serial]
+fn the_label_shows_from_two_networks_with_main_for_the_first() {
+    let render = |config: &ModuleConfig| {
+        MockContext::host()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_translation("host.label.default", "Principal")
+            .with_config(config)
+            .run(|ctx| serde_json::to_string(&render_host_main(ctx).expect("tiroir")).unwrap())
+    };
+    let one = render(&sample_config());
+    assert!(!one.contains(r#""name":"networks.0.label""#), "{one}");
+    let two = render(&ModuleConfig {
+        networks: vec![
+            network("main", "Villa", "soleil2026"),
+            network("fast", "Villa-5G", "soleil2026"),
+        ],
+        ..sample_config()
+    });
+    assert!(
+        two.contains(
+            r#""name":"networks.0.label","placeholder":"i18n:host.label.placeholder","value":"Principal""#
+        ),
+        "{two}"
+    );
+    assert!(
+        two.contains(
+            r#""name":"networks.1.label","placeholder":"i18n:host.label.placeholder","value":"""#
+        ),
+        "{two}"
+    );
+}
+
+/// Sécurité « Ouvert » choisie dans le brouillon : le champ mot de passe disparaît aussitôt.
+#[test]
+#[serial]
+fn an_open_network_has_no_password_field() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&sample_config())
+        .run(|mut ctx| {
+            let before = serde_json::to_string(&render_host_main(ctx.clone()).unwrap()).unwrap();
+            assert!(before.contains(r#""name":"networks.0.password""#));
+            ctx.input = serde_json::json!({ "networks.0.security": "nopass" });
+            let after = serde_json::to_string(&render_host_main(ctx).unwrap()).unwrap();
+            assert!(
+                !after.contains(r#""name":"networks.0.password""#),
+                "{after}"
+            );
+            assert!(after.contains(r#""value":"nopass""#), "{after}");
+        });
+}
+
+/// « Personnalisé » : de 1 à 168 heures, l'erreur sous le champ.
+#[test]
+#[serial]
+fn custom_reveal_takes_1_to_168_hours() {
+    let config = ModuleConfig {
+        reveal_policy: RevealPolicy::Custom,
+        reveal_hours: Some(200),
+        ..sample_config()
+    };
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&config)
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_host_main(ctx).unwrap()).unwrap();
+            assert!(json.contains(r#""name":"reveal_hours""#), "{json}");
+            assert!(
+                json.contains(r#""error":"Entre 1 et 168 heures.""#),
+                "{json}"
+            );
+        });
+    assert!(ModuleConfig {
+        reveal_hours: Some(6),
+        ..config
+    }
+    .problems()
+    .is_empty());
 }

@@ -9,7 +9,7 @@ use portaki_sdk::sdui::primitives::{Card, Page, Text};
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::{ModuleConfig, RevealPolicy};
-use crate::reveal::{evaluate_reveal, offset_for_iana};
+use crate::reveal::{evaluate_reveal, offset_for_iana, Schedule};
 
 #[portaki_sdk::surface(
     host,
@@ -25,7 +25,7 @@ pub fn render_host_stay(ctx: HostContext) -> Result<Surface> {
     } else {
         match window(&ctx) {
             Some((checkin, checkout)) => line(
-                &config,
+                &Schedule::load(&config),
                 checkin,
                 checkout,
                 time::now()?,
@@ -56,17 +56,18 @@ fn window(ctx: &HostContext) -> Option<(DateTime<Utc>, DateTime<Utc>)> {
 }
 
 fn line(
-    config: &ModuleConfig,
+    schedule: &Schedule,
     checkin: DateTime<Utc>,
     checkout: DateTime<Utc>,
     now: DateTime<Utc>,
     timezone: &str,
 ) -> String {
-    if config.reveal_policy == RevealPolicy::Always {
+    if schedule.policy == RevealPolicy::Always {
         return "i18n:host.stay.always".to_string();
     }
     let decision = evaluate_reveal(
-        config.reveal_policy,
+        schedule.policy,
+        schedule.hours,
         now,
         Some(checkin),
         Some(checkout),
@@ -121,7 +122,7 @@ mod tests {
 
     #[test]
     fn the_day_before_at_four_pm_in_the_property_time() {
-        let config = ModuleConfig::default(); // la veille à 16 h
+        let config = Schedule::resolve(&ModuleConfig::default(), None); // la veille à 16 h
         let (checkin, checkout) = (at("2026-08-24T14:00:00Z"), at("2026-08-29T08:00:00Z"));
         assert_eq!(
             line(
