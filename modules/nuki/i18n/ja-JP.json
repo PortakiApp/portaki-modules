@@ -9,7 +9,7 @@
   "guest.unlock.keypad": "キーパッドに {code} を入力してください。",
   "guest.unlock.offline": "スマートロックから応答がありませんでした。キーパッドに {code} を入力してください。",
   "guest.unlock.opened": "ドアが開きました。",
-  "host.codePerStay.help": "滞在ごとにロックにコードが作成され、到着から出発まで有効です。",
+  "host.codePerStay.help": "滞在ごとにロックにコードが作成され、到着から出発まで有効で、その後削除されます。",
   "host.codePerStay.label": "滞在ごとのコード",
   "host.codePerStay.warning": "オンにすると、Portaki が Nuki Web 経由でロックに書き込みます。判断はご自身で。",
   "host.deviceName.hint": "内部用の名前です。",

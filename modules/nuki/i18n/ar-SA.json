@@ -9,7 +9,7 @@
   "guest.unlock.keypad": "أدخل الرمز {code} على لوحة الأرقام.",
   "guest.unlock.offline": "لم يستجب القفل. أدخل الرمز {code} على لوحة الأرقام.",
   "guest.unlock.opened": "الباب مفتوح.",
-  "host.codePerStay.help": "يُنشأ رمز على القفل لكل إقامة، صالح من الوصول حتى المغادرة.",
+  "host.codePerStay.help": "يُنشأ رمز على القفل لكل إقامة، صالح من الوصول حتى المغادرة، ثم يُحذف.",
   "host.codePerStay.label": "رمز لكل إقامة",
   "host.codePerStay.warning": "عند التفعيل، يكتب Portaki على قفلك عبر Nuki Web: القرار لك.",
   "host.deviceName.hint": "تسمية داخلية.",

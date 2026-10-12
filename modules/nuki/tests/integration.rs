@@ -399,6 +399,118 @@ fn an_unanswered_unlock_hands_the_shared_code_without_creating_one() {
         });
 }
 
+// --- Les codes expirés quittent la serrure ---------------------------------------------------
+
+/// A keypad authorization as Nuki lists it.
+fn auth(id: &str, name: &str, until: Option<&str>) -> serde_json::Value {
+    let mut auth = serde_json::json!({ "id": id, "name": name, "type": 13, "code": 456789 });
+    if let Some(until) = until {
+        auth["allowedUntilDate"] = until.into();
+    }
+    auth
+}
+
+fn deleted_ids(host: &portaki_test_utils::MockHostFunctions) -> Vec<String> {
+    calls_of(host, "delete_auth")
+        .into_iter()
+        .map(|args| {
+            assert_eq!(args["smartlockId"], "lock-abc");
+            args["authId"].as_str().expect("authId").to_string()
+        })
+        .collect()
+}
+
+/// Now is 2 June 12:00Z (`byok_guest`).
+fn lock_with_codes() -> String {
+    serde_json::json!([
+        auth("expired", "Portaki 0a1b2c3d", Some("2026-05-30T10:00:00.000Z")),
+        auth("active", "Portaki 4e5f6a7b", Some("2026-06-05T10:00:00.000Z")),
+        auth("no-end", "Portaki 8c9d0e1f", None),
+        auth("host", "Ménage", Some("2026-01-01T10:00:00.000Z")),
+        auth("host-portaki", "Portaki ménage", Some("2026-01-01T10:00:00.000Z")),
+        { "id": "fob", "name": "Portaki 22223333", "type": 2, "allowedUntilDate": "2026-01-01T10:00:00.000Z" },
+    ])
+    .to_string()
+}
+
+#[test]
+#[serial]
+fn expired_portaki_codes_are_deleted_before_the_stays_code_is_created() {
+    byok_guest()
+        .with_connector_response("nuki", "list_auths", lock_with_codes())
+        .with_connector_response("nuki", "delete_auth", "{}")
+        .with_connector_response("nuki", "create_auth", "{}")
+        .run_with(|ctx, host| {
+            get_guest_credential(ctx, StayArgs::default()).expect("credential");
+            assert_eq!(deleted_ids(host), vec!["expired"]);
+            let order: Vec<String> = host
+                .connector_calls()
+                .into_iter()
+                .map(|call| call.operation)
+                .collect();
+            assert_eq!(order, ["list_auths", "delete_auth", "create_auth"]);
+        });
+}
+
+/// An active code, one without an end date, the host's own (even named « Portaki … »), a fob:
+/// never deleted.
+#[test]
+#[serial]
+fn active_and_foreign_authorizations_are_never_deleted() {
+    let booking = Booking::default();
+    let mine = format!("Portaki {}", &booking.id.simple().to_string()[..8]);
+    let auths = serde_json::json!([
+        auth("mine", &mine, Some("2026-06-08T10:00:00.000Z")),
+        auth("active", "Portaki 4e5f6a7b", Some("2026-06-05T10:00:00.000Z")),
+        auth("no-end", "Portaki 8c9d0e1f", None),
+        auth("unreadable", "Portaki 9a9a9a9a", Some("demain")),
+        auth("host", "Ménage", Some("2026-01-01T10:00:00.000Z")),
+        auth("host-portaki", "Portaki ménage", Some("2026-01-01T10:00:00.000Z")),
+        { "id": "fob", "name": "Portaki 22223333", "type": 2, "allowedUntilDate": "2026-01-01T10:00:00.000Z" },
+    ])
+    .to_string();
+    byok_guest()
+        .with_stay(booking)
+        .with_connector_response("nuki", "list_auths", auths)
+        .with_connector_response("nuki", "delete_auth", "{}")
+        .run_with(|ctx, host| {
+            let cred = get_guest_credential(ctx, StayArgs::default()).expect("credential");
+            assert_eq!(cred.code, "456789");
+            assert!(deleted_ids(host).is_empty());
+        });
+}
+
+/// Nuki refusing a delete costs the guest nothing: the stay's code is still created.
+#[test]
+#[serial]
+fn a_refused_delete_still_gives_the_stays_code() {
+    byok_guest()
+        .with_connector_response("nuki", "list_auths", lock_with_codes())
+        .with_connector_error("nuki", "delete_auth", "connector_http_error")
+        .with_connector_response("nuki", "create_auth", "{}")
+        .run_with(|ctx, host| {
+            let cred = get_guest_credential(ctx, StayArgs::default()).expect("credential");
+            assert_ne!(cred.code, "482910", "not the shared code");
+            assert_eq!(deleted_ids(host), vec!["expired"]);
+            assert_eq!(calls_of(host, "create_auth").len(), 1);
+        });
+}
+
+/// The stay encart only reads the lock: it never deletes.
+#[test]
+#[serial]
+fn the_stay_encart_never_deletes() {
+    host_stay(&[capability::core::STORAGE, capability::external::NUKI_BYOK])
+        .with_connector_response("nuki", "list_auths", lock_with_codes())
+        .with_connector_response("nuki", "delete_auth", "{}")
+        .run_with(|mut ctx, host| {
+            ctx.input = stay_input(&Booking::default().id.to_string());
+            render_host_stay(ctx).expect("render");
+            assert_eq!(calls_of(host, "list_auths").len(), 1);
+            assert!(deleted_ids(host).is_empty());
+        });
+}
+
 fn host_stay(capabilities: &[capability::CapabilityId]) -> MockContextBuilder {
     MockContext::host()
         .with_capabilities(capabilities)

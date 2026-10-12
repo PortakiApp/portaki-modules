@@ -8,6 +8,7 @@ Les réglages Nuki, à l'image des autres modules.
 * Le tiroir dit si la clé de votre compte Nuki Web est connectée.
 * « Un code par séjour » reste éteint par défaut, et rappelle qu'il écrit sur votre serrure.
 * Copiés vers un autre logement, la serrure et son nom sont marqués « À vérifier ».
+* Les codes par séjour expirés sont supprimés de la serrure ; ceux que vous avez créés vous-même n’y sont jamais touchés.
 
 ## 1.7.1
 

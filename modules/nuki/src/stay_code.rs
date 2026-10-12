@@ -3,8 +3,11 @@
 //! Pas de KV : un code écrit depuis le dashboard irait dans la couche brouillon, que le livret ne
 //! lit pas. L'autorisation porte le nom `Portaki <8 premiers caractères du séjour>` ; on la cherche
 //! sur la serrure, on la crée au premier affichage si elle n'y est pas. Elle vaut de l'arrivée au
-//! départ, toujours : le catalogue n'ouvre ni suppression ni modification, une autorisation sans
-//! date de fin resterait valable pour toujours.
+//! départ, toujours, puis le premier affichage d'un séjour suivant la supprime : un clavier Nuki a
+//! un nombre de codes limité.
+//!
+//! Le catalogue ouvre la suppression d'une autorisation, sans voir son nom : ne toucher qu'aux
+//! codes `Portaki <8 hex>` expirés est la garde de ce module, et la seule.
 
 use portaki_sdk::host;
 use portaki_sdk::prelude::*;
@@ -23,15 +26,27 @@ struct LockArgs {
     smartlock_id: String,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DeleteArgs {
+    smartlock_id: String,
+    /// Nuki's `id` of the authorization (not its lock-local `authId`).
+    auth_id: String,
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct NukiAuth {
+    #[serde(default)]
+    id: Option<String>,
     #[serde(default)]
     name: String,
     #[serde(rename = "type", default)]
     auth_type: i64,
     #[serde(default)]
     code: Option<u64>,
+    #[serde(default)]
+    allowed_until_date: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -63,15 +78,22 @@ pub(crate) fn auth_name(stay_id: &Uuid) -> String {
     format!("Portaki {}", &stay_id.simple().to_string()[..8])
 }
 
-/// The stay's code on the lock, if Nuki holds one.
-pub(crate) fn find(smartlock_id: &str, stay_id: &Uuid) -> Result<Option<String>> {
-    let auths: Vec<NukiAuth> = host::connectors::call(
+fn list(smartlock_id: &str) -> Result<Vec<NukiAuth>> {
+    host::connectors::call(
         "nuki",
         "list_auths",
         &LockArgs {
             smartlock_id: smartlock_id.to_string(),
         },
-    )?;
+    )
+}
+
+/// The stay's code on the lock, if Nuki holds one.
+pub(crate) fn find(smartlock_id: &str, stay_id: &Uuid) -> Result<Option<String>> {
+    find_in(list(smartlock_id)?, stay_id)
+}
+
+fn find_in(auths: Vec<NukiAuth>, stay_id: &Uuid) -> Result<Option<String>> {
     let name = auth_name(stay_id);
     match auths
         .into_iter()
@@ -95,7 +117,10 @@ pub(crate) fn ensure(
     checkout: DateTime<Utc>,
     now: DateTime<Utc>,
 ) -> Result<String> {
-    if let Some(code) = find(smartlock_id, stay_id)? {
+    let auths = list(smartlock_id)?;
+    // Avant de créer : c'est la place qu'un code expiré tient sur le clavier.
+    purge_expired(smartlock_id, &auths, now);
+    if let Some(code) = find_in(auths, stay_id)? {
         return Ok(code);
     }
     let code = generate(stay_id, now);
@@ -116,6 +141,48 @@ pub(crate) fn ensure(
         },
     )?;
     Ok(code.to_string())
+}
+
+/// A keypad code this module created (`Portaki ` + 8 hex) whose validity ended. No end date, an
+/// unreadable one, or any other name: the host's, never touched.
+fn is_expired_portaki_code(auth: &NukiAuth, now: DateTime<Utc>) -> bool {
+    let ours = auth
+        .name
+        .strip_prefix("Portaki ")
+        .is_some_and(|suffix| suffix.len() == 8 && suffix.bytes().all(|b| b.is_ascii_hexdigit()));
+    let ended = auth
+        .allowed_until_date
+        .as_deref()
+        .and_then(|until| DateTime::parse_from_rfc3339(until).ok())
+        .is_some_and(|until| until < now);
+    auth.auth_type == KEYPAD_CODE && ours && ended
+}
+
+/// Deletes the lock's expired Portaki codes; a refused delete is logged and retried next time.
+/// Nuki deletes asynchronously: a code listed again right after may answer 404, logged the same.
+fn purge_expired(smartlock_id: &str, auths: &[NukiAuth], now: DateTime<Utc>) {
+    for auth in auths
+        .iter()
+        .filter(|auth| is_expired_portaki_code(auth, now))
+    {
+        let Some(auth_id) = auth.id.clone() else {
+            continue;
+        };
+        let deleted: Result<serde_json::Value> = host::connectors::call(
+            "nuki",
+            "delete_auth",
+            &DeleteArgs {
+                smartlock_id: smartlock_id.to_string(),
+                auth_id,
+            },
+        );
+        if let Err(error) = deleted {
+            let mut fields = host::log::Fields::new();
+            fields.insert("error", &error.to_string());
+            fields.insert("smartlockId", &smartlock_id);
+            let _ = host::log::warn("nuki_expired_code_delete_failed", &fields);
+        }
+    }
 }
 
 fn nuki_date(at: DateTime<Utc>) -> String {

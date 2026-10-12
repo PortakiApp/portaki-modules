@@ -9,7 +9,7 @@
   "guest.unlock.keypad": "请在键盘上输入密码 {code}。",
   "guest.unlock.offline": "智能锁没有响应。请在键盘上输入密码 {code}。",
   "guest.unlock.opened": "门已打开。",
-  "host.codePerStay.help": "每次入住都会在门锁上创建一个密码，从到达到离开有效。",
+  "host.codePerStay.help": "每次入住都会在门锁上创建一个密码，从到达到离开有效，之后删除。",
   "host.codePerStay.label": "每次入住一个密码",
   "host.codePerStay.warning": "开启后，Portaki 会通过 Nuki Web 写入您的门锁：由您决定。",
   "host.deviceName.hint": "内部名称。",

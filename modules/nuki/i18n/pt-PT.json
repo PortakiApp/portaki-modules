@@ -9,7 +9,7 @@
   "guest.unlock.keypad": "Introduza o código {code} no teclado.",
   "guest.unlock.offline": "A fechadura não respondeu. Introduza o código {code} no teclado.",
   "guest.unlock.opened": "A porta está aberta.",
-  "host.codePerStay.help": "É criado um código na fechadura para cada estadia, válido da chegada à partida.",
+  "host.codePerStay.help": "É criado um código na fechadura para cada estadia, válido da chegada à partida, e depois eliminado.",
   "host.codePerStay.label": "Um código por estadia",
   "host.codePerStay.warning": "Ativado, o Portaki escreve na sua fechadura através do Nuki Web: a decisão é sua.",
   "host.deviceName.hint": "Etiqueta interna.",

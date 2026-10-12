@@ -9,7 +9,7 @@
   "guest.unlock.keypad": "Geben Sie den Code {code} auf dem Tastenfeld ein.",
   "guest.unlock.offline": "Das Schloss hat nicht geantwortet. Geben Sie den Code {code} auf dem Tastenfeld ein.",
   "guest.unlock.opened": "Die Tür ist offen.",
-  "host.codePerStay.help": "Für jeden Aufenthalt wird ein Code auf dem Schloss erstellt, gültig von der Ankunft bis zur Abreise.",
+  "host.codePerStay.help": "Für jeden Aufenthalt wird ein Code auf dem Schloss erstellt, gültig von der Ankunft bis zur Abreise, danach gelöscht.",
   "host.codePerStay.label": "Ein Code pro Aufenthalt",
   "host.codePerStay.warning": "Aktiviert schreibt Portaki über Nuki Web auf Ihr Schloss: Das entscheiden Sie.",
   "host.deviceName.hint": "Interne Bezeichnung.",

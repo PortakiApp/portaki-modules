@@ -9,7 +9,7 @@
   "guest.unlock.keypad": "Enter code {code} on the keypad.",
   "guest.unlock.offline": "The lock did not answer. Enter code {code} on the keypad.",
   "guest.unlock.opened": "The door is open.",
-  "host.codePerStay.help": "A code is created on the lock for each stay, valid from arrival to departure.",
+  "host.codePerStay.help": "A code is created on the lock for each stay, valid from arrival to departure, then deleted.",
   "host.codePerStay.label": "One code per stay",
   "host.codePerStay.warning": "When on, Portaki writes to your lock through Nuki Web: that is your call.",
   "host.deviceName.hint": "Internal label.",
