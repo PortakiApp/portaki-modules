@@ -30,11 +30,18 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             }),
         _ => {}
     }
-    if config.proposed_destinations().len() > MAX_DESTINATIONS {
+    let destinations = config.proposed_destinations();
+    if destinations.len() > MAX_DESTINATIONS {
         items.push(blocking(
             "config.destinations",
             "config.destinations",
             "config.destinations.max",
+        ));
+    } else if destinations.iter().any(|name| sncf::unknown(name)) {
+        items.push(blocking(
+            "config.destinations.unknown",
+            "config.destinations",
+            "config.station.unknown",
         ));
     }
     Ok(PublishReadiness { items })

@@ -550,6 +550,12 @@ pub fn station(name: &str) -> std::result::Result<Station, BoardError> {
     }
 }
 
+/// La source ne connaît aucune gare de ce nom. Une source muette (clé absente, panne) ne compte
+/// pas : ce n'est pas la faute du nom.
+pub fn unknown(name: &str) -> bool {
+    matches!(station(name), Err(BoardError::UnknownStation))
+}
+
 /// La première gare de la réponse.
 ///
 /// Le filtre se fait ici plutôt qu'avec `type[]=stop_area` : ce nom de paramètre à crochets ne

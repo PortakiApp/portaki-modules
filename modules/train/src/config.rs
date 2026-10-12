@@ -4,7 +4,9 @@ use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Serialize};
 
 /// Les réglages de l'hôte. Les clés sont les noms des champs du formulaire : la plateforme prend
-/// `updateConfig` elle-même, et une clé absente se lit comme son [`Default`].
+/// `updateConfig` elle-même, et une clé absente se lit comme son [`Default`]. La gare et les
+/// destinations sont propres au logement (`local`) : copiées ailleurs, elles y sont marquées
+/// « À vérifier ».
 #[portaki_sdk::config]
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ModuleConfig {
@@ -12,11 +14,11 @@ pub struct ModuleConfig {
     ///
     /// Un nom, pas un identifiant : l'hôte sait le nom de sa gare, pas son `stop_area` Navitia.
     /// Le module le résout lui-même et garde la correspondance.
-    #[field(required, label = "config.station")]
+    #[field(local, required, label = "config.station")]
     pub station: String,
     /// Les gares que le voyageur trouve en tête du filtre (spec §2.2) — 6 au plus. Le voyageur
     /// peut toujours en choisir une autre.
-    #[field(label = "config.destinations")]
+    #[field(local, label = "config.destinations")]
     pub destinations: Vec<String>,
     /// Le sens montré d'abord : les départs de la gare, ou les arrivées.
     #[field(kind = "select", options = ["from", "to"], label = "config.direction")]
