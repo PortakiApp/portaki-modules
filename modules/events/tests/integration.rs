@@ -196,46 +196,126 @@ fn without_a_position_nothing_is_searched_nearby() {
         });
 }
 
-/// Les lignes suivent ce que l'hôte a saisi, et « Ajouter » en demande une de plus.
-///
-/// Six emplacements figés gelaient la liste à six : l'hôte voyait quatre cartes vides quand il
-/// avait saisi deux événements, et ne pouvait pas en saisir un septième parce que le formulaire
-/// ne le dessinait jamais.
+/// Le tableau (§2.2) : une ligne par événement saisi, triée par date, chacune avec son panneau
+/// latéral ; « Ajouter » en ouvre une, avec son id, jusqu'à cinquante.
 #[test]
 #[serial]
-fn the_form_draws_the_rows_the_host_has() {
+fn the_table_lists_the_events_sorted_and_adds_one() {
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&json!({}))
         .run(|ctx| {
-            let json =
-                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
-            assert!(json.contains("events.0.title"), "{json}");
-            assert!(!json.contains("events.1.title"), "{json}");
-            assert!(json.contains(r#""events_count":2"#), "{json}");
+            let surface = render_host_main(ctx).expect("host main");
+            let table = data_table(&surface);
+            assert_eq!(table["panel"], "sheet");
+            assert!(
+                table.get("sortable").is_none(),
+                "trié par date, pas à la main"
+            );
+            assert_eq!(table["rows"].as_array().unwrap().len(), 0);
+            let added = table["addAction"]["payload"]["newEvents"]
+                .as_str()
+                .expect("newEvents");
+            assert_eq!(added.len(), 36, "{added}");
+        });
+
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_now("2099-07-01T10:00:00Z".parse().unwrap())
+        .with_config(&json!({ "events": [
+            { "id": "tard", "title": "Concert", "starts_at": "2099-08-22T20:00:00Z", "price": "12 €" },
+            { "id": "passe", "title": "Fête du jardin", "starts_at": "2099-06-02T10:00:00Z" },
+            { "title": "", "place": "", "starts_at": "" },
+            { "id": "tot", "title": "Feu d'artifice", "date": "2099-08-15", "start_time": "22:30" }
+        ] }))
+        .run(|mut ctx| {
+            ctx.input = json!({ "newEvents": "nouveau" });
+            let surface = render_host_main(ctx).expect("host main");
+            let table = data_table(&surface);
+            let ids: Vec<&str> = table["rows"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|row| row["id"].as_str().unwrap())
+                .collect();
+            // À venir par date, puis le passé, puis l'ajouté ; la ligne vide n'est plus là.
+            assert_eq!(ids, ["tot", "tard", "passe", "nouveau"]);
+            let rows = table["rows"].as_array().unwrap();
+            assert_eq!(rows[0]["when"], "15/08 · 22:30");
+            assert_eq!(rows[1]["price"], "12 €");
+            assert_eq!(rows[2]["badge"], "i18n:host.event.badge.past");
+            // Le panneau du rang 0 est celui de « tot », nommé à son rang affiché.
+            let panel = serde_json::to_string(&table["children"][0]).unwrap();
+            assert!(panel.contains(r#""name":"events.0.date""#), "{panel}");
+            assert!(panel.contains("2099-08-15"), "{panel}");
+            let json = serde_json::to_string(&surface).unwrap();
+            assert!(json.contains("4 / 50"), "{json}");
         });
 
     let rows: Vec<Value> = (0..events::MAX_EVENTS)
-        .map(|i| json!({ "title": format!("Événement {i}"), "place": "Ici" }))
+        .map(
+            |i| json!({ "id": format!("e{i}"), "title": format!("Événement {i}"), "place": "Ici" }),
+        )
         .collect();
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&json!({ "events": rows }))
         .run(|ctx| {
-            let json =
-                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
-            let last = events::MAX_EVENTS - 1;
-            assert!(json.contains(&format!("events.{last}.title")), "{json}");
-            assert!(
-                !json.contains(&format!("events.{}.title", last + 1)),
-                "{json}"
-            );
-            // La borne tient : au dernier, « Ajouter » n'en demande pas un de plus.
-            assert!(
-                json.contains(&format!(r#""events_count":{}"#, events::MAX_EVENTS)),
-                "{json}"
-            );
+            let surface = render_host_main(ctx).expect("host main");
+            let table = data_table(&surface);
+            assert_eq!(table["rows"].as_array().unwrap().len(), events::MAX_EVENTS);
+            // La borne tient : au cinquantième, plus d'« Ajouter ».
+            assert!(table.get("addAction").is_none());
+            let json = serde_json::to_string(&surface).unwrap();
+            assert!(json.contains("i18n:host.events.tooMany"), "{json}");
         });
+}
+
+/// Le `DataTable` d'une surface.
+fn data_table(surface: &portaki_sdk::sdui::surface::Surface) -> Value {
+    fn find(value: &Value) -> Option<Value> {
+        match value {
+            Value::Object(object) if object.get("type") == Some(&json!("DataTable")) => {
+                Some(value.clone())
+            }
+            Value::Object(object) => object.values().find_map(find),
+            Value::Array(items) => items.iter().find_map(find),
+            _ => None,
+        }
+    }
+    find(&serde_json::to_value(surface).unwrap()).expect("a DataTable")
+}
+
+/// La surface telle que le tableau de bord l'enregistre : chaque ligne du tableau envoie son id
+/// (`events.<i>.id`), ce que `config_save` ne sait pas lire d'un `DataTable`.
+fn with_row_ids(
+    surface: &portaki_sdk::sdui::surface::Surface,
+) -> portaki_sdk::sdui::surface::Surface {
+    fn walk(value: &mut Value) {
+        match value {
+            Value::Object(object) if object.get("type") == Some(&json!("DataTable")) => {
+                let name = object["rowName"].as_str().unwrap_or_default().to_string();
+                let ids: Vec<Value> = object["rows"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|row| row["id"].clone())
+                    .collect();
+                let panels = object["children"].as_array_mut().unwrap();
+                for (index, (panel, id)) in panels.iter_mut().zip(ids).enumerate() {
+                    panel["children"].as_array_mut().unwrap().push(json!({
+                        "type": "TextInput", "name": format!("{name}.{index}.id"), "value": id
+                    }));
+                }
+            }
+            Value::Object(object) => object.values_mut().for_each(walk),
+            Value::Array(items) => items.iter_mut().for_each(walk),
+            _ => {}
+        }
+    }
+    let mut value = serde_json::to_value(surface).unwrap();
+    walk(&mut value);
+    serde_json::from_value(value).unwrap()
 }
 
 /// « Accès » est sa propre carte, et elle passe avant « Bon à savoir » (§2.11).
@@ -330,16 +410,16 @@ fn a_save_in_english_keeps_the_french() {
         .with_config(&stored)
         .run(|mut ctx| {
             ctx.locale = "en-US".into();
-            let surface = render_host_main(ctx).expect("host main");
+            let surface = with_row_ids(&render_host_main(ctx).expect("host main"));
             let sent = config_save::form_args(&surface);
-            // Stored order, the blank row where it was; ids on the filled rows only.
+            // Une ligne par événement, triées par date ; la ligne vide n'est plus dessinée.
             assert_eq!(sent["events"][0]["id"], "evt-1");
             assert_eq!(sent["events"][0]["title"], "Jazz concert");
-            assert!(sent["events"][1].get("id").is_none());
-            assert_eq!(sent["events"][2]["id"], "evt-3");
-            assert_eq!(sent["events"][2]["title"], "Brocante");
-            // Trois lignes stockées, trois dessinées : plus de créneaux vides en bout de liste.
-            assert_eq!(sent["events"].as_array().unwrap().len(), 3);
+            assert_eq!(sent["events"][1]["id"], "evt-3");
+            assert_eq!(sent["events"][1]["title"], "Brocante");
+            assert_eq!(sent["events"][1]["date"], "2099-07-26");
+            assert_eq!(sent["events"][1]["start_time"], "09:00");
+            assert_eq!(sent["events"].as_array().unwrap().len(), 2);
             assert_eq!(sent["disclaimer"], "Dates are indicative");
 
             let saved = config_save::save(EMISSIONS, &surface, &stored, "en");
@@ -348,12 +428,12 @@ fn a_save_in_english_keeps_the_french() {
             assert_eq!(first["place"], stored["events"][0]["place"]);
             assert_eq!(first["ends_at"], stored["events"][0]["ends_at"]);
             assert_eq!(first["note"], stored["events"][0]["note"]);
-            assert_eq!(saved["events"][2]["title"]["fr"], "Brocante");
-            assert_eq!(saved["events"][2]["place"]["fr"], "Port");
+            assert_eq!(saved["events"][1]["title"]["fr"], "Brocante");
+            assert_eq!(saved["events"][1]["place"]["fr"], "Port");
             // La description est désormais dans le formulaire : un enregistrement en anglais y
             // écrit l'anglais, et le français reste. Avant, elle n'était portée par aucun champ
             // et traversait les sauvegardes sans changer.
-            assert_eq!(saved["events"][2]["note"]["fr"], "Gratuit");
+            assert_eq!(saved["events"][1]["note"]["fr"], "Gratuit");
             assert_eq!(saved["disclaimer"], stored["disclaimer"]);
         });
 }
@@ -441,18 +521,22 @@ fn a_weekly_event_names_its_days_on_its_page() {
 }
 
 /// Les jours en choix multiple, les dates en liste : `events.0.dates.1.date`, et « Ajouter une
-/// date » dessine une ligne de plus sur cet événement seul.
+/// date » dessine une ligne de plus sur cet événement seul. Chacun ne se montre qu'à sa
+/// répétition (`visibleWhen`).
 #[test]
 #[serial]
 fn the_form_draws_weekdays_and_dates() {
     let config = json!({
         "events": [
-            { "title": "Marché", "recurrence": "weekly", "weekdays": ["tue", "thu"] },
-            { "title": "Festival", "recurrence": "dates", "dates": [{ "date": "2026-08-14" }] }
+            { "id": "marche", "title": "Marché", "recurrence": "weekly", "weekdays": ["tue", "thu"],
+              "date": "2099-07-07", "start_time": "08:00" },
+            { "id": "festival", "title": "Festival", "recurrence": "dates",
+              "date": "2099-07-10", "dates": [{ "date": "2099-08-14" }] }
         ]
     });
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
+        .with_now("2099-07-01T10:00:00Z".parse().unwrap())
         .with_config(&config)
         .run(|ctx| {
             let json =
@@ -460,20 +544,25 @@ fn the_form_draws_weekdays_and_dates() {
             assert!(json.contains("events.0.weekdays"), "{json}");
             assert!(json.contains(r#"[\"tue\",\"thu\"]"#), "{json}");
             assert!(
-                json.contains("i18n:host.event.recurrence.label.dates"),
+                json.contains(r#""visibleWhen":"events.0.recurrence=weekly""#),
                 "{json}"
             );
+            assert!(
+                json.contains(r#""visibleWhen":"events.1.recurrence=dates""#),
+                "{json}"
+            );
+            assert!(json.contains(r#""layout":"segmented""#), "{json}");
             assert!(json.contains("events.1.dates.0.date"), "{json}");
-            assert!(json.contains("2026-08-14"), "{json}");
+            assert!(json.contains("2099-08-14"), "{json}");
             assert!(!json.contains("events.1.dates.1.date"), "{json}");
-            assert!(json.contains(r#""dates_for":1"#), "{json}");
-            assert!(json.contains(r#""dates_count":2"#), "{json}");
+            assert!(json.contains(r#""dates.festival":2"#), "{json}");
         });
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
+        .with_now("2099-07-01T10:00:00Z".parse().unwrap())
         .with_config(&config)
         .run(|mut ctx| {
-            ctx.input = json!({ "events_count": 2, "dates_for": 1, "dates_count": 2 });
+            ctx.input = json!({ "dates.festival": 2 });
             let json =
                 serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
             assert!(json.contains("events.1.dates.1.date"), "{json}");

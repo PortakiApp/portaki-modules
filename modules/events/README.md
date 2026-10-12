@@ -28,7 +28,7 @@ Pool env on module-runtime: `OPENAGENDA_POOL_KEY`.
 |-------|------------|-------------|
 | guest | `home.card` | Upcoming events (manual + nearby) |
 | guest | `explore.detail` | Full list, map when coordinates exist |
-| host | `main` | Nearby toggle / radius + six manual slots + disclaimer |
+| host | `main` | Public events toggle / radius, events table (side panel per row, sorted by date), disclaimer |
 
 ## Behaviour
 
