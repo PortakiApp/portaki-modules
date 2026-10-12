@@ -165,10 +165,21 @@ fn the_host_form_sends_the_declared_keys() {
         }))
         .run(|ctx| {
             let surface = render_host_main(ctx).expect("host main");
+            // Les champs d'avant la refonte ne se dessinent que tant qu'ils disent quelque chose.
             config_form::assert_form_matches_config(
                 concat!(env!("OUT_DIR"), "/portaki-emissions"),
                 &surface,
-                &[],
+                &[
+                    "bin_room_hours",
+                    "collects_fri",
+                    "collects_mon",
+                    "collects_sat",
+                    "collects_sun",
+                    "collects_thu",
+                    "collects_tue",
+                    "collects_wed",
+                    "takeout_note",
+                ],
             );
             let json = serde_json::to_string(&surface).expect("surface json");
             assert!(json.contains(r"Plastique\nCarton"), "{json}");
@@ -345,10 +356,9 @@ fn the_form_draws_the_bins_the_host_has() {
                 serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
             assert!(json.contains("bins.11.title"), "{json}");
             assert!(!json.contains("bins.12.title"), "{json}");
-            assert!(
-                json.contains(&format!(r#""bins_count":{}"#, waste_recycling::MAX_BINS)),
-                "{json}"
-            );
+            // À la borne, plus d'« Ajouter » : la phrase dit pourquoi.
+            assert!(!json.contains("bins_count"), "{json}");
+            assert!(json.contains("i18n:host.bins.tooMany"), "{json}");
         });
 }
 
@@ -763,7 +773,7 @@ fn the_host_reminder_is_a_task_the_evening_before_a_collection() {
             // Lundi 20 h à Paris.
             assert_eq!(tasks[0].at, at("2026-10-05T18:00:00Z"));
             assert_eq!(tasks[0].title.fr, "Sortir les bacs");
-            assert_eq!(tasks[0].context.fr, "Ce soir");
+            assert_eq!(tasks[0].context.fr, "Bac jaune · collecte demain matin");
             assert_eq!(tasks[0].items.len(), 1);
             assert_eq!(tasks[0].items[0].label.fr, "Bacs sortis");
             assert!(!tasks[0].items[0].done);
@@ -934,5 +944,52 @@ fn the_new_caps_warn_without_blocking() {
                 .find(|c| c.id == "config.bin_room_steps")
                 .expect("averti");
             assert_eq!(step.hint.get("fr"), "120 caractères au maximum.");
+        });
+}
+
+/// La page de réglages (§2) : cinq cartes dans l'ordre, ce qui dépend d'un interrupteur masqué
+/// avec lui, la couleur nommée, et le bac sans jour signalé sans bloquer.
+#[test]
+#[serial]
+fn the_settings_page_follows_the_spec() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({
+            "bins": [{ "title": "Bac jaune", "items": "Emballages", "color": "yellow" }],
+            "bin_room_enabled": true,
+            "bin_room_where": "Cour",
+            "bin_room_hours_range": "07:00-07:00"
+        }))
+        .run(|ctx| {
+            let json =
+                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            let order: Vec<usize> = ["collection", "bins", "binRoom", "dropoff", "compost"]
+                .iter()
+                .map(|key| json.find(&format!("i18n:host.section.{key}\"")).expect(key))
+                .collect();
+            assert!(order.windows(2).all(|w| w[0] < w[1]), "{json}");
+            assert!(!json.contains("\"type\":\"Card\""), "{json}");
+            assert!(
+                json.contains("\"type\":\"RadioGroup\",\"name\":\"put_out\""),
+                "{json}"
+            );
+            for gate in [
+                "has_collection=true",
+                "bin_room_enabled=true",
+                "compost_enabled=true",
+            ] {
+                assert!(json.contains(gate), "{gate}: {json}");
+            }
+            assert!(json.contains("i18n:host.bin.color.yellow"), "{json}");
+            assert!(
+                json.contains("Le bac jaune n'a pas de jour de collecte."),
+                "{json}"
+            );
+            assert!(
+                json.contains("L'heure de fin doit être différente de l'heure de début."),
+                "{json}"
+            );
+            // Le composteur fermé propose déjà ses listes.
+            assert!(json.contains("Épluchures"), "{json}");
         });
 }

@@ -71,6 +71,7 @@
                 "leading": {
                   "swatch": "yellow"
                 },
+                "meta": "Jaune",
                 "subtitle": "Emballages plastique et métal, Cartons et papiers",
                 "title": "Bac jaune",
                 "type": "ListItem"
@@ -79,6 +80,7 @@
                 "leading": {
                   "swatch": "green"
                 },
+                "meta": "Vert",
                 "subtitle": "Bouteilles et bocaux, sans bouchon",
                 "title": "Colonne à verre",
                 "type": "ListItem"
@@ -87,6 +89,7 @@
                 "leading": {
                   "swatch": "brown"
                 },
+                "meta": "Marron",
                 "subtitle": "Épluchures, marc de café, restes de repas",
                 "title": "Bac à biodéchets",
                 "type": "ListItem"
@@ -95,6 +98,7 @@
                 "leading": {
                   "swatch": "grey"
                 },
+                "meta": "Gris",
                 "subtitle": "Tout le reste, en sac fermé",
                 "title": "Ordures ménagères",
                 "type": "ListItem"

@@ -6,7 +6,7 @@ use portaki_sdk::sdui::common::{Leading, LeadingVisual};
 use portaki_sdk::sdui::primitives::{Highlight, InfoBanner, ListItem, Text};
 
 use crate::collection::{next_collection, Departure, NextCollection};
-use crate::config::{bin_swatch, DropoffRow};
+use crate::config::{bin_swatch, capitalized, BinRow, DropoffRow};
 
 use super::load::GuestData;
 
@@ -29,7 +29,10 @@ pub fn bin_rows(data: &GuestData) -> Vec<Component> {
     data.bins
         .iter()
         .map(|bin| {
-            let mut item = ListItem::new().title(bin.title.get(&data.locale));
+            let mut item = ListItem::new()
+                .title(bin_name(data, bin))
+                // Le nom de la couleur à côté de la pastille, jamais la couleur seule (§2.2).
+                .meta(color_name(bin));
             let subtitle = bin.items(&data.locale).join(", ");
             if !subtitle.is_empty() {
                 item = item.subtitle(subtitle);
@@ -51,15 +54,30 @@ pub fn bin_rows(data: &GuestData) -> Vec<Component> {
                     .unwrap_or_else(|_| days.join(", "));
                 item = item.child(Text::new().text(line).variant(TextVariant::Caption));
             }
-            if let Some(swatch) = bin_swatch(bin.color.as_deref()) {
-                item = item.leading(Leading::Visual(Box::new(LeadingVisual {
-                    swatch: Some(swatch),
-                    ..LeadingVisual::default()
-                })));
-            }
+            // Gris sans teinte connue (§9 cas 6) : toujours une pastille, toujours nommée.
+            item = item.leading(Leading::Visual(Box::new(LeadingVisual {
+                swatch: bin_swatch(Some(bin.color_key())),
+                ..LeadingVisual::default()
+            })));
             Component::ListItem(item)
         })
         .collect()
+}
+
+/// Le nom de la couleur du bac, dans la langue du voyageur : « Jaune ».
+fn color_name(bin: &BinRow) -> String {
+    let key = format!("host.bin.color.{}", bin.color_key());
+    t!(&key).unwrap_or(key)
+}
+
+/// Le nom du bac, « Bac jaune » quand l'hôte n'en a pas donné (§2.2).
+pub fn bin_name(data: &GuestData, bin: &BinRow) -> String {
+    let name = bin.title.get(&data.locale).trim();
+    if !name.is_empty() {
+        return name.to_string();
+    }
+    let color = color_name(bin).to_lowercase();
+    capitalized(&t!("bin.defaultName", color = &color).unwrap_or(color))
 }
 
 /// La consigne de sortie, en clair dans la feuille — sauf le jour où elle est déjà remontée en
