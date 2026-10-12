@@ -3,8 +3,8 @@
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
 use portaki_sdk::sdui::primitives::{
-    AddressMapPicker, Button, Card, ChoiceList, Field, FieldHint, Form, ImageUpload, NumberInput,
-    Page, Select, Stack, StepList, Text, TextArea, TextInput, ToggleRow,
+    AddressMapPicker, Button, Card, ChoiceList, Field, FieldHint, FileUpload, Form, ImageUpload,
+    NumberInput, Page, Select, Stack, StepList, Text, TextArea, TextInput, ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
 use serde::Serialize;
@@ -275,9 +275,12 @@ fn trail_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Componen
     children.push(
         gpx_field
             .child(
-                ImageUpload::new()
+                // `.gpx` en plus du type : la plupart des navigateurs n'en connaissent pas le MIME.
+                FileUpload::new()
                     .name(format!("trails.{index}.gpx_file"))
-                    .value(trail.map(|t| t.gpx_file.clone()).unwrap_or_default()),
+                    .value(trail.map(|t| t.gpx_file.clone()).unwrap_or_default())
+                    .accept("application/gpx+xml,.gpx")
+                    .maxBytes(portaki_sdk::limits::HOST_FILE_READ_MAX_BYTES as u32),
             )
             .into(),
     );
