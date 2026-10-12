@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.11.0
+
+Un calendrier des événements, mois par mois.
+
+* Nouvel onglet « Calendrier des événements » : vos événements et ceux d'OpenAgenda, mois par mois, répétitions comprises.
+* Filtre Tous, Les vôtres, OpenAgenda ; un clic ouvre l'événement, et le vôtre mène à ses réglages.
+* Un doublon (même nom à une heure près, même lieu) est signalé en tête de l'onglet ; le livret ne garde que le vôtre.
+* Les événements passés restent grisés 30 jours dans l'onglet ; un agenda OpenAgenda injoignable y est signalé.
+* Le livret puise désormais dans les 100 prochains événements d'OpenAgenda, au lieu de 12.
+
 ## 1.10.0
 
 Vos événements en tableau, et un lieu toujours sur la carte.

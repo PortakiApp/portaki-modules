@@ -442,6 +442,55 @@ impl EventRow {
         event
     }
 
+    /// Chaque début dont le jour, à l'heure du logement, tombe entre `first` et `last` inclus :
+    /// toutes les occurrences d'un mois pour le calendrier, là où [`Self::next_from`] n'en donne
+    /// qu'une. Rien sans date lisible.
+    pub fn occurrences_in(
+        &self,
+        first: chrono::NaiveDate,
+        last: chrono::NaiveDate,
+        tz: Option<&PropertyTz>,
+    ) -> Vec<chrono::DateTime<chrono::Utc>> {
+        use chrono::{Datelike, Months};
+        let Some(starts) = crate::time_format::parse_starts_at(&self.starts_at) else {
+            return Vec::new();
+        };
+        let start_local = local(starts, tz);
+        let at_local = |date: chrono::NaiveDate| utc(date.and_time(start_local.time()), tz);
+        let within = |date: &chrono::NaiveDate| (first..=last).contains(date);
+        let dates: Vec<chrono::NaiveDate> = match self.recurrence() {
+            "weekly" => {
+                let days = self.effective_weekdays(tz);
+                first
+                    .max(start_local.date())
+                    .iter_days()
+                    .take_while(|date| *date <= last)
+                    .filter(|date| days.contains(&date.weekday()))
+                    .collect()
+            }
+            // Le même quantième chaque mois ; un 31 saute les mois qui n'en ont pas.
+            "monthly" => {
+                let start = start_local.date();
+                let months = ((first.year() - start.year()) * 12 + first.month() as i32
+                    - start.month() as i32)
+                    .max(0) as u32;
+                (months..months + 2)
+                    .filter_map(|n| start.checked_add_months(Months::new(n)))
+                    .filter(|date| date.day() == start.day())
+                    .collect()
+            }
+            "dates" => {
+                let mut dates = self.chosen_dates();
+                dates.push(start_local.date());
+                dates.sort();
+                dates.dedup();
+                dates
+            }
+            _ => vec![start_local.date()],
+        };
+        dates.into_iter().filter(within).map(at_local).collect()
+    }
+
     /// L'événement avec `starts_at` / `ends_at` tirés du jour et des heures du formulaire, quand le
     /// jour est lisible ; tel quel sinon. Toute la journée : minuit, sans fin.
     ///

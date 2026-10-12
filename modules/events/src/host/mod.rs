@@ -19,6 +19,9 @@ use serde_json::{json, Map, Value};
 use crate::config::{EventRow, ModuleConfig};
 use crate::nearby::{has_open_agenda, host_now};
 
+mod calendar;
+pub use calendar::render_host_calendar;
+
 pub use crate::config::MAX_EVENTS;
 use crate::config::{RECURRENCES, WEEKDAYS};
 
