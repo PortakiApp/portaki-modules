@@ -1,16 +1,19 @@
-//! Host settings drawer (spec Votre avis §2.1): when to ask, the public review link (any
-//! platform, detected from the domain), the private comment. The thank-you message stays.
+//! Host settings drawer (spec Votre avis §2.1, planche « Avis — réglages »): when to ask, the
+//! public review link (any platform, detected from the domain), whether it follows the stay's
+//! booking platform, the private comment. The thank-you message stays.
 
 use portaki_sdk::config::check;
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui::common::{ChoiceListLayout, Tone};
 use portaki_sdk::sdui::primitives::{
-    Card, ChoiceList, Field, FieldHint, Form, Page, Stack, Text, TextArea, TextInput, ToggleRow,
+    Badge, Card, ChoiceList, Field, FieldHint, Form, InlineNotice, Page, Stack, TextArea,
+    TextInput, ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
 
 use crate::commands::StoredReview;
 use crate::config::{
-    AskFrom, ModuleConfig, ReviewPlatform, PUBLIC_REVIEWS_MAX, PUBLIC_REVIEWS_MIN,
+    AskFrom, ChannelMode, ModuleConfig, ReviewPlatform, PUBLIC_REVIEWS_MAX, PUBLIC_REVIEWS_MIN,
 };
 use crate::email_text::clip_chars;
 use crate::i18n::text;
@@ -25,20 +28,31 @@ use crate::i18n::text;
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let config = ModuleConfig::load(&ctx)?;
 
+    // La plateforme, lue sur le domaine du lien enregistré : en lecture seule, sous le champ.
+    let hint: Component = match config.platform() {
+        Some(platform) => Stack::new()
+            .direction(StackDirection::Horizontal)
+            .children(vec![
+                Badge::new().label(platform_label(platform)).into(),
+                FieldHint::new().text("i18n:host.reviewUrl.detected").into(),
+            ])
+            .into(),
+        None => FieldHint::new().text("i18n:host.reviewUrl.help").into(),
+    };
     let mut url = Field::new()
         .name("review_url")
         .label("i18n:host.reviewUrl.label")
         .required(false)
         .child(Stack::new().children(vec![
-                FieldHint::new().text("i18n:host.reviewUrl.help").into(),
-                TextInput::new()
-                    .name("review_url")
-                    // L'ancien lien Airbnb s'affiche ici tant que `review_url` est vide : il est
-                    // enregistré sous ce nom au prochain enregistrement.
-                    .value(config.public_url().unwrap_or_default())
-                    .placeholder("i18n:host.reviewUrl.placeholder")
-                    .into(),
-            ]));
+            TextInput::new()
+                .name("review_url")
+                // L'ancien lien Airbnb s'affiche ici tant que `review_url` est vide : il est
+                // enregistré sous ce nom au prochain enregistrement.
+                .value(config.public_url().unwrap_or_default())
+                .placeholder("i18n:host.reviewUrl.placeholder")
+                .into(),
+            hint,
+        ]));
     if let Some(error) = check::https_url(config.review_url.trim()) {
         url = url.error(error.get(&ctx.locale).to_string());
     }
@@ -49,36 +63,33 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
             .child(
                 ChoiceList::new()
                     .name("ask_from")
+                    .layout(ChoiceListLayout::Segmented)
                     .value(config.ask_from.as_wire())
                     .choices(vec![
                         ChoiceOption::new(
                             AskFrom::Checkout.as_wire(),
                             "i18n:host.askFrom.label.checkout",
-                        )
-                        .icon(IconName::ClockCircle),
+                        ),
                         ChoiceOption::new(
                             AskFrom::NextDay10h.as_wire(),
                             "i18n:host.askFrom.label.next_day_10h",
-                        )
-                        .icon(IconName::ClockCircle),
+                        ),
                     ]),
             )
             .into(),
         url.into(),
+        ToggleRow::new()
+            .name("channel_mode")
+            .label("i18n:host.channelMode.label")
+            .description("i18n:host.channelMode.help")
+            .checked(config.channel_mode == ChannelMode::Auto)
+            .into(),
+        // Spec §3 : le lien ne dépend jamais de la note.
+        InlineNotice::new()
+            .tone(Tone::Neutral)
+            .message("i18n:host.reviewUrl.anyRating")
+            .into(),
     ];
-    // Lecture seule, déduite du lien : sans `name`, le formulaire ne l'envoie pas.
-    if let Some(platform) = config.platform() {
-        children.push(
-            Field::new()
-                .label("i18n:host.platform.label")
-                .child(
-                    Text::new()
-                        .text(platform_label(platform))
-                        .variant(TextVariant::Body),
-                )
-                .into(),
-        );
-    }
     children.push(
         ToggleRow::new()
             .name("private_comment")
@@ -166,6 +177,7 @@ fn public_card(config: &ModuleConfig, consented: &[(String, StoredReview)], loca
             ToggleRow::new()
                 .name("public_enabled")
                 .label("i18n:host.public.enabled.label")
+                .description("i18n:host.public.enabled.help")
                 .checked(config.public_enabled),
         )
         .child(reviews)

@@ -1,9 +1,13 @@
 # Changelog
 
-## 1.6.1
+## 1.7.0
 
-Montée technique.
+Les réglages Votre avis, à l'image des autres modules.
 
+* « Demander à partir de » se choisit d'un geste : L'heure de départ ou Le lendemain à 10 h.
+* La plateforme reconnue s'affiche sous le lien d'avis, et le tiroir rappelle que filtrer selon la note est interdit.
+* « Selon la plateforme de réservation » se règle dans le tiroir : le lien Airbnb pour les seuls voyageurs Airbnb.
+* Copié vers un autre logement, le lien d'avis est marqué « À vérifier ».
 * Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
 
 ## 1.6.0
