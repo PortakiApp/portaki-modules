@@ -68,7 +68,7 @@ pub fn build_event_item(data: &GuestData, event: &EventRow) -> Surface {
 /// Quand, quoi, où — dans cet ordre : on ouvre une fiche d'événement pour l'heure.
 fn header(data: &GuestData, event: &EventRow) -> Component {
     let mut children: Vec<Component> = Vec::new();
-    let when = crate::time_format::event_when(event);
+    let when = crate::time_format::event_when(event, data.tz.as_ref());
     if !when.trim().is_empty() {
         children.push(Badge::new().label(when).into());
     }

@@ -19,13 +19,46 @@ pub fn parse_starts_at(raw: &str) -> Option<DateTime<Utc>> {
     if let Ok(dt) = trimmed.parse::<DateTime<Utc>>() {
         return Some(dt);
     }
-    if let Ok(naive) = NaiveDateTime::parse_from_str(trimmed, "%Y-%m-%dT%H:%M:%S") {
-        return Some(naive.and_utc());
+    parse_wall(trimmed).map(|naive| naive.and_utc())
+}
+
+/// Une date sans fuseau (`2026-08-15T22:30:00`) : l'heure du mur, celle des sélecteurs du
+/// formulaire comme de l'ancien champ texte.
+fn parse_wall(raw: &str) -> Option<NaiveDateTime> {
+    NaiveDateTime::parse_from_str(raw, "%Y-%m-%dT%H:%M:%S")
+        .or_else(|_| NaiveDateTime::parse_from_str(raw, "%Y-%m-%d %H:%M:%S"))
+        .ok()
+}
+
+/// L'événement avec ses heures du mur portées en instants, à l'heure du logement : 22 h 30 à
+/// Paris l'été, c'est 20 h 30 UTC. Une seule fois, au chargement, pour que la fenêtre, « Ce soir »
+/// et la répétition comparent des instants, et que l'affichage les ramène à l'heure du logement
+/// sans décalage. Une date qui porte son fuseau (`…Z`) est déjà un instant ; sans fuseau connu,
+/// rien ne bouge (UTC, comme avant).
+pub fn anchored(mut event: EventRow, tz: Option<&PropertyTz>) -> EventRow {
+    let Some(tz) = tz else {
+        return event;
+    };
+    let anchor = |raw: &str| {
+        let raw = raw.trim();
+        DateTime::parse_from_rfc3339(raw)
+            .is_err()
+            .then(|| parse_wall(raw))
+            .flatten()
+            .map(|wall| tz.from_local(wall).to_rfc3339())
+    };
+    if let Some(starts) = anchor(&event.starts_at) {
+        event.starts_at = starts;
     }
-    if let Ok(naive) = NaiveDateTime::parse_from_str(trimmed, "%Y-%m-%d %H:%M:%S") {
-        return Some(naive.and_utc());
+    if let Some(ends) = event.ends_at.as_deref().and_then(anchor) {
+        event.ends_at = Some(ends);
     }
-    None
+    event
+}
+
+/// « 22:30 » : l'heure de l'instant, à l'heure du logement (UTC sans fuseau connu).
+pub fn local_time(at: DateTime<Utc>, tz: Option<&PropertyTz>) -> String {
+    crate::config::local(at, tz).format("%H:%M").to_string()
 }
 
 /// La fenêtre du séjour, élargie d'un jour de chaque côté (§0.7).
@@ -116,14 +149,14 @@ pub fn sort_events_by_start(mut events: Vec<EventRow>) -> Vec<EventRow> {
 }
 
 /// Le badge « quand » d'un événement : annulé d'abord, puis toute la journée, sinon l'heure.
-pub fn event_when(event: &EventRow) -> String {
+pub fn event_when(event: &EventRow, tz: Option<&PropertyTz>) -> String {
     if event.cancelled {
         return "i18n:guest.event.cancelled".to_string();
     }
     if event.all_day {
         return "i18n:guest.event.allDay".to_string();
     }
-    format_starts_at_display(&event.starts_at)
+    format_starts_at_display(&event.starts_at, tz)
 }
 
 /// « Ce soir » (§9 #2) : l'événement commence aujourd'hui, à l'heure du logement — pas celle
@@ -176,11 +209,11 @@ pub fn weekly_line(event: &EventRow, tz: Option<&PropertyTz>) -> Option<String> 
     Some(t!("guest.recurrence.weekly", days = &days).unwrap_or(days))
 }
 
-pub fn format_starts_at_display(raw: &str) -> String {
+pub fn format_starts_at_display(raw: &str, tz: Option<&PropertyTz>) -> String {
     let Some(at) = parse_starts_at(raw) else {
         return raw.trim().to_string();
     };
-    let time = at.format("%H:%M").to_string();
+    let time = local_time(at, tz);
     t!("guest.event.startsAt", time = &time).unwrap_or_else(|_| time)
 }
 
@@ -289,6 +322,86 @@ mod tests {
             &row("demain", "2026-07-15T19:00:00Z"),
             now,
             paris.as_ref()
+        ));
+    }
+
+    /// L'heure affichée est celle du logement : l'heure du mur des sélecteurs ressort telle
+    /// quelle, et un instant UTC d'une ancienne ligne est ramené à Paris (UTC+2 l'été) comme à
+    /// New York (UTC−4).
+    #[test]
+    #[serial_test::serial]
+    fn times_show_at_the_property() {
+        let mut mock = portaki_test_utils::MockContext::guest();
+        let bundle: std::collections::BTreeMap<String, String> =
+            serde_json::from_str(include_str!("../i18n/fr-FR.json")).unwrap();
+        for (key, value) in bundle {
+            mock = mock.with_translation(key, value);
+        }
+        mock.run(|_| {
+            let wall = EventRow {
+                ends_at: Some("2026-08-15T23:15:00".into()),
+                ..row("feu", "2026-08-15T22:30:00")
+            };
+            let instant = row("marché", "2026-08-15T20:30:00Z");
+            let shown = |event: &EventRow, tz: &str| {
+                let tz = PropertyTz::parse(tz);
+                let event = anchored(event.clone(), tz.as_ref());
+                let starts = local_time(at(&event.starts_at), tz.as_ref());
+                (event_when(&event, tz.as_ref()), starts, event)
+            };
+            let when = |time: &str| {
+                t!("guest.event.startsAt", time = time).unwrap_or_else(|_| time.to_string())
+            };
+
+            let (paris_when, paris_time, paris) = shown(&wall, "Europe/Paris");
+            assert_eq!((paris_when, paris_time.as_str()), (when("22:30"), "22:30"));
+            assert_eq!(at(&paris.starts_at), at("2026-08-15T20:30:00Z"));
+            assert_eq!(
+                paris.ends_at.as_deref().map(at),
+                Some(at("2026-08-15T21:15:00Z"))
+            );
+            let (ny_when, ny_time, ny) = shown(&wall, "America/New_York");
+            assert_eq!((ny_when, ny_time.as_str()), (when("22:30"), "22:30"));
+            assert_eq!(at(&ny.starts_at), at("2026-08-16T02:30:00Z"));
+
+            assert_eq!(shown(&instant, "Europe/Paris").1, "22:30");
+            assert_eq!(shown(&instant, "America/New_York").1, "16:30");
+            // Sans fuseau connu, rien ne bouge : UTC, comme avant.
+            assert_eq!(shown(&wall, "").1, "22:30");
+            assert_eq!(shown(&instant, "").1, "20:30");
+        });
+    }
+
+    /// 22 h 30 saisi au formulaire, c'est ce soir à Paris dès le 15 à 22 h (20 h UTC) — lu en
+    /// UTC, il tombait à 0 h 30 le 16 et perdait le badge. À New York, ce soir le 15 à 16 h 30,
+    /// pas encore la veille à 23 h.
+    #[test]
+    fn a_wall_clock_event_is_tonight_at_the_property() {
+        let event = row("feu", "2026-08-15T22:30:00");
+        let paris = PropertyTz::parse("Europe/Paris");
+        let event_paris = anchored(event.clone(), paris.as_ref());
+        assert!(is_tonight(
+            &event_paris,
+            at("2026-08-15T20:00:00Z"),
+            paris.as_ref()
+        ));
+        // 23 h à Paris : commencé depuis une demi-heure, sans fin donnée, plus de badge.
+        assert!(!is_tonight(
+            &event_paris,
+            at("2026-08-15T21:00:00Z"),
+            paris.as_ref()
+        ));
+        let ny = PropertyTz::parse("America/New_York");
+        let event_ny = anchored(event, ny.as_ref());
+        assert!(is_tonight(
+            &event_ny,
+            at("2026-08-15T20:30:00Z"),
+            ny.as_ref()
+        ));
+        assert!(!is_tonight(
+            &event_ny,
+            at("2026-08-15T03:00:00Z"),
+            ny.as_ref()
         ));
     }
 

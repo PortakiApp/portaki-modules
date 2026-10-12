@@ -263,7 +263,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260602T180000Z/20260602T220000Z&text=March%C3%A9+nocturne+des+artisans&location=Place+du+village"
+              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260602T160000Z/20260602T200000Z&text=March%C3%A9+nocturne+des+artisans&location=Place+du+village"
             },
             "label": "i18n:guest.addToCalendar",
             "type": "Button",
