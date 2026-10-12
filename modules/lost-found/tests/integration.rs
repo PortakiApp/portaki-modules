@@ -970,3 +970,98 @@ fn a_sent_report_opens_the_sheet_on_its_confirmation() {
             assert!(json.contains("form.step.object"), "{json}");
         });
 }
+
+/// Le tiroir de la planche : sous-champs révélés par l'interrupteur du brouillon, frais d'envoi
+/// en choix segmenté, et tout décoché qui se dit au lieu de revenir en silence au défaut.
+#[test]
+#[serial]
+fn the_drawer_reveals_each_option_s_field_and_refuses_no_option() {
+    fn find<'a>(
+        value: &'a serde_json::Value,
+        pred: &dyn Fn(&serde_json::Value) -> bool,
+    ) -> Option<&'a serde_json::Value> {
+        if pred(value) {
+            return Some(value);
+        }
+        match value {
+            serde_json::Value::Object(map) => map.values().find_map(|v| find(v, pred)),
+            serde_json::Value::Array(items) => items.iter().find_map(|v| find(v, pred)),
+            _ => None,
+        }
+    }
+    let field = |tree: &serde_json::Value, name: &str| {
+        find(tree, &|v| v["type"] == "Field" && v["name"] == name)
+            .unwrap_or_else(|| panic!("champ {name}"))
+            .clone()
+    };
+    let toggle = |tree: &serde_json::Value, name: &str| {
+        find(tree, &|v| v["type"] == "ToggleRow" && v["name"] == name)
+            .unwrap_or_else(|| panic!("interrupteur {name}"))["checked"]
+            .clone()
+    };
+
+    // Rien d'enregistré : renvoi et récupération cochés, chaque sous-champ rendu et suspendu à
+    // son interrupteur — même celui du don, décoché.
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|ctx| {
+            let tree = serde_json::to_value(render_host_main(ctx).expect("host main")).unwrap();
+            assert_eq!(toggle(&tree, "return_ship"), true);
+            assert_eq!(toggle(&tree, "return_pickup"), true);
+            assert_eq!(toggle(&tree, "return_donate"), false);
+            let shipping = field(&tree, "shipping_paid_by");
+            assert_eq!(shipping["visibleWhen"], "return_ship=true");
+            assert!(
+                find(&shipping, &|v| v["type"] == "ChoiceList"
+                    && v["layout"] == "segmented")
+                .is_some(),
+                "{shipping}"
+            );
+            let pickup = field(&tree, "pickup_note");
+            assert_eq!(pickup["visibleWhen"], "return_pickup=true");
+            assert!(
+                find(&pickup, &|v| v["type"] == "TextArea").is_some(),
+                "{pickup}"
+            );
+            assert_eq!(
+                field(&tree, "donate_org")["visibleWhen"],
+                "return_donate=true"
+            );
+            assert!(
+                !tree.to_string().contains("Proposez au moins une option"),
+                "{tree}"
+            );
+        });
+
+    // Tout décoché : l'erreur s'affiche, l'enregistrement garde les trois à faux, et le voyageur
+    // d'un livret déjà publié garde un choix.
+    let off = json!({ "return_ship": false, "return_pickup": false, "return_donate": false });
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .with_config(&off)
+        .run(|ctx| {
+            let surface = render_host_main(ctx).expect("host main");
+            let tree = serde_json::to_value(&surface).unwrap();
+            assert_eq!(toggle(&tree, "return_ship"), false);
+            assert!(
+                tree.to_string()
+                    .contains("Proposez au moins une option de restitution."),
+                "{tree}"
+            );
+            let saved = config_save::save(EMISSIONS, &surface, &off, "fr");
+            for key in ["return_ship", "return_pickup", "return_donate"] {
+                assert_eq!(saved[key], false, "{key} : {saved}");
+            }
+        });
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_config(&off)
+        .run(|ctx| {
+            let json = serde_json::to_string(&render_home_card(ctx).expect("render")).unwrap();
+            assert!(json.contains("guest.return.ship"), "{json}");
+            assert!(json.contains("guest.return.pickup"), "{json}");
+        });
+}

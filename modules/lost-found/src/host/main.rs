@@ -3,8 +3,10 @@
 //! dashboard.
 
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui::common::{ChoiceListLayout, Tone};
 use portaki_sdk::sdui::primitives::{
-    Card, Field, FieldHint, Form, NumberInput, Page, Select, Stack, TextInput, Toggle,
+    Card, ChoiceList, Field, FieldHint, Form, InlineNotice, NumberInput, Page, Stack, TextArea,
+    TextInput, ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
 
@@ -37,7 +39,6 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
 fn window_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
     Card::new()
         .title("i18n:host.window.title")
-        .subtitle("i18n:host.window.subtitle")
         .icon(IconName::ClockCircle)
         .child(with_error(
             Field::new()
@@ -87,70 +88,71 @@ fn window_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
 }
 
 /// Les options de restitution, chacune suivie de ce qu'elle demande : qui paie le renvoi, où
-/// récupérer, quelle association. Un réglage dépendant est masqué tant que son option est
-/// décochée (règles communes) : une question sans objet n'a pas à être posée.
+/// récupérer, quelle association. Un réglage dépendant suit l'interrupteur du brouillon
+/// (`visibleWhen`, masqué et non grisé) ; masqué, il n'est pas envoyé et sa valeur reste.
 fn return_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let offered = config.return_options();
+    let chosen = config.chosen_options();
     let toggle = |name: &str, key: &str| -> Component {
-        Field::new()
+        ToggleRow::new()
             .name(name)
             .label(format!("i18n:host.return.{key}"))
-            .child(Toggle::new().name(name).checked(offered.contains(&key)))
+            .checked(chosen.contains(&key))
             .into()
     };
     let mut card = Card::new()
         .title("i18n:host.return.title")
         .subtitle("i18n:host.return.subtitle")
-        .icon(IconName::Package)
-        .child(toggle("return_ship", "ship"));
-
-    if offered.contains(&"ship") {
-        card = card
-            .child(
-                Field::new()
-                    .name("shipping_paid_by")
-                    .label("i18n:host.shipping.label")
-                    .child(
-                        Select::new()
-                            .name("shipping_paid_by")
-                            .options(vec![
-                                ChoiceOption::new("guest", "i18n:host.shipping.label.guest"),
-                                ChoiceOption::new("host", "i18n:host.shipping.label.host"),
-                            ])
-                            .value(if config.shipping_paid_by_guest() {
-                                "guest"
-                            } else {
-                                "host"
-                            }),
-                    ),
-            )
-            .child(FieldHint::new().text("i18n:host.shipping.hint"));
+        .icon(IconName::Package);
+    if let Some(error) = config.error_of("return") {
+        card = card.child(
+            InlineNotice::new()
+                .tone(Tone::Danger)
+                .message(error.get(&ctx.locale).to_string()),
+        );
     }
-
-    card = card.child(toggle("return_pickup", "pickup"));
-    if offered.contains(&"pickup") {
-        card = card.child(with_error(
+    card.child(toggle("return_ship", "ship"))
+        .child(
+            Field::new()
+                .name("shipping_paid_by")
+                .label("i18n:host.shipping.label")
+                .visibleWhen("return_ship=true")
+                .child(
+                    ChoiceList::new()
+                        .name("shipping_paid_by")
+                        .layout(ChoiceListLayout::Segmented)
+                        .value(if config.shipping_paid_by_guest() {
+                            "guest"
+                        } else {
+                            "host"
+                        })
+                        .choices(vec![
+                            ChoiceOption::new("guest", "i18n:host.shipping.label.guest"),
+                            ChoiceOption::new("host", "i18n:host.shipping.label.host"),
+                        ]),
+                ),
+        )
+        .child(toggle("return_pickup", "pickup"))
+        .child(with_error(
             Field::new()
                 .name("pickup_note")
                 .label("i18n:host.pickupNote.label")
+                .visibleWhen("return_pickup=true")
                 .child(
-                    TextInput::new()
+                    TextArea::new()
                         .name("pickup_note")
                         .value(config.pickup_note.host_value(ctx))
                         .placeholder("i18n:host.pickupNote.placeholder"),
                 ),
             config,
             ctx,
-        ));
-    }
-
-    card = card.child(toggle("return_donate", "donate"));
-    if offered.contains(&"donate") {
-        card = card.child(with_error(
+        ))
+        .child(toggle("return_donate", "donate"))
+        .child(with_error(
             Field::new()
                 .name("donate_org")
                 .label("i18n:host.donateOrg.label")
                 .required(true)
+                .visibleWhen("return_donate=true")
                 .child(
                     TextInput::new()
                         .name("donate_org")
@@ -159,10 +161,8 @@ fn return_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
                 ),
             config,
             ctx,
-        ));
-    }
-
-    card.into()
+        ))
+        .into()
 }
 
 /// La valeur à montrer : celle que l'hôte a saisie, même hors bornes — c'est elle que l'erreur

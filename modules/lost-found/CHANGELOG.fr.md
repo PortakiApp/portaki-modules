@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.13.0
+
+Les réglages Objet oublié, à l'image des autres modules.
+
+* Le délai de déclaration et la durée de garde se règlent en jours, avec − et +.
+* Frais d'envoi, consignes de retrait et association n'apparaissent que sous l'option cochée.
+* Les frais d'envoi se choisissent d'un geste : À la charge du voyageur ou Offerts.
+* Tout décocher bloque la publication : « Proposez au moins une option de restitution. »
+* Copiées vers un autre logement, les consignes de retrait sont marquées « À vérifier ».
+
 ## 1.12.1
 
 Montée technique.

@@ -51,20 +51,26 @@ pub struct ModuleConfig {
     #[field(label = "host.keep.label")]
     pub keep_days: f64,
     /// Renvoi postal proposé.
+    ///
+    /// Les trois options sont des `Option` pour distinguer « jamais touché » (toutes absentes :
+    /// renvoi et récupération, le défaut de la spec) de « tout décoché » (bloque la publication).
+    /// Dès qu'une option est enregistrée, une absente vaut décochée — ce que lisaient les
+    /// configurations écrites avant.
     #[field(label = "host.return.ship")]
-    #[serde(skip_serializing_if = "std::ops::Not::not")]
-    pub return_ship: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub return_ship: Option<bool>,
     /// Récupération sur place proposée.
     #[field(label = "host.return.pickup")]
-    #[serde(skip_serializing_if = "std::ops::Not::not")]
-    pub return_pickup: bool,
-    /// Où et quand récupérer l'objet, sous « Je viens le chercher ».
-    #[field(label = "host.pickupNote.label")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub return_pickup: Option<bool>,
+    /// Où et quand récupérer l'objet, sous « Je viens le chercher ». Propre au logement : copié
+    /// ailleurs, il y est marqué « À vérifier ».
+    #[field(local, label = "host.pickupNote.label")]
     pub pickup_note: I18nText,
     /// Don de l'objet proposé.
     #[field(label = "host.return.donate")]
-    #[serde(skip_serializing_if = "std::ops::Not::not")]
-    pub return_donate: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub return_donate: Option<bool>,
     /// L'association qui reçoit les dons. Un nom propre : pas traduit.
     #[field(label = "host.donateOrg.label")]
     pub donate_org: String,
@@ -124,7 +130,10 @@ impl ModuleConfig {
         if out_of(self.keep_days, MIN_KEEP_DAYS, MAX_KEEP_DAYS) {
             problems.push(("keep_days", text("host.keep.error", &[])));
         }
-        let offered = self.return_options();
+        let offered = self.chosen_options();
+        if offered.is_empty() {
+            problems.push(("return", text("host.return.error", &[])));
+        }
         if offered.contains(&"pickup") {
             for (_, note) in self.pickup_note.by_language() {
                 if let Some(error) = check::max_chars(note, PICKUP_NOTE_MAX) {
@@ -151,20 +160,32 @@ impl ModuleConfig {
             .map(|(_, error)| error)
     }
 
-    /// Les options de restitution que l'hôte propose, dans l'ordre où le voyageur les lit.
+    /// Les options cochées dans le tiroir, telles quelles — vide si l'hôte a tout décoché.
     ///
-    /// Aucune cochée vaut les deux premières : un hôte qui n'a pas touché à ce réglage propose le
-    /// renvoi et la récupération, ce que le module faisait déjà en toutes lettres.
-    pub fn return_options(&self) -> Vec<&'static str> {
-        let chosen: Vec<&'static str> = [
-            ("ship", self.return_ship),
-            ("pickup", self.return_pickup),
-            ("donate", self.return_donate),
+    /// Rien d'enregistré vaut renvoi et récupération (spec §2.2) ; dès qu'une option l'est, une
+    /// absente vaut décochée.
+    pub fn chosen_options(&self) -> Vec<&'static str> {
+        let untouched = [self.return_ship, self.return_pickup, self.return_donate]
+            .iter()
+            .all(Option::is_none);
+        let on = |option: Option<bool>, default: bool| option.unwrap_or(untouched && default);
+        [
+            ("ship", on(self.return_ship, true)),
+            ("pickup", on(self.return_pickup, true)),
+            ("donate", on(self.return_donate, false)),
         ]
         .into_iter()
         .filter(|(_, on)| *on)
         .map(|(key, _)| key)
-        .collect();
+        .collect()
+    }
+
+    /// Les options de restitution que le voyageur lit, dans l'ordre.
+    ///
+    /// Tout décoché bloque la publication ([`Self::problems`]) ; un livret déjà publié propose
+    /// alors renvoi et récupération plutôt qu'un choix vide.
+    pub fn return_options(&self) -> Vec<&'static str> {
+        let chosen = self.chosen_options();
         if chosen.is_empty() {
             vec!["ship", "pickup"]
         } else {
@@ -248,7 +269,7 @@ mod tests {
     #[test]
     fn only_donating_asks_for_no_address() {
         let config = ModuleConfig {
-            return_donate: true,
+            return_donate: Some(true),
             ..ModuleConfig::default()
         };
         assert_eq!(config.return_options(), ["donate"]);
@@ -296,13 +317,13 @@ mod tests {
             fields(ModuleConfig {
                 window_days: 90.0,
                 keep_days: 3.0,
-                return_donate: true,
+                return_donate: Some(true),
                 ..ModuleConfig::default()
             }),
             ["window_days", "keep_days", "donate_org"]
         );
         let error = ModuleConfig {
-            return_donate: true,
+            return_donate: Some(true),
             ..ModuleConfig::default()
         }
         .error_of("donate_org")
@@ -310,9 +331,31 @@ mod tests {
         assert_eq!(error.get("fr"), "Indiquez l'association.");
         assert!(fields(ModuleConfig {
             donate_org: String::new(),
-            return_pickup: true,
+            return_pickup: Some(true),
             ..ModuleConfig::default()
         })
         .is_empty());
+    }
+
+    /// Tout décoché bloque la publication ; rien d'enregistré, non. Le voyageur garde un choix.
+    #[test]
+    fn unchecking_every_option_is_a_problem_not_an_empty_choice() {
+        let off = ModuleConfig {
+            return_ship: Some(false),
+            return_pickup: Some(false),
+            return_donate: Some(false),
+            ..ModuleConfig::default()
+        };
+        assert!(off.chosen_options().is_empty());
+        assert_eq!(off.return_options(), ["ship", "pickup"]);
+        assert_eq!(
+            off.error_of("return").expect("error").get("fr"),
+            "Proposez au moins une option de restitution."
+        );
+        assert_eq!(ModuleConfig::default().chosen_options(), ["ship", "pickup"]);
+        // Une option enregistrée seule : les autres valent décochées, comme avant.
+        let pickup: ModuleConfig =
+            serde_json::from_value(json!({ "return_pickup": true })).expect("config");
+        assert_eq!(pickup.chosen_options(), ["pickup"]);
     }
 }
