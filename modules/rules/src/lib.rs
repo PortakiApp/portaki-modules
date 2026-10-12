@@ -7,10 +7,14 @@ mod entities;
 mod guest;
 mod host;
 mod i18n;
+mod ids;
 mod queries;
 mod store;
 
-pub use commands::{save_content, update_config, RuleItemInput, SaveContentArgs};
+pub use commands::{
+    apply_template, save_content, update_config, ApplyTemplateArgs, RuleItemInput, RuleSlot,
+    SaveContentArgs,
+};
 pub use content::{RuleItem, RuleStatus, RulesPayload};
 pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use entities::RulesContent;

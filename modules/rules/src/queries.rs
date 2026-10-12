@@ -4,7 +4,7 @@ use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadine
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::content::{RulesBundle, RulesPayload, MAX_CARD_LIMIT, MIN_CARD_LIMIT};
+use crate::content::{RulesBundle, RulesPayload, MAX_CARD_LIMIT, MAX_RULES, MIN_CARD_LIMIT};
 use crate::i18n::text;
 use crate::store;
 
@@ -62,6 +62,20 @@ pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
         label: text("publish.rules.label"),
         hint: text("publish.rules.hint"),
     }];
+    // « 30 règles au maximum. » : rien n'est refusé à l'enregistrement, la publication attend.
+    if bundle
+        .by_lang
+        .values()
+        .any(|payload| payload.items.len() > MAX_RULES)
+    {
+        items.push(PublishCheck {
+            id: "config.rules".into(),
+            level: PublishLevel::Required,
+            ok: false,
+            label: text("host.rules.title"),
+            hint: text("host.rules.tooMany"),
+        });
+    }
     if let Some(error) = bundle.card_limit.and_then(|n| {
         portaki_sdk::config::check::between(
             f64::from(n),
@@ -83,7 +97,7 @@ pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
     for payload in bundle.by_lang.values() {
         for (index, item) in payload.items.iter().enumerate() {
             for (field, error) in item.problems() {
-                let id = format!("config.items.{index}.{field}");
+                let id = format!("config.rules.{index}.{field}");
                 if seen.insert(id.clone()) {
                     items.push(PublishCheck {
                         id,
