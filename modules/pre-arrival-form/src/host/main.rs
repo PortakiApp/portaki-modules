@@ -1,22 +1,36 @@
-//! Host property surface — design `editorPrearrival` / `prearrival-editor-v1`.
+//! Host settings page — spec Pré-arrivée §2, mode « page ».
 //!
-//! Choice cards for when to show + toggle grid for form questions.
-//! Save chrome is owned by the workspace tab; the platform stores the declared config.
+//! Three `Section`s, the shell's cards, in the spec's order: arrival time, questions, sending and
+//! reminders. The host's own questions are a sortable `DataTable` whose row opens in a dialog
+//! (`panel: "dialog"`), its fields named `custom_questions.<i>.<key>`; the options show only for
+//! « Choix » (`visibleWhen`). A rule broken shows under its field, the same one
+//! `publishReadiness` blocks on; no Save button — the shell autosaves through `updateConfig`.
 
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
+use portaki_sdk::sdui::common::{ChoiceListLayout, Tone};
 use portaki_sdk::sdui::primitives::{
-    Card, ChoiceList, Field, FieldHint, Form, Grid, Page, Select, Stack, StepList, TextInput,
-    ToggleRow,
+    ChoiceList, DataTable, Field, FieldHint, Form, InlineNotice, Page, Section, Stack, TextInput,
+    TimePicker, ToggleRow,
 };
 use portaki_sdk::sdui::surface::Surface;
+use serde_json::{json, Map, Value};
 
 use crate::config::{
-    Deadline, ModuleConfig, QuestionKind, ShowWhen, DEFAULT_SLOTS_UNTIL, MAX_CUSTOM_QUESTIONS,
-    MAX_OPTIONS, MIN_OPTIONS,
+    CustomQuestion, Deadline, ModuleConfig, QuestionKind, ShowWhen, DEFAULT_LATE_FROM,
+    DEFAULT_SLOTS_UNTIL, MAX_CUSTOM_QUESTIONS, MAX_OPTIONS,
 };
 
-/// Host main — editable pre-arrival timing + question toggles.
+/// Les questions ajoutées pas encore enregistrées : leurs id, séparés par des virgules.
+const NEW_QUESTIONS: &str = "newQuestions";
+
+// « Arrivée tardive · Marie · 23:30 » dans À venir : `crate::tasks`.
+#[portaki_sdk::nav(
+    placement = HostPlacement::WorkspaceTimelineTask,
+    path = "tasks",
+    label_key = "catalog.host.tasks",
+    icon = IconName::ClockCircle
+)]
 #[portaki_sdk::surface(
     host,
     id = "main",
@@ -27,239 +41,289 @@ use crate::config::{
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let config = ModuleConfig::load(&ctx)?;
-
-    let mut form_children: Vec<Component> = vec![
-        Card::new()
-            .title("i18n:host.section.when")
-            .subtitle("i18n:host.section.when.help")
-            .icon(IconName::ClockCircle)
-            .children(vec![when_choice_list(config.show_when).into()])
-            .into(),
-        Card::new()
-            .title("i18n:host.section.questions")
-            .subtitle("i18n:host.section.questions.help")
-            .icon(IconName::Clipboard)
-            .children(vec![Grid::new()
-                .columns(2)
-                .gap(8.0)
-                .minColumnWidth(300.0)
-                .children(question_toggle_rows(&config))
-                .into()])
-            .into(),
-        custom_questions_card(&config, &ctx),
-        reminder_card(&config),
-    ];
-
-    // Les créneaux n'ont d'objet que si l'heure d'arrivée est demandée (règles communes).
-    if config.ask_arrival_time {
-        form_children.insert(1, slots_card(&config, &ctx));
-    }
-
-    // No Page title / Save — workspace tab owns chrome + footer Save.
     Ok(Surface::new(
-        Page::new().child(Form::new().child(Stack::new().gap(16.0).children(form_children))),
+        Page::new().child(
+            Form::new()
+                .child(arrival_section(&config, &ctx))
+                .child(questions_section(&config, &ctx))
+                .child(sending_section(&config)),
+        ),
     )
     .with_id(MAIN))
 }
 
-/// §2.1 Les créneaux d'arrivée : les trois plages, ou un pas régulier jusqu'à une heure de fin.
-fn slots_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let step = match config.slot_step.trim() {
-        "15" | "30" | "60" => config.slot_step.trim(),
-        _ => "ranges",
+// ── 2.1 Heure d'arrivée ──────────────────────────────────────────────────────
+
+/// Les créneaux partent de l'heure d'arrivée du logement : une surface hôte ne la reçoit pas
+/// (`PropertyContext` n'a pas d'heure d'entrée), donc seule la fin et le pas se règlent ici.
+fn arrival_section(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let until = match config.slots_until.trim() {
+        "" => DEFAULT_SLOTS_UNTIL,
+        until => until,
     };
-    let mut card = Card::new()
-        .title("i18n:host.slots.title")
-        .icon(IconName::ClockCircle)
+    let late_from = config.late_from.as_deref().unwrap_or(DEFAULT_LATE_FROM);
+    Section::new()
+        .title("i18n:host.section.arrival")
+        .child(
+            named(config, ctx, "slots_until")
+                .label("i18n:host.slots.until")
+                .child(TimePicker::new().name("slots_until").value(until))
+                .child(FieldHint::new().text("i18n:host.slots.step.hint")),
+        )
         .child(
             Field::new()
                 .name("slot_step")
                 .label("i18n:host.slots.step")
-                .child(
-                    Select::new()
-                        .name("slot_step")
-                        .options(
-                            ["ranges", "15", "30", "60"]
-                                .into_iter()
-                                .map(|key| {
-                                    ChoiceOption::new(key, format!("i18n:host.slots.step.{key}"))
-                                })
-                                .collect(),
-                        )
-                        .value(step),
-                ),
+                .child(segmented(
+                    "slot_step",
+                    config.step_shown(),
+                    &["15", "30", "60"],
+                    "host.slots.step",
+                )),
         )
-        .child(FieldHint::new().text("i18n:host.slots.step.hint"));
-    if step != "ranges" {
-        let mut until = Field::new()
-            .name("slots_until")
-            .label("i18n:host.slots.until");
-        if let Some(error) = config.error_of("slots_until") {
-            until = until.error(error.get(&ctx.locale).to_string());
-        }
-        card = card.child(
-            until.child(
-                TextInput::new()
-                    .name("slots_until")
-                    .value(config.slots_until.clone())
-                    .placeholder(DEFAULT_SLOTS_UNTIL),
-            ),
-        );
-    }
-    card.into()
-}
-
-/// §2.2 « Vos questions » : 5 au plus, en lignes que l'hôte ajoute et retire.
-fn custom_questions_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let stored = config.custom_questions.len();
-    let count = match ctx.input_u64("custom_questions_count") {
-        Some(asked) => (asked as usize).min(MAX_CUSTOM_QUESTIONS),
-        // Une ligne de trop reste affichée, avec son erreur : le formulaire ne la retire pas.
-        None => stored,
-    }
-    .max(stored);
-    let rows: Vec<Component> = (0..count)
-        .map(|index| custom_question_row(index, config, ctx))
-        .collect();
-    let mut list = Field::new().name("custom_questions");
-    if let Some(error) = config.error_of("custom_questions") {
-        list = list.error(error.get(&ctx.locale).to_string());
-    }
-    Card::new()
-        .title("i18n:host.custom.title")
-        .subtitle("i18n:host.custom.help")
-        .icon(IconName::Clipboard)
         .child(
-            list.child(
-                StepList::new()
-                    .addLabel("i18n:host.custom.add")
-                    .removeLabel("i18n:host.custom.remove")
-                    .emptyTitle("i18n:host.custom.emptyTitle")
-                    .emptyDescription("i18n:host.custom.help")
-                    .itemKeyPrefix("custom_questions")
-                    .addAction(Action::emit(
-                        contracts::shell::SURFACE_INPUT,
-                        Some(serde_json::json!({
-                            "custom_questions_count": (count + 1).min(MAX_CUSTOM_QUESTIONS)
-                        })),
-                    ))
-                    .children(rows),
-            ),
+            named(config, ctx, "late_from")
+                .label("i18n:host.lateFrom")
+                .child(TimePicker::new().name("late_from").value(late_from))
+                .child(FieldHint::new().text("i18n:host.lateFrom.hint")),
         )
         .into()
 }
 
-/// Une question : son libellé, ce qu'elle attend, ses options si c'est un choix, et si elle est
-/// obligatoire.
-fn custom_question_row(index: usize, config: &ModuleConfig, ctx: &HostContext) -> Component {
-    let question = config.custom_questions.get(index);
-    let key = |name: &str| format!("custom_questions.{index}.{name}");
-    let with_error = |field: Field, name: &str| match config.error_of(name) {
-        Some(error) => field.error(error.get(&ctx.locale).to_string()),
-        None => field,
-    };
-    let kind = ctx
-        .input_str(&key("type"))
-        .and_then(|raw| serde_json::from_value(serde_json::Value::from(raw)).ok())
-        .or(question.map(|q| q.kind))
-        .unwrap_or_default();
+// ── 2.2 Questions ────────────────────────────────────────────────────────────
 
-    let mut children: Vec<Component> = vec![
-        sdui::row_id("custom_questions", index, question.map(|q| q.id.as_str())),
-        with_error(Field::new().name(key("label")), &key("label"))
-            .label("i18n:host.custom.label")
-            .required(true)
-            .child(
-                TextInput::new()
-                    .name(key("label"))
-                    .value(
-                        question
-                            .map(|q| q.label.host_value(ctx))
-                            .unwrap_or_default(),
-                    )
-                    .placeholder("i18n:host.custom.label.placeholder"),
-            )
-            .into(),
-        Field::new()
-            .name(key("type"))
-            .label("i18n:host.custom.type")
-            .child(
-                Select::new()
-                    .name(key("type"))
-                    .options(
-                        QuestionKind::WIRE_VALUES
-                            .iter()
-                            .map(|wire| {
-                                ChoiceOption::new(*wire, format!("i18n:host.custom.type.{wire}"))
-                            })
-                            .collect(),
-                    )
-                    .value(kind.as_wire()),
-            )
-            .into(),
-    ];
-    if kind == QuestionKind::Choice {
-        let options = question.map(|q| q.options.as_slice()).unwrap_or_default();
-        let slots = (options.len() + 1)
-            .clamp(MIN_OPTIONS, MAX_OPTIONS)
-            .max(options.len());
-        let inputs: Vec<Component> = (0..slots)
-            .map(|option| {
-                let name = format!("custom_questions.{index}.options.{option}.label");
-                TextInput::new()
-                    .name(name)
-                    .value(
-                        options
-                            .get(option)
-                            .map(|o| o.label.host_value(ctx))
-                            .unwrap_or_default(),
-                    )
-                    .into()
-            })
-            .collect();
+fn questions_section(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    Section::new()
+        .title("i18n:host.section.questions")
+        .child(toggle(
+            "ask_transport",
+            "host.question.transport",
+            config.ask_transport,
+        ))
+        .child(toggle(
+            "ask_occasion",
+            "host.question.occasion",
+            config.ask_occasion,
+        ))
+        .child(toggle(
+            "ask_needs",
+            "host.question.needs",
+            config.asks_needs(),
+        ))
+        .child(toggle(
+            "ask_guest_count",
+            "host.question.guestCount",
+            config.ask_guest_count,
+        ))
+        .child(custom_questions(config, ctx))
+        .into()
+}
+
+fn toggle(name: &str, key: &str, checked: bool) -> ToggleRow {
+    ToggleRow::new()
+        .name(name)
+        .label(format!("i18n:{key}"))
+        .description(format!("i18n:{key}.hint"))
+        .checked(checked)
+}
+
+/// « Vos questions » : le tableau ordonnable, « N / 5 », et la fenêtre de chaque question.
+fn custom_questions(config: &ModuleConfig, ctx: &HostContext) -> Component {
+    let rows = rows(config, ctx);
+    let mut children: Vec<Component> = vec![FieldHint::new().text("i18n:host.custom.help").into()];
+    if let Some(error) = config.error_of("custom_questions") {
         children.push(
-            with_error(Field::new().name(key("options")), &key("options"))
-                .label("i18n:host.custom.options")
-                .child(Stack::new().gap(6.0).children(inputs))
+            InlineNotice::new()
+                .tone(Tone::Danger)
+                .message(error.get(&ctx.locale).to_string())
                 .into(),
         );
     }
-    children.push(
-        ToggleRow::new()
-            .name(key("required"))
-            .label("i18n:host.custom.required")
-            .checked(question.is_some_and(|q| q.required))
-            .into(),
-    );
-    Stack::new()
-        .id(format!("custom-question-{index}"))
-        .gap(10.0)
+    let mut table = DataTable::new()
+        .rowName("custom_questions")
+        .sortable(true)
+        .panel("dialog")
+        .columns(json!([
+            { "key": "label", "label": "i18n:host.custom.label", "sub": "sub" },
+            { "key": "kind", "label": "i18n:host.custom.type", "kind": "pill" },
+        ]))
+        .rows(Value::Array(
+            rows.iter()
+                .map(|(id, question)| row(id, question, ctx))
+                .collect(),
+        ))
+        .children(
+            rows.iter()
+                .enumerate()
+                .map(|(index, (id, question))| question_panel(index, id, question, config, ctx))
+                .collect(),
+        );
+    if rows.len() < MAX_CUSTOM_QUESTIONS {
+        let mut added: Vec<String> = rows
+            .iter()
+            .skip(config.custom_questions.len())
+            .map(|(id, _)| id.clone())
+            .collect();
+        added.push(Uuid::new_v4().to_string());
+        let mut input = Map::new();
+        input.insert(NEW_QUESTIONS.into(), Value::String(added.join(",")));
+        table = table
+            .addLabel("i18n:host.custom.add")
+            .addAction(Action::emit(
+                contracts::shell::SURFACE_INPUT,
+                Some(Value::Object(input)),
+            ));
+    }
+    children.push(table.into());
+    Section::new()
+        .title("i18n:host.custom.title")
+        .subtitle(format!("{} / {MAX_CUSTOM_QUESTIONS}", rows.len()))
         .children(children)
         .into()
 }
 
-/// §2.3 Envoi et relances : la limite, et l'e-mail de la veille.
-fn reminder_card(config: &ModuleConfig) -> Component {
-    Card::new()
+/// Les lignes : les questions enregistrées, puis celles qu'« Ajouter » a ouvertes. Une question
+/// sans id (enregistrée avant le tableau) en reçoit un, stable d'un rendu à l'autre
+/// (`question-<rang>`) : la plateforme la rapproche par sa position, et l'id reste.
+fn rows(config: &ModuleConfig, ctx: &HostContext) -> Vec<(String, CustomQuestion)> {
+    let mut rows: Vec<(String, CustomQuestion)> = config
+        .custom_questions
+        .iter()
+        .enumerate()
+        .map(|(index, question)| {
+            let id = match question.id.trim() {
+                "" => format!("question-{index}"),
+                id => id.to_string(),
+            };
+            (id, question.clone())
+        })
+        .collect();
+    for id in ctx.input_str(NEW_QUESTIONS).unwrap_or_default().split(',') {
+        let id = id.trim();
+        if !id.is_empty()
+            && rows.len() < MAX_CUSTOM_QUESTIONS
+            && !rows.iter().any(|(known, _)| known == id)
+        {
+            rows.push((id.to_string(), CustomQuestion::default()));
+        }
+    }
+    rows
+}
+
+/// Une ligne du tableau : la question, « Obligatoire » et les options dessous, la réponse en
+/// pastille.
+fn row(id: &str, question: &CustomQuestion, ctx: &HostContext) -> Value {
+    let mut sub: Vec<String> = Vec::new();
+    if question.required {
+        sub.push(t!("host.custom.required").unwrap_or_default());
+    }
+    if question.kind == QuestionKind::Choice {
+        sub.extend(
+            question
+                .options()
+                .into_iter()
+                .map(|o| o.host_value(ctx).to_string()),
+        );
+    }
+    json!({
+        "id": id,
+        "label": question.label.host_value(ctx),
+        "sub": sub.join(" · "),
+        "kind": format!("i18n:host.custom.type.{}", question.kind.as_wire()),
+    })
+}
+
+/// La fenêtre d'une question : Question, Réponse, Options (seulement pour « Choix »), Obligatoire.
+fn question_panel(
+    index: usize,
+    id: &str,
+    question: &CustomQuestion,
+    config: &ModuleConfig,
+    ctx: &HostContext,
+) -> Component {
+    let key = |name: &str| format!("custom_questions.{index}.{name}");
+    // Les erreurs d'une question enregistrée ; une ligne neuve n'en a pas encore.
+    let field = |name: &str| {
+        let field = Field::new().name(key(name));
+        match config
+            .custom_questions
+            .get(index)
+            .and_then(|_| config.error_of(&key(name)))
+        {
+            Some(error) => field.error(error.get(&ctx.locale).to_string()),
+            None => field,
+        }
+    };
+    // Six cases : la fenêtre est rendue une fois, elle ne peut pas en ajouter. Vides, elles ne
+    // comptent pas (`CustomQuestion::options`).
+    let options: Vec<Component> = (0..MAX_OPTIONS)
+        .map(|option| {
+            TextInput::new()
+                .name(format!("custom_questions.{index}.options.{option}.label"))
+                .value(
+                    question
+                        .options
+                        .get(option)
+                        .map(|o| o.label.host_value(ctx))
+                        .unwrap_or_default(),
+                )
+                .into()
+        })
+        .collect();
+    Stack::new()
+        .gap(14.0)
+        .children(vec![
+            sdui::row_id("custom_questions", index, Some(id)),
+            field("label")
+                .label("i18n:host.custom.label")
+                .required(true)
+                .child(
+                    TextInput::new()
+                        .name(key("label"))
+                        .value(question.label.host_value(ctx))
+                        .placeholder("i18n:host.custom.label.placeholder"),
+                )
+                .into(),
+            Field::new()
+                .name(key("type"))
+                .label("i18n:host.custom.type")
+                .child(segmented(
+                    &key("type"),
+                    question.kind.as_wire(),
+                    &QuestionKind::WIRE_VALUES,
+                    "host.custom.type",
+                ))
+                .into(),
+            field("options")
+                .label("i18n:host.custom.options")
+                .visibleWhen(format!("{}=choice", key("type")))
+                .child(Stack::new().gap(6.0).children(options))
+                .child(FieldHint::new().text("i18n:host.custom.options.hint"))
+                .into(),
+            ToggleRow::new()
+                .name(key("required"))
+                .label("i18n:host.custom.required")
+                .checked(question.required)
+                .into(),
+        ])
+        .into()
+}
+
+// ── 2.3 Envoi et relances ────────────────────────────────────────────────────
+
+fn sending_section(config: &ModuleConfig) -> Component {
+    Section::new()
         .title("i18n:host.section.reminder")
-        .icon(IconName::Bell)
         .child(
             Field::new()
                 .name("deadline")
                 .label("i18n:host.deadline")
-                .child(
-                    Select::new()
-                        .name("deadline")
-                        .options(
-                            Deadline::CHOICE_LIST_WIRE_VALUES
-                                .iter()
-                                .map(|key| {
-                                    ChoiceOption::new(*key, format!("i18n:host.deadline.{key}"))
-                                })
-                                .collect(),
-                        )
-                        .value(config.deadline.as_wire()),
-                ),
+                .child(segmented(
+                    "deadline",
+                    config.deadline.as_wire(),
+                    Deadline::CHOICE_LIST_WIRE_VALUES,
+                    "host.deadline",
+                )),
         )
         .child(
             ToggleRow::new()
@@ -268,82 +332,50 @@ fn reminder_card(config: &ModuleConfig) -> Component {
                 .description("i18n:host.reminder.hint")
                 .checked(config.reminder),
         )
+        // Toujours lu par le livret (`show_when.rs`) : il garde sa place, ici, sous un nom clair.
+        .child(
+            Field::new()
+                .name("show_when")
+                .label("i18n:host.when")
+                .child(
+                    ChoiceList::new()
+                        .name("show_when")
+                        .layout(ChoiceListLayout::Segmented)
+                        .value(config.show_when.as_wire())
+                        .choices(
+                            ShowWhen::CHOICE_LIST_WIRE_VALUES
+                                .iter()
+                                .map(|key| {
+                                    ChoiceOption::new(*key, format!("i18n:host.when.{key}.desc"))
+                                })
+                                .collect(),
+                        ),
+                ),
+        )
         .into()
 }
 
-fn when_choice_list(selected: ShowWhen) -> ChoiceList {
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/// Un choix en segments, libellés `i18n:{prefix}.{valeur}`.
+fn segmented(name: &str, value: &str, values: &[&str], prefix: &str) -> ChoiceList {
     ChoiceList::new()
-        .name("show_when")
-        .value(selected.as_wire())
-        .layout(ChoiceListLayout::Cards)
-        .choices(vec![
-            ChoiceOption::new("confirm", "i18n:host.when.confirm")
-                .description("i18n:host.when.confirm.desc")
-                .icon(IconName::CheckCircle),
-            ChoiceOption::new("before", "i18n:host.when.before")
-                .description("i18n:host.when.before.desc")
-                .icon(IconName::ClockCircle),
-            ChoiceOption::new("checkin", "i18n:host.when.checkin")
-                .description("i18n:host.when.checkin.desc")
-                .icon(IconName::Key),
-        ])
-}
-
-fn question_toggle_rows(questions: &ModuleConfig) -> Vec<Component> {
-    vec![
-        toggle_row(
-            "ask_arrival_time",
-            "i18n:host.question.arrival",
-            IconName::ClockCircle,
-            questions.ask_arrival_time,
-        ),
-        // Juste après l'heure : les deux disent ce que l'hôte doit préparer — une place de
-        // parking, un horaire de train, un transfert.
-        toggle_row(
-            "ask_transport",
-            "i18n:host.question.transport",
-            IconName::Car,
-            questions.ask_transport,
-        ),
-        toggle_row(
-            "ask_occasion",
-            "i18n:host.question.occasion",
-            IconName::Gift,
-            questions.ask_occasion,
-        ),
-        toggle_row(
-            "ask_allergies",
-            "i18n:host.question.allergies",
-            IconName::InfoCircle,
-            questions.ask_allergies,
-        ),
-        toggle_row(
-            "ask_guest_count",
-            "i18n:host.question.guestCount",
-            IconName::Users,
-            questions.ask_guest_count,
-        ),
-        toggle_row(
-            "ask_special_needs",
-            "i18n:host.question.specialNeeds",
-            IconName::Home,
-            questions.ask_special_needs,
-        ),
-        toggle_row(
-            "ask_id_document",
-            "i18n:host.question.idDocument",
-            IconName::Clipboard,
-            questions.ask_id_document,
-        ),
-    ]
-}
-
-fn toggle_row(name: &str, label: &str, icon: IconName, checked: bool) -> Component {
-    // Bordered tile + leading icon chip (design `editorPrearrival` question grid).
-    ToggleRow::new()
         .name(name)
-        .label(label)
-        .icon(icon)
-        .checked(checked)
-        .into()
+        .layout(ChoiceListLayout::Segmented)
+        .value(value)
+        .choices(
+            values
+                .iter()
+                .map(|key| ChoiceOption::new(*key, format!("i18n:{prefix}.{key}")))
+                .collect(),
+        )
+}
+
+/// Le champ `name`, avec le message de [`ModuleConfig::error_of`] sous lui s'il y en a un.
+fn named(config: &ModuleConfig, ctx: &HostContext, name: &str) -> Field {
+    let field = Field::new().name(name);
+    match config.error_of(name) {
+        Some(error) => field.error(error.get(&ctx.locale).to_string()),
+        None => field,
+    }
 }

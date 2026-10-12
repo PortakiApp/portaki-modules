@@ -80,7 +80,8 @@ fn completed_card(row: &PreArrivalResponse, questions: &ModuleConfig, ctx: &Cont
 
     let mut rows: Vec<Component> = Vec::new();
 
-    if questions.ask_arrival_time {
+    // Toujours demandée (§9 cas 4).
+    {
         rows.push(detail_row(
             "clock-circle",
             "i18n:host.stay.arrival.label",
@@ -117,7 +118,7 @@ fn completed_card(row: &PreArrivalResponse, questions: &ModuleConfig, ctx: &Cont
             None,
         ));
     }
-    if questions.ask_allergies {
+    if questions.asks_needs() {
         let allergies_raw = row
             .allergies
             .as_ref()
@@ -142,7 +143,7 @@ fn completed_card(row: &PreArrivalResponse, questions: &ModuleConfig, ctx: &Cont
             None,
         ));
     }
-    if questions.ask_special_needs {
+    if questions.asks_needs() {
         rows.push(detail_row(
             "home",
             "i18n:host.stay.specialNeeds.label",
@@ -150,11 +151,13 @@ fn completed_card(row: &PreArrivalResponse, questions: &ModuleConfig, ctx: &Cont
             None,
         ));
     }
-    if questions.ask_id_document {
+    // La pièce d'identité n'est plus demandée (la fiche de police la recueille) ; une réponse
+    // donnée avant reste lisible.
+    if let Some(id_document) = row.id_document.as_deref().filter(|v| !v.trim().is_empty()) {
         rows.push(detail_row(
             "clipboard",
             "i18n:host.stay.idDocument.label",
-            display_or_dash(row.id_document.as_deref()),
+            id_document.trim().to_string(),
             None,
         ));
     }

@@ -123,12 +123,11 @@ pub fn send_reminder(ctx: &Context, choice: Deadline, email_id: &str) -> Result<
 /// The questions the host enabled, previewed as empty fields.
 fn form_preview(config: &ModuleConfig) -> Vec<EmailBlock> {
     let asked = [
-        (config.ask_arrival_time, "arrival"),
+        (true, "arrival"),
         (config.ask_guest_count, "guestCount"),
         (config.ask_occasion, "occasion"),
-        (config.ask_allergies, "allergies"),
-        (config.ask_special_needs, "specialNeeds"),
-        (config.ask_id_document, "idDocument"),
+        (config.asks_needs(), "allergies"),
+        (config.asks_needs(), "specialNeeds"),
     ];
     let fields: Vec<EmailFormField> = asked
         .into_iter()
@@ -156,19 +155,26 @@ mod tests {
         let [EmailBlock::Fields { items, .. }] = blocks.as_slice() else {
             panic!("{blocks:?}");
         };
-        assert_eq!(items.len(), 4);
+        // Heure, voyageurs, occasion, et les besoins en deux champs (allergies comprises).
+        assert_eq!(items.len(), 5);
         for field in items {
             assert_eq!(field.label.translations.len(), 8, "{:?}", field.label);
             assert!(!field.label.fr.is_empty() && !field.label.en.is_empty());
         }
 
+        // L'heure d'arrivée reste, toujours demandée ; la pièce d'identité ne revient pas.
         let nothing = ModuleConfig {
             ask_arrival_time: false,
             ask_occasion: false,
-            ask_allergies: false,
+            ask_needs: Some(false),
             ask_guest_count: false,
+            ask_id_document: true,
             ..ModuleConfig::default()
         };
-        assert!(form_preview(&nothing).is_empty());
+        let blocks = form_preview(&nothing);
+        let [EmailBlock::Fields { items, .. }] = blocks.as_slice() else {
+            panic!("one block");
+        };
+        assert_eq!(items.len(), 1);
     }
 }

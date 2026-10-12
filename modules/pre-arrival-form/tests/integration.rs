@@ -354,6 +354,14 @@ fn only_the_chosen_deadline_reminds_an_open_unanswered_form() {
     assert!(reminders_sent(open, Duration::hours(1), false).is_empty());
 }
 
+/// Les champs que la page ne montre plus : leur valeur enregistrée reste, `updateConfig` fusionne.
+const RETIRED: &[&str] = &[
+    "ask_arrival_time",
+    "ask_allergies",
+    "ask_special_needs",
+    "ask_id_document",
+];
+
 #[test]
 #[serial]
 fn host_main_renders_config_editor() {
@@ -362,64 +370,103 @@ fn host_main_renders_config_editor() {
         .with_property(Property::default())
         .with_config(&ModuleConfig {
             show_when: ShowWhen::Checkin,
-            ask_special_needs: true,
             ask_id_document: true,
-            // Un pas régulier : l'heure de fin n'est dessinée que là.
-            slot_step: "30".into(),
             ..ModuleConfig::default()
         })
         .run(|ctx| {
             let surface = render_host_main(ctx).expect("host main");
-            // Les toggles, `show_when` et les créneaux : exactement les clés déclarées.
+            // Exactement les clés déclarées, moins celles que la page a quittées — et les
+            // questions, un tableau vide ici (`rowName`, sans champ nommé ; voir le test suivant).
+            let mut not_in_form = RETIRED.to_vec();
+            not_in_form.push("custom_questions");
             config_form::assert_form_matches_config(
                 concat!(env!("OUT_DIR"), "/portaki-emissions"),
                 &surface,
-                &[],
+                &not_in_form,
             );
-            assert!(SurfaceAssertions::new(&surface).contains_type("Page"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("ChoiceList"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("ToggleRow"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("Grid"));
+            let page = SurfaceAssertions::new(&surface);
+            assert!(page.contains_type("Section"));
+            assert!(page.contains_type("DataTable"));
+            assert!(page.contains_type("TimePicker"));
             let json = serde_json::to_string(&surface).expect("surface json");
-            assert!(json.contains("show_when"));
-            assert!(json.contains("ask_arrival_time"));
-            assert!(json.contains("ask_id_document"));
-            assert!(json.contains("host.section.when"));
-            assert!(json.contains("host.section.questions"));
-            // Design question tiles: bordered ToggleRow + leading icon chip.
-            assert!(json.contains("\"icon\":\"clock-circle\""));
-            assert!(json.contains("\"icon\":\"gift\""));
-            assert!(json.contains("\"icon\":\"users\""));
+            for key in [
+                "host.section.arrival",
+                "host.section.questions",
+                "host.section.reminder",
+                "late_from",
+                "ask_needs",
+                "show_when",
+            ] {
+                assert!(json.contains(key), "{key}");
+            }
+            // La pièce d'identité a quitté la page, même cochée.
+            assert!(!json.contains("ask_id_document"));
+            // Arrivée tardive à 22:00 par défaut, pas de 30 min par défaut.
+            assert!(
+                json.contains(r#""name":"late_from","value":"22:00""#),
+                "{json}"
+            );
+            assert!(
+                json.contains(r#""name":"slot_step","value":"30""#),
+                "{json}"
+            );
         });
+}
+
+/// « Besoins particuliers » : un interrupteur pour deux réglages d'avant. Lu des deux tant que
+/// l'hôte ne l'a pas enregistré, puis seul — l'éteindre ne se rallume pas par `ask_allergies`.
+#[test]
+fn the_needs_toggle_reads_both_old_keys_until_it_is_saved() {
+    let read = |config: serde_json::Value| -> bool {
+        serde_json::from_value::<ModuleConfig>(config)
+            .expect("config")
+            .asks_needs()
+    };
+    assert!(ModuleConfig::default().asks_needs());
+    assert!(read(
+        json!({ "ask_allergies": false, "ask_special_needs": true })
+    ));
+    assert!(!read(
+        json!({ "ask_allergies": false, "ask_special_needs": false })
+    ));
+    assert!(!read(json!({ "ask_allergies": true, "ask_needs": false })));
+    assert!(read(json!({ "ask_allergies": false, "ask_needs": true })));
 }
 
 #[test]
 #[serial]
 fn guest_form_respects_question_toggles() {
     reset_test_store();
-    let config = json!({
+    let render = |config: serde_json::Value| -> String {
+        MockContext::guest()
+            .with_property(Property::default())
+            .with_config(&config)
+            .run(|ctx| {
+                serde_json::to_string(&render_guest_form(ctx).expect("guest surface"))
+                    .expect("surface json")
+            })
+    };
+    let json = render(json!({
         "show_when": "confirm",
-        "ask_arrival_time": true,
+        "ask_arrival_time": false,
         "ask_occasion": false,
         "ask_allergies": true,
         "ask_guest_count": false,
-        "ask_special_needs": true,
+        "ask_special_needs": false,
         "ask_id_document": true
-    });
+    }));
+    // L'heure est toujours demandée (§9 cas 4), et la pièce d'identité ne l'est plus.
+    assert!(json.contains("form.arrival.label"));
+    assert!(!json.contains("form.idDocument.label"));
+    assert!(!json.contains("form.occasion.label"));
+    assert!(!json.contains("form.guestCount.label"));
+    // Besoins particuliers : les allergies comprises.
+    assert!(json.contains("form.specialNeeds.label"));
+    assert!(json.contains("form.allergies.label"));
 
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_config(&config)
-        .run(|ctx| {
-            let surface = render_guest_form(ctx).expect("guest surface");
-            let json = serde_json::to_string(&surface).expect("surface json");
-            assert!(json.contains("form.arrival.label"));
-            assert!(!json.contains("form.occasion.label"));
-            assert!(json.contains("form.specialNeeds.label"));
-            assert!(json.contains("form.idDocument.label"));
-            assert!(!json.contains("form.guestCount.label"));
-        });
+    let json = render(json!({ "show_when": "confirm", "ask_needs": false }));
+    assert!(!json.contains("form.specialNeeds.label"));
+    assert!(!json.contains("form.allergies.label"));
 }
 
 #[test]
@@ -516,43 +563,37 @@ fn host_stay_surface_missing_stay_id() {
         });
 }
 
+/// L'heure d'arrivée est toujours posée : plus de recommandation « une question au moins ». Une
+/// heure d'arrivée tardive illisible bloque, sous son champ.
 #[test]
 #[serial]
-fn publish_readiness_recommends_one_question() {
+fn publish_readiness_blocks_on_a_bad_late_from() {
     let config = json!({
-        "ask_arrival_time": false,
         "ask_occasion": false,
-        "ask_allergies": false,
-        "ask_guest_count": false
+        "ask_needs": false,
+        "ask_guest_count": false,
+        "late_from": "25:00"
     });
     MockContext::host()
         .with_property(Property::default())
         .with_config(&config)
         .run(|ctx| {
-            let item = &publish_readiness(ctx).expect("publishReadiness").items[0];
-            assert_eq!(item.id, "questions");
+            let items = publish_readiness(ctx).expect("publishReadiness").items;
+            assert!(items.iter().all(|item| item.id != "questions"));
+            let item = items
+                .iter()
+                .find(|item| item.id == "config.late_from")
+                .expect("late_from");
             assert!(!item.ok);
         });
     MockContext::host()
         .with_property(Property::default())
         .run(|ctx| {
-            assert!(publish_readiness(ctx).expect("publishReadiness").items[0].ok);
+            assert!(publish_readiness(ctx)
+                .expect("publishReadiness")
+                .items
+                .is_empty());
         });
-    // Le transport seul, ou une question de l'hôte seule, est une question posée.
-    let mut transport_only = config.clone();
-    transport_only["ask_transport"] = json!(true);
-    let mut custom_only = config;
-    custom_only["custom_questions"] = json!([{ "label": "Draps ?", "type": "yes_no" }]);
-    for only in [transport_only, custom_only] {
-        MockContext::host()
-            .with_property(Property::default())
-            .with_config(&only)
-            .run(|ctx| {
-                let item = &publish_readiness(ctx).expect("publishReadiness").items[0];
-                assert_eq!(item.id, "questions");
-                assert!(item.ok, "{only}");
-            });
-    }
 }
 
 /// Un séjour dont l'entrée est à 16 h (Paris), pour que les créneaux soient les mêmes à chaque
@@ -797,23 +838,49 @@ fn host_main_edits_custom_questions() {
     MockContext::host()
         .with_property(Property::default())
         .with_config(&custom_questions_config())
+        .with_translation("host.custom.required", "Obligatoire")
         .run(|ctx| {
             let surface = render_host_main(ctx).expect("host main");
-            // L'heure de fin n'est dessinée qu'avec un pas régulier.
             config_form::assert_form_matches_config(
                 concat!(env!("OUT_DIR"), "/portaki-emissions"),
                 &surface,
-                &["slots_until"],
+                RETIRED,
             );
-            assert!(SurfaceAssertions::new(&surface).contains_type("StepList"));
             let json = serde_json::to_string(&surface).expect("json");
+            // Un tableau ordonnable, chaque question dans une fenêtre.
+            assert!(json.contains(r#""panel":"dialog""#), "{json}");
+            assert!(json.contains(r#""sortable":true"#), "{json}");
+            assert!(json.contains("3 / 5"), "{json}");
+            // La ligne : « Obligatoire », ou les options, sous la question.
+            assert!(json.contains(r#""sub":"Obligatoire""#), "{json}");
+            assert!(json.contains(r#""sub":"Sucré · Salé""#), "{json}");
             assert!(json.contains("custom_questions.0.label"));
             assert!(json.contains("custom_questions.0.required"));
-            // Les options, seulement pour la question à choix, en sous-liste.
-            assert!(json.contains("custom_questions.1.options.0.label"));
+            assert!(json.contains("custom_questions.1.options.5.label"));
             assert!(json.contains("Salé"));
-            assert!(!json.contains("custom_questions.0.options"));
-            assert!(!json.contains("custom_questions.2.options"));
+            // Les options ne s'affichent que pour « Choix ».
+            assert!(json.contains(r#""visibleWhen":"custom_questions.0.type=choice""#));
+            assert!(json.contains(r#""visibleWhen":"custom_questions.1.type=choice""#));
+        });
+}
+
+/// « Ajouter une question » ouvre une ligne neuve, et plus de ligne à 5.
+#[test]
+#[serial]
+fn adding_a_question_opens_a_row_up_to_five() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .with_config(&custom_questions_config())
+        .run(|mut ctx| {
+            ctx.input = json!({ "newQuestions": "neuve,autre,encore" });
+            let json =
+                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
+            assert!(json.contains(r#""id":"neuve""#), "{json}");
+            assert!(json.contains("custom_questions.4.label"), "{json}");
+            assert!(!json.contains("custom_questions.5.label"), "{json}");
+            assert!(json.contains("5 / 5"), "{json}");
+            assert!(!json.contains("i18n:host.custom.add"), "{json}");
         });
 }
 
@@ -899,5 +966,60 @@ fn custom_answers_are_kept_and_shown_on_the_stay() {
             ctx.input = json!({ "stayId": stay_id.to_string() });
             let json = serde_json::to_string(&render_host_stay(ctx).expect("stay")).expect("json");
             assert!(json.contains("Petit-déjeuner ?"));
+        });
+}
+
+/// « Arrivée tardive · Marie · 23:30 » dans À venir : une arrivée annoncée à « Arrivée tardive à
+/// partir de » ou après (22:00 par défaut), rien avant, rien quand l'hôte a vidé le champ.
+#[test]
+#[serial]
+fn a_late_arrival_is_a_task() {
+    use portaki_sdk::contracts::timeline::{TimelineStay, TimelineTasksArgs};
+    use pre_arrival_form::late_arrival_tasks;
+    reset_test_store();
+    let late = Uuid::new_v4();
+    let early = Uuid::new_v4();
+    for (stay_id, time) in [(late, "23:30"), (early, "18:00")] {
+        MockContext::guest()
+            .with_property(Property::default())
+            .with_now("2026-10-03T09:00:00Z".parse().expect("la veille"))
+            .run(|mut ctx| {
+                ctx.guest.as_mut().expect("guest").session_id = stay_id;
+                ctx.stay = Some(stay_opening_at_four(stay_id, None));
+                let args = SubmitArgs {
+                    arrival_time_estimated: Some(time.into()),
+                    ..sample_submit()
+                };
+                submit(ctx, args).expect("submit");
+            });
+    }
+    let stay = |id: Uuid, name: &str| TimelineStay {
+        id,
+        check_in: "2026-10-04T14:00:00Z".parse().expect("arrivée"),
+        check_out: "2026-10-11T09:00:00Z".parse().expect("départ"),
+        guest_name: name.into(),
+        status: "UPCOMING".into(),
+    };
+    let args = TimelineTasksArgs {
+        property_id: Uuid::nil(),
+        from: "2026-10-01T00:00:00Z".parse().expect("début"),
+        to: "2026-10-08T00:00:00Z".parse().expect("fin"),
+        stays: vec![stay(late, "Marie"), stay(early, "Ada")],
+    };
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|_| {
+            let tasks =
+                late_arrival_tasks(&ModuleConfig::default(), &args, "Europe/Paris", "L'Islette");
+            assert_eq!(tasks.len(), 1, "{tasks:?}");
+            assert_eq!(tasks[0].stay_id, Some(late));
+            assert_eq!(tasks[0].title.get("fr"), "Arrivée tardive · Marie · 23:30");
+            assert_eq!(tasks[0].context.get("fr"), "L'Islette");
+
+            let cleared = ModuleConfig {
+                late_from: Some(String::new()),
+                ..ModuleConfig::default()
+            };
+            assert!(late_arrival_tasks(&cleared, &args, "Europe/Paris", "L'Islette").is_empty());
         });
 }

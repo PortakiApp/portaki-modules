@@ -98,16 +98,28 @@ pub struct ModuleConfig {
         label = "host.when"
     )]
     pub show_when: ShowWhen,
+    /// Plus lu : l'heure d'arrivée est toujours demandée (§9 cas 4). Gardé pour les réglages
+    /// enregistrés.
     #[field(label = "host.question.arrival")]
     pub ask_arrival_time: bool,
     #[field(label = "host.question.occasion")]
     pub ask_occasion: bool,
+    /// Lu par [`ModuleConfig::asks_needs`] tant que `ask_needs` est absent.
     #[field(label = "host.question.allergies")]
     pub ask_allergies: bool,
     #[field(label = "host.question.guestCount")]
     pub ask_guest_count: bool,
+    /// Lu par [`ModuleConfig::asks_needs`] tant que `ask_needs` est absent.
     #[field(label = "host.question.specialNeeds")]
     pub ask_special_needs: bool,
+    /// « Besoins particuliers » : l'interrupteur qui remplace `ask_special_needs` et
+    /// `ask_allergies` (spec Pré-arrivée §2.2). Absent : l'un des deux d'avant — voir
+    /// [`ModuleConfig::asks_needs`].
+    #[field(label = "host.question.needs")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ask_needs: Option<bool>,
+    /// Plus lu : la fiche de police (Formalités) recueille la pièce d'identité. Gardé pour les
+    /// réglages enregistrés.
     #[field(label = "host.question.idDocument")]
     pub ask_id_document: bool,
     /// « Vous arrivez en ? » — voiture, train, avion (§2.20).
@@ -130,6 +142,11 @@ pub struct ModuleConfig {
     #[field(label = "host.slots.until")]
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub slots_until: String,
+    /// « Arrivée tardive à partir de », `HH:MM` : une arrivée annoncée à cette heure ou après
+    /// pose une tâche dans À venir. Absent : 22:00 ; vide : pas de tâche.
+    #[field(label = "host.lateFrom")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub late_from: Option<String>,
     /// À remplir avant (§2.3).
     #[field(
         kind = "select",
@@ -222,6 +239,10 @@ fn lenient_bool<'de, D: serde::Deserializer<'de>>(de: D) -> Result<bool, D::Erro
 
 /// Le dernier créneau proposé quand l'hôte n'en donne pas.
 pub const DEFAULT_SLOTS_UNTIL: &str = "23:00";
+/// L'heure d'une arrivée tardive quand l'hôte n'en donne pas (§2.1).
+pub const DEFAULT_LATE_FROM: &str = "22:00";
+/// Le pas montré quand l'hôte n'en a pas choisi (§2.1).
+pub const DEFAULT_SLOT_STEP: &str = "30";
 
 impl Default for ModuleConfig {
     fn default() -> Self {
@@ -232,10 +253,12 @@ impl Default for ModuleConfig {
             ask_allergies: true,
             ask_guest_count: true,
             ask_special_needs: false,
+            ask_needs: None,
             ask_id_document: false,
             ask_transport: false,
             slot_step: String::new(),
             slots_until: String::new(),
+            late_from: None,
             deadline: Deadline::J1At18,
             reminder: true,
             custom_questions: Vec::new(),
@@ -282,6 +305,9 @@ impl ModuleConfig {
             .map(|error| ("slots_until".to_string(), error))
             .into_iter()
             .collect();
+        if let Some(error) = check::time(self.late_from.as_deref().unwrap_or_default().trim()) {
+            problems.push(("late_from".into(), error));
+        }
         if self.custom_questions.len() > MAX_CUSTOM_QUESTIONS {
             problems.push((
                 "custom_questions".into(),
@@ -332,16 +358,24 @@ impl ModuleConfig {
             .take(MAX_CUSTOM_QUESTIONS)
     }
 
-    /// At least one question is asked.
-    pub fn asks_anything(&self) -> bool {
-        self.ask_arrival_time
-            || self.ask_occasion
-            || self.ask_allergies
-            || self.ask_guest_count
-            || self.ask_special_needs
-            || self.ask_id_document
-            || self.ask_transport
-            || self.guest_questions().next().is_some()
+    /// « Besoins particuliers » (besoins et allergies, §2.2) : le réglage d'un seul
+    /// interrupteur, ou, tant que l'hôte ne l'a pas enregistré, l'un des deux d'avant.
+    pub fn asks_needs(&self) -> bool {
+        self.ask_needs
+            .unwrap_or(self.ask_special_needs || self.ask_allergies)
+    }
+
+    /// Le pas montré à l'hôte : le sien, 30 min sinon (§2.1).
+    pub fn step_shown(&self) -> &str {
+        match self.slot_step.trim() {
+            step @ ("15" | "30" | "60") => step,
+            _ => DEFAULT_SLOT_STEP,
+        }
+    }
+
+    /// L'heure d'une arrivée tardive, en minutes ; `None` quand l'hôte a vidé le champ.
+    pub fn late_from_minutes(&self) -> Option<u32> {
+        crate::slots::minutes_of(self.late_from.as_deref().unwrap_or(DEFAULT_LATE_FROM))
     }
 }
 

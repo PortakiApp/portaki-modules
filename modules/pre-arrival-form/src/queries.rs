@@ -67,36 +67,26 @@ pub fn get_status(ctx: Context) -> Result<PreArrivalStatus> {
     })
 }
 
-/// Recommends asking the guest at least one question; never blocks. A rule over six toggles,
-/// which the declared config cannot say.
+/// Ce que `problems` refuse bloque la publication, sous le champ concerné. L'heure d'arrivée est
+/// toujours demandée (§9 cas 4) : plus de « posez au moins une question » à recommander.
 #[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
 pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
     let config = ModuleConfig::load(&ctx)?;
-    let mut items = vec![PublishCheck {
-        id: "questions".into(),
-        level: PublishLevel::Recommended,
-        ok: config.asks_anything(),
-        label: text("publish.questions.label"),
-        hint: text("publish.questions.hint"),
-    }];
-    // L'heure du dernier créneau et les questions de l'hôte, sous leur champ : elles bloquent,
-    // comme dans le formulaire.
-    items.extend(
-        config
-            .problems()
-            .into_iter()
-            .map(|(field, error)| PublishCheck {
-                label: text(if field == "slots_until" {
-                    "host.slots.until"
-                } else {
-                    "host.custom.title"
-                }),
-                id: format!("config.{field}"),
-                level: PublishLevel::Required,
-                ok: false,
-                hint: error,
+    let items = config
+        .problems()
+        .into_iter()
+        .map(|(field, error)| PublishCheck {
+            label: text(match field.as_str() {
+                "slots_until" => "host.slots.until",
+                "late_from" => "host.lateFrom",
+                _ => "host.custom.title",
             }),
-    );
+            id: format!("config.{field}"),
+            level: PublishLevel::Required,
+            ok: false,
+            hint: error,
+        })
+        .collect();
     Ok(PublishReadiness { items })
 }
 
