@@ -579,6 +579,7 @@ SUMMARY:Reserved\nDESCRIPTION:Name: Leo Martin\nEND:VEVENT\nEND:VCALENDAR\n";
                     property_id: ctx.property_id,
                     period: 30,
                     key: "calendar-sync".into(),
+                    views: None,
                 },
             )
             .expect("statsSummary");

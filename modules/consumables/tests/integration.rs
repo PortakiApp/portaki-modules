@@ -279,6 +279,7 @@ fn stock_args() -> StatsSummaryArgs {
         property_id: Uuid::nil(),
         period: 30,
         key: "stock".into(),
+        views: None,
     }
 }
 

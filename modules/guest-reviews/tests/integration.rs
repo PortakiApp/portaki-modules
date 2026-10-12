@@ -781,6 +781,7 @@ fn stored_reviews_feed_the_stats() {
                     property_id: ctx.property_id,
                     period: 30,
                     key: "reviews".into(),
+                    views: None,
                 },
             )
             .expect("statsSummary");
