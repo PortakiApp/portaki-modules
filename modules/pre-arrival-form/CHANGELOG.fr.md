@@ -4,7 +4,7 @@
 
 La page Avant l’arrivée refaite.
 
-* Pas des créneaux et heure d’arrivée tardive réglables ; À venir signale les arrivées tardives et les formulaires non remplis à l’approche de la limite.
+* Pas des créneaux et arrivée tardive réglables ; À venir signale les arrivées tardives et les formulaires non remplis avant la limite.
 * Vos questions dans un tableau à réordonner ; un seul interrupteur pour besoins et allergies, plus de pièce d’identité (Formalités).
 * Date limite, relance et affichage se règlent dans « Envoi et relances » ; « Renvoyer le formulaire » le renvoie au voyageur depuis le séjour.
 * Les statistiques du logement comptent les formulaires remplis sur la période.

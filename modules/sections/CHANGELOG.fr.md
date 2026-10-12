@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.0
+
+Vos rubriques gardent toutes leurs langues.
+
+* Le premier enregistrement des rubriques garde leurs textes dans toutes les langues, et une rubrique retirée ne revient plus vide.
+
 ## 1.6.1
 
 Montée technique.

@@ -6,7 +6,7 @@ Vos itinéraires en tableau, et une trace qui remplit le reste.
 
 * Vos itinéraires se rangent dans un tableau à glisser : les deux premiers vont sur la carte d'accueil, chacun s'ouvre dans un panneau.
 * La trace GPX propose le nom, la distance, le dénivelé, la durée et le départ ; « Recalculer depuis la trace » les reprend.
-* Durée en heures et minutes, saison en JJ/MM, dénivelé demandé sans altitude ; cinq conseils « Avant de partir » ; mesures corrigées signalées au voyageur.
+* Durée en heures et minutes, saison en JJ/MM, dénivelé sans altitude ; cinq conseils « Avant de partir » ; mesures corrigées signalées.
 * Les statistiques du logement comptent les itinéraires consultés par vos voyageurs sur la période.
 * Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
 
