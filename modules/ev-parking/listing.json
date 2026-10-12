@@ -14,8 +14,8 @@
     "en": "The reserved spot, the gate code and the charger PIN, revealed on the host's schedule, with a map link and instructions. The spot is also mentioned in arrival emails."
   },
   "hostSurface": {
-    "fr": "Un onglet Parking VE : place, codes, itinéraire, consignes et moment d’affichage des codes.",
-    "en": "An EV parking tab: spot, codes, directions, instructions and when codes are shown."
+    "fr": "Une page Parking VE en trois cartes : la place et son épingle, la borne, le tarif et la réservation.",
+    "en": "An EV parking page in three cards: the spot and its pin, the charger, the price and booking."
   },
   "configItems": [
     {
@@ -27,8 +27,12 @@
       "en": "Gate code and charger PIN"
     },
     {
-      "fr": "Lien carte et consignes (facultatif)",
-      "en": "Map link and instructions (optional)"
+      "fr": "Position de la borne sur la carte, photo de la place, prise, puissance, câble, mode d’emploi",
+      "en": "Charger pin on the map, photo of the spot, plug, power, cable, how to use it"
+    },
+    {
+      "fr": "Tarif de la recharge et réservation de la borne",
+      "en": "Charging price and charger booking"
     },
     {
       "fr": "Moment d’affichage des codes (dès la réservation, 24 h avant, la veille à 16 h ou à l’arrivée)",
