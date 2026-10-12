@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.8.0...issue-report-v1.9.0) (2026-10-12)
+
+
+### Features
+
+* **appliances:** settings page and devices table ([5843ee5](https://github.com/PortakiApp/portaki-modules/commit/5843ee56ef9828fde785e7b7f9b73ed03144bfb0))
+* **issue-report:** add the Signalements tab ([07a3a8e](https://github.com/PortakiApp/portaki-modules/commit/07a3a8e25c1fde40855207b5a8b5efbd1f474a1d))
+* **issue-report:** redesign host settings ([edad49c](https://github.com/PortakiApp/portaki-modules/commit/edad49c8156fda76eeb298d56e253e183f01f6f4))
+* **trails:** upload GPX as a file, not an image ([9b3db9e](https://github.com/PortakiApp/portaki-modules/commit/9b3db9e15fbe337724635ec0d7b3bd8999581822))
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.4.0 ([909824e](https://github.com/PortakiApp/portaki-modules/commit/909824eef489e66ca1cb61740c730ef4e569e4ee))
+* **deps:** bump portaki-sdk to 10.5.0 ([1e3d5b3](https://github.com/PortakiApp/portaki-modules/commit/1e3d5b3fc254ba1456d55d7a87c3c282fdbc4483))
+* **deps:** bump portaki-sdk to 10.6.0 ([0b8302f](https://github.com/PortakiApp/portaki-modules/commit/0b8302fdc7f973fd5ea779c01271ca53fbec4927))
+* **deps:** bump portaki-sdk to 10.7.0 ([54469bc](https://github.com/PortakiApp/portaki-modules/commit/54469bc8460caea3ee5939ee40c513fbb1c81b42))
+* **deps:** bump portaki-sdk to 10.8.0 ([2ae3d86](https://github.com/PortakiApp/portaki-modules/commit/2ae3d86ab23aefd75de5979d1015ea9b28c33252))
+* **deps:** bump portaki-sdk to 10.9.0 ([1ecf14d](https://github.com/PortakiApp/portaki-modules/commit/1ecf14de162d25ded36a6a82ef6a6176a9c24e03))
+* **issue-report:** label every category in stats ([d91e1e4](https://github.com/PortakiApp/portaki-modules/commit/d91e1e4ef5291681305e1c9e88868915fd992117))
+* **issue-report:** say a copied number needs review ([481e851](https://github.com/PortakiApp/portaki-modules/commit/481e851e82701737bf71932980735b851b1aa4ab))
+
 ## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.7.0...issue-report-v1.8.0) (2026-10-09)
 
 

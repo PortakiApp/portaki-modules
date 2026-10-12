@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/rules-v1.8.1...rules-v1.9.0) (2026-10-12)
+
+
+### Features
+
+* **appliances:** settings page and devices table ([5843ee5](https://github.com/PortakiApp/portaki-modules/commit/5843ee56ef9828fde785e7b7f9b73ed03144bfb0))
+* **rules:** sortable rules table and dialog editing ([e1e59d1](https://github.com/PortakiApp/portaki-modules/commit/e1e59d1dbf9c7c5e24ffcd256dc92550544ec951))
+* **trails:** upload GPX as a file, not an image ([9b3db9e](https://github.com/PortakiApp/portaki-modules/commit/9b3db9e15fbe337724635ec0d7b3bd8999581822))
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.4.0 ([909824e](https://github.com/PortakiApp/portaki-modules/commit/909824eef489e66ca1cb61740c730ef4e569e4ee))
+* **deps:** bump portaki-sdk to 10.5.0 ([1e3d5b3](https://github.com/PortakiApp/portaki-modules/commit/1e3d5b3fc254ba1456d55d7a87c3c282fdbc4483))
+* **deps:** bump portaki-sdk to 10.6.0 ([0b8302f](https://github.com/PortakiApp/portaki-modules/commit/0b8302fdc7f973fd5ea779c01271ca53fbec4927))
+* **deps:** bump portaki-sdk to 10.7.0 ([54469bc](https://github.com/PortakiApp/portaki-modules/commit/54469bc8460caea3ee5939ee40c513fbb1c81b42))
+* **deps:** bump portaki-sdk to 10.8.0 ([2ae3d86](https://github.com/PortakiApp/portaki-modules/commit/2ae3d86ab23aefd75de5979d1015ea9b28c33252))
+* **deps:** bump portaki-sdk to 10.9.0 ([1ecf14d](https://github.com/PortakiApp/portaki-modules/commit/1ecf14de162d25ded36a6a82ef6a6176a9c24e03))
+
 ## [1.8.1](https://github.com/PortakiApp/portaki-modules/compare/rules-v1.8.0...rules-v1.8.1) (2026-10-09)
 
 
