@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "Escursioni",
+  "catalog.host.trails-views": "Percorsi consultati",
   "config.trails": "Escursioni",
   "guest.before.title": "Prima di partire",
   "guest.before.water": "Porta 1,5 L d’acqua a persona",
@@ -131,5 +132,13 @@
   "publish.measures.label": "Escursioni senza misure",
   "publish.public.hint": "Seleziona da 2 a 4 percorsi per la pagina pubblica o disattiva il blocco. Sotto i 2 non viene mostrato.",
   "publish.trails.hint": "Aggiungi almeno un itinerario.",
-  "publish.trails.label": "Almeno un’escursione"
+  "publish.trails.label": "Almeno un’escursione",
+  "stats.tile": "percorsi consultati",
+  "stats.views.clicks.call": "Chiamate",
+  "stats.views.clicks.directions": "Indicazioni richieste",
+  "stats.views.clicks.link": "Link aperti",
+  "stats.views.clicks.mail": "E-mail",
+  "stats.views.empty": "Nessun percorso consultato nel periodo.",
+  "stats.views.list": "Elenco percorsi aperto",
+  "stats.views.unavailable": "Ancora nessuna consultazione degli ospiti da mostrare."
 }

@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "ハイキング",
+  "catalog.host.trails-views": "閲覧されたルート",
   "config.trails": "コース",
   "guest.before.title": "出かける前に",
   "guest.before.water": "ひとり 1.5 L の水をお持ちください",
@@ -131,5 +132,13 @@
   "publish.measures.label": "所要時間や距離のないコースがあります",
   "publish.public.hint": "公開ページ用に2〜4件のコースを選ぶか、ブロックをオフにしてください。2件未満では表示されません。",
   "publish.trails.hint": "ルートを1つ以上追加してください。",
-  "publish.trails.label": "コースを 1 件以上"
+  "publish.trails.label": "コースを 1 件以上",
+  "stats.tile": "閲覧されたルート",
+  "stats.views.clicks.call": "通話",
+  "stats.views.clicks.directions": "経路案内",
+  "stats.views.clicks.link": "開かれたリンク",
+  "stats.views.clicks.mail": "メール",
+  "stats.views.empty": "この期間に閲覧されたルートはありません。",
+  "stats.views.list": "ルート一覧の表示",
+  "stats.views.unavailable": "表示できるゲストの閲覧はまだありません。"
 }

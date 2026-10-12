@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "Wandelingen",
+  "catalog.host.trails-views": "Bekeken wandelroutes",
   "config.trails": "Wandelingen",
   "guest.before.title": "Voor je vertrekt",
   "guest.before.water": "Neem 1,5 L water per persoon mee",
@@ -131,5 +132,13 @@
   "publish.measures.label": "Wandelingen zonder maten",
   "publish.public.hint": "Vink 2 tot 4 wandelingen aan voor de openbare pagina of zet het blok uit. Onder de 2 wordt het niet getoond.",
   "publish.trails.hint": "Voeg minstens één route toe.",
-  "publish.trails.label": "Minstens één wandeling"
+  "publish.trails.label": "Minstens één wandeling",
+  "stats.tile": "bekeken wandelroutes",
+  "stats.views.clicks.call": "Oproepen",
+  "stats.views.clicks.directions": "Routes opgevraagd",
+  "stats.views.clicks.link": "Geopende links",
+  "stats.views.clicks.mail": "E-mails",
+  "stats.views.empty": "Geen wandelroute bekeken in deze periode.",
+  "stats.views.list": "Routelijst geopend",
+  "stats.views.unavailable": "Nog geen weergaven door gasten om te tonen."
 }

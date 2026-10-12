@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "Rutas",
+  "catalog.host.trails-views": "Rutas consultadas",
   "config.trails": "Rutas",
   "guest.before.title": "Antes de salir",
   "guest.before.water": "Lleva 1,5 L de agua por persona",
@@ -131,5 +132,13 @@
   "publish.measures.label": "Rutas sin medidas",
   "publish.public.hint": "Marque de 2 a 4 rutas para la página pública o desactive el bloque. Con menos de 2, no se muestra.",
   "publish.trails.hint": "Añada al menos una ruta.",
-  "publish.trails.label": "Al menos una ruta"
+  "publish.trails.label": "Al menos una ruta",
+  "stats.tile": "rutas consultadas",
+  "stats.views.clicks.call": "Llamadas",
+  "stats.views.clicks.directions": "Rutas solicitadas",
+  "stats.views.clicks.link": "Enlaces abiertos",
+  "stats.views.clicks.mail": "Correos",
+  "stats.views.empty": "Ninguna ruta consultada en este periodo.",
+  "stats.views.list": "Lista de rutas abierta",
+  "stats.views.unavailable": "Todavía no hay consultas de huéspedes que mostrar."
 }

@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "Trails",
+  "catalog.host.trails-views": "Trails viewed",
   "config.trails": "Trails",
   "guest.before.title": "Before you set off",
   "guest.before.water": "Take 1.5 L of water per person",
@@ -131,5 +132,13 @@
   "publish.measures.label": "Trails without measures",
   "publish.public.hint": "Tick 2 to 4 walks for the public page, or switch the block off. Below 2, it is not shown.",
   "publish.trails.hint": "Add at least one trail.",
-  "publish.trails.label": "At least one trail"
+  "publish.trails.label": "At least one trail",
+  "stats.tile": "trails viewed",
+  "stats.views.clicks.call": "Calls",
+  "stats.views.clicks.directions": "Directions requested",
+  "stats.views.clicks.link": "Links opened",
+  "stats.views.clicks.mail": "Emails",
+  "stats.views.empty": "No trail viewed in this period.",
+  "stats.views.list": "Trail list opened",
+  "stats.views.unavailable": "No guest views to show yet."
 }

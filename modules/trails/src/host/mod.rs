@@ -7,6 +7,10 @@
 //! bloque « Publier » (`publishReadiness`), jamais l'enregistrement.
 
 use portaki_sdk::contracts::i18n::I18nText;
+mod stats;
+
+pub use stats::{render_host_stats, stats_summary};
+
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::{ChoiceListLayout, Tone};
 use portaki_sdk::sdui::primitives::{

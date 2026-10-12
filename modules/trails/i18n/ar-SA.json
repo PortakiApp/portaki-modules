@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "مسارات المشي",
+  "catalog.host.trails-views": "المسارات المعروضة",
   "config.trails": "المسارات",
   "guest.before.title": "قبل الانطلاق",
   "guest.before.water": "خُذ 1.5 لتر من الماء لكل شخص",
@@ -131,5 +132,13 @@
   "publish.measures.label": "مسارات بلا مقاييس",
   "publish.public.hint": "اختر من 2 إلى 4 مسارات للصفحة العامة أو أوقف الكتلة. إذا كانت أقل من 2 فلن تظهر.",
   "publish.trails.hint": "أضف مسارًا واحدًا على الأقل.",
-  "publish.trails.label": "مسار واحد على الأقل"
+  "publish.trails.label": "مسار واحد على الأقل",
+  "stats.tile": "المسارات المعروضة",
+  "stats.views.clicks.call": "المكالمات",
+  "stats.views.clicks.directions": "طلبات الاتجاهات",
+  "stats.views.clicks.link": "الروابط المفتوحة",
+  "stats.views.clicks.mail": "رسائل البريد",
+  "stats.views.empty": "لم يُعرض أي مسار خلال هذه الفترة.",
+  "stats.views.list": "فتح قائمة المسارات",
+  "stats.views.unavailable": "لا توجد مشاهدات للضيوف لعرضها بعد."
 }

@@ -1,5 +1,6 @@
 {
   "catalog.host.main": "Randonnées",
+  "catalog.host.trails-views": "Itinéraires consultés",
   "config.trails": "Itinéraires",
   "guest.before.title": "Avant de partir",
   "guest.before.water": "Emportez 1,5 L d’eau par personne",
@@ -131,5 +132,13 @@
   "publish.measures.label": "Des itinéraires sans mesure",
   "publish.public.hint": "Cochez de 2 à 4 itinéraires pour la page publique, ou éteignez le bloc. En dessous de 2, il ne s’affiche pas.",
   "publish.trails.hint": "Ajoutez au moins un itinéraire.",
-  "publish.trails.label": "Au moins un itinéraire"
+  "publish.trails.label": "Au moins un itinéraire",
+  "stats.tile": "itinéraires consultés",
+  "stats.views.clicks.call": "Appels",
+  "stats.views.clicks.directions": "Itinéraires demandés",
+  "stats.views.clicks.link": "Liens ouverts",
+  "stats.views.clicks.mail": "E-mails",
+  "stats.views.empty": "Aucun itinéraire consulté sur la période.",
+  "stats.views.list": "Liste des randonnées ouverte",
+  "stats.views.unavailable": "Pas encore de consultations des voyageurs à afficher."
 }
