@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.9.0...issue-report-v1.9.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* **issue-report:** drop UPDATE from v2 migration ([24bdf14](https://github.com/PortakiApp/portaki-modules/commit/24bdf1409abef3e4379d392bc24883b51a405d84))
+
 ## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.8.0...issue-report-v1.9.0) (2026-10-12)
 
 
