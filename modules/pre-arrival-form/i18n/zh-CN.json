@@ -148,5 +148,12 @@
   "surface.host.main.title": "入住前问卷",
   "surface.host.stay.title": "入住前问卷",
   "task.lateArrival.title": "晚到 · {guest} · {time}",
-  "task.lateArrival.title.anonymous": "晚到 · {time}"
+  "task.lateArrival.title.anonymous": "晚到 · {time}",
+  "task.unfilled.title": "到达前表单未填写",
+  "task.unfilled.context.today": "{guest} · 今天到达",
+  "task.unfilled.context.today.anonymous": "今天到达",
+  "task.unfilled.context.tomorrow": "{guest} · 明天到达",
+  "task.unfilled.context.tomorrow.anonymous": "明天到达",
+  "task.unfilled.context.date": "{guest} · {month}/{day} 到达",
+  "task.unfilled.context.date.anonymous": "{month}/{day} 到达"
 }

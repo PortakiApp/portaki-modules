@@ -148,5 +148,12 @@
   "surface.host.main.title": "Formulario previo a la llegada",
   "surface.host.stay.title": "Formulario previo a la llegada",
   "task.lateArrival.title": "Llegada tardía · {guest} · {time}",
-  "task.lateArrival.title.anonymous": "Llegada tardía · {time}"
+  "task.lateArrival.title.anonymous": "Llegada tardía · {time}",
+  "task.unfilled.title": "Formulario previo sin rellenar",
+  "task.unfilled.context.today": "{guest} · llega hoy",
+  "task.unfilled.context.today.anonymous": "Llega hoy",
+  "task.unfilled.context.tomorrow": "{guest} · llega mañana",
+  "task.unfilled.context.tomorrow.anonymous": "Llega mañana",
+  "task.unfilled.context.date": "{guest} · llega el {day}/{month}",
+  "task.unfilled.context.date.anonymous": "Llega el {day}/{month}"
 }

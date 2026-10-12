@@ -148,5 +148,12 @@
   "surface.host.main.title": "Formulaire pré-arrivée",
   "surface.host.stay.title": "Formulaire de pré-arrivée",
   "task.lateArrival.title": "Arrivée tardive · {guest} · {time}",
-  "task.lateArrival.title.anonymous": "Arrivée tardive · {time}"
+  "task.lateArrival.title.anonymous": "Arrivée tardive · {time}",
+  "task.unfilled.title": "Pré-arrivée non remplie",
+  "task.unfilled.context.today": "{guest} · arrivée aujourd’hui",
+  "task.unfilled.context.today.anonymous": "Arrivée aujourd’hui",
+  "task.unfilled.context.tomorrow": "{guest} · arrivée demain",
+  "task.unfilled.context.tomorrow.anonymous": "Arrivée demain",
+  "task.unfilled.context.date": "{guest} · arrivée le {day}/{month}",
+  "task.unfilled.context.date.anonymous": "Arrivée le {day}/{month}"
 }

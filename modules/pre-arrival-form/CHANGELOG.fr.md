@@ -4,7 +4,7 @@
 
 La page Avant l’arrivée refaite.
 
-* Choisissez le pas des créneaux (15 min, 30 min ou 1 h) et l’heure d’une arrivée tardive : elle crée une tâche dans À venir.
+* Pas des créneaux et heure d’arrivée tardive réglables ; À venir signale les arrivées tardives et les formulaires non remplis à l’approche de la limite.
 * Vos questions dans un tableau à réordonner ; un seul interrupteur pour besoins et allergies, plus de pièce d’identité (Formalités).
 * Date limite, relance et affichage se règlent dans « Envoi et relances » ; « Renvoyer le formulaire » le renvoie au voyageur depuis le séjour.
 * Les statistiques du logement comptent les formulaires remplis sur la période.

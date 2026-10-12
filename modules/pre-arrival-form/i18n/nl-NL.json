@@ -148,5 +148,12 @@
   "surface.host.main.title": "Formulier vóór aankomst",
   "surface.host.stay.title": "Formulier vóór aankomst",
   "task.lateArrival.title": "Late aankomst · {guest} · {time}",
-  "task.lateArrival.title.anonymous": "Late aankomst · {time}"
+  "task.lateArrival.title.anonymous": "Late aankomst · {time}",
+  "task.unfilled.title": "Formulier vóór aankomst niet ingevuld",
+  "task.unfilled.context.today": "{guest} · aankomst vandaag",
+  "task.unfilled.context.today.anonymous": "Aankomst vandaag",
+  "task.unfilled.context.tomorrow": "{guest} · aankomst morgen",
+  "task.unfilled.context.tomorrow.anonymous": "Aankomst morgen",
+  "task.unfilled.context.date": "{guest} · aankomst op {day}-{month}",
+  "task.unfilled.context.date.anonymous": "Aankomst op {day}-{month}"
 }

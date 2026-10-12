@@ -14,7 +14,7 @@ use pre_arrival_form::{
     get_status, publish_readiness, render_guest_form, render_home_card, render_host_main,
     render_host_resend, render_host_stats, render_host_stay, resend_form, reset_test_store,
     send_form_available, send_reminder_j0, send_reminder_j1, send_reminder_j3, stats_summary,
-    submit, ModuleConfig, ResendFormArgs, ShowWhen, SubmitArgs,
+    submit, Deadline, ModuleConfig, ResendFormArgs, ShowWhen, SubmitArgs,
 };
 use serde_json::json;
 
@@ -1022,6 +1022,86 @@ fn a_late_arrival_is_a_task() {
                 ..ModuleConfig::default()
             };
             assert!(late_arrival_tasks(&cleared, &args, "Europe/Paris", "L'Islette").is_empty());
+        });
+}
+
+/// « Pré-arrivée non remplie · Marie · arrivée demain » dans À venir : une arrivée sans réponse
+/// dont la limite (la veille à 18 h par défaut) tombe dans les 24 h ; rien une fois répondu, rien
+/// trop tôt, rien après l'arrivée.
+#[test]
+#[serial]
+fn an_unfilled_form_near_its_deadline_is_a_task() {
+    use portaki_sdk::contracts::timeline::{TimelineStay, TimelineTasksArgs};
+    use pre_arrival_form::unfilled_form_tasks;
+    reset_test_store();
+    let (marie, ada, anonymous) = (Uuid::new_v4(), Uuid::new_v4(), Uuid::new_v4());
+    answer(ada);
+    let stay = |id: Uuid, name: &str, check_in: &str| TimelineStay {
+        id,
+        check_in: check_in.parse().expect("arrivée"),
+        check_out: "2026-10-20T09:00:00Z".parse().expect("départ"),
+        guest_name: name.into(),
+        status: "UPCOMING".into(),
+    };
+    let args = TimelineTasksArgs {
+        property_id: Uuid::nil(),
+        from: "2026-10-10T00:00:00Z".parse().expect("début"),
+        to: "2026-10-17T00:00:00Z".parse().expect("fin"),
+        stays: vec![
+            stay(marie, "Marie", "2026-10-13T14:00:00Z"),
+            stay(ada, "Ada", "2026-10-13T14:00:00Z"),
+            stay(anonymous, " ", "2026-10-14T14:00:00Z"),
+        ],
+    };
+    let at = |now: &str| now.parse().expect("maintenant");
+    let config = ModuleConfig {
+        show_when: ShowWhen::Confirm,
+        ..ModuleConfig::default()
+    };
+    MockContext::host()
+        .with_property(Property::default())
+        .run(|_| {
+            // Le 12 à 10 h, Paris : la limite de Marie (le 12 à 18 h) est dans les 24 h.
+            let tasks =
+                unfilled_form_tasks(&config, &args, at("2026-10-12T08:00:00Z"), "Europe/Paris");
+            assert_eq!(tasks.len(), 1, "{tasks:?}");
+            assert_eq!(tasks[0].stay_id, Some(marie));
+            assert_eq!(tasks[0].title.get("fr"), "Pré-arrivée non remplie");
+            assert_eq!(tasks[0].context.get("fr"), "Marie · arrivée demain");
+
+            // Le 13 au matin : Marie arrive aujourd'hui, le voyageur sans nom demain.
+            let tasks =
+                unfilled_form_tasks(&config, &args, at("2026-10-13T07:00:00Z"), "Europe/Paris");
+            let contexts: Vec<_> = tasks
+                .iter()
+                .map(|t| t.context.get("fr").to_string())
+                .collect();
+            assert_eq!(contexts, ["Marie · arrivée aujourd’hui", "Arrivée demain"]);
+
+            // Limite à J-3 : prévenu trois jours avant, avec la date.
+            let j3 = ModuleConfig {
+                deadline: Deadline::J3,
+                ..config.clone()
+            };
+            let tasks = unfilled_form_tasks(&j3, &args, at("2026-10-10T08:00:00Z"), "Europe/Paris");
+            assert_eq!(tasks.len(), 1, "{tasks:?}");
+            assert_eq!(tasks[0].context.get("fr"), "Marie · arrivée le 13/10");
+
+            // Trop tôt, puis après l'arrivée.
+            assert!(unfilled_form_tasks(
+                &config,
+                &args,
+                at("2026-10-10T08:00:00Z"),
+                "Europe/Paris"
+            )
+            .is_empty());
+            assert!(unfilled_form_tasks(
+                &config,
+                &args,
+                at("2026-10-14T15:00:00Z"),
+                "Europe/Paris"
+            )
+            .is_empty());
         });
 }
 
