@@ -90,13 +90,18 @@ impl Schedule {
     }
 }
 
-/// The first module that provides `access.reveal_schedule` on this property.
-///
-/// ponytail: always `None` on portaki-sdk 10.5.0 — `CapabilityId` is a closed enum without
-/// `access.reveal_schedule`, and `ModulePeer` has no `shared`. Once the SDK has both, this is
-/// `host::module::list_by_capability(…)?.into_iter().next()` mapped onto [`Peer`].
+/// The first module that provides `access.reveal_schedule` on this property, with the published
+/// values it shares. A host error leaves Wi-Fi on its own choice: never block the booklet on it.
 fn reveal_schedule_peer() -> Option<Peer> {
-    None
+    let peer = host::module::list_by_capability(portaki_sdk::capability::access::REVEAL_SCHEDULE)
+        .ok()?
+        .into_iter()
+        .next()?;
+    Some(Peer {
+        module_id: peer.module_id.to_string(),
+        display_name: peer.display_name,
+        shared: peer.shared,
+    })
 }
 
 /// Placeholder written into SDUI when the password is not yet revealable.
