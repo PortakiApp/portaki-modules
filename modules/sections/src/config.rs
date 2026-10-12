@@ -103,10 +103,56 @@ pub struct ModuleConfig {
 
 impl ModuleConfig {
     /// The sections to show and edit: the saved list, or the module's tables from before it.
+    ///
+    /// Before the first save the form is seeded with the legacy rows (their uuid as `id`), so the
+    /// first `updateConfig` carries every one of them. That save writes the editing language
+    /// only: a saved row whose id is a legacy one takes its other languages from the tables, or
+    /// the first save would erase them. A row the dashboard removed comes back blank (all its
+    /// fields, `id` included, set to `""`) and is dropped: an empty saved list hides the tables
+    /// for good.
     pub fn sections(&self) -> Vec<SectionRow> {
-        match &self.sections {
-            Some(rows) => rows.clone(),
-            None => crate::store::legacy_rows().unwrap_or_default(),
+        let Some(rows) = &self.sections else {
+            return crate::store::legacy_rows().unwrap_or_default();
+        };
+        let rows: Vec<SectionRow> = rows
+            .iter()
+            .filter(|row| {
+                !(row.id.trim().is_empty() && row.is_blank() && row.photo.trim().is_empty())
+            })
+            .cloned()
+            .collect();
+        // Only rows born in the tables carry a uuid: no table read for a config of after.
+        if !rows
+            .iter()
+            .any(|row| uuid::Uuid::parse_str(&row.id).is_ok())
+        {
+            return rows;
+        }
+        let legacy = crate::store::legacy_rows().unwrap_or_default();
+        rows.into_iter()
+            .map(|mut row| {
+                if let Some(old) = legacy.iter().find(|old| old.id == row.id) {
+                    fill_missing(&mut row.title, &old.title);
+                    fill_missing(&mut row.body, &old.body);
+                }
+                row
+            })
+            .collect()
+    }
+}
+
+/// Every language `from` has and `into` lacks.
+// ponytail: a language the host never edited keeps the legacy text, even after the source
+// language changed — stale beats lost; the translation flow can refresh it.
+fn fill_missing(into: &mut I18nText, from: &I18nText) {
+    for (lang, text) in from.by_language() {
+        let slot = match lang {
+            "fr" => &mut into.fr,
+            "en" => &mut into.en,
+            other => into.others.entry(other.to_string()).or_default(),
+        };
+        if slot.trim().is_empty() {
+            *slot = text.to_string();
         }
     }
 }
@@ -246,7 +292,7 @@ mod tests {
 
     fn row(title: &str, body: &str) -> SectionRow {
         SectionRow {
-            id: title.into(),
+            id: format!("row-{title}"),
             title: title.into(),
             body: body.into(),
             photo: String::new(),

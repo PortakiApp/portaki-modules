@@ -271,3 +271,111 @@ fn a_long_teaser_is_hinted_not_blocked() {
     assert_eq!(readiness.items.len(), 1);
     assert!(!readiness.items[0].ok);
 }
+
+/// Every `sections.N.key` input of the rendered form, with its seeded value — what the
+/// dashboard holds before the first keystroke.
+fn form_values(node: &Value, out: &mut Vec<(String, String)>) {
+    match node {
+        Value::Object(map) => {
+            if let (Some(Value::String(name)), Some(Value::String(value))) =
+                (map.get("name"), map.get("value"))
+            {
+                if name.starts_with("sections.") && !out.iter().any(|(n, _)| n == name) {
+                    out.push((name.clone(), value.clone()));
+                }
+            }
+            map.values().for_each(|child| form_values(child, out));
+        }
+        Value::Array(items) => items.iter().for_each(|child| form_values(child, out)),
+        _ => {}
+    }
+}
+
+/// What `updateConfig` stores from a host form in French: each row, its localized fields in
+/// French only (the platform keeps the other languages of a row it already holds — none here).
+fn saved_in_french(values: &[(String, String)]) -> Value {
+    let mut rows: Vec<serde_json::Map<String, Value>> = Vec::new();
+    for (name, value) in values {
+        let mut parts = name.split('.').skip(1);
+        let index: usize = parts.next().unwrap().parse().unwrap();
+        let key = parts.next().unwrap();
+        rows.resize_with(rows.len().max(index + 1), Default::default);
+        let value = if key == "title" || key == "body" {
+            json!({ "fr": value })
+        } else {
+            json!(value)
+        };
+        rows[index].insert(key.into(), value);
+    }
+    json!({ "sections": rows })
+}
+
+/// §8, sans perte : des sections d'avant, une seule modifiée → la config enregistrée les garde
+/// toutes (ids conservés), la modifiée à jour, les autres langues reprises des tables.
+#[test]
+#[serial]
+fn the_first_save_keeps_every_legacy_section() {
+    reset_test_store();
+    let first = seed_legacy_section(
+        0,
+        &[
+            ("fr", "Bienvenue", "Bonjour à tous."),
+            ("en", "Welcome", "Hello all."),
+        ],
+    );
+    let second = seed_legacy_section(1, &[("fr", "Le jardin", "Les transats sont dehors.")]);
+
+    let form =
+        host().run(|ctx| serde_json::to_value(render_host_main(ctx).expect("host")).expect("json"));
+    let mut values = Vec::new();
+    form_values(&form, &mut values);
+    // The one edit of the host: the second title.
+    for (name, value) in values.iter_mut() {
+        if name == "sections.1.title" {
+            *value = "Le jardin et la piscine".into();
+        }
+    }
+    let saved = saved_in_french(&values);
+
+    let (fr, en) = [("fr-FR", "fr"), ("en-US", "en")]
+        .map(|(locale, _)| {
+            guest().with_config(&saved).run(|ctx| {
+                list_sections(
+                    ctx,
+                    ListSectionsArgs {
+                        locale: Some(locale.into()),
+                    },
+                )
+                .expect("list")
+            })
+        })
+        .into();
+    let ids: Vec<String> = fr.iter().map(|s| s.id.clone()).collect();
+    assert_eq!(ids, [first.to_string(), second.to_string()]);
+    assert_eq!(fr[0].title, "Bienvenue");
+    assert!(fr[0].body_markdown.contains("Bonjour à tous."));
+    assert_eq!(fr[1].title, "Le jardin et la piscine");
+    // Written in French only, the English of the first section comes from the tables.
+    assert_eq!(en[0].title, "Welcome");
+    assert!(en[0].body_markdown.contains("Hello all."));
+}
+
+/// Retirer une ligne dans le tableau de bord la renvoie vide (`""` partout), pas absente :
+/// tout retirer enregistre une liste de lignes vides, qui ne rend pas les sections d'avant.
+#[test]
+#[serial]
+fn removing_every_row_hides_the_legacy_sections() {
+    reset_test_store();
+    seed_legacy_section(0, &[("fr", "Bienvenue", "Bonjour à tous.")]);
+    let removed = json!({ "show_from": "booking",
+        "sections": [{ "id": "", "title": "", "body": "", "photo": "" }] });
+    let (card, readiness) = guest().with_config(&removed).run(|ctx| {
+        (
+            render_home_card(ctx.clone()).expect("card"),
+            publish_readiness(ctx).expect("readiness"),
+        )
+    });
+    assert!(SurfaceAssertions::new(&card).contains_type("EmptyState"));
+    // A removed row never blocks « Publier ».
+    assert!(readiness.items.is_empty());
+}
