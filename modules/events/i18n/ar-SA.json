@@ -4,6 +4,7 @@
   "capability.openAgenda.fallback": "ارفع مستوى باقتك أو أضف مفتاح OpenAgenda الخاص بك (تقويم الفعاليات)",
   "capability.openAgenda.purpose": "يجلب النزهات والفعاليات حول مكان الإقامة، وهو مشمول في باقتك لدى Portaki",
   "catalog.host.calendar": "تقويم الفعاليات",
+  "catalog.host.events-views": "الفعاليات المعروضة",
   "catalog.host.main": "الفعاليات",
   "config.events": "فعاليات يدوية",
   "connector.openAgenda.name": "OpenAgenda",
@@ -149,5 +150,13 @@
   "module.description": "نزهات وحفلات وأنشطة قريبة",
   "module.displayName": "فعاليات محلية",
   "nav.event": "حدث",
-  "nav.events": "فعاليات محلية"
+  "nav.events": "فعاليات محلية",
+  "stats.tile": "الفعاليات المعروضة",
+  "stats.views.clicks.call": "المكالمات",
+  "stats.views.clicks.directions": "طلبات الاتجاهات",
+  "stats.views.clicks.link": "الروابط المفتوحة",
+  "stats.views.clicks.mail": "رسائل البريد",
+  "stats.views.empty": "لم تُعرض أي فعالية خلال هذه الفترة.",
+  "stats.views.list": "فتح قائمة الفعاليات",
+  "stats.views.unavailable": "لا توجد مشاهدات للضيوف لعرضها بعد."
 }

@@ -18,7 +18,9 @@ pub use email_context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use guest::{
     render_explore_detail, render_explore_item, render_home_card, render_upcoming_card,
 };
-pub use host::{render_host_calendar, render_host_main, MAX_EVENTS};
+pub use host::{
+    render_host_calendar, render_host_main, render_host_stats, stats_summary, MAX_EVENTS,
+};
 pub use map_markers::{map_markers, MapMarkersResponse, MAX_MARKERS};
 pub use nearby::{has_open_agenda, invalidate_nearby_cache, resolve_events};
 

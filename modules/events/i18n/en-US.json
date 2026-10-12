@@ -4,6 +4,7 @@
   "capability.openAgenda.fallback": "Upgrade your plan or add your own OpenAgenda key (events listings)",
   "capability.openAgenda.purpose": "Loads events around the property, included in your Portaki plan",
   "catalog.host.calendar": "Events calendar",
+  "catalog.host.events-views": "Events viewed",
   "catalog.host.main": "Events",
   "config.events": "Manual events",
   "connector.openAgenda.name": "OpenAgenda",
@@ -149,5 +150,13 @@
   "module.description": "Concerts, markets, and festivals near the stay",
   "module.displayName": "Local events",
   "nav.event": "Event",
-  "nav.events": "Local events"
+  "nav.events": "Local events",
+  "stats.tile": "events viewed",
+  "stats.views.clicks.call": "Calls",
+  "stats.views.clicks.directions": "Directions requested",
+  "stats.views.clicks.link": "Links opened",
+  "stats.views.clicks.mail": "Emails",
+  "stats.views.empty": "No event viewed in this period.",
+  "stats.views.list": "Event list opened",
+  "stats.views.unavailable": "No guest views to show yet."
 }

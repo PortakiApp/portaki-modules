@@ -4,6 +4,7 @@
   "capability.openAgenda.fallback": "Wechseln Sie den Tarif oder hinterlegen Sie Ihren eigenen OpenAgenda-Schlüssel (Veranstaltungskalender)",
   "capability.openAgenda.purpose": "Lädt Ausflüge und Veranstaltungen rund um die Unterkunft, in Ihrem Portaki-Tarif enthalten",
   "catalog.host.calendar": "Veranstaltungskalender",
+  "catalog.host.events-views": "Angesehene Veranstaltungen",
   "catalog.host.main": "Veranstaltungen",
   "config.events": "Manuelle Veranstaltungen",
   "connector.openAgenda.name": "OpenAgenda",
@@ -149,5 +150,13 @@
   "module.description": "Ausflüge, Konzerte und Programm in der Nähe",
   "module.displayName": "Veranstaltungen vor Ort",
   "nav.event": "Event",
-  "nav.events": "Veranstaltungen"
+  "nav.events": "Veranstaltungen",
+  "stats.tile": "angesehene Veranstaltungen",
+  "stats.views.clicks.call": "Anrufe",
+  "stats.views.clicks.directions": "Angefragte Routen",
+  "stats.views.clicks.link": "Geöffnete Links",
+  "stats.views.clicks.mail": "E-Mails",
+  "stats.views.empty": "In diesem Zeitraum wurde keine Veranstaltung angesehen.",
+  "stats.views.list": "Veranstaltungsliste geöffnet",
+  "stats.views.unavailable": "Noch keine Gästeaufrufe anzuzeigen."
 }
