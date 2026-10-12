@@ -89,7 +89,7 @@ mod tests {
         MockContext::guest()
             .with_capabilities(&[capability::core::STORAGE])
             .run(|ctx| {
-                storage::create_from_template(lists::template("departure").unwrap()).unwrap();
+                storage::create_from_template(lists::template("departure").unwrap(), None).unwrap();
                 let out = build_email_context(
                     ctx,
                     EmailContextArgs {

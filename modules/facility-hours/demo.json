@@ -3,8 +3,7 @@
   "surfaces": [
     {
       "i18n": {
-        "guest.note.title": "À savoir",
-        "guest.state.open": "Ouvert"
+        "guest.note.title": "À savoir"
       },
       "labelKey": "nav.facility-hours",
       "path": "facility-hours/detail",
@@ -79,7 +78,7 @@
                     "title": "Piscine",
                     "trailing": {
                       "badge": {
-                        "label": "i18n:guest.state.open",
+                        "label": "Ouvert · ferme à 20:00",
                         "tone": "success"
                       }
                     },
@@ -129,7 +128,7 @@
                     "title": "Laverie",
                     "trailing": {
                       "badge": {
-                        "label": "i18n:guest.state.open",
+                        "label": "Ouvert · ferme à 22:00",
                         "tone": "success"
                       }
                     },
@@ -217,7 +216,6 @@
     {
       "i18n": {
         "guest.note.title": "À savoir",
-        "guest.state.open": "Ouvert",
         "guest.stay.checkin": "Arrivée",
         "guest.stay.checkout": "Départ",
         "home.card.subtitle": "État en direct",
@@ -300,7 +298,7 @@
             "title": "Piscine",
             "trailing": {
               "badge": {
-                "label": "i18n:guest.state.open",
+                "label": "Ouvert · ferme à 20:00",
                 "tone": "success"
               }
             },
@@ -343,7 +341,7 @@
             "title": "Laverie",
             "trailing": {
               "badge": {
-                "label": "i18n:guest.state.open",
+                "label": "Ouvert · ferme à 22:00",
                 "tone": "success"
               }
             },

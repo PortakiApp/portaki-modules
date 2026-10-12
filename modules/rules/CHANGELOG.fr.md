@@ -1,9 +1,13 @@
 # Changelog
 
-## 1.8.2
+## 1.9.0
 
-Montée technique.
+Les règles en tableau, dans l'ordre du livret.
 
+* Les règles se gèrent dans un tableau qu'on réordonne par glisser-déposer (ou au clavier) : l'ordre est celui du livret.
+* La carte d'accueil montre les premières règles, et un filet « Sur la carte d'accueil » le dit dans le tableau.
+* Chaque règle s'ouvre dans une fenêtre : règle, précision, type en quatre cartes, thème proposé d'après le texte, horaires.
+* Un règlement vide part d'un modèle : silence, animaux, tabac, fêtes, visiteurs ; au-delà de 30 règles, la publication attend.
 * Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
 
 ## 1.8.1

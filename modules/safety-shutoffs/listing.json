@@ -14,13 +14,13 @@
     "en": "A discreet card in the Help section and a full-screen page: 112, your instruction, and every shutoff point with its location."
   },
   "hostSurface": {
-    "fr": "Un onglet où vous ajoutez jusqu’à huit organes — type, titre, emplacement, manœuvre — et votre consigne générale.",
-    "en": "A tab where you add up to eight shutoff points — type, title, location, what to do — and your general instruction."
+    "fr": "Une page où vous rangez jusqu’à vingt emplacements dans un tableau — type, nom, où, comment couper, photo — et votre consigne générale.",
+    "en": "A page where you order up to twenty locations in a table — type, name, where, how to shut off, photo — and your general instruction."
   },
   "configItems": [
     {
-      "fr": "Jusqu’à huit organes : type, titre, emplacement, consigne",
-      "en": "Up to eight shutoff points: type, title, location, instruction"
+      "fr": "Jusqu’à vingt emplacements : type, nom, où, comment couper, photo",
+      "en": "Up to twenty locations: type, name, where, how to shut off, photo"
     },
     {
       "fr": "Votre consigne générale (facultative)",

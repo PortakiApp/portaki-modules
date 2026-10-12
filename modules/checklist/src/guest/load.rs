@@ -35,10 +35,8 @@ pub struct GuestChecklistData {
 /// `departure_only` keeps the departure lists (post-stay card).
 pub fn load_guest_checklist(ctx: &GuestContext, departure_only: bool) -> Result<GuestLoad> {
     let mut guest_lists = Vec::new();
-    for list in storage::list_checklists()? {
-        let wanted = list.audience == lists::GUEST
-            && (!departure_only || lists::is_departure_trigger(&list.trigger));
-        if !wanted {
+    for list in storage::booklet_lists()? {
+        if departure_only && !lists::is_departure_trigger(&list.trigger) {
             continue;
         }
         let items = storage::items_of(list.id)?;

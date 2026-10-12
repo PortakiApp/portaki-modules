@@ -97,6 +97,25 @@ pub fn list_checklists() -> Result<Vec<Checklist>> {
     Ok(rows)
 }
 
+/// The guest lists the booklet shows: every guest list, but one departure list only — the first in
+/// order (« Une seule checklist « Voyageur · Départ » à la fois »). A second one waits, hidden,
+/// until the first is deleted or moved off the departure.
+pub fn booklet_lists() -> Result<Vec<Checklist>> {
+    let mut departure_seen = false;
+    Ok(list_checklists()?
+        .into_iter()
+        .filter(|list| {
+            if list.audience != lists::GUEST {
+                return false;
+            }
+            if !lists::is_departure_trigger(&list.trigger) {
+                return true;
+            }
+            !std::mem::replace(&mut departure_seen, true)
+        })
+        .collect())
+}
+
 pub fn save_checklist(list: Checklist) -> Result<()> {
     upsert(&TEST_LISTS, list)
 }
@@ -111,11 +130,13 @@ pub fn delete_checklist(id: Uuid) -> Result<()> {
 }
 
 /// Creates a list from `template`, placed after the existing ones.
-pub fn create_from_template(template: &Template) -> Result<Checklist> {
+///
+/// `id`: the one the editor picked for the new list, so it lands selected; a random one otherwise.
+pub fn create_from_template(template: &Template, id: Option<Uuid>) -> Result<Checklist> {
     let (name_fr, name_en) = template.name();
     let host = template.audience == lists::HOST;
     let list = Checklist {
-        id: Uuid::new_v4(),
+        id: id.unwrap_or_else(Uuid::new_v4),
         name_fr,
         name_en,
         audience: template.audience.to_string(),
@@ -243,6 +264,12 @@ pub fn replace_items(checklist_id: Uuid, items: Vec<ItemDraft>) -> Result<()> {
             remove(&TEST_ITEMS, row.id)?;
         }
     }
+    // An id another list owns is never taken over: that row gets a fresh one.
+    let elsewhere: Vec<Uuid> = all_items()?
+        .into_iter()
+        .filter(|row| row.checklist_id != checklist_id)
+        .map(|row| row.id)
+        .collect();
     let now = time::now()?;
     for (index, draft) in items.into_iter().enumerate() {
         let previous = draft
@@ -252,7 +279,12 @@ pub fn replace_items(checklist_id: Uuid, items: Vec<ItemDraft>) -> Result<()> {
         upsert(
             &TEST_ITEMS,
             ChecklistItem {
-                id: previous.map_or_else(Uuid::new_v4, |row| row.id),
+                // A new step keeps the id the editor gave its row: the next render finds it stored
+                // instead of showing it again as a blank row.
+                id: previous
+                    .map(|row| row.id)
+                    .or(draft.id.filter(|id| !elsewhere.contains(id)))
+                    .unwrap_or_else(Uuid::new_v4),
                 checklist_id,
                 label_fr,
                 label_en,

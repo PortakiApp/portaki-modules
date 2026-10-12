@@ -31,7 +31,7 @@ fn row(kind: &str, location: &str) -> ShutoffRow {
 
 fn config(rows: Vec<ShutoffRow>) -> ModuleConfig {
     ModuleConfig {
-        shutoffs: rows,
+        shutoffs: Some(rows),
         general_note: I18nText::new("Numéro du syndic", "Building manager"),
     }
 }

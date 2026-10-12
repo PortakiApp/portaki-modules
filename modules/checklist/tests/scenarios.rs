@@ -14,6 +14,7 @@ fn setup(builder: MockContextBuilder) -> MockContextBuilder {
         for template in ["departure", "cleaning"] {
             let args = CreateChecklistArgs {
                 template: template.into(),
+                id: None,
             };
             create_checklist(ctx.clone(), args).expect("create");
         }

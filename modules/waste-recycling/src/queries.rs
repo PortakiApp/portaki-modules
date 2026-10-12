@@ -36,11 +36,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
 
     // Un bac ramassé devant la porte, mais sans jour : le bandeau ne peut rien en dire (§3).
     if let Some(bin) = config.bin_without_days() {
-        let name = bin.title.get("fr").trim().to_string();
-        let index = config
-            .bins
-            .iter()
-            .position(|row| row.id == bin.id && row.title == bin.title);
+        let index = config.bins.iter().position(|row| *row == bin);
         items.push(PublishCheck {
             id: match index {
                 Some(index) => format!("config.bins.{index}.days"),
@@ -49,7 +45,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             level: PublishLevel::Recommended,
             ok: false,
             label: crate::i18n::text("host.collection.days"),
-            hint: crate::i18n::text_with("publish.days.bin", &[("bin", name.as_str())]),
+            hint: bin.no_days_warning(),
         });
     }
 
@@ -94,10 +90,11 @@ fn field_label(field: &str) -> &'static str {
         "compost_location" => "host.compost.location",
         "compost_accepted" => "host.compost.accepted",
         "compost_refused" => "host.compost.refused",
-        "collection_schedule" => "host.schedule.label",
+        "collection_schedule" => "host.collectionNote.label",
         "takeout_note" => "host.takeout.label",
         "bin_room_steps" => "host.binRoom.label",
         "bin_room_lat" => "host.binRoom.position",
+        "bin_room_hours_range" => "host.binRoom.hours",
         _ if field.starts_with("bins.") && field.ends_with(".title") => "host.bin.title",
         _ if field.starts_with("bins.") && field.ends_with(".note") => "host.bin.note",
         _ if field.starts_with("bins.") => "host.bin.items",

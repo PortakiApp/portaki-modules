@@ -35,7 +35,7 @@ pub struct ModuleConfig {
     /// La phrase que l'hôte a écrite. Conservée : elle s'affiche tant qu'aucun jour n'est coché, et
     /// reste en second sous le jour calculé — elle dit souvent ce que des cases ne disent pas
     /// (« avant 7 h », « bac vert la semaine paire »).
-    #[field(label = "host.schedule.label")]
+    #[field(label = "host.collectionNote.label")]
     pub collection_schedule: I18nText,
     /// Les jours de collecte, un champ par jour (§2.7). Sept booléens plutôt qu'une liste : le
     /// formulaire hôte envoie des champs plats, et une liste de chaînes n'a pas de ligne à
@@ -71,14 +71,15 @@ pub struct ModuleConfig {
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub host_reminder: bool,
     /// Les points d'apport, quand les déchets ne se sortent pas devant la porte (§3.2).
-    #[field(label = "config.dropoffPoints")]
+    /// Jamais copiés d'un logement à l'autre (§6) : un point sans sa position n'en est pas un.
+    #[field(local, label = "config.dropoffPoints")]
     pub dropoff_points: Vec<DropoffRow>,
     /// Le composteur. Quatre champs plats plutôt qu'une structure imbriquée : le formulaire hôte
     /// envoie des noms plats, et `bins` est la seule forme imbriquée dont la fusion est éprouvée.
     #[field(label = "host.compost.enabled")]
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub compost_enabled: bool,
-    #[field(label = "host.compost.location")]
+    #[field(local, label = "host.compost.location")]
     pub compost_location: I18nText,
     /// Un élément par ligne.
     #[field(label = "host.compost.accepted")]
@@ -96,20 +97,20 @@ pub struct ModuleConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bin_room_enabled: Option<bool>,
     /// Où se trouve le local — la ligne en gras du bloc.
-    #[field(label = "host.binRoom.where")]
+    #[field(local, label = "host.binRoom.where")]
     pub bin_room_where: I18nText,
     #[field(label = "host.binRoom.label")]
     pub bin_room_steps: I18nText,
     /// L'épingle du local (spec Tri §2.3) : un repère sur la Carte du livret. Le sélecteur de
     /// carte l'envoie en texte (`"43.5"`) ou en nombre.
-    #[field(label = "host.binRoom.position")]
+    #[field(local, label = "host.binRoom.position")]
     #[serde(
         default,
         deserialize_with = "coord",
         skip_serializing_if = "Option::is_none"
     )]
     pub bin_room_lat: Option<f64>,
-    #[field(label = "host.binRoom.position")]
+    #[field(local, label = "host.binRoom.position")]
     #[serde(
         default,
         deserialize_with = "coord",
@@ -117,20 +118,22 @@ pub struct ModuleConfig {
     )]
     pub bin_room_lng: Option<f64>,
     /// L'adresse telle que le sélecteur l'a résolue, pour la relire dans le formulaire.
-    #[field(label = "host.binRoom.position")]
+    #[field(local, label = "host.binRoom.position")]
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub bin_room_address: String,
     /// Le code de la porte du local, s'il y en a une (§2.7).
     ///
     /// Un secret « comme Accès » (spec Tri §2.3) : chiffré au repos, masqué chez le voyageur
-    /// jusqu'à la veille de l'arrivée à 16 h (le défaut d'Accès — voir `guest::load`), copiable
-    /// ensuite parce qu'on le lit devant un digicode.
+    /// jusqu'au moment que le calendrier d'Accès partage (`access.reveal_schedule`, la veille de
+    /// l'arrivée à 16 h sans lui — voir `guest::load`), copiable ensuite parce qu'on le lit devant
+    /// un digicode.
     ///
     /// Un code enregistré en clair avant ce marquage reste lisible : la plateforme ne déchiffre
     /// que les valeurs préfixées `enc:v1:`, rend les autres telles quelles et les scelle à la
     /// prochaine écriture.
     #[field(
         secret,
+        local,
         reveal(guest_pre_arrival, guest_stay),
         label = "host.binRoom.code"
     )]
@@ -139,8 +142,13 @@ pub struct ModuleConfig {
     ///
     /// Du texte et non deux heures : un local fermé le dimanche n'a pas d'horaire à comparer, et
     /// c'est ce qu'un gardien affiche sur sa porte.
-    #[field(label = "host.binRoom.hours")]
+    #[field(label = "host.binRoom.hours.legacy")]
     pub bin_room_hours: I18nText,
+    /// Les heures d'accès en plage, `07:00-21:00` (spec Tri §2.3) : ce que `TimeRange` envoie. La
+    /// phrase de [`Self::bin_room_hours`] reste lue tant que la plage est vide.
+    #[field(label = "host.binRoom.hours")]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub bin_room_hours_range: String,
 }
 
 /// Le premier texte trop long, toutes langues confondues.
@@ -155,6 +163,30 @@ fn line_too_long(value: &I18nText, max: usize) -> Option<I18nText> {
     value
         .by_language()
         .find_map(|(_, text)| text.lines().find_map(|line| check::max_chars(line, max)))
+}
+
+/// La première lettre en capitale : « yellow bin » en tête de rangée devient « Yellow bin ».
+pub fn capitalized(text: &str) -> String {
+    let mut chars = text.chars();
+    match chars.next() {
+        Some(first) => first.to_uppercase().chain(chars).collect(),
+        None => String::new(),
+    }
+}
+
+/// Une plage `HH:MM-HH:MM`, ce que `TimeRange` envoie, en ses deux heures.
+fn parse_range(raw: &str) -> Option<(&str, &str)> {
+    let (from, until) = raw.trim().split_once('-')?;
+    let hour = |value: &str| {
+        let (h, m) = value.split_once(':')?;
+        (h.len() == 2 && m.len() == 2).then_some(())?;
+        let (h, m): (u32, u32) = (h.parse().ok()?, m.parse().ok()?);
+        (h < 24 && m < 60).then_some(())
+    };
+    let (from, until) = (from.trim(), until.trim());
+    hour(from)?;
+    hour(until)?;
+    Some((from, until))
 }
 
 /// Une coordonnée en nombre ou en texte, comme le sélecteur de carte l'envoie.
@@ -258,6 +290,7 @@ impl ModuleConfig {
             || !self.bin_room_steps.is_blank()
             || !self.bin_room_code.trim().is_empty()
             || !self.bin_room_hours.is_blank()
+            || !self.bin_room_hours_range.trim().is_empty()
     }
 
     /// Ramassage devant le logement ; oui sans choix enregistré.
@@ -292,13 +325,10 @@ impl ModuleConfig {
             if bin.is_blank() {
                 continue;
             }
+            // Sans nom, le bac s'appelle « Bac {couleur} » (§2.2) : rien à exiger.
             push(
                 format!("bins.{index}.title"),
-                if bin.title.is_blank() {
-                    Some(text("host.bin.title.required"))
-                } else {
-                    too_long(&bin.title, BIN_TITLE_MAX)
-                },
+                too_long(&bin.title, BIN_TITLE_MAX),
             );
             push(
                 format!("bins.{index}.items"),
@@ -322,6 +352,19 @@ impl ModuleConfig {
                 "bin_room_code".into(),
                 (code > 0 && !(CODE_MIN..=CODE_MAX).contains(&code))
                     .then(|| text("host.binRoom.code.length")),
+            );
+            push(
+                "bin_room_hours_range".into(),
+                match self.bin_room_hours_range.trim() {
+                    "" => None,
+                    raw => match parse_range(raw) {
+                        None => Some(text("host.binRoom.hours.format")),
+                        Some((from, until)) if from == until => {
+                            Some(text("host.binRoom.hours.same"))
+                        }
+                        Some(_) => None,
+                    },
+                },
             );
         }
 
@@ -500,6 +543,20 @@ impl ModuleConfig {
     /// semaine — le bandeau annonce la prochaine collecte, quel que soit le bac.
     pub fn collection_days(&self) -> Vec<String> {
         let bins = self.parse_bins();
+        self.global_days()
+            .into_iter()
+            .filter(|(day, ticked)| {
+                *ticked
+                    || bins
+                        .iter()
+                        .any(|bin| bin.days.iter().any(|d| d.trim() == *day))
+            })
+            .map(|(day, _)| day.to_string())
+            .collect()
+    }
+
+    /// Les jours cochés pour tout le logement, d'avant les jours par bac, `mon` … `sun`.
+    pub fn global_days(&self) -> [(&'static str, bool); 7] {
         [
             ("mon", self.collects_mon),
             ("tue", self.collects_tue),
@@ -509,30 +566,12 @@ impl ModuleConfig {
             ("sat", self.collects_sat),
             ("sun", self.collects_sun),
         ]
-        .into_iter()
-        .filter(|(day, ticked)| {
-            *ticked
-                || bins
-                    .iter()
-                    .any(|bin| bin.days.iter().any(|d| d.trim() == *day))
-        })
-        .map(|(day, _)| day.to_string())
-        .collect()
     }
 
     /// Le premier bac sans jour de collecte quand le logement n'en a pas non plus, pour
     /// l'avertissement « Le bac jaune n'a pas de jour de collecte. » (§3).
     pub fn bin_without_days(&self) -> Option<BinRow> {
-        let global = [
-            self.collects_mon,
-            self.collects_tue,
-            self.collects_wed,
-            self.collects_thu,
-            self.collects_fri,
-            self.collects_sat,
-            self.collects_sun,
-        ];
-        if !self.has_collection() || global.contains(&true) {
+        if !self.has_collection() || self.global_days().iter().any(|(_, ticked)| *ticked) {
             return None;
         }
         self.parse_bins()
@@ -540,13 +579,22 @@ impl ModuleConfig {
             .find(|bin| bin.days.is_empty())
     }
 
-    /// The named rows, for the guest: the form sends its slots, blank ones included.
+    /// The filled rows, for the guest: the form sends its slots, blank ones included. A bin
+    /// without a name but with a content is one: it is called « Bac {couleur} » (§2.2).
     pub fn parse_bins(&self) -> Vec<BinRow> {
         self.bins
             .iter()
-            .filter(|b| !b.title.is_blank())
+            .filter(|b| !b.is_blank())
             .cloned()
             .collect()
+    }
+
+    /// Les heures d'accès au local, `07:00 – 21:00` ; la phrase d'avant la plage sinon.
+    pub fn bin_room_hours(&self, locale: &str) -> String {
+        match parse_range(&self.bin_room_hours_range) {
+            Some((from, until)) => format!("{from} – {until}"),
+            None => self.bin_room_hours.get(locale).trim().to_string(),
+        }
     }
 }
 
@@ -604,6 +652,34 @@ where
 }
 
 impl BinRow {
+    /// La teinte du bac ; gris sans teinte connue (§9 cas 6 : « pastille grise + nom »).
+    pub fn color_key(&self) -> &'static str {
+        bin_color_name(self.color.as_deref()).unwrap_or("grey")
+    }
+
+    /// Le nom du bac en français et en anglais, « Bac {couleur} » sans nom (§2.2).
+    pub fn name_text(&self) -> I18nText {
+        if !self.title.is_blank() {
+            return self.title.clone();
+        }
+        let name = crate::i18n::text_with_text(
+            "bin.defaultName",
+            "color",
+            &crate::i18n::text(&format!("host.bin.color.{}", self.color_key())),
+        );
+        I18nText::new(capitalized(name.get("fr")), capitalized(name.get("en")))
+    }
+
+    /// « Le bac jaune n'a pas de jour de collecte. » (§3) : sous la liste des bacs, et dans
+    /// `publishReadiness`, pour que les deux disent la même chose.
+    pub fn no_days_warning(&self) -> I18nText {
+        crate::i18n::text_with_text(
+            "publish.days.bin",
+            "color",
+            &crate::i18n::text(&format!("host.bin.color.{}", self.color_key())),
+        )
+    }
+
     /// Nothing the form shows but a color: a slot the host left (or emptied).
     pub fn is_blank(&self) -> bool {
         self.title.is_blank() && self.items.is_blank()
@@ -932,6 +1008,59 @@ mod tests {
             ]
         );
         assert!(ModuleConfig::default().problems().is_empty());
+    }
+
+    /// Une plage d'heures se lit en ses deux bornes ; la phrase d'avant reste lue sans plage, et
+    /// une plage vide ou nulle est signalée (règles communes §6).
+    #[test]
+    fn the_bin_room_hours_are_a_range() {
+        let config = |value| serde_json::from_value::<ModuleConfig>(value).unwrap();
+        let ranged = config(json!({
+            "bin_room_enabled": true,
+            "bin_room_where": "Cour",
+            "bin_room_hours": "7 h – 21 h",
+            "bin_room_hours_range": "07:00-21:00"
+        }));
+        assert_eq!(ranged.bin_room_hours("fr"), "07:00 – 21:00");
+        assert!(ranged.error_of("bin_room_hours_range").is_none());
+        let legacy = config(json!({ "bin_room_hours": "7 h – 21 h" }));
+        assert_eq!(legacy.bin_room_hours("fr"), "7 h – 21 h");
+        let error = |range: &str| {
+            config(json!({
+                "bin_room_enabled": true,
+                "bin_room_where": "Cour",
+                "bin_room_hours_range": range
+            }))
+            .error_of("bin_room_hours_range")
+            .map(|e| e.get("fr").to_string())
+        };
+        assert_eq!(
+            error("07:00-07:00").as_deref(),
+            Some("L'heure de fin doit être différente de l'heure de début.")
+        );
+        assert_eq!(error("7h-21h").as_deref(), Some("Heure au format 16:00."));
+        assert_eq!(error("22:00-06:00"), None);
+    }
+
+    /// Sans nom, un bac rempli s'appelle « Bac {couleur} », gris sans teinte (§2.2, §9 cas 6).
+    #[test]
+    fn a_bin_without_a_name_is_named_after_its_colour() {
+        let config: ModuleConfig = serde_json::from_value(json!({
+            "bins": [
+                { "items": "Emballages", "color": "yellow" },
+                { "items": "Ordures" },
+                { "title": "Verre", "items": "Bouteilles", "color": "green" }
+            ]
+        }))
+        .unwrap();
+        let names: Vec<String> = config
+            .parse_bins()
+            .iter()
+            .map(|bin| bin.name_text().get("fr").to_string())
+            .collect();
+        assert_eq!(names, ["Bac jaune", "Bac gris", "Verre"]);
+        assert_eq!(config.parse_bins()[0].name_text().get("en"), "Yellow bin");
+        assert!(config.problems().is_empty());
     }
 
     /// 3 à 12 caractères (§2.3), jugés côté hôte où la plateforme rend le code en clair ; vide

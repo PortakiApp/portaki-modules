@@ -56,8 +56,7 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
         ..RulesPayload::default()
     };
     let lines: Vec<String> = payload
-        .by_weight()
-        .into_iter()
+        .named()
         .filter_map(|item| {
             let title = item.title.trim();
             if title.is_empty() {

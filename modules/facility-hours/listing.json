@@ -6,25 +6,25 @@
     "en": "Pool, spa, gym: opening hours for every facility."
   },
   "description": {
-    "fr": "Le voyageur consulte les horaires de la piscine, du spa, de la salle de sport ou de tout autre équipement partagé, sans avoir à demander. L’hôte saisit jusqu’à six équipements et une note générale pour les consignes communes.",
-    "en": "Guests check the opening hours of the pool, spa, gym or any other shared facility without having to ask. The host enters up to six facilities and a general note for shared instructions."
+    "fr": "Le voyageur consulte les horaires de la piscine, du spa, de la salle de sport ou de tout autre équipement partagé, sans avoir à demander. L’hôte saisit jusqu’à trente équipements, leurs plages, leur saison et leurs fermetures exceptionnelles.",
+    "en": "Guests check the opening hours of the pool, spa, gym or any other shared facility without having to ask. The host enters up to thirty facilities, with their time ranges, season and exceptional closures."
   },
   "guestSurface": {
     "fr": "Les horaires de chaque équipement partagé et une note générale.",
     "en": "Opening hours for each shared facility and a general note."
   },
   "hostSurface": {
-    "fr": "Un onglet Horaires pour saisir jusqu’à six équipements et une note.",
-    "en": "An Hours tab to enter up to six facilities and a note."
+    "fr": "Une page de réglages : les équipements en tableau, chacun ouvert dans un panneau.",
+    "en": "A settings page: facilities in a table, each opened in a side panel."
   },
   "configItems": [
     {
-      "fr": "Jusqu’à six équipements : nom, horaires, détails et note",
-      "en": "Up to six facilities: name, hours, details and note"
+      "fr": "Jusqu’à trente équipements : nom, groupe, plages, saison et fermetures",
+      "en": "Up to thirty facilities: name, group, time ranges, season and closures"
     },
     {
-      "fr": "Note générale (facultatif)",
-      "en": "General note (optional)"
+      "fr": "Lignes sur la carte d’accueil (1 à 6)",
+      "en": "Rows on the home card (1 to 6)"
     }
   ],
   "capabilities": [],

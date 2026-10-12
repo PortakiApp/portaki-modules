@@ -150,7 +150,8 @@ fn without_a_host_phone_only_the_emergency_button_shows() {
     });
 }
 
-/// Le formulaire hôte dessine ce que la configuration déclare, et une ligne par organe stocké.
+/// Le formulaire hôte dessine ce que la configuration déclare : la consigne, puis le tableau
+/// ordonnable, une ligne et un dialogue par organe stocké.
 #[test]
 #[serial]
 fn the_host_form_draws_the_rows_the_host_has() {
@@ -161,67 +162,145 @@ fn the_host_form_draws_the_rows_the_host_has() {
             let surface = render_host_main(ctx).expect("host main");
             config_form::assert_form_matches_config(EMISSIONS, &surface, &[]);
             let json = serde_json::to_string(&surface).expect("json");
-            assert!(json.contains("shutoffs.0.kind"), "{json}");
-            assert!(json.contains("shutoffs.1.location"), "{json}");
-            // Deux organes stockés : pas de troisième ligne vide.
-            assert!(!json.contains("shutoffs.2.kind"), "{json}");
+            let wire = serde_json::to_value(&surface).expect("wire");
+            let table = find_type(&wire, "DataTable").expect("DataTable");
+            assert_eq!(table["rowName"], "shutoffs");
+            assert_eq!(table["sortable"], true);
+            assert_eq!(table["panel"], "dialog");
+            assert_eq!(table["rows"].as_array().unwrap().len(), 2);
+            assert_eq!(table["children"].as_array().unwrap().len(), 2);
+            assert_eq!(table["rows"][0]["title"], "Tableau électrique");
+            assert_eq!(table["rows"][0]["location"], "Placard de l’entrée");
+            assert_eq!(table["rows"][0]["kind"], "i18n:host.kind.label.electricity");
+            assert_eq!(table["rows"][0]["status"], "");
+            // La consigne d'abord, les emplacements ensuite (planche).
+            assert!(json.find("general_note").unwrap() < json.find("DataTable").unwrap());
+            // Le type en cartes, avec son glyphe.
+            assert!(json.contains(r#""layout":"cards""#), "{json}");
+            assert!(json.contains(r#""icon":"zap""#), "{json}");
             assert!(json.contains(r#""value":"electricity""#), "{json}");
-            assert!(json.contains("Tableau électrique"), "{json}");
-            // Un organe complet : rien sous la liste.
+            assert!(json.contains("shutoffs.1.location"), "{json}");
+            assert!(!json.contains("shutoffs.2.kind"), "{json}");
+            assert!(json.contains(r#""subtitle":"2 / 20""#), "{json}");
+            // Deux organes complets : ni erreur, ni avertissement sous la liste.
             assert!(!json.contains("Ajoutez au moins un emplacement."), "{json}");
+            assert!(!json.contains("ne seront pas publiés"), "{json}");
         });
 }
 
-/// Rien de stocké : une ligne, et « Ajouter » en demande une de plus.
+fn find_type<'a>(value: &'a Value, kind: &str) -> Option<&'a Value> {
+    match value {
+        Value::Object(object) if object.get("type").and_then(Value::as_str) == Some(kind) => {
+            Some(value)
+        }
+        Value::Object(object) => object.values().find_map(|v| find_type(v, kind)),
+        Value::Array(items) => items.iter().find_map(|v| find_type(v, kind)),
+        _ => None,
+    }
+}
+
+/// Première ouverture : les cinq lignes proposées, « À compléter », et l'avertissement de la
+/// planche — « 5 emplacements vides ne seront pas publiés. ».
 #[test]
 #[serial]
-fn an_empty_form_draws_one_row_and_can_ask_for_another() {
+fn a_first_open_proposes_five_rows() {
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&json!({}))
         .run(|ctx| {
-            let json =
-                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
-            assert!(json.contains("shutoffs.0.kind"), "{json}");
-            assert!(!json.contains("shutoffs.1.kind"), "{json}");
-            assert!(json.contains(r#""shutoffs_count":2"#), "{json}");
-            // Le message de la spec, sous la liste — celui que la porte de publication donne.
+            let wire = serde_json::to_value(render_host_main(ctx).expect("host main")).unwrap();
+            let json = wire.to_string();
+            let table = find_type(&wire, "DataTable").expect("DataTable");
+            let ids: Vec<&str> = table["rows"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|row| row["id"].as_str().unwrap())
+                .collect();
+            assert_eq!(
+                ids,
+                [
+                    "electricity",
+                    "water",
+                    "gas",
+                    "extinguisher",
+                    "smoke_detector"
+                ]
+            );
+            assert_eq!(table["rows"][2]["title"], "i18n:host.kind.label.gas");
+            assert_eq!(table["rows"][2]["status"], "i18n:host.shutoffs.todo");
+            assert_eq!(
+                table["rows"][2]["location"],
+                "i18n:host.shutoffs.location.proposed"
+            );
+            // Le nom suit le type : le placeholder du gaz est « Gaz ».
             assert!(
-                json.contains(r#""error":"Ajoutez au moins un emplacement.""#),
+                json.contains(r#""placeholder":"i18n:host.kind.label.gas""#),
                 "{json}"
             );
+            assert!(
+                json.contains("5 emplacements vides ne seront pas publiés."),
+                "{json}"
+            );
+            assert!(json.contains("Ajoutez au moins un emplacement."), "{json}");
         });
 }
 
-/// La borne tient : au dernier organe, « Ajouter » n'en demande pas un de plus.
+/// Toutes retirées : la liste reste vide, les propositions ne reviennent pas.
+#[test]
+#[serial]
+fn an_emptied_list_does_not_propose_again() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&json!({ "shutoffs": [] }))
+        .run(|ctx| {
+            let wire = serde_json::to_value(render_host_main(ctx).expect("host main")).unwrap();
+            let table = find_type(&wire, "DataTable").expect("DataTable");
+            assert!(table["rows"].as_array().unwrap().is_empty());
+            assert!(table["addAction"].is_object());
+        });
+}
+
+/// « Ajouter un emplacement » rend une ligne de plus, sans type choisi ; les lignes déjà
+/// ajoutées restent.
+#[test]
+#[serial]
+fn adding_a_row_keeps_the_rows_added_before() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&sample_config())
+        .run(|mut ctx| {
+            ctx.input = json!({ "newShutoffs": "n1" });
+            let wire = serde_json::to_value(render_host_main(ctx).expect("host main")).unwrap();
+            let table = find_type(&wire, "DataTable").expect("DataTable");
+            assert_eq!(table["rows"][2]["id"], "n1");
+            assert_eq!(table["rows"][2]["kind"], "");
+            let next = table["addAction"]["payload"]["newShutoffs"]
+                .as_str()
+                .expect("next input");
+            assert!(next.starts_with("n1,"), "{next}");
+        });
+}
+
+/// La borne tient : au dernier organe, plus de bouton « Ajouter ».
 #[test]
 #[serial]
 fn the_bound_holds_at_the_last_row() {
     let rows: Vec<Value> = (0..safety_shutoffs::MAX_SHUTOFFS)
-        .map(|i| json!({ "title": format!("Organe {i}"), "location": "Ici" }))
+        .map(|i| json!({ "id": format!("r{i}"), "kind": "water", "title": format!("Organe {i}"), "location": "Ici" }))
         .collect();
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
         .with_config(&json!({ "shutoffs": rows }))
         .run(|ctx| {
-            let json =
-                serde_json::to_string(&render_host_main(ctx).expect("host main")).expect("json");
-            let last = safety_shutoffs::MAX_SHUTOFFS - 1;
-            assert!(
-                json.contains(&format!(r#""shutoffs.{last}.kind""#)),
-                "{json}"
+            let wire = serde_json::to_value(render_host_main(ctx).expect("host main")).unwrap();
+            let table = find_type(&wire, "DataTable").expect("DataTable");
+            assert_eq!(
+                table["rows"].as_array().unwrap().len(),
+                safety_shutoffs::MAX_SHUTOFFS
             );
-            assert!(
-                !json.contains(&format!(r#""shutoffs.{}.kind""#, last + 1)),
-                "{json}"
-            );
-            assert!(
-                json.contains(&format!(
-                    r#""shutoffs_count":{}"#,
-                    safety_shutoffs::MAX_SHUTOFFS
-                )),
-                "{json}"
-            );
+            assert!(table.get("addAction").is_none(), "{table}");
+            assert!(wire.to_string().contains(r#""subtitle":"20 / 20""#));
         });
 }
 
@@ -297,6 +376,25 @@ fn publication_needs_one_complete_shutoff() {
     assert!(half.items[0].ok);
     assert_eq!(half.items[1].id, "incomplete");
     assert!(!half.items[1].ok);
+    assert_eq!(
+        half.items[1].hint.get("fr"),
+        "1 emplacement vide ne sera pas publié."
+    );
+
+    // Une ligne proposée jamais ouverte (son id seul) compte parmi les vides.
+    let proposed = check(json!({
+        "shutoffs": [
+            { "id": "water", "location": "Cave" },
+            { "id": "gas" },
+            { "id": "smoke_detector" }
+        ]
+    }));
+    assert!(proposed.items[0].ok);
+    assert_eq!(
+        proposed.items[1].hint.get("fr"),
+        "2 emplacements vides ne seront pas publiés."
+    );
+    assert_eq!(proposed.items.len(), 2, "{:?}", proposed.items);
 }
 
 /// Avec un numéro au profil, « Appeler Claire » passe devant les numéros d'urgence (§2.22).

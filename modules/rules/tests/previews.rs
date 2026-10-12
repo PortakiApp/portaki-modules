@@ -31,6 +31,7 @@ fn previews_match_the_rendered_surfaces() {
         save_content(
             ctx.clone(),
             SaveContentArgs {
+                rules: None,
                 card_limit: None,
                 items: Vec::new(),
                 content_fr: sample_payload(),

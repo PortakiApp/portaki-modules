@@ -11,9 +11,9 @@ use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 use serde_json::json;
 
 use rules::{
-    get_content, publish_readiness, render_explore_detail, render_home_card, render_host_main,
-    reset_test_store, save_content, update_config, GetContentArgs, RuleItemInput, RulesContent,
-    SaveContentArgs,
+    apply_template, get_content, publish_readiness, render_explore_detail, render_home_card,
+    render_host_main, reset_test_store, save_content, update_config, ApplyTemplateArgs,
+    GetContentArgs, RuleItemInput, RuleSlot, RulesContent, SaveContentArgs,
 };
 
 fn sample_payload() -> String {
@@ -52,6 +52,7 @@ fn home_card_renders_list_items_with_content() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    rules: None,
                     card_limit: None,
                     items: Vec::new(),
                     content_fr: sample_payload(),
@@ -88,6 +89,7 @@ fn the_card_offers_the_rules_it_does_not_show() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    rules: None,
                     card_limit: None,
                     items: Vec::new(),
                     content_fr: six.clone(),
@@ -120,6 +122,7 @@ fn no_button_when_the_card_already_shows_every_rule() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    rules: None,
                     card_limit: None,
                     items: Vec::new(),
                     content_fr: sample_payload(),
@@ -144,6 +147,7 @@ fn explore_detail_renders_full_list() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    rules: None,
                     card_limit: None,
                     items: Vec::new(),
                     content_fr: sample_payload(),
@@ -171,6 +175,7 @@ fn get_content_returns_saved_items() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    rules: None,
                     card_limit: None,
                     items: Vec::new(),
                     content_fr: sample_payload(),
@@ -192,18 +197,27 @@ fn get_content_returns_saved_items() {
 
 #[test]
 #[serial]
-fn host_main_renders_rules_section_steplist() {
+fn host_main_is_a_sortable_table_in_two_sections() {
     reset_test_store();
     MockContext::host()
         .with_property(Property::default())
         .run(|ctx| {
             let surface = render_host_main(ctx);
-            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("StepList"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("Section"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("DataTable"));
             assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
             let json = serde_json::to_string(&surface).expect("json");
-            assert!(json.contains("host.section.title") || json.contains("Règles du logement"));
-            assert!(json.contains("host.rules.add") || json.contains("Ajouter une règle"));
+            for needle in [
+                r#""sortable":true"#,
+                r#""panel":"dialog""#,
+                r#""dividerAfter":4"#,
+                "host.rules.divider",
+                "host.rules.add",
+                // Vide : « Partir d'un modèle ».
+                r#""name":"applyTemplate""#,
+            ] {
+                assert!(json.contains(needle), "{needle} absent : {json}");
+            }
         });
 }
 
@@ -217,6 +231,7 @@ fn update_config_persists_items_for_locale() {
             update_config(
                 ctx.clone(),
                 SaveContentArgs {
+                    rules: None,
                     card_limit: None,
                     items: vec![RuleItemInput {
                         icon: "clock-circle".into(),
@@ -272,6 +287,7 @@ fn publish_readiness_requires_one_rule() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    rules: None,
                     card_limit: None,
                     items: Vec::new(),
                     content_fr: sample_payload(),
@@ -283,11 +299,11 @@ fn publish_readiness_requires_one_rule() {
         });
 }
 
-/// Le tri décide *quelles* quatre règles la carte montre : une règle importante posée en
-/// cinquième position passe devant les neutres (§2.8).
+/// La carte montre les premières, dans l'ordre de l'hôte (§2.2) : une règle importante posée en
+/// cinquième position attend dans la page.
 #[test]
 #[serial]
-fn the_card_lifts_the_important_rule_above_the_neutral_ones() {
+fn the_card_shows_the_first_rules_in_the_host_order() {
     reset_test_store();
     let five = json!({
         "items": [
@@ -306,6 +322,7 @@ fn the_card_lifts_the_important_rule_above_the_neutral_ones() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    rules: None,
                     card_limit: None,
                     items: Vec::new(),
                     content_fr: five.clone(),
@@ -316,9 +333,8 @@ fn the_card_lifts_the_important_rule_above_the_neutral_ones() {
             let surface = render_home_card(ctx).expect("render");
             let json = serde_json::to_string(&surface).expect("json");
 
-            assert!(json.contains("Calme après 22 h"), "{json}");
-            // La dernière neutre cède sa place et attend dans la page.
-            assert!(!json.contains("Vélos au garage"), "{json}");
+            assert!(json.contains("Vélos au garage"), "{json}");
+            assert!(!json.contains("Calme après 22 h"), "{json}");
         });
 }
 
@@ -343,6 +359,7 @@ fn only_important_and_allowed_rules_wear_a_badge() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    rules: None,
                     card_limit: None,
                     items: Vec::new(),
                     content_fr: three.clone(),
@@ -406,6 +423,7 @@ fn the_detail_groups_by_theme_but_not_when_there_is_only_one() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    rules: None,
                     card_limit: None,
                     items: Vec::new(),
                     content_fr: grouped.clone(),
@@ -423,6 +441,7 @@ fn the_detail_groups_by_theme_but_not_when_there_is_only_one() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    rules: None,
                     card_limit: None,
                     items: Vec::new(),
                     content_fr: single.clone(),
@@ -465,6 +484,7 @@ fn the_status_follows_the_rule_into_every_language() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    rules: None,
                     card_limit: None,
                     items: Vec::new(),
                     content_fr: bilingual.clone(),
@@ -476,6 +496,7 @@ fn the_status_follows_the_rule_into_every_language() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    rules: None,
                     card_limit: None,
                     items: vec![
                         RuleItemInput {
@@ -535,6 +556,7 @@ fn unthemed_rules_close_the_detail_instead_of_breaking_it_up() {
             save_content(
                 ctx.clone(),
                 SaveContentArgs {
+                    rules: None,
                     card_limit: None,
                     items: Vec::new(),
                     content_fr: mixed.clone(),
@@ -575,7 +597,7 @@ fn find_list_items(node: &serde_json::Value) -> Vec<serde_json::Value> {
     out
 }
 
-/// Le formulaire hôte porte bien les deux nouveaux champs par règle (§2.8).
+/// Le dialogue d'une règle porte le type, le thème et les heures (§2.2) — ici sur le modèle.
 #[test]
 #[serial]
 fn host_rows_carry_status_and_theme() {
@@ -584,13 +606,17 @@ fn host_rows_carry_status_and_theme() {
         .with_property(Property::default())
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
+            apply_template(ctx.clone(), ApplyTemplateArgs {}).expect("template");
             let surface = render_host_main(ctx);
             let json = serde_json::to_string(&surface).expect("json");
-            assert!(json.contains("items.0.status"), "{json}");
-            assert!(json.contains("items.0.theme"), "{json}");
+            assert!(json.contains("rules.0.status"), "{json}");
+            assert!(json.contains("rules.0.theme"), "{json}");
             assert!(json.contains("rule.status.important"), "{json}");
             assert!(json.contains("rule.theme.noise"), "{json}");
-            assert!(json.contains("items.0.hours"), "{json}");
+            assert!(
+                json.contains(r#""type":"TimeRange","name":"rules.0.hours","value":"22:00-08:00""#),
+                "{json}"
+            );
             assert!(json.contains(r#""name":"card_limit""#), "{json}");
         });
 }
@@ -608,6 +634,7 @@ fn a_detail_without_a_title_keeps_its_row_and_its_error() {
             update_config(
                 ctx.clone(),
                 SaveContentArgs {
+                    rules: None,
                     card_limit: None,
                     items: vec![
                         RuleItemInput {
@@ -640,16 +667,16 @@ fn a_detail_without_a_title_keeps_its_row_and_its_error() {
             let title = readiness
                 .items
                 .iter()
-                .find(|item| item.id == "config.items.1.title")
+                .find(|item| item.id == "config.rules.1.title")
                 .expect("erreur du titre");
             assert!(!title.ok);
             assert_eq!(title.hint.get("fr"), "Écrivez la règle.");
             assert_eq!(readiness.items.len(), 2, "{:?}", readiness.items);
 
             let json = serde_json::to_string(&render_host_main(ctx)).expect("json");
-            assert!(json.contains("items.1.subtitle"), "{json}");
+            assert!(json.contains("rules.1.detail"), "{json}");
             assert!(json.contains(r#""error":"Écrivez la règle.""#), "{json}");
-            assert!(!json.contains("items.2.title"), "{json}");
+            assert!(!json.contains("rules.2.title"), "{json}");
         });
 }
 
@@ -665,6 +692,7 @@ fn a_lone_untitled_rule_is_not_a_rule_yet() {
             update_config(
                 ctx.clone(),
                 SaveContentArgs {
+                    rules: None,
                     card_limit: None,
                     items: vec![RuleItemInput {
                         subtitle: "Merci pour le voisinage".into(),
@@ -680,5 +708,150 @@ fn a_lone_untitled_rule_is_not_a_rule_yet() {
             // Pas le modèle par défaut à la place du brouillon.
             assert!(json.contains("Merci pour le voisinage"), "{json}");
             assert!(!json.contains("Logement non-fumeur"), "{json}");
+        });
+}
+
+fn slot(id: &str) -> RuleSlot {
+    RuleSlot {
+        id: id.into(),
+        ..RuleSlot::default()
+    }
+}
+
+fn save_rules(ctx: &portaki_sdk::prelude::Context, rules: Vec<RuleSlot>) {
+    update_config(
+        ctx.clone(),
+        SaveContentArgs {
+            rules: Some(rules),
+            card_limit: None,
+            items: Vec::new(),
+            content_fr: String::new(),
+            content_en: String::new(),
+        },
+    )
+    .expect("updateConfig");
+}
+
+fn titles(ctx: &portaki_sdk::prelude::Context, locale: &str) -> Vec<String> {
+    get_content(
+        ctx.clone(),
+        GetContentArgs {
+            locale: Some(locale.into()),
+        },
+    )
+    .expect("get")
+    .items
+    .into_iter()
+    .map(|item| item.title)
+    .collect()
+}
+
+/// Le tableau : une ligne jamais ouverte n'envoie que son id et garde tout ; l'ordre reçu vaut pour
+/// chaque langue ; une règle retirée l'est partout ; les anciennes règles reçoivent `r{rang}`.
+#[test]
+#[serial]
+fn the_table_reorders_and_deletes_by_id_in_every_language() {
+    reset_test_store();
+    let legacy = |a: &str, b: &str, c: &str| {
+        json!({ "items": [
+            { "title": a, "status": "important", "hours": "22:00 – 08:00" },
+            { "title": b }, { "title": c }
+        ] })
+        .to_string()
+    };
+    MockContext::host()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            save_content(
+                ctx.clone(),
+                SaveContentArgs {
+                    rules: None,
+                    card_limit: None,
+                    items: Vec::new(),
+                    content_fr: legacy("Silence", "Pas de fête", "Non-fumeur"),
+                    content_en: legacy("Quiet", "No parties", "No smoking"),
+                },
+            )
+            .expect("seed");
+            // Non-fumeur remonte, Pas de fête est supprimée, Silence n'a pas été ouverte.
+            save_rules(
+                &ctx,
+                vec![
+                    RuleSlot {
+                        title: Some("Non-fumeur, même au balcon".into()),
+                        ..slot("r2")
+                    },
+                    slot("r0"),
+                ],
+            );
+            assert_eq!(
+                titles(&ctx, "fr-FR"),
+                ["Non-fumeur, même au balcon", "Silence"]
+            );
+            assert_eq!(titles(&ctx, "en-US"), ["No smoking", "Quiet"]);
+            let view = get_content(
+                ctx.clone(),
+                GetContentArgs {
+                    locale: Some("en-US".into()),
+                },
+            )
+            .expect("get");
+            assert_eq!(view.items[1].status, rules::RuleStatus::Important);
+            assert_eq!(view.items[1].hours, "22:00 – 08:00");
+        });
+}
+
+/// « Partir d'un modèle » : cinq règles dans la langue de l'hôte, et un second clic n'écrase rien.
+#[test]
+#[serial]
+fn the_template_fills_an_empty_rulebook_once() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            apply_template(ctx.clone(), ApplyTemplateArgs {}).expect("template");
+            let first = titles(&ctx, "fr-FR");
+            assert_eq!(first.len(), 5, "{first:?}");
+            save_rules(&ctx, vec![slot("t-silence")]);
+            apply_template(ctx.clone(), ApplyTemplateArgs {}).expect("template");
+            assert_eq!(titles(&ctx, "fr-FR").len(), 1);
+            // Les heures du modèle, au format du `TimeRange`, se lisent « 22:00 – 08:00 ».
+            let json =
+                serde_json::to_string(&render_home_card(ctx.clone()).expect("card")).expect("json");
+            assert!(json.contains("22:00 – 08:00"), "{json}");
+        });
+}
+
+/// Au-delà de 30 : rien n'est refusé, la publication attend avec « 30 règles au maximum. ».
+#[test]
+#[serial]
+fn more_than_thirty_rules_block_publishing_not_saving() {
+    reset_test_store();
+    MockContext::host()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            save_rules(
+                &ctx,
+                (0..31)
+                    .map(|i| RuleSlot {
+                        title: Some(format!("Règle {i}")),
+                        ..slot(&format!("x{i}"))
+                    })
+                    .collect(),
+            );
+            assert_eq!(titles(&ctx, "fr-FR").len(), 31);
+            let readiness = publish_readiness(ctx.clone()).expect("readiness");
+            let check = readiness
+                .items
+                .iter()
+                .find(|item| item.id == "config.rules")
+                .expect("30 au plus");
+            assert_eq!(check.hint.get("fr"), "30 règles au maximum.");
+            // Plus de bouton « Ajouter ».
+            let json = serde_json::to_string(&render_host_main(ctx)).expect("json");
+            assert!(!json.contains("host.rules.add"), "{json}");
         });
 }
