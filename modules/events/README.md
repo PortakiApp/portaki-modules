@@ -30,6 +30,7 @@ Pool env on module-runtime: `OPENAGENDA_POOL_KEY`.
 | guest | `explore.detail` | Full list, map when coordinates exist |
 | host | `main` | Public events toggle / radius, events table (side panel per row, sorted by date), disclaimer |
 | host | `calendar` | Workspace tab: month calendar (`MonthCalendar`) of your events (recurrences expanded) and OpenAgenda's, source filter, duplicates banner, event detail |
+| host | `events-views` | Stats tile « Événements consultés » (`statsSummary`, `property-stats-card` + `-detail`): guest opens of `explore.item`, list opens and outbound taps from `views`; `—` without booklet statistics |
 
 ## Behaviour
 

@@ -7,7 +7,7 @@ Vos événements en tableau et en calendrier, et un lieu toujours sur la carte.
 * Vos événements se rangent dans un tableau trié par date ; l'onglet « Calendrier des événements » les montre mois par mois, avec ceux d'OpenAgenda.
 * « Quand » se saisit par un jour et des heures de début et de fin ; un événement doit être placé sur la carte, dans un rayon de 1 à 50 km.
 * « Ajouter les événements publics » ajoute ou retire d'un geste ceux d'OpenAgenda ; le livret puise dans les 100 prochains, au lieu de 12.
-* Un doublon (même nom à une heure près, même lieu) est signalé en tête du calendrier ; le livret ne garde que le vôtre.
+* Un doublon (même nom à une heure près, même lieu) est signalé en tête du calendrier ; les statistiques comptent les événements consultés.
 * Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
 
 ## 1.9.0

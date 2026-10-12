@@ -4,6 +4,7 @@
   "capability.openAgenda.fallback": "Mude de plano ou adicione a sua própria chave OpenAgenda (agenda de saídas)",
   "capability.openAgenda.purpose": "Carrega saídas e eventos à volta do alojamento, incluído no seu plano Portaki",
   "catalog.host.calendar": "Calendário de eventos",
+  "catalog.host.events-views": "Eventos consultados",
   "catalog.host.main": "Eventos",
   "config.events": "Eventos manuais",
   "connector.openAgenda.name": "OpenAgenda",
@@ -149,5 +150,13 @@
   "module.description": "Saídas, concertos e animação por perto",
   "module.displayName": "Eventos locais",
   "nav.event": "Evento",
-  "nav.events": "Eventos locais"
+  "nav.events": "Eventos locais",
+  "stats.tile": "eventos consultados",
+  "stats.views.clicks.call": "Chamadas",
+  "stats.views.clicks.directions": "Direções pedidas",
+  "stats.views.clicks.link": "Ligações abertas",
+  "stats.views.clicks.mail": "E-mails",
+  "stats.views.empty": "Nenhum evento consultado neste período.",
+  "stats.views.list": "Lista de eventos aberta",
+  "stats.views.unavailable": "Ainda não há consultas dos hóspedes para mostrar."
 }

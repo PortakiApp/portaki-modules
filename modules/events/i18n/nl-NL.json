@@ -4,6 +4,7 @@
   "capability.openAgenda.fallback": "Upgrade je abonnement of voeg je eigen OpenAgenda-sleutel toe (evenementenagenda)",
   "capability.openAgenda.purpose": "Haalt uitjes en evenementen rond de accommodatie op, inbegrepen in je Portaki-abonnement",
   "catalog.host.calendar": "Evenementenkalender",
+  "catalog.host.events-views": "Bekeken evenementen",
   "catalog.host.main": "Evenementen",
   "config.events": "Handmatige evenementen",
   "connector.openAgenda.name": "OpenAgenda",
@@ -149,5 +150,13 @@
   "module.description": "Uitjes, concerten en activiteiten vlakbij",
   "module.displayName": "Evenementen in de buurt",
   "nav.event": "Event",
-  "nav.events": "Evenementen"
+  "nav.events": "Evenementen",
+  "stats.tile": "bekeken evenementen",
+  "stats.views.clicks.call": "Oproepen",
+  "stats.views.clicks.directions": "Routes opgevraagd",
+  "stats.views.clicks.link": "Geopende links",
+  "stats.views.clicks.mail": "E-mails",
+  "stats.views.empty": "Geen evenement bekeken in deze periode.",
+  "stats.views.list": "Evenementenlijst geopend",
+  "stats.views.unavailable": "Nog geen weergaven door gasten om te tonen."
 }

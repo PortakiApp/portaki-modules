@@ -4,6 +4,7 @@
   "capability.openAgenda.fallback": "プランを変更するか、ご自身の OpenAgenda キー（イベントカレンダー）を追加してください",
   "capability.openAgenda.purpose": "宿泊施設周辺のお出かけやイベントを取得します。Portaki のプランに含まれています",
   "catalog.host.calendar": "イベントカレンダー",
+  "catalog.host.events-views": "閲覧されたイベント",
   "catalog.host.main": "イベント",
   "config.events": "手入力のイベント",
   "connector.openAgenda.name": "OpenAgenda",
@@ -149,5 +150,13 @@
   "module.description": "近くのお出かけ、コンサート、催し",
   "module.displayName": "地域のイベント",
   "nav.event": "イベント",
-  "nav.events": "地域のイベント"
+  "nav.events": "地域のイベント",
+  "stats.tile": "閲覧されたイベント",
+  "stats.views.clicks.call": "通話",
+  "stats.views.clicks.directions": "経路案内",
+  "stats.views.clicks.link": "開かれたリンク",
+  "stats.views.clicks.mail": "メール",
+  "stats.views.empty": "この期間に閲覧されたイベントはありません。",
+  "stats.views.list": "イベント一覧の表示",
+  "stats.views.unavailable": "表示できるゲストの閲覧はまだありません。"
 }

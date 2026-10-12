@@ -4,6 +4,7 @@
   "capability.openAgenda.fallback": "升级方案，或添加您自己的 OpenAgenda 密钥（活动日历）",
   "capability.openAgenda.purpose": "获取住所周边的出游与活动，已包含在您的 Portaki 方案中",
   "catalog.host.calendar": "活动日历",
+  "catalog.host.events-views": "浏览的活动",
   "catalog.host.main": "活动",
   "config.events": "手动活动",
   "connector.openAgenda.name": "OpenAgenda",
@@ -149,5 +150,13 @@
   "module.description": "附近的出游、演出与活动",
   "module.displayName": "周边活动",
   "nav.event": "活动",
-  "nav.events": "周边活动"
+  "nav.events": "周边活动",
+  "stats.tile": "浏览的活动",
+  "stats.views.clicks.call": "通话",
+  "stats.views.clicks.directions": "导航请求",
+  "stats.views.clicks.link": "打开的链接",
+  "stats.views.clicks.mail": "邮件",
+  "stats.views.empty": "此期间没有浏览的活动。",
+  "stats.views.list": "活动列表打开次数",
+  "stats.views.unavailable": "暂无住客浏览数据。"
 }

@@ -6,6 +6,10 @@
 //! side panel (`panel: "sheet"`), `children[i]` of the `DataTable`. A rule broken shows under its
 //! field (`Field::error`), the same one `publishReadiness` blocks on.
 
+mod stats;
+
+pub use stats::{render_host_stats, stats_summary};
+
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
