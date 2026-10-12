@@ -101,8 +101,9 @@ pub fn device_list_item(device: &Appliance) -> Component {
         .chevron(true)
         .action(action);
 
-    if !device.emoji.trim().is_empty() {
-        item = item.leading(Leading::Icon(device.emoji.clone()));
+    let emoji = device.shown_emoji();
+    if !emoji.is_empty() {
+        item = item.leading(Leading::Icon(emoji));
     }
     if !device.location.trim().is_empty() {
         item = item.subtitle(device.location.clone());

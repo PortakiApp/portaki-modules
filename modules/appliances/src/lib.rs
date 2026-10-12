@@ -9,11 +9,12 @@ mod i18n;
 mod ids;
 mod queries;
 mod store;
+mod suggest;
 
 pub use commands::{
     delete_appliance, reorder_appliances, replace_devices, save_appliance, save_safety_notice,
-    DeleteApplianceArgs, ReorderAppliancesArgs, ReplaceDeviceSlot, ReplaceDevicesArgs,
-    SaveApplianceArgs, SaveSafetyNoticeArgs,
+    update_config, DeleteApplianceArgs, ReorderAppliancesArgs, ReplaceDeviceSlot,
+    ReplaceDevicesArgs, SaveApplianceArgs, SaveSafetyNoticeArgs, UpdateConfigArgs,
 };
 pub use content::{Appliance, ApplianceStatus, AppliancesPayload, MAX_APPLIANCES, MAX_FEATURED};
 pub use entities::AppliancesContent;

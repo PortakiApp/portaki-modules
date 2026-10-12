@@ -65,13 +65,44 @@ pub struct Appliance {
     /// lisible en dessous.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub steps: Vec<ApplianceStep>,
+    /// « Notice PDF » (§2.2) : la référence `portaki-file:` du PDF déposé. Partagée entre les
+    /// langues ; affichée à la place du lien quand les deux existent (§3).
+    #[serde(
+        default,
+        rename = "manualFile",
+        skip_serializing_if = "String::is_empty"
+    )]
+    pub manual_file: String,
 }
 
-/// Une étape du mode d'emploi : `{ text }` (§8). Le schéma attend le stockage de fichiers.
+impl Appliance {
+    /// L'emoji de l'appareil, ou celui que son nom propose (§4) ; vide → l'icône prise.
+    pub fn shown_emoji(&self) -> String {
+        match self.emoji.trim() {
+            "" => crate::suggest::emoji(&self.name)
+                .unwrap_or_default()
+                .to_string(),
+            emoji => emoji.to_string(),
+        }
+    }
+
+    /// Un mode d'emploi, sous une forme ou une autre : étapes, texte, PDF ou lien (§9 #4).
+    pub fn has_manual(&self) -> bool {
+        self.steps.iter().any(|step| !step.text.trim().is_empty())
+            || !description_plain_text(&self.description).trim().is_empty()
+            || !self.manual_file.trim().is_empty()
+            || !self.manual_url.trim().is_empty()
+    }
+}
+
+/// Une étape du mode d'emploi : `{ text }` (§8), et son schéma facultatif.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct ApplianceStep {
     #[serde(default)]
     pub text: String,
+    /// La référence `portaki-file:` du schéma (ImageUpload). Partagée entre les langues.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub image: String,
 }
 
 /// Root payload stored as JSON in `content_fr` (canonical; single language).
@@ -100,6 +131,10 @@ pub struct AppliancesPayload {
         skip_serializing_if = "Option::is_none"
     )]
     pub featured_limit: Option<u32>,
+    /// « Ordre des pièces » (§2.1) : les pièces dans l'ordre voulu par l'hôte. Une pièce absente
+    /// suit, dans l'ordre de création ; « Autres » reste en dernier.
+    #[serde(default, rename = "roomOrder", skip_serializing_if = "Vec::is_empty")]
+    pub room_order: Vec<String>,
 }
 
 impl AppliancesPayload {
@@ -193,6 +228,30 @@ impl AppliancesPayload {
             }
         }
         warnings
+    }
+
+    /// [`Self::problems`], plus « Donnez un nom à l'appareil. » pour un appareil sans nom dans
+    /// aucune langue. Une traduction pas encore faite (nom vide dans cette langue seulement, semé
+    /// par `sync_shared_from`) n'en est pas un : elle bloquerait la publication à tort.
+    pub fn problems_in(
+        &self,
+        bundle: &AppliancesBundle,
+    ) -> Vec<(String, portaki_sdk::contracts::i18n::I18nText)> {
+        let mut problems = self.problems();
+        for (index, device) in self.devices.iter().enumerate() {
+            let named = bundle.by_lang.values().any(|payload| {
+                payload
+                    .find_device(&device.id)
+                    .is_some_and(|d| !d.name.trim().is_empty())
+            });
+            if device.name.trim().is_empty() && !named {
+                problems.push((
+                    format!("devices.{index}.name"),
+                    crate::i18n::text("host.device.name.required"),
+                ));
+            }
+        }
+        problems
     }
 
     /// Le message à afficher sous `field`, s'il y en a un.
@@ -293,9 +352,35 @@ impl AppliancesPayload {
             }
         }
 
+        // L'ordre choisi d'abord ; une pièce qu'il ne cite pas garde sa place d'apparition.
+        let rank = |room: &Option<String>| {
+            room.as_deref()
+                .and_then(|name| self.room_order.iter().position(|r| r.trim() == name))
+                .unwrap_or(usize::MAX)
+        };
+        rooms.sort_by_key(|(room, _)| rank(room));
         if !unplaced.is_empty() {
             rooms.push((None, unplaced));
         }
+        rooms
+    }
+
+    /// Les pièces des appareils, dans l'ordre de la liste du livret (« Autres » exclue).
+    pub fn rooms(&self) -> Vec<String> {
+        let mut rooms: Vec<String> = Vec::new();
+        for device in &self.devices {
+            let room = device.location.trim();
+            if !room.is_empty() && !rooms.iter().any(|r| r == room) {
+                rooms.push(room.to_string());
+            }
+        }
+        let rank = |room: &String| {
+            self.room_order
+                .iter()
+                .position(|r| r.trim() == room)
+                .unwrap_or(usize::MAX)
+        };
+        rooms.sort_by_key(rank);
         rooms
     }
 
@@ -393,6 +478,11 @@ impl AppliancesBundle {
                     device.status = src.status;
                     device.model = src.model.clone();
                     device.video_url = src.video_url.clone();
+                    device.manual_file = src.manual_file.clone();
+                    // Le schéma d'une étape vaut pour toutes les langues, au même rang.
+                    for (step, src_step) in device.steps.iter_mut().zip(&src.steps) {
+                        step.image = src_step.image.clone();
+                    }
                 }
             }
             // Align device list order/ids with source when missing.
@@ -412,6 +502,16 @@ impl AppliancesBundle {
                 .retain(|d| source.find_device(&d.id).is_some());
             payload.sort_by_order();
         }
+    }
+
+    /// Ce que l'hôte édite : [`Self::pick`], ou sa langue telle quelle quand aucune n'a d'appareil
+    /// nommé — un appareil tout juste ajouté, sans nom encore, ne disparaît pas du tableau.
+    pub fn for_host(&self, locale: &str, property_locale: &str) -> AppliancesPayload {
+        let picked = self.pick(locale, property_locale);
+        if picked.is_empty() && picked.safety_notice.trim().is_empty() {
+            return self.get(locale);
+        }
+        picked
     }
 
     pub fn pick(&self, guest_locale: &str, property_locale: &str) -> AppliancesPayload {
@@ -513,6 +613,7 @@ fn migrate_legacy(value: &Value) -> AppliancesPayload {
         devices: migrated,
         safety_notice: plain_text_to_tiptap(&legacy_safety),
         featured_limit: None,
+        room_order: Vec::new(),
     }
 }
 
@@ -1019,7 +1120,10 @@ mod tests {
     }
 
     fn step(text: &str) -> ApplianceStep {
-        ApplianceStep { text: text.into() }
+        ApplianceStep {
+            text: text.into(),
+            ..ApplianceStep::default()
+        }
     }
 
     /// Les nouveaux contrôles avertissent, ils ne bloquent pas : un appareil déjà publié reste

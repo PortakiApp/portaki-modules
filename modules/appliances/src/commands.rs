@@ -94,8 +94,10 @@ pub struct ReplaceDevicesArgs {
 pub struct ReplaceDeviceSlot {
     #[serde(default)]
     pub id: String,
+    /// Absent : gardé (une ligne du tableau jamais ouverte n'envoie que son id). Vide : la ligne
+    /// est retirée si elle n'envoie rien d'autre.
     #[serde(default)]
-    pub name: String,
+    pub name: Option<String>,
     #[serde(default)]
     pub emoji: Option<String>,
     #[serde(default)]
@@ -111,6 +113,12 @@ pub struct ReplaceDeviceSlot {
     pub safety_note: Option<String>,
     #[serde(default)]
     pub status: Option<String>,
+    /// « Actif » (case du tableau, interrupteur du panneau) : prime sur `status`.
+    #[serde(default)]
+    pub active: serde_json::Value,
+    /// « Notice PDF » : la référence `portaki-file:` du `FileUpload`.
+    #[serde(default, rename = "manualFile", alias = "manual_file")]
+    pub manual_file: Option<String>,
     /// « Marque et modèle », non traduit.
     #[serde(default)]
     pub model: Option<String>,
@@ -184,6 +192,7 @@ pub fn save_appliance(ctx: Context, args: SaveApplianceArgs) -> Result<Appliance
         video_url: args.video_url.trim().to_string(),
         steps: parse_steps(args.steps.as_ref())
             .unwrap_or_else(|| previous.map(|d| d.steps.clone()).unwrap_or_default()),
+        manual_file: previous.map(|d| d.manual_file.clone()).unwrap_or_default(),
     };
 
     if next.featured {
@@ -285,66 +294,7 @@ pub fn save_safety_notice(ctx: Context, args: SaveSafetyNoticeArgs) -> Result<()
 pub fn replace_devices(ctx: Context, args: ReplaceDevicesArgs) -> Result<()> {
     let lang = crate::content::AppliancesBundle::lang_code(&ctx.locale);
     let mut payload = store::load_payload_for(&lang, &ctx.property.locale)?;
-    let mut next_devices: Vec<Appliance> = Vec::new();
-
-    for (index, slot) in args.devices.iter().enumerate() {
-        let name = slot.name.trim().to_string();
-        if name.is_empty() {
-            continue;
-        }
-        if next_devices.len() >= MAX_APPLIANCES {
-            return Err(refusal(&ctx, "host.devices.tooMany", &[]));
-        }
-
-        let id = {
-            let trimmed = slot.id.trim();
-            if trimmed.is_empty() {
-                Uuid::new_v4().to_string()
-            } else {
-                trimmed.to_string()
-            }
-        };
-
-        // Ce que la ligne n'envoie pas reste tel qu'enregistré : un formulaire sans champ
-        // « Sécurité » effaçait la consigne de chaque appareil à chaque enregistrement.
-        let stored = payload.find_device(&id);
-        let text = |sent: &Option<String>, kept: fn(&Appliance) -> &String| {
-            sent.as_deref()
-                .map(|value| value.trim().to_string())
-                .or_else(|| stored.map(|d| kept(d).clone()))
-                .unwrap_or_default()
-        };
-        let featured = match &slot.featured {
-            serde_json::Value::Null => stored.is_some_and(|d| d.featured),
-            value => parse_boolish(value),
-        };
-        let status = match slot.status.as_deref() {
-            Some(status) if status.trim().eq_ignore_ascii_case("hidden") => ApplianceStatus::Hidden,
-            Some(_) => ApplianceStatus::Active,
-            None => stored.map(|d| d.status).unwrap_or_default(),
-        };
-        let description = match (slot.description.as_deref(), stored) {
-            (None, Some(d)) => d.description.clone(),
-            (sent, _) => normalize_description(sent.unwrap_or_default()),
-        };
-
-        next_devices.push(Appliance {
-            name,
-            emoji: text(&slot.emoji, |d| &d.emoji),
-            description,
-            featured,
-            order: index as i32,
-            location: text(&slot.location, |d| &d.location),
-            manual_url: text(&slot.manual_url, |d| &d.manual_url),
-            safety_note: text(&slot.safety_note, |d| &d.safety_note),
-            status,
-            model: text(&slot.model, |d| &d.model),
-            video_url: text(&slot.video_url, |d| &d.video_url),
-            steps: parse_steps(slot.steps.as_ref())
-                .unwrap_or_else(|| stored.map(|d| d.steps.clone()).unwrap_or_default()),
-            id,
-        });
-    }
+    let next_devices = merge_devices(&ctx, &payload, &args.devices)?;
 
     let featured_count = next_devices
         .iter()
@@ -366,6 +316,181 @@ pub fn replace_devices(ctx: Context, args: ReplaceDevicesArgs) -> Result<()> {
     payload.sort_by_order();
     let _ = store::save_payload_for(&lang, &payload)?;
     Ok(())
+}
+
+/// Le formulaire des réglages (page du module, onglet Appareils) : enregistré à chaque saisie par
+/// l'auto-save du tableau de bord.
+#[portaki_sdk::params]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct UpdateConfigArgs {
+    /// « Appareils mis en avant » : un nombre, le `NumberInput` n'envoie pas d'entier.
+    #[serde(default, rename = "featuredLimit", alias = "featured_limit")]
+    pub featured_limit: Option<f64>,
+    /// « Ordre des pièces » : la valeur de l'`EditableList`, `[{ label }]` en JSON ou en tableau.
+    #[serde(default, rename = "roomOrder", alias = "room_order")]
+    pub room_order: Option<serde_json::Value>,
+    #[serde(
+        default,
+        rename = "paperManualsLocation",
+        alias = "paper_manuals_location"
+    )]
+    pub paper_manuals_location: Option<String>,
+    /// Absente : la liste reste telle quelle. Présente : les lignes envoyées, dans cet ordre.
+    #[serde(default)]
+    pub devices: Option<Vec<ReplaceDeviceSlot>>,
+}
+
+/// Enregistre les réglages. Rien n'est refusé ici : ce qui dépasse une borne (trop d'appareils en
+/// avant, texte trop long) s'affiche sous son champ et bloque « Publier » (`publishReadiness`) —
+/// un auto-save refusé perdrait la saisie en cours.
+#[portaki_sdk::command(
+    name = "updateConfig",
+    example(
+        label = "Carte d'accueil et deux appareils",
+        input = r#"{"featuredLimit":4,"paperManualsLocation":"Boîte rouge, étagère du salon","devices":[{"id":"four","name":"Four","location":"Cuisine","featured":true,"active":true},{"id":"lave-linge"}]}"#
+    )
+)]
+pub fn update_config(ctx: Context, args: UpdateConfigArgs) -> Result<()> {
+    let lang = crate::content::AppliancesBundle::lang_code(&ctx.locale);
+    let mut payload = store::load_host_payload(&lang, &ctx.property.locale)?;
+    if let Some(limit) = args.featured_limit.filter(|n| n.is_finite()) {
+        payload.featured_limit = Some(limit.round().max(0.0) as u32);
+    }
+    if let Some(order) = args.room_order.as_ref() {
+        payload.room_order = parse_labels(order);
+    }
+    if let Some(location) = args.paper_manuals_location.as_deref() {
+        payload.paper_manuals_location = location.trim().to_string();
+    }
+    if let Some(devices) = args.devices.as_deref() {
+        payload.devices = merge_devices(&ctx, &payload, devices)?;
+    }
+    let _ = store::save_payload_for(&lang, &payload)?;
+    Ok(())
+}
+
+/// Les lignes envoyées, fusionnées aux appareils enregistrés de même `id` : un champ absent garde
+/// sa valeur, un champ vide l'efface. Une ligne vide (nom vide, rien d'autre) est retirée.
+fn merge_devices(
+    ctx: &Context,
+    payload: &crate::content::AppliancesPayload,
+    slots: &[ReplaceDeviceSlot],
+) -> Result<Vec<Appliance>> {
+    let mut next_devices: Vec<Appliance> = Vec::new();
+    for (index, slot) in slots.iter().enumerate() {
+        let id = slot.id.trim();
+        let stored = (!id.is_empty()).then(|| payload.find_device(id)).flatten();
+        let name = match (slot.name.as_deref(), stored) {
+            (Some(sent), _) => sent.trim().to_string(),
+            (None, Some(d)) => d.name.clone(),
+            (None, None) => String::new(),
+        };
+        if name.is_empty() && (stored.is_none() || slot.name.is_some()) && slot_is_blank(slot) {
+            continue;
+        }
+        if next_devices.len() >= MAX_APPLIANCES {
+            return Err(refusal(ctx, "host.devices.tooMany", &[]));
+        }
+        let id = if id.is_empty() {
+            Uuid::new_v4().to_string()
+        } else {
+            id.to_string()
+        };
+
+        // Ce que la ligne n'envoie pas reste tel qu'enregistré : un formulaire sans champ
+        // « Sécurité » effaçait la consigne de chaque appareil à chaque enregistrement.
+        let text = |sent: &Option<String>, kept: fn(&Appliance) -> &String| {
+            sent.as_deref()
+                .map(|value| value.trim().to_string())
+                .or_else(|| stored.map(|d| kept(d).clone()))
+                .unwrap_or_default()
+        };
+        let featured = match &slot.featured {
+            serde_json::Value::Null => stored.is_some_and(|d| d.featured),
+            value => parse_boolish(value),
+        };
+        let status = match (&slot.active, slot.status.as_deref()) {
+            (serde_json::Value::Null, Some(status))
+                if status.trim().eq_ignore_ascii_case("hidden") =>
+            {
+                ApplianceStatus::Hidden
+            }
+            (serde_json::Value::Null, Some(_)) => ApplianceStatus::Active,
+            (serde_json::Value::Null, None) => stored.map(|d| d.status).unwrap_or_default(),
+            (active, _) if parse_boolish(active) => ApplianceStatus::Active,
+            _ => ApplianceStatus::Hidden,
+        };
+        let description = match (slot.description.as_deref(), stored) {
+            (None, Some(d)) => d.description.clone(),
+            (sent, _) => normalize_description(sent.unwrap_or_default()),
+        };
+
+        next_devices.push(Appliance {
+            name,
+            emoji: text(&slot.emoji, |d| &d.emoji),
+            description,
+            featured,
+            order: index as i32,
+            location: text(&slot.location, |d| &d.location),
+            manual_url: text(&slot.manual_url, |d| &d.manual_url),
+            safety_note: text(&slot.safety_note, |d| &d.safety_note),
+            status,
+            model: text(&slot.model, |d| &d.model),
+            video_url: text(&slot.video_url, |d| &d.video_url),
+            manual_file: text(&slot.manual_file, |d| &d.manual_file),
+            steps: parse_steps(slot.steps.as_ref())
+                .unwrap_or_else(|| stored.map(|d| d.steps.clone()).unwrap_or_default()),
+            id,
+        });
+    }
+    Ok(next_devices)
+}
+
+/// Rien d'écrit hors du nom : la ligne qu'« Ajouter » a ouverte puis qu'on a laissée.
+fn slot_is_blank(slot: &ReplaceDeviceSlot) -> bool {
+    let empty = |v: &Option<String>| v.as_deref().is_none_or(|v| v.trim().is_empty());
+    [
+        &slot.emoji,
+        &slot.location,
+        &slot.manual_url,
+        &slot.safety_note,
+        &slot.model,
+        &slot.video_url,
+        &slot.manual_file,
+    ]
+    .into_iter()
+    .all(empty)
+        && slot
+            .description
+            .as_deref()
+            .is_none_or(|d| crate::content::description_plain_text(d).trim().is_empty())
+        && parse_steps(slot.steps.as_ref()).is_none_or(|steps| steps.is_empty())
+}
+
+/// Les libellés d'une `EditableList` (`[{ label }]`, en JSON ou en tableau) ou une liste de textes.
+fn parse_labels(raw: &serde_json::Value) -> Vec<String> {
+    use serde_json::Value;
+    let parsed;
+    let rows = match raw {
+        Value::String(json) => {
+            parsed = serde_json::from_str::<Value>(json).unwrap_or(Value::Null);
+            match parsed.as_array() {
+                Some(rows) => rows,
+                None => return Vec::new(),
+            }
+        }
+        Value::Array(rows) => rows,
+        _ => return Vec::new(),
+    };
+    rows.iter()
+        .filter_map(|row| match row {
+            Value::String(text) => Some(text.as_str()),
+            row => row.get("label").and_then(Value::as_str),
+        })
+        .map(str::trim)
+        .filter(|label| !label.is_empty())
+        .map(str::to_string)
+        .collect()
 }
 
 /// Un refus dit à l'hôte dans sa langue, avec le message de la spec — pas une phrase de développeur.
@@ -393,20 +518,27 @@ fn parse_steps(raw: Option<&serde_json::Value>) -> Option<Vec<ApplianceStep>> {
         Value::Array(rows) => rows,
         _ => return None,
     };
+    let field = |row: &Value, keys: &[&str]| {
+        keys.iter()
+            .find_map(|key| row.get(*key).and_then(Value::as_str))
+            .unwrap_or_default()
+            .trim()
+            .to_string()
+    };
     Some(
         rows.iter()
-            .filter_map(|row| match row {
-                Value::String(text) => Some(text.as_str()),
-                row => row
-                    .get("label")
-                    .or_else(|| row.get("text"))
-                    .and_then(Value::as_str),
+            .map(|row| match row {
+                Value::String(text) => ApplianceStep {
+                    text: text.trim().to_string(),
+                    ..ApplianceStep::default()
+                },
+                row => ApplianceStep {
+                    text: field(row, &["label", "text"]),
+                    image: field(row, &["image"]),
+                },
             })
-            .map(str::trim)
-            .filter(|text| !text.is_empty())
-            .map(|text| ApplianceStep {
-                text: text.to_string(),
-            })
+            // Une étape vide (retirée de la liste, ou ajoutée puis laissée) tombe.
+            .filter(|step| !step.text.is_empty() || !step.image.is_empty())
             .collect(),
     )
 }

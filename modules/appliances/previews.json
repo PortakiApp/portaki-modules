@@ -113,6 +113,10 @@
             "type": "Stack"
           },
           {
+            "message": "La surface reste chaude quelques minutes après l'arrêt.",
+            "type": "InfoBanner"
+          },
+          {
             "children": [
               {
                 "text": "i18n:explore.item.howto",
@@ -125,10 +129,6 @@
             ],
             "surface": "elevated",
             "type": "Card"
-          },
-          {
-            "message": "La surface reste chaude quelques minutes après l'arrêt.",
-            "type": "InfoBanner"
           },
           {
             "children": [

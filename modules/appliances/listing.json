@@ -14,8 +14,8 @@
     "en": "The list of appliances (oven, washing machine, air conditioning…) with, for each one, the room, how to use it and a link to the manual, plus a shared safety notice."
   },
   "hostSurface": {
-    "fr": "Un onglet Appareils pour ajouter, modifier, mettre en avant ou masquer les appareils, et rédiger la consigne de sécurité.",
-    "en": "An Appliances tab to add, edit, feature or hide appliances, and write the safety notice."
+    "fr": "Un onglet Appareils : un tableau pour ajouter, modifier, mettre en avant ou masquer les appareils, avec leurs étapes, leur notice PDF et leur consigne de sécurité.",
+    "en": "An Appliances tab: a table to add, edit, feature or hide appliances, with their steps, PDF manual and safety note."
   },
   "configItems": [
     {
@@ -27,8 +27,8 @@
       "en": "How-to instructions"
     },
     {
-      "fr": "Lien vers le manuel (facultatif)",
-      "en": "Link to the manual (optional)"
+      "fr": "Notice PDF ou lien vers le manuel (facultatif)",
+      "en": "PDF manual or link to the manual (optional)"
     },
     {
       "fr": "Consigne de sécurité du logement",

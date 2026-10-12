@@ -57,17 +57,18 @@ pub fn load_payload(ctx: &Context) -> Result<AppliancesPayload> {
     store::load_payload_for(&ctx.locale, &ctx.property.locale)
 }
 
-/// Ce qui bloque la publication : les longueurs de la spec Appareils et le nombre d'appareils
-/// en avant ([`AppliancesPayload::problems`]), chacun désignant son champ (`config.<clé>`) ; et,
+/// Ce qui bloque la publication : les longueurs de la spec Appareils, le nom d'un appareil et le
+/// nombre d'appareils en avant ([`AppliancesPayload::problems_in`]), chacun désignant son champ (`config.<clé>`) ; et,
 /// sans bloquer, le modèle, la vidéo et les étapes ([`AppliancesPayload::warnings`]).
 #[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
 pub fn publish_readiness(
     ctx: Context,
 ) -> Result<portaki_sdk::contracts::publish::PublishReadiness> {
     use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
-    let payload = store::load_payload_for(&ctx.locale, &ctx.property.locale)?;
+    let bundle = store::load_bundle()?;
+    let payload = bundle.for_host(&ctx.locale, &ctx.property.locale);
     let required = payload
-        .problems()
+        .problems_in(&bundle)
         .into_iter()
         .map(|problem| (problem, PublishLevel::Required));
     let recommended = payload
