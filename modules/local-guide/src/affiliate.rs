@@ -33,8 +33,8 @@ pub const PARTNER_QUERY_PARAM: &str = "partner_id";
 /// Recherche GetYourGuide par destination.
 const SEARCH_BASE: &str = "https://www.getyourguide.com/s/";
 
-/// Nombre maximum de liens choisis par l'hôte.
-pub const MAX_CURATED_LINKS: usize = 10;
+/// Nombre maximum de liens choisis par l'hôte : « 5 activités au maximum en avant » (§2.2).
+pub const MAX_CURATED_LINKS: usize = 5;
 
 /// Domaine des liens longs.
 const GYG_DOMAIN: &str = "getyourguide.com";
@@ -51,12 +51,16 @@ const GYG_SHORT_DOMAIN: &str = "gyg.me";
 /// du §2.13, et inventer des paramètres d'affiliation serait pire que ne pas en avoir.
 const VIATOR_DOMAIN: &str = "viator.com";
 
+/// Domaine des liens Tiqets que l'hôte colle (§2.2, « Viator ou Tiqets »). Aucun enrichissement :
+/// le lien sort tel quel, avec son nom et le conseil de l'hôte.
+const TIQETS_DOMAIN: &str = "tiqets.com";
+
 /// Pourquoi une URL proposée par l'hôte a été refusée.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CuratedUrlError {
     /// Champ laissé vide — la ligne est simplement ignorée, ce n'est pas une faute.
     Empty,
-    /// Ni GetYourGuide, ni `gyg.me`, ni Viator : refusé à l'enregistrement.
+    /// Ni GetYourGuide, ni `gyg.me`, ni Viator, ni Tiqets : refusé à l'enregistrement.
     NotGetYourGuide,
 }
 
@@ -209,6 +213,9 @@ pub fn normalize_curated_url(raw: &str) -> Result<String, CuratedUrlError> {
             return Ok(https);
         }
         return Err(CuratedUrlError::NotGetYourGuide);
+    }
+    if is_domain_or_subdomain(&host, TIQETS_DOMAIN) {
+        return Ok(https);
     }
     Err(CuratedUrlError::NotGetYourGuide)
 }

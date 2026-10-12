@@ -8,6 +8,7 @@
 use chrono::{Datelike, NaiveDate, Weekday};
 use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
+use portaki_sdk::sdui::hours;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 
@@ -15,14 +16,18 @@ use serde_json::Value;
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ModuleConfig {
     /// The rows of the host form, blank ones included (see [`Self::parse_spots`]).
-    #[field(structured, required, label = "config.spots")]
+    ///
+    /// Copiées vers un autre logement, marquées « À vérifier » (`local`) — catégories, conseils et
+    /// avantages compris ; fusionnées ligne par ligne sur leur `id`, dans l'ordre reçu : le tableau
+    /// se réordonne. Les distances ne sont jamais stockées, elles se recalculent.
+    #[field(structured, required, local, label = "config.spots")]
     pub spots: Vec<SpotRow>,
     /// Les activités que l'hôte propose lui-même (§2.13, `origin: host`).
     ///
     /// Rien à voir avec les liens partenaires de « Activités & billets » : ici l'hôte décrit ce
     /// qu'il connaît — la sortie voilier de Marc —, la réservation se fait avec le prestataire,
     /// et aucune commission n'est perçue.
-    #[field(structured, label = "config.hostActivities")]
+    #[field(structured, local, label = "config.hostActivities")]
     pub host_activities: Vec<HostActivityRow>,
     #[field(label = "host.disclaimer.label")]
     pub disclaimer: I18nText,
@@ -32,8 +37,9 @@ pub struct ModuleConfig {
     pub activities_destination: String,
     #[field(label = "host.activities.intro")]
     pub activities_intro: I18nText,
-    /// The links of the « Activités & billets » section, as the form rows `{ url, label }`.
-    #[field(structured, label = "host.section.activities")]
+    /// « Vos choix dans le catalogue » : les liens collés par l'hôte, `{ url, label, tip }`, cinq
+    /// en avant au plus. Copiés « À vérifier » (`local`).
+    #[field(structured, local, label = "host.section.activities")]
     pub activities: Vec<ActivityRow>,
     #[field(label = "host.tiqets.enabled")]
     pub tiqets_enabled: bool,
@@ -62,6 +68,45 @@ pub struct ModuleConfig {
     #[field(kind = "structured", label = "host.public.spots")]
     #[serde(deserialize_with = "id_list")]
     pub public_spots: Vec<String>,
+    // §2.2 Activités des partenaires. Absents tant que l'hôte n'a pas enregistré la nouvelle
+    // carte : ils retombent alors sur les réglages d'avant, fournisseur par fournisseur.
+    /// « Afficher le catalogue ». Absent : l'un des anciens interrupteurs allumé.
+    #[field(label = "host.partners.enabled")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub partners_enabled: Option<bool>,
+    /// Les fournisseurs choisis, [`PROVIDERS`]. Absent : ceux que les anciens interrupteurs
+    /// allumaient.
+    #[field(kind = "structured", label = "host.partners.providers")]
+    #[serde(
+        default,
+        deserialize_with = "optional_id_list",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub providers: Option<Vec<String>>,
+    /// Un seul rayon pour tous les fournisseurs, 1 à 50 km. Absent : celui de Tiqets d'avant.
+    #[field(label = "host.partners.radius")]
+    #[serde(
+        default,
+        deserialize_with = "optional_number",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub partner_radius_km: Option<u32>,
+    /// Prix maximum, en euros, 1 à 1 000. Absent : pas de filtre.
+    #[field(label = "host.partners.maxPrice")]
+    #[serde(
+        default,
+        deserialize_with = "optional_number",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub partner_max_price: Option<u32>,
+    /// Note minimale commune. Absente : celle de chaque fournisseur d'avant.
+    #[field(kind = "select", options = ["0", "3", "4"], label = "host.partners.minRating")]
+    #[serde(
+        default,
+        deserialize_with = "optional_number",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub partner_min_rating: Option<u8>,
 }
 
 impl Default for ModuleConfig {
@@ -81,6 +126,11 @@ impl Default for ModuleConfig {
             viator_min_rating: VIATOR_DEFAULT_MIN_RATING,
             public_enabled: false,
             public_spots: Vec::new(),
+            partners_enabled: None,
+            providers: None,
+            partner_radius_km: None,
+            partner_max_price: None,
+            partner_min_rating: None,
         }
     }
 }
@@ -97,6 +147,34 @@ const TIQETS_MIN_RATING_CHOICES: [u32; 3] = [0, 3, 4];
 
 /// Note minimale Viator par défaut : la liste suit la ville entière, le filtre écarte le tout-venant.
 pub const VIATOR_DEFAULT_MIN_RATING: u8 = 4;
+
+/// Les fournisseurs du catalogue que l'hôte peut choisir (§2.2). GetYourGuide est annoncé, pas
+/// proposé.
+pub const PROVIDERS: [&str; 2] = ["viator", "tiqets"];
+
+/// Bornes du rayon commun et du prix maximum (§2.2).
+pub const PARTNER_RADIUS_KM: (u32, u32) = (1, 50);
+pub const PARTNER_MAX_PRICE: (u32, u32) = (1, 1000);
+
+/// Les catégories d'une adresse (§2.1), stockées en toutes lettres : l'emoji par défaut et la page
+/// publique les lisent telles quelles. Le jeton sert aux libellés traduits du formulaire.
+pub const CATEGORIES: [(&str, &str); 9] = [
+    ("restaurant", "Restaurant"),
+    ("cafe", "Café"),
+    ("shop", "Commerce"),
+    ("market", "Marché"),
+    ("beach", "Plage"),
+    ("culture", "Culture"),
+    ("sport", "Sport"),
+    ("wellness", "Bien-être"),
+    ("other", "Autre"),
+];
+
+/// L'ordre de prix proposé (§2.1) ; l'ancien texte libre reste lisible.
+pub const PRICE_LEVELS: [&str; 4] = ["€", "€€", "€€€", "€€€€"];
+
+/// Au-delà, l'adresse est sans doute mal placée (§2.1, position ≤ 50 km) : un avertissement.
+pub const SPOT_MAX_KM: f64 = 50.0;
 
 /// The old KV blob onto the declared keys: the nested `activities: {enabled, destination, intro,
 /// links}` and `tiqets: {enabled, radius_km, min_rating}` sections go flat (numbers to their
@@ -174,6 +252,9 @@ pub struct TiqetsConfig {
     /// Note minimale des avis, 1 à 5 ; 0 = aucun filtre.
     #[serde(default)]
     pub min_rating: u8,
+    /// Prix maximum en euros ; `None` = aucun filtre.
+    #[serde(default)]
+    pub max_price: Option<u32>,
 }
 
 impl Default for TiqetsConfig {
@@ -182,6 +263,7 @@ impl Default for TiqetsConfig {
             enabled: false,
             radius_km: TIQETS_DEFAULT_RADIUS_KM,
             min_rating: 0,
+            max_price: None,
         }
     }
 }
@@ -213,6 +295,8 @@ pub struct ViatorConfig {
     pub enabled: bool,
     /// Note minimale des avis, 1 à 5 ; 0 = aucun filtre.
     pub min_rating: u8,
+    /// Prix maximum en euros ; `None` = aucun filtre.
+    pub max_price: Option<u32>,
 }
 
 impl Default for ViatorConfig {
@@ -220,7 +304,16 @@ impl Default for ViatorConfig {
         Self {
             enabled: false,
             min_rating: VIATOR_DEFAULT_MIN_RATING,
+            max_price: None,
         }
+    }
+}
+
+/// Sous le prix maximum, ou sans prix connu : un produit sans prix n'est pas « trop cher ».
+pub fn within_price(price: Option<f64>, max: Option<u32>) -> bool {
+    match (price, max) {
+        (Some(price), Some(max)) => price <= f64::from(max),
+        _ => true,
     }
 }
 
@@ -243,6 +336,9 @@ impl ViatorConfig {
 pub struct ActivitiesConfig {
     /// Affiche la section dans le livret. Éteinte tant que l'hôte ne l'allume pas.
     pub enabled: bool,
+    /// Le lien de recherche GetYourGuide de la destination, en tête : seulement pour qui avait
+    /// allumé l'ancienne section. Sans lui, la section ne montre que les choix de l'hôte.
+    pub search: bool,
     /// Ville visée, quand celle de l'adresse ne convient pas (« Antibes »).
     pub destination: String,
     /// Phrase d'introduction affichée au-dessus des liens.
@@ -272,6 +368,40 @@ impl ActivityRow {
     pub fn is_blank(&self) -> bool {
         self.url.trim().is_empty() && self.label.is_blank()
     }
+
+    /// Ce qui ne va pas dans ce lien, par sous-clé ; rien pour une ligne vide.
+    pub fn problems(&self) -> Vec<(&'static str, I18nText)> {
+        if self.is_blank() {
+            return Vec::new();
+        }
+        let refused = matches!(
+            crate::affiliate::normalize_curated_url(&self.url),
+            Err(crate::affiliate::CuratedUrlError::NotGetYourGuide)
+        );
+        [
+            (
+                "url",
+                refused.then(|| crate::i18n::text("host.activities.error.badUrl")),
+            ),
+            ("tip", too_long(&self.tip, 200)),
+        ]
+        .into_iter()
+        .filter_map(|(key, error)| Some((key, error?)))
+        .collect()
+    }
+}
+
+/// Le premier texte trop long d'un texte traduit, dans n'importe quelle langue.
+fn too_long(value: &I18nText, max: usize) -> Option<I18nText> {
+    value
+        .by_language()
+        .find_map(|(_, text)| check::max_chars(text, max))
+}
+
+fn plain_too_long(value: &Option<String>, max: usize) -> Option<I18nText> {
+    value
+        .as_deref()
+        .and_then(|text| check::max_chars(text, max))
 }
 
 /// Combien de bons plans la configuration accepte (spec Bons plans §2.1).
@@ -290,56 +420,14 @@ impl ModuleConfig {
     /// Ce qui ne va pas, champ par champ (`spots.<i>.title`…) — sous le champ dans le formulaire,
     /// et dans `publishReadiness`. La position manquante n'y est pas : elle avertit sans bloquer.
     pub fn problems(&self) -> Vec<(String, I18nText)> {
-        let too_long = |value: &I18nText, max: usize| {
-            value
-                .by_language()
-                .find_map(|(_, text)| check::max_chars(text, max))
-        };
-        let plain = |value: &Option<String>, max: usize| {
-            value
-                .as_deref()
-                .and_then(|text| check::max_chars(text, max))
-        };
         let mut problems: Vec<(String, I18nText)> = Vec::new();
         let filled = self.spots.iter().filter(|s| !s.is_blank()).count();
         if filled > MAX_SPOTS {
             problems.push(("spots".into(), crate::i18n::text("host.spots.tooMany")));
         }
         for (index, spot) in self.spots.iter().enumerate() {
-            if spot.is_blank() {
-                continue;
-            }
-            let season = [&spot.season_from, &spot.season_to]
-                .into_iter()
-                .any(|day| day.as_deref().is_some_and(|d| day_of_year(d).is_none()))
-                .then(|| crate::i18n::text("host.spot.season.invalid"));
-            for (key, error) in [
-                (
-                    "title",
-                    if spot.title.is_blank() {
-                        Some(crate::i18n::text("host.spot.title.required"))
-                    } else {
-                        too_long(&spot.title, 60)
-                    },
-                ),
-                (
-                    "category",
-                    spot.category
-                        .is_none()
-                        .then(|| crate::i18n::text("host.spot.category.required")),
-                ),
-                ("perk", too_long(&spot.perk, 120)),
-                ("warning", too_long(&spot.warning, 120)),
-                ("season_from", season),
-                ("detail", too_long(&spot.detail, 280)),
-                ("price", plain(&spot.price, 30)),
-                ("parking", plain(&spot.parking, 80)),
-                ("phone", spot.phone.as_deref().and_then(phone_error)),
-                ("url", spot.url.as_deref().and_then(check::https_url)),
-            ] {
-                if let Some(error) = error {
-                    problems.push((format!("spots.{index}.{key}"), error));
-                }
+            for (key, error) in spot.problems() {
+                problems.push((format!("spots.{index}.{key}"), error));
             }
         }
         let activities = self
@@ -354,17 +442,49 @@ impl ModuleConfig {
             ));
         }
         for (index, activity) in self.host_activities.iter().enumerate() {
-            if activity.is_blank() {
-                continue;
+            for (key, error) in activity.problems() {
+                problems.push((format!("host_activities.{index}.{key}"), error));
             }
-            for (key, error) in [
-                ("provider", plain(&activity.provider, 60)),
-                ("duration", plain(&activity.duration, 30)),
-                ("phone", activity.phone.as_deref().and_then(phone_error)),
-                ("url", activity.url.as_deref().and_then(check::https_url)),
-            ] {
-                if let Some(error) = error {
-                    problems.push((format!("host_activities.{index}.{key}"), error));
+        }
+        if self.partners_on() {
+            // Sans fournisseur choisi, rien ne s'afficherait — sauf l'ancienne recherche
+            // GetYourGuide d'un hôte qui l'avait allumée : elle tient le catalogue à elle seule.
+            if self.providers.as_ref().is_some_and(Vec::is_empty) && !self.activities_enabled {
+                problems.push((
+                    "providers".into(),
+                    crate::i18n::text("host.partners.providers.required"),
+                ));
+            }
+            let (min, max) = PARTNER_RADIUS_KM;
+            if self
+                .partner_radius_km
+                .is_some_and(|km| !(min..=max).contains(&km))
+            {
+                problems.push((
+                    "partner_radius_km".into(),
+                    crate::i18n::text("host.partners.radius.range"),
+                ));
+            }
+            let (min, max) = PARTNER_MAX_PRICE;
+            if self
+                .partner_max_price
+                .is_some_and(|price| !(min..=max).contains(&price))
+            {
+                problems.push((
+                    "partner_max_price".into(),
+                    crate::i18n::text("host.partners.maxPrice.range"),
+                ));
+            }
+            let links = self.activities.iter().filter(|a| !a.is_blank()).count();
+            if links > crate::affiliate::MAX_CURATED_LINKS {
+                problems.push((
+                    "activities".into(),
+                    crate::i18n::text("host.activities.error.tooMany"),
+                ));
+            }
+            for (index, link) in self.activities.iter().enumerate() {
+                for (key, error) in link.problems() {
+                    problems.push((format!("activities.{index}.{key}"), error));
                 }
             }
         }
@@ -438,32 +558,70 @@ impl ModuleConfig {
 
     /// The « Activités & billets » section. Links and destination are the host's raw input:
     /// `activities::resolve` normalizes them (GetYourGuide only, partner id) at render.
+    ///
+    /// Allumée avec le catalogue, dès qu'il y a un choix de l'hôte — ou que l'ancienne section
+    /// l'était : son lien de recherche reste alors en tête.
     pub fn activities(&self) -> ActivitiesConfig {
+        let links: Vec<ActivityRow> = self
+            .activities
+            .iter()
+            .filter(|row| !row.url.trim().is_empty())
+            .cloned()
+            .collect();
+        let on = self.partners_on();
         ActivitiesConfig {
-            enabled: self.activities_enabled,
+            enabled: on && (self.activities_enabled || !links.is_empty()),
+            search: on && self.activities_enabled,
             destination: self.activities_destination.trim().to_string(),
             intro: self.activities_intro.clone(),
-            links: self
-                .activities
-                .iter()
-                .filter(|row| !row.url.trim().is_empty())
-                .cloned()
-                .collect(),
+            links,
         }
+    }
+
+    /// « Afficher le catalogue » ; avant la carte, l'un des anciens interrupteurs allumé.
+    pub fn partners_on(&self) -> bool {
+        self.partners_enabled
+            .unwrap_or(self.tiqets_enabled || self.viator_enabled || self.activities_enabled)
+    }
+
+    /// Les fournisseurs choisis, dans l'ordre de [`PROVIDERS`] ; avant la carte, ceux que les
+    /// anciens interrupteurs allumaient.
+    pub fn providers(&self) -> Vec<&'static str> {
+        PROVIDERS
+            .into_iter()
+            .filter(|provider| match &self.providers {
+                Some(chosen) => chosen.iter().any(|c| c == provider),
+                None => match *provider {
+                    "viator" => self.viator_enabled,
+                    _ => self.tiqets_enabled,
+                },
+            })
+            .collect()
+    }
+
+    fn provider_on(&self, provider: &str) -> bool {
+        self.partners_on() && self.providers().contains(&provider)
+    }
+
+    /// Le rayon commun ; avant la carte, celui de Tiqets.
+    pub fn partner_radius(&self) -> u32 {
+        self.partner_radius_km.unwrap_or(self.tiqets_radius_km)
     }
 
     pub fn tiqets(&self) -> TiqetsConfig {
         TiqetsConfig {
-            enabled: self.tiqets_enabled,
-            radius_km: self.tiqets_radius_km,
-            min_rating: self.tiqets_min_rating,
+            enabled: self.provider_on("tiqets"),
+            radius_km: self.partner_radius(),
+            min_rating: self.partner_min_rating.unwrap_or(self.tiqets_min_rating),
+            max_price: self.partner_max_price,
         }
     }
 
     pub fn viator(&self) -> ViatorConfig {
         ViatorConfig {
-            enabled: self.viator_enabled,
-            min_rating: self.viator_min_rating,
+            enabled: self.provider_on("viator"),
+            min_rating: self.partner_min_rating.unwrap_or(self.viator_min_rating),
+            max_price: self.partner_max_price,
         }
     }
 }
@@ -532,6 +690,22 @@ impl HostActivityRow {
     /// Rien que le formulaire montre : une ligne que l'hôte a laissée (ou vidée).
     pub fn is_blank(&self) -> bool {
         self.title.is_blank() && self.provider.is_none() && self.photo.trim().is_empty()
+    }
+
+    /// Ce qui ne va pas dans cette activité, par sous-clé ; rien pour une ligne vide.
+    pub fn problems(&self) -> Vec<(&'static str, I18nText)> {
+        if self.is_blank() {
+            return Vec::new();
+        }
+        [
+            ("provider", plain_too_long(&self.provider, 60)),
+            ("duration", plain_too_long(&self.duration, 30)),
+            ("phone", self.phone.as_deref().and_then(phone_error)),
+            ("url", self.url.as_deref().and_then(check::https_url)),
+        ]
+        .into_iter()
+        .filter_map(|(key, error)| Some((key, error?)))
+        .collect()
     }
 
     /// La photo déposée, en référence, ou `None`.
@@ -659,6 +833,13 @@ pub struct SpotRow {
     /// « Réservation indispensable en août » : le bandeau d'avertissement de la fiche.
     #[serde(default)]
     pub warning: I18nText,
+    /// « J'ai un accord avec ce lieu » : un avantage sans accord avertit, sans bloquer (§3).
+    #[serde(default)]
+    pub perk_agreement: bool,
+    /// Les horaires par jour, la valeur d'un `WeeklyHours` (`mon=12:00-14:00,19:00-22:00;…`).
+    /// Vide : les anciens `hours` / `closed_day` valent toujours.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub weekly_hours: String,
 }
 
 /// L'emoji d'une catégorie de la spec (§2.1), quand l'hôte n'en a pas choisi. Comparé sans
@@ -753,6 +934,52 @@ impl SpotRow {
         valid_coords(self.lat?, self.lng?)
     }
 
+    /// Ce qui ne va pas dans cette adresse, par sous-clé ; rien pour une ligne vide. La position
+    /// manquante n'y est pas : elle avertit sans bloquer (`publishReadiness`).
+    pub fn problems(&self) -> Vec<(&'static str, I18nText)> {
+        if self.is_blank() {
+            return Vec::new();
+        }
+        let season = [&self.season_from, &self.season_to]
+            .into_iter()
+            .any(|day| day.as_deref().is_some_and(|d| day_of_year(d).is_none()))
+            .then(|| crate::i18n::text("host.spot.season.invalid"));
+        let note = self.note.as_ref().and_then(|note| too_long(note, 280));
+        [
+            (
+                "title",
+                if self.title.is_blank() {
+                    Some(crate::i18n::text("host.spot.title.required"))
+                } else {
+                    too_long(&self.title, 60)
+                },
+            ),
+            (
+                "category",
+                self.category
+                    .is_none()
+                    .then(|| crate::i18n::text("host.spot.category.required")),
+            ),
+            ("perk", too_long(&self.perk, 120)),
+            ("note", note),
+            ("warning", too_long(&self.warning, 120)),
+            ("season_from", season),
+            ("detail", too_long(&self.detail, 280)),
+            ("price", plain_too_long(&self.price, 30)),
+            ("parking", plain_too_long(&self.parking, 80)),
+            ("phone", self.phone.as_deref().and_then(phone_error)),
+            ("url", self.url.as_deref().and_then(check::https_url)),
+        ]
+        .into_iter()
+        .filter_map(|(key, error)| Some((key, error?)))
+        .collect()
+    }
+
+    /// Un avantage annoncé sans « J'ai un accord avec ce lieu » (§3) : un avertissement.
+    pub fn perk_without_agreement(&self) -> bool {
+        !self.perk.is_blank() && !self.perk_agreement
+    }
+
     /// Le jour de fermeture, s'il est l'un des sept : un jeton hors de la liste ne ferme rien
     /// plutôt que de fermer un jour deviné.
     pub fn closed_weekday(&self) -> Option<Weekday> {
@@ -763,9 +990,37 @@ impl SpotRow {
             .map(|(_, day)| *day)
     }
 
-    /// Fermé le jour demandé.
+    /// Fermé le jour demandé : sans plage ce jour-là dans [`SpotRow::weekly_hours`] quand il est
+    /// rempli, sinon l'ancien jour de fermeture.
     pub fn closed_on(&self, day: Weekday) -> bool {
-        self.closed_weekday() == Some(day)
+        match self.week() {
+            Some(week) => week[day.num_days_from_monday() as usize].is_empty(),
+            None => self.closed_weekday() == Some(day),
+        }
+    }
+
+    /// Les plages du jour demandé, « 12:00 – 14:00, 19:00 – 22:00 », quand les horaires par jour
+    /// sont remplis et que ce jour-là en a.
+    pub fn hours_on(&self, day: Weekday) -> Option<String> {
+        let ranges = &self.week()?[day.num_days_from_monday() as usize];
+        (!ranges.is_empty()).then(|| {
+            ranges
+                .iter()
+                .map(|(from, to)| format!("{from} – {to}"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        })
+    }
+
+    /// L'hôte a saisi des horaires par jour : ils remplacent l'ancienne ligne libre.
+    pub fn has_weekly_hours(&self) -> bool {
+        self.week().is_some()
+    }
+
+    /// Les horaires par jour, ou `None` tant que l'hôte n'en a saisi aucune plage.
+    fn week(&self) -> Option<[Vec<hours::Range>; 7]> {
+        let week = hours::parse_week(&self.weekly_hours);
+        week.iter().any(|day| !day.is_empty()).then_some(week)
     }
 
     /// Rien de stocké que l'id : un emplacement que l'hôte a laissé (ou vidé).
@@ -861,6 +1116,31 @@ where
     })
 }
 
+/// [`id_list`], absent kept apart from empty: `None` is « never saved », `Some([])` « none chosen ».
+fn optional_id_list<'de, D>(deserializer: D) -> std::result::Result<Option<Vec<String>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    id_list(deserializer).map(Some)
+}
+
+/// A number from the form — `12`, `12.6` (rounded), `"12"` — or none: an empty or unreadable value
+/// drops the setting rather than refusing the whole config.
+fn optional_number<'de, D, N>(deserializer: D) -> std::result::Result<Option<N>, D::Error>
+where
+    D: Deserializer<'de>,
+    N: TryFrom<u64>,
+{
+    let number = match Value::deserialize(deserializer)? {
+        Value::Number(n) => n.as_f64(),
+        Value::String(s) => s.trim().replace(',', ".").parse::<f64>().ok(),
+        _ => None,
+    };
+    Ok(number
+        .filter(|n| n.is_finite() && *n >= 0.0)
+        .and_then(|n| N::try_from(n.round() as u64).ok()))
+}
+
 /// A number, or the select's value as text (`"10"`); `""` is the default.
 fn number_or_text<'de, D, N>(deserializer: D, default: N) -> std::result::Result<N, D::Error>
 where
@@ -943,13 +1223,15 @@ mod tests {
             config.viator(),
             ViatorConfig {
                 enabled: true,
-                min_rating: 0
+                min_rating: 0,
+                max_price: None,
             }
         );
         assert_eq!(
             ViatorConfig {
                 enabled: true,
-                min_rating: 9
+                min_rating: 9,
+                max_price: None,
             }
             .normalized_min_rating(),
             5
@@ -962,6 +1244,7 @@ mod tests {
             enabled: true,
             radius_km: 5000,
             min_rating: 9,
+            max_price: None,
         };
         assert_eq!(config.normalized_radius_km(), 100);
         assert_eq!(config.normalized_min_rating(), Some(5));
@@ -1064,7 +1347,8 @@ mod tests {
             TiqetsConfig {
                 enabled: true,
                 radius_km: 20,
-                min_rating: 4
+                min_rating: 4,
+                max_price: None,
             }
         );
     }
@@ -1113,7 +1397,8 @@ mod tests {
             TiqetsConfig {
                 enabled: true,
                 radius_km: 40,
-                min_rating: 3
+                min_rating: 3,
+                max_price: None,
             }
         );
     }
@@ -1403,5 +1688,152 @@ mod tests {
         assert_eq!(config.guest_spots(Some(day(1, 1))).len(), 1);
         assert_eq!(config.guest_spots(Some(day(1, 7))).len(), 2);
         assert_eq!(config.guest_spots(None).len(), 2);
+    }
+
+    /// Avant la nouvelle carte, chaque fournisseur suit son ancien interrupteur ; enregistrée, elle
+    /// gagne : un rayon, une note, un prix pour tous, et le catalogue éteint coupe tout.
+    #[test]
+    fn the_partner_settings_fall_back_on_the_old_switches() {
+        let config: ModuleConfig = serde_json::from_value(json!({
+            "viator_enabled": true, "tiqets_radius_km": "40", "viator_min_rating": "3"
+        }))
+        .unwrap();
+        assert!(config.partners_on());
+        assert_eq!(config.providers(), ["viator"]);
+        assert!(config.viator().enabled);
+        assert!(!config.tiqets().enabled);
+        assert_eq!(config.tiqets().radius_km, 40);
+        assert_eq!(config.viator().min_rating, 3);
+
+        let config: ModuleConfig = serde_json::from_value(json!({
+            "viator_enabled": true, "tiqets_radius_km": "40",
+            "partners_enabled": true, "providers": ["tiqets", "viator"],
+            "partner_radius_km": "15", "partner_max_price": 80.4, "partner_min_rating": "4"
+        }))
+        .unwrap();
+        assert_eq!(config.providers(), ["viator", "tiqets"]);
+        assert_eq!(
+            config.tiqets(),
+            TiqetsConfig {
+                enabled: true,
+                radius_km: 15,
+                min_rating: 4,
+                max_price: Some(80)
+            }
+        );
+        assert_eq!(config.viator().max_price, Some(80));
+        assert_eq!(config.viator().min_rating, 4);
+
+        let off: ModuleConfig = serde_json::from_value(json!({
+            "partners_enabled": false, "providers": ["viator"], "activities_enabled": true,
+            "activities": [{ "url": "https://gyg.me/aBcD12" }]
+        }))
+        .unwrap();
+        assert!(!off.viator().enabled);
+        assert!(!off.activities().enabled);
+
+        // Les choix de l'hôte s'affichent sans l'ancienne recherche GetYourGuide.
+        let picks: ModuleConfig = serde_json::from_value(json!({
+            "partners_enabled": true, "providers": ["viator"],
+            "activities": [{ "url": "https://www.tiqets.com/fr/musee-p1/" }]
+        }))
+        .unwrap();
+        assert!(picks.activities().enabled);
+        assert!(!picks.activities().search);
+    }
+
+    #[test]
+    fn the_partner_settings_are_checked_only_when_the_catalogue_is_on() {
+        let raw = json!({
+            "partners_enabled": true, "providers": [], "partner_radius_km": 80,
+            "partner_max_price": 5000,
+            "activities": [{ "url": "https://example.com/x", "tip": "x".repeat(201) }]
+        });
+        let config: ModuleConfig = serde_json::from_value(raw.clone()).unwrap();
+        for (field, expected) in [
+            ("providers", "Choisissez au moins un fournisseur."),
+            ("partner_radius_km", "Entre 1 et 50 km."),
+            ("partner_max_price", "Entre 1 et 1 000 €."),
+            (
+                "activities.0.url",
+                "Ce lien n’est pas une activité d’un fournisseur connecté.",
+            ),
+            ("activities.0.tip", "200 caractères au maximum."),
+        ] {
+            assert_eq!(
+                message(&config, field).as_deref(),
+                Some(expected),
+                "{field}"
+            );
+        }
+        let mut off = raw;
+        off["partners_enabled"] = json!(false);
+        let off: ModuleConfig = serde_json::from_value(off).unwrap();
+        assert!(off.problems().is_empty());
+
+        let six: Vec<Value> = (0..6)
+            .map(|n| json!({ "url": format!("https://gyg.me/a{n}") }))
+            .collect();
+        let config: ModuleConfig =
+            serde_json::from_value(json!({ "partners_enabled": true, "activities": six })).unwrap();
+        assert_eq!(
+            message(&config, "activities").as_deref(),
+            Some("5 activités au maximum en avant.")
+        );
+    }
+
+    /// Les horaires par jour : un jour sans plage est fermé ; vides, l'ancien jour de fermeture.
+    #[test]
+    fn weekly_hours_close_the_days_without_a_range() {
+        let spot = SpotRow {
+            weekly_hours: "mon=12:00-14:00,19:00-22:00;tue=12:00-14:00".into(),
+            closed_day: Some("tue".into()),
+            ..SpotRow::default()
+        };
+        assert!(spot.has_weekly_hours());
+        assert!(!spot.closed_on(Weekday::Mon));
+        assert!(!spot.closed_on(Weekday::Tue));
+        assert!(spot.closed_on(Weekday::Wed));
+        assert_eq!(
+            spot.hours_on(Weekday::Mon).as_deref(),
+            Some("12:00 – 14:00, 19:00 – 22:00")
+        );
+        assert_eq!(spot.hours_on(Weekday::Sun), None);
+        let legacy = SpotRow {
+            closed_day: Some("tue".into()),
+            ..SpotRow::default()
+        };
+        assert!(!legacy.has_weekly_hours());
+        assert!(legacy.closed_on(Weekday::Tue));
+        assert!(!legacy.closed_on(Weekday::Wed));
+    }
+
+    /// Le conseil borné à 280 ; un avantage sans accord avertit, il n'est pas une erreur.
+    #[test]
+    fn the_tip_is_bounded_and_a_perk_asks_for_an_agreement() {
+        let config: ModuleConfig = serde_json::from_value(json!({
+            "spots": [{ "title": "Le Bacon", "category": "Restaurant",
+                        "note": "x".repeat(281), "perk": "10 %" }]
+        }))
+        .unwrap();
+        assert_eq!(
+            message(&config, "spots.0.note").as_deref(),
+            Some("280 caractères au maximum.")
+        );
+        assert!(config.spots[0].perk_without_agreement());
+        assert!(config.error_of("spots.0.perk").is_none());
+        let agreed = SpotRow {
+            perk_agreement: true,
+            ..config.spots[0].clone()
+        };
+        assert!(!agreed.perk_without_agreement());
+    }
+
+    #[test]
+    fn a_product_without_price_is_never_too_expensive() {
+        assert!(within_price(Some(20.0), Some(20)));
+        assert!(!within_price(Some(20.5), Some(20)));
+        assert!(within_price(None, Some(20)));
+        assert!(within_price(Some(5000.0), None));
     }
 }

@@ -288,6 +288,42 @@ fn an_out_of_bounds_choice_warns_without_blocking() {
     }
 }
 
+/// Une adresse à plus de 50 km du logement, un avantage sans accord : deux avertissements, jamais
+/// un blocage (§2.1, §3).
+#[test]
+#[serial]
+fn a_far_spot_and_an_unagreed_perk_warn_without_blocking() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_coordinates(Some(GeoPoint::new(CENTRE.0, CENTRE.1)))
+        .with_config(&json!({
+            "spots": [
+                { "title": "Près", "category": "Café", "lat": NEAR.0, "lng": NEAR.1,
+                  "perk": { "fr": "Un café offert" }, "perk_agreement": true },
+                { "title": "Loin", "category": "Plage", "lat": 44.2, "lng": 7.13,
+                  "perk": { "fr": "10 %" } }
+            ]
+        }))
+        .run(|ctx| {
+            let readiness = publish_readiness(ctx).expect("readiness");
+            for (id, hint) in [
+                (
+                    "config.spots.1.lat",
+                    "À plus de 50 km du logement : vérifiez la position.",
+                ),
+                (
+                    "config.spots.1.perk_agreement",
+                    "Sans accord avec le lieu, l’avantage risque de ne pas être honoré : confirmez-le ou retirez-le.",
+                ),
+            ] {
+                let item = readiness.items.iter().find(|i| i.id == id).expect(id);
+                assert_eq!(serde_json::to_value(item.level).unwrap(), json!("recommended"));
+                assert_eq!(item.hint.get("fr"), hint);
+            }
+            assert!(!readiness.items.iter().any(|i| i.id.starts_with("config.spots.0")));
+        });
+}
+
 /// Une catégorie manquante avertit sans bloquer ; un lien sans https bloque toujours.
 #[test]
 #[serial]

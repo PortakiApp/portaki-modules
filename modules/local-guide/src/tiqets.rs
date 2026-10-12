@@ -141,7 +141,7 @@ pub fn resolve(ctx: &Context, config: &TiqetsConfig) -> Option<TiqetsView> {
     });
     if let Some(cache) = cached.as_ref() {
         if now - cache.fetched_at < FRESH_SECS {
-            return view(cache.products.clone());
+            return view(cache.products.clone(), config.max_price);
         }
     }
 
@@ -162,7 +162,7 @@ pub fn resolve(ctx: &Context, config: &TiqetsConfig) -> Option<TiqetsView> {
                 fetched_at: now,
                 products: products.clone(),
             });
-            view(products)
+            view(products, config.max_price)
         }
         Err(error) => {
             if error.to_string().contains("connector_credential_missing") {
@@ -176,12 +176,15 @@ pub fn resolve(ctx: &Context, config: &TiqetsConfig) -> Option<TiqetsView> {
             // qu'elle reste sous la limite de 14 jours.
             cached
                 .filter(|cache| now - cache.fetched_at < STALE_MAX_SECS)
-                .and_then(|cache| view(cache.products))
+                .and_then(|cache| view(cache.products, config.max_price))
         }
     }
 }
 
-fn view(products: Vec<TiqetsProduct>) -> Option<TiqetsView> {
+/// Les produits sous le prix maximum de l'hôte, filtrés au rendu : le cache reste celui de la
+/// recherche, un prix changé vaut tout de suite. Les prix sont demandés en [`CURRENCY`].
+fn view(mut products: Vec<TiqetsProduct>, max_price: Option<u32>) -> Option<TiqetsView> {
+    products.retain(|product| crate::config::within_price(product.price, max_price));
     if products.is_empty() {
         None
     } else {

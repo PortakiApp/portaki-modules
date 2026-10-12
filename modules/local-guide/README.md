@@ -21,9 +21,9 @@ Portaki's, set as the module's publisher key in the developer space, or the host
 
 | Section | Description |
 |---------|-------------|
-| Spots | Up to 6 host-curated addresses with category, distance, tag and note |
+| Spots | Up to 30 host-curated addresses (sortable table, side panel) with category, price, perk, tip, weekly hours and season; distances computed from the property |
 | Map | The located spots plus the property, on the enriched surface only |
-| Activities & tickets | GetYourGuide affiliate links (**off by default**) — an automatic destination search plus up to 10 host-curated links |
+| Activities & tickets | Up to 5 host-picked Viator, Tiqets or GetYourGuide links with a tip (**off by default**); the GetYourGuide destination search only for hosts who had turned it on |
 | Tickets & activities (Tiqets) | Bookable Tiqets products around the property — title, image, price, rating, affiliate link (**off by default**) |
 | Tours & activities (Viator) | Bookable Viator products in the property's city — title, image, price, rating, duration, affiliate link (**off by default**) |
 

@@ -6,33 +6,33 @@
     "en": "Your favourite local spots on a map, plus activities to book."
   },
   "description": {
-    "fr": "L’hôte partage jusqu’à six adresses du coin, avec catégorie, distance et description, et le voyageur les retrouve sur une carte autour du logement. Si l’hôte les active, des activités et billets réservables à proximité complètent la liste, avec photo, prix et note.",
-    "en": "The host shares up to six local places, with category, distance and description, and guests see them on a map around the rental. If the host turns them on, bookable activities and tickets nearby round out the list, with photo, price and rating."
+    "fr": "L’hôte partage jusqu’à trente adresses du coin, avec catégorie, prix, avantage, conseil et horaires, et le voyageur les retrouve sur une carte autour du logement. Si l’hôte les active, des activités réservables à proximité complètent la liste, avec photo, prix et note.",
+    "en": "The host shares up to thirty local places, with category, price, perk, tip and opening hours, and guests see them on a map around the rental. If the host turns them on, bookable activities nearby round out the list, with photo, price and rating."
   },
   "guestSurface": {
-    "fr": "Jusqu’à six adresses choisies par l’hôte (catégorie, distance, description), une carte des lieux et du logement et, si l’hôte les active, des activités et billets réservables autour du logement, avec photo, prix et note.",
-    "en": "Up to six places picked by the host (category, distance, description), a map of the places and the rental and, if the host turns them on, bookable activities and tickets nearby, with photo, price and rating."
+    "fr": "Jusqu’à trente adresses choisies par l’hôte (catégorie, prix, avantage, conseil, horaires), une carte des lieux et du logement et, si l’hôte les active, des activités réservables autour du logement, avec photo, prix et note.",
+    "en": "Up to thirty places picked by the host (category, price, perk, tip, opening hours), a map of the places and the rental and, if the host turns them on, bookable activities nearby, with photo, price and rating."
   },
   "hostSurface": {
-    "fr": "Un onglet Bons plans pour saisir les adresses et les placer sur la carte, et activer les sections d’activités et de billets, désactivées par défaut.",
-    "en": "A Local picks tab to enter places and pin them on the map, and to turn on the activities and tickets sections, off by default."
+    "fr": "Un onglet Bons plans : vos adresses et vos activités en tableaux à réordonner, le catalogue des partenaires (désactivé par défaut) et le choix des adresses de la page publique.",
+    "en": "A Local picks tab: your places and activities in sortable tables, the partner catalogue (off by default) and the places shown on the public page."
   },
   "configItems": [
     {
-      "fr": "Jusqu’à six adresses : nom, catégorie, distance, description, emplacement",
-      "en": "Up to six places: name, category, distance, description, location"
+      "fr": "Jusqu’à trente adresses : nom, catégorie, prix, position, photos, avantage, conseil, horaires, saison",
+      "en": "Up to thirty places: name, category, price, location, photos, perk, tip, opening hours, season"
     },
     {
-      "fr": "Avertissement affiché sous la liste",
-      "en": "Disclaimer shown under the list"
+      "fr": "Jusqu’à six activités que vous proposez vous-même",
+      "en": "Up to six activities you offer yourself"
     },
     {
-      "fr": "Activités partenaires : destination et liens (facultatif)",
-      "en": "Partner activities: destination and links (optional)"
+      "fr": "Catalogue des partenaires : fournisseurs, rayon, prix maximum, note minimale et cinq choix mis en avant (facultatif)",
+      "en": "Partner catalogue: providers, radius, maximum price, minimum rating and five featured picks (optional)"
     },
     {
-      "fr": "Billets à proximité : rayon et note minimale (facultatif)",
-      "en": "Nearby tickets: radius and minimum rating (optional)"
+      "fr": "Trois à six adresses sur la page publique du logement (facultatif)",
+      "en": "Three to six places on the rental’s public page (optional)"
     }
   ],
   "publishedLangs": [

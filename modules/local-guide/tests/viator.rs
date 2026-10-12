@@ -334,14 +334,15 @@ fn an_unsupported_booklet_language_asks_viator_in_english() {
 #[test]
 #[serial]
 fn the_host_sheet_says_why_nothing_would_show() {
+    // Prêt, ou pas choisi : rien à dire. Seul un empêchement s'affiche (clé, ville).
     MockContext::host().with_config(&enabled()).run(|ctx| {
         let json = surface_json(&render_host_main(ctx).expect("host main"));
-        assert!(json.contains("i18n:host.section.viator"), "{json}");
-        assert!(json.contains("i18n:host.viator.status.ready"), "{json}");
+        assert!(json.contains(r#""value":"[\"viator\"]""#), "{json}");
+        assert!(!json.contains("host.viator.status"), "{json}");
     });
     MockContext::host().run(|ctx| {
         let json = surface_json(&render_host_main(ctx).expect("host main"));
-        assert!(json.contains("i18n:host.viator.status.off"), "{json}");
+        assert!(!json.contains("host.viator.status"), "{json}");
     });
 }
 
@@ -380,13 +381,12 @@ fn every_viator_key_exists_in_both_bundles() {
         )
     });
     assert!(refs.contains("guest.viator.disclosure"));
-    assert!(refs.contains("host.viator.minRating.4"));
+    assert!(refs.contains("host.partners.minRating.4"));
 
     let runtime_keys = [
         "guest.viator.priceFrom",
         "guest.viator.rating",
         "connector.viator.name",
-        "host.viator.status.off",
         "host.viator.status.missingKey",
         "host.viator.status.missingCity",
     ];

@@ -599,15 +599,17 @@ fn build_activities(view: &ActivitiesView, host_name: &str, locale: &str) -> Vec
         )
         .unwrap_or_else(|_| view.destination.clone())
     };
-    children.push(
-        Link::new()
-            .label(destination_label)
-            .href(view.destination_url.clone())
-            .action(Action::External {
-                url: view.destination_url.clone(),
-            })
-            .into(),
-    );
+    if !view.destination_url.is_empty() {
+        children.push(
+            Link::new()
+                .label(destination_label)
+                .href(view.destination_url.clone())
+                .action(Action::External {
+                    url: view.destination_url.clone(),
+                })
+                .into(),
+        );
+    }
 
     // Les liens reconnus défilent en tuiles illustrées ; les autres restent des liens. C'est
     // exactement la distinction du §2.13 : un lien enrichi se choisit sur sa photo et sa note,
