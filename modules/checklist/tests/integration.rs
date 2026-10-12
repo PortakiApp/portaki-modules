@@ -278,6 +278,7 @@ fn photo_item_refuses_a_tick_without_photo() {
                 property_id: Uuid::nil(),
                 period: 30,
                 key: "cleaning".into(),
+                views: None,
             },
         )
         .expect("summary");
@@ -307,6 +308,7 @@ fn guest_ticks_feed_the_checklist_stats() {
                     property_id: Uuid::nil(),
                     period: 90,
                     key: "checklist".into(),
+                    views: None,
                 },
             )
             .expect("summary");

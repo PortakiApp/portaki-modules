@@ -172,6 +172,7 @@ fn host_stats_list_recent_after_guest_submit() {
                     property_id: Uuid::nil(),
                     period: 90,
                     key: "lost-stats".into(),
+                    views: None,
                 },
             )
             .expect("statsSummary");

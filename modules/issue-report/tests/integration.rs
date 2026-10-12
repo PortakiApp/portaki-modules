@@ -235,6 +235,7 @@ fn host_stats_reflect_resolution_and_period() {
                     property_id: Uuid::nil(),
                     period: 30,
                     key: "issue-stats".into(),
+                    views: None,
                 },
             )
             .expect("statsSummary");
