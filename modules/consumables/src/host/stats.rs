@@ -419,6 +419,9 @@ mod tests {
             created_at: day(created),
             restocked_at: restocked.map(day),
             host_reply: None,
+            guest_name: String::new(),
+            stay_check_in: None,
+            stay_check_out: None,
         }
     }
 
@@ -427,6 +430,7 @@ mod tests {
     fn restock_rhythm_is_the_mean_gap_to_the_next_shortage() {
         let item = ConsumableItem {
             emoji: String::new(),
+            location: String::new(),
             id: Uuid::new_v4(),
             label_fr: "Café".into(),
             label_en: "Coffee".into(),

@@ -43,11 +43,13 @@ fn home_card_opens_form_overlay_with_catalog() {
                 ReplaceItemsArgs {
                     items: vec![ConsumableItemInput {
                         emoji: String::new(),
-                        label: String::new(),
+                        label: None,
                         label_fr: "Café".into(),
                         label_en: "Coffee".into(),
                         sort_order: 0,
                         low_threshold: 0,
+                        id: None,
+                        location: None,
                     }],
                     items_json: None,
                 },
@@ -87,19 +89,23 @@ fn one_submit_reports_every_product_the_guest_picked() {
                     items: vec![
                         ConsumableItemInput {
                             emoji: String::new(),
-                            label: String::new(),
+                            label: None,
                             label_fr: "Papier toilette".into(),
                             label_en: "Toilet paper".into(),
                             sort_order: 0,
                             low_threshold: 0,
+                            id: None,
+                            location: None,
                         },
                         ConsumableItemInput {
                             emoji: String::new(),
-                            label: String::new(),
+                            label: None,
                             label_fr: "Café".into(),
                             label_en: "Coffee".into(),
                             sort_order: 1,
                             low_threshold: 0,
+                            id: None,
+                            location: None,
                         },
                     ],
                     items_json: None,
@@ -141,11 +147,13 @@ fn the_single_product_field_is_still_accepted() {
                 ReplaceItemsArgs {
                     items: vec![ConsumableItemInput {
                         emoji: String::new(),
-                        label: String::new(),
+                        label: None,
                         label_fr: "Papier toilette".into(),
                         label_en: "Toilet paper".into(),
                         sort_order: 0,
                         low_threshold: 0,
+                        id: None,
+                        location: None,
                     }],
                     items_json: None,
                 },
@@ -186,11 +194,13 @@ fn the_product_grid_starts_with_nothing_picked() {
                 ReplaceItemsArgs {
                     items: vec![ConsumableItemInput {
                         emoji: String::new(),
-                        label: String::new(),
+                        label: None,
                         label_fr: "Papier toilette".into(),
                         label_en: "Toilet paper".into(),
                         sort_order: 0,
                         low_threshold: 0,
+                        id: None,
+                        location: None,
                     }],
                     items_json: None,
                 },
@@ -223,11 +233,13 @@ fn submit_creates_open_report_and_lists_on_card() {
                 ReplaceItemsArgs {
                     items: vec![ConsumableItemInput {
                         emoji: String::new(),
-                        label: String::new(),
+                        label: None,
                         label_fr: "Papier toilette".into(),
                         label_en: "Toilet paper".into(),
                         sort_order: 0,
                         low_threshold: 0,
+                        id: None,
+                        location: None,
                     }],
                     items_json: None,
                 },
@@ -286,11 +298,13 @@ fn host_mark_restocked_clears_open_list() {
                 ReplaceItemsArgs {
                     items: vec![ConsumableItemInput {
                         emoji: String::new(),
-                        label: String::new(),
+                        label: None,
                         label_fr: "Savon".into(),
                         label_en: "Soap".into(),
                         sort_order: 0,
                         low_threshold: 0,
+                        id: None,
+                        location: None,
                     }],
                     items_json: None,
                 },
@@ -377,9 +391,11 @@ fn host_mark_restocked_clears_open_list() {
             assert!(stats.contains("\"50 %\""));
 
             let surface = render_host_main(ctx);
-            assert!(SurfaceAssertions::new(&surface).contains_type("IndexedInput"));
+            assert!(SurfaceAssertions::new(&surface).contains_type("DataTable"));
             let json = serde_json::to_string(&surface).expect("surface json");
-            assert!(json.contains("host.main.emptyRecent"));
+            // Livrée, la demande reste dans la table et quitte « À traiter ».
+            assert!(json.contains("i18n:status.restocked"), "{json}");
+            assert!(!json.contains("host.received.toHandle"), "{json}");
         });
 }
 
@@ -392,10 +408,10 @@ fn seed_defaults_fills_empty_catalog() {
         .run(|ctx| {
             seed_defaults(ctx.clone(), EmptyArgs {}).expect("seed");
             let items = list_items(ctx.clone()).expect("items");
-            assert_eq!(items.len(), 8);
+            assert_eq!(items.len(), 6);
 
             seed_defaults(ctx.clone(), EmptyArgs {}).expect("seed again");
-            assert_eq!(list_items(ctx).expect("items").len(), 8);
+            assert_eq!(list_items(ctx).expect("items").len(), 6);
         });
 }
 
@@ -409,11 +425,13 @@ fn an_emoji_follows_its_product_and_an_empty_field_does_not_erase_it() {
     reset_test_store();
     let save = |emoji: &str, label: &str| ConsumableItemInput {
         emoji: emoji.into(),
-        label: label.into(),
+        label: Some(label.into()),
         label_fr: String::new(),
         label_en: String::new(),
         sort_order: 0,
         low_threshold: 0,
+        id: None,
+        location: None,
     };
     MockContext::host()
         .with_property(Property::default())
@@ -422,8 +440,9 @@ fn an_emoji_follows_its_product_and_an_empty_field_does_not_erase_it() {
                 ctx.clone(),
                 UpdateConfigArgs {
                     requests_enabled: None,
+                    notify: None,
                     max_requests: None,
-                    restock_delay: Default::default(),
+                    restock_delay: Some(Default::default()),
                     items: vec![save("☕", "Café")],
                 },
             )
@@ -433,8 +452,9 @@ fn an_emoji_follows_its_product_and_an_empty_field_does_not_erase_it() {
                 ctx.clone(),
                 UpdateConfigArgs {
                     requests_enabled: None,
+                    notify: None,
                     max_requests: None,
-                    restock_delay: Default::default(),
+                    restock_delay: Some(Default::default()),
                     items: vec![save("", "Coffee")],
                 },
             )
@@ -456,11 +476,13 @@ fn the_host_s_restocking_time_reaches_the_guest() {
     reset_test_store();
     let item = || ConsumableItemInput {
         emoji: String::new(),
-        label: "Café".into(),
+        label: Some("Café".into()),
         label_fr: String::new(),
         label_en: String::new(),
         sort_order: 0,
         low_threshold: 0,
+        id: None,
+        location: None,
     };
 
     // Écriture : l'hôte enregistre, et son propre écran le relit.
@@ -471,9 +493,11 @@ fn the_host_s_restocking_time_reaches_the_guest() {
                 ctx.clone(),
                 UpdateConfigArgs {
                     requests_enabled: None,
+                    notify: None,
                     max_requests: None,
-                    restock_delay: serde_json::from_value(json!({ "fr": "sous 24 h" }))
-                        .expect("délai"),
+                    restock_delay: Some(
+                        serde_json::from_value(json!({ "fr": "sous 24 h" })).expect("délai"),
+                    ),
                     items: vec![item()],
                 },
             )
@@ -481,13 +505,30 @@ fn the_host_s_restocking_time_reaches_the_guest() {
             let host = serde_json::to_string(&render_host_main(ctx.clone())).unwrap();
             assert!(host.contains("sous 24 h"), "{host}");
 
+            // Demandes fermées, le champ masqué n'est pas envoyé : le délai reste.
+            update_config(
+                ctx.clone(),
+                UpdateConfigArgs {
+                    requests_enabled: Some(json!(false)),
+                    notify: None,
+                    max_requests: None,
+                    restock_delay: None,
+                    items: vec![item()],
+                },
+            )
+            .expect("demandes fermées");
+            assert!(portaki_sdk::host::kv::get("restock_delay")
+                .expect("kv")
+                .is_some());
+
             // Effacé, le réglage disparaît — l'hôte doit pouvoir reprendre sa promesse.
             update_config(
                 ctx.clone(),
                 UpdateConfigArgs {
                     requests_enabled: None,
+                    notify: None,
                     max_requests: None,
-                    restock_delay: Default::default(),
+                    restock_delay: Some(Default::default()),
                     items: vec![item()],
                 },
             )
@@ -511,12 +552,19 @@ fn the_host_s_restocking_time_reaches_the_guest() {
             assert!(!form.contains("\"i18n:form.notice\""), "{form}");
         });
 
-    // Sans réglage, la phrase générique : le voyageur sait quand même que son envoi part.
+    // Sans réglage, « dans la journée », le défaut de la spec (§2.2).
     MockContext::guest()
         .with_property(Property::default())
+        .with_translation(
+            "form.notice.delay",
+            "Votre hôte réapprovisionne dans la journée.",
+        )
         .run(|ctx| {
             let form = serde_json::to_string(&render_guest_form(ctx).expect("formulaire")).unwrap();
-            assert!(form.contains("i18n:form.notice"), "{form}");
+            assert!(
+                form.contains("Votre hôte réapprovisionne dans la journée."),
+                "{form}"
+            );
         });
 }
 
@@ -531,15 +579,18 @@ fn update_config_replaces_catalog() {
                 ctx.clone(),
                 UpdateConfigArgs {
                     requests_enabled: None,
+                    notify: None,
                     max_requests: None,
-                    restock_delay: Default::default(),
+                    restock_delay: Some(Default::default()),
                     items: vec![ConsumableItemInput {
                         emoji: String::new(),
-                        label: "Coffee pods".into(),
+                        label: Some("Coffee pods".into()),
                         label_fr: String::new(),
                         label_en: String::new(),
                         sort_order: 0,
                         low_threshold: 0,
+                        id: None,
+                        location: None,
                     }],
                 },
             )
@@ -558,8 +609,8 @@ fn host_main_and_stats_render() {
         .run(|ctx| {
             let main = render_host_main(ctx.clone());
             assert!(SurfaceAssertions::new(&main).contains_type("Page"));
-            assert!(SurfaceAssertions::new(&main).contains_type("IndexedInput"));
-            assert!(SurfaceAssertions::new(&main).contains_type("InfoBanner"));
+            assert!(SurfaceAssertions::new(&main).contains_type("DataTable"));
+            assert!(SurfaceAssertions::new(&main).contains_type("Section"));
             assert!(SurfaceAssertions::new(&main).contains_type("Button"));
 
             let stats = render_host_stats(ctx);
@@ -626,11 +677,13 @@ fn long_note_is_stored_whole_and_quoted_in_the_host_email() {
                 ReplaceItemsArgs {
                     items: vec![ConsumableItemInput {
                         emoji: String::new(),
-                        label: String::new(),
+                        label: None,
                         label_fr: "Serviettes".into(),
                         label_en: "Towels".into(),
                         sort_order: 0,
                         low_threshold: 0,
+                        id: None,
+                        location: None,
                     }],
                     items_json: None,
                 },
@@ -698,11 +751,13 @@ fn an_empty_catalog_does_not_block_publication() {
 fn named_item(emoji: &str, label: &str) -> ConsumableItemInput {
     ConsumableItemInput {
         emoji: emoji.into(),
-        label: label.into(),
+        label: Some(label.into()),
         label_fr: String::new(),
         label_en: String::new(),
         sort_order: 0,
         low_threshold: 0,
+        id: None,
+        location: None,
     }
 }
 
@@ -716,8 +771,11 @@ fn save(
         ctx.clone(),
         UpdateConfigArgs {
             requests_enabled: None,
+            notify: None,
             max_requests,
-            restock_delay: serde_json::from_value(json!({ "fr": restock_delay })).expect("délai"),
+            restock_delay: Some(
+                serde_json::from_value(json!({ "fr": restock_delay })).expect("délai"),
+            ),
             items,
         },
     )
@@ -867,23 +925,6 @@ fn max_requests_out_of_range_is_reported_not_clamped() {
     }
 }
 
-/// La grille s'ouvre d'une case quand les huit sont prises, et un neuvième produit déjà stocké
-/// s'affiche au lieu de disparaître.
-///
-/// La grille de huit est le dessin et elle reste ; elle n'est plus un plafond.
-#[test]
-#[serial]
-fn the_catalog_grid_grows_past_its_eight_tiles() {
-    reset_test_store();
-    MockContext::host().run(|ctx| {
-        let json = serde_json::to_string(&render_host_main(ctx)).expect("json");
-        assert!(json.contains("items.7.label"), "{json}");
-        assert!(!json.contains("items.8.label"), "{json}");
-        // « Ajouter » demande la neuvième case.
-        assert!(json.contains(r#""items_count":9"#), "{json}");
-    });
-}
-
 /// Un produit déjà signalé pendant ce séjour le dit sur sa tuile (§2.5).
 ///
 /// Sans cela, le voyageur qui rouvre le formulaire ne voit aucune différence, resignale le même
@@ -901,11 +942,13 @@ fn an_already_reported_product_says_so_until_it_is_restocked() {
                 ReplaceItemsArgs {
                     items: vec![ConsumableItemInput {
                         emoji: String::new(),
-                        label: String::new(),
+                        label: None,
                         label_fr: "Café".into(),
                         label_en: "Coffee".into(),
                         sort_order: 0,
                         low_threshold: 0,
+                        id: None,
+                        location: None,
                     }],
                     items_json: None,
                 },
@@ -949,11 +992,13 @@ fn the_stay_cap_stops_requests() {
                 ReplaceItemsArgs {
                     items: vec![ConsumableItemInput {
                         emoji: String::new(),
-                        label: String::new(),
+                        label: None,
                         label_fr: "Café".into(),
                         label_en: "Coffee".into(),
                         sort_order: 0,
                         low_threshold: 0,
+                        id: None,
+                        location: None,
                     }],
                     items_json: None,
                 },
@@ -994,11 +1039,13 @@ fn planned_with_a_reply_reaches_the_guest_and_ends_the_task() {
                 ReplaceItemsArgs {
                     items: vec![ConsumableItemInput {
                         emoji: String::new(),
-                        label: String::new(),
+                        label: None,
                         label_fr: "Café".into(),
                         label_en: "Coffee".into(),
                         sort_order: 0,
                         low_threshold: 0,
+                        id: None,
+                        location: None,
                     }],
                     items_json: None,
                 },

@@ -1,9 +1,13 @@
 # Changelog
 
-## 2.10.1
+## 2.11.0
 
-Montée technique.
+Les produits en tableau, et les demandes au même endroit.
 
+* Les produits se gèrent dans un tableau : recherche, filtres « Demandés récemment » et « Jamais demandés », chaque ligne s'ouvre dans un panneau.
+* Chaque produit dit où le trouver, et le voyageur le lit avant de demander ; l'emoji est proposé d'après le nom, avec une liste de départ en un clic.
+* Vous choisissez d'être prévenu par e-mail ou non ; sans délai écrit, le voyageur lit « dans la journée ».
+* Les demandes reçues s'affichent en table avec le voyageur et le séjour, et « Répondre » envoie votre réponse par e-mail au voyageur.
 * Les identifiants et codes du module sont désormais tirés au hasard par la plateforme : ils ne peuvent plus se répéter ni se deviner.
 
 ## 2.10.0

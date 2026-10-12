@@ -10,11 +10,13 @@ use serial_test::serial;
 fn item(fr: &str, en: &str) -> ConsumableItemInput {
     ConsumableItemInput {
         emoji: "☕".into(),
-        label: String::new(),
+        label: None,
         label_fr: fr.into(),
         label_en: en.into(),
         sort_order: 0,
         low_threshold: 0,
+        id: None,
+        location: None,
     }
 }
 

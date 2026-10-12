@@ -10,12 +10,14 @@ use portaki_sdk::contracts::i18n::I18nText;
 use crate::entities::ConsumableItem;
 use crate::host::MAX_ITEMS;
 use crate::i18n::text;
-use crate::labels::labels_from_item;
+use crate::labels::{labels_from_item, location_from_item};
 use crate::storage::settings::{Settings, MAX_MAX_REQUESTS, MIN_MAX_REQUESTS};
 
 /// Le nom d'un produit et le délai annoncé : 40 caractères au plus.
 const NAME_MAX: usize = 40;
 const RESTOCK_DELAY_MAX: usize = 40;
+/// « Où le trouver » : 80 caractères au plus.
+const LOCATION_MAX: usize = 80;
 
 /// Ce que l'hôte a enregistré, tel que les contrôles le lisent.
 pub struct Stored<'a> {
@@ -25,8 +27,8 @@ pub struct Stored<'a> {
 }
 
 impl Stored<'_> {
-    /// `(champ du formulaire, message)` : `items`, `items.<i>.label`, `restock_delay`,
-    /// `max_requests`.
+    /// `(champ du formulaire, message)` : `items`, `items.<i>.label`, `items.<i>.location`,
+    /// `restock_delay`, `notify`, `max_requests`.
     pub fn problems(&self) -> Vec<(String, I18nText)> {
         let mut problems = Vec::new();
         if self.items.len() > MAX_ITEMS {
@@ -44,6 +46,12 @@ impl Stored<'_> {
             if let Some(error) = error {
                 problems.push((format!("items.{index}.label"), error));
             }
+            if let Some(error) = location_from_item(item)
+                .values()
+                .find_map(|text| check::max_chars(text, LOCATION_MAX))
+            {
+                problems.push((format!("items.{index}.location"), error));
+            }
         }
         // Demandes fermées : le plafond et le délai sont masqués, une erreur n'aurait pas de champ.
         if !self.settings.requests_enabled() {
@@ -55,6 +63,9 @@ impl Stored<'_> {
                 .find_map(|(_, text)| check::max_chars(text, RESTOCK_DELAY_MAX))
         }) {
             problems.push(("restock_delay".into(), error));
+        }
+        if self.settings.notify().is_empty() {
+            problems.push(("notify".into(), text("host.notify.required", &[])));
         }
         if let Some(error) = self.settings.max_requests.and_then(|max| {
             check::between(
@@ -80,9 +91,11 @@ impl Stored<'_> {
 /// Le libellé du champ en défaut, tel que le formulaire le montre.
 pub fn field_label(field: &str) -> &'static str {
     match field {
-        "items" => "host.main.catalogTitle",
+        "items" => "host.products.title",
         "restock_delay" => "host.main.restockDelay",
+        "notify" => "host.notify",
         "max_requests" => "host.requests.max",
+        field if field.ends_with(".location") => "host.product.location",
         _ => "host.product.name",
     }
 }

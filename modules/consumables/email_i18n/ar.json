@@ -1,0 +1,8 @@
+{
+  "email.cta.seeMore": "عرض المزيد",
+  "email.hostReply.subject": "ردّ عليك مضيفك",
+  "email.hostReply.eyebrow": "المستهلكات",
+  "email.hostReply.title": "ردّ على طلبك: {item}",
+  "email.hostReply.body": "طلبت: {item}.\n\nيردّ مضيفك:\n\n«{reply}»",
+  "email.hostReply.cta": "فتح الدليل"
+}

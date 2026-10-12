@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 /// Property-scoped consumable catalog entry.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 3)]
+#[portaki_sdk::entity(schema_version = 5)]
 pub struct ConsumableItem {
     pub id: Uuid,
     pub label_fr: String,
@@ -21,6 +21,10 @@ pub struct ConsumableItem {
     /// une liste d'avant ce champ se lit comme avant.
     #[serde(default)]
     pub emoji: String,
+    /// « Où le trouver » : une carte JSON de toutes les langues, comme `label_fr`. Vide quand
+    /// l'hôte n'a rien dit.
+    #[serde(default)]
+    pub location: String,
     pub created_at: DateTime<Utc>,
 }
 
@@ -33,7 +37,7 @@ pub const CONSUMABLE_ITEM_INDEXES: &[&str] = &["sort_order"];
 /// `property_id` is injected by typed-repo from invocation context; kept in the
 /// schema so SELECT/INSERT/DELETE with `WHERE property_id = …` succeed.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 4)]
+#[portaki_sdk::entity(schema_version = 5)]
 pub struct ConsumableReport {
     pub id: Uuid,
     pub stay_id: Uuid,
@@ -53,6 +57,14 @@ pub struct ConsumableReport {
     /// La réponse de l'hôte, que le voyageur lit sous sa demande.
     #[serde(default)]
     pub host_reply: Option<String>,
+    /// Le nom du voyageur à l'envoi, pour la colonne « Voyageur ». Vide quand il est inconnu.
+    #[serde(default)]
+    pub guest_name: String,
+    /// Les dates du séjour à l'envoi, pour la colonne « Séjour ».
+    #[serde(default)]
+    pub stay_check_in: Option<DateTime<Utc>>,
+    #[serde(default)]
+    pub stay_check_out: Option<DateTime<Utc>>,
 }
 
 fn default_status() -> String {

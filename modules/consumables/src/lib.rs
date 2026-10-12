@@ -16,6 +16,7 @@ mod level;
 mod queries;
 mod status;
 mod storage;
+mod suggest;
 mod tasks;
 
 pub use amenities::amenities_list;
