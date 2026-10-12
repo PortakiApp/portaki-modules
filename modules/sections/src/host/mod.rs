@@ -14,7 +14,9 @@ use portaki_sdk::sdui::primitives::{
 };
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::config::{ModuleConfig, SectionRow, ShowFrom, MAX_SECTIONS};
+use crate::config::{
+    error_of, teaser_too_long, ModuleConfig, Problem, SectionRow, ShowFrom, MAX_SECTIONS,
+};
 use crate::content::editor_value;
 
 /// The host's profile page in the dashboard, where the name and the photo are edited.
@@ -40,7 +42,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
 
     let form = Form::new()
         .child(welcome_card(&config, &ctx))
-        .child(sections_card(&config, &sections, &ctx));
+        .child(sections_card(&config.problems(), &sections, &ctx));
     Ok(Surface::new(Page::new().child(form)).with_id(MAIN))
 }
 
@@ -75,7 +77,7 @@ fn welcome_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         .input_str("show_from")
         .and_then(ShowFrom::parse)
         .unwrap_or(config.show_from);
-    let mut show_field = Field::new()
+    let show_field = Field::new()
         .name("show_from")
         .label("i18n:host.showFrom.label")
         .required(true)
@@ -95,9 +97,6 @@ fn welcome_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
                         .collect(),
                 ),
         );
-    if let Some(error) = config.error_of("config.show_from", &ctx.locale) {
-        show_field = show_field.error(error);
-    }
     Section::new()
         .title("i18n:host.section.welcome")
         .subtitle("i18n:host.section.welcome.help")
@@ -144,11 +143,11 @@ fn signature_field(ctx: &HostContext) -> Component {
 }
 
 /// §2.2 Sections.
-fn sections_card(config: &ModuleConfig, sections: &[SectionRow], ctx: &HostContext) -> Component {
+fn sections_card(problems: &[Problem], sections: &[SectionRow], ctx: &HostContext) -> Component {
     let rows: Vec<Component> = sections
         .iter()
         .enumerate()
-        .map(|(index, row)| section_row(config, index, row, ctx))
+        .map(|(index, row)| section_row(problems, index, row, ctx))
         .collect();
     let mut list = StepList::new()
         .label("i18n:host.sections.label")
@@ -187,7 +186,7 @@ fn sections_card(config: &ModuleConfig, sections: &[SectionRow], ctx: &HostConte
                 .into(),
         );
     }
-    if let Some(error) = config.error_of("config.sections", &ctx.locale) {
+    if let Some(error) = error_of(problems, "config.sections", &ctx.locale) {
         children.push(InlineNotice::new().tone(Tone::Danger).message(error).into());
     }
     Section::new()
@@ -207,7 +206,7 @@ fn counter(count: usize) -> String {
 }
 
 fn section_row(
-    config: &ModuleConfig,
+    problems: &[Problem],
     index: usize,
     row: &SectionRow,
     ctx: &HostContext,
@@ -215,9 +214,11 @@ fn section_row(
     let name = |key: &str| format!("sections.{index}.{key}");
     let field = |key: &str, label: &str, child: Component| {
         let mut field = Field::new().name(name(key)).label(label).child(child);
-        if let Some(error) =
-            config.error_of(&format!("config.sections[{index}].{key}"), &ctx.locale)
-        {
+        if let Some(error) = error_of(
+            problems,
+            &format!("config.sections[{index}].{key}"),
+            &ctx.locale,
+        ) {
             field = field.error(error);
         }
         field
@@ -266,7 +267,7 @@ fn section_row(
         // L'éditeur riche n'a pas d'indication de saisie : l'exemple de la spec vient dessous.
         FieldHint::new().text("i18n:host.body.placeholder").into(),
     ];
-    if index == 0 && config.teaser_too_long() {
+    if index == 0 && teaser_too_long(problems) {
         body.push(FieldHint::new().text("i18n:config.body.teaser").into());
     }
     children.push(
