@@ -78,16 +78,34 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
         } else {
             name.clone()
         };
+        let mut item = ListItem::new()
+            .title(title)
+            .subtitle(match distance {
+                Some(distance) => format!("{phone} · {distance}"),
+                None => phone.clone(),
+            })
+            .leading(Leading::Icon("heart-handshake".into()))
+            .trailing(Trailing::Text("i18n:guest.call".into()));
+        // « Ouverte jusqu'à 19:30 » / « Fermée » sous la pharmacie (ses horaires, §2.3).
+        if let (true, Some(state)) = (*key == "guest.health.pharmacy", &data.pharmacy_state) {
+            item = item.child(
+                Text::new()
+                    .text(state.clone())
+                    .variant(TextVariant::Caption),
+            );
+        }
+        children.push(Component::ListItem(item.action(tel_action(phone))));
+    }
+
+    // La pharmacie de garde du pays, toujours là où elle existe (§2.3, §9 cas 4).
+    if let Some(number) = data.on_duty_pharmacy {
         children.push(Component::ListItem(
             ListItem::new()
-                .title(title)
-                .subtitle(match distance {
-                    Some(distance) => format!("{phone} · {distance}"),
-                    None => phone.clone(),
-                })
+                .title("i18n:guest.health.onDuty")
+                .subtitle(number)
                 .leading(Leading::Icon("heart-handshake".into()))
                 .trailing(Trailing::Text("i18n:guest.call".into()))
-                .action(tel_action(phone)),
+                .action(tel_action(number)),
         ));
     }
 
@@ -124,7 +142,13 @@ pub fn country_numbers(locale: &str) -> Component {
                 // c'est la tuile entière qui le prend. Plus appuyé que le dessin, jamais faux.
                 tile = tile.tone(Tone::Danger);
             }
-            Component::ListItem(tile.action(tel_action(number.number)))
+            // Le 114 se joint par SMS : un appel vocal n'y aboutit pas.
+            let action = if number.sms {
+                Action::external(format!("sms:{}", number.number))
+            } else {
+                tel_action(number.number)
+            };
+            Component::ListItem(tile.action(action))
         })
         .collect();
 

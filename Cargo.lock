@@ -234,6 +234,7 @@ dependencies = [
 name = "emergency-contacts"
 version = "1.8.0"
 dependencies = [
+ "chrono",
  "extism-pdk",
  "portaki-sdk",
  "portaki-sdk-macros",

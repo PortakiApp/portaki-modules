@@ -14,17 +14,21 @@
     "en": "Useful numbers (pharmacy, doctor…), a reminder of the 112 emergency number and, if the host wishes, their direct phone line."
   },
   "hostSurface": {
-    "fr": "Un onglet Urgences pour saisir votre téléphone et jusqu’à six contacts.",
-    "en": "An Emergency tab to enter your phone number and up to six contacts."
+    "fr": "Une page Urgences : les numéros du pays, votre numéro et vos horaires, jusqu’à vingt contacts, la pharmacie, l’hôpital et le médecin.",
+    "en": "An Emergency page: the country's numbers, your number and hours, up to twenty contacts, the pharmacy, hospital and doctor."
   },
   "configItems": [
     {
-      "fr": "Votre téléphone (facultatif)",
-      "en": "Your phone number (optional)"
+      "fr": "Votre numéro, et quand on peut vous joindre (facultatif)",
+      "en": "Your number, and when you can be reached (optional)"
     },
     {
-      "fr": "Jusqu’à six contacts : libellé et numéro",
-      "en": "Up to six contacts: label and number"
+      "fr": "Jusqu’à vingt contacts : nom, numéro, quand les appeler",
+      "en": "Up to twenty contacts: name, number, when to call"
+    },
+    {
+      "fr": "Pharmacie (avec ses horaires), hôpital et médecin",
+      "en": "Pharmacy (with opening hours), hospital and doctor"
     }
   ],
   "capabilities": [],

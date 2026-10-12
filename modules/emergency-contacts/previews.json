@@ -6,10 +6,14 @@
         "guest.call": "Appeler",
         "guest.emergency.message": "En cas d’urgence vitale, composez le 112 ou le 15 (SAMU) selon les consignes locales.",
         "guest.emergency.title": "Urgence vitale",
+        "guest.health.onDuty": "Pharmacie de garde",
         "guest.host.label": "Votre hôte",
+        "guest.host.outOfHours": "En dehors, appelez le 112 en cas d'urgence.",
         "guest.numbers.fire": "Pompiers",
         "guest.numbers.general": "Urgences",
         "guest.numbers.medical": "SAMU",
+        "guest.numbers.police": "Police",
+        "guest.numbers.sms": "Par SMS",
         "nav.emergency-contacts": "Urgences & utiles"
       },
       "surfaceId": "explore.detail",
@@ -48,6 +52,19 @@
               {
                 "action": {
                   "type": "external",
+                  "url": "tel:17"
+                },
+                "layout": "tile",
+                "leading": {
+                  "icon": "phone"
+                },
+                "subtitle": "i18n:guest.numbers.police",
+                "title": "17",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "type": "external",
                   "url": "tel:18"
                 },
                 "layout": "tile",
@@ -56,6 +73,19 @@
                 },
                 "subtitle": "i18n:guest.numbers.fire",
                 "title": "18",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "type": "external",
+                  "url": "sms:114"
+                },
+                "layout": "tile",
+                "leading": {
+                  "icon": "phone"
+                },
+                "subtitle": "i18n:guest.numbers.sms",
+                "title": "114",
                 "type": "ListItem"
               }
             ],
@@ -71,11 +101,88 @@
           {
             "action": {
               "type": "external",
-              "url": "tel:0639981234"
+              "url": "tel:+33639981234"
             },
+            "children": [
+              {
+                "text": "Joignable 08:00 – 21:00",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "i18n:guest.host.outOfHours",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
             "leading": "users",
-            "subtitle": "06 39 98 12 34",
+            "subtitle": "+33639981234",
             "title": "i18n:guest.host.label",
+            "trailing": "i18n:guest.call",
+            "type": "ListItem"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:+33639980012"
+            },
+            "children": [
+              {
+                "text": "Elle a un double des clés.",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "leading": "phone",
+            "subtitle": "+33639980012",
+            "title": "Paulette, la voisine",
+            "trailing": "i18n:guest.call",
+            "type": "ListItem"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:+33199001234"
+            },
+            "children": [
+              {
+                "text": "Pour une fuite d'eau",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "leading": "phone",
+            "subtitle": "+33199001234",
+            "title": "Plombier",
+            "trailing": "i18n:guest.call",
+            "type": "ListItem"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:+33199005678"
+            },
+            "children": [
+              {
+                "text": "Fermée",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "leading": "heart-handshake",
+            "subtitle": "+33199005678",
+            "title": "Pharmacie du Port",
+            "trailing": "i18n:guest.call",
+            "type": "ListItem"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:+33199009012"
+            },
+            "leading": "heart-handshake",
+            "subtitle": "+33199009012",
+            "title": "Dr Le Gall",
             "trailing": "i18n:guest.call",
             "type": "ListItem"
           },
@@ -84,45 +191,9 @@
               "type": "external",
               "url": "tel:3237"
             },
-            "children": [
-              {
-                "text": "Service national",
-                "type": "Text",
-                "variant": "caption"
-              }
-            ],
-            "leading": "phone",
+            "leading": "heart-handshake",
             "subtitle": "3237",
-            "title": "Pharmacie de garde",
-            "trailing": "i18n:guest.call",
-            "type": "ListItem"
-          },
-          {
-            "action": {
-              "type": "external",
-              "url": "tel:0199001234"
-            },
-            "children": [
-              {
-                "text": "Cabinet du centre, sur rendez-vous",
-                "type": "Text",
-                "variant": "caption"
-              }
-            ],
-            "leading": "phone",
-            "subtitle": "01 99 00 12 34",
-            "title": "Médecin généraliste",
-            "trailing": "i18n:guest.call",
-            "type": "ListItem"
-          },
-          {
-            "action": {
-              "type": "external",
-              "url": "tel:15"
-            },
-            "leading": "phone",
-            "subtitle": "15",
-            "title": "SAMU",
+            "title": "i18n:guest.health.onDuty",
             "trailing": "i18n:guest.call",
             "type": "ListItem"
           }

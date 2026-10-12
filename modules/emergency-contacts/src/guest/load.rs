@@ -1,6 +1,9 @@
 //! Load config for guest surfaces.
 
+use chrono::{Datelike, Timelike};
+use portaki_sdk::host::time::{self, PropertyTz};
 use portaki_sdk::prelude::*;
+use portaki_sdk::sdui::hours;
 
 use crate::config::{ContactRow, ModuleConfig};
 
@@ -14,8 +17,8 @@ pub struct GuestData {
     /// qui ne sonnent nulle part là-bas. Les libellés, eux, restent dans sa langue — ce sont des
     /// clés que le livret résout.
     pub property_locale: String,
-    /// « Pharmacie de garde : 3237 · Hôpital d'Antibes à 3,1 km » — vide quand l'hôte n'a rien
-    /// donné, et la carte se termine alors sur ses contacts.
+    /// « Pharmacie : Pharmacie du Port · Hôpital : CHU d'Antibes (3.1 km) » — les lieux sans
+    /// numéro ; vide quand l'hôte n'en a pas donné.
     pub useful_line: String,
     /// La plage où l'hôte répond, quand il n'est pas joignable 24 h/24.
     pub host_hours: Option<(String, String)>,
@@ -23,6 +26,12 @@ pub struct GuestData {
     /// La distance quand la place et le logement sont tous deux placés (§2.3 : « Rangée +
     /// distance »).
     pub health: Vec<(&'static str, String, String, Option<String>)>,
+    /// « Ouverte jusqu'à 19:30 » ou « Fermée », sous la pharmacie, quand l'hôte a donné ses
+    /// horaires.
+    pub pharmacy_state: Option<String>,
+    /// La pharmacie de garde du pays (le 3237 en France), une rangée qu'on appelle — même sans
+    /// pharmacie saisie (spec §9 cas 4).
+    pub on_duty_pharmacy: Option<&'static str>,
 }
 
 /// Ce qu'il y a à montrer — et il y a **toujours** quelque chose (§2.16).
@@ -71,7 +80,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
                 "guest.health.doctor",
                 &config.doctor,
                 &config.doctor_phone,
-                None,
+                away(config.doctor_lat, config.doctor_lng),
             ),
         ]
         .into_iter()
@@ -85,7 +94,52 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
             )
         })
         .collect(),
+        pharmacy_state: pharmacy_state(&config.pharmacy_hours, &ctx.property.timezone),
+        on_duty_pharmacy: crate::numbers::on_duty_pharmacy(&ctx.property.locale),
     }))
+}
+
+/// « Ouverte jusqu'à 19:30 » ou « Fermée », à l'heure du logement. Sans horaires, rien.
+fn pharmacy_state(week: &str, timezone: &str) -> Option<String> {
+    if week.trim().is_empty() {
+        return None;
+    }
+    let now = time::now().ok()?;
+    let local = match PropertyTz::parse(timezone) {
+        Some(tz) => tz.to_local(now).naive_local(),
+        None => now.naive_utc(),
+    };
+    let day = local.weekday().num_days_from_monday() as usize;
+    let minutes = local.hour() * 60 + local.minute();
+    match open_until(&hours::parse_week(week), day, minutes) {
+        Some(close) => t!("guest.pharmacy.openUntil", time = close).ok(),
+        None => t!("guest.pharmacy.closed").ok(),
+    }
+}
+
+/// L'heure de fermeture si c'est ouvert le jour `day` (lundi = 0) à `minutes` après minuit. Une
+/// plage qui passe minuit court sur le lendemain matin.
+fn open_until(week: &[Vec<hours::Range>; 7], day: usize, minutes: u32) -> Option<String> {
+    // `parse_week` rend des heures `HH:MM` valides.
+    let at = |t: &str| {
+        let (h, m) = t.split_once(':').unwrap_or(("0", "0"));
+        h.parse::<u32>().unwrap_or(0) * 60 + m.parse::<u32>().unwrap_or(0)
+    };
+    let today = week[day].iter().find(|(start, end)| {
+        let (s, e) = (at(start), at(end));
+        if e > s {
+            (s..e).contains(&minutes)
+        } else {
+            minutes >= s
+        }
+    });
+    let yesterday = || {
+        week[(day + 6) % 7].iter().find(|(start, end)| {
+            let (s, e) = (at(start), at(end));
+            e < s && minutes < e
+        })
+    };
+    today.or_else(yesterday).map(|(_, end)| end.clone())
 }
 
 /// Le numéro de l'hôte : celui qu'il a saisi ici, sinon celui de son profil.
@@ -164,4 +218,22 @@ fn haversine_metres((lat1, lng1): (f64, f64), (lat2, lng2): (f64, f64)) -> f64 {
     let a = ((phi2 - phi1) / 2.0).sin().powi(2)
         + phi1.cos() * phi2.cos() * ((lng2 - lng1).to_radians() / 2.0).sin().powi(2);
     2.0 * EARTH_RADIUS_M * a.sqrt().asin()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_pharmacy_is_open_until_its_closing_time() {
+        let week = hours::parse_week("mon=09:00-12:00,14:00-19:30;sat=22:00-02:00");
+        assert_eq!(open_until(&week, 0, 10 * 60), Some("12:00".into()));
+        assert_eq!(open_until(&week, 0, 13 * 60), None);
+        assert_eq!(open_until(&week, 0, 19 * 60), Some("19:30".into()));
+        assert_eq!(open_until(&week, 1, 10 * 60), None, "mardi : fermé");
+        // Samedi 22:00 – 02:00 : encore ouverte dimanche à 01:00.
+        assert_eq!(open_until(&week, 5, 23 * 60), Some("02:00".into()));
+        assert_eq!(open_until(&week, 6, 60), Some("02:00".into()));
+        assert_eq!(open_until(&week, 6, 3 * 60), None);
+    }
 }
