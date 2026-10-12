@@ -15,6 +15,13 @@ use portaki_sdk::sdui::surface::Surface;
 
 use crate::config::ModuleConfig;
 
+// « Serrure hors ligne », « Batterie faible » dans À venir : `crate::tasks`.
+#[portaki_sdk::nav(
+    placement = HostPlacement::WorkspaceTimelineTask,
+    path = "tasks",
+    label_key = "catalog.host.tasks",
+    icon = IconName::DangerTriangle
+)]
 #[portaki_sdk::surface(
     host,
     id = "main",

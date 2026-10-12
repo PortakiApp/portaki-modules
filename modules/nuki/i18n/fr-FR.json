@@ -4,6 +4,7 @@
   "catalog.host.main": "Nuki",
   "catalog.host.regenerate": "Régénérer le code",
   "catalog.host.stay": "Accès Nuki",
+  "catalog.host.tasks": "État de la serrure",
   "connector.nuki.name": "Compte Nuki Web",
   "feeds.access-guide": "le code clavier",
   "guest.credential.keypad": "Code du clavier : {code}",
@@ -47,5 +48,11 @@
   "module.description": "Serrure connectée Nuki — codes clavier pour l’accès voyageur",
   "module.displayName": "Nuki",
   "publish.access.hint": "Ajoutez un code clavier, ou l’identifiant de la serrure avec la clé de votre compte Nuki Web dans Intégrations.",
-  "publish.access.label": "Code clavier ou déverrouillage à distance"
+  "publish.access.label": "Code clavier ou déverrouillage à distance",
+  "task.battery.context": "{charge} % restants",
+  "task.battery.context.critical": "Niveau critique",
+  "task.battery.title": "Batterie faible",
+  "task.offline.context": "Le voyageur reçoit le code de secours du clavier",
+  "task.offline.context.noFallback": "Aucun code de secours : le voyageur ne peut pas entrer",
+  "task.offline.title": "Serrure hors ligne"
 }

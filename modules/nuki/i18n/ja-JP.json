@@ -4,6 +4,7 @@
   "catalog.host.main": "Nuki",
   "catalog.host.regenerate": "コードを再発行",
   "catalog.host.stay": "Nuki アクセス",
+  "catalog.host.tasks": "ロックの状態",
   "connector.nuki.name": "Nuki Web アカウント",
   "feeds.access-guide": "キーパッドコード",
   "guest.credential.keypad": "キーパッドの暗証番号：{code}",
@@ -47,5 +48,11 @@
   "module.description": "Nuki スマートロック — ゲストのアクセス用キーパッドコード",
   "module.displayName": "Nuki",
   "publish.access.hint": "キーパッドコードを追加するか、ロックの識別子と Nuki Web アカウントのキーを「連携」に追加してください。",
-  "publish.access.label": "キーパッドコードまたは遠隔解錠"
+  "publish.access.label": "キーパッドコードまたは遠隔解錠",
+  "task.battery.context": "残り {charge}%",
+  "task.battery.context.critical": "危険なレベル",
+  "task.battery.title": "バッテリー残量低下",
+  "task.offline.context": "ゲストにはキーパッドの予備コードが届きます",
+  "task.offline.context.noFallback": "予備コードがありません：ゲストは入室できません",
+  "task.offline.title": "ロックがオフライン"
 }

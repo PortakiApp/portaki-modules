@@ -2,8 +2,8 @@
 
 use nuki::{
     get_guest_credential, publish_readiness, regenerate_code, render_host_main,
-    render_host_regenerate, render_host_stay, unlock, ModuleConfig, RegenerateArgs, StayArgs,
-    SMART_LOCK,
+    render_host_regenerate, render_host_stay, timeline_tasks, unlock, ModuleConfig, RegenerateArgs,
+    StayArgs, SMART_LOCK,
 };
 use portaki_sdk::capability;
 use portaki_sdk::contracts::smart_lock;
@@ -762,4 +762,147 @@ fn the_regenerate_modal_says_why_it_cannot() {
     assert!(!ended.contains("regenerateCode"), "{ended}");
     let unknown = render_regenerate(host_stay(byok), serde_json::json!({})).to_string();
     assert!(unknown.contains("host.stay.unknown"), "{unknown}");
+}
+
+// --- « Serrure hors ligne », « Batterie faible » dans À venir (spec Nuki §9) -----------------
+
+fn lock_watch() -> MockContextBuilder {
+    host_stay(&[capability::core::STORAGE, capability::external::NUKI_BYOK])
+        .with_now(at("2026-08-20T10:00:00Z"))
+}
+
+fn week() -> portaki_sdk::contracts::timeline::TimelineTasksArgs {
+    serde_json::from_value(serde_json::json!({
+        "propertyId": "5f0c2b1e-8a4d-4c6f-9e21-3b7d9a6c4e10",
+        "from": "2026-08-17T00:00:00Z",
+        "to": "2026-08-24T00:00:00Z",
+        "stays": []
+    }))
+    .expect("args")
+}
+
+fn task_ids(builder: MockContextBuilder) -> Vec<String> {
+    builder.run(|ctx| {
+        timeline_tasks(ctx, week())
+            .expect("tasks")
+            .tasks
+            .into_iter()
+            .map(|task| task.id)
+            .collect()
+    })
+}
+
+#[test]
+#[serial]
+fn an_offline_lock_is_a_task_that_says_the_fallback_code_answers() {
+    lock_watch()
+        .with_connector_response("nuki", "get_smartlock", r#"{"serverState":4,"name":"x"}"#)
+        .run_with(|ctx, host| {
+            let tasks = timeline_tasks(ctx, week()).expect("tasks").tasks;
+            assert_eq!(tasks.len(), 1);
+            assert_eq!(tasks[0].id, "lock-offline");
+            assert_eq!(tasks[0].title.fr, "Serrure hors ligne");
+            assert_eq!(tasks[0].at, at("2026-08-20T10:00:00Z"));
+            assert!(
+                tasks[0].context.fr.contains("code de secours"),
+                "{:?}",
+                tasks[0].context
+            );
+            assert!(tasks[0].items.is_empty());
+            assert_eq!(
+                calls_of(host, "get_smartlock")[0]["smartlockId"],
+                "lock-abc"
+            );
+        });
+}
+
+#[test]
+#[serial]
+fn a_low_or_critical_battery_is_a_task_with_its_charge() {
+    lock_watch()
+        .with_connector_response(
+            "nuki",
+            "get_smartlock",
+            r#"{"serverState":0,"state":{"batteryCritical":false,"batteryCharge":15}}"#,
+        )
+        .run(|ctx| {
+            let tasks = timeline_tasks(ctx, week()).expect("tasks").tasks;
+            assert_eq!(tasks.len(), 1);
+            assert_eq!(tasks[0].id, "battery-low");
+            assert_eq!(tasks[0].title.fr, "Batterie faible");
+            assert_eq!(tasks[0].context.fr, "15 % restants");
+        });
+    let critical = lock_watch().with_connector_response(
+        "nuki",
+        "get_smartlock",
+        r#"{"serverState":4,"state":{"batteryCritical":true}}"#,
+    );
+    assert_eq!(task_ids(critical), ["lock-offline", "battery-low"]);
+}
+
+#[test]
+#[serial]
+fn a_healthy_lock_or_an_unanswering_nuki_is_no_task() {
+    let healthy = lock_watch().with_connector_response(
+        "nuki",
+        "get_smartlock",
+        r#"{"serverState":0,"state":{"batteryCritical":false,"batteryCharge":80}}"#,
+    );
+    assert!(task_ids(healthy).is_empty());
+    let failing =
+        lock_watch().with_connector_error("nuki", "get_smartlock", "connector_egress_failed");
+    assert!(task_ids(failing).is_empty());
+}
+
+/// Sans clé Nuki Web, sans serrure, ou hors de la fenêtre qui contient maintenant : Nuki n'est
+/// jamais appelé.
+#[test]
+#[serial]
+fn the_lock_is_only_read_with_the_key_a_lock_and_the_current_window() {
+    let cases = [
+        host_stay(&[capability::core::STORAGE]).with_now(at("2026-08-20T10:00:00Z")),
+        lock_watch().with_config(&ModuleConfig {
+            smartlock_id: " ".into(),
+            ..sample_config()
+        }),
+        lock_watch().with_now(at("2026-08-30T10:00:00Z")),
+    ];
+    for builder in cases {
+        builder
+            .with_connector_response("nuki", "get_smartlock", r#"{"serverState":4}"#)
+            .run_with(|ctx, host| {
+                assert!(timeline_tasks(ctx, week()).expect("tasks").tasks.is_empty());
+                assert!(calls_of(host, "get_smartlock").is_empty());
+            });
+    }
+}
+
+/// À venir se relit à chaque focus : la serrure n'est lue qu'une fois par cache.
+#[test]
+#[serial]
+fn the_lock_state_is_cached_between_two_reads() {
+    lock_watch()
+        .with_connector_response("nuki", "get_smartlock", r#"{"serverState":4}"#)
+        .run_with(|ctx, host| {
+            let first = timeline_tasks(ctx.clone(), week()).expect("first").tasks;
+            let second = timeline_tasks(ctx, week()).expect("second").tasks;
+            assert_eq!(first.len(), 1);
+            assert_eq!(second.len(), 1);
+            assert_eq!(calls_of(host, "get_smartlock").len(), 1);
+        });
+}
+
+/// L'orchestrateur n'appelle `timelineTasks` que pour un module qui déclare la nav
+/// `WorkspaceTimelineTask` : sans elle, « Serrure hors ligne » n'atteint jamais À venir.
+#[test]
+fn timeline_tasks_are_declared_to_the_dashboard() {
+    let path = concat!(
+        env!("OUT_DIR"),
+        "/portaki-emissions/nav-tasks_HostPlacement__WorkspaceTimelineTask.json"
+    );
+    let raw = std::fs::read_to_string(path).expect("the tasks nav is emitted");
+    let nav: serde_json::Value = serde_json::from_str(&raw).expect("nav json");
+    assert_eq!(nav["placement"], "HostPlacement::WorkspaceTimelineTask");
+    assert_eq!(nav["path"], "tasks");
+    assert_eq!(nav["label_key"], "catalog.host.tasks");
 }

@@ -4,6 +4,7 @@
   "catalog.host.main": "Nuki",
   "catalog.host.regenerate": "重新生成密码",
   "catalog.host.stay": "Nuki 门禁",
+  "catalog.host.tasks": "门锁状态",
   "connector.nuki.name": "Nuki Web 账户",
   "feeds.access-guide": "键盘密码",
   "guest.credential.keypad": "键盘密码：{code}",
@@ -47,5 +48,11 @@
   "module.description": "Nuki 智能锁 — 供房客进入使用的键盘密码",
   "module.displayName": "Nuki",
   "publish.access.hint": "添加键盘密码，或同时填写锁的标识并在「集成」中添加您 Nuki Web 账户的密钥。",
-  "publish.access.label": "键盘密码或远程开锁"
+  "publish.access.label": "键盘密码或远程开锁",
+  "task.battery.context": "剩余 {charge}%",
+  "task.battery.context.critical": "电量严重不足",
+  "task.battery.title": "电量不足",
+  "task.offline.context": "住客将收到键盘备用密码",
+  "task.offline.context.noFallback": "没有备用密码：住客无法进入",
+  "task.offline.title": "门锁离线"
 }

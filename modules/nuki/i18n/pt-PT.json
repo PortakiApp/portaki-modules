@@ -4,6 +4,7 @@
   "catalog.host.main": "Nuki",
   "catalog.host.regenerate": "Regenerar o código",
   "catalog.host.stay": "Acesso Nuki",
+  "catalog.host.tasks": "Estado da fechadura",
   "connector.nuki.name": "Conta Nuki Web",
   "feeds.access-guide": "o código de teclado",
   "guest.credential.keypad": "Código do teclado: {code}",
@@ -47,5 +48,11 @@
   "module.description": "Fechadura inteligente Nuki — códigos de teclado para o acesso do hóspede",
   "module.displayName": "Nuki",
   "publish.access.hint": "Adicione um código de teclado, ou o identificador da fechadura juntamente com a chave da sua conta Nuki Web em Integrações.",
-  "publish.access.label": "Código de teclado ou abertura à distância"
+  "publish.access.label": "Código de teclado ou abertura à distância",
+  "task.battery.context": "{charge} % restantes",
+  "task.battery.context.critical": "Nível crítico",
+  "task.battery.title": "Bateria fraca",
+  "task.offline.context": "O hóspede recebe o código de recurso do teclado",
+  "task.offline.context.noFallback": "Sem código de recurso: o hóspede não consegue entrar",
+  "task.offline.title": "Fechadura offline"
 }

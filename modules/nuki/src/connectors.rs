@@ -1,4 +1,5 @@
-//! Nuki Cloud connector — remote unlock and per-stay keypad codes via host egress (Bearer).
+//! Nuki Cloud connector — remote unlock, per-stay keypad codes and lock health via host egress
+//! (Bearer).
 //!
 //! The platform catalogue (`contracts/connectors/nuki.json`) pins every operation and binds
 //! `smartlockId` to the install's `smartlock_id`. Delete is one authorization at a time, and the
@@ -29,4 +30,8 @@ impl ModuleNuki {
     /// Deletes one authorization by its Nuki `id` — only expired `Portaki …` codes, see `stay_code`.
     #[portaki_sdk::connector_op(method = "DELETE", path = "/smartlock/{smartlockId}/auth/{authId}")]
     pub fn delete_auth() {}
+
+    /// The configured lock: online state and battery, read by `tasks` (the rest is ignored).
+    #[portaki_sdk::connector_op(method = "GET", path = "/smartlock/{smartlockId}")]
+    pub fn get_smartlock() {}
 }
