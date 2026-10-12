@@ -56,14 +56,20 @@ pub fn build_item_detail(payload: &AppliancesPayload, device_id: Option<&str>) -
 /// Masquée quand il n'y a rien de tout cela — une carte qui annonce des notices et n'en liste
 /// aucune ne dit rien. Le dépôt d'un PDF attend le lot de stockage de fichiers.
 fn manuals_card(device: &Appliance, paper_location: &str) -> Option<Component> {
-    let url = device.manual_url.trim();
+    let pdf = device.manual_file.trim();
+    // Le PDF et le lien : seul le PDF s'affiche (§3).
+    let url = if pdf.is_empty() {
+        device.manual_url.trim()
+    } else {
+        ""
+    };
     let paper = paper_location.trim();
     // Seulement un lien https que la règle accepte : un lien en http ou hors règle reste un
     // avertissement chez l'hôte, pas un bouton chez le voyageur.
     let video = device.video_url.trim();
     let video =
         (video.starts_with("https://") && crate::content::is_video_url(video)).then_some(video);
-    if url.is_empty() && paper.is_empty() && video.is_none() {
+    if pdf.is_empty() && url.is_empty() && paper.is_empty() && video.is_none() {
         return None;
     }
 
@@ -75,6 +81,16 @@ fn manuals_card(device: &Appliance, paper_location: &str) -> Option<Component> {
                 .leading(Leading::Icon("link".into()))
                 .chevron(true)
                 .action(Action::external(video.to_string())),
+        ));
+    }
+    if !pdf.is_empty() {
+        // La référence devient une URL signée au rendu, côté plateforme.
+        rows.push(Component::ListItem(
+            ListItem::new()
+                .title("i18n:explore.item.manual.pdf")
+                .leading(Leading::Icon("file-text".into()))
+                .chevron(true)
+                .action(Action::external(pdf.to_string())),
         ));
     }
     if !url.is_empty() {
@@ -106,17 +122,24 @@ fn manuals_card(device: &Appliance, paper_location: &str) -> Option<Component> {
 
 fn device_detail_children(device: &Appliance, paper_manuals_location: &str) -> Vec<Component> {
     let mut children = vec![header_row(device)];
+    // La consigne de sécurité en tête de fiche, avant le mode d'emploi (§2.2).
+    if !device.safety_note.trim().is_empty() {
+        children.push(Component::InfoBanner(
+            InfoBanner::new().message(device.safety_note.clone()),
+        ));
+    }
 
     // Les étapes saisies une à une, puis le mode d'emploi libre sous elles (§2.2). Sans étapes,
     // la fiche lit celles de la liste du texte libre, comme avant.
     let structured: Vec<HowToStep> = device
         .steps
         .iter()
-        .map(|step| step.text.trim())
-        .filter(|text| !text.is_empty())
-        .map(|text| HowToStep {
-            text: text.to_string(),
-            image: None,
+        .filter(|step| !step.text.trim().is_empty())
+        .map(|step| HowToStep {
+            text: step.text.trim().to_string(),
+            image: Some(step.image.trim())
+                .filter(|image| !image.is_empty())
+                .map(str::to_string),
         })
         .collect();
     let has_structured = !structured.is_empty();
@@ -182,9 +205,12 @@ fn device_detail_children(device: &Appliance, paper_manuals_location: &str) -> V
         ));
     }
 
-    if !device.safety_note.trim().is_empty() {
-        children.push(Component::InfoBanner(
-            InfoBanner::new().message(device.safety_note.clone()),
+    // Ni étapes, ni texte, ni notice : la fiche le dit, le bouton souci reste dessous (§9 #4).
+    if !device.has_manual() {
+        children.push(Component::Text(
+            Text::new()
+                .text("i18n:explore.item.noManual")
+                .variant(TextVariant::Caption),
         ));
     }
 
@@ -232,12 +258,11 @@ fn header_row(device: &Appliance) -> Component {
     }
 
     let mut header_children = Vec::new();
-    if !device.emoji.trim().is_empty() {
+    let emoji = device.shown_emoji();
+    if !emoji.is_empty() {
         // L'emoji est un pictogramme, pas un titre : `Icon` le porte, `display` reste au nom.
         // 64 px, la taille « lg » de la maquette pour une tête de fiche (§2.4, planche app-0).
-        header_children.push(Component::Icon(
-            Icon::new().emoji(device.emoji.clone()).size(64.0),
-        ));
+        header_children.push(Component::Icon(Icon::new().emoji(emoji).size(64.0)));
     }
     header_children.push(Component::Stack(title_stack));
 

@@ -47,6 +47,11 @@ pub fn load_payload_for(locale: &str, property_locale: &str) -> Result<Appliance
     Ok(load_bundle()?.pick(locale, property_locale))
 }
 
+/// [`AppliancesBundle::for_host`] : ce que les réglages montrent et modifient.
+pub fn load_host_payload(locale: &str, property_locale: &str) -> Result<AppliancesPayload> {
+    Ok(load_bundle()?.for_host(locale, property_locale))
+}
+
 /// Persist payload for one language; merge into N-lang bundle and sync shared fields.
 pub fn save_payload_for(locale: &str, payload: &AppliancesPayload) -> Result<AppliancesContent> {
     let mut bundle = load_bundle()?;

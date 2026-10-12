@@ -436,7 +436,7 @@ fn the_manuals_card_appears_only_when_there_is_a_manual() {
                         paper_manuals_location: Some(paper.to_string()),
                         devices: vec![ReplaceDeviceSlot {
                             id: "tv".into(),
-                            name: "Télévision".into(),
+                            name: Some("Télévision".into()),
                             manual_url: Some(manual_url.to_string()),
                             ..ReplaceDeviceSlot::default()
                         }],
@@ -479,12 +479,12 @@ fn the_paper_location_is_shared_by_every_appliance() {
                     devices: vec![
                         ReplaceDeviceSlot {
                             id: "tv".into(),
-                            name: "Télévision".into(),
+                            name: Some("Télévision".into()),
                             ..ReplaceDeviceSlot::default()
                         },
                         ReplaceDeviceSlot {
                             id: "washer".into(),
-                            name: "Lave-linge".into(),
+                            name: Some("Lave-linge".into()),
                             ..ReplaceDeviceSlot::default()
                         },
                     ],
@@ -718,7 +718,7 @@ fn saving_without_steps_keeps_them() {
                     paper_manuals_location: None,
                     devices: vec![ReplaceDeviceSlot {
                         id: "washer".into(),
-                        name: "Lave-linge".into(),
+                        name: Some("Lave-linge".into()),
                         ..ReplaceDeviceSlot::default()
                     }],
                 },
@@ -788,7 +788,7 @@ fn replace_devices_keeps_what_the_row_does_not_send() {
             };
             replace(ReplaceDeviceSlot {
                 id: "washer".into(),
-                name: "Lave-linge".into(),
+                name: Some("Lave-linge".into()),
                 ..ReplaceDeviceSlot::default()
             });
             let out = render_washer(&ctx);
@@ -804,7 +804,7 @@ fn replace_devices_keeps_what_the_row_does_not_send() {
 
             replace(ReplaceDeviceSlot {
                 id: "washer".into(),
-                name: "Lave-linge".into(),
+                name: Some("Lave-linge".into()),
                 safety_note: Some(String::new()),
                 ..ReplaceDeviceSlot::default()
             });
@@ -838,7 +838,7 @@ fn the_safety_note_has_its_field_and_is_saved_per_language() {
             }
 
             let fr = host_form(&ctx, "fr-FR");
-            assert!(fr.contains(r#""name":"safetyNote""#), "{fr}");
+            assert!(fr.contains(r#""name":"devices.0.safetyNote""#), "{fr}");
             assert!(fr.contains("host.device.safetyNote"), "{fr}");
             assert!(
                 fr.contains(r#""value":"Pas de machine après 22 h.""#),
