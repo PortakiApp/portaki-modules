@@ -7,7 +7,7 @@
 use chrono::{DateTime, Datelike, Duration, Months, NaiveDate, Utc};
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{
-    Button, Card, FilterChip, InlineNotice, KeyValue, MonthCalendar, Page, Stack, Text,
+    Button, Card, FilterBar, FilterChip, InlineNotice, KeyValue, MonthCalendar, Page, Stack, Text,
 };
 use portaki_sdk::sdui::surface::Surface;
 use serde_json::{json, Value};
@@ -191,9 +191,10 @@ fn input(pairs: Value) -> Action {
     Action::emit(contracts::shell::SURFACE_INPUT, Some(pairs))
 }
 
-/// Le filtre de source, puis « Réglages » : la fiche du module.
+/// Le filtre de source, une seule piste comme sur la planche, puis « Réglages » : la fiche du
+/// module.
 fn toolbar(ctx: &HostContext, source: &str) -> Component {
-    let mut chips: Vec<Component> = SOURCES
+    let chips: Vec<Component> = SOURCES
         .iter()
         .map(|key| {
             FilterChip::new()
@@ -203,23 +204,21 @@ fn toolbar(ctx: &HostContext, source: &str) -> Component {
                 .into()
         })
         .collect();
-    chips.push(
-        Button::new()
-            .label("i18n:host.calendar.settings")
-            .variant(ButtonVariant::Outline)
-            .action(Action::navigate(
-                NavigateTarget::path(format!(
-                    "/listings/{}/modules/{}",
-                    ctx.property_id, ctx.module_id
-                )),
-                None,
-            ))
-            .into(),
-    );
+    let settings: Component = Button::new()
+        .label("i18n:host.calendar.settings")
+        .variant(ButtonVariant::Outline)
+        .action(Action::navigate(
+            NavigateTarget::path(format!(
+                "/listings/{}/modules/{}",
+                ctx.property_id, ctx.module_id
+            )),
+            None,
+        ))
+        .into();
     Stack::new()
         .direction(StackDirection::Horizontal)
         .gap(8.0)
-        .children(chips)
+        .children(vec![FilterBar::new().children(chips).into(), settings])
         .into()
 }
 

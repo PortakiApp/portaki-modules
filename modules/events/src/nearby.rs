@@ -57,8 +57,11 @@ pub fn resolve_events(
     let window = crate::time_format::stay_window(ctx.stay.as_ref());
     let tz = ctx.property_tz();
     let anchored = |e| crate::time_format::anchored(e, tz.as_ref());
-    let manual = config.parse_events().into_iter().map(anchored).collect();
-    let mut manual = crate::time_format::sort_events_by_start(manual);
+    let all_manual: Vec<EventRow> = config.parse_events().into_iter().map(anchored).collect();
+    // Un import double le vôtre à n'importe laquelle de ses dates du séjour, pas seulement la
+    // prochaine : le marché de chaque mardi double l'import du deuxième mardi aussi.
+    let own_dates = occurrences_within(&all_manual, window, tz.as_ref());
+    let mut manual = crate::time_format::sort_events_by_start(all_manual);
     manual = crate::time_format::events_within(&manual, window, tz.as_ref());
     if for_home_card {
         manual = crate::time_format::events_for_home_card(&manual, now, tz.as_ref());
@@ -84,7 +87,34 @@ pub fn resolve_events(
         nearby.truncate(MAX_NEARBY);
     }
 
-    Ok(merge_manual_and_nearby(manual, nearby))
+    Ok(merge_manual_and_nearby(manual, nearby, &own_dates))
+}
+
+/// Vos événements à chacune de leurs dates dans la fenêtre ; tels quels sans fenêtre.
+fn occurrences_within(
+    events: &[EventRow],
+    window: Option<(DateTime<Utc>, DateTime<Utc>)>,
+    tz: Option<&time::PropertyTz>,
+) -> Vec<EventRow> {
+    let Some((from, to)) = window else {
+        return events.to_vec();
+    };
+    let (first, last) = (
+        crate::config::local(from, tz).date(),
+        crate::config::local(to, tz).date(),
+    );
+    events
+        .iter()
+        .flat_map(|event| {
+            event
+                .occurrences_in(first, last, tz)
+                .into_iter()
+                .map(move |at| EventRow {
+                    starts_at: at.to_rfc3339(),
+                    ..event.clone()
+                })
+        })
+        .collect()
 }
 
 /// Les événements d'OpenAgenda à venir autour du logement, à l'heure du logement — `None` quand
@@ -196,11 +226,16 @@ fn fetch_from_api(lat: f64, lng: f64, radius_km: u32, locale: &str) -> Result<Ve
         .collect())
 }
 
-/// Vos événements, puis ceux d'OpenAgenda qui n'en doublent aucun : le vôtre gagne (§3).
-fn merge_manual_and_nearby(manual: Vec<EventRow>, nearby: Vec<EventRow>) -> Vec<EventRow> {
+/// Vos événements, puis ceux d'OpenAgenda qui ne doublent aucune de vos dates (`own_dates`) :
+/// le vôtre gagne (§3).
+fn merge_manual_and_nearby(
+    manual: Vec<EventRow>,
+    nearby: Vec<EventRow>,
+    own_dates: &[EventRow],
+) -> Vec<EventRow> {
     let kept: Vec<EventRow> = nearby
         .into_iter()
-        .filter(|imported| !manual.iter().any(|own| is_duplicate(own, imported)))
+        .filter(|imported| !own_dates.iter().any(|own| is_duplicate(own, imported)))
         .collect();
     crate::time_format::sort_events_by_start(manual.into_iter().chain(kept).collect())
 }
@@ -277,7 +312,7 @@ mod tests {
             note: None,
             ..Default::default()
         }];
-        let merged = merge_manual_and_nearby(manual, nearby);
+        let merged = merge_manual_and_nearby(manual.clone(), nearby, &manual);
         assert_eq!(merged.len(), 1);
         assert_eq!(merged[0].id, "manual-1");
         assert_eq!(merged[0].place.get("fr"), "Chez nous");
