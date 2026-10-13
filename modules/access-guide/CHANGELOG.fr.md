@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.3
+
+Le rappel de changement de code se coche.
+
+* Le rappel « Changer le code » après un départ se coche « Code changé » depuis le tableau de bord ou l'app mobile, au lieu de revenir sans fin.
+
 ## 1.10.1
 
 Montée technique.
