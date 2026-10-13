@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v1.8.0...ical-sync-v1.8.1) (2026-10-13)
+
+
+### Bug Fixes
+
+* **ical-sync:** refuse feed links to guests ([0d48b19](https://github.com/PortakiApp/portaki-modules/commit/0d48b195e98ab688c3aa0310fd06edb296d097bd))
+
 ## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v1.7.0...ical-sync-v1.8.0) (2026-10-12)
 
 
