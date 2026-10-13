@@ -1,0 +1,22 @@
+{
+  "email": {
+    "fr": "Prévenir l'hôte d'un problème signalé par un voyageur, et envoyer au voyageur la réponse de l'hôte.",
+    "en": "Alerts the host to an issue a guest reports, and emails the host's reply to the guest."
+  },
+  "events": {
+    "fr": "Inscrire au journal de l'espace les signalements que l'hôte ajoute et ceux qu'il résout.",
+    "en": "Logs the issues the host adds or resolves in the workspace activity log."
+  },
+  "guest:files": {
+    "fr": "Recevoir la photo que le voyageur joint à son signalement.",
+    "en": "Accepts the photo a guest attaches to an issue report."
+  },
+  "platform": {
+    "fr": "Vérifier que le module est activé et configuré avant de montrer au voyageur le formulaire de signalement.",
+    "en": "Checks the module is enabled and set up before showing the guest the issue form."
+  },
+  "repo": {
+    "fr": "Enregistrer chaque signalement, son statut et l'historique des réponses au voyageur.",
+    "en": "Stores each issue report, its status and the history of replies to the guest."
+  }
+}

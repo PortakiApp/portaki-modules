@@ -1,0 +1,70 @@
+{
+  "email": {
+    "fr": "Prévenir par e-mail les voyageurs attendus ou sur place quand le code d'accès change, sans jamais y écrire le code.",
+    "en": "Emails guests about to arrive or on site when the access code changes, without ever writing the code in it."
+  },
+  "kv": {
+    "fr": "Reprendre les réglages et les textes d'arrivée enregistrés avant que la plateforme ne les garde.",
+    "en": "Imports the arrival settings and texts saved before the platform kept them."
+  },
+  "platform": {
+    "fr": "Lister les modules de serrure connectée installés pour que l'hôte choisisse la sienne, et vérifier que l'accès est prêt avant de l'afficher.",
+    "en": "Lists the installed smart-lock modules so the host can pick theirs, and checks access is set up before showing it."
+  },
+  "reveal:building_access_gate_code:arrival_email": {
+    "fr": "Écrire le digicode de l'immeuble dans l'e-mail d'arrivée du voyageur.",
+    "en": "Puts the building door code in the guest's arrival email."
+  },
+  "reveal:building_access_gate_code:guest_pre_arrival": {
+    "fr": "Montrer au voyageur, avant son arrivée, le digicode de l'immeuble.",
+    "en": "Shows the guest the building door code before arrival."
+  },
+  "reveal:building_access_gate_code:guest_stay": {
+    "fr": "Montrer au voyageur, pendant son séjour, le digicode de l'immeuble.",
+    "en": "Shows the guest the building door code during the stay."
+  },
+  "reveal:door_code:arrival_email": {
+    "fr": "Écrire le code de la porte (portail, immeuble ou logement) dans l'e-mail d'arrivée du voyageur.",
+    "en": "Puts the door code (gate, building or apartment) in the guest's arrival email."
+  },
+  "reveal:door_code:guest_pre_arrival": {
+    "fr": "Montrer au voyageur, avant son arrivée, le code de la porte (portail, immeuble ou logement).",
+    "en": "Shows the guest the door code (gate, building or apartment) before arrival."
+  },
+  "reveal:door_code:guest_stay": {
+    "fr": "Montrer au voyageur, pendant son séjour, le code de la porte (portail, immeuble ou logement).",
+    "en": "Shows the guest the door code (gate, building or apartment) during the stay."
+  },
+  "reveal:keybox_code:arrival_email": {
+    "fr": "Écrire le code de la boîte à clés dans l'e-mail d'arrivée du voyageur.",
+    "en": "Puts the key box code in the guest's arrival email."
+  },
+  "reveal:keybox_code:guest_pre_arrival": {
+    "fr": "Montrer au voyageur, avant son arrivée, le code de la boîte à clés.",
+    "en": "Shows the guest the key box code before arrival."
+  },
+  "reveal:keybox_code:guest_stay": {
+    "fr": "Montrer au voyageur, pendant son séjour, le code de la boîte à clés.",
+    "en": "Shows the guest the key box code during the stay."
+  },
+  "reveal:parking_code:guest_pre_arrival": {
+    "fr": "Montrer au voyageur, avant son arrivée, le code du parking du logement.",
+    "en": "Shows the guest the listing's parking code before arrival."
+  },
+  "reveal:parking_code:guest_stay": {
+    "fr": "Montrer au voyageur, pendant son séjour, le code du parking du logement.",
+    "en": "Shows the guest the listing's parking code during the stay."
+  },
+  "reveal:smart_lock_manual_code:arrival_email": {
+    "fr": "Écrire le code de secours de la serrure connectée dans l'e-mail d'arrivée du voyageur.",
+    "en": "Puts the smart lock's backup code in the guest's arrival email."
+  },
+  "reveal:smart_lock_manual_code:guest_pre_arrival": {
+    "fr": "Montrer au voyageur, avant son arrivée, le code de secours de la serrure connectée.",
+    "en": "Shows the guest the smart lock's backup code before arrival."
+  },
+  "reveal:smart_lock_manual_code:guest_stay": {
+    "fr": "Montrer au voyageur, pendant son séjour, le code de secours de la serrure connectée.",
+    "en": "Shows the guest the smart lock's backup code during the stay."
+  }
+}

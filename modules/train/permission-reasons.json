@@ -1,0 +1,14 @@
+{
+  "connectors:sncf": {
+    "fr": "Chercher les gares proches et les prochains départs via l'API SNCF.",
+    "en": "Finds nearby stations and upcoming departures through the SNCF API."
+  },
+  "kv": {
+    "fr": "Noter un jour qu'une clé SNCF manque, pour le dire à l'hôte sans réessayer en boucle.",
+    "en": "Notes for a day that an SNCF key is missing, to tell the host without retrying in a loop."
+  },
+  "platform": {
+    "fr": "Vérifier que le module est activé et réglé avant de montrer les trains dans le livret.",
+    "en": "Checks the module is enabled and set up before showing trains in the booklet."
+  }
+}

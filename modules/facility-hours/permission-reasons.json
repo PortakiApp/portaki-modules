@@ -1,0 +1,10 @@
+{
+  "kv": {
+    "fr": "Reprendre les horaires de la piscine, du spa et des espaces communs enregistrés avant que la plateforme ne les garde.",
+    "en": "Imports the pool, spa and shared space hours saved before the platform kept them."
+  },
+  "platform": {
+    "fr": "Vérifier que le module est activé et complet avant de montrer les horaires des équipements au voyageur.",
+    "en": "Checks the module is enabled and complete before showing the facility hours to the guest."
+  }
+}

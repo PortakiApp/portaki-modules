@@ -1,0 +1,22 @@
+{
+  "email": {
+    "fr": "Rappeler au voyageur, la veille du départ, la liste de départ qu'il n'a pas terminée.",
+    "en": "Reminds the guest, the day before check-out, of a departure list left unfinished."
+  },
+  "events": {
+    "fr": "Signaler l'avancement des listes de l'équipe dans le journal de l'espace, et quand un réassort est fait.",
+    "en": "Reports progress on staff checklists to the workspace activity log, and when supplies are restocked."
+  },
+  "kv": {
+    "fr": "Garder les réglages d'affichage de chaque liste voyageur : étapes visibles, message final et rappel.",
+    "en": "Keeps each guest list's display settings: visible steps, closing message and reminder."
+  },
+  "platform": {
+    "fr": "Vérifier que le module est activé et configuré avant de montrer au voyageur ses listes à cocher.",
+    "en": "Checks the module is enabled and set up before showing the guest their checklists."
+  },
+  "repo": {
+    "fr": "Enregistrer les listes, leurs étapes et ce que le voyageur ou l'équipe a coché.",
+    "en": "Stores the lists, their steps and what the guest or staff ticked off."
+  }
+}

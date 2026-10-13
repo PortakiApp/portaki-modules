@@ -1,0 +1,14 @@
+{
+  "connectors:open-agenda": {
+    "fr": "Chercher sur OpenAgenda les événements à venir autour du logement, pour les ajouter à ceux que l'hôte a saisis.",
+    "en": "Finds upcoming events around the listing on OpenAgenda, to add them to the ones the host entered."
+  },
+  "kv": {
+    "fr": "Garder une heure les événements trouvés autour du logement, pour ne pas interroger OpenAgenda à chaque visite.",
+    "en": "Keeps the events found around the listing for an hour, so OpenAgenda is not queried on every visit."
+  },
+  "platform": {
+    "fr": "Vérifier que le module est activé et réglé avant de montrer la carte des événements dans le livret.",
+    "en": "Checks the module is enabled and set up before showing the events card in the booklet."
+  }
+}

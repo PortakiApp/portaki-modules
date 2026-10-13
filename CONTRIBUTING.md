@@ -53,6 +53,11 @@ cargo install --git https://github.com/PortakiApp/portaki-sdk --branch main --lo
    cd modules/<module-id> && portaki check
    ```
 
+   Every permission and revealed secret the built manifest declares needs a host-facing reason in
+   `modules/<module-id>/permission-reasons.json` (`{ "<key>": { "fr": "…", "en": "…" } }`, ≤160
+   chars) — CI's `portaki release` sends it; `./scripts/check-permission-reasons.sh <module-id>`
+   checks it after `portaki build`.
+
 9. Open a PR to **`main`**. Do not push directly to `main`.
 
 ## Capability IDs

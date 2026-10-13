@@ -1,0 +1,26 @@
+{
+  "kv": {
+    "fr": "Reprendre les réglages Wi-Fi enregistrés avant que la plateforme ne les garde.",
+    "en": "Imports the Wi-Fi settings saved before the platform kept them."
+  },
+  "platform": {
+    "fr": "Suivre le calendrier d'affichage des codes du module d'accès s'il est installé, et vérifier que le Wi-Fi est prêt avant de l'afficher.",
+    "en": "Follows the access module's code reveal schedule when one is installed, and checks the Wi-Fi is set up before showing it."
+  },
+  "reveal:networks[].password:guest_pre_arrival": {
+    "fr": "Donner au voyageur, avant son arrivée, le mot de passe du Wi-Fi.",
+    "en": "Gives the guest the Wi-Fi password before arrival."
+  },
+  "reveal:networks[].password:guest_stay": {
+    "fr": "Donner au voyageur, pendant son séjour, le mot de passe du Wi-Fi.",
+    "en": "Gives the guest the Wi-Fi password during the stay."
+  },
+  "reveal:password:guest_pre_arrival": {
+    "fr": "Donner au voyageur, avant son arrivée, le mot de passe Wi-Fi enregistré avant la liste de réseaux.",
+    "en": "Gives the guest, before arrival, the Wi-Fi password saved before networks became a list."
+  },
+  "reveal:password:guest_stay": {
+    "fr": "Donner au voyageur, pendant son séjour, le mot de passe Wi-Fi enregistré avant la liste de réseaux.",
+    "en": "Gives the guest, during the stay, the Wi-Fi password saved before networks became a list."
+  }
+}

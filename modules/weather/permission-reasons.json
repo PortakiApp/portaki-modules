@@ -1,0 +1,22 @@
+{
+  "connectors:open-weather": {
+    "fr": "Chercher sur OpenWeather la météo du moment et les prévisions au logement.",
+    "en": "Gets the current weather and forecast at the listing from OpenWeather."
+  },
+  "connectors:open-weather-statistics": {
+    "fr": "Afficher sur la page publique les températures moyennes de chaque mois.",
+    "en": "Shows each month's average temperatures on the public page."
+  },
+  "kv": {
+    "fr": "Garder les températures moyennes des mois déjà obtenues, et noter quand OpenWeather ne les fournit pas.",
+    "en": "Keeps the monthly average temperatures already fetched, and notes when OpenWeather does not provide them."
+  },
+  "platform": {
+    "fr": "Vérifier que le module est activé et réglé avant de montrer la météo dans le livret et sur la page publique.",
+    "en": "Checks the module is enabled and set up before showing the weather in the booklet and on the public page."
+  },
+  "repo": {
+    "fr": "Garder la dernière météo et les prévisions du logement, pour ne pas interroger OpenWeather à chaque visite.",
+    "en": "Keeps the listing's latest weather and forecast, so OpenWeather is not queried on every visit."
+  }
+}

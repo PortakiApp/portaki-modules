@@ -1,0 +1,10 @@
+{
+  "connectors:nuki": {
+    "fr": "Créer sur la serrure Nuki le code de chaque séjour, ouvrir à distance et lire l'état de la serrure via Nuki Web.",
+    "en": "Creates each stay's code on the Nuki lock, unlocks remotely and reads the lock's state through Nuki Web."
+  },
+  "kv": {
+    "fr": "Garder cinq minutes l'état de la serrure (batterie, connexion), pour ne pas interroger Nuki à chaque affichage.",
+    "en": "Keeps the lock's state (battery, connection) for five minutes, so Nuki is not queried on every view."
+  }
+}

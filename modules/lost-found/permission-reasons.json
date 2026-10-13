@@ -1,0 +1,18 @@
+{
+  "email": {
+    "fr": "Prévenir l'hôte d'un objet déclaré par un voyageur, et écrire au voyageur quand un objet est trouvé ou après son départ.",
+    "en": "Alerts the host to items guests report, and emails guests about found items and after check-out."
+  },
+  "events": {
+    "fr": "Inscrire au journal de l'espace chaque changement de statut d'un objet perdu ou trouvé.",
+    "en": "Logs each status change of a lost or found item in the workspace activity log."
+  },
+  "platform": {
+    "fr": "Vérifier que le module est activé et configuré avant de montrer au voyageur la carte des objets perdus.",
+    "en": "Checks the module is enabled and set up before showing the guest the lost-and-found card."
+  },
+  "repo": {
+    "fr": "Enregistrer les objets perdus déclarés par les voyageurs et ceux que l'hôte trouve, avec leur statut.",
+    "en": "Stores lost items guests report and those the host finds, with their status."
+  }
+}

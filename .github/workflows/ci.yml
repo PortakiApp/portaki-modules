@@ -162,6 +162,12 @@ jobs:
           working-directory: modules/${{ matrix.module }}
           artifact: wasm-${{ matrix.module }}
 
+      # Le manifeste que ce build vient d'écrire : chaque permission et chaque secret révélé qu'il
+      # déclare doit être justifié dans `permission-reasons.json`, que `portaki release` envoie.
+      # Sans justification, la stable reste en brouillon au registre, sans que rien ne rougisse.
+      - name: Justifications des permissions
+        run: ./scripts/check-permission-reasons.sh "${{ matrix.module }}"
+
   # Ce qui se publie : les modules dont la VERSION a changé, pas tous ceux qu'un commit touche.
   # Une publication est immuable au registre — republier 0.4.1 avec d'autres octets est refusé.
   # Sans ce filtre, tout merge qui modifiait un module sans bumper sa version (une montée de
