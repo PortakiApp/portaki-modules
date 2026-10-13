@@ -98,20 +98,6 @@ jobs:
       - name: SDK pin
         run: ./scripts/check-sdk-pin.sh
 
-      # Une stable publiée sans notes françaises reste en brouillon au registre, sans que rien ne
-      # rougisse : la publication réussit, la version n'entre jamais au catalogue. C'est ce qui a
-      # figé les vingt-trois modules. Le contrôle est ici parce qu'il ne coûte rien et qu'il doit
-      # tomber en PR, avant que la version soit prise.
-      - name: Notes de version françaises
-        run: |
-          ./scripts/check-changelog-fr.sh --self-test
-          ./scripts/check-changelog-fr.sh
-
-      # La table d'une entité ne vient que des migrations, l'écriture prend tous les champs de la
-      # structure : un champ sans colonne fait échouer chaque écriture, et aucun test ne le voit.
-      - name: Colonnes des entités
-        run: ./scripts/check-entity-columns.py
-
       - name: Format
         run: cargo fmt --all -- --check
 
@@ -161,16 +147,15 @@ jobs:
 
       # Tests (batterie de conformité comprise), build --release, contrôle du manifeste, emballage — le code du
       # module ne tourne qu'ici, sans aucun droit. L'artefact part au job `publish`.
+      # Puis `portaki ci check`, que l'action lance après le build : notes de version dans chaque
+      # langue de `listing.json`, justifications de chaque permission déclarée, colonne de chaque
+      # champ d'entité, SDK du lock = CLI. Ce que faisaient `check-changelog-fr.sh`,
+      # `check-permission-reasons.sh` et `check-entity-columns.py` — sans eux une stable reste en
+      # brouillon, ou casse chaque écriture en production, sans que rien ne rougisse.
       - uses: PortakiApp/portaki-release-action/build@v2
         with:
           working-directory: modules/${{ matrix.module }}
           artifact: wasm-${{ matrix.module }}
-
-      # Le manifeste que ce build vient d'écrire : chaque permission et chaque secret révélé qu'il
-      # déclare doit être justifié dans `permission-reasons.json`, que `portaki release` envoie.
-      # Sans justification, la stable reste en brouillon au registre, sans que rien ne rougisse.
-      - name: Justifications des permissions
-        run: ./scripts/check-permission-reasons.sh "${{ matrix.module }}"
 
   # Ce qui se publie : les modules dont la VERSION a changé, pas tous ceux qu'un commit touche.
   # Une publication est immuable au registre — republier 0.4.1 avec d'autres octets est refusé.

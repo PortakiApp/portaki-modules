@@ -19,8 +19,6 @@ cd "$(dirname "$0")/.."
 
 only="${1:-}"
 
-./scripts/check-changelog-fr.sh
-
 done_count=0
 failed=()
 for cargo in modules/*/Cargo.toml; do
