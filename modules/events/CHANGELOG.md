@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.1](https://github.com/PortakiApp/portaki-modules/compare/events-v1.10.0...events-v1.10.1) (2026-10-13)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.10.0 ([f9906b0](https://github.com/PortakiApp/portaki-modules/commit/f9906b0045b44a3f033f1feac24ef7b0ba7f4954))
+
 ## [1.10.0](https://github.com/PortakiApp/portaki-modules/compare/events-v1.9.0...events-v1.10.0) (2026-10-12)
 
 
