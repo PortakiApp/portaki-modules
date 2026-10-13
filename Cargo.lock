@@ -232,7 +232,7 @@ dependencies = [
 
 [[package]]
 name = "emergency-contacts"
-version = "1.9.0"
+version = "1.9.1"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -522,7 +522,7 @@ dependencies = [
 
 [[package]]
 name = "ical-sync"
-version = "1.8.0"
+version = "1.8.1"
 dependencies = [
  "chrono",
  "extism-pdk",

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.9.0...emergency-contacts-v1.9.1) (2026-10-13)
+
+
+### Bug Fixes
+
+* **emergency-contacts:** republish with sms: links allowed ([7b9468c](https://github.com/PortakiApp/portaki-modules/commit/7b9468c21e05136f5fea4aa9b047f083c02660e4))
+
 ## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.8.0...emergency-contacts-v1.9.0) (2026-10-12)
 
 
