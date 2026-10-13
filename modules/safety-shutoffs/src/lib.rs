@@ -25,8 +25,5 @@ portaki_sdk::portaki_module!(
     sort_order = 180,
 );
 
-#[portaki_sdk::capability(required, id = "core.storage")]
-pub const STORAGE: &str = "core.storage";
-
 #[portaki_sdk::capability(provided, id = "amenities.provide")]
 pub const AMENITIES: &str = "amenities.provide";
