@@ -1,0 +1,14 @@
+{
+  "email": {
+    "fr": "Prévenir l'hôte par e-mail quand un voyageur laisse une note et un commentaire.",
+    "en": "Emails the host when a guest leaves a rating and a comment."
+  },
+  "kv": {
+    "fr": "Garder la note et le commentaire de chaque séjour, et si le voyageur accepte de les publier.",
+    "en": "Keeps each stay's rating and comment, and whether the guest agreed to publish them."
+  },
+  "platform": {
+    "fr": "Vérifier que le module est activé et configuré avant de proposer au voyageur de noter son séjour.",
+    "en": "Checks the module is enabled and set up before asking the guest to rate the stay."
+  }
+}

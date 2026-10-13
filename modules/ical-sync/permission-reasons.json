@@ -1,0 +1,10 @@
+{
+  "email": {
+    "fr": "Prévenir l'hôte quand un calendrier ne se synchronise plus ou qu'un séjour importé n'a pas l'e-mail du voyageur.",
+    "en": "Tells the host when a calendar stops syncing or an imported stay lacks the guest's email."
+  },
+  "kv": {
+    "fr": "Garder l'état de la dernière synchronisation : séjours déjà importés, erreurs et historique récent.",
+    "en": "Keeps the last sync state: stays already imported, errors and recent history."
+  }
+}

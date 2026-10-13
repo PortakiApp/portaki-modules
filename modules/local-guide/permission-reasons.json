@@ -1,0 +1,18 @@
+{
+  "connectors:tiqets": {
+    "fr": "Chercher sur Tiqets les billets et activités en vente autour du logement, avec prix et photos.",
+    "en": "Finds tickets and activities on sale around the listing on Tiqets, with prices and photos."
+  },
+  "connectors:viator": {
+    "fr": "Chercher sur Viator les activités proposées dans la ville du logement.",
+    "en": "Finds activities offered in the listing's city on Viator."
+  },
+  "kv": {
+    "fr": "Garder un jour les activités Tiqets et Viator trouvées, et noter une clé manquante pour le dire à l'hôte.",
+    "en": "Keeps the Tiqets and Viator activities found for a day, and notes a missing key to tell the host."
+  },
+  "platform": {
+    "fr": "Vérifier que le module est activé et réglé avant de montrer le guide local dans le livret et sur la page publique.",
+    "en": "Checks the module is enabled and set up before showing the local guide in the booklet and on the public page."
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "kv": {
+    "fr": "Reprendre les réglages de la borne de recharge enregistrés avant que la plateforme ne les garde.",
+    "en": "Imports the charging spot settings saved before the platform kept them."
+  },
+  "platform": {
+    "fr": "Vérifier que le module est activé et complet avant de montrer la borne de recharge au voyageur.",
+    "en": "Checks the module is enabled and complete before showing the charging spot to the guest."
+  },
+  "reveal:charger_pin:guest_pre_arrival": {
+    "fr": "Montrer au voyageur, avant son arrivée, le code ou badge de la borne de recharge.",
+    "en": "Shows the guest the charger's code or badge before arrival."
+  },
+  "reveal:charger_pin:guest_stay": {
+    "fr": "Montrer au voyageur, pendant son séjour, le code ou badge de la borne de recharge.",
+    "en": "Shows the guest the charger's code or badge during the stay."
+  },
+  "reveal:parking_code:guest_pre_arrival": {
+    "fr": "Montrer au voyageur, avant son arrivée, le code de la barrière de l'emplacement de recharge.",
+    "en": "Shows the guest the barrier code of the charging spot before arrival."
+  },
+  "reveal:parking_code:guest_stay": {
+    "fr": "Montrer au voyageur, pendant son séjour, le code de la barrière de l'emplacement de recharge.",
+    "en": "Shows the guest the barrier code of the charging spot during the stay."
+  }
+}

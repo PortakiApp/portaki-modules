@@ -1,0 +1,10 @@
+{
+  "platform": {
+    "fr": "Vérifier que le module est activé et configuré avant d'afficher vos rubriques libres au voyageur dans le livret.",
+    "en": "Checks the module is enabled and set up before showing your custom sections to the guest in the booklet."
+  },
+  "repo": {
+    "fr": "Garder les rubriques libres du logement, leur ordre, ainsi que leur titre et leur texte dans chaque langue.",
+    "en": "Keeps the listing's custom sections, their order, and their title and text in each language."
+  }
+}

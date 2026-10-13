@@ -1,0 +1,18 @@
+{
+  "email": {
+    "fr": "Prévenir l'hôte qu'un voyageur signale un consommable manquant, et transmettre sa réponse au voyageur.",
+    "en": "Alerts the host when a guest reports a missing supply, and emails the host's reply to the guest."
+  },
+  "kv": {
+    "fr": "Garder le stock des consommables du logement et les signalements de manque.",
+    "en": "Keeps the listing's supplies stock and the shortages guests report."
+  },
+  "platform": {
+    "fr": "Vérifier que le module est activé et configuré avant de proposer au voyageur de signaler un manque.",
+    "en": "Checks the module is enabled and set up before letting the guest report a missing supply."
+  },
+  "repo": {
+    "fr": "Enregistrer la liste des consommables du logement et chaque demande de réassort d'un voyageur.",
+    "en": "Stores the listing's supplies list and each restock request from a guest."
+  }
+}

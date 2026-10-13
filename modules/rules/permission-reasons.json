@@ -1,0 +1,10 @@
+{
+  "platform": {
+    "fr": "Vérifier que le module est activé et configuré avant d'afficher le règlement intérieur au voyageur dans le livret.",
+    "en": "Checks the module is enabled and set up before showing the house rules to the guest in the booklet."
+  },
+  "repo": {
+    "fr": "Garder le règlement intérieur du logement, affiché dans le livret et résumé dans l'e-mail d'arrivée.",
+    "en": "Keeps the listing's house rules, shown in the booklet and summed up in the arrival email."
+  }
+}

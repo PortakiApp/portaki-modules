@@ -1,0 +1,22 @@
+{
+  "email": {
+    "fr": "Envoyer au voyageur le formulaire d'avant arrivée, le renvoyer à la demande de l'hôte et le relancer s'il reste sans réponse.",
+    "en": "Sends the guest the pre-arrival form, resends it when the host asks, and reminds the guest if it is left unanswered."
+  },
+  "events": {
+    "fr": "Signaler à la plateforme que le formulaire est rempli, pour inscrire au séjour l'heure d'arrivée et les notes du voyageur.",
+    "en": "Tells the platform the form is filled in, so the guest's arrival time and notes are saved on the stay."
+  },
+  "kv": {
+    "fr": "Lire les réglages du formulaire enregistrés par une ancienne version du module, tant que la plateforme n'en a pas.",
+    "en": "Reads form settings saved by an older version of the module, until the platform holds them."
+  },
+  "platform": {
+    "fr": "Vérifier que le module est activé et réglé avant de montrer le formulaire au voyageur dans le livret.",
+    "en": "Checks the module is enabled and set up before showing the form to the guest in the booklet."
+  },
+  "repo": {
+    "fr": "Garder les réponses de chaque voyageur au formulaire d'avant arrivée.",
+    "en": "Keeps each guest's answers to the pre-arrival form."
+  }
+}

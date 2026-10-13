@@ -1,0 +1,10 @@
+{
+  "platform": {
+    "fr": "Vérifier que le module est activé et configuré avant d'afficher les appareils au voyageur dans le livret.",
+    "en": "Checks the module is enabled and set up before showing the appliances to the guest in the booklet."
+  },
+  "repo": {
+    "fr": "Garder la liste des appareils du logement, avec leurs étapes d'utilisation, notices et consignes de sécurité.",
+    "en": "Keeps the listing's appliances with their how-to steps, manuals and safety notes."
+  }
+}

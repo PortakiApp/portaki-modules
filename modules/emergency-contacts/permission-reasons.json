@@ -1,0 +1,10 @@
+{
+  "kv": {
+    "fr": "Reprendre les numéros utiles enregistrés avant que la plateforme ne garde les réglages.",
+    "en": "Imports the useful numbers saved before the platform kept the settings."
+  },
+  "platform": {
+    "fr": "Vérifier que le module est activé et complet avant de montrer les numéros d'urgence au voyageur.",
+    "en": "Checks the module is enabled and complete before showing the emergency numbers to the guest."
+  }
+}

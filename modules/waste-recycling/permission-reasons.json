@@ -1,0 +1,18 @@
+{
+  "kv": {
+    "fr": "Retenir les soirs où l'hôte a coché les bacs sortis avant une collecte, et reprendre les anciens réglages du tri.",
+    "en": "Remembers the evenings the host ticked the bins out before a collection, and imports the older sorting settings."
+  },
+  "platform": {
+    "fr": "Suivre le calendrier d'affichage des codes du module d'accès pour le code du local poubelles, et vérifier que le tri est prêt.",
+    "en": "Follows the access module's code reveal schedule for the bin room code, and checks the sorting guide is set up."
+  },
+  "reveal:bin_room_code:guest_pre_arrival": {
+    "fr": "Montrer au voyageur, avant son arrivée, le code du local poubelles.",
+    "en": "Shows the guest the bin room code before arrival."
+  },
+  "reveal:bin_room_code:guest_stay": {
+    "fr": "Montrer au voyageur, pendant son séjour, le code du local poubelles.",
+    "en": "Shows the guest the bin room code during the stay."
+  }
+}
