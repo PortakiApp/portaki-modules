@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.3](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.2...access-guide-v1.10.3) (2026-10-13)
+
+
+### Bug Fixes
+
+* **access-guide:** let host tick the code rotation task ([90224fd](https://github.com/PortakiApp/portaki-modules/commit/90224fd4ffc1a927939516361f533152d046e981))
+* **deps:** bump portaki-sdk to 10.12.0 ([ccb811c](https://github.com/PortakiApp/portaki-modules/commit/ccb811c7c87b650034054a30b27ae60155ed1d23))
+
 ## [1.10.2](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.1...access-guide-v1.10.2) (2026-10-13)
 
 

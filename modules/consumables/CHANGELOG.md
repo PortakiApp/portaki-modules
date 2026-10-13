@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.11.3](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.11.2...consumables-v2.11.3) (2026-10-13)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.12.0 ([ccb811c](https://github.com/PortakiApp/portaki-modules/commit/ccb811c7c87b650034054a30b27ae60155ed1d23))
+
 ## [2.11.2](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.11.1...consumables-v2.11.2) (2026-10-13)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.3](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v1.9.2...ev-parking-v1.9.3) (2026-10-13)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.12.0 ([ccb811c](https://github.com/PortakiApp/portaki-modules/commit/ccb811c7c87b650034054a30b27ae60155ed1d23))
+
 ## [1.9.2](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v1.9.1...ev-parking-v1.9.2) (2026-10-13)
 
 

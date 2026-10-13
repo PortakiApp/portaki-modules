@@ -1,6 +1,6 @@
 [package]
 name = "ev-parking"
-version = "1.9.2"
+version = "1.9.3"
 edition.workspace = true
 license.workspace = true
 description = "Portaki guest EV parking module — spot label, gate code, charger PIN, timed reveal"
