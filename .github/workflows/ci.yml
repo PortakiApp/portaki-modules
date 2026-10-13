@@ -20,9 +20,11 @@ on:
         description: "Un module, plusieurs séparés par des virgules, `all` pour tous (vide : comportement normal)"
         required: false
 
+# Sur une PR, un nouveau push remplace l'ancien run. Sur main, jamais : un run peut être en train de
+# publier, et l'annuler laisse des modules bumpés mais jamais poussés (13 oct. : 16 sur 23).
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
