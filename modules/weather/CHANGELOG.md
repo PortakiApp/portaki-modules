@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.2](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.7.1...weather-v1.7.2) (2026-10-13)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.11.0 ([26f9cd8](https://github.com/PortakiApp/portaki-modules/commit/26f9cd81a19fa03ba6adc3f8bdae4ed2c6ee18ce))
+
 ## [1.7.1](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.7.0...weather-v1.7.1) (2026-10-13)
 
 

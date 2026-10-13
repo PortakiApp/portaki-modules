@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.2](https://github.com/PortakiApp/portaki-modules/compare/safety-shutoffs-v0.8.1...safety-shutoffs-v0.8.2) (2026-10-13)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.11.0 ([26f9cd8](https://github.com/PortakiApp/portaki-modules/commit/26f9cd81a19fa03ba6adc3f8bdae4ed2c6ee18ce))
+
 ## [0.8.1](https://github.com/PortakiApp/portaki-modules/compare/safety-shutoffs-v0.8.0...safety-shutoffs-v0.8.1) (2026-10-13)
 
 
