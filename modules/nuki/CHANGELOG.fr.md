@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.1
+
+Montée technique.
+
+* Le module passe à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 1.8.0
 
 Les réglages Nuki, à l'image des autres modules.

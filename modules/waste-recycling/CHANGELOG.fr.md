@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.12.1
+
+Montée technique.
+
+* Le module passe à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 1.12.0
 
 Les réglages Tri & déchets redessinés.

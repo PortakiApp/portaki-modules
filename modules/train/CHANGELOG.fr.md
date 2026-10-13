@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.5.1
+
+Montée technique.
+
+* Le module passe à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 2.5.0
 
 Les réglages Trains, à l'image des autres modules.

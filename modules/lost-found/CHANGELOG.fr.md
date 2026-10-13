@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.13.1
+
+Montée technique.
+
+* Le module passe à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 1.13.0
 
 Les réglages Objet oublié, à l'image des autres modules.
