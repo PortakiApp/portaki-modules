@@ -116,7 +116,15 @@ for cargo in modules/*/Cargo.toml; do
 
   # La section de cette version, jusqu'au titre suivant ; `## [1.2.0](…)` compte aussi.
   bullets="$(awk -v version="$version" '
-    /^## /  { if (inside) exit; inside = (index($0, version) > 0); next }
+    /^## /  {
+      if (inside) exit
+      token = substr($0, 4)
+      if (substr(token, 1, 1) == "[") { sub(/^\[/, "", token); sub(/\].*/, "", token) }
+      else { sub(/[ \t].*/, "", token) }
+      sub(/^v/, "", token)
+      inside = (token == version)
+      next
+    }
     inside && /^\* / { print substr($0, 3) }
   ' "$changelog")"
 
