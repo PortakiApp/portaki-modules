@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.2
+
+Montée technique.
+
+* Le module passe à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 1.9.1
 
 Le SMS au 114 s'ouvre.

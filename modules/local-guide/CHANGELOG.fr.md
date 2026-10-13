@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.14.1
+
+Montée technique.
+
+* Le module passe à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 1.14.0
 
 La page Bons plans et activités refaite.

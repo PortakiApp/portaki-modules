@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.1
+
+Montée technique.
+
+* Le module passe à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 0.8.0
 
 Les emplacements en tableau, et cinq proposés d'emblée.

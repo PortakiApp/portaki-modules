@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.1
+
+Montée technique.
+
+* Le module passe à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 0.9.0
 
 Vos itinéraires en tableau, et une trace qui remplit le reste.

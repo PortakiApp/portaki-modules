@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.1
+
+Montée technique.
+
+* Le module passe à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 1.7.0
 
 Les réglages Météo, à l'image des autres modules.

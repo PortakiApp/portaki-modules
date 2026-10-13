@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.2
+
+Montée technique.
+
+* Le module passe à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 1.8.1
 
 Les liens de vos calendriers restent réservés à la synchro.
