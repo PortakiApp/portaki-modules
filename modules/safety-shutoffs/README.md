@@ -15,7 +15,7 @@ OCI image: `oci.portaki.app/modules/safety-shutoffs:<semver>`
 
 | Capability | Required | Purpose |
 |------------|----------|---------|
-| `core.storage` | Yes | Host configuration (`shutoffs`, `general_note`) |
+| `amenities.provide` | No (provided) | Lists the shutoffs among the property amenities |
 
 ## Surfaces
 
