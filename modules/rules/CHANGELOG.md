@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1](https://github.com/PortakiApp/portaki-modules/compare/rules-v1.9.0...rules-v1.9.1) (2026-10-13)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.10.0 ([f9906b0](https://github.com/PortakiApp/portaki-modules/commit/f9906b0045b44a3f033f1feac24ef7b0ba7f4954))
+
 ## [1.9.0](https://github.com/PortakiApp/portaki-modules/compare/rules-v1.8.1...rules-v1.9.0) (2026-10-12)
 
 
