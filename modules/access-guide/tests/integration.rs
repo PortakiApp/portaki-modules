@@ -1559,8 +1559,8 @@ fn the_rotation_reminder_follows_each_departure() {
         }
         .to_model("fr")
     };
-    assert!(rotate_code_tasks(&config(false), &args, "Europe/Paris").is_empty());
-    let tasks = rotate_code_tasks(&config(true), &args, "Europe/Paris");
+    assert!(rotate_code_tasks(&config(false), &args, "Europe/Paris", |_| false).is_empty());
+    let tasks = rotate_code_tasks(&config(true), &args, "Europe/Paris", |_| false);
     assert_eq!(tasks.len(), 1, "only the departure inside the window");
     assert_eq!(
         tasks[0].title.get("fr"),
@@ -1569,6 +1569,59 @@ fn the_rotation_reminder_follows_each_departure() {
     assert_eq!(tasks[0].context.get("fr"), "Après le départ du 29/08");
     assert_eq!(tasks[0].at, at("2026-08-29T08:00:00Z"));
     assert_eq!(tasks[0].stay_id, Some(args.stays[0].id));
+    // Une case « Code changé » : sans elle, rien ne la faisait sortir d'À venir.
+    assert_eq!(tasks[0].items.len(), 1);
+    assert_eq!(tasks[0].items[0].label.get("fr"), "Code changé");
+    assert_eq!(tasks[0].items[0].label.get("en"), "Code changed");
+    assert!(!tasks[0].items[0].done);
+    let id = tasks[0].id.clone();
+    let ticked = rotate_code_tasks(&config(true), &args, "Europe/Paris", |task| task == id);
+    assert!(ticked[0].items[0].done);
+}
+
+/// « Code changé » se coche, se décoche et tient d'un calcul à l'autre ; le code manquant ne se
+/// coche pas, et le voyageur ne coche rien.
+#[test]
+#[serial]
+fn the_rotation_reminder_is_ticked_by_the_host() {
+    use access_guide::{task_complete, task_toggle};
+    use portaki_sdk::contracts::timeline::{TaskCompleteArgs, TaskToggleArgs};
+    let stay = Uuid::new_v4();
+    let task_id = format!("rotate-code:{stay}");
+    let done = |id: &str| {
+        portaki_sdk::host::kv::get(&format!("task:{id}"))
+            .expect("kv")
+            .is_some()
+    };
+    let toggle = |task_id: &str, item_id: &str, done: bool| TaskToggleArgs {
+        property_id: Uuid::nil(),
+        task_id: task_id.into(),
+        item_id: item_id.into(),
+        done,
+        photo: None,
+    };
+    let complete = |task_id: &str| TaskCompleteArgs {
+        property_id: Uuid::nil(),
+        task_id: task_id.into(),
+    };
+    MockContext::host().run(|ctx| {
+        task_toggle(ctx.clone(), toggle(&task_id, "changed", true)).expect("ticked");
+        assert!(done(&task_id));
+        task_toggle(ctx.clone(), toggle(&task_id, "changed", false)).expect("unticked");
+        assert!(!done(&task_id));
+        task_complete(ctx.clone(), complete(&task_id)).expect("complete");
+        assert!(done(&task_id));
+
+        assert!(task_toggle(ctx.clone(), toggle(&task_id, "other", true)).is_err());
+        let missing = format!("missing-code:{stay}");
+        assert!(task_complete(ctx.clone(), complete(&missing)).is_err());
+        assert!(!done(&missing));
+        assert!(task_complete(ctx.clone(), complete("rotate-code:demain")).is_err());
+    });
+    MockContext::guest().run(|ctx| {
+        let refused = task_complete(ctx, complete(&task_id)).expect_err("guest");
+        assert!(refused.to_string().contains("host_only"));
+    });
 }
 
 /// One `Section` per block of the spec, in its order, never a `Card` inside; the blocks of a

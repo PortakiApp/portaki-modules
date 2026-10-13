@@ -354,5 +354,6 @@
   "guest.desk.closed": "休息",
   "guest.method.otherHow": "如何进入",
   "task.rotateCode.title": "更换钥匙盒密码",
-  "task.rotateCode.context": "{date} 退房后"
+  "task.rotateCode.context": "{date} 退房后",
+  "task.rotateCode.item": "已更换密码"
 }
