@@ -1,4 +1,8 @@
 {
+  "host:files": {
+    "fr": "Lire la trace GPX que vous déposez pour en tirer la distance, le dénivelé, le départ et le tracé montrés aux voyageurs.",
+    "en": "Reads the GPX track you upload to work out the distance, elevation, start point and route shown to guests."
+  },
   "platform": {
     "fr": "Vérifier que le module est activé et configuré avant d'afficher les randonnées au voyageur et sur la page publique.",
     "en": "Checks the module is enabled and set up before showing the hiking trails to guests and on the public page."
