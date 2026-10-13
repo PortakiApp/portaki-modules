@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.2
+
+La trace GPX enfin lue.
+
+* La trace GPX déposée est enfin lue : distance, dénivelé, départ et tracé s'affichent ; le module demande l'accès à vos fichiers déposés.
+
 ## 0.9.1
 
 Montée technique.

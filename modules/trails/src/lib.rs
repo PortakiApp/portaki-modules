@@ -26,6 +26,3 @@ portaki_sdk::portaki_module!(
     maturity = Maturity::Stable,
     sort_order = 190,
 );
-
-#[portaki_sdk::capability(required, id = "core.storage")]
-pub const STORAGE: &str = "core.storage";

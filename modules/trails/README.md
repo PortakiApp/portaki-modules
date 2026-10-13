@@ -11,12 +11,6 @@ Part of the [`portaki-modules`](https://github.com/PortakiApp/portaki-modules) m
 
 OCI image: `oci.portaki.app/modules/trails:<semver>`
 
-## Capabilities
-
-| Capability | Required | Purpose |
-|------------|----------|---------|
-| `core.storage` | Yes | Host configuration (`trails`, `commune_url`) |
-
 ## Surfaces
 
 | Shell | Surface id | Description |
