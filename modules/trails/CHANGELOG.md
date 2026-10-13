@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.9.2](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.9.1...trails-v0.9.2) (2026-10-13)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.11.0 ([26f9cd8](https://github.com/PortakiApp/portaki-modules/commit/26f9cd81a19fa03ba6adc3f8bdae4ed2c6ee18ce))
+* **trails:** declare host:files for GPX reads ([9b8f0c2](https://github.com/PortakiApp/portaki-modules/commit/9b8f0c226bddc6b7a57b8fdee17d9743c0daff2e))
+
 ## [0.9.1](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.9.0...trails-v0.9.1) (2026-10-13)
 
 
