@@ -4,8 +4,8 @@
     "en": "Finds nearby stations and upcoming departures through the SNCF API."
   },
   "kv": {
-    "fr": "Noter un jour qu'une clé SNCF manque, pour le dire à l'hôte sans réessayer en boucle.",
-    "en": "Notes for a day that an SNCF key is missing, to tell the host without retrying in a loop."
+    "fr": "Garder les gares trouvées un mois et les départs deux minutes, et noter un jour qu'une clé SNCF manque.",
+    "en": "Caches stations found for a month and departures for two minutes, and notes for a day that an SNCF key is missing."
   },
   "platform": {
     "fr": "Vérifier que le module est activé et réglé avant de montrer les trains dans le livret.",

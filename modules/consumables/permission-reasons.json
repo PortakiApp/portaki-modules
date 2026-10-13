@@ -4,8 +4,8 @@
     "en": "Alerts the host when a guest reports a missing supply, and emails the host's reply to the guest."
   },
   "kv": {
-    "fr": "Garder le stock des consommables du logement et les signalements de manque.",
-    "en": "Keeps the listing's supplies stock and the shortages guests report."
+    "fr": "Garder le délai de réassort annoncé par l'hôte et les réglages des demandes des voyageurs.",
+    "en": "Keeps the restock delay the host announces and the settings for guest requests."
   },
   "platform": {
     "fr": "Vérifier que le module est activé et configuré avant de proposer au voyageur de signaler un manque.",
