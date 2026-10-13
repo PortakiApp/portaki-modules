@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.1
+
+Le SMS au 114 s'ouvre.
+
+* Le bouton « SMS au 114 » ouvre désormais la messagerie du voyageur ; la 1.9.0, refusée à la publication, n'a jamais été proposée.
+
 ## 1.9.0
 
 La page Urgences refaite.
