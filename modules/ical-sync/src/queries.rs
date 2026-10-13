@@ -58,8 +58,13 @@ pub struct ApplyFeedsResponse {
 }
 
 /// Returns HTTPS .ics URLs for the platform to fetch (`hostScheduledSync.sourcesQuery`).
+///
+/// The links are row secrets: only the platform, calling as the host, gets them — never a guest.
 #[portaki_sdk::query(name = "listSources", example(label = "Calendriers à relever"))]
 pub fn list_sources(ctx: Context) -> Result<ListSourcesResponse> {
+    if ctx.guest.is_some() {
+        return Err(PortakiError::Host("host_only".into()));
+    }
     let config = ModuleConfig::load(&ctx)?;
     let sources = config
         .connected_calendars()

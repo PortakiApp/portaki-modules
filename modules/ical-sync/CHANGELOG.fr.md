@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.1
+
+Les liens de vos calendriers restent réservés à la synchro.
+
+* Les liens de vos calendriers ne sont remis qu'à la synchro de Portaki, jamais à un voyageur.
+
 ## 1.8.0
 
 Vos calendriers en tableau, leurs liens gardés secrets.
