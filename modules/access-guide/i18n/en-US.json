@@ -354,5 +354,6 @@
   "guest.desk.closed": "Closed",
   "guest.method.otherHow": "How to get in",
   "task.rotateCode.title": "Change the key box code",
-  "task.rotateCode.context": "After the departure on {date}"
+  "task.rotateCode.context": "After the departure on {date}",
+  "task.rotateCode.item": "Code changed"
 }

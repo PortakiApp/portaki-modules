@@ -354,5 +354,6 @@
   "guest.desk.closed": "Fechado",
   "guest.method.otherHow": "Como entrar",
   "task.rotateCode.title": "Mudar o código da caixa de chaves",
-  "task.rotateCode.context": "Após a saída de {date}"
+  "task.rotateCode.context": "Após a saída de {date}",
+  "task.rotateCode.item": "Código alterado"
 }

@@ -26,7 +26,10 @@ pub use guest::{
 };
 pub use host::{render_host_change_code, render_host_main, render_host_stay};
 pub use queries::{map_markers, publish_readiness, MapMarkersResponse};
-pub use tasks::{missing_code_tasks, missing_stay_code_tasks, rotate_code_tasks, timeline_tasks};
+pub use tasks::{
+    missing_code_tasks, missing_stay_code_tasks, rotate_code_tasks, task_complete, task_toggle,
+    timeline_tasks,
+};
 pub use texts::{lang_code, ModuleTexts, StepText};
 
 portaki_sdk::portaki_module!(

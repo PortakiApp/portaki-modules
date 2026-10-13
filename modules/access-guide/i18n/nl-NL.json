@@ -354,5 +354,6 @@
   "guest.desk.closed": "Gesloten",
   "guest.method.otherHow": "Zo komt u binnen",
   "task.rotateCode.title": "Code van het sleutelkastje wijzigen",
-  "task.rotateCode.context": "Na het vertrek op {date}"
+  "task.rotateCode.context": "Na het vertrek op {date}",
+  "task.rotateCode.item": "Code gewijzigd"
 }

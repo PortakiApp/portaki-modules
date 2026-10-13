@@ -354,5 +354,6 @@
   "guest.desk.closed": "休業",
   "guest.method.otherHow": "入り方",
   "task.rotateCode.title": "キーボックスのコードを変更",
-  "task.rotateCode.context": "{date}のチェックアウト後"
+  "task.rotateCode.context": "{date}のチェックアウト後",
+  "task.rotateCode.item": "コードを変更済み"
 }

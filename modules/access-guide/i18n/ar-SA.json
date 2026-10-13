@@ -354,5 +354,6 @@
   "guest.desk.closed": "مغلق",
   "guest.method.otherHow": "كيفية الدخول",
   "task.rotateCode.title": "تغيير رمز صندوق المفاتيح",
-  "task.rotateCode.context": "بعد المغادرة في {date}"
+  "task.rotateCode.context": "بعد المغادرة في {date}",
+  "task.rotateCode.item": "تم تغيير الرمز"
 }
