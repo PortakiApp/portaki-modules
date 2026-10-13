@@ -16,8 +16,8 @@ pub use config::{CalendarFeed, CalendarFormat, CalendarRow, Config, ModuleConfig
 pub use host::{render_host_main, render_host_stats, render_host_stay, stats_summary};
 pub use ics::{parse_stay_rows, FeedParseContext, StayImportRow};
 pub use queries::{
-    apply_feeds, list_sources, ApplyFeedsArgs, ApplyFeedsResponse, FeedBody, FeedSource,
-    ListSourcesResponse,
+    apply_feeds, list_sources, publish_readiness, ApplyFeedsArgs, ApplyFeedsResponse, FeedBody,
+    FeedSource, ListSourcesResponse,
 };
 pub use tasks::timeline_tasks;
 
