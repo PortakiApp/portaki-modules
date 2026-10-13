@@ -101,7 +101,9 @@ jobs:
       # figé les vingt-trois modules. Le contrôle est ici parce qu'il ne coûte rien et qu'il doit
       # tomber en PR, avant que la version soit prise.
       - name: Notes de version françaises
-        run: ./scripts/check-changelog-fr.sh
+        run: |
+          ./scripts/check-changelog-fr.sh --self-test
+          ./scripts/check-changelog-fr.sh
 
       # La table d'une entité ne vient que des migrations, l'écriture prend tous les champs de la
       # structure : un champ sans colonne fait échouer chaque écriture, et aucun test ne le voit.
