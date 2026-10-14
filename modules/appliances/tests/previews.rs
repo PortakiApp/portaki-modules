@@ -37,7 +37,14 @@ fn seed(ctx: Context) {
             status: ApplianceStatus::Active,
             model: String::new(),
             video_url: String::new(),
-            steps: None,
+            // Une étape avec sa photo : la fiche d'un appareil montre ce que l'hôte a photographié.
+            steps: Some(json!([
+                {
+                    "text": "Posez une casserole à fond aimanté au centre du foyer.",
+                    "image": "portaki-file:plaques-induction-1"
+                },
+                { "text": "Appuyez 2 secondes sur la touche marche, puis choisissez la puissance." }
+            ])),
         },
         SaveApplianceArgs {
             id: Some("lave-linge".into()),
