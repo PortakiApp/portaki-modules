@@ -983,3 +983,27 @@ fn the_tab_filters_reports_and_adds_one() {
     assert!(render(json!({ "add": "1" })).contains("host.add.noStay"));
     let _ = open;
 }
+
+/// « Un souci avec cet appareil ? » ouvre la feuille déjà remplie : la catégorie et le nom de
+/// l'appareil arrivent par l'adresse. Une catégorie que l'hôte ne propose pas est ignorée.
+#[test]
+#[serial]
+fn the_form_opens_prefilled_from_its_address() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .run(|mut ctx| {
+            ctx.input = json!({ "category": "appliance", "summary": "  Plaques à induction " });
+            let json = serde_json::to_string(&render_guest_form(ctx).expect("form")).unwrap();
+            assert!(json.contains(r#""value":"appliance""#), "{json}");
+            assert!(json.contains(r#""value":"Plaques à induction""#), "{json}");
+        });
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_config(&json!({ "category_noise": true, "category_other": true }))
+        .run(|mut ctx| {
+            ctx.input = json!({ "category": "appliance" });
+            let json = serde_json::to_string(&render_guest_form(ctx).expect("form")).unwrap();
+            assert!(!json.contains(r#""value":"appliance""#), "{json}");
+        });
+}
