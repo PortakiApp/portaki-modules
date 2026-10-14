@@ -32,13 +32,28 @@ pub fn render_guest_form(ctx: GuestContext) -> Result<Surface> {
                 })
         })
         .flatten();
+    let categories = config.categories();
+    // Un autre écran peut ouvrir la feuille déjà remplie — « Un souci avec cet appareil ? » sur
+    // la fiche d'un appareil passe `category` et `summary` dans l'adresse. C'est du texte de la
+    // chaîne de requête : la catégorie ne passe que si l'hôte la propose, le titre est borné.
+    let category = ctx
+        .input_str("category")
+        .and_then(|wire| categories.iter().copied().find(|offered| *offered == wire));
+    let summary = ctx
+        .input_str("summary")
+        .map(|text| text.chars().take(PREFILL_SUMMARY_MAX_CHARS).collect());
     Ok(build_form_surface(&FormInputs {
-        categories: config.categories(),
+        categories,
         photo: config.photo_allowed(),
         urgent,
         response_time: config.response_time(),
+        category,
+        summary,
     }))
 }
+
+/// Un titre pré-rempli reste un titre : le nom d'un appareil, pas un mode d'emploi entier.
+const PREFILL_SUMMARY_MAX_CHARS: usize = 120;
 
 /// Ce que la feuille a besoin de savoir de la configuration.
 pub struct FormInputs {
@@ -49,6 +64,10 @@ pub struct FormInputs {
     pub urgent: Option<String>,
     /// `within_day`, `within_hour` ou `none`.
     pub response_time: &'static str,
+    /// La catégorie déjà choisie, quand un autre écran ouvre la feuille (une catégorie offerte).
+    pub category: Option<&'static str>,
+    /// Le titre déjà écrit — le nom de l'appareil en panne.
+    pub summary: Option<String>,
 }
 
 pub fn build_form_surface(inputs: &FormInputs) -> Surface {
@@ -95,7 +114,7 @@ fn build_form(inputs: &FormInputs) -> Form {
     // Une seule liste, posée en une fois : `children` **remplace** là où `child` allonge, et un
     // `child` suivi d'un `children` perdait silencieusement l'en-tête.
     let mut children = vec![sheet_header()];
-    children.extend(category_field(categories));
+    children.extend(category_field(categories, inputs.category));
     let mut form = Form::new();
     for child in children {
         form = form.child(child);
@@ -106,11 +125,15 @@ fn build_form(inputs: &FormInputs) -> Form {
                 .name("summary")
                 .label("i18n:form.summary.label")
                 .required(true)
-                .child(
-                    TextInput::new()
+                .child({
+                    let input = TextInput::new()
                         .name("summary")
-                        .placeholder("i18n:form.summary.placeholder"),
-                ),
+                        .placeholder("i18n:form.summary.placeholder");
+                    match &inputs.summary {
+                        Some(summary) => input.value(summary.clone()),
+                        None => input,
+                    }
+                }),
         )
         .child(
             Field::new()
@@ -187,7 +210,7 @@ const AIDE: &str = "aide";
 /// Choisir dans une liste d'un seul élément n'est pas un choix : c'est une ligne de plus à lire
 /// dans une feuille qu'on ouvre parce que quelque chose ne va pas. La catégorie part quand même
 /// au signalement, le formulaire la porte en valeur plutôt qu'en question.
-fn category_field(categories: &[&str]) -> Vec<Component> {
+fn category_field(categories: &[&str], selected: Option<&str>) -> Vec<Component> {
     match categories {
         [] => Vec::new(),
         [only] => vec![Component::TextInput(
@@ -198,7 +221,10 @@ fn category_field(categories: &[&str]) -> Vec<Component> {
                 .name("category")
                 .label("i18n:form.category.label")
                 .required(true)
-                .child(category_choice_list(many)),
+                .child(match selected {
+                    Some(wire) => category_choice_list(many).value(wire),
+                    None => category_choice_list(many),
+                }),
         )],
     }
 }

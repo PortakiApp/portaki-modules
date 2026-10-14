@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.5
+
+Un signalement peut s'ouvrir déjà rempli.
+
+* Ouvert depuis la fiche d'un appareil, le formulaire arrive avec la catégorie « Appareil ou équipement » et le nom de l'appareil déjà saisis.
+
 ## 1.9.2
 
 Montée technique.
