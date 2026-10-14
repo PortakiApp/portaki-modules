@@ -32,6 +32,10 @@ fn only_located_spots_become_markers() {
             assert_eq!(marker.label.as_deref(), Some("Plage du Midi"));
             assert_eq!(marker.category.as_deref(), Some("Plage"));
             assert!((marker.lat - 43.548).abs() < 1e-9);
+            assert_eq!(
+                serde_json::to_value(&marker.action).expect("action")["to"],
+                "local-guide/detail/plage"
+            );
             assert!((marker.lng - 7.005).abs() < 1e-9);
         });
 }
