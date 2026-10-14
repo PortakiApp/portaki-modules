@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.5](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.14.4...local-guide-v1.14.5) (2026-10-14)
+
+
+### Bug Fixes
+
+* **local-guide:** give spot tiles their host note ([87a46b4](https://github.com/PortakiApp/portaki-modules/commit/87a46b495d7087c3e2c7317e701ef7a56f27f0f0))
+
 ## [1.14.4](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.14.3...local-guide-v1.14.4) (2026-10-14)
 
 

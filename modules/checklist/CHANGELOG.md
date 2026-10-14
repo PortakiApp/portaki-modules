@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.4](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.9.3...checklist-v1.9.4) (2026-10-14)
+
+
+### Bug Fixes
+
+* **checklist:** hide home card until list opens ([91ac68b](https://github.com/PortakiApp/portaki-modules/commit/91ac68b5ecf68e112e711faf4f9a49acbeaacc30))
+
 ## [1.9.3](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.9.2...checklist-v1.9.3) (2026-10-13)
 
 

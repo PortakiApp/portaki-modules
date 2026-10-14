@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.4](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.7.3...weather-v1.7.4) (2026-10-14)
+
+
+### Bug Fixes
+
+* **weather:** drop accent tint on hero and today ([65d8426](https://github.com/PortakiApp/portaki-modules/commit/65d8426adc7e7f9c45358bd7da0f32e1ccf35b12))
+
 ## [1.7.3](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.7.2...weather-v1.7.3) (2026-10-13)
 
 
