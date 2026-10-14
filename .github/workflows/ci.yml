@@ -32,9 +32,9 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   # La plateforme où publier : son registre délivre le droit de push vers son dépôt OCI, reçoit
-  # l'annonce et fait entrer la version au catalogue. Variable de dépôt pour viser un staging
-  # sans toucher au workflow.
-  PORTAKI_API_URL: ${{ vars.PORTAKI_API_URL || 'https://api.portaki.app' }}
+  # l'annonce et fait entrer la version au catalogue. La production seule, écrite ici : une
+  # variable d'organisation ne doit pas pouvoir détourner les publications sans que ça se voie.
+  PORTAKI_API_URL: https://api.portaki.app
 
 jobs:
   changes:
