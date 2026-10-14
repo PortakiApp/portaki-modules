@@ -3,7 +3,7 @@
 use portaki_sdk::host::i18n::{translate, Vars};
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::action::Action;
-use portaki_sdk::sdui::common::{Leading, ListItemLayout, SurfaceLevel};
+use portaki_sdk::sdui::common::{Leading, LeadingVisual, ListItemLayout, SurfaceLevel};
 use portaki_sdk::sdui::primitives::{Button, Card, EmptyState, Grid, ListItem};
 use portaki_sdk::sdui::surface::Surface;
 
@@ -103,7 +103,12 @@ pub fn device_list_item(device: &Appliance) -> Component {
 
     let emoji = device.shown_emoji();
     if !emoji.is_empty() {
-        item = item.leading(Leading::Icon(emoji));
+        // `emoji`, pas la forme nue `Leading::Icon` : nue, le livret la prend pour une icône et la
+        // pose sur la pastille teintée ; nommée, il dessine la pastille blanche de la maquette.
+        item = item.leading(Leading::Visual(Box::new(LeadingVisual {
+            emoji: Some(emoji),
+            ..LeadingVisual::default()
+        })));
     }
     if !device.location.trim().is_empty() {
         item = item.subtitle(device.location.clone());
