@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.4
+
+La météo reprend les couleurs de votre livret.
+
+* La température du moment s'affiche dans la couleur du texte, et non plus dans une teinte qui changeait l'ambiance du thème.
+* Dans les prévisions, le jour même est repéré par une teinte douce plutôt qu'un aplat orange.
+
 ## 1.7.1
 
 Montée technique.

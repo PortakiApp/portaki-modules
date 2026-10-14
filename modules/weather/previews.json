@@ -26,7 +26,6 @@
               {
                 "children": [
                   {
-                    "tone": "warning",
                     "type": "Temperature",
                     "unit": "C",
                     "value": 23.0,
@@ -164,7 +163,7 @@
                 },
                 "subtitle": "Ensoleillé · vent 11 km/h · pluie 0 % · humidité 55 %",
                 "title": "Lun 1",
-                "tone": "primary",
+                "tone": "success",
                 "trailing": {
                   "mono": true,
                   "text": "17° / 25°"

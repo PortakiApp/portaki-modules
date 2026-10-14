@@ -41,10 +41,11 @@ pub fn build_forecast_table(forecast: &WeatherForecast, units: &WeatherUnits) ->
                     icon: Some(icon_name_for_condition(&day.condition)),
                     ..LeadingVisual::default()
                 })));
-            // Le premier jour est aujourd'hui : la maquette le teinte pour qu'on le retrouve
-            // sans compter les lignes.
+            // Le premier jour est aujourd'hui : une teinte douce pour qu'on le retrouve sans
+            // compter les lignes. `success` est le voile de marque à 12 % du livret, encre du
+            // texte ; `primary` en faisait un aplat orange plein, seul de toutes les listes.
             if rank == 0 {
-                item = item.tone(Tone::Primary);
+                item = item.tone(Tone::Success);
             }
             Component::ListItem(item)
         })
