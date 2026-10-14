@@ -111,11 +111,27 @@ fn previews_match_the_rendered_surfaces() {
     let markers = previews::guest(root)
         .with_config(&sample_config())
         .run(|ctx| map_markers(ctx).expect("repères"));
-    previews::check_all(
+    // Les autres fiches : la démo ouvre celle de l'itinéraire tapé, pas toujours la même.
+    let variants = ["littoral", "brague", "baou"]
+        .into_iter()
+        .map(|id| {
+            let input = json!({ "trailId": id });
+            let tree = previews::guest(root)
+                .with_config(&sample_config())
+                .run(|mut ctx| {
+                    ctx.input = input.clone();
+                    render_explore_item(ctx).expect("item")
+                });
+            ("explore.item", input, tree)
+        })
+        .collect();
+    previews::check_all_with_variants(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![("explore.detail", list), ("explore.item", item)],
         vec![("home.card", home)],
         Some(serde_json::to_value(markers).expect("repères")),
+        Vec::new(),
+        variants,
     );
 }
