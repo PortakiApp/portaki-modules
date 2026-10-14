@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.14.5
+
+Des tuiles « Bons plans » qui disent pourquoi y aller.
+
+* Chaque tuile montre votre note sur l'adresse, ou sa description, avec la catégorie, la distance et le prix dessous.
+* Toute la tuile ouvre la fiche : la flèche seule sous le texte disparaît, et le badge d'avantage réapparaît.
+* Sur la carte d'accueil, votre mention s'affiche en légende sous les adresses plutôt qu'en bandeau « Info ».
+
 ## 1.14.4
 
 Les adresses montrent vos photos.

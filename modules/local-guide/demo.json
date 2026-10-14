@@ -330,7 +330,6 @@
                       "to": "local-guide/activity/voilier",
                       "type": "navigate"
                     },
-                    "chevron": true,
                     "layout": "tile",
                     "leading": {
                       "image": "portaki-file:voilier-1"
@@ -748,7 +747,6 @@
       "i18n": {
         "guest.activities.disclosure": "Liens partenaires : Portaki peut percevoir une commission, sans surcoût pour vous.",
         "guest.activities.title": "Activités & billets",
-        "guest.disclaimer.title": "Info",
         "guest.hostActivities.choice": "Choix de votre hôte",
         "guest.hostActivities.disclosure": "Activité proposée par votre hôte, sans commission. La réservation se fait directement avec le prestataire.",
         "guest.hostActivities.title": "Vos activités",
@@ -769,23 +767,18 @@
         },
         "children": [
           {
-            "message": "Suggestions de votre hôte, sans partenariat.",
-            "title": "i18n:guest.disclaimer.title",
-            "type": "InfoBanner"
-          },
-          {
             "children": [
               {
                 "action": {
                   "to": "local-guide/detail/boulangerie",
                   "type": "navigate"
                 },
-                "chevron": true,
                 "layout": "tile",
                 "leading": {
                   "image": "portaki-file:boulangerie-1"
                 },
-                "subtitle": "Boulangerie · 350 m",
+                "meta": "Boulangerie · 350 m · €",
+                "subtitle": "Venez avant 9 h : les croissants partent vite le dimanche.",
                 "title": "La boulangerie du village",
                 "type": "ListItem"
               },
@@ -794,12 +787,12 @@
                   "to": "local-guide/detail/marche",
                   "type": "navigate"
                 },
-                "chevron": true,
                 "layout": "tile",
                 "leading": {
                   "image": "portaki-file:marche-1"
                 },
-                "subtitle": "Marché · 1,2 km",
+                "meta": "Marché · 1,2 km",
+                "subtitle": "Fruits, fromages et fleurs, le samedi matin.",
                 "title": "Marché provençal",
                 "trailing": {
                   "badge": {
@@ -814,12 +807,12 @@
                   "to": "local-guide/detail/lac",
                   "type": "navigate"
                 },
-                "chevron": true,
                 "layout": "tile",
                 "leading": {
                   "image": "portaki-file:lac-1"
                 },
-                "subtitle": "Baignade · 9 km",
+                "meta": "Baignade · 9 km",
+                "subtitle": "Eau calme et plage de galets, idéal avec des enfants.",
                 "title": "Lac de Saint-Cassien",
                 "type": "ListItem"
               }
@@ -828,6 +821,11 @@
             "gap": 8.0,
             "scroll": true,
             "type": "Stack"
+          },
+          {
+            "text": "Suggestions de votre hôte, sans partenariat.",
+            "type": "Text",
+            "variant": "caption"
           },
           {
             "children": [
@@ -843,7 +841,6 @@
                       "to": "local-guide/activity/voilier",
                       "type": "navigate"
                     },
-                    "chevron": true,
                     "layout": "tile",
                     "leading": {
                       "image": "portaki-file:voilier-1"
