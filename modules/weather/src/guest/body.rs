@@ -40,8 +40,9 @@ pub fn build_current_hero(
         Temperature::new()
             .value(temp.round())
             .unit(unit)
-            .variant(TempVariant::Hero)
-            .tone(tone_for_temp_c(current.temp_c)),
+            // L'encre du texte, pas une teinte de température : en `warning`, 23° sortait dans
+            // l'encre de marque, en très gros, et changeait l'ambiance du thème de l'hôte.
+            .variant(TempVariant::Hero),
     );
     text_stack = text_stack.child(Text::new().text(description).variant(TextVariant::Caption));
     if let Some(city) = city {
