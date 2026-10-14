@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.0
+
+Le formulaire s'ouvre depuis les autres modules.
+
+* Les modules qui proposent de signaler un souci, comme la fiche d'un appareil, ouvrent ce formulaire directement, déjà rempli.
+
 ## 1.9.5
 
 Un signalement peut s'ouvrir déjà rempli.
