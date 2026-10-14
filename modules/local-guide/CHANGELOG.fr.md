@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.14.4
+
+Les adresses montrent vos photos.
+
+* Une adresse avec photo l'affiche dans sa tuile du livret ; sans photo, la vignette de plan reste.
+
 ## 1.14.1
 
 Montée technique.
