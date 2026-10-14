@@ -46,3 +46,10 @@ portaki_sdk::portaki_module!(
 
 #[portaki_sdk::capability(required, id = "core.storage")]
 pub const STORAGE: &str = "core.storage";
+
+/// Ce module sait recevoir le signalement d'un souci : un autre module qui en dépend
+/// (`#[capability(optional, id = "report.issue")]`) le trouve sur le logement et ouvre ce
+/// formulaire, déjà rempli par `category` et `summary` (voir `guest::form`). Aucune commande
+/// prêtée : l'envoi reste celui du voyageur, depuis le formulaire de ce module.
+#[portaki_sdk::capability(provided, id = "report.issue", path = "issue-report/form")]
+pub const REPORT_ISSUE: &str = "report.issue";
