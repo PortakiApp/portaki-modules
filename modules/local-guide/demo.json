@@ -11,8 +11,8 @@
         "id": "boulangerie",
         "kind": "poi",
         "label": "La boulangerie du village",
-        "lat": 43.5531,
-        "lng": 7.0152
+        "lat": 43.554,
+        "lng": 7.1268
       },
       {
         "action": {
@@ -24,8 +24,8 @@
         "id": "marche",
         "kind": "poi",
         "label": "Marché provençal",
-        "lat": 43.5552,
-        "lng": 7.0214
+        "lat": 43.5617,
+        "lng": 7.125
       },
       {
         "action": {
@@ -211,16 +211,16 @@
                 "id": "boulangerie",
                 "kind": "poi",
                 "label": "La boulangerie du village",
-                "lat": 43.5531,
-                "lng": 7.0152
+                "lat": 43.554,
+                "lng": 7.1268
               },
               {
                 "emoji": "🧺",
                 "id": "marche",
                 "kind": "poi",
                 "label": "Marché provençal",
-                "lat": 43.5552,
-                "lng": 7.0214
+                "lat": 43.5617,
+                "lng": 7.125
               },
               {
                 "id": "lac",
@@ -233,15 +233,15 @@
                 "id": "property",
                 "kind": "property",
                 "label": "L'Islette",
-                "lat": 43.5513,
-                "lng": 7.0128
+                "lat": 43.5509,
+                "lng": 7.1266
               }
             ],
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.556475,
-                "lng": 6.975125
+                "lat": 43.55822500000001,
+                "lng": 7.0573749999999995
               },
               "zoom": 13.0
             }
@@ -320,7 +320,7 @@
                 "leading": {
                   "image": "portaki-file:lac-1"
                 },
-                "subtitle": "Baignade · 9 km",
+                "subtitle": "Baignade · 22 km",
                 "title": "Lac de Saint-Cassien",
                 "type": "ListItem"
               }
@@ -511,7 +511,7 @@
                 "key": "i18n:guest.tile.walk",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "environ 4 min"
+                "value": "environ 5 min"
               }
             ],
             "minColumnWidth": 96.0,
@@ -527,22 +527,22 @@
                 "id": "spot",
                 "kind": "poi",
                 "label": "La boulangerie du village",
-                "lat": 43.5531,
-                "lng": 7.0152
+                "lat": 43.554,
+                "lng": 7.1268
               },
               {
                 "id": "property",
                 "kind": "property",
                 "label": "L'Islette",
-                "lat": 43.5513,
-                "lng": 7.0128
+                "lat": 43.5509,
+                "lng": 7.1266
               }
             ],
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.5531,
-                "lng": 7.0152
+                "lat": 43.554,
+                "lng": 7.1268
               },
               "zoom": 14.0
             }
@@ -596,7 +596,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://www.google.com/maps/search/?api=1&query=43.5531,7.0152"
+              "url": "https://www.google.com/maps/search/?api=1&query=43.554,7.1268"
             },
             "label": "i18n:guest.route",
             "type": "Button"
@@ -823,7 +823,7 @@
                 "leading": {
                   "image": "portaki-file:lac-1"
                 },
-                "meta": "Baignade · 9 km",
+                "meta": "Baignade · 22 km",
                 "subtitle": "Eau calme et plage de galets, idéal avec des enfants.",
                 "title": "Lac de Saint-Cassien",
                 "type": "ListItem"
@@ -1034,14 +1034,14 @@
                 "key": "i18n:guest.tile.walk",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "environ 158 min"
+                "value": "environ 268 min"
               },
               {
                 "icon": "car",
                 "key": "i18n:guest.tile.drive",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "environ 27 min"
+                "value": "environ 45 min"
               }
             ],
             "minColumnWidth": 96.0,
@@ -1064,8 +1064,8 @@
                 "id": "property",
                 "kind": "property",
                 "label": "L'Islette",
-                "lat": 43.5513,
-                "lng": 7.0128
+                "lat": 43.5509,
+                "lng": 7.1266
               }
             ],
             "type": "Map",
@@ -1138,14 +1138,14 @@
                 "key": "i18n:guest.tile.walk",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "environ 10 min"
+                "value": "environ 15 min"
               },
               {
                 "icon": "car",
                 "key": "i18n:guest.tile.drive",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "environ 2 min"
+                "value": "environ 3 min"
               }
             ],
             "minColumnWidth": 96.0,
@@ -1161,22 +1161,22 @@
                 "id": "spot",
                 "kind": "poi",
                 "label": "Marché provençal",
-                "lat": 43.5552,
-                "lng": 7.0214
+                "lat": 43.5617,
+                "lng": 7.125
               },
               {
                 "id": "property",
                 "kind": "property",
                 "label": "L'Islette",
-                "lat": 43.5513,
-                "lng": 7.0128
+                "lat": 43.5509,
+                "lng": 7.1266
               }
             ],
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.5552,
-                "lng": 7.0214
+                "lat": 43.5617,
+                "lng": 7.125
               },
               "zoom": 14.0
             }
@@ -1184,7 +1184,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://www.google.com/maps/search/?api=1&query=43.5552,7.0214"
+              "url": "https://www.google.com/maps/search/?api=1&query=43.5617,7.125"
             },
             "label": "i18n:guest.route",
             "type": "Button"

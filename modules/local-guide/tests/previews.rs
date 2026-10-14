@@ -10,7 +10,7 @@ use local_guide::{
 
 use serde_json::json;
 
-/// Trois adresses d'exemple autour du logement fictif des fixtures (Cannes). Activités et
+/// Trois adresses d'exemple autour du logement de la démo (Cap d'Antibes). Activités et
 /// billets restent éteints, comme chez un hôte qui vient d'installer le module.
 fn sample_config() -> serde_json::Value {
     json!({
@@ -29,8 +29,8 @@ fn sample_config() -> serde_json::Value {
                 "opening": "Fermée le lundi",
                 "parking": "Place de l'église, en face",
                 "phone": "+33 4 93 00 00 01",
-                "address": "Place de l'église, Cannes",
-                "lat": 43.5531, "lng": 7.0152
+                "address": "Boulevard du Cap, Antibes",
+                "lat": 43.5540, "lng": 7.1268
             },
             {
                 "id": "marche",
@@ -40,13 +40,13 @@ fn sample_config() -> serde_json::Value {
                 "tag": "Samedi matin",
                 "detail": { "fr": "Fruits, fromages et fleurs, le samedi matin.", "en": "Fruit, cheese and flowers, on Saturday mornings." },
                 "photos": ["portaki-file:marche-1"],
-                "lat": 43.5552, "lng": 7.0214
+                "lat": 43.5617, "lng": 7.1250
             },
             {
                 "id": "lac",
                 "title": { "fr": "Lac de Saint-Cassien", "en": "Lake Saint-Cassien" },
                 "category": "Baignade",
-                "distance": "9 km",
+                "distance": "22 km",
                 "detail": { "fr": "Eau calme et plage de galets, idéal avec des enfants.", "en": "Calm water and a pebble beach, great with kids." },
                 "photos": ["portaki-file:lac-1"],
                 "lat": 43.5663, "lng": 6.8511

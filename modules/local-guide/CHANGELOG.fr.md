@@ -5,6 +5,7 @@
 Une adresse tapée sur la carte ouvre sa fiche.
 
 * Sur la carte du livret, toucher une adresse ouvre sa fiche plutôt que la liste des bons plans.
+* L'aperçu public place les adresses d'exemple autour du logement de démonstration, au Cap d'Antibes, avec des distances justes.
 
 ## 1.14.5
 
