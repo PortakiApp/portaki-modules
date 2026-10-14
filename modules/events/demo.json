@@ -11,8 +11,8 @@
         "id": "marche-nocturne",
         "kind": "poi",
         "label": "Marché nocturne des artisans",
-        "lat": 43.5528,
-        "lng": 7.0171
+        "lat": 43.553,
+        "lng": 7.124
       }
     ]
   },
@@ -36,15 +36,15 @@
                 "id": "marche-nocturne",
                 "kind": "poi",
                 "label": "Marché nocturne des artisans",
-                "lat": 43.5528,
-                "lng": 7.0171
+                "lat": 43.553,
+                "lng": 7.124
               }
             ],
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.5528,
-                "lng": 7.0171
+                "lat": 43.553,
+                "lng": 7.124
               },
               "zoom": 13.0
             }
@@ -184,7 +184,7 @@
                 "key": "i18n:guest.tile.walk",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "environ 5 min"
+                "value": "environ 4 min"
               }
             ],
             "minColumnWidth": 96.0,
@@ -200,22 +200,22 @@
                 "id": "event",
                 "kind": "poi",
                 "label": "Marché nocturne des artisans",
-                "lat": 43.5528,
-                "lng": 7.0171
+                "lat": 43.553,
+                "lng": 7.124
               },
               {
                 "id": "property",
                 "kind": "property",
                 "label": "i18n:guest.map.property",
-                "lat": 43.5513,
-                "lng": 7.0128
+                "lat": 43.5509,
+                "lng": 7.1266
               }
             ],
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.5528,
-                "lng": 7.0171
+                "lat": 43.553,
+                "lng": 7.124
               },
               "zoom": 14.0
             }
@@ -259,7 +259,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://www.google.com/maps/search/?api=1&query=43.5528,7.0171"
+              "url": "https://www.google.com/maps/search/?api=1&query=43.553,7.124"
             },
             "label": "i18n:guest.route",
             "type": "Button"

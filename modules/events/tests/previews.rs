@@ -29,8 +29,8 @@ fn sample_config() -> serde_json::Value {
                     "fr": "Place piétonne, accès de plain-pied\nParking de l'église à 200 m",
                     "en": "Pedestrian square, step-free access\nChurch car park 200 m away"
                 },
-                "address": "Place du village, Cannes",
-                "lat": 43.5528, "lng": 7.0171
+                "address": "Place du village, Antibes",
+                "lat": 43.5530, "lng": 7.1240
             },
             {
                 "id": "concert",
