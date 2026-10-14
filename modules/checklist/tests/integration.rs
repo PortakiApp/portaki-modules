@@ -117,8 +117,11 @@ fn guest_list_waits_for_its_trigger() {
                 checkout_at: Some(Utc::now() + Duration::days(5)),
                 ..StayContext::default()
             });
+            // Rien à dire tant que la liste n'ouvre pas : un état vide sans texte, que le livret
+            // masque — pas de carte « pas encore ».
             let json = json_of(&render_home_card(ctx).expect("render"));
-            assert!(json.contains("home.card.notYet"));
+            assert!(json.contains(r#""type":"EmptyState""#), "{json}");
+            assert!(!json.contains("home.card.notYet"), "{json}");
             assert!(!json.contains("completeItem"));
         });
 }

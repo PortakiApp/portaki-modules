@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.4
+
+Pas de carte tant que la liste n'est pas ouverte.
+
+* Avant le moment choisi, la checklist n'apparaît plus dans le livret : la carte « s'ouvrira au moment choisi par l'hôte » disparaît.
+* L'aperçu montre la liste de départ ouverte, cochable, telle que le voyageur la voit en fin de séjour.
+
 ## 1.9.1
 
 Montée technique.

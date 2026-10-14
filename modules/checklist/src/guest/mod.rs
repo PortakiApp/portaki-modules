@@ -5,7 +5,7 @@ mod home;
 mod load;
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::{Card, Text};
+use portaki_sdk::sdui::primitives::{Card, EmptyState, Text};
 use portaki_sdk::sdui::surface::Surface;
 
 use home::build_home_card;
@@ -37,6 +37,12 @@ pub fn render_post_stay_card(ctx: GuestContext) -> Result<Surface> {
 fn render_card(ctx: &GuestContext, surface_id: SurfaceId, departure_only: bool) -> Result<Surface> {
     Ok(match load_guest_checklist(ctx, departure_only)? {
         GuestLoad::NoItems => message_card(surface_id, IconName::ListChecks, "home.card.empty"),
+        // Pendant le séjour, une liste qui n'est pas encore ouverte ne dit rien au voyageur : un
+        // état vide sans texte, que le livret masque (§1.9). « Pas encore » n'était que du bruit,
+        // sur chaque livret. L'après-séjour garde sa phrase.
+        GuestLoad::NotYet if !departure_only => {
+            Surface::new(EmptyState::new().icon(IconName::ListChecks)).with_id(surface_id)
+        }
         GuestLoad::NotYet => message_card(surface_id, IconName::ClockCircle, "home.card.notYet"),
         GuestLoad::Ready(data) => build_home_card(&data, surface_id),
     })
