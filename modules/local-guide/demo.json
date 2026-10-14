@@ -48,6 +48,12 @@
       "tree": {
         "children": [
           {
+            "alt": "Sortie voilier au coucher du soleil",
+            "aspectRatio": "4 / 3",
+            "type": "Image",
+            "url": "portaki-file:voilier-1"
+          },
+          {
             "children": [
               {
                 "label": "i18n:guest.hostActivities.choice",
@@ -254,10 +260,7 @@
                   }
                 ],
                 "leading": {
-                  "map": {
-                    "lat": 43.5531,
-                    "lng": 7.0152
-                  }
+                  "image": "portaki-file:boulangerie-1"
                 },
                 "subtitle": "Boulangerie · 350 m",
                 "title": "La boulangerie du village",
@@ -277,11 +280,7 @@
                   }
                 ],
                 "leading": {
-                  "emoji": "🧺",
-                  "map": {
-                    "lat": 43.5552,
-                    "lng": 7.0214
-                  }
+                  "image": "portaki-file:marche-1"
                 },
                 "subtitle": "Marché · 1,2 km",
                 "title": "Marché provençal",
@@ -307,10 +306,7 @@
                   }
                 ],
                 "leading": {
-                  "map": {
-                    "lat": 43.5663,
-                    "lng": 6.8511
-                  }
+                  "image": "portaki-file:lac-1"
                 },
                 "subtitle": "Baignade · 9 km",
                 "title": "Lac de Saint-Cassien",
@@ -336,6 +332,9 @@
                     },
                     "chevron": true,
                     "layout": "tile",
+                    "leading": {
+                      "image": "portaki-file:voilier-1"
+                    },
                     "meta": "60 € / pers.",
                     "subtitle": "Marc, skipper au port · 3 h",
                     "title": "Sortie voilier au coucher du soleil",
@@ -784,10 +783,7 @@
                 "chevron": true,
                 "layout": "tile",
                 "leading": {
-                  "map": {
-                    "lat": 43.5531,
-                    "lng": 7.0152
-                  }
+                  "image": "portaki-file:boulangerie-1"
                 },
                 "subtitle": "Boulangerie · 350 m",
                 "title": "La boulangerie du village",
@@ -801,11 +797,7 @@
                 "chevron": true,
                 "layout": "tile",
                 "leading": {
-                  "emoji": "🧺",
-                  "map": {
-                    "lat": 43.5552,
-                    "lng": 7.0214
-                  }
+                  "image": "portaki-file:marche-1"
                 },
                 "subtitle": "Marché · 1,2 km",
                 "title": "Marché provençal",
@@ -825,10 +817,7 @@
                 "chevron": true,
                 "layout": "tile",
                 "leading": {
-                  "map": {
-                    "lat": 43.5663,
-                    "lng": 6.8511
-                  }
+                  "image": "portaki-file:lac-1"
                 },
                 "subtitle": "Baignade · 9 km",
                 "title": "Lac de Saint-Cassien",
@@ -856,6 +845,9 @@
                     },
                     "chevron": true,
                     "layout": "tile",
+                    "leading": {
+                      "image": "portaki-file:voilier-1"
+                    },
                     "meta": "60 € / pers.",
                     "subtitle": "Marc, skipper au port · 3 h",
                     "title": "Sortie voilier au coucher du soleil",

@@ -63,9 +63,15 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         if !subtitle.is_empty() {
             item = item.subtitle(subtitle);
         }
-        // La vignette de plan, centrée sur l'adresse : la maquette la met devant chaque tuile, et
-        // `LeadingVisual::map` l'attend — on sait où est le lieu dès que l'hôte l'a posé.
-        if let (Some(lat), Some(lng)) = (spot.lat, spot.lng) {
+        // La première photo de l'hôte d'abord : c'est elle qui donne envie d'y aller, et la fiche
+        // la montre déjà. Sans photo, la vignette de plan, centrée sur l'adresse — la maquette la
+        // met devant chaque tuile, et `LeadingVisual::map` l'attend.
+        if let Some(photo) = spot.photo_ref() {
+            item = item.leading(Leading::Visual(Box::new(LeadingVisual {
+                image: Some(photo.to_string()),
+                ..LeadingVisual::default()
+            })));
+        } else if let (Some(lat), Some(lng)) = (spot.lat, spot.lng) {
             item = item.leading(Leading::Visual(Box::new(LeadingVisual {
                 map: Some(GeoPoint { lat, lng }),
                 emoji: spot.emoji(),

@@ -39,6 +39,7 @@ fn sample_config() -> serde_json::Value {
                 "distance": "1,2 km",
                 "tag": "Samedi matin",
                 "detail": { "fr": "Fruits, fromages et fleurs, le samedi matin.", "en": "Fruit, cheese and flowers, on Saturday mornings." },
+                "photos": ["portaki-file:marche-1"],
                 "lat": 43.5552, "lng": 7.0214
             },
             {
@@ -47,6 +48,7 @@ fn sample_config() -> serde_json::Value {
                 "category": "Baignade",
                 "distance": "9 km",
                 "detail": { "fr": "Eau calme et plage de galets, idéal avec des enfants.", "en": "Calm water and a pebble beach, great with kids." },
+                "photos": ["portaki-file:lac-1"],
                 "lat": 43.5663, "lng": 6.8511
             }
         ],
@@ -70,7 +72,8 @@ fn sample_config() -> serde_json::Value {
                     "fr": "Dites-lui que vous venez d'ici : il vous garde le coucher de soleil.",
                     "en": "Tell him you are staying here: he will save you the sunset."
                 },
-                "phone": "+33 6 22 33 44 55"
+                "phone": "+33 6 22 33 44 55",
+                "photo": "portaki-file:voilier-1"
             }
         ],
         // Un lien collé par l'hôte et reconnu par le catalogue (§2.13, `origin: hostLink`) : c'est
