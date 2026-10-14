@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.4
+
+L'aperçu du catalogue montre une adresse au Cap d'Antibes.
+
+* L'aperçu public du module affiche l'adresse du logement de démonstration, au Cap d'Antibes, au lieu d'une adresse à Cannes.
+
 ## 1.10.3
 
 Le rappel de changement de code se coche.
