@@ -28,13 +28,27 @@ fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
     reset_test_store();
     let context = previews::guest(root);
-    let (card, post_stay) = context.run(|ctx| {
+    let post_stay = context.run(|ctx| {
         seed(&ctx);
-        (
-            render_home_card(ctx.clone()).expect("card"),
-            render_post_stay_card(ctx).expect("post-stay"),
-        )
+        render_post_stay_card(ctx).expect("post-stay")
     });
+    /*
+     * La carte d'accueil, rendue la veille du départ : la liste ouverte et cochable.
+     *
+     * <p>À l'heure des aperçus — la veille d'une arrivée — la liste n'est pas ouverte, et la carte
+     * se masque (un état vide sans texte). Le catalogue n'aurait rien montré du module, et la démo
+     * « pendant le séjour » non plus : elle prend ce rendu en phase `stay`.
+     */
+    reset_test_store();
+    let during = || {
+        previews::guest_at(root, previews::DURING).run(|ctx| {
+            seed(&ctx);
+            render_home_card(ctx).expect("card")
+        })
+    };
+    let card = during();
+    reset_test_store();
+    let stay_card = during();
     /*
      * La carte d'après séjour, rendue après le départ.
      *
@@ -42,9 +56,6 @@ fn previews_match_the_rendered_surfaces() {
      * livret servait ce rendu-là même quand sa clé demandait l'après. Les listes de départ restent
      * pourtant cochables une fois le séjour fini.
      *
-     * <p>Rien pour « pendant » : la porte du module ouvre à 48 h du départ (§2.9), et le séjour de
-     * la démo en est à cinq jours. « Pas encore » y est la bonne réponse, et la section se masque
-     * d'elle-même — c'est §1.9 qui fonctionne, pas un trou.
      */
     reset_test_store();
     let after = previews::guest_at(root, previews::AFTER).run(|ctx| {
@@ -59,6 +70,9 @@ fn previews_match_the_rendered_surfaces() {
         // Les deux surfaces ont un chemin : rien à ajouter pour la démo.
         Vec::new(),
         None,
-        vec![("post-stay", vec![("post-stay.card", after)])],
+        vec![
+            ("stay", vec![("home.card", stay_card)]),
+            ("post-stay", vec![("post-stay.card", after)]),
+        ],
     );
 }
