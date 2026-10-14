@@ -11,7 +11,7 @@ use weather::{render_explore_forecast, render_home_card, render_upcoming_card};
 /// début juin ensoleillée avec un passage pluvieux, au format que le connecteur renvoie.
 fn sample_current() -> String {
     json!({
-        "name": "Cannes",
+        "name": "Antibes",
         "main": { "temp": 23.4, "humidity": 58 },
         "wind": { "speed": 3.2 },
         "weather": [{ "main": "Clear" }]
@@ -39,7 +39,7 @@ fn sample_forecast() -> String {
             })
         })
         .collect();
-    json!({ "city": { "name": "Cannes" }, "list": list }).to_string()
+    json!({ "city": { "name": "Antibes" }, "list": list }).to_string()
 }
 
 #[test]

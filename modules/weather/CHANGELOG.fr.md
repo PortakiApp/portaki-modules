@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.5
+
+L'aperçu du catalogue montre la météo d'Antibes.
+
+* L'aperçu public du module nomme Antibes, la ville du logement de démonstration, au lieu de Cannes.
+
 ## 1.7.4
 
 La météo reprend les couleurs de votre livret.
