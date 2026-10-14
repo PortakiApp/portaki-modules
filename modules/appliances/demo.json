@@ -122,6 +122,32 @@
                 "type": "Eyebrow"
               },
               {
+                "children": [
+                  {
+                    "leading": {
+                      "index": 1
+                    },
+                    "title": "Posez une casserole à fond aimanté au centre du foyer.",
+                    "type": "ListItem"
+                  },
+                  {
+                    "alt": "Schéma 1 : Posez une casserole à fond aimanté au centre du foyer.",
+                    "aspectRatio": "4 / 3",
+                    "type": "Image",
+                    "url": "portaki-file:plaques-induction-1"
+                  }
+                ],
+                "gap": 6.0,
+                "type": "Stack"
+              },
+              {
+                "leading": {
+                  "index": 2
+                },
+                "title": "Appuyez 2 secondes sur la touche marche, puis choisissez la puissance.",
+                "type": "ListItem"
+              },
+              {
                 "content": "{\"content\":[{\"content\":[{\"text\":\"Appuyez 2 secondes sur la touche marche, puis choisissez le foyer.\",\"type\":\"text\"}],\"type\":\"paragraph\"},{\"content\":[{\"text\":\"Seules les casseroles à fond aimanté chauffent.\",\"type\":\"text\"}],\"type\":\"paragraph\"}],\"type\":\"doc\"}",
                 "type": "RichText"
               }
