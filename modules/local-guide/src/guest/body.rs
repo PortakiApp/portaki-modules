@@ -23,6 +23,21 @@ pub fn closed_today_label(data: &GuestData, spot: &crate::config::SpotRow) -> Op
     })
 }
 
+/// Ce qu'une tuile dit sous le nom : pourquoi l'hôte recommande l'adresse (sa note), sinon sa
+/// description, sinon les horaires.
+fn tile_pitch(data: &GuestData, spot: &crate::config::SpotRow) -> Option<String> {
+    let note = spot.note.as_ref().map(|note| note.get(&data.locale));
+    [
+        note,
+        Some(spot.detail.get(&data.locale)),
+        spot.hours.as_deref(),
+    ]
+    .into_iter()
+    .flatten()
+    .map(|text| text.trim().to_string())
+    .find(|text| !text.is_empty())
+}
+
 pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
     let mut children = Vec::new();
 
@@ -32,7 +47,9 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         }
     }
 
-    if !data.disclaimer.is_empty() {
+    // Sur la carte d'accueil, la mention de l'hôte est une légende sous les tuiles, comme la
+    // maquette la pose : en bandeau « Info » au-dessus, elle passait avant les adresses.
+    if enriched && !data.disclaimer.is_empty() {
         children.push(Component::InfoBanner(
             InfoBanner::new()
                 .title("i18n:guest.disclaimer.title")
@@ -60,8 +77,28 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         let subtitle = subtitle_parts.join(" · ");
 
         let mut item = ListItem::new().title(title);
-        if !subtitle.is_empty() {
-            item = item.subtitle(subtitle);
+        // En tuile, le sous-titre tient deux lignes : il porte ce que l'hôte dit de l'adresse
+        // ([`tile_pitch`]) ; catégorie, distance et prix passent dessous, sur une ligne. Sans cela,
+        // la tuile ne disait que son nom et sa catégorie.
+        let pitch = (!enriched).then(|| tile_pitch(data, spot)).flatten();
+        match pitch {
+            Some(pitch) => {
+                item = item.subtitle(pitch);
+                let mut facts = subtitle_parts;
+                if let Some(price) = spot
+                    .price
+                    .as_deref()
+                    .map(str::trim)
+                    .filter(|p| !p.is_empty())
+                {
+                    facts.push(price.to_string());
+                }
+                if !facts.is_empty() {
+                    item = item.meta(facts.join(" · "));
+                }
+            }
+            None if !subtitle.is_empty() => item = item.subtitle(subtitle),
+            None => {}
         }
         // La première photo de l'hôte d'abord : c'est elle qui donne envie d'y aller, et la fiche
         // la montre déjà. Sans photo, la vignette de plan, centrée sur l'adresse — la maquette la
@@ -103,11 +140,16 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
             })));
         }
         // La fiche, pas le lien du commerçant : la maquette donne à chaque tuile `action: detail`,
-        // et le site se rejoint depuis la fiche, après l'avantage, le plan et les horaires.
-        item = item.chevron(true).action(Action::navigate(
+        // et le site se rejoint depuis la fiche, après l'avantage, le plan et les horaires. La
+        // tuile entière est le geste : un chevron y tombait seul sur une rangée sous le texte, et
+        // prenait la place de la pastille d'avantage.
+        item = item.action(Action::navigate(
             NavigateTarget::path(format!("local-guide/detail/{}", spot.route_id(index))),
             None,
         ));
+        if enriched {
+            item = item.chevron(true);
+        }
 
         if enriched {
             if let Some(note) = spot.note.as_ref() {
@@ -149,6 +191,13 @@ pub fn build_spots_body(data: &GuestData, enriched: bool) -> Vec<Component> {
                     .children(spots),
             )
         });
+        if !enriched && !data.disclaimer.is_empty() {
+            children.push(Component::Text(
+                Text::new()
+                    .text(data.disclaimer.clone())
+                    .variant(TextVariant::Caption),
+            ));
+        }
     }
 
     // Les activités de l'hôte avant celles des partenaires : c'est l'ordre du §2.13, et ce sont

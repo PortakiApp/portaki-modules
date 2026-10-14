@@ -72,7 +72,7 @@ fn tile(data: &GuestData, activity: &HostActivityRow, index: usize) -> Component
             }),
             ..TrailingVisual::default()
         })))
-        .chevron(true)
+        // Pas de chevron : en tuile, il tombait seul sous le texte et masquait « Choix de l'hôte ».
         .action(Action::navigate(
             NavigateTarget::path(format!("local-guide/activity/{}", activity.route_id(index))),
             None,

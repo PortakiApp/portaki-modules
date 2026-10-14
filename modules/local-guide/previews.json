@@ -301,7 +301,6 @@
                       "to": "local-guide/activity/voilier",
                       "type": "navigate"
                     },
-                    "chevron": true,
                     "layout": "tile",
                     "leading": {
                       "image": "portaki-file:voilier-1"
