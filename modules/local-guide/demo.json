@@ -3,6 +3,10 @@
   "markers": {
     "markers": [
       {
+        "action": {
+          "to": "local-guide/detail/boulangerie",
+          "type": "navigate"
+        },
         "category": "Boulangerie",
         "id": "boulangerie",
         "kind": "poi",
@@ -11,6 +15,10 @@
         "lng": 7.0152
       },
       {
+        "action": {
+          "to": "local-guide/detail/marche",
+          "type": "navigate"
+        },
         "category": "Marché",
         "emoji": "🧺",
         "id": "marche",
@@ -20,6 +28,10 @@
         "lng": 7.0214
       },
       {
+        "action": {
+          "to": "local-guide/detail/lac",
+          "type": "navigate"
+        },
         "category": "Baignade",
         "id": "lac",
         "kind": "poi",
@@ -970,6 +982,216 @@
         "icon": "map-pin",
         "title": "i18n:nav.local-guide",
         "type": "Card"
+      }
+    }
+  ],
+  "variants": [
+    {
+      "i18n": {
+        "guest.map.label": "Plan : le logement et l’adresse",
+        "guest.route": "Itinéraire",
+        "guest.tile.drive": "En voiture",
+        "guest.tile.walk": "À pied"
+      },
+      "input": {
+        "spotId": "lac"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "alt": "Lac de Saint-Cassien",
+            "aspectRatio": "4 / 3",
+            "type": "Image",
+            "url": "portaki-file:lac-1"
+          },
+          {
+            "children": [
+              {
+                "text": "Lac de Saint-Cassien",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "Baignade",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "Eau calme et plage de galets, idéal avec des enfants.",
+                "type": "Text",
+                "variant": "body"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "icon": "users",
+                "key": "i18n:guest.tile.walk",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "environ 158 min"
+              },
+              {
+                "icon": "car",
+                "key": "i18n:guest.tile.drive",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "environ 27 min"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "interactionMode": "none",
+            "isStatic": true,
+            "label": "i18n:guest.map.label",
+            "markers": [
+              {
+                "id": "spot",
+                "kind": "poi",
+                "label": "Lac de Saint-Cassien",
+                "lat": 43.5663,
+                "lng": 6.8511
+              },
+              {
+                "id": "property",
+                "kind": "property",
+                "label": "L'Islette",
+                "lat": 43.5513,
+                "lng": 7.0128
+              }
+            ],
+            "type": "Map",
+            "viewport": {
+              "center": {
+                "lat": 43.5663,
+                "lng": 6.8511
+              },
+              "zoom": 14.0
+            }
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.google.com/maps/search/?api=1&query=43.5663,6.8511"
+            },
+            "label": "i18n:guest.route",
+            "type": "Button"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.map.label": "Plan : le logement et l’adresse",
+        "guest.route": "Itinéraire",
+        "guest.tile.drive": "En voiture",
+        "guest.tile.walk": "À pied"
+      },
+      "input": {
+        "spotId": "marche"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "alt": "Marché provençal",
+            "aspectRatio": "4 / 3",
+            "type": "Image",
+            "url": "portaki-file:marche-1"
+          },
+          {
+            "children": [
+              {
+                "text": "Marché provençal",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "Marché",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "Fruits, fromages et fleurs, le samedi matin.",
+                "type": "Text",
+                "variant": "body"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "icon": "users",
+                "key": "i18n:guest.tile.walk",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "environ 10 min"
+              },
+              {
+                "icon": "car",
+                "key": "i18n:guest.tile.drive",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "environ 2 min"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "interactionMode": "none",
+            "isStatic": true,
+            "label": "i18n:guest.map.label",
+            "markers": [
+              {
+                "id": "spot",
+                "kind": "poi",
+                "label": "Marché provençal",
+                "lat": 43.5552,
+                "lng": 7.0214
+              },
+              {
+                "id": "property",
+                "kind": "property",
+                "label": "L'Islette",
+                "lat": 43.5513,
+                "lng": 7.0128
+              }
+            ],
+            "type": "Map",
+            "viewport": {
+              "center": {
+                "lat": 43.5552,
+                "lng": 7.0214
+              },
+              "zoom": 14.0
+            }
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.google.com/maps/search/?api=1&query=43.5552,7.0214"
+            },
+            "label": "i18n:guest.route",
+            "type": "Button"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
       }
     }
   ]

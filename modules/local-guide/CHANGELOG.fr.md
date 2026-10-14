@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.14.6
+
+Une adresse tapée sur la carte ouvre sa fiche.
+
+* Sur la carte du livret, toucher une adresse ouvre sa fiche plutôt que la liste des bons plans.
+
 ## 1.14.5
 
 Des tuiles « Bons plans » qui disent pourquoi y aller.

@@ -31,7 +31,8 @@ pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
     let markers = config
         .guest_spots(today)
         .into_iter()
-        .filter_map(|spot| {
+        .enumerate()
+        .filter_map(|(index, spot)| {
             // Les spots sans position ne sont pas une anomalie : la carte est arrivée après
             // eux, et l'hôte n'est pas obligé de la remplir.
             let (lat, lng) = spot.coords()?;
@@ -45,7 +46,12 @@ pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
                 marker.category = Some(category.to_string());
             }
             marker.emoji = spot.emoji();
-            Some(marker)
+            // Le tap ouvre la fiche de CETTE adresse, au même chemin que sa tuile dans la liste :
+            // le livret suit l'action sans connaître le module.
+            Some(marker.action(Action::navigate(
+                NavigateTarget::path(format!("local-guide/detail/{}", spot.route_id(index))),
+                None,
+            )))
         })
         .take(MAX_MARKERS)
         .collect();
