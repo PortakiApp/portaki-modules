@@ -165,6 +165,33 @@ pub fn check_all_phased(
     markers: Option<Value>,
     phases: Vec<(&str, Vec<(&str, Surface)>)>,
 ) {
+    check_all_with_variants(
+        module_root,
+        emissions,
+        rendered,
+        extra,
+        markers,
+        phases,
+        Vec::new(),
+    );
+}
+
+/// Comme [`check_all_phased`], plus des rendus d'une surface pour une entrée précise.
+///
+/// <p>`variants` porte `(surfaceId, input, rendu)` : la fiche d'un événement, d'une adresse, d'un
+/// itinéraire, rendue pour chacun de ceux que la démo montre. Un aperçu est un rendu figé ; sans
+/// eux, la démo du livret ouvrait la même fiche quel que soit l'élément tapé. Le livret choisit la
+/// variante dont l'`input` correspond à celui de la navigation.
+#[allow(dead_code)]
+pub fn check_all_with_variants(
+    module_root: &str,
+    emissions: &str,
+    rendered: Vec<(&str, Surface)>,
+    extra: Vec<(&str, Surface)>,
+    markers: Option<Value>,
+    phases: Vec<(&str, Vec<(&str, Surface)>)>,
+    variants: Vec<(&str, Value, Surface)>,
+) {
     let demo: Vec<(&str, Value)> = rendered
         .iter()
         .chain(extra.iter())
@@ -185,12 +212,23 @@ pub fn check_all_phased(
             (name, trees)
         })
         .collect();
+    let variants: Vec<(&str, Value, Value)> = variants
+        .into_iter()
+        .map(|(id, input, surface)| {
+            (
+                id,
+                input,
+                serde_json::to_value(&surface.root).expect("arbre SDUI"),
+            )
+        })
+        .collect();
     check_demo(
         module_root,
         guest_routes(Path::new(emissions)),
         demo,
         markers,
         phased,
+        variants,
     );
     check_previews(module_root, emissions, rendered);
 }
@@ -280,6 +318,7 @@ fn check_demo(
     rendered: Vec<(&str, Value)>,
     markers: Option<Value>,
     phases: Vec<(&str, Vec<(&str, Value)>)>,
+    variants: Vec<(&str, Value, Value)>,
 ) {
     let root = Path::new(module_root);
     let bundle = fr_bundle(module_root);
@@ -339,6 +378,22 @@ fn check_demo(
             by_phase.insert(name.to_string(), Value::Array(list));
         }
         document["phases"] = Value::Object(by_phase);
+    }
+    if !variants.is_empty() {
+        let mut ids = Vec::new();
+        let mut list: Vec<Value> = variants
+            .into_iter()
+            .map(|(surface_id, input, mut tree)| {
+                stable_uuids(&mut tree, &mut ids);
+                let i18n: Map<String, Value> = i18n_refs(&tree)
+                    .into_iter()
+                    .filter_map(|key| bundle.get(&key).map(|value| (key, value.clone())))
+                    .collect();
+                json!({ "surfaceId": surface_id, "input": input, "tree": tree, "i18n": i18n })
+            })
+            .collect();
+        list.sort_by_key(|v| (v["surfaceId"].to_string(), v["input"].to_string()));
+        document["variants"] = Value::Array(list);
     }
     let expected = serde_json::to_string_pretty(&document).expect("json") + "\n";
     let path = root.join(DEMO_FILE);
