@@ -265,8 +265,8 @@
                 "id": "property",
                 "kind": "property",
                 "label": "i18n:guest.map.property",
-                "lat": 43.5513,
-                "lng": 7.0128
+                "lat": 43.5509,
+                "lng": 7.1266
               },
               {
                 "icon": "mountain",
@@ -490,8 +490,8 @@
                 "id": "property",
                 "kind": "property",
                 "label": "i18n:guest.map.property",
-                "lat": 43.5513,
-                "lng": 7.0128
+                "lat": 43.5509,
+                "lng": 7.1266
               },
               {
                 "icon": "mountain",
@@ -641,8 +641,8 @@
                 "id": "property",
                 "kind": "property",
                 "label": "i18n:guest.map.property",
-                "lat": 43.5513,
-                "lng": 7.0128
+                "lat": 43.5509,
+                "lng": 7.1266
               },
               {
                 "icon": "mountain",
@@ -701,7 +701,6 @@
         "guest.map.label": "Plan du départ",
         "guest.map.property": "Le logement",
         "guest.map.start": "Départ",
-        "guest.routeToStart": "Itinéraire jusqu’au départ",
         "guest.tile.distance": "Distance",
         "guest.tile.duration": "Durée",
         "guest.tile.elevation": "Dénivelé",
@@ -726,7 +725,7 @@
               },
               {
                 "emphasis": "subtle",
-                "text": "Départ : Plage de la Garoupe, Antibes",
+                "text": "Départ : Plage de la Garoupe, Antibes · 950 m",
                 "type": "Text",
                 "variant": "caption"
               }
@@ -783,8 +782,8 @@
                 "id": "property",
                 "kind": "property",
                 "label": "i18n:guest.map.property",
-                "lat": 43.5513,
-                "lng": 7.0128
+                "lat": 43.5509,
+                "lng": 7.1266
               },
               {
                 "icon": "mountain",
@@ -821,14 +820,6 @@
             "surface": "elevated",
             "title": "i18n:guest.before.title",
             "type": "Card"
-          },
-          {
-            "action": {
-              "type": "external",
-              "url": "https://www.google.com/maps/search/?api=1&query=43.5585,7.1322"
-            },
-            "label": "i18n:guest.routeToStart",
-            "type": "Button"
           }
         ],
         "gap": 14.0,
