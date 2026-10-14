@@ -63,7 +63,7 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
 name = "appliances"
-version = "1.12.3"
+version = "1.12.4"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -163,7 +163,7 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
 name = "checklist"
-version = "1.9.3"
+version = "1.9.4"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -556,7 +556,7 @@ dependencies = [
 
 [[package]]
 name = "issue-report"
-version = "1.9.4"
+version = "1.9.5"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -656,7 +656,7 @@ checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
 
 [[package]]
 name = "local-guide"
-version = "1.14.4"
+version = "1.14.5"
 dependencies = [
  "chrono",
  "extism-pdk",
@@ -1496,7 +1496,7 @@ dependencies = [
 
 [[package]]
 name = "weather"
-version = "1.7.3"
+version = "1.7.4"
 dependencies = [
  "chrono",
  "extism-pdk",

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.4](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.12.3...appliances-v1.12.4) (2026-10-14)
+
+
+### Bug Fixes
+
+* **appliances:** pass category and summary on issue ([9d24c29](https://github.com/PortakiApp/portaki-modules/commit/9d24c29833c98a7cce234cd4fe067817872f1c38))
+
 ## [1.12.3](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.12.2...appliances-v1.12.3) (2026-10-13)
 
 

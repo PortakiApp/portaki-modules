@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.5](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.9.4...issue-report-v1.9.5) (2026-10-14)
+
+
+### Bug Fixes
+
+* **issue-report:** prefill form from its address ([90764e9](https://github.com/PortakiApp/portaki-modules/commit/90764e91e18392271ac398239c369b48bf57e35f))
+
 ## [1.9.4](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.9.3...issue-report-v1.9.4) (2026-10-13)
 
 
