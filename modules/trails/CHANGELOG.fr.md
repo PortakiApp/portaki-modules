@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.4
+
+Un itinéraire tapé sur la carte ouvre sa fiche.
+
+* Sur la carte du livret, toucher un départ de randonnée ouvre la fiche de cet itinéraire.
+
 ## 0.9.2
 
 La trace GPX enfin lue.

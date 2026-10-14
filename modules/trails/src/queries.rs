@@ -147,7 +147,12 @@ pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
             if !title.is_empty() {
                 marker = marker.label(title);
             }
-            Some(marker)
+            // Le tap ouvre la fiche de CET itinéraire (`trails/:trailId`) : le livret visait
+            // `trails/detail`, que la route d'un itinéraire captait avec `trailId = "detail"`.
+            Some(marker.action(Action::navigate(
+                NavigateTarget::path(format!("trails/{}", trail.route_id(index))),
+                None,
+            )))
         })
         .collect();
     Ok(MapMarkersResponse { markers })

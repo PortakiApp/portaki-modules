@@ -3,6 +3,10 @@
   "markers": {
     "markers": [
       {
+        "action": {
+          "to": "trails/garoupe",
+          "type": "navigate"
+        },
         "category": "hiking",
         "icon": "mountain",
         "id": "trail-garoupe",
@@ -12,6 +16,10 @@
         "lng": 7.1298
       },
       {
+        "action": {
+          "to": "trails/littoral",
+          "type": "navigate"
+        },
         "category": "hiking",
         "icon": "mountain",
         "id": "trail-littoral",
@@ -21,6 +29,10 @@
         "lng": 7.1322
       },
       {
+        "action": {
+          "to": "trails/brague",
+          "type": "navigate"
+        },
         "category": "hiking",
         "icon": "mountain",
         "id": "trail-brague",
@@ -30,6 +42,10 @@
         "lng": 7.098
       },
       {
+        "action": {
+          "to": "trails/baou",
+          "type": "navigate"
+        },
         "category": "hiking",
         "icon": "mountain",
         "id": "trail-baou",
@@ -379,6 +395,444 @@
         "subtitle": "4 itinéraires choisis par votre hôte",
         "title": "i18n:home.card.title",
         "type": "Card"
+      }
+    }
+  ],
+  "variants": [
+    {
+      "i18n": {
+        "guest.before.title": "Avant de partir",
+        "guest.before.water": "Emportez 1,5 L d’eau par personne",
+        "guest.before.weather": "Déconseillé par orage ou vent fort",
+        "guest.map.label": "Plan du départ",
+        "guest.map.property": "Le logement",
+        "guest.map.start": "Départ",
+        "guest.openTrace": "Ouvrir la trace",
+        "guest.routeToStart": "Itinéraire jusqu’au départ",
+        "guest.tile.distance": "Distance",
+        "guest.tile.duration": "Durée",
+        "guest.tile.elevation": "Dénivelé",
+        "guest.tile.shape": "Type"
+      },
+      "input": {
+        "trailId": "baou"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "label": "▲▲▲ Sportif",
+                "type": "Badge"
+              },
+              {
+                "text": "Baou de Saint-Jeannet",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "Départ : Saint-Jeannet, place Sainte-Barbe",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "icon": "clock-circle",
+                "key": "i18n:guest.tile.duration",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "4 h"
+              },
+              {
+                "icon": "compass",
+                "key": "i18n:guest.tile.distance",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "8 km"
+              },
+              {
+                "icon": "arrow-up",
+                "key": "i18n:guest.tile.elevation",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "600 m"
+              },
+              {
+                "icon": "refresh",
+                "key": "i18n:guest.tile.shape",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "Aller-retour"
+              }
+            ],
+            "minColumnWidth": 136.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "text": "Montée raide jusqu’au sommet du baou, panorama de l’Estérel au cap Ferrat. Passages rocheux, chaussures montantes conseillées.",
+            "type": "Text",
+            "variant": "body"
+          },
+          {
+            "interactionMode": "none",
+            "isStatic": true,
+            "label": "i18n:guest.map.label",
+            "markers": [
+              {
+                "id": "property",
+                "kind": "property",
+                "label": "i18n:guest.map.property",
+                "lat": 43.5513,
+                "lng": 7.0128
+              },
+              {
+                "icon": "mountain",
+                "id": "start",
+                "kind": "poi",
+                "label": "i18n:guest.map.start",
+                "lat": 43.757,
+                "lng": 7.148
+              }
+            ],
+            "type": "Map",
+            "viewport": {
+              "center": {
+                "lat": 43.757,
+                "lng": 7.148
+              },
+              "zoom": 13.0
+            }
+          },
+          {
+            "children": [
+              {
+                "leading": "droplet",
+                "title": "i18n:guest.before.water",
+                "type": "ListItem"
+              },
+              {
+                "leading": "cloud-sun",
+                "title": "i18n:guest.before.weather",
+                "type": "ListItem"
+              }
+            ],
+            "icon": "info-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.before.title",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.visorando.com/randonnee-baou-de-saint-jeannet"
+            },
+            "label": "i18n:guest.openTrace",
+            "type": "Button"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.google.com/maps/search/?api=1&query=43.757,7.148"
+            },
+            "label": "i18n:guest.routeToStart",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.before.title": "Avant de partir",
+        "guest.before.water": "Emportez 1,5 L d’eau par personne",
+        "guest.before.weather": "Déconseillé par orage ou vent fort",
+        "guest.map.label": "Plan du départ",
+        "guest.map.property": "Le logement",
+        "guest.map.start": "Départ",
+        "guest.routeToStart": "Itinéraire jusqu’au départ",
+        "guest.tile.distance": "Distance",
+        "guest.tile.duration": "Durée",
+        "guest.tile.elevation": "Dénivelé",
+        "guest.tile.shape": "Type"
+      },
+      "input": {
+        "trailId": "brague"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "label": "▲▲ Moyen",
+                "type": "Badge"
+              },
+              {
+                "text": "Vallée de la Brague",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "Départ : Biot, chemin des Combes",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "icon": "clock-circle",
+                "key": "i18n:guest.tile.duration",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "3 h"
+              },
+              {
+                "icon": "compass",
+                "key": "i18n:guest.tile.distance",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "9.5 km"
+              },
+              {
+                "icon": "arrow-up",
+                "key": "i18n:guest.tile.elevation",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "220 m"
+              },
+              {
+                "icon": "refresh",
+                "key": "i18n:guest.tile.shape",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "Aller-retour"
+              }
+            ],
+            "minColumnWidth": 136.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "text": "Le long de la rivière, sous les chênes, avec plusieurs gués. Agréable par forte chaleur.",
+            "type": "Text",
+            "variant": "body"
+          },
+          {
+            "interactionMode": "none",
+            "isStatic": true,
+            "label": "i18n:guest.map.label",
+            "markers": [
+              {
+                "id": "property",
+                "kind": "property",
+                "label": "i18n:guest.map.property",
+                "lat": 43.5513,
+                "lng": 7.0128
+              },
+              {
+                "icon": "mountain",
+                "id": "start",
+                "kind": "poi",
+                "label": "i18n:guest.map.start",
+                "lat": 43.628,
+                "lng": 7.098
+              }
+            ],
+            "type": "Map",
+            "viewport": {
+              "center": {
+                "lat": 43.628,
+                "lng": 7.098
+              },
+              "zoom": 13.0
+            }
+          },
+          {
+            "children": [
+              {
+                "leading": "droplet",
+                "title": "i18n:guest.before.water",
+                "type": "ListItem"
+              },
+              {
+                "leading": "cloud-sun",
+                "title": "i18n:guest.before.weather",
+                "type": "ListItem"
+              }
+            ],
+            "icon": "info-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.before.title",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.google.com/maps/search/?api=1&query=43.628,7.098"
+            },
+            "label": "i18n:guest.routeToStart",
+            "type": "Button"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.before.title": "Avant de partir",
+        "guest.before.water": "Emportez 1,5 L d’eau par personne",
+        "guest.before.weather": "Déconseillé par orage ou vent fort",
+        "guest.map.label": "Plan du départ",
+        "guest.map.property": "Le logement",
+        "guest.map.start": "Départ",
+        "guest.routeToStart": "Itinéraire jusqu’au départ",
+        "guest.tile.distance": "Distance",
+        "guest.tile.duration": "Durée",
+        "guest.tile.elevation": "Dénivelé",
+        "guest.tile.shape": "Type"
+      },
+      "input": {
+        "trailId": "littoral"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "label": "▲ Facile",
+                "type": "Badge"
+              },
+              {
+                "text": "Sentier du littoral du Cap",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "Départ : Plage de la Garoupe, Antibes",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "icon": "clock-circle",
+                "key": "i18n:guest.tile.duration",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "2 h 30"
+              },
+              {
+                "icon": "compass",
+                "key": "i18n:guest.tile.distance",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "8 km"
+              },
+              {
+                "icon": "arrow-up",
+                "key": "i18n:guest.tile.elevation",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "60 m"
+              },
+              {
+                "icon": "refresh",
+                "key": "i18n:guest.tile.shape",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "Boucle"
+              }
+            ],
+            "minColumnWidth": 136.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "text": "Le tour du Cap au ras des rochers, entre criques et villas. Passages sur des marches taillées, glissants par mer agitée.",
+            "type": "Text",
+            "variant": "body"
+          },
+          {
+            "interactionMode": "none",
+            "isStatic": true,
+            "label": "i18n:guest.map.label",
+            "markers": [
+              {
+                "id": "property",
+                "kind": "property",
+                "label": "i18n:guest.map.property",
+                "lat": 43.5513,
+                "lng": 7.0128
+              },
+              {
+                "icon": "mountain",
+                "id": "start",
+                "kind": "poi",
+                "label": "i18n:guest.map.start",
+                "lat": 43.5585,
+                "lng": 7.1322
+              }
+            ],
+            "type": "Map",
+            "viewport": {
+              "center": {
+                "lat": 43.5585,
+                "lng": 7.1322
+              },
+              "zoom": 13.0
+            }
+          },
+          {
+            "children": [
+              {
+                "leading": "droplet",
+                "title": "i18n:guest.before.water",
+                "type": "ListItem"
+              },
+              {
+                "leading": "cloud-sun",
+                "title": "i18n:guest.before.weather",
+                "type": "ListItem"
+              }
+            ],
+            "icon": "info-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.before.title",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.google.com/maps/search/?api=1&query=43.5585,7.1322"
+            },
+            "label": "i18n:guest.routeToStart",
+            "type": "Button"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
       }
     }
   ]
