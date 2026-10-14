@@ -5,6 +5,7 @@
 Un itinéraire tapé sur la carte ouvre sa fiche.
 
 * Sur la carte du livret, toucher un départ de randonnée ouvre la fiche de cet itinéraire.
+* L'aperçu public mesure les départs depuis le logement de démonstration, au Cap d'Antibes.
 
 ## 0.9.2
 
