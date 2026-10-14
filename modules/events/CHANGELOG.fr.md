@@ -5,6 +5,7 @@
 Un événement tapé sur la carte ouvre sa fiche.
 
 * Sur la carte du livret, toucher un événement ouvre sa fiche plutôt que la liste de tous les événements.
+* L'aperçu public place l'événement d'exemple près du logement de démonstration, au Cap d'Antibes.
 
 ## 1.10.1
 
