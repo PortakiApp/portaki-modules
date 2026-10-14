@@ -20,7 +20,7 @@ fn sample_config() -> serde_json::Value {
         "building_access_intercom": "Appartement 3, 2e étage",
         "parking_enabled": true,
         "parking_map_url": "https://maps.example.com/parking",
-        "address": "12 rue des Oliviers, 06400 Cannes",
+        "address": "Chemin de la Garoupe, 06160 Antibes",
         "reveal_policy": "always",
         "steps": [
             { "id": "parking", "kind": "parking", "title": { "fr": "Garez-vous au sous-sol" },
