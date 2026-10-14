@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.4
+
+Un événement tapé sur la carte ouvre sa fiche.
+
+* Sur la carte du livret, toucher un événement ouvre sa fiche plutôt que la liste de tous les événements.
+
 ## 1.10.1
 
 Montée technique.

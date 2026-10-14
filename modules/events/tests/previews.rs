@@ -71,8 +71,20 @@ fn previews_match_the_rendered_surfaces() {
     let markers = context
         .clone()
         .run(|ctx| map_markers(ctx).expect("repères"));
+    // Les autres fiches : la démo ouvre celle de l'événement tapé, pas toujours la même.
+    let variants = ["concert", "vide-grenier"]
+        .into_iter()
+        .map(|id| {
+            let input = json!({ "eventId": id });
+            let tree = context.clone().run(|mut ctx| {
+                ctx.input = input.clone();
+                render_explore_item(ctx).expect("surface")
+            });
+            ("explore.item", input, tree)
+        })
+        .collect();
     let home = context.run(render_home_card).expect("home");
-    previews::check_all(
+    previews::check_all_with_variants(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![
@@ -82,5 +94,7 @@ fn previews_match_the_rendered_surfaces() {
         ],
         vec![("home.card", home)],
         Some(serde_json::to_value(markers).expect("repères")),
+        Vec::new(),
+        variants,
     );
 }
