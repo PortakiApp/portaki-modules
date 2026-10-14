@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.12.5
+
+Les appareils mis en avant, comme sur la maquette.
+
+* Dans le livret, l'emoji de chaque appareil se pose sur une pastille blanche, en tuile comme en liste, au lieu de la pastille teintée des icônes.
+
 ## 1.12.4
 
 Signaler une panne depuis la fiche d'un appareil.

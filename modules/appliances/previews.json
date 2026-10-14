@@ -17,7 +17,9 @@
                   "type": "navigate"
                 },
                 "chevron": true,
-                "leading": "🍳",
+                "leading": {
+                  "emoji": "🍳"
+                },
                 "subtitle": "Cuisine",
                 "title": "Plaques à induction",
                 "type": "ListItem"
@@ -36,7 +38,9 @@
                   "type": "navigate"
                 },
                 "chevron": true,
-                "leading": "🌀",
+                "leading": {
+                  "emoji": "🌀"
+                },
                 "subtitle": "Salle de bain",
                 "title": "Lave-linge",
                 "type": "ListItem"
@@ -55,7 +59,9 @@
                   "type": "navigate"
                 },
                 "chevron": true,
-                "leading": "📺",
+                "leading": {
+                  "emoji": "📺"
+                },
                 "subtitle": "Salon",
                 "title": "Télévision",
                 "type": "ListItem"
