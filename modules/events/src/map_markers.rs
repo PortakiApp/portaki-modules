@@ -24,6 +24,14 @@ pub struct MapMarkersResponse {
     pub markers: Vec<MapMarker>,
 }
 
+/// Ce que fait le tap d'un repère : la fiche de l'événement (`events/detail/:eventId`).
+fn item_action(route_id: &str) -> Action {
+    Action::navigate(
+        NavigateTarget::path(format!("events/detail/{route_id}")),
+        None,
+    )
+}
+
 #[portaki_sdk::query(name = "mapMarkers", example(label = "Points sur la carte"))]
 pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
     let config = ModuleConfig::load(&ctx)?;
@@ -32,7 +40,8 @@ pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
     let events = resolve_events(&ctx, &config, false).unwrap_or_default();
     let markers = events
         .into_iter()
-        .filter_map(|event| {
+        .enumerate()
+        .filter_map(|(index, event)| {
             if !event.has_coords() {
                 return None;
             }
@@ -45,7 +54,10 @@ pub fn map_markers(ctx: Context) -> Result<MapMarkersResponse> {
             // Le type du lieu : c'est d'après lui que le livret range le repère dans la famille
             // « Événements », pas d'après le nom du module.
             marker.category = Some("event".into());
-            Some(marker)
+            // Le tap ouvre la fiche de CET événement, au même chemin que sa ligne dans la liste :
+            // le livret suit l'action sans connaître le module. Rang compté avant le filtre des
+            // positions, comme `render_explore_item` le compte.
+            Some(marker.action(item_action(&event.route_id(index))))
         })
         .take(MAX_MARKERS)
         .collect();

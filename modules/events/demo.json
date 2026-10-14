@@ -3,6 +3,10 @@
   "markers": {
     "markers": [
       {
+        "action": {
+          "to": "events/detail/marche-nocturne",
+          "type": "navigate"
+        },
         "category": "event",
         "id": "marche-nocturne",
         "kind": "poi",
@@ -399,6 +403,106 @@
         "icon": "calendar",
         "title": "i18n:home.card.title",
         "type": "Card"
+      }
+    }
+  ],
+  "variants": [
+    {
+      "i18n": {
+        "guest.addToCalendar": "Ajouter à mon agenda",
+        "guest.openLink": "Ouvrir le lien"
+      },
+      "input": {
+        "eventId": "concert"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "label": "à 20:30",
+                "type": "Badge"
+              },
+              {
+                "text": "Concert de jazz en plein air",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "Jardin public",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260604T183000Z/20260604T193000Z&text=Concert+de+jazz+en+plein+air&location=Jardin+public"
+            },
+            "label": "i18n:guest.addToCalendar",
+            "type": "Button"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://example.com/concert"
+            },
+            "label": "i18n:guest.openLink",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.addToCalendar": "Ajouter à mon agenda"
+      },
+      "input": {
+        "eventId": "vide-grenier"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "label": "à 08:00",
+                "type": "Badge"
+              },
+              {
+                "text": "Vide-grenier du dimanche",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "Parking de la plage",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260607T060000Z/20260607T070000Z&text=Vide-grenier+du+dimanche&location=Parking+de+la+plage"
+            },
+            "label": "i18n:guest.addToCalendar",
+            "type": "Button"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
       }
     }
   ]

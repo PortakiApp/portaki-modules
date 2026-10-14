@@ -43,6 +43,11 @@ fn only_located_events_become_markers() {
             assert_eq!(marker.id, "evt-1");
             assert_eq!(marker.label.as_deref(), Some("Concert jazz"));
             assert!((marker.lat - 43.58).abs() < 1e-9);
+            // Le tap ouvre la fiche de l'événement, pas la liste du module.
+            assert_eq!(
+                serde_json::to_value(&marker.action).expect("action")["to"],
+                "events/detail/evt-1"
+            );
         });
 }
 
