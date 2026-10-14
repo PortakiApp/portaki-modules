@@ -2,9 +2,9 @@
 
 ## 1.9.5
 
-Un signalement peut s'ouvrir déjà rempli.
+Le formulaire sait se préremplir.
 
-* Ouvert depuis la fiche d'un appareil, le formulaire arrive avec la catégorie « Appareil ou équipement » et le nom de l'appareil déjà saisis.
+* Ouvert avec une catégorie proposée par l'hôte et un résumé, le formulaire les saisit d'avance ; le voyageur peut toujours les changer.
 
 ## 1.9.2
 
