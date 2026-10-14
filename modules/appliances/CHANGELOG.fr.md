@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.12.4
+
+Signaler une panne depuis la fiche d'un appareil.
+
+* « Un souci avec cet appareil ? » transmet la catégorie et le nom de l'appareil, pour ouvrir un signalement déjà rempli.
+* Le mode d'emploi ne part plus avec la demande : il n'avait rien à y faire.
+
 ## 1.12.1
 
 Montée technique.

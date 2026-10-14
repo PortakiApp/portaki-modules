@@ -12,11 +12,16 @@ use portaki_sdk::sdui::primitives::{
 };
 use portaki_sdk::sdui::surface::Surface;
 
+/// Ce que « Un souci avec cet appareil ? » confie au livret. Le livret choisit la suite (le
+/// formulaire de signalement s'il est installé, la messagerie sinon) et passe les scalaires dans
+/// l'adresse : `category` et `summary` sont les noms que lit le formulaire d'`issue-report`.
+/// Pas de mode d'emploi ici — il finissait dans une URL.
 #[portaki_sdk::wire(serialize)]
 struct OpenHostChatPayload<'a> {
     appliance_id: &'a str,
     appliance_name: &'a str,
-    context: String,
+    category: &'static str,
+    summary: &'a str,
 }
 
 pub fn build_item_detail(payload: &AppliancesPayload, device_id: Option<&str>) -> Surface {
@@ -223,7 +228,8 @@ fn device_detail_children(device: &Appliance, paper_manuals_location: &str) -> V
         Some(json_value(OpenHostChatPayload {
             appliance_id: &device.id,
             appliance_name: &device.name,
-            context: description_plain_text(&device.description),
+            category: "appliance",
+            summary: &device.name,
         })),
     );
 

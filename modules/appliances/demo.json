@@ -179,7 +179,8 @@
               "payload": {
                 "applianceId": "plaques",
                 "applianceName": "Plaques à induction",
-                "context": "Appuyez 2 secondes sur la touche marche, puis choisissez le foyer.\nSeules les casseroles à fond aimanté chauffent."
+                "category": "appliance",
+                "summary": "Plaques à induction"
               },
               "type": "emit"
             },

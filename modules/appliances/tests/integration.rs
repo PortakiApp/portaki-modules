@@ -187,6 +187,9 @@ fn explore_item_uses_device_id_and_howto_steps() {
             assert!(tv_json.contains("Allumez avec la télécommande."));
             assert!(tv_json.contains("https://example.com/tv-manual"));
             assert!(tv_json.contains("openHostChat"));
+            // Le formulaire de signalement lit ces deux noms pour s'ouvrir déjà rempli.
+            assert!(tv_json.contains(r#""category":"appliance""#));
+            assert!(tv_json.contains(r#""summary":"Télévision""#));
             assert!(!tv_json.contains("Lave-linge"));
 
             let mut washer_ctx = ctx.clone();
