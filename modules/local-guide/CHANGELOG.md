@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.4](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.14.3...local-guide-v1.14.4) (2026-10-14)
+
+
+### Bug Fixes
+
+* **local-guide:** show spot photo on its tile ([9ece112](https://github.com/PortakiApp/portaki-modules/commit/9ece112055b137a45b4e29374f17e672cf6a5b57))
+
 ## [1.14.3](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.14.2...local-guide-v1.14.3) (2026-10-13)
 
 
