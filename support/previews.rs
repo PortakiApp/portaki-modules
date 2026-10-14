@@ -73,11 +73,16 @@ pub const NOW: &str = "2026-05-31T10:00:00Z";
 /// Le lendemain du départ — pour ce qu'un module ne montre qu'après.
 ///
 /// `allow(dead_code)` parce que ce fichier est inclus par `#[path]` dans chaque module : ce dont
-/// un seul se sert est mort pour les vingt autres. Pas d'équivalent « pendant le séjour » : le cas
-/// qu'on croyait en avoir besoin, la checklist, ouvre à 48 h du départ, et « pas encore » est la
-/// bonne réponse à mi-séjour.
+/// un seul se sert est mort pour les vingt autres.
 #[allow(dead_code)]
 pub const AFTER: &str = "2026-06-09T10:00:00Z";
+
+/// La veille du départ, en plein séjour — la phase `stay` de la démo (`demo-sejour`).
+///
+/// Ce qu'un module n'ouvre qu'en fin de séjour (une liste de départ, à 48 h du départ par défaut)
+/// y est ouvert : la démo le montre en service plutôt que masqué.
+#[allow(dead_code)]
+pub const DURING: &str = "2026-06-07T10:00:00Z";
 
 /// Un contexte voyageur à une autre heure que celle des aperçus.
 ///
