@@ -4,7 +4,7 @@
 
 L'aperçu du catalogue montre une adresse au Cap d'Antibes.
 
-* L'aperçu public du module affiche l'adresse du logement de démonstration, au Cap d'Antibes, au lieu d'une adresse à Cannes.
+* L'aperçu public du module affiche l'adresse et la position du logement de démonstration, au Cap d'Antibes, au lieu de Cannes.
 
 ## 1.10.3
 
