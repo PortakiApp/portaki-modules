@@ -12,6 +12,8 @@
   "day.strip": "{weekday} {day}",
   "day.sunday": "الأحد",
   "day.thursday": "الخميس",
+  "day.today": "اليوم",
+  "day.tomorrow": "غدًا",
   "day.tuesday": "الثلاثاء",
   "day.wednesday": "الأربعاء",
   "email.condition.cloudy": "سماء غائمة",

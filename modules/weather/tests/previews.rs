@@ -20,12 +20,14 @@ fn sample_current() -> String {
 }
 
 fn sample_forecast() -> String {
+    // À partir du jour de l'horloge des aperçus (31 mai), comme OpenWeather qui commence
+    // aujourd'hui : la bande lit « Aujourd'hui », « Demain », justes quel que soit le jour réel.
     let days = [
-        ("2026-06-01", "Clear", 17.0, 25.0, 0.0, 55, 3.1),
-        ("2026-06-02", "Clouds", 17.5, 24.0, 0.2, 62, 4.0),
-        ("2026-06-03", "Rain", 16.0, 21.0, 0.8, 81, 6.5),
-        ("2026-06-04", "Clouds", 16.5, 23.0, 0.3, 66, 4.4),
-        ("2026-06-05", "Clear", 18.0, 27.0, 0.0, 52, 2.8),
+        ("2026-05-31", "Clear", 17.0, 25.0, 0.0, 55, 3.1),
+        ("2026-06-01", "Clouds", 17.5, 24.0, 0.2, 62, 4.0),
+        ("2026-06-02", "Rain", 16.0, 21.0, 0.8, 81, 6.5),
+        ("2026-06-03", "Clouds", 16.5, 23.0, 0.3, 66, 4.4),
+        ("2026-06-04", "Clear", 18.0, 27.0, 0.0, 52, 2.8),
     ];
     let list: Vec<Value> = days
         .iter()

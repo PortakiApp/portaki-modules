@@ -162,7 +162,7 @@
                   "icon": "sun"
                 },
                 "subtitle": "Ensoleillé · vent 11 km/h · pluie 0 % · humidité 55 %",
-                "title": "Lun 1",
+                "title": "Aujourd'hui",
                 "tone": "success",
                 "trailing": {
                   "mono": true,
@@ -175,7 +175,7 @@
                   "icon": "cloud-sun"
                 },
                 "subtitle": "Nuageux · vent 14 km/h · pluie 20 % · humidité 62 %",
-                "title": "Mar 2",
+                "title": "Demain",
                 "trailing": {
                   "mono": true,
                   "text": "18° / 24°"
@@ -187,7 +187,7 @@
                   "icon": "cloud-rain"
                 },
                 "subtitle": "Pluvieux · vent 23 km/h · pluie 80 % · humidité 81 %",
-                "title": "Mer 3",
+                "title": "Mar 2",
                 "trailing": {
                   "mono": true,
                   "text": "16° / 21°"
@@ -199,7 +199,7 @@
                   "icon": "cloud-sun"
                 },
                 "subtitle": "Nuageux · vent 16 km/h · pluie 30 % · humidité 66 %",
-                "title": "Jeu 4",
+                "title": "Mer 3",
                 "trailing": {
                   "mono": true,
                   "text": "17° / 23°"
@@ -211,7 +211,7 @@
                   "icon": "sun"
                 },
                 "subtitle": "Ensoleillé · vent 10 km/h · pluie 0 % · humidité 52 %",
-                "title": "Ven 5",
+                "title": "Jeu 4",
                 "trailing": {
                   "mono": true,
                   "text": "18° / 27°"
@@ -288,7 +288,7 @@
                 "boxed": true,
                 "children": [
                   {
-                    "text": "Lun 1",
+                    "text": "Aujourd'hui",
                     "type": "Text",
                     "variant": "caption"
                   },
@@ -313,7 +313,7 @@
                 "boxed": true,
                 "children": [
                   {
-                    "text": "Mar 2",
+                    "text": "Demain",
                     "type": "Text",
                     "variant": "caption"
                   },
@@ -337,7 +337,7 @@
                 "boxed": true,
                 "children": [
                   {
-                    "text": "Mer 3",
+                    "text": "Mar 2",
                     "type": "Text",
                     "variant": "caption"
                   },
@@ -361,7 +361,7 @@
                 "boxed": true,
                 "children": [
                   {
-                    "text": "Jeu 4",
+                    "text": "Mer 3",
                     "type": "Text",
                     "variant": "caption"
                   },
@@ -385,7 +385,7 @@
                 "boxed": true,
                 "children": [
                   {
-                    "text": "Ven 5",
+                    "text": "Jeu 4",
                     "type": "Text",
                     "variant": "caption"
                   },

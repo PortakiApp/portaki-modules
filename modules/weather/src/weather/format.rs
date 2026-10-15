@@ -46,11 +46,24 @@ pub fn tone_for_temp_c(temp_c: f64) -> Tone {
     }
 }
 
-/// Short strip / table label: weekday + day-of-month via host i18n.
-pub fn format_day_strip_label(date: &str) -> String {
+/// Short strip / table label: « Aujourd'hui », « Demain », then weekday + day-of-month.
+///
+/// Les deux premiers jours se disent relativement : c'est ainsi qu'on les lit, et la démo du
+/// livret, rendue à une date figée, ne tombe juste sur un nom de jour que par hasard.
+pub fn format_day_strip_label(date: &str, today: NaiveDate) -> String {
+    use portaki_sdk::host::time::{relative_day, RelativeDay};
+
     let Some(parsed) = parse_forecast_date(date) else {
         return date.to_string();
     };
+    let relative = match relative_day(parsed.into(), today.into()) {
+        RelativeDay::Today | RelativeDay::Tonight => Some("day.today"),
+        RelativeDay::Tomorrow => Some("day.tomorrow"),
+        _ => None,
+    };
+    if let Some(key) = relative {
+        return t!(key).unwrap_or_else(|_| key.to_string());
+    }
     let day = parsed.day().to_string();
     let key = weekday_key_for_date(date);
     let weekday = t!(&key).unwrap_or(key);
@@ -164,11 +177,16 @@ mod tests {
 
     #[test]
     fn formats_strip_label_via_i18n() {
+        let today = NaiveDate::from_ymd_opt(2026, 7, 14).unwrap();
         MockContext::guest()
+            .with_translation("day.today", "Aujourd'hui")
+            .with_translation("day.tomorrow", "Demain")
             .with_translation("day.thursday", "jeu.")
             .with_translation("day.strip", "{weekday} {day}")
             .run(|_| {
-                assert_eq!(format_day_strip_label("2026-07-16"), "jeu. 16");
+                assert_eq!(format_day_strip_label("2026-07-14", today), "Aujourd'hui");
+                assert_eq!(format_day_strip_label("2026-07-15", today), "Demain");
+                assert_eq!(format_day_strip_label("2026-07-16", today), "jeu. 16");
             });
     }
 

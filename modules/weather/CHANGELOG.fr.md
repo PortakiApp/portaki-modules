@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.8
+
+Les prévisions disent « Aujourd'hui » et « Demain ».
+
+* La bande et le tableau des prévisions nomment les deux premiers jours « Aujourd'hui » et « Demain », puis le jour de la semaine.
+* La couleur qui marque le jour courant ne se pose plus que sur aujourd'hui, et non sur le premier jour affiché avant l'arrivée.
+
 ## 1.7.5
 
 L'aperçu du catalogue montre la météo d'Antibes.

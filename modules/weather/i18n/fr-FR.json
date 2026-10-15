@@ -12,6 +12,8 @@
   "day.strip": "{weekday} {day}",
   "day.sunday": "Dim",
   "day.thursday": "Jeu",
+  "day.today": "Aujourd'hui",
+  "day.tomorrow": "Demain",
   "day.tuesday": "Mar",
   "day.wednesday": "Mer",
   "email.condition.cloudy": "ciel nuageux",

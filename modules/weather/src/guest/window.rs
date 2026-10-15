@@ -23,16 +23,21 @@ pub fn window(
     now: DateTime<Utc>,
     timezone: &str,
 ) -> Option<(NaiveDate, NaiveDate)> {
-    let local = |instant: DateTime<Utc>| match PropertyTz::parse(timezone) {
-        Some(tz) => tz.to_local(instant).date_naive(),
-        None => instant.date_naive(),
-    };
+    let local = |instant: DateTime<Utc>| local_today(instant, timezone);
     let stay = stay?;
     let today = local(now);
     let from = local(stay.checkin_at?) - Duration::days(1);
     let to = local(stay.checkout_at?) + Duration::days(1);
     let from = from.max(today);
     (from <= to).then_some((from, to))
+}
+
+/// Le jour de `now` au logement : c'est là qu'est « aujourd'hui », pas à l'heure du serveur.
+pub fn local_today(now: DateTime<Utc>, timezone: &str) -> NaiveDate {
+    match PropertyTz::parse(timezone) {
+        Some(tz) => tz.to_local(now).date_naive(),
+        None => now.date_naive(),
+    }
 }
 
 /// Le nombre de jours à demander au fournisseur pour couvrir cette fenêtre.
@@ -47,10 +52,7 @@ pub fn days_to_fetch(
     let Some((_, to)) = window else {
         return 5;
     };
-    let today = match PropertyTz::parse(timezone) {
-        Some(tz) => tz.to_local(now).date_naive(),
-        None => now.date_naive(),
-    };
+    let today = local_today(now, timezone);
     let span = (to - today).num_days() + 1;
     span.clamp(1, MAX_DAYS as i64) as u8
 }

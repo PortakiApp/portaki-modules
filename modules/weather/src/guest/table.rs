@@ -7,7 +7,7 @@ use portaki_sdk::sdui::primitives::{Card, ListItem};
 use crate::entities::WeatherUnits;
 use crate::weather::{
     convert_temp, description_key_for_condition, format_day_strip_label, format_temp_label,
-    format_wind_kmh, icon_name_for_condition, WeatherForecast,
+    format_wind_kmh, icon_name_for_condition, parse_forecast_date, WeatherForecast,
 };
 
 /// Une ligne par jour : l'icône du temps devant, le jour, ce qu'il fait, et les deux températures
@@ -17,18 +17,21 @@ use crate::weather::{
 /// chacune tienne trois caractères, et un en-tête « 💧 » au-dessus d'un « 70 % » n'a plus de mot
 /// pour dire ce que c'est. Le détail — vent, pluie, humidité — passe en sous-titre, où il se lit
 /// en une phrase.
-pub fn build_forecast_table(forecast: &WeatherForecast, units: &WeatherUnits) -> Component {
+pub fn build_forecast_table(
+    forecast: &WeatherForecast,
+    units: &WeatherUnits,
+    today: chrono::NaiveDate,
+) -> Component {
     let unit = units.sdui_unit();
     let rows: Vec<Component> = forecast
         .days
         .iter()
-        .enumerate()
-        .map(|(rank, day)| {
+        .map(|day| {
             let min = format_temp_label(convert_temp(day.min_c, *units), unit, false);
             let max = format_temp_label(convert_temp(day.max_c, *units), unit, false);
 
             let mut item = ListItem::new()
-                .title(format_day_strip_label(&day.date))
+                .title(format_day_strip_label(&day.date, today))
                 .subtitle(day_summary(day))
                 // Les deux températures dans l'emplacement de fin, en chiffres à chasse fixe :
                 // une colonne de « 18° / 22° » ne s'aligne pas en proportionnelle.
@@ -41,10 +44,10 @@ pub fn build_forecast_table(forecast: &WeatherForecast, units: &WeatherUnits) ->
                     icon: Some(icon_name_for_condition(&day.condition)),
                     ..LeadingVisual::default()
                 })));
-            // Le premier jour est aujourd'hui : une teinte douce pour qu'on le retrouve sans
+            // Aujourd'hui : une teinte douce pour qu'on le retrouve sans
             // compter les lignes. `success` est le voile de marque à 12 % du livret, encre du
             // texte ; `primary` en faisait un aplat orange plein, seul de toutes les listes.
-            if rank == 0 {
+            if parse_forecast_date(&day.date) == Some(today) {
                 item = item.tone(Tone::Success);
             }
             Component::ListItem(item)

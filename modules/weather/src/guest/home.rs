@@ -39,6 +39,7 @@ pub fn build_home_card(data: &GuestWeatherData) -> Surface {
                 &data.forecast,
                 &data.units,
                 data.city.as_deref(),
+                data.today,
             )),
     )
     .with_id(crate::guest::HOME_CARD)
