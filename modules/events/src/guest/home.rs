@@ -60,7 +60,17 @@ fn upcoming_headline(data: &GuestData) -> Option<String> {
     if title.is_empty() {
         return None;
     }
-    let when = crate::time_format::event_when(event, data.tz.as_ref());
+    // Une ligne de texte : ce que le livret traduirait (`i18n:`) se traduit ici, et le jour
+    // d'aujourd'hui, que les autres surfaces portent en badge, se dit dans la ligne.
+    let when = data.when(event);
+    let when = match when.strip_prefix("i18n:") {
+        Some(key) => t!(key).unwrap_or_else(|_| key.to_string()),
+        None => when,
+    };
+    let when = match data.today_key(event) {
+        Some(key) => format!("{} {when}", t!(key).unwrap_or_else(|_| key.to_string())),
+        None => when,
+    };
     if when.trim().is_empty() {
         Some(title.to_string())
     } else {

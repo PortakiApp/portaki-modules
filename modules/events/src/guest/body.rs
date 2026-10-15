@@ -65,7 +65,7 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         if !place.trim().is_empty() {
             subtitle_parts.push(place);
         }
-        let when = crate::time_format::event_when(event, data.tz.as_ref());
+        let when = data.when(event);
         if !when.trim().is_empty() {
             subtitle_parts.push(when);
         }
@@ -87,8 +87,8 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
         } else if !enriched {
             item = item.child(Pill::new().label("i18n:guest.event.dateTbd"));
         }
-        if data.is_tonight(event) {
-            item = item.child(tonight_badge());
+        if let Some(key) = data.today_key(event) {
+            item = item.child(today_badge(key));
         }
 
         // La fiche, pas le lien tiers : la maquette donne à chaque ligne `action: detail`, et la
@@ -129,7 +129,7 @@ pub fn build_events_body(data: &GuestData, enriched: bool) -> Vec<Component> {
 /// L'événement qui arrive, en vedette : son heure, son titre, son lieu.
 fn headline(data: &GuestData, event: &crate::config::EventRow) -> Component {
     let mut children: Vec<Component> = Vec::new();
-    let when = crate::time_format::event_when(event, data.tz.as_ref());
+    let when = data.when(event);
     if when.trim().is_empty() {
         children.push(Component::Pill(
             Pill::new().label("i18n:guest.event.dateTbd"),
@@ -137,8 +137,8 @@ fn headline(data: &GuestData, event: &crate::config::EventRow) -> Component {
     } else {
         children.push(Component::Badge(Badge::new().label(when)));
     }
-    if data.is_tonight(event) {
-        children.push(tonight_badge());
+    if let Some(key) = data.today_key(event) {
+        children.push(today_badge(key));
     }
     children.push(Component::Text(
         Text::new()
@@ -157,11 +157,11 @@ fn headline(data: &GuestData, event: &crate::config::EventRow) -> Component {
     Component::Stack(Stack::new().gap(4.0).children(children))
 }
 
-/// Le badge « Ce soir », en couleur de marque (§9 #2).
-pub(super) fn tonight_badge() -> Component {
+/// Le badge du jour, « Ce soir » ou « Aujourd'hui », en couleur de marque (§9 #2).
+pub(super) fn today_badge(key: &str) -> Component {
     Component::Badge(
         Badge::new()
-            .label("i18n:guest.event.tonight")
+            .label(format!("i18n:{key}"))
             .tone(Tone::Primary),
     )
 }

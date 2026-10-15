@@ -1,11 +1,14 @@
 # Changelog
 
-## 1.10.5
+## 1.11.0
 
-La voiture pour les événements éloignés.
+Le jour de chaque événement, dit comme on le dit.
 
+* Chaque événement dit son jour : « Demain à 20:30 », « Samedi à 10:00 », puis la date au-delà de la semaine.
+* Le badge du jour dit « Ce soir » à partir de 18 h, « Aujourd'hui » avant : un concert à 11 h ne passe plus pour une soirée.
+* Un événement qui revient chaque semaine montre sa prochaine date, plus celle du début du séjour, et la liste suit l'ordre des dates.
 * Au-delà de 45 minutes de marche, la fiche d'un événement donne le temps en voiture plutôt qu'à pied.
-* L'aperçu public et la démo montrent trois rendez-vous réels d'Antibes, chacun avec sa fiche et sa place exacte sur la carte.
+* L'aperçu public et la démo montrent trois rendez-vous réels d'Antibes, datés ce soir, demain et samedi.
 
 ## 1.10.4
 
