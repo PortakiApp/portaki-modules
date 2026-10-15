@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.6](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.11.5...pre-arrival-form-v1.11.6) (2026-10-15)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.14.1 ([3e3743e](https://github.com/PortakiApp/portaki-modules/commit/3e3743e9309f8e53a1952f28ad768572e9675267))
+
 ## [1.11.5](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.11.4...pre-arrival-form-v1.11.5) (2026-10-15)
 
 
