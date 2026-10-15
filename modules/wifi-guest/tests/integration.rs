@@ -467,6 +467,7 @@ fn a_peer_sharing_its_reveal_schedule_replaces_the_own_choice() {
             .as_object()
             .cloned()
             .unwrap(),
+        path: None,
     };
     MockContext::host()
         .with_capabilities(&[capability::core::STORAGE])
