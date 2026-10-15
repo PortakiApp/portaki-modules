@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.2
+
+La démo dit « Départ demain ».
+
+* La démo « pendant le séjour » se place la veille du départ : la carte y annonce « Départ demain à 11:00 », juste quel que soit le jour où on l'ouvre.
+
 ## 1.10.0
 
 Le départ dit « demain ».
