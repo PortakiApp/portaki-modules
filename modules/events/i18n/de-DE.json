@@ -44,6 +44,7 @@
   "guest.teaser": "Was in der Umgebung los ist",
   "guest.tile.duration": "Dauer",
   "guest.tile.price": "Preis",
+  "guest.tile.drive": "Mit dem Auto",
   "guest.tile.walk": "Zu Fuß",
   "guest.walk.minutes": "etwa {count} Min.",
   "guest.weekday.fri": "Fr.",

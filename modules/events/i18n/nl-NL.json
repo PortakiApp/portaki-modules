@@ -44,6 +44,7 @@
   "guest.teaser": "Wat er in de buurt te doen is",
   "guest.tile.duration": "Duur",
   "guest.tile.price": "Prijs",
+  "guest.tile.drive": "Met de auto",
   "guest.tile.walk": "Te voet",
   "guest.walk.minutes": "ongeveer {count} min",
   "guest.weekday.fri": "vr",

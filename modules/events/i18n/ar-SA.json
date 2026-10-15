@@ -44,6 +44,7 @@
   "guest.teaser": "ما يجري من حولك",
   "guest.tile.duration": "المدة",
   "guest.tile.price": "السعر",
+  "guest.tile.drive": "بالسيارة",
   "guest.tile.walk": "سيرًا",
   "guest.walk.minutes": "نحو {count} دقيقة",
   "guest.weekday.fri": "الجمعة",

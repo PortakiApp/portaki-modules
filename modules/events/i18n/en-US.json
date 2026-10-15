@@ -44,6 +44,7 @@
   "guest.teaser": "What's on around you",
   "guest.tile.duration": "Duration",
   "guest.tile.price": "Price",
+  "guest.tile.drive": "By car",
   "guest.tile.walk": "On foot",
   "guest.walk.minutes": "about {count} min",
   "guest.weekday.fri": "Fri",

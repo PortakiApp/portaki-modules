@@ -44,6 +44,7 @@
   "guest.teaser": "Ce qui se passe autour de vous",
   "guest.tile.duration": "Durée",
   "guest.tile.price": "Prix",
+  "guest.tile.drive": "En voiture",
   "guest.tile.walk": "À pied",
   "guest.walk.minutes": "environ {count} min",
   "guest.weekday.fri": "ven.",
