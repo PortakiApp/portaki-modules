@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.7](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.12.6...waste-recycling-v1.12.7) (2026-10-15)
+
+
+### Bug Fixes
+
+* **waste-recycling:** demo collects today ([f415902](https://github.com/PortakiApp/portaki-modules/commit/f4159025acf7d8964199950d99ea8703f2a97a92))
+
 ## [1.12.6](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.12.5...waste-recycling-v1.12.6) (2026-10-15)
 
 

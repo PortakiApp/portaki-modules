@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.2](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.10.1...checklist-v1.10.2) (2026-10-15)
+
+
+### Bug Fixes
+
+* **checklist:** demo departs tomorrow ([84fec6d](https://github.com/PortakiApp/portaki-modules/commit/84fec6d8fd4c8d59393c0c4f58878cd33d74de13))
+
 ## [1.10.1](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.10.0...checklist-v1.10.1) (2026-10-15)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.8](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.14.7...facility-hours-v1.14.8) (2026-10-15)
+
+
+### Bug Fixes
+
+* **facility-hours:** call today's row today ([8d2188d](https://github.com/PortakiApp/portaki-modules/commit/8d2188db63fb3954220cf61f668899409ad2f834))
+
 ## [1.14.7](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.14.6...facility-hours-v1.14.7) (2026-10-15)
 
 

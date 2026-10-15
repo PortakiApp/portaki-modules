@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.2](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.14.1...lost-found-v1.14.2) (2026-10-15)
+
+
+### Bug Fixes
+
+* **lost-found:** count deadline from checkout ([684e515](https://github.com/PortakiApp/portaki-modules/commit/684e515ed6700d31cc6194cd024ebf40835b54bf))
+* **lost-found:** demo deadline tomorrow ([6cd8adc](https://github.com/PortakiApp/portaki-modules/commit/6cd8adc70547670ec09fc1e25405125f9583f190))
+
 ## [1.14.1](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.14.0...lost-found-v1.14.1) (2026-10-15)
 
 
