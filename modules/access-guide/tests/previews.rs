@@ -8,29 +8,30 @@ use access_guide::{
 };
 use serde_json::json;
 
-/// Une boîte à clés, un digicode d'immeuble et deux étapes d'arrivée, codes visibles tout de
-/// suite pour que l'aperçu montre ce que le voyageur lira le jour J.
+/// Une maison derrière un portail : le portail, l'allée où se garer, la boîte à clés près de la
+/// porte. Codes visibles tout de suite pour que l'aperçu montre ce que le voyageur lira le jour J.
 fn sample_config() -> serde_json::Value {
     json!({
         "primary_method": "keybox",
-        "keybox_location": "À droite de la porte d'entrée, sous la boîte aux lettres",
+        "keybox_location": "Sur le mur de pierre, à droite de la porte d'entrée",
         "keybox_code": "4821",
-        "building_access_enabled": true,
-        "building_access_gate_code": "A17B",
-        "building_access_intercom": "Appartement 3, 2e étage",
         "parking_enabled": true,
+        "parking_type": "private",
+        "parking_spot": "Allée devant la maison",
         "parking_map_url": "https://maps.example.com/parking",
         "address": "Chemin de la Garoupe, 06160 Antibes",
         "reveal_policy": "always",
         "steps": [
-            { "id": "parking", "kind": "parking", "title": { "fr": "Garez-vous au sous-sol" },
-              "detail": { "fr": "Rampe à gauche de l'immeuble, place n° 8." } },
-            { "id": "door", "kind": "door", "title": { "fr": "Entrez dans l'immeuble" },
-              "detail": { "fr": "Digicode au portail, puis ascenseur jusqu'au 2e étage." } }
+            { "id": "gate", "kind": "gate", "title": { "fr": "Ouvrez le portail" },
+              "detail": { "fr": "Portail en bois vert au bout du chemin ; il s'ouvre à la main. Refermez-le derrière vous." } },
+            { "id": "parking", "kind": "parking", "title": { "fr": "Garez-vous dans l'allée" },
+              "detail": { "fr": "Deux voitures tiennent sur le gravier, devant l'ancienne bergerie." } },
+            { "id": "door", "kind": "door", "title": { "fr": "Entrez par la porte d'entrée" },
+              "detail": { "fr": "Les clés sont dans la boîte, sur le mur à droite de la porte." } }
         ],
         "method_instructions": { "fr": "Composez le code, tirez le volet vers le bas : les clés sont sur le crochet." },
-        "parking_info": { "fr": "Place n° 8 au sous-sol, badge sur le trousseau." },
-        "global_note": { "fr": "Merci de refermer la boîte à clés après usage." }
+        "parking_info": { "fr": "Allée privée derrière le portail, gratuite, deux places." },
+        "global_note": { "fr": "Merci de refermer la boîte à clés et le portail après usage." }
     })
 }
 

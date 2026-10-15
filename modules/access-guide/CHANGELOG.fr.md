@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.5
+
+Un aperçu fidèle à la maison de démonstration.
+
+* L'aperçu public et la démo du livret décrivent l'arrivée dans une maison : portail, allée, boîte à clés près de la porte. Rien ne change pour l'hôte.
+
 ## 1.10.4
 
 L'aperçu du catalogue montre une adresse au Cap d'Antibes.
