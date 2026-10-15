@@ -4,6 +4,7 @@
     {
       "i18n": {
         "guest.note.title": "À savoir",
+        "guest.today": "aujourd’hui",
         "nav.facility-hours": "Horaires & accès"
       },
       "surfaceId": "explore.detail",
@@ -69,7 +70,7 @@
                       },
                       {
                         "current": true,
-                        "label": "dimanche",
+                        "label": "i18n:guest.today",
                         "value": "09:00 – 20:00"
                       }
                     ],
@@ -119,7 +120,7 @@
                       },
                       {
                         "current": true,
-                        "label": "dimanche",
+                        "label": "i18n:guest.today",
                         "value": "08:00 – 22:00"
                       }
                     ],
@@ -183,7 +184,7 @@
                       },
                       {
                         "current": true,
-                        "label": "dimanche",
+                        "label": "i18n:guest.today",
                         "value": "08:30 – 12:00 · 14:00 – 18:00"
                       }
                     ],

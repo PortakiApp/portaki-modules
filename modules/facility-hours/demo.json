@@ -3,7 +3,8 @@
   "surfaces": [
     {
       "i18n": {
-        "guest.note.title": "À savoir"
+        "guest.note.title": "À savoir",
+        "guest.today": "aujourd’hui"
       },
       "labelKey": "nav.facility-hours",
       "path": "facility-hours/detail",
@@ -69,7 +70,7 @@
                       },
                       {
                         "current": true,
-                        "label": "dimanche",
+                        "label": "i18n:guest.today",
                         "value": "09:00 – 20:00"
                       }
                     ],
@@ -119,7 +120,7 @@
                       },
                       {
                         "current": true,
-                        "label": "dimanche",
+                        "label": "i18n:guest.today",
                         "value": "08:00 – 22:00"
                       }
                     ],
@@ -183,7 +184,7 @@
                       },
                       {
                         "current": true,
-                        "label": "dimanche",
+                        "label": "i18n:guest.today",
                         "value": "08:30 – 12:00 · 14:00 – 18:00"
                       }
                     ],
@@ -218,6 +219,7 @@
         "guest.note.title": "À savoir",
         "guest.stay.checkin": "Arrivée",
         "guest.stay.checkout": "Départ",
+        "guest.today": "aujourd’hui",
         "home.card.subtitle": "État en direct",
         "home.card.title": "Horaires & accès"
       },
@@ -289,7 +291,7 @@
               },
               {
                 "current": true,
-                "label": "dimanche",
+                "label": "i18n:guest.today",
                 "value": "09:00 – 20:00"
               }
             ],
@@ -332,7 +334,7 @@
               },
               {
                 "current": true,
-                "label": "dimanche",
+                "label": "i18n:guest.today",
                 "value": "08:00 – 22:00"
               }
             ],
@@ -375,7 +377,7 @@
               },
               {
                 "current": true,
-                "label": "dimanche",
+                "label": "i18n:guest.today",
                 "value": "08:30 – 12:00 · 14:00 – 18:00"
               }
             ],
