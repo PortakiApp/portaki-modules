@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.5
+
+Des balades vraiment autour du logement de démonstration.
+
+* L'aperçu public et la démo montrent trois balades du Cap d'Antibes et du vieil Antibes, au lieu d'un sommet à 23 km. Rien ne change pour l'hôte.
+
 ## 0.9.4
 
 Un itinéraire tapé sur la carte ouvre sa fiche.
