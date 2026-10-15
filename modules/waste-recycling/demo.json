@@ -8,6 +8,7 @@
       "i18n": {
         "guest.binRoom.title": "Le local poubelles",
         "guest.bins.title": "Les bacs",
+        "guest.collection.today": "Collecte aujourd’hui",
         "guest.inside.title": "Dans le logement"
       },
       "labelKey": "nav.waste-recycling",
@@ -16,8 +17,8 @@
       "tree": {
         "children": [
           {
-            "message": "Mardi pour le bac jaune, vendredi pour les ordures ménagères.",
-            "title": "Prochaine collecte mardi",
+            "message": "Bac jaune et ordures ménagères, ramassés tôt le matin.",
+            "title": "i18n:guest.collection.today",
             "tone": "info",
             "type": "InfoBanner"
           },
@@ -123,6 +124,7 @@
     },
     {
       "i18n": {
+        "guest.collection.today": "Collecte aujourd’hui",
         "guest.dropoff.cta": "Où déposer mes déchets ?",
         "home.card.title": "Tri & déchets"
       },
@@ -139,8 +141,8 @@
         },
         "children": [
           {
-            "message": "Mardi pour le bac jaune, vendredi pour les ordures ménagères.",
-            "title": "Prochaine collecte mardi",
+            "message": "Bac jaune et ordures ménagères, ramassés tôt le matin.",
+            "title": "i18n:guest.collection.today",
             "tone": "info",
             "type": "InfoBanner"
           },

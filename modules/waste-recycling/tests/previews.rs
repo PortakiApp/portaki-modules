@@ -42,11 +42,15 @@ fn sample_config() -> serde_json::Value {
         ],
         // Les jours cochés disent quand, la phrase dit quoi : les deux se lisent ensemble, et c'est
         // exactement ce que l'aperçu doit montrer (§2.7).
-        "collects_tue": true,
-        "collects_fri": true,
+        //
+        // Le dimanche, jour de l'horloge des aperçus : le bandeau dit « Collecte aujourd'hui ». Un
+        // autre jour s'y écrirait par son nom (« Prochaine collecte mardi »), et un rendu figé qui
+        // nomme un jour ment dans la démo six jours sur sept. La phrase, pour la même raison, ne
+        // nomme pas de jour.
+        "collects_sun": true,
         "collection_schedule": {
-            "fr": "Mardi pour le bac jaune, vendredi pour les ordures ménagères.",
-            "en": "Tuesday for the yellow bin, Friday for general waste."
+            "fr": "Bac jaune et ordures ménagères, ramassés tôt le matin.",
+            "en": "Yellow bin and general waste, collected early in the morning."
         },
         "bin_room_steps": {
             "fr": "Sortez par le portail, allée de gauche\nPorte grise du local, ouverte de 7 h à 22 h\nDéposez vos sacs dans le bon bac",
