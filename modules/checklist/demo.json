@@ -111,7 +111,7 @@
             }
           ],
           "icon": "list-checks",
-          "subtitle": "Départ lundi à 11:00 · cochez au fur et à mesure",
+          "subtitle": "Départ demain à 11:00 · cochez au fur et à mesure",
           "title": "Avant de partir",
           "type": "Card"
         }
@@ -172,7 +172,7 @@
           }
         ],
         "icon": "list-checks",
-        "subtitle": "Départ lundi à 11:00 · cochez au fur et à mesure",
+        "subtitle": "Départ demain à 11:00 · cochez au fur et à mesure",
         "title": "Avant de partir",
         "type": "Card"
       }
