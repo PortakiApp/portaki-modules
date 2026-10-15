@@ -1066,3 +1066,35 @@ fn the_drawer_reveals_each_option_s_field_and_refuses_no_option() {
             assert!(json.contains("guest.return.pickup"), "{json}");
         });
 }
+
+/// Avant le départ, le délai se compte depuis le départ : ni date ni jour nommé, que le voyageur
+/// aurait à recalculer — et qu'un rendu figé démentirait. Après, « Jusqu'à demain ».
+#[test]
+#[serial]
+fn the_deadline_counts_from_checkout_until_the_guest_leaves() {
+    use portaki_sdk::context::StayContext;
+    let checkout = chrono::DateTime::parse_from_rfc3339("2026-06-08T09:00:00Z")
+        .unwrap()
+        .with_timezone(&chrono::Utc);
+    let render = |now, window_days: u32| {
+        reset_test_store();
+        MockContext::guest()
+            .with_stay(StayContext {
+                checkout_at: Some(checkout),
+                ..StayContext::default()
+            })
+            .with_kv(
+                "config",
+                serde_json::to_vec(&json!({ "window_days": window_days })).unwrap(),
+            )
+            .with_translation("form.deadline.afterCheckout", "+{days} j")
+            .with_translation("form.deadline.afterCheckout.one", "lendemain")
+            .with_translation("form.deadline.day.tomorrow", "demain")
+            .with_translation("form.deadline.relative", "Jusqu'à {day}")
+            .with_now(now)
+            .run(|ctx| serde_json::to_string(&render_guest_form(ctx).unwrap()).unwrap())
+    };
+    assert!(render(checkout - Duration::days(1), 7).contains("\"+7 j\""));
+    assert!(render(checkout - Duration::days(1), 1).contains("\"lendemain\""));
+    assert!(render(checkout + Duration::days(1), 2).contains("\"Jusqu'à demain\""));
+}

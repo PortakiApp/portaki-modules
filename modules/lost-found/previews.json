@@ -289,7 +289,7 @@
               },
               {
                 "message": "i18n:form.deadline.message",
-                "title": "Jusqu’au 10 juin 2026",
+                "title": "Jusqu’à 2 jours après votre départ",
                 "tone": "neutral",
                 "type": "InfoBanner"
               },

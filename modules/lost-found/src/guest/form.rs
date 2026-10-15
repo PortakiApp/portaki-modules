@@ -431,12 +431,23 @@ fn return_icon(option: &str) -> IconName {
 /// « Jusqu'à samedi », « Jusqu'au 5 septembre 2026 » — la fin du délai, écrite pour le voyageur :
 /// le jour quand il tombe dans la semaine, la date sinon.
 ///
+/// Avant le départ, le délai n'a pas commencé : il se compte depuis le départ (« Jusqu'à 7 jours
+/// après votre départ »). Une date, c'était un calcul de plus pour le voyageur — et, dans la démo
+/// figée, une date de juin servie en octobre.
+///
 /// Rien sans date de départ ni horloge : le délai ne court pas davantage, et annoncer une échéance
 /// qu'on ne sait pas calculer vaut moins que ne rien annoncer.
 fn deadline_label(ctx: &GuestContext, window_days: u32) -> Option<String> {
     use portaki_sdk::host::time::{self, PropertyTz, RelativeDay};
 
     let checkout_at = ctx.stay.as_ref().and_then(|stay| stay.checkout_at)?;
+    let now = time::now().ok()?;
+    if now < checkout_at {
+        return match window_days {
+            1 => t!("form.deadline.afterCheckout.one").ok(),
+            days => t!("form.deadline.afterCheckout", days = days.to_string()).ok(),
+        };
+    }
     let deadline = checkout_at + chrono::Duration::days(i64::from(window_days));
     // Dans le fuseau du logement : un départ le 8 à 10 h plus sept jours ne tombe pas la veille
     // parce que le voyageur lit son livret depuis Tokyo.
@@ -446,10 +457,10 @@ fn deadline_label(ctx: &GuestContext, window_days: u32) -> Option<String> {
         None => at.naive_utc(),
     };
     let day = local(deadline).date();
-    let key = match time::now().map(|now| time::relative_day(day.into(), local(now))) {
-        Ok(RelativeDay::Today | RelativeDay::Tonight) => "today",
-        Ok(RelativeDay::Tomorrow) => "tomorrow",
-        Ok(RelativeDay::Weekday(weekday)) => ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+    let key = match time::relative_day(day.into(), local(now)) {
+        RelativeDay::Today | RelativeDay::Tonight => "today",
+        RelativeDay::Tomorrow => "tomorrow",
+        RelativeDay::Weekday(weekday) => ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
             [weekday.num_days_from_monday() as usize],
         // Hier, une date lointaine, ou un cas que le SDK ajouterait : la date.
         _ => {

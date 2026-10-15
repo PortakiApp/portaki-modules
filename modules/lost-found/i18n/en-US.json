@@ -18,6 +18,8 @@
   "form.category.toy": "Toy, comforter",
   "form.contactHint.label": "How to reach you (optional)",
   "form.contactHint.placeholder": "Phone or email",
+  "form.deadline.afterCheckout": "Until {days} days after checkout",
+  "form.deadline.afterCheckout.one": "Until the day after checkout",
   "form.deadline.day.fri": "Friday",
   "form.deadline.day.mon": "Monday",
   "form.deadline.day.sat": "Saturday",

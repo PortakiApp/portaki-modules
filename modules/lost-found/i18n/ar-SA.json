@@ -18,6 +18,8 @@
   "form.category.toy": "لعبة، دمية",
   "form.contactHint.label": "كيف نتواصل معك (اختياري)",
   "form.contactHint.placeholder": "هاتف أو بريد",
+  "form.deadline.afterCheckout": "حتى {days} يومًا بعد المغادرة",
+  "form.deadline.afterCheckout.one": "حتى اليوم التالي للمغادرة",
   "form.deadline.day.fri": "الجمعة",
   "form.deadline.day.mon": "الاثنين",
   "form.deadline.day.sat": "السبت",

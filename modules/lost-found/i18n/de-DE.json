@@ -18,6 +18,8 @@
   "form.category.toy": "Spielzeug, Kuscheltier",
   "form.contactHint.label": "Wie wir Sie erreichen (optional)",
   "form.contactHint.placeholder": "Telefon oder E-Mail",
+  "form.deadline.afterCheckout": "Bis {days} Tage nach der Abreise",
+  "form.deadline.afterCheckout.one": "Bis zum Tag nach der Abreise",
   "form.deadline.day.fri": "Freitag",
   "form.deadline.day.mon": "Montag",
   "form.deadline.day.sat": "Samstag",

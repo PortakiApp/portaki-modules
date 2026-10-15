@@ -18,6 +18,8 @@
   "form.category.toy": "Jouet, doudou",
   "form.contactHint.label": "Comment vous joindre (optionnel)",
   "form.contactHint.placeholder": "Téléphone ou e-mail",
+  "form.deadline.afterCheckout": "Jusqu’à {days} jours après votre départ",
+  "form.deadline.afterCheckout.one": "Jusqu’au lendemain de votre départ",
   "form.deadline.day.fri": "vendredi",
   "form.deadline.day.mon": "lundi",
   "form.deadline.day.sat": "samedi",

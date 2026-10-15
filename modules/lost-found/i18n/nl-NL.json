@@ -18,6 +18,8 @@
   "form.category.toy": "Speelgoed, knuffel",
   "form.contactHint.label": "Hoe we je bereiken (optioneel)",
   "form.contactHint.placeholder": "Telefoon of e-mail",
+  "form.deadline.afterCheckout": "Tot {days} dagen na je vertrek",
+  "form.deadline.afterCheckout.one": "Tot de dag na je vertrek",
   "form.deadline.day.fri": "vrijdag",
   "form.deadline.day.mon": "maandag",
   "form.deadline.day.sat": "zaterdag",
