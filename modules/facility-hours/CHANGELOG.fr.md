@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.14.5
+
+Un aperçu fidèle à la maison de démonstration.
+
+* L'aperçu public et la démo du livret montrent les équipements d'une maison : piscine, jacuzzi et ménage en cours de séjour. Rien ne change pour l'hôte.
+
 ## 1.14.1
 
 Montée technique.

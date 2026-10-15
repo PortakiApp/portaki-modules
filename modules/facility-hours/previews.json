@@ -27,7 +27,7 @@
                   {
                     "children": [
                       {
-                        "text": "Tous les jours, de juin à septembre",
+                        "text": "Chauffée de mai à octobre",
                         "type": "Text",
                         "variant": "caption"
                       },
@@ -37,7 +37,7 @@
                         "variant": "caption"
                       },
                       {
-                        "text": "Bonnet de bain non obligatoire.",
+                        "text": "Merci de remettre la bâche le soir.",
                         "type": "Text",
                         "variant": "caption"
                       }
@@ -73,7 +73,7 @@
                         "value": "09:00 – 20:00"
                       }
                     ],
-                    "leading": "sun",
+                    "leading": "droplet",
                     "subtitle": "9 h – 20 h",
                     "title": "Piscine",
                     "trailing": {
@@ -87,7 +87,7 @@
                   {
                     "children": [
                       {
-                        "text": "Rez-de-chaussée, bâtiment B",
+                        "text": "Sous la pergola, côté jardin",
                         "type": "Text",
                         "variant": "caption"
                       }
@@ -95,37 +95,37 @@
                     "details": [
                       {
                         "label": "lundi",
-                        "value": "07:00 – 22:00"
+                        "value": "08:00 – 22:00"
                       },
                       {
                         "label": "mardi",
-                        "value": "07:00 – 22:00"
+                        "value": "08:00 – 22:00"
                       },
                       {
                         "label": "mercredi",
-                        "value": "07:00 – 22:00"
+                        "value": "08:00 – 22:00"
                       },
                       {
                         "label": "jeudi",
-                        "value": "07:00 – 22:00"
+                        "value": "08:00 – 22:00"
                       },
                       {
                         "label": "vendredi",
-                        "value": "07:00 – 22:00"
+                        "value": "08:00 – 22:00"
                       },
                       {
                         "label": "samedi",
-                        "value": "07:00 – 22:00"
+                        "value": "08:00 – 22:00"
                       },
                       {
                         "current": true,
                         "label": "dimanche",
-                        "value": "07:00 – 22:00"
+                        "value": "08:00 – 22:00"
                       }
                     ],
-                    "leading": "droplet",
-                    "subtitle": "7 h – 22 h",
-                    "title": "Laverie",
+                    "leading": "sparkles",
+                    "subtitle": "8 h – 22 h",
+                    "title": "Jacuzzi",
                     "trailing": {
                       "badge": {
                         "label": "Ouvert · ferme à 22:00",
@@ -151,7 +151,7 @@
                   {
                     "children": [
                       {
-                        "text": "Du lundi au samedi",
+                        "text": "Du lundi au samedi, sur demande la veille",
                         "type": "Text",
                         "variant": "caption"
                       }
@@ -187,9 +187,9 @@
                         "value": "08:30 – 12:00 · 14:00 – 18:00"
                       }
                     ],
-                    "leading": "building",
+                    "leading": "sparkles",
                     "subtitle": "8 h 30 – 12 h · 14 h – 18 h",
-                    "title": "Accueil de la résidence",
+                    "title": "Ménage en cours de séjour",
                     "trailing": {
                       "badge": {
                         "label": "Ouvre à 14:00",
