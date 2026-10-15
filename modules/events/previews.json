@@ -24,18 +24,18 @@
                 "lng": 7.12758
               },
               {
-                "id": "concert",
-                "kind": "poi",
-                "label": "Concert au théâtre Anthéa",
-                "lat": 43.59031,
-                "lng": 7.11821
-              },
-              {
                 "id": "picasso",
                 "kind": "poi",
                 "label": "Les collections du musée Picasso",
                 "lat": 43.58071,
                 "lng": 7.12826
+              },
+              {
+                "id": "concert",
+                "kind": "poi",
+                "label": "Concert au théâtre Anthéa",
+                "lat": 43.59031,
+                "lng": 7.11821
               }
             ],
             "type": "Map",
@@ -68,13 +68,33 @@
             "leading": {
               "time": "07:00"
             },
-            "subtitle": "Cours Masséna · Mardi à 07:00 · Tous les mardis, mercredis, jeudis, vendredis, samedis et dimanches",
+            "subtitle": "Cours Masséna · Demain à 07:00",
             "title": "Marché provençal",
             "type": "ListItem"
           },
           {
             "text": "i18n:guest.next",
             "type": "Eyebrow"
+          },
+          {
+            "action": {
+              "to": "events/detail/picasso",
+              "type": "navigate"
+            },
+            "chevron": true,
+            "children": [
+              {
+                "text": "Les œuvres que Picasso a peintes ici en 1946, dans le château qui domine la mer.",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "leading": {
+              "time": "19:00"
+            },
+            "subtitle": "Château Grimaldi · Demain à 19:00",
+            "title": "Les collections du musée Picasso",
+            "type": "ListItem"
           },
           {
             "action": {
@@ -96,28 +116,8 @@
             "leading": {
               "time": "20:30"
             },
-            "subtitle": "Anthéa, théâtre d'Antibes · Mercredi à 20:30",
+            "subtitle": "Anthéa, théâtre d'Antibes · Demain à 20:30",
             "title": "Concert au théâtre Anthéa",
-            "type": "ListItem"
-          },
-          {
-            "action": {
-              "to": "events/detail/picasso",
-              "type": "navigate"
-            },
-            "chevron": true,
-            "children": [
-              {
-                "text": "Les œuvres que Picasso a peintes ici en 1946, dans le château qui domine la mer.",
-                "type": "Text",
-                "variant": "caption"
-              }
-            ],
-            "leading": {
-              "time": "10:00"
-            },
-            "subtitle": "Château Grimaldi · Samedi à 10:00",
-            "title": "Les collections du musée Picasso",
             "type": "ListItem"
           }
         ],
@@ -145,18 +145,13 @@
           {
             "children": [
               {
-                "label": "Mardi à 07:00",
+                "label": "Demain à 07:00",
                 "type": "Badge"
               },
               {
                 "text": "Marché provençal",
                 "type": "Text",
                 "variant": "display"
-              },
-              {
-                "text": "Tous les mardis, mercredis, jeudis, vendredis, samedis et dimanches",
-                "type": "Text",
-                "variant": "caption"
               },
               {
                 "emphasis": "subtle",
@@ -277,7 +272,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260602T050000Z/20260602T110000Z&text=March%C3%A9+proven%C3%A7al&location=Cours+Mass%C3%A9na"
+              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260601T050000Z/20260601T110000Z&text=March%C3%A9+proven%C3%A7al&location=Cours+Mass%C3%A9na"
             },
             "label": "i18n:guest.addToCalendar",
             "type": "Button",
@@ -307,7 +302,7 @@
         },
         "children": [
           {
-            "text": "Marché provençal · Mardi à 07:00",
+            "text": "Marché provençal · Demain à 07:00",
             "type": "Text",
             "variant": "caption"
           }

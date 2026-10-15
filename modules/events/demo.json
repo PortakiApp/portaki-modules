@@ -16,18 +16,6 @@
       },
       {
         "action": {
-          "to": "events/detail/concert",
-          "type": "navigate"
-        },
-        "category": "event",
-        "id": "concert",
-        "kind": "poi",
-        "label": "Concert au théâtre Anthéa",
-        "lat": 43.59031,
-        "lng": 7.11821
-      },
-      {
-        "action": {
           "to": "events/detail/picasso",
           "type": "navigate"
         },
@@ -37,6 +25,18 @@
         "label": "Les collections du musée Picasso",
         "lat": 43.58071,
         "lng": 7.12826
+      },
+      {
+        "action": {
+          "to": "events/detail/concert",
+          "type": "navigate"
+        },
+        "category": "event",
+        "id": "concert",
+        "kind": "poi",
+        "label": "Concert au théâtre Anthéa",
+        "lat": 43.59031,
+        "lng": 7.11821
       }
     ]
   },
@@ -56,11 +56,11 @@
               "isStatic": true,
               "markers": [
                 {
-                  "id": "concert",
+                  "id": "marche-provencal",
                   "kind": "poi",
-                  "label": "Concert au théâtre Anthéa",
-                  "lat": 43.59031,
-                  "lng": 7.11821
+                  "label": "Marché provençal",
+                  "lat": 43.58093,
+                  "lng": 7.12758
                 },
                 {
                   "id": "picasso",
@@ -68,13 +68,20 @@
                   "label": "Les collections du musée Picasso",
                   "lat": 43.58071,
                   "lng": 7.12826
+                },
+                {
+                  "id": "concert",
+                  "kind": "poi",
+                  "label": "Concert au théâtre Anthéa",
+                  "lat": 43.59031,
+                  "lng": 7.11821
                 }
               ],
               "type": "Map",
               "viewport": {
                 "center": {
-                  "lat": 43.58551,
-                  "lng": 7.123235
+                  "lat": 43.58398333333334,
+                  "lng": 7.1246833333333335
                 },
                 "zoom": 13.0
               }
@@ -83,6 +90,50 @@
               "message": "Programme indicatif, à vérifier auprès des organisateurs.",
               "title": "i18n:guest.disclaimer.title",
               "type": "InfoBanner"
+            },
+            {
+              "action": {
+                "to": "events/detail/marche-provencal",
+                "type": "navigate"
+              },
+              "chevron": true,
+              "children": [
+                {
+                  "text": "Producteurs du pays sous la halle du vieil Antibes : fruits, fromages, olives, fleurs.",
+                  "type": "Text",
+                  "variant": "caption"
+                }
+              ],
+              "leading": {
+                "time": "07:00"
+              },
+              "subtitle": "Cours Masséna · Hier à 07:00",
+              "title": "Marché provençal",
+              "type": "ListItem"
+            },
+            {
+              "text": "i18n:guest.next",
+              "type": "Eyebrow"
+            },
+            {
+              "action": {
+                "to": "events/detail/picasso",
+                "type": "navigate"
+              },
+              "chevron": true,
+              "children": [
+                {
+                  "text": "Les œuvres que Picasso a peintes ici en 1946, dans le château qui domine la mer.",
+                  "type": "Text",
+                  "variant": "caption"
+                }
+              ],
+              "leading": {
+                "time": "19:00"
+              },
+              "subtitle": "Château Grimaldi · Hier à 19:00",
+              "title": "Les collections du musée Picasso",
+              "type": "ListItem"
             },
             {
               "action": {
@@ -104,32 +155,8 @@
               "leading": {
                 "time": "20:30"
               },
-              "subtitle": "Anthéa, théâtre d'Antibes · 3 juin à 20:30",
+              "subtitle": "Anthéa, théâtre d'Antibes · Hier à 20:30",
               "title": "Concert au théâtre Anthéa",
-              "type": "ListItem"
-            },
-            {
-              "text": "i18n:guest.next",
-              "type": "Eyebrow"
-            },
-            {
-              "action": {
-                "to": "events/detail/picasso",
-                "type": "navigate"
-              },
-              "chevron": true,
-              "children": [
-                {
-                  "text": "Les œuvres que Picasso a peintes ici en 1946, dans le château qui domine la mer.",
-                  "type": "Text",
-                  "variant": "caption"
-                }
-              ],
-              "leading": {
-                "time": "10:00"
-              },
-              "subtitle": "Château Grimaldi · 6 juin à 10:00",
-              "title": "Les collections du musée Picasso",
               "type": "ListItem"
             }
           ],
@@ -260,7 +287,7 @@
               "leading": {
                 "time": "07:00"
               },
-              "subtitle": "Cours Masséna · Demain à 07:00 · Tous les mardis, mercredis, jeudis, vendredis, samedis et dimanches",
+              "subtitle": "Cours Masséna · Demain à 07:00",
               "title": "Marché provençal",
               "type": "ListItem"
             },
@@ -278,9 +305,9 @@
                 }
               ],
               "leading": {
-                "time": "10:00"
+                "time": "19:00"
               },
-              "subtitle": "Château Grimaldi · Samedi à 10:00",
+              "subtitle": "Château Grimaldi · Demain à 19:00",
               "title": "Les collections du musée Picasso",
               "type": "ListItem"
             }
@@ -368,7 +395,7 @@
               "leading": {
                 "time": "07:00"
               },
-              "subtitle": "Cours Masséna · Demain à 07:00 · Tous les mardis, mercredis, jeudis, vendredis, samedis et dimanches",
+              "subtitle": "Cours Masséna · Demain à 07:00",
               "title": "Marché provençal",
               "type": "ListItem"
             },
@@ -379,9 +406,9 @@
               },
               "chevron": true,
               "leading": {
-                "time": "10:00"
+                "time": "19:00"
               },
-              "subtitle": "Château Grimaldi · Samedi à 10:00",
+              "subtitle": "Château Grimaldi · Demain à 19:00",
               "title": "Les collections du musée Picasso",
               "type": "ListItem"
             }
@@ -445,18 +472,18 @@
                 "lng": 7.12758
               },
               {
-                "id": "concert",
-                "kind": "poi",
-                "label": "Concert au théâtre Anthéa",
-                "lat": 43.59031,
-                "lng": 7.11821
-              },
-              {
                 "id": "picasso",
                 "kind": "poi",
                 "label": "Les collections du musée Picasso",
                 "lat": 43.58071,
                 "lng": 7.12826
+              },
+              {
+                "id": "concert",
+                "kind": "poi",
+                "label": "Concert au théâtre Anthéa",
+                "lat": 43.59031,
+                "lng": 7.11821
               }
             ],
             "type": "Map",
@@ -489,13 +516,33 @@
             "leading": {
               "time": "07:00"
             },
-            "subtitle": "Cours Masséna · Mardi à 07:00 · Tous les mardis, mercredis, jeudis, vendredis, samedis et dimanches",
+            "subtitle": "Cours Masséna · Demain à 07:00",
             "title": "Marché provençal",
             "type": "ListItem"
           },
           {
             "text": "i18n:guest.next",
             "type": "Eyebrow"
+          },
+          {
+            "action": {
+              "to": "events/detail/picasso",
+              "type": "navigate"
+            },
+            "chevron": true,
+            "children": [
+              {
+                "text": "Les œuvres que Picasso a peintes ici en 1946, dans le château qui domine la mer.",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "leading": {
+              "time": "19:00"
+            },
+            "subtitle": "Château Grimaldi · Demain à 19:00",
+            "title": "Les collections du musée Picasso",
+            "type": "ListItem"
           },
           {
             "action": {
@@ -517,28 +564,8 @@
             "leading": {
               "time": "20:30"
             },
-            "subtitle": "Anthéa, théâtre d'Antibes · Mercredi à 20:30",
+            "subtitle": "Anthéa, théâtre d'Antibes · Demain à 20:30",
             "title": "Concert au théâtre Anthéa",
-            "type": "ListItem"
-          },
-          {
-            "action": {
-              "to": "events/detail/picasso",
-              "type": "navigate"
-            },
-            "chevron": true,
-            "children": [
-              {
-                "text": "Les œuvres que Picasso a peintes ici en 1946, dans le château qui domine la mer.",
-                "type": "Text",
-                "variant": "caption"
-              }
-            ],
-            "leading": {
-              "time": "10:00"
-            },
-            "subtitle": "Château Grimaldi · Samedi à 10:00",
-            "title": "Les collections du musée Picasso",
             "type": "ListItem"
           }
         ],
@@ -566,18 +593,13 @@
           {
             "children": [
               {
-                "label": "Mardi à 07:00",
+                "label": "Demain à 07:00",
                 "type": "Badge"
               },
               {
                 "text": "Marché provençal",
                 "type": "Text",
                 "variant": "display"
-              },
-              {
-                "text": "Tous les mardis, mercredis, jeudis, vendredis, samedis et dimanches",
-                "type": "Text",
-                "variant": "caption"
               },
               {
                 "emphasis": "subtle",
@@ -698,7 +720,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260602T050000Z/20260602T110000Z&text=March%C3%A9+proven%C3%A7al&location=Cours+Mass%C3%A9na"
+              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260601T050000Z/20260601T110000Z&text=March%C3%A9+proven%C3%A7al&location=Cours+Mass%C3%A9na"
             },
             "label": "i18n:guest.addToCalendar",
             "type": "Button",
@@ -737,7 +759,7 @@
           {
             "children": [
               {
-                "label": "Mardi à 07:00",
+                "label": "Demain à 07:00",
                 "type": "Badge"
               },
               {
@@ -775,6 +797,19 @@
           },
           {
             "action": {
+              "to": "events/detail/picasso",
+              "type": "navigate"
+            },
+            "chevron": true,
+            "leading": {
+              "time": "19:00"
+            },
+            "subtitle": "Château Grimaldi · Demain à 19:00",
+            "title": "Les collections du musée Picasso",
+            "type": "ListItem"
+          },
+          {
+            "action": {
               "to": "events/detail/concert",
               "type": "navigate"
             },
@@ -782,21 +817,8 @@
             "leading": {
               "time": "20:30"
             },
-            "subtitle": "Anthéa, théâtre d'Antibes · Mercredi à 20:30",
+            "subtitle": "Anthéa, théâtre d'Antibes · Demain à 20:30",
             "title": "Concert au théâtre Anthéa",
-            "type": "ListItem"
-          },
-          {
-            "action": {
-              "to": "events/detail/picasso",
-              "type": "navigate"
-            },
-            "chevron": true,
-            "leading": {
-              "time": "10:00"
-            },
-            "subtitle": "Château Grimaldi · Samedi à 10:00",
-            "title": "Les collections du musée Picasso",
             "type": "ListItem"
           }
         ],
@@ -826,7 +848,7 @@
         },
         "children": [
           {
-            "text": "Marché provençal · Mardi à 07:00",
+            "text": "Marché provençal · Demain à 07:00",
             "type": "Text",
             "variant": "caption"
           }
@@ -856,7 +878,7 @@
           {
             "children": [
               {
-                "label": "Mercredi à 20:30",
+                "label": "Demain à 20:30",
                 "type": "Badge"
               },
               {
@@ -928,7 +950,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260603T183000Z/20260603T193000Z&text=Concert+au+th%C3%A9%C3%A2tre+Anth%C3%A9a&location=Anth%C3%A9a%2C+th%C3%A9%C3%A2tre+d%27Antibes"
+              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260601T183000Z/20260601T193000Z&text=Concert+au+th%C3%A9%C3%A2tre+Anth%C3%A9a&location=Anth%C3%A9a%2C+th%C3%A9%C3%A2tre+d%27Antibes"
             },
             "label": "i18n:guest.addToCalendar",
             "type": "Button",
@@ -969,18 +991,13 @@
           {
             "children": [
               {
-                "label": "Mardi à 07:00",
+                "label": "Demain à 07:00",
                 "type": "Badge"
               },
               {
                 "text": "Marché provençal",
                 "type": "Text",
                 "variant": "display"
-              },
-              {
-                "text": "Tous les mardis, mercredis, jeudis, vendredis, samedis et dimanches",
-                "type": "Text",
-                "variant": "caption"
               },
               {
                 "emphasis": "subtle",
@@ -1101,7 +1118,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260602T050000Z/20260602T110000Z&text=March%C3%A9+proven%C3%A7al&location=Cours+Mass%C3%A9na"
+              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260601T050000Z/20260601T110000Z&text=March%C3%A9+proven%C3%A7al&location=Cours+Mass%C3%A9na"
             },
             "label": "i18n:guest.addToCalendar",
             "type": "Button",
@@ -1130,7 +1147,7 @@
           {
             "children": [
               {
-                "label": "Samedi à 10:00",
+                "label": "Demain à 19:00",
                 "type": "Badge"
               },
               {
@@ -1160,7 +1177,7 @@
                 "key": "i18n:guest.tile.duration",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "8 h"
+                "value": "3 h"
               },
               {
                 "icon": "users",
@@ -1214,7 +1231,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260606T080000Z/20260606T160000Z&text=Les+collections+du+mus%C3%A9e+Picasso&location=Ch%C3%A2teau+Grimaldi"
+              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260601T170000Z/20260601T200000Z&text=Les+collections+du+mus%C3%A9e+Picasso&location=Ch%C3%A2teau+Grimaldi"
             },
             "label": "i18n:guest.addToCalendar",
             "type": "Button",
@@ -1322,7 +1339,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260603T183000Z/20260603T193000Z&text=Concert+au+th%C3%A9%C3%A2tre+Anth%C3%A9a&location=Anth%C3%A9a%2C+th%C3%A9%C3%A2tre+d%27Antibes"
+              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260607T183000Z/20260607T193000Z&text=Concert+au+th%C3%A9%C3%A2tre+Anth%C3%A9a&location=Anth%C3%A9a%2C+th%C3%A9%C3%A2tre+d%27Antibes"
             },
             "label": "i18n:guest.addToCalendar",
             "type": "Button",
@@ -1371,11 +1388,6 @@
                 "text": "Marché provençal",
                 "type": "Text",
                 "variant": "display"
-              },
-              {
-                "text": "Tous les mardis, mercredis, jeudis, vendredis, samedis et dimanches",
-                "type": "Text",
-                "variant": "caption"
               },
               {
                 "emphasis": "subtle",
@@ -1496,7 +1508,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260604T050000Z/20260604T110000Z&text=March%C3%A9+proven%C3%A7al&location=Cours+Mass%C3%A9na"
+              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260608T050000Z/20260608T110000Z&text=March%C3%A9+proven%C3%A7al&location=Cours+Mass%C3%A9na"
             },
             "label": "i18n:guest.addToCalendar",
             "type": "Button",
@@ -1526,7 +1538,7 @@
           {
             "children": [
               {
-                "label": "Samedi à 10:00",
+                "label": "Demain à 19:00",
                 "type": "Badge"
               },
               {
@@ -1556,7 +1568,7 @@
                 "key": "i18n:guest.tile.duration",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "8 h"
+                "value": "3 h"
               },
               {
                 "icon": "users",
@@ -1610,7 +1622,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260606T080000Z/20260606T160000Z&text=Les+collections+du+mus%C3%A9e+Picasso&location=Ch%C3%A2teau+Grimaldi"
+              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260608T170000Z/20260608T200000Z&text=Les+collections+du+mus%C3%A9e+Picasso&location=Ch%C3%A2teau+Grimaldi"
             },
             "label": "i18n:guest.addToCalendar",
             "type": "Button",
