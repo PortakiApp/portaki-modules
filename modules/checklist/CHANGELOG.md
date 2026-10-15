@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.5](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.9.4...checklist-v1.9.5) (2026-10-15)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.13.1 ([ac7ec94](https://github.com/PortakiApp/portaki-modules/commit/ac7ec94fee72a75e265c4470ea6559c001acd6af))
+
 ## [1.9.4](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.9.3...checklist-v1.9.4) (2026-10-14)
 
 

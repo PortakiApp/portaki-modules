@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.10.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.9.5...issue-report-v1.10.0) (2026-10-15)
+
+
+### Features
+
+* **issue-report:** provide the report capability ([927c507](https://github.com/PortakiApp/portaki-modules/commit/927c507ccaebc298e4bbd2edfcc09e2702660038))
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.13.1 ([ac7ec94](https://github.com/PortakiApp/portaki-modules/commit/ac7ec94fee72a75e265c4470ea6559c001acd6af))
+
 ## [1.9.5](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.9.4...issue-report-v1.9.5) (2026-10-14)
 
 

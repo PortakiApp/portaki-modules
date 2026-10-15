@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.9.4](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.9.3...trails-v0.9.4) (2026-10-15)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.13.1 ([ac7ec94](https://github.com/PortakiApp/portaki-modules/commit/ac7ec94fee72a75e265c4470ea6559c001acd6af))
+* **trails:** demo distances from Cap d'Antibes ([d748cae](https://github.com/PortakiApp/portaki-modules/commit/d748caee9b70d14bfeb5d4fcbb6167c43839f57a))
+* **trails:** open trail detail from map pin ([a65eb28](https://github.com/PortakiApp/portaki-modules/commit/a65eb28f3f37735805e75d09982381cfe364155e))
+
 ## [0.9.3](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.9.2...trails-v0.9.3) (2026-10-13)
 
 

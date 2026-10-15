@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.10.4](https://github.com/PortakiApp/portaki-modules/compare/events-v1.10.3...events-v1.10.4) (2026-10-15)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.13.1 ([ac7ec94](https://github.com/PortakiApp/portaki-modules/commit/ac7ec94fee72a75e265c4470ea6559c001acd6af))
+* **events:** demo event near the property ([bde1753](https://github.com/PortakiApp/portaki-modules/commit/bde1753cf7336bd9b4d5abf62778a0de735b89e8))
+* **events:** open event detail from map pin ([b4ccbef](https://github.com/PortakiApp/portaki-modules/commit/b4ccbef0f1e746e778ceea8b8660321348d408b8))
+
 ## [1.10.3](https://github.com/PortakiApp/portaki-modules/compare/events-v1.10.2...events-v1.10.3) (2026-10-13)
 
 

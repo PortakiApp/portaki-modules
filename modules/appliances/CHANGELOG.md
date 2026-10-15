@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.13.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.12.4...appliances-v1.13.0) (2026-10-15)
+
+
+### Features
+
+* **issue-report:** provide the report capability ([927c507](https://github.com/PortakiApp/portaki-modules/commit/927c507ccaebc298e4bbd2edfcc09e2702660038))
+
+
+### Bug Fixes
+
+* **appliances:** emoji leading on device rows ([a813503](https://github.com/PortakiApp/portaki-modules/commit/a813503b5f8ed1b1c62cb8a705d92eea0b5e190c))
+* **appliances:** open the report form directly ([9165c94](https://github.com/PortakiApp/portaki-modules/commit/9165c9457ac5e423592d4ec8c28eb9c67afc1666))
+* **deps:** bump portaki-sdk to 10.13.1 ([ac7ec94](https://github.com/PortakiApp/portaki-modules/commit/ac7ec94fee72a75e265c4470ea6559c001acd6af))
+
 ## [1.12.4](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.12.3...appliances-v1.12.4) (2026-10-14)
 
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.10.4](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.3...access-guide-v1.10.4) (2026-10-15)
+
+
+### Bug Fixes
+
+* **access-guide:** demo address at Cap d'Antibes ([4fd86dd](https://github.com/PortakiApp/portaki-modules/commit/4fd86dd9cb0bccf4bb5a461ece314b6d62c81b4c))
+* **access-guide:** demo pin at Cap d'Antibes ([2926fba](https://github.com/PortakiApp/portaki-modules/commit/2926fbadc10df747652ec6077f2c03a84ff96684))
+* **deps:** bump portaki-sdk to 10.13.1 ([ac7ec94](https://github.com/PortakiApp/portaki-modules/commit/ac7ec94fee72a75e265c4470ea6559c001acd6af))
+
 ## [1.10.3](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.2...access-guide-v1.10.3) (2026-10-13)
 
 

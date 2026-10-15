@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.14.6](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.14.5...local-guide-v1.14.6) (2026-10-15)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.13.1 ([ac7ec94](https://github.com/PortakiApp/portaki-modules/commit/ac7ec94fee72a75e265c4470ea6559c001acd6af))
+* **local-guide:** demo spots around Cap d'Antibes ([6221d99](https://github.com/PortakiApp/portaki-modules/commit/6221d9989550485c1c234f969a40c61514b48cec))
+* **local-guide:** open spot detail from map pin ([b634fa0](https://github.com/PortakiApp/portaki-modules/commit/b634fa0d83e87b15eca1a5d6fb76377959b1c0ca))
+
 ## [1.14.5](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.14.4...local-guide-v1.14.5) (2026-10-14)
 
 
