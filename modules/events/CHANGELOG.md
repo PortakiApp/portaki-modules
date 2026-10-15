@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.2](https://github.com/PortakiApp/portaki-modules/compare/events-v1.11.1...events-v1.11.2) (2026-10-15)
+
+
+### Bug Fixes
+
+* **events:** demo events tonight and tomorrow ([be0c9e4](https://github.com/PortakiApp/portaki-modules/commit/be0c9e432db93e34215486fc7d7491d0d686f03b))
+
 ## [1.11.1](https://github.com/PortakiApp/portaki-modules/compare/events-v1.11.0...events-v1.11.1) (2026-10-15)
 
 

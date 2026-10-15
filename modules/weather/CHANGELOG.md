@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.8](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.7.7...weather-v1.7.8) (2026-10-15)
+
+
+### Bug Fixes
+
+* **weather:** say today/tomorrow in forecast ([efe3cf0](https://github.com/PortakiApp/portaki-modules/commit/efe3cf0de1edf8ff1f1c3abd443b794b9612476e))
+
 ## [1.7.7](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.7.6...weather-v1.7.7) (2026-10-15)
 
 
