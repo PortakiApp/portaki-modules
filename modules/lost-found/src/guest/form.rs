@@ -428,21 +428,37 @@ fn return_icon(option: &str) -> IconName {
     }
 }
 
-/// « Jusqu'au 5 septembre » — la date de la fin du délai, écrite pour le voyageur.
+/// « Jusqu'à samedi », « Jusqu'au 5 septembre 2026 » — la fin du délai, écrite pour le voyageur :
+/// le jour quand il tombe dans la semaine, la date sinon.
 ///
 /// Rien sans date de départ ni horloge : le délai ne court pas davantage, et annoncer une échéance
 /// qu'on ne sait pas calculer vaut moins que ne rien annoncer.
 fn deadline_label(ctx: &GuestContext, window_days: u32) -> Option<String> {
+    use portaki_sdk::host::time::{self, PropertyTz, RelativeDay};
+
     let checkout_at = ctx.stay.as_ref().and_then(|stay| stay.checkout_at)?;
     let deadline = checkout_at + chrono::Duration::days(i64::from(window_days));
     // Dans le fuseau du logement : un départ le 8 à 10 h plus sept jours ne tombe pas la veille
     // parce que le voyageur lit son livret depuis Tokyo.
-    let local = match portaki_sdk::host::time::PropertyTz::parse(&ctx.timezone) {
-        Some(tz) => tz.to_local(deadline).date_naive(),
-        None => deadline.date_naive(),
+    let tz = PropertyTz::parse(&ctx.timezone);
+    let local = |at: chrono::DateTime<chrono::Utc>| match tz {
+        Some(tz) => tz.to_local(at).naive_local(),
+        None => at.naive_utc(),
     };
-    let formatted = portaki_sdk::host::time::long_date(local, &ctx.locale);
-    t!("form.deadline.title", date = formatted).ok()
+    let day = local(deadline).date();
+    let key = match time::now().map(|now| time::relative_day(day.into(), local(now))) {
+        Ok(RelativeDay::Today | RelativeDay::Tonight) => "today",
+        Ok(RelativeDay::Tomorrow) => "tomorrow",
+        Ok(RelativeDay::Weekday(weekday)) => ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+            [weekday.num_days_from_monday() as usize],
+        _ => {
+            let formatted = time::long_date(day, &ctx.locale);
+            return t!("form.deadline.title", date = formatted).ok();
+        }
+    };
+    let key = format!("form.deadline.day.{key}");
+    let day = t!(&key).unwrap_or(key);
+    t!("form.deadline.relative", day = day).ok()
 }
 
 /// L'adresse de renvoi, seulement quand l'hôte propose le renvoi (§10).

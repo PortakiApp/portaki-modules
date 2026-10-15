@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.14.0
+
+La fin du délai, dite comme on la dit.
+
+* Le formulaire annonce « Jusqu'à lundi » ou « Jusqu'à demain » quand la fin du délai tombe dans la semaine, la date au-delà.
+* La démo « après le séjour » montre le formulaire le lendemain du départ.
+
 ## 1.13.1
 
 Montée technique.
