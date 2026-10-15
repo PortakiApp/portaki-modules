@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.14.7
+
+Plus de temps de marche pour les adresses lointaines.
+
+* Au-delà de 45 minutes de marche, la fiche d'une adresse ne montre plus que le temps en voiture.
+* L'aperçu public et la démo montrent trois lieux réels d'Antibes, placés à leur vraie position ; chacun ouvre sa fiche.
+
 ## 1.14.6
 
 Une adresse tapée sur la carte ouvre sa fiche.

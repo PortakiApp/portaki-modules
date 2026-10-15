@@ -25,6 +25,10 @@ const TILE_WIDTH: f64 = 96.0;
 pub(crate) const WALK_KMH: f64 = 5.0;
 pub(crate) const DRIVE_KMH: f64 = 30.0;
 
+/// Au-delà de 45 min à pied (3,75 km), la marche n'est plus une façon d'y aller : « environ
+/// 268 min » pour un lac à 22 km ne renseigne personne. Seule la voiture reste.
+const WALK_LIMIT_M: f64 = WALK_KMH * 1000.0 * 45.0 / 60.0;
+
 pub fn build_spot_item(data: &GuestData, spot: &SpotRow) -> Surface {
     let mut children: Vec<Component> = Vec::new();
 
@@ -113,17 +117,30 @@ fn header(data: &GuestData, spot: &SpotRow) -> Component {
 /// « À pied 15 min · En voiture 4 min », depuis la distance entre le logement et l'adresse.
 ///
 /// Rien sans les deux positions : une durée tirée d'une seule serait inventée. La tuile voiture
-/// disparaît sous 400 m — on ne prend pas la voiture pour traverser la rue.
+/// disparaît sous 400 m — on ne prend pas la voiture pour traverser la rue — et la tuile marche
+/// au-delà de 45 min de marche.
 fn travel_tiles(data: &GuestData, spot: &SpotRow) -> Option<Component> {
     let (property_lat, property_lng) = data.property_coords?;
     let (lat, lng) = (spot.lat?, spot.lng?);
     let metres = haversine_m(property_lat, property_lng, lat, lng);
+    Some(
+        Grid::new()
+            .minColumnWidth(TILE_WIDTH)
+            .plain(true)
+            .children(tiles_for(metres))
+            .into(),
+    )
+}
 
-    let mut tiles: Vec<Component> = vec![tile(
-        IconName::Users,
-        "i18n:guest.tile.walk",
-        minutes_label(metres, WALK_KMH),
-    )];
+fn tiles_for(metres: f64) -> Vec<Component> {
+    let mut tiles: Vec<Component> = Vec::new();
+    if metres <= WALK_LIMIT_M {
+        tiles.push(tile(
+            IconName::Users,
+            "i18n:guest.tile.walk",
+            minutes_label(metres, WALK_KMH),
+        ));
+    }
     if metres >= 400.0 {
         tiles.push(tile(
             IconName::Car,
@@ -131,13 +148,7 @@ fn travel_tiles(data: &GuestData, spot: &SpotRow) -> Option<Component> {
             minutes_label(metres, DRIVE_KMH),
         ));
     }
-    Some(
-        Grid::new()
-            .minColumnWidth(TILE_WIDTH)
-            .plain(true)
-            .children(tiles)
-            .into(),
-    )
+    tiles
 }
 
 fn tile(icon: IconName, label: &str, value: String) -> Component {
@@ -371,6 +382,22 @@ mod tests {
         // traduction n'est pas chargée : la valeur de secours est le nombre seul.
         assert!(minutes_label(1000.0, WALK_KMH).ends_with("12 min"));
         assert!(minutes_label(1050.0, WALK_KMH).ends_with("13 min"));
+    }
+
+    #[test]
+    fn far_places_show_the_drive_only() {
+        let keys = |metres| {
+            tiles_for(metres)
+                .into_iter()
+                .map(|tile| serde_json::to_value(tile).expect("tile")["key"].clone())
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(keys(300.0), ["i18n:guest.tile.walk"]);
+        assert_eq!(
+            keys(3_750.0),
+            ["i18n:guest.tile.walk", "i18n:guest.tile.drive"]
+        );
+        assert_eq!(keys(22_000.0), ["i18n:guest.tile.drive"]);
     }
 
     #[test]

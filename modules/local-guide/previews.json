@@ -167,26 +167,26 @@
             "isStatic": true,
             "markers": [
               {
-                "id": "boulangerie",
-                "kind": "poi",
-                "label": "La boulangerie du village",
-                "lat": 43.554,
-                "lng": 7.1268
-              },
-              {
                 "emoji": "🧺",
                 "id": "marche",
                 "kind": "poi",
                 "label": "Marché provençal",
-                "lat": 43.5617,
-                "lng": 7.125
+                "lat": 43.58093,
+                "lng": 7.12758
               },
               {
-                "id": "lac",
+                "id": "garoupe",
                 "kind": "poi",
-                "label": "Lac de Saint-Cassien",
-                "lat": 43.5663,
-                "lng": 6.8511
+                "label": "Plage de la Garoupe",
+                "lat": 43.55455,
+                "lng": 7.1357
+              },
+              {
+                "id": "fort-carre",
+                "kind": "poi",
+                "label": "Fort Carré",
+                "lat": 43.59034,
+                "lng": 7.12762
               },
               {
                 "id": "property",
@@ -199,8 +199,8 @@
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.55822500000001,
-                "lng": 7.0573749999999995
+                "lat": 43.56918,
+                "lng": 7.1293750000000005
               },
               "zoom": 13.0
             }
@@ -214,38 +214,18 @@
             "children": [
               {
                 "action": {
-                  "to": "local-guide/detail/boulangerie",
-                  "type": "navigate"
-                },
-                "chevron": true,
-                "children": [
-                  {
-                    "text": "Venez avant 9 h : les croissants partent vite le dimanche.",
-                    "type": "Text",
-                    "variant": "caption"
-                  },
-                  {
-                    "text": "Pains au levain et croissants au beurre, cuits sur place.",
-                    "type": "Text",
-                    "variant": "body"
-                  }
-                ],
-                "leading": {
-                  "image": "portaki-file:boulangerie-1"
-                },
-                "subtitle": "Boulangerie · 350 m",
-                "title": "La boulangerie du village",
-                "type": "ListItem"
-              },
-              {
-                "action": {
                   "to": "local-guide/detail/marche",
                   "type": "navigate"
                 },
                 "chevron": true,
                 "children": [
                   {
-                    "text": "Fruits, fromages et fleurs, le samedi matin.",
+                    "text": "Venez avant 10 h : après, la halle est noire de monde.",
+                    "type": "Text",
+                    "variant": "caption"
+                  },
+                  {
+                    "text": "Fruits, fromages, olives et fleurs sous la halle du cours Masséna, dans le vieil Antibes.",
                     "type": "Text",
                     "variant": "body"
                   }
@@ -253,11 +233,11 @@
                 "leading": {
                   "image": "portaki-file:marche-1"
                 },
-                "subtitle": "Marché · 1,2 km",
+                "subtitle": "Marché · 3,3 km",
                 "title": "Marché provençal",
                 "trailing": {
                   "badge": {
-                    "label": "Samedi matin",
+                    "label": "Le matin",
                     "tone": "primary"
                   }
                 },
@@ -265,22 +245,48 @@
               },
               {
                 "action": {
-                  "to": "local-guide/detail/lac",
+                  "to": "local-guide/detail/garoupe",
                   "type": "navigate"
                 },
                 "chevron": true,
                 "children": [
                   {
-                    "text": "Eau calme et plage de galets, idéal avec des enfants.",
+                    "text": "Sable fin et eau calme au fond de l'anse, idéal avec des enfants.",
                     "type": "Text",
                     "variant": "body"
                   }
                 ],
                 "leading": {
-                  "image": "portaki-file:lac-1"
+                  "map": {
+                    "lat": 43.55455,
+                    "lng": 7.1357
+                  }
                 },
-                "subtitle": "Baignade · 22 km",
-                "title": "Lac de Saint-Cassien",
+                "subtitle": "Baignade · 850 m",
+                "title": "Plage de la Garoupe",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "to": "local-guide/detail/fort-carre",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "children": [
+                  {
+                    "text": "Le fort en étoile qui veille sur le port Vauban, et la vue jusqu'aux Alpes par temps clair.",
+                    "type": "Text",
+                    "variant": "body"
+                  }
+                ],
+                "leading": {
+                  "map": {
+                    "lat": 43.59034,
+                    "lng": 7.12762
+                  }
+                },
+                "subtitle": "Patrimoine · 4,4 km",
+                "title": "Fort Carré",
                 "type": "ListItem"
               }
             ],
@@ -398,15 +404,13 @@
     },
     {
       "i18n": {
-        "guest.call": "Appeler",
         "guest.map.label": "Plan : le logement et l’adresse",
-        "guest.perk.title": "Votre avantage",
         "guest.practical.hours": "Horaires",
         "guest.practical.opening": "Ouverture",
         "guest.practical.parking": "Parking",
-        "guest.practical.phone": "Téléphone",
         "guest.practical.title": "Infos pratiques",
         "guest.route": "Itinéraire",
+        "guest.tile.drive": "En voiture",
         "guest.tile.walk": "À pied",
         "nav.spot": "Adresse"
       },
@@ -415,41 +419,26 @@
       "tree": {
         "children": [
           {
-            "children": [
-              {
-                "alt": "La boulangerie du village",
-                "aspectRatio": "4 / 3",
-                "type": "Image",
-                "url": "portaki-file:boulangerie-1"
-              },
-              {
-                "alt": "La boulangerie du village",
-                "aspectRatio": "4 / 3",
-                "type": "Image",
-                "url": "portaki-file:boulangerie-2"
-              }
-            ],
-            "direction": "horizontal",
-            "gap": 8.0,
-            "itemWidth": "78%",
-            "scroll": true,
-            "type": "Stack"
+            "alt": "Marché provençal",
+            "aspectRatio": "4 / 3",
+            "type": "Image",
+            "url": "portaki-file:marche-1"
           },
           {
             "children": [
               {
-                "text": "La boulangerie du village",
+                "text": "Marché provençal",
                 "type": "Text",
                 "variant": "display"
               },
               {
                 "emphasis": "subtle",
-                "text": "Boulangerie · €",
+                "text": "Marché",
                 "type": "Text",
                 "variant": "caption"
               },
               {
-                "text": "Pains au levain et croissants au beurre, cuits sur place.",
+                "text": "Fruits, fromages, olives et fleurs sous la halle du cours Masséna, dans le vieil Antibes.",
                 "type": "Text",
                 "variant": "body"
               }
@@ -458,19 +447,20 @@
             "type": "Stack"
           },
           {
-            "message": "Un café offert avec deux croissants, sur présentation de cette page.",
-            "title": "i18n:guest.perk.title",
-            "tone": "primary",
-            "type": "InfoBanner"
-          },
-          {
             "children": [
               {
                 "icon": "users",
                 "key": "i18n:guest.tile.walk",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "environ 5 min"
+                "value": "environ 41 min"
+              },
+              {
+                "icon": "car",
+                "key": "i18n:guest.tile.drive",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "environ 7 min"
               }
             ],
             "minColumnWidth": 96.0,
@@ -485,9 +475,9 @@
               {
                 "id": "spot",
                 "kind": "poi",
-                "label": "La boulangerie du village",
-                "lat": 43.554,
-                "lng": 7.1268
+                "label": "Marché provençal",
+                "lat": 43.58093,
+                "lng": 7.12758
               },
               {
                 "id": "property",
@@ -500,8 +490,8 @@
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.554,
-                "lng": 7.1268
+                "lat": 43.58093,
+                "lng": 7.12758
               },
               "zoom": 14.0
             }
@@ -512,23 +502,17 @@
                 "key": "i18n:guest.practical.hours",
                 "mono": true,
                 "type": "KeyValue",
-                "value": "07:00 – 13:00 · 16:00 – 19:00"
+                "value": "06:00 – 13:00"
               },
               {
                 "key": "i18n:guest.practical.opening",
                 "type": "KeyValue",
-                "value": "Fermée le lundi"
+                "value": "Fermé le lundi hors saison"
               },
               {
                 "key": "i18n:guest.practical.parking",
                 "type": "KeyValue",
-                "value": "Place de l'église, en face"
-              },
-              {
-                "key": "i18n:guest.practical.phone",
-                "mono": true,
-                "type": "KeyValue",
-                "value": "+33 4 93 00 00 01"
+                "value": "Parking du Pré aux Pêcheurs, à 300 m"
               }
             ],
             "icon": "info-circle",
@@ -542,7 +526,7 @@
                 "author": {
                   "name": ""
                 },
-                "content": "Venez avant 9 h : les croissants partent vite le dimanche.",
+                "content": "Venez avant 10 h : après, la halle est noire de monde.",
                 "type": "RichText",
                 "variant": "lead"
               }
@@ -555,19 +539,10 @@
           {
             "action": {
               "type": "external",
-              "url": "https://www.google.com/maps/search/?api=1&query=43.554,7.1268"
+              "url": "https://www.google.com/maps/search/?api=1&query=43.58093,7.12758"
             },
             "label": "i18n:guest.route",
             "type": "Button"
-          },
-          {
-            "action": {
-              "type": "external",
-              "url": "tel:+33493000001"
-            },
-            "label": "i18n:guest.call",
-            "type": "Button",
-            "variant": "outline"
           }
         ],
         "gap": 14.0,

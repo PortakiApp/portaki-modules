@@ -10,46 +10,45 @@ use local_guide::{
 
 use serde_json::json;
 
-/// Trois adresses d'exemple autour du logement de la démo (Cap d'Antibes). Activités et
-/// billets restent éteints, comme chez un hôte qui vient d'installer le module.
+/// Trois adresses réelles autour du logement de la démo (Cap d'Antibes), positions relevées sur
+/// OpenStreetMap : le marché du vieil Antibes, la plage au bout du chemin, le Fort Carré — assez
+/// loin pour que la fiche ne propose plus que la voiture. Activités et billets restent éteints,
+/// comme chez un hôte qui vient d'installer le module.
 fn sample_config() -> serde_json::Value {
     json!({
         "spots": [
             {
-                "id": "boulangerie",
-                "title": { "fr": "La boulangerie du village", "en": "The village bakery" },
-                "category": "Boulangerie",
-                "distance": "350 m",
-                "detail": { "fr": "Pains au levain et croissants au beurre, cuits sur place.", "en": "Sourdough and butter croissants, baked on site." },
-                "note": { "fr": "Venez avant 9 h : les croissants partent vite le dimanche.", "en": "Come before 9am: the croissants go fast on Sundays." },
-                "perk": { "fr": "Un café offert avec deux croissants, sur présentation de cette page.", "en": "A free coffee with two croissants, on showing this page." },
-                "price": "€",
-                "hours": "07:00 – 13:00 · 16:00 – 19:00",
-                "photos": ["portaki-file:boulangerie-1", "portaki-file:boulangerie-2"],
-                "opening": "Fermée le lundi",
-                "parking": "Place de l'église, en face",
-                "phone": "+33 4 93 00 00 01",
-                "address": "Boulevard du Cap, Antibes",
-                "lat": 43.5540, "lng": 7.1268
-            },
-            {
                 "id": "marche",
                 "title": { "fr": "Marché provençal", "en": "Provençal market" },
                 "category": "Marché",
-                "distance": "1,2 km",
-                "tag": "Samedi matin",
-                "detail": { "fr": "Fruits, fromages et fleurs, le samedi matin.", "en": "Fruit, cheese and flowers, on Saturday mornings." },
+                "distance": "3,3 km",
+                "tag": "Le matin",
+                "detail": { "fr": "Fruits, fromages, olives et fleurs sous la halle du cours Masséna, dans le vieil Antibes.", "en": "Fruit, cheese, olives and flowers under the covered hall of Cours Masséna, in old Antibes." },
+                "note": { "fr": "Venez avant 10 h : après, la halle est noire de monde.", "en": "Come before 10am: after that, the hall is packed." },
+                "hours": "06:00 – 13:00",
                 "photos": ["portaki-file:marche-1"],
-                "lat": 43.5617, "lng": 7.1250
+                "opening": "Fermé le lundi hors saison",
+                "parking": "Parking du Pré aux Pêcheurs, à 300 m",
+                "address": "Cours Masséna, Antibes",
+                "lat": 43.58093, "lng": 7.12758
             },
             {
-                "id": "lac",
-                "title": { "fr": "Lac de Saint-Cassien", "en": "Lake Saint-Cassien" },
+                "id": "garoupe",
+                "title": { "fr": "Plage de la Garoupe", "en": "La Garoupe beach" },
                 "category": "Baignade",
-                "distance": "22 km",
-                "detail": { "fr": "Eau calme et plage de galets, idéal avec des enfants.", "en": "Calm water and a pebble beach, great with kids." },
-                "photos": ["portaki-file:lac-1"],
-                "lat": 43.5663, "lng": 6.8511
+                "distance": "850 m",
+                "detail": { "fr": "Sable fin et eau calme au fond de l'anse, idéal avec des enfants.", "en": "Fine sand and calm water at the back of the cove, great with kids." },
+                "address": "Chemin de la Garoupe, Antibes",
+                "lat": 43.55455, "lng": 7.1357
+            },
+            {
+                "id": "fort-carre",
+                "title": { "fr": "Fort Carré", "en": "Fort Carré" },
+                "category": "Patrimoine",
+                "distance": "4,4 km",
+                "detail": { "fr": "Le fort en étoile qui veille sur le port Vauban, et la vue jusqu'aux Alpes par temps clair.", "en": "The star-shaped fort watching over Port Vauban, with views to the Alps on a clear day." },
+                "address": "Quai Éric Tabarly, Antibes",
+                "lat": 43.59034, "lng": 7.12762
             }
         ],
         // Une activité que l'hôte propose lui-même (§2.13) : pas un lien partenaire, une sortie
@@ -108,7 +107,7 @@ fn previews_match_the_rendered_surfaces() {
         .clone()
         .run(|ctx| render_explore_detail(ctx).expect("surface"));
     let item = context.clone().run(|mut ctx| {
-        ctx.input = json!({ "spotId": "boulangerie" });
+        ctx.input = json!({ "spotId": "marche" });
         render_explore_item(ctx).expect("surface")
     });
     let activity = context.clone().run(|mut ctx| {
@@ -128,17 +127,27 @@ fn previews_match_the_rendered_surfaces() {
     let markers = context
         .clone()
         .run(|ctx| map_markers(ctx).expect("repères"));
-    // Les autres fiches : la démo ouvre celle de l'adresse tapée, pas toujours la même.
-    let variants = ["marche", "lac"]
+    // Chaque fiche que la démo peut ouvrir : celle de l'adresse, de l'activité ou du lien tapé,
+    // pas toujours la même.
+    let variant = |surface_id, input: serde_json::Value| {
+        let render = match surface_id {
+            "explore.activity" => render_explore_activity,
+            "explore.link" => render_explore_link,
+            _ => render_explore_item,
+        };
+        let tree = context.clone().run(|mut ctx| {
+            ctx.input = input.clone();
+            render(ctx).expect("surface")
+        });
+        (surface_id, input, tree)
+    };
+    let variants = ["marche", "garoupe", "fort-carre"]
         .into_iter()
-        .map(|id| {
-            let input = json!({ "spotId": id });
-            let tree = context.clone().run(|mut ctx| {
-                ctx.input = input.clone();
-                render_explore_item(ctx).expect("surface")
-            });
-            ("explore.item", input, tree)
-        })
+        .map(|id| variant("explore.item", json!({ "spotId": id })))
+        .chain([
+            variant("explore.activity", json!({ "activityId": "voilier" })),
+            variant("explore.link", json!({ "productCode": "273628P2" })),
+        ])
         .collect();
     let home = context.run(render_home_card).expect("home");
     previews::check_all_with_variants(

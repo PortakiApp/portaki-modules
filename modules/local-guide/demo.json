@@ -4,18 +4,6 @@
     "markers": [
       {
         "action": {
-          "to": "local-guide/detail/boulangerie",
-          "type": "navigate"
-        },
-        "category": "Boulangerie",
-        "id": "boulangerie",
-        "kind": "poi",
-        "label": "La boulangerie du village",
-        "lat": 43.554,
-        "lng": 7.1268
-      },
-      {
-        "action": {
           "to": "local-guide/detail/marche",
           "type": "navigate"
         },
@@ -24,20 +12,32 @@
         "id": "marche",
         "kind": "poi",
         "label": "Marché provençal",
-        "lat": 43.5617,
-        "lng": 7.125
+        "lat": 43.58093,
+        "lng": 7.12758
       },
       {
         "action": {
-          "to": "local-guide/detail/lac",
+          "to": "local-guide/detail/garoupe",
           "type": "navigate"
         },
         "category": "Baignade",
-        "id": "lac",
+        "id": "garoupe",
         "kind": "poi",
-        "label": "Lac de Saint-Cassien",
-        "lat": 43.5663,
-        "lng": 6.8511
+        "label": "Plage de la Garoupe",
+        "lat": 43.55455,
+        "lng": 7.1357
+      },
+      {
+        "action": {
+          "to": "local-guide/detail/fort-carre",
+          "type": "navigate"
+        },
+        "category": "Patrimoine",
+        "id": "fort-carre",
+        "kind": "poi",
+        "label": "Fort Carré",
+        "lat": 43.59034,
+        "lng": 7.12762
       }
     ]
   },
@@ -208,26 +208,26 @@
             "isStatic": true,
             "markers": [
               {
-                "id": "boulangerie",
-                "kind": "poi",
-                "label": "La boulangerie du village",
-                "lat": 43.554,
-                "lng": 7.1268
-              },
-              {
                 "emoji": "🧺",
                 "id": "marche",
                 "kind": "poi",
                 "label": "Marché provençal",
-                "lat": 43.5617,
-                "lng": 7.125
+                "lat": 43.58093,
+                "lng": 7.12758
               },
               {
-                "id": "lac",
+                "id": "garoupe",
                 "kind": "poi",
-                "label": "Lac de Saint-Cassien",
-                "lat": 43.5663,
-                "lng": 6.8511
+                "label": "Plage de la Garoupe",
+                "lat": 43.55455,
+                "lng": 7.1357
+              },
+              {
+                "id": "fort-carre",
+                "kind": "poi",
+                "label": "Fort Carré",
+                "lat": 43.59034,
+                "lng": 7.12762
               },
               {
                 "id": "property",
@@ -240,8 +240,8 @@
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.55822500000001,
-                "lng": 7.0573749999999995
+                "lat": 43.56918,
+                "lng": 7.1293750000000005
               },
               "zoom": 13.0
             }
@@ -255,38 +255,18 @@
             "children": [
               {
                 "action": {
-                  "to": "local-guide/detail/boulangerie",
-                  "type": "navigate"
-                },
-                "chevron": true,
-                "children": [
-                  {
-                    "text": "Venez avant 9 h : les croissants partent vite le dimanche.",
-                    "type": "Text",
-                    "variant": "caption"
-                  },
-                  {
-                    "text": "Pains au levain et croissants au beurre, cuits sur place.",
-                    "type": "Text",
-                    "variant": "body"
-                  }
-                ],
-                "leading": {
-                  "image": "portaki-file:boulangerie-1"
-                },
-                "subtitle": "Boulangerie · 350 m",
-                "title": "La boulangerie du village",
-                "type": "ListItem"
-              },
-              {
-                "action": {
                   "to": "local-guide/detail/marche",
                   "type": "navigate"
                 },
                 "chevron": true,
                 "children": [
                   {
-                    "text": "Fruits, fromages et fleurs, le samedi matin.",
+                    "text": "Venez avant 10 h : après, la halle est noire de monde.",
+                    "type": "Text",
+                    "variant": "caption"
+                  },
+                  {
+                    "text": "Fruits, fromages, olives et fleurs sous la halle du cours Masséna, dans le vieil Antibes.",
                     "type": "Text",
                     "variant": "body"
                   }
@@ -294,11 +274,11 @@
                 "leading": {
                   "image": "portaki-file:marche-1"
                 },
-                "subtitle": "Marché · 1,2 km",
+                "subtitle": "Marché · 3,3 km",
                 "title": "Marché provençal",
                 "trailing": {
                   "badge": {
-                    "label": "Samedi matin",
+                    "label": "Le matin",
                     "tone": "primary"
                   }
                 },
@@ -306,22 +286,48 @@
               },
               {
                 "action": {
-                  "to": "local-guide/detail/lac",
+                  "to": "local-guide/detail/garoupe",
                   "type": "navigate"
                 },
                 "chevron": true,
                 "children": [
                   {
-                    "text": "Eau calme et plage de galets, idéal avec des enfants.",
+                    "text": "Sable fin et eau calme au fond de l'anse, idéal avec des enfants.",
                     "type": "Text",
                     "variant": "body"
                   }
                 ],
                 "leading": {
-                  "image": "portaki-file:lac-1"
+                  "map": {
+                    "lat": 43.55455,
+                    "lng": 7.1357
+                  }
                 },
-                "subtitle": "Baignade · 22 km",
-                "title": "Lac de Saint-Cassien",
+                "subtitle": "Baignade · 850 m",
+                "title": "Plage de la Garoupe",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "to": "local-guide/detail/fort-carre",
+                  "type": "navigate"
+                },
+                "chevron": true,
+                "children": [
+                  {
+                    "text": "Le fort en étoile qui veille sur le port Vauban, et la vue jusqu'aux Alpes par temps clair.",
+                    "type": "Text",
+                    "variant": "body"
+                  }
+                ],
+                "leading": {
+                  "map": {
+                    "lat": 43.59034,
+                    "lng": 7.12762
+                  }
+                },
+                "subtitle": "Patrimoine · 4,4 km",
+                "title": "Fort Carré",
                 "type": "ListItem"
               }
             ],
@@ -439,15 +445,13 @@
     },
     {
       "i18n": {
-        "guest.call": "Appeler",
         "guest.map.label": "Plan : le logement et l’adresse",
-        "guest.perk.title": "Votre avantage",
         "guest.practical.hours": "Horaires",
         "guest.practical.opening": "Ouverture",
         "guest.practical.parking": "Parking",
-        "guest.practical.phone": "Téléphone",
         "guest.practical.title": "Infos pratiques",
         "guest.route": "Itinéraire",
+        "guest.tile.drive": "En voiture",
         "guest.tile.walk": "À pied"
       },
       "labelKey": "nav.spot",
@@ -456,41 +460,26 @@
       "tree": {
         "children": [
           {
-            "children": [
-              {
-                "alt": "La boulangerie du village",
-                "aspectRatio": "4 / 3",
-                "type": "Image",
-                "url": "portaki-file:boulangerie-1"
-              },
-              {
-                "alt": "La boulangerie du village",
-                "aspectRatio": "4 / 3",
-                "type": "Image",
-                "url": "portaki-file:boulangerie-2"
-              }
-            ],
-            "direction": "horizontal",
-            "gap": 8.0,
-            "itemWidth": "78%",
-            "scroll": true,
-            "type": "Stack"
+            "alt": "Marché provençal",
+            "aspectRatio": "4 / 3",
+            "type": "Image",
+            "url": "portaki-file:marche-1"
           },
           {
             "children": [
               {
-                "text": "La boulangerie du village",
+                "text": "Marché provençal",
                 "type": "Text",
                 "variant": "display"
               },
               {
                 "emphasis": "subtle",
-                "text": "Boulangerie · €",
+                "text": "Marché",
                 "type": "Text",
                 "variant": "caption"
               },
               {
-                "text": "Pains au levain et croissants au beurre, cuits sur place.",
+                "text": "Fruits, fromages, olives et fleurs sous la halle du cours Masséna, dans le vieil Antibes.",
                 "type": "Text",
                 "variant": "body"
               }
@@ -499,19 +488,20 @@
             "type": "Stack"
           },
           {
-            "message": "Un café offert avec deux croissants, sur présentation de cette page.",
-            "title": "i18n:guest.perk.title",
-            "tone": "primary",
-            "type": "InfoBanner"
-          },
-          {
             "children": [
               {
                 "icon": "users",
                 "key": "i18n:guest.tile.walk",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "environ 5 min"
+                "value": "environ 41 min"
+              },
+              {
+                "icon": "car",
+                "key": "i18n:guest.tile.drive",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "environ 7 min"
               }
             ],
             "minColumnWidth": 96.0,
@@ -526,9 +516,9 @@
               {
                 "id": "spot",
                 "kind": "poi",
-                "label": "La boulangerie du village",
-                "lat": 43.554,
-                "lng": 7.1268
+                "label": "Marché provençal",
+                "lat": 43.58093,
+                "lng": 7.12758
               },
               {
                 "id": "property",
@@ -541,8 +531,8 @@
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.554,
-                "lng": 7.1268
+                "lat": 43.58093,
+                "lng": 7.12758
               },
               "zoom": 14.0
             }
@@ -553,23 +543,17 @@
                 "key": "i18n:guest.practical.hours",
                 "mono": true,
                 "type": "KeyValue",
-                "value": "07:00 – 13:00 · 16:00 – 19:00"
+                "value": "06:00 – 13:00"
               },
               {
                 "key": "i18n:guest.practical.opening",
                 "type": "KeyValue",
-                "value": "Fermée le lundi"
+                "value": "Fermé le lundi hors saison"
               },
               {
                 "key": "i18n:guest.practical.parking",
                 "type": "KeyValue",
-                "value": "Place de l'église, en face"
-              },
-              {
-                "key": "i18n:guest.practical.phone",
-                "mono": true,
-                "type": "KeyValue",
-                "value": "+33 4 93 00 00 01"
+                "value": "Parking du Pré aux Pêcheurs, à 300 m"
               }
             ],
             "icon": "info-circle",
@@ -583,7 +567,7 @@
                 "author": {
                   "name": ""
                 },
-                "content": "Venez avant 9 h : les croissants partent vite le dimanche.",
+                "content": "Venez avant 10 h : après, la halle est noire de monde.",
                 "type": "RichText",
                 "variant": "lead"
               }
@@ -596,19 +580,10 @@
           {
             "action": {
               "type": "external",
-              "url": "https://www.google.com/maps/search/?api=1&query=43.554,7.1268"
+              "url": "https://www.google.com/maps/search/?api=1&query=43.58093,7.12758"
             },
             "label": "i18n:guest.route",
             "type": "Button"
-          },
-          {
-            "action": {
-              "type": "external",
-              "url": "tel:+33493000001"
-            },
-            "label": "i18n:guest.call",
-            "type": "Button",
-            "variant": "outline"
           }
         ],
         "gap": 14.0,
@@ -782,20 +757,6 @@
             "children": [
               {
                 "action": {
-                  "to": "local-guide/detail/boulangerie",
-                  "type": "navigate"
-                },
-                "layout": "tile",
-                "leading": {
-                  "image": "portaki-file:boulangerie-1"
-                },
-                "meta": "Boulangerie · 350 m · €",
-                "subtitle": "Venez avant 9 h : les croissants partent vite le dimanche.",
-                "title": "La boulangerie du village",
-                "type": "ListItem"
-              },
-              {
-                "action": {
                   "to": "local-guide/detail/marche",
                   "type": "navigate"
                 },
@@ -803,12 +764,12 @@
                 "leading": {
                   "image": "portaki-file:marche-1"
                 },
-                "meta": "Marché · 1,2 km",
-                "subtitle": "Fruits, fromages et fleurs, le samedi matin.",
+                "meta": "Marché · 3,3 km",
+                "subtitle": "Venez avant 10 h : après, la halle est noire de monde.",
                 "title": "Marché provençal",
                 "trailing": {
                   "badge": {
-                    "label": "Samedi matin",
+                    "label": "Le matin",
                     "tone": "primary"
                   }
                 },
@@ -816,16 +777,36 @@
               },
               {
                 "action": {
-                  "to": "local-guide/detail/lac",
+                  "to": "local-guide/detail/garoupe",
                   "type": "navigate"
                 },
                 "layout": "tile",
                 "leading": {
-                  "image": "portaki-file:lac-1"
+                  "map": {
+                    "lat": 43.55455,
+                    "lng": 7.1357
+                  }
                 },
-                "meta": "Baignade · 22 km",
-                "subtitle": "Eau calme et plage de galets, idéal avec des enfants.",
-                "title": "Lac de Saint-Cassien",
+                "meta": "Baignade · 850 m",
+                "subtitle": "Sable fin et eau calme au fond de l'anse, idéal avec des enfants.",
+                "title": "Plage de la Garoupe",
+                "type": "ListItem"
+              },
+              {
+                "action": {
+                  "to": "local-guide/detail/fort-carre",
+                  "type": "navigate"
+                },
+                "layout": "tile",
+                "leading": {
+                  "map": {
+                    "lat": 43.59034,
+                    "lng": 7.12762
+                  }
+                },
+                "meta": "Patrimoine · 4,4 km",
+                "subtitle": "Le fort en étoile qui veille sur le port Vauban, et la vue jusqu'aux Alpes par temps clair.",
+                "title": "Fort Carré",
                 "type": "ListItem"
               }
             ],
@@ -988,38 +969,178 @@
   "variants": [
     {
       "i18n": {
-        "guest.map.label": "Plan : le logement et l’adresse",
-        "guest.route": "Itinéraire",
-        "guest.tile.drive": "En voiture",
-        "guest.tile.walk": "À pied"
+        "guest.activity.duration": "Durée",
+        "guest.activity.included": "Inclus",
+        "guest.activity.languages": "Langues",
+        "guest.activity.meet": "Rendez-vous",
+        "guest.activity.phone": "Téléphone",
+        "guest.activity.price": "Prix",
+        "guest.hostActivities.choice": "Choix de votre hôte",
+        "guest.hostActivities.disclosure": "Activité proposée par votre hôte, sans commission. La réservation se fait directement avec le prestataire.",
+        "guest.practical.title": "Infos pratiques"
       },
       "input": {
-        "spotId": "lac"
+        "activityId": "voilier"
       },
-      "surfaceId": "explore.item",
+      "surfaceId": "explore.activity",
       "tree": {
         "children": [
           {
-            "alt": "Lac de Saint-Cassien",
+            "alt": "Sortie voilier au coucher du soleil",
             "aspectRatio": "4 / 3",
             "type": "Image",
-            "url": "portaki-file:lac-1"
+            "url": "portaki-file:voilier-1"
           },
           {
             "children": [
               {
-                "text": "Lac de Saint-Cassien",
+                "label": "i18n:guest.hostActivities.choice",
+                "type": "Badge"
+              },
+              {
+                "text": "Sortie voilier au coucher du soleil",
                 "type": "Text",
                 "variant": "display"
               },
               {
                 "emphasis": "subtle",
-                "text": "Baignade",
+                "text": "Proposé par votre hôte · Marc, skipper au port",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "icon": "star",
+                "key": "i18n:guest.activity.price",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "60 € / pers."
+              },
+              {
+                "icon": "clock",
+                "key": "i18n:guest.activity.duration",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "3 h"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "title": "Annulation à voir directement avec Marc.",
+            "tone": "success",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "leading": "check",
+                "title": "Boissons à bord",
+                "type": "ListItem"
+              },
+              {
+                "leading": "check",
+                "title": "Arrêt baignade à la Garoupe",
+                "type": "ListItem"
+              }
+            ],
+            "icon": "check-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.activity.included",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "key": "i18n:guest.activity.meet",
+                "type": "KeyValue",
+                "value": "Port Vauban, ponton C"
+              },
+              {
+                "key": "i18n:guest.activity.languages",
+                "type": "KeyValue",
+                "value": "Français, anglais"
+              },
+              {
+                "key": "i18n:guest.activity.phone",
+                "mono": true,
+                "type": "KeyValue",
+                "value": "+33 6 22 33 44 55"
+              }
+            ],
+            "icon": "info-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.practical.title",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "author": {
+                  "name": ""
+                },
+                "content": "Dites-lui que vous venez d'ici : il vous garde le coucher de soleil.",
+                "type": "RichText",
+                "variant": "lead"
+              }
+            ],
+            "icon": "message",
+            "surface": "elevated",
+            "title": "Le conseil de votre hôte",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "tel:+33622334455"
+            },
+            "label": "Réserver auprès de Marc, skipper au port",
+            "type": "Button"
+          },
+          {
+            "text": "i18n:guest.hostActivities.disclosure",
+            "type": "Text",
+            "variant": "caption"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.map.label": "Plan : le logement et l’adresse",
+        "guest.route": "Itinéraire",
+        "guest.tile.drive": "En voiture"
+      },
+      "input": {
+        "spotId": "fort-carre"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "text": "Fort Carré",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "Patrimoine",
                 "type": "Text",
                 "variant": "caption"
               },
               {
-                "text": "Eau calme et plage de galets, idéal avec des enfants.",
+                "text": "Le fort en étoile qui veille sur le port Vauban, et la vue jusqu'aux Alpes par temps clair.",
                 "type": "Text",
                 "variant": "body"
               }
@@ -1030,18 +1151,11 @@
           {
             "children": [
               {
-                "icon": "users",
-                "key": "i18n:guest.tile.walk",
-                "layout": "tile",
-                "type": "KeyValue",
-                "value": "environ 268 min"
-              },
-              {
                 "icon": "car",
                 "key": "i18n:guest.tile.drive",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "environ 45 min"
+                "value": "environ 9 min"
               }
             ],
             "minColumnWidth": 96.0,
@@ -1056,9 +1170,9 @@
               {
                 "id": "spot",
                 "kind": "poi",
-                "label": "Lac de Saint-Cassien",
-                "lat": 43.5663,
-                "lng": 6.8511
+                "label": "Fort Carré",
+                "lat": 43.59034,
+                "lng": 7.12762
               },
               {
                 "id": "property",
@@ -1071,8 +1185,8 @@
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.5663,
-                "lng": 6.8511
+                "lat": 43.59034,
+                "lng": 7.12762
               },
               "zoom": 14.0
             }
@@ -1080,7 +1194,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://www.google.com/maps/search/?api=1&query=43.5663,6.8511"
+              "url": "https://www.google.com/maps/search/?api=1&query=43.59034,7.12762"
             },
             "label": "i18n:guest.route",
             "type": "Button"
@@ -1093,6 +1207,108 @@
     {
       "i18n": {
         "guest.map.label": "Plan : le logement et l’adresse",
+        "guest.route": "Itinéraire",
+        "guest.tile.drive": "En voiture",
+        "guest.tile.walk": "À pied"
+      },
+      "input": {
+        "spotId": "garoupe"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "text": "Plage de la Garoupe",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "Baignade",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "text": "Sable fin et eau calme au fond de l'anse, idéal avec des enfants.",
+                "type": "Text",
+                "variant": "body"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "icon": "users",
+                "key": "i18n:guest.tile.walk",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "environ 11 min"
+              },
+              {
+                "icon": "car",
+                "key": "i18n:guest.tile.drive",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "environ 2 min"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "interactionMode": "none",
+            "isStatic": true,
+            "label": "i18n:guest.map.label",
+            "markers": [
+              {
+                "id": "spot",
+                "kind": "poi",
+                "label": "Plage de la Garoupe",
+                "lat": 43.55455,
+                "lng": 7.1357
+              },
+              {
+                "id": "property",
+                "kind": "property",
+                "label": "L'Islette",
+                "lat": 43.5509,
+                "lng": 7.1266
+              }
+            ],
+            "type": "Map",
+            "viewport": {
+              "center": {
+                "lat": 43.55455,
+                "lng": 7.1357
+              },
+              "zoom": 14.0
+            }
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.google.com/maps/search/?api=1&query=43.55455,7.1357"
+            },
+            "label": "i18n:guest.route",
+            "type": "Button"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.map.label": "Plan : le logement et l’adresse",
+        "guest.practical.hours": "Horaires",
+        "guest.practical.opening": "Ouverture",
+        "guest.practical.parking": "Parking",
+        "guest.practical.title": "Infos pratiques",
         "guest.route": "Itinéraire",
         "guest.tile.drive": "En voiture",
         "guest.tile.walk": "À pied"
@@ -1123,7 +1339,7 @@
                 "variant": "caption"
               },
               {
-                "text": "Fruits, fromages et fleurs, le samedi matin.",
+                "text": "Fruits, fromages, olives et fleurs sous la halle du cours Masséna, dans le vieil Antibes.",
                 "type": "Text",
                 "variant": "body"
               }
@@ -1138,14 +1354,14 @@
                 "key": "i18n:guest.tile.walk",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "environ 15 min"
+                "value": "environ 41 min"
               },
               {
                 "icon": "car",
                 "key": "i18n:guest.tile.drive",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "environ 3 min"
+                "value": "environ 7 min"
               }
             ],
             "minColumnWidth": 96.0,
@@ -1161,8 +1377,8 @@
                 "id": "spot",
                 "kind": "poi",
                 "label": "Marché provençal",
-                "lat": 43.5617,
-                "lng": 7.125
+                "lat": 43.58093,
+                "lng": 7.12758
               },
               {
                 "id": "property",
@@ -1175,19 +1391,200 @@
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.5617,
-                "lng": 7.125
+                "lat": 43.58093,
+                "lng": 7.12758
               },
               "zoom": 14.0
             }
           },
           {
+            "children": [
+              {
+                "key": "i18n:guest.practical.hours",
+                "mono": true,
+                "type": "KeyValue",
+                "value": "06:00 – 13:00"
+              },
+              {
+                "key": "i18n:guest.practical.opening",
+                "type": "KeyValue",
+                "value": "Fermé le lundi hors saison"
+              },
+              {
+                "key": "i18n:guest.practical.parking",
+                "type": "KeyValue",
+                "value": "Parking du Pré aux Pêcheurs, à 300 m"
+              }
+            ],
+            "icon": "info-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.practical.title",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "author": {
+                  "name": ""
+                },
+                "content": "Venez avant 10 h : après, la halle est noire de monde.",
+                "type": "RichText",
+                "variant": "lead"
+              }
+            ],
+            "icon": "message",
+            "surface": "elevated",
+            "title": "Le conseil de votre hôte",
+            "type": "Card"
+          },
+          {
             "action": {
               "type": "external",
-              "url": "https://www.google.com/maps/search/?api=1&query=43.5617,7.125"
+              "url": "https://www.google.com/maps/search/?api=1&query=43.58093,7.12758"
             },
             "label": "i18n:guest.route",
             "type": "Button"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "guest.activities.disclosure": "Liens partenaires : Portaki peut percevoir une commission, sans surcoût pour vous.",
+        "guest.activity.about": "À propos",
+        "guest.activity.duration": "Durée",
+        "guest.activity.provider": "Fournisseur",
+        "guest.activity.rating": "Avis",
+        "guest.activity.tip": "Le conseil de votre hôte",
+        "guest.practical.title": "Infos pratiques",
+        "guest.viator.freeCancellation": "Annulation gratuite",
+        "guest.viator.priceFromLabel": "Dès",
+        "guest.viator.via": "via Viator"
+      },
+      "input": {
+        "productCode": "273628P2"
+      },
+      "surfaceId": "explore.link",
+      "tree": {
+        "children": [
+          {
+            "alt": "Le petit train d'Antibes",
+            "aspectRatio": "4 / 3",
+            "type": "Image",
+            "url": "https://hare-media-cdn.tripadvisor.com/media/attractions-splice-spp-720x480/10/24/33/0b.jpg"
+          },
+          {
+            "children": [
+              {
+                "label": "i18n:guest.viator.via",
+                "type": "Badge"
+              },
+              {
+                "text": "Le petit train d'Antibes",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "★ 4,1 (48 avis) · 45 min",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "icon": "ticket",
+                "key": "i18n:guest.viator.priceFromLabel",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "13 €"
+              },
+              {
+                "icon": "clock-circle",
+                "key": "i18n:guest.activity.duration",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "45 min"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "title": "i18n:guest.viator.freeCancellation",
+            "tone": "success",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "author": {
+                  "name": ""
+                },
+                "content": "Asseyez-vous à droite : c'est le côté qui longe les remparts.",
+                "type": "RichText",
+                "variant": "lead"
+              }
+            ],
+            "icon": "message",
+            "surface": "elevated",
+            "title": "i18n:guest.activity.tip",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "text": "Profitez du Petit Train touristique d’Antibes pour parcourir cette ville à la situation géographique exceptionnelle et riche des trésors du passé.\nCette situation particulière, avec le site exceptionnel du Cap d’Antibes, les plages de sable de Juan-les-Pins, le charme de sa Vieille Ville et ses Remparts donnent à Antibes ses caractéristiques spécifiques qui la distinguent des autres villes de la Côte d’Azur.\nÀ la fois ville-musée, ville-spectacle et ville-novatrice, elle mélange avec aisance ses contrastes et ses multiples facettes. Très appréciée des artistes à travers le monde qui trouvent dans les rues et monuments historiques de la ville une nouvelle source d’inspiration, Antibes Juan-les-Pins est connue pour être une ville ouverte à toutes les formes d’art.",
+                "type": "Text"
+              }
+            ],
+            "icon": "info-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.activity.about",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "key": "i18n:guest.activity.rating",
+                "type": "KeyValue",
+                "value": "★ 4,1 (48 avis)"
+              },
+              {
+                "key": "i18n:guest.activity.duration",
+                "type": "KeyValue",
+                "value": "45 min"
+              },
+              {
+                "key": "i18n:guest.activity.provider",
+                "type": "KeyValue",
+                "value": "Viator"
+              }
+            ],
+            "icon": "info-circle",
+            "surface": "elevated",
+            "title": "i18n:guest.practical.title",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://shop.live.rc.viator.com/fr-FR/tours/Antibes/The-Little-Train-of-Antibes-Juan-les-Pins/d21941-273628P2?mcid=42383&pid=P00322642&medium=api&api_version=2.0"
+            },
+            "label": "Réserver auprès de Viator",
+            "type": "Button"
+          },
+          {
+            "text": "i18n:guest.activities.disclosure",
+            "type": "Text",
+            "variant": "caption"
           }
         ],
         "gap": 14.0,
