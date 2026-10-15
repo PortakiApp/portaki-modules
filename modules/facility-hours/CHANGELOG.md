@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.5](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.14.4...facility-hours-v1.14.5) (2026-10-15)
+
+
+### Bug Fixes
+
+* **facility-hours:** house amenities in the demo ([7cc2bb3](https://github.com/PortakiApp/portaki-modules/commit/7cc2bb309eb2051db092f552e7b7c60cf9fcfa0e))
+
 ## [1.14.4](https://github.com/PortakiApp/portaki-modules/compare/facility-hours-v1.14.3...facility-hours-v1.14.4) (2026-10-15)
 
 

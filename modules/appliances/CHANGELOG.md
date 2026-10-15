@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.1](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.13.0...appliances-v1.13.1) (2026-10-15)
+
+
+### Bug Fixes
+
+* **appliances:** demo detail per appliance ([c2cda25](https://github.com/PortakiApp/portaki-modules/commit/c2cda25bd578e45d26dac58715bb7fbe88e0bbd4))
+
 ## [1.13.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.12.4...appliances-v1.13.0) (2026-10-15)
 
 

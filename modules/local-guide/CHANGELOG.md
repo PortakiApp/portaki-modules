@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.7](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.14.6...local-guide-v1.14.7) (2026-10-15)
+
+
+### Bug Fixes
+
+* **local-guide:** drive time only for far places ([4a485ee](https://github.com/PortakiApp/portaki-modules/commit/4a485eef1c3fdf46688ac82761b213af6c7faaaa))
+
 ## [1.14.6](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.14.5...local-guide-v1.14.6) (2026-10-15)
 
 
