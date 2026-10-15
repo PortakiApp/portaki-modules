@@ -170,6 +170,7 @@ fn explore_item_uses_device_id_and_howto_steps() {
     reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
+        .with_peers(appliances::REPORT_ISSUE, vec![report_provider()])
         .with_capabilities(&[capability::core::STORAGE])
         .run(|ctx| {
             seed_two_devices(ctx.clone());
@@ -186,7 +187,9 @@ fn explore_item_uses_device_id_and_howto_steps() {
             assert!(tv_json.contains("Télévision"));
             assert!(tv_json.contains("Allumez avec la télécommande."));
             assert!(tv_json.contains("https://example.com/tv-manual"));
-            assert!(tv_json.contains("openHostChat"));
+            // Le bouton ouvre le formulaire du fournisseur, au chemin qu'il a déclaré.
+            assert!(tv_json.contains(r#""type":"navigate""#), "{tv_json}");
+            assert!(tv_json.contains(r#""to":"provider/form""#), "{tv_json}");
             // Le formulaire de signalement lit ces deux noms pour s'ouvrir déjà rempli.
             assert!(tv_json.contains(r#""category":"appliance""#));
             assert!(tv_json.contains(r#""summary":"Télévision""#));
@@ -200,6 +203,31 @@ fn explore_item_uses_device_id_and_howto_steps() {
             assert!(washer_json.contains("Lave-linge"));
             assert!(washer_json.contains("Pas de machine après 21 h."));
             assert!(washer_json.contains("ECO 30"));
+        });
+}
+
+/// Le module qui sait recevoir un signalement, tel que la plateforme le trouve.
+fn report_provider() -> portaki_sdk::host::module::ModulePeer {
+    serde_json::from_value(json!({ "moduleId": "provider", "path": "provider/form" })).unwrap()
+}
+
+/// Sans module qui reçoive un signalement, « Un souci avec cet appareil ? » ne s'affiche pas :
+/// un bouton qui ne mène nulle part coûte plus qu'aucun bouton.
+#[test]
+#[serial]
+fn explore_item_hides_the_report_button_without_a_provider() {
+    reset_test_store();
+    MockContext::guest()
+        .with_property(Property::default())
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            seed_two_devices(ctx.clone());
+            let mut tv_ctx = ctx.clone();
+            tv_ctx.input = json!({ "deviceId": "tv" });
+            let tv = render_explore_item(tv_ctx).expect("render");
+            let tv_json = serde_json::to_string(&tv).expect("json");
+            assert!(!tv_json.contains("explore.item.contactHost"), "{tv_json}");
+            assert!(!tv_json.contains("navigate"), "{tv_json}");
         });
 }
 

@@ -73,7 +73,21 @@ fn load_for_item(ctx: &GuestContext, device_id: Option<&str>) -> Result<Surface>
     if payload.is_empty_for_guest() {
         return Ok(no_appliances_state(EXPLORE_ITEM));
     }
-    Ok(build_item_detail(&payload, device_id))
+    Ok(build_item_detail(
+        &payload,
+        device_id,
+        report_issue_path().as_deref(),
+    ))
+}
+
+/// Le chemin du formulaire de signalement, quand un module installé le fournit ; sinon `None`, et
+/// la fiche ne montre pas de bouton qui ne mènerait nulle part. Une erreur de la plateforme coûte
+/// le bouton, pas la fiche.
+fn report_issue_path() -> Option<String> {
+    portaki_sdk::host::module::list_by_capability(crate::REPORT_ISSUE)
+        .ok()?
+        .into_iter()
+        .find_map(|peer| peer.path)
 }
 
 /// No appliance published yet.

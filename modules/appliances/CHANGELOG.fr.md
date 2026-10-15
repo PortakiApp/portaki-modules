@@ -2,8 +2,10 @@
 
 ## 1.12.5
 
-Les appareils mis en avant, comme sur la maquette.
+Signaler une panne sans quitter la fiche, et des appareils comme sur la maquette.
 
+* « Un souci avec cet appareil ? » ouvre directement le formulaire de signalement, déjà rempli, par-dessus la fiche.
+* Le bouton n'apparaît que si un module de signalement est installé sur le logement.
 * Dans le livret, l'emoji de chaque appareil se pose sur une pastille blanche, en tuile comme en liste, au lieu de la pastille teintée des icônes.
 
 ## 1.12.4

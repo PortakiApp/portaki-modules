@@ -90,16 +90,23 @@ fn seed(ctx: Context) {
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
     reset_test_store();
-    let (detail, item, home) = previews::guest(root).run(|ctx| {
-        seed(ctx.clone());
-        let mut item_ctx = ctx.clone();
-        item_ctx.input = json!({ "deviceId": "plaques" });
-        (
-            render_explore_detail(ctx.clone()).expect("render"),
-            render_explore_item(item_ctx).expect("render"),
-            render_home_card(ctx).expect("render"),
-        )
-    });
+    // La démo installe un module qui reçoit les signalements : la fiche montre donc son bouton,
+    // ouvert au chemin que ce module déclare pour `report.issue`.
+    let reporter: portaki_sdk::host::module::ModulePeer =
+        serde_json::from_value(json!({ "moduleId": "issue-report", "path": "issue-report/form" }))
+            .expect("peer");
+    let (detail, item, home) = previews::guest(root)
+        .with_peers(appliances::REPORT_ISSUE, vec![reporter])
+        .run(|ctx| {
+            seed(ctx.clone());
+            let mut item_ctx = ctx.clone();
+            item_ctx.input = json!({ "deviceId": "plaques" });
+            (
+                render_explore_detail(ctx.clone()).expect("render"),
+                render_explore_item(item_ctx).expect("render"),
+                render_home_card(ctx).expect("render"),
+            )
+        });
     previews::check_all(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
