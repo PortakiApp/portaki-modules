@@ -40,8 +40,10 @@ const DEMO_FILE: &str = "demo.json";
 pub fn guest(module_root: &str) -> portaki_test_utils::MockContextBuilder {
     let stay = StayContext {
         stay_id: Uuid::from_u128(0x2222_2222_2222_2222_2222_2222_2222_2222),
-        checkin_at: Some(at("2026-06-01T15:00:00Z")),
-        checkout_at: Some(at("2026-06-08T10:00:00Z")),
+        // 16 h et 11 h à Paris (CEST) : les heures que le livret de démo affiche
+        // (`checkinTime` / `checkoutTime` de sa fixture).
+        checkin_at: Some(at("2026-06-01T14:00:00Z")),
+        checkout_at: Some(at("2026-06-08T09:00:00Z")),
         ..StayContext::default()
     };
     fr_bundle(module_root)

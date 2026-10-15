@@ -37,16 +37,16 @@
               {
                 "choices": [
                   {
-                    "label": "17–18 h",
+                    "label": "16–17 h",
+                    "value": "16:00"
+                  },
+                  {
+                    "label": "17–19 h",
                     "value": "17:00"
                   },
                   {
-                    "label": "18–20 h",
-                    "value": "18:00"
-                  },
-                  {
-                    "label": "Après 20 h",
-                    "value": "20:00"
+                    "label": "Après 19 h",
+                    "value": "19:00"
                   }
                 ],
                 "layout": "segmented",
@@ -60,7 +60,7 @@
             "type": "Field"
           },
           {
-            "text": "dès 17:00",
+            "text": "dès 16:00",
             "type": "FieldHint"
           },
           {
