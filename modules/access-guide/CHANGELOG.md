@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.5](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.4...access-guide-v1.10.5) (2026-10-15)
+
+
+### Bug Fixes
+
+* **access-guide:** describe a house in the demo ([584abde](https://github.com/PortakiApp/portaki-modules/commit/584abdea26661886b2379f1724ee843be1bfb84f))
+
 ## [1.10.4](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.3...access-guide-v1.10.4) (2026-10-15)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.5](https://github.com/PortakiApp/portaki-modules/compare/train-v2.5.4...train-v2.5.5) (2026-10-15)
+
+
+### Bug Fixes
+
+* **train:** demo detail per departure ([34eafc7](https://github.com/PortakiApp/portaki-modules/commit/34eafc7230c5f021fc509bf4f5dea627bbdfb612))
+
 ## [2.5.4](https://github.com/PortakiApp/portaki-modules/compare/train-v2.5.3...train-v2.5.4) (2026-10-15)
 
 

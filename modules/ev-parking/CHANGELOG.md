@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.5](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v1.9.4...ev-parking-v1.9.5) (2026-10-15)
+
+
+### Bug Fixes
+
+* **ev-parking:** demo charger in the house garage ([c2f0564](https://github.com/PortakiApp/portaki-modules/commit/c2f05643f6a45da1d2abbc4ee5f0f312e585dc63))
+
 ## [1.9.4](https://github.com/PortakiApp/portaki-modules/compare/ev-parking-v1.9.3...ev-parking-v1.9.4) (2026-10-15)
 
 

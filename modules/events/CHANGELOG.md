@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.5](https://github.com/PortakiApp/portaki-modules/compare/events-v1.10.4...events-v1.10.5) (2026-10-15)
+
+
+### Bug Fixes
+
+* **events:** drive time for far events ([fd9c179](https://github.com/PortakiApp/portaki-modules/commit/fd9c17903d280cc19f22b1b9239910dfd4e11008))
+
 ## [1.10.4](https://github.com/PortakiApp/portaki-modules/compare/events-v1.10.3...events-v1.10.4) (2026-10-15)
 
 

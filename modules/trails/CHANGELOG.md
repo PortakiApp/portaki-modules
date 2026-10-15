@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.5](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.9.4...trails-v0.9.5) (2026-10-15)
+
+
+### Bug Fixes
+
+* **trails:** demo trails around Cap d'Antibes ([bcadfc7](https://github.com/PortakiApp/portaki-modules/commit/bcadfc714124b75a02bff20a5086c05a25d64e63))
+
 ## [0.9.4](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.9.3...trails-v0.9.4) (2026-10-15)
 
 
