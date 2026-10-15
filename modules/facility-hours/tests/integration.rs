@@ -153,9 +153,19 @@ fn structured_hours_carry_a_state_and_the_week() {
             let json = serde_json::to_string(&surface).expect("json");
 
             assert!(json.contains("guest.state.open"), "{json}");
-            // Les sept jours, avec le jour courant marqué.
+            // Les sept jours, avec le jour courant marqué — et nommé « aujourd'hui », pas
+            // « mercredi » : un rendu figé qui nomme le jour ment six jours sur sept.
             assert!(json.contains("\"details\""), "{json}");
-            assert!(json.contains("\"current\":true"), "{json}");
+            assert!(
+                json.contains(
+                    "\"label\":\"i18n:guest.today\",\"value\":\"08:00 – 20:00\",\"current\":true"
+                ),
+                "{json}"
+            );
+            assert!(
+                !json.contains("mercredi") && !json.contains("Wednesday"),
+                "{json}"
+            );
         });
 }
 
@@ -200,6 +210,7 @@ fn the_new_badges_are_in_every_bundle() {
             ("guest.state.openUntil", "{time}"),
             ("host.facility.ranges.overlapOn", "{day}"),
             ("host.exception.past", ""),
+            ("guest.today", ""),
         ] {
             let text = texts[key].as_str().unwrap_or_default();
             assert!(

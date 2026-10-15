@@ -30,7 +30,7 @@ fn state_badge(state: &State, locale: &str, exception_today: bool) -> Option<Tra
     })))
 }
 
-/// Les sept jours d'une ligne, lundi en tête, le jour courant marqué (§2.6).
+/// Les sept jours d'une ligne, lundi en tête, le jour courant marqué et nommé « aujourd'hui » (§2.6).
 fn week_rows(
     row: &crate::config::FacilityRow,
     locale: &str,
@@ -52,10 +52,18 @@ fn week_rows(
                     spans_text(&spans)
                 }
             };
+            // Le jour courant se dit « aujourd'hui », pas par son nom : la ligne marquée le dit
+            // déjà, et un rendu figé (la démo) qui l'appelle « dimanche » ment six jours sur sept.
+            let current = today == Some(*day);
+            let label = if current {
+                "i18n:guest.today".to_string()
+            } else {
+                time::weekday_name(*day, locale).to_string()
+            };
             DetailRow {
-                label: time::weekday_name(*day, locale).to_string(),
+                label,
                 value,
-                current: today == Some(*day),
+                current,
             }
         })
         .collect()

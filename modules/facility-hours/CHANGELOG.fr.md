@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.14.8
+
+Le jour courant s'appelle « aujourd'hui ».
+
+* Dans la semaine dépliable des horaires, la ligne du jour se lit « aujourd'hui » au lieu de son nom.
+
 ## 1.14.5
 
 Un aperçu fidèle à la maison de démonstration.
