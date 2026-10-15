@@ -397,6 +397,7 @@ fn check_demo(
         list.sort_by_key(|v| (v["surfaceId"].to_string(), v["input"].to_string()));
         document["variants"] = Value::Array(list);
     }
+    check_item_variants(&document, &routes);
     let expected = serde_json::to_string_pretty(&document).expect("json") + "\n";
     let path = root.join(DEMO_FILE);
     if std::env::var_os("PORTAKI_UPDATE_DEMO").is_some() {
@@ -408,6 +409,74 @@ fn check_demo(
         current == expected,
         "{DEMO_FILE} ne correspond plus au rendu — PORTAKI_UPDATE_DEMO=1 cargo test --test previews"
     );
+}
+
+/// Chaque élément que la démo montre ouvre **sa** fiche.
+///
+/// Une navigation vers une surface à paramètres (`events/detail/:eventId`) — depuis un repère de la
+/// carte, une ligne de liste, une carte — doit trouver une variante de cette surface rendue pour
+/// cette entrée. Sans elle, le livret de démo retombe sur la fiche par défaut : on tape le concert,
+/// on lit le marché.
+fn check_item_variants(document: &Value, routes: &std::collections::BTreeMap<String, Value>) {
+    let mut targets = BTreeSet::new();
+    let mut stack = vec![document];
+    while let Some(value) = stack.pop() {
+        match value {
+            Value::Object(fields) => {
+                if fields.get("type").and_then(Value::as_str) == Some("navigate") {
+                    if let Some(to) = fields.get("to").and_then(Value::as_str) {
+                        targets.insert(to.to_string());
+                    }
+                }
+                stack.extend(fields.values());
+            }
+            Value::Array(items) => stack.extend(items),
+            _ => {}
+        }
+    }
+    let variants = document["variants"].as_array().cloned().unwrap_or_default();
+    let missing: Vec<String> = targets
+        .iter()
+        .flat_map(|to| {
+            routes.iter().filter_map(move |(surface_id, catalog)| {
+                let input = route_input(catalog["path"].as_str()?, to)?;
+                Some((to, surface_id, input))
+            })
+        })
+        .filter(|(_, surface_id, input)| {
+            !variants
+                .iter()
+                .any(|v| v["surfaceId"] == surface_id.as_str() && v["input"] == *input)
+        })
+        .map(|(to, surface_id, input)| format!("{to} → {surface_id} {input}"))
+        .collect();
+    assert!(
+        missing.is_empty(),
+        "la démo ouvrirait la fiche par défaut — variante manquante pour : {missing:?}"
+    );
+}
+
+/// L'entrée qu'une navigation donne à une surface : `{ "eventId": "concert" }` pour
+/// `events/detail/concert` sous `events/detail/:eventId`. Rien si le chemin n'a pas de paramètre
+/// ou ne correspond pas.
+fn route_input(pattern: &str, to: &str) -> Option<Value> {
+    let to = to.trim_start_matches('/').split(['?', '#']).next()?;
+    let (pattern, to): (Vec<&str>, Vec<&str>) =
+        (pattern.split('/').collect(), to.split('/').collect());
+    if pattern.len() != to.len() || !pattern.iter().any(|seg| seg.starts_with(':')) {
+        return None;
+    }
+    let mut input = Map::new();
+    for (seg, value) in pattern.iter().zip(&to) {
+        match seg.strip_prefix(':') {
+            Some(name) => {
+                input.insert(name.to_string(), Value::String((*value).to_string()));
+            }
+            None if seg != value => return None,
+            None => {}
+        }
+    }
+    Some(Value::Object(input))
 }
 
 /// `GuestRole::StatusCell` → `"status-cell"`, comme le fait `portaki build`.
