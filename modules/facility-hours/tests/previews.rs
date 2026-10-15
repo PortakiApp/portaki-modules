@@ -6,7 +6,8 @@ mod previews;
 use facility_hours::{render_explore_detail, render_home_card};
 use serde_json::json;
 
-/// Les équipements d'une résidence de vacances et leurs horaires.
+/// Les équipements de la maison et leurs horaires : la piscine, le jacuzzi du jardin (qu'on
+/// coupe le soir pour les voisins), le ménage en cours de séjour avec sa pause de midi.
 fn sample_config() -> serde_json::Value {
     json!({
         "facilities": [
@@ -14,36 +15,36 @@ fn sample_config() -> serde_json::Value {
                 "id": "piscine",
                 "title": { "fr": "Piscine", "en": "Swimming pool" },
                 "group": "Équipements",
-                "icon": "sun",
+                "icon": "droplet",
                 "opens_at": "09:00",
                 "closes_at": "20:00",
                 "lines": {
-                    "fr": "Tous les jours, de juin à septembre\nEnfants sous la surveillance d'un adulte",
-                    "en": "Every day, June to September\nChildren must be supervised by an adult"
+                    "fr": "Chauffée de mai à octobre\nEnfants sous la surveillance d'un adulte",
+                    "en": "Heated from May to October\nChildren must be supervised by an adult"
                 },
                 "hours": "9 h – 20 h",
-                "note": { "fr": "Bonnet de bain non obligatoire.", "en": "Swim cap not required." }
+                "note": { "fr": "Merci de remettre la bâche le soir.", "en": "Please put the cover back on in the evening." }
             },
             {
-                "id": "laverie",
-                "title": { "fr": "Laverie", "en": "Laundry room" },
+                "id": "jacuzzi",
+                "title": { "fr": "Jacuzzi", "en": "Hot tub" },
                 "group": "Équipements",
-                "icon": "droplet",
-                "opens_at": "07:00",
+                "icon": "sparkles",
+                "opens_at": "08:00",
                 "closes_at": "22:00",
-                "lines": { "fr": "Rez-de-chaussée, bâtiment B", "en": "Ground floor, building B" },
-                "hours": "7 h – 22 h"
+                "lines": { "fr": "Sous la pergola, côté jardin", "en": "Under the pergola, garden side" },
+                "hours": "8 h – 22 h"
             },
             {
-                "id": "accueil",
-                "title": { "fr": "Accueil de la résidence", "en": "Reception" },
+                "id": "menage",
+                "title": { "fr": "Ménage en cours de séjour", "en": "Mid-stay cleaning" },
                 "group": "Services",
-                "icon": "building",
+                "icon": "sparkles",
                 "opens_at": "08:30",
                 "closes_at": "18:00",
                 "break_from": "12:00",
                 "break_to": "14:00",
-                "lines": { "fr": "Du lundi au samedi", "en": "Monday to Saturday" },
+                "lines": { "fr": "Du lundi au samedi, sur demande la veille", "en": "Monday to Saturday, on request the day before" },
                 "hours": "8 h 30 – 12 h · 14 h – 18 h"
             }
         ],
