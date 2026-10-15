@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.14.2
+
+Le délai de la démo finit demain.
+
+* La démo « après le séjour » annonce « Jusqu'à demain » au lieu d'un jour nommé, juste quel que soit le jour où on l'ouvre.
+
 ## 1.14.0
 
 La fin du délai, dite comme on la dit.

@@ -11,7 +11,11 @@ use serde_json::json;
 
 fn sample_config() -> Vec<u8> {
     serde_json::to_vec(&json!({
-        "host_note": "Les objets retrouvés sont gardés un mois ; l'envoi par la poste est à votre charge."
+        "host_note": "Les objets retrouvés sont gardés un mois ; l'envoi par la poste est à votre charge.",
+        // Deux jours : rendue le lendemain du départ, la fin du délai se lit « Jusqu'à demain ».
+        // Avec le délai par défaut (sept jours), elle tombait un lundi, et un rendu figé qui
+        // nomme un jour ment dans la démo six jours sur sept.
+        "window_days": 2
     }))
     .expect("config json")
 }
@@ -22,7 +26,7 @@ fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
     /*
      * Rendu la veille de l'arrivée (les aperçus), puis le lendemain du départ (la démo
-     * `demo-apres`) : la fin du délai s'y lit « Jusqu'à lundi », pas une date de juin servie en
+     * `demo-apres`) : la fin du délai s'y lit « Jusqu'à demain », pas une date de juin servie en
      * octobre.
      */
     let render = |instant: &str| {
