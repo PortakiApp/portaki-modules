@@ -15,6 +15,8 @@ pub struct GuestWeatherData {
     pub forecast: WeatherForecast,
     pub units: WeatherUnits,
     pub city: Option<String>,
+    /// Aujourd'hui au logement : la bande et le tableau disent « Aujourd'hui », « Demain ».
+    pub today: chrono::NaiveDate,
 }
 
 pub enum GuestLoad {
@@ -89,5 +91,6 @@ pub fn load_guest_weather(ctx: &GuestContext, surface_id: SurfaceId) -> Result<G
         forecast,
         units: WeatherUnits::for_locale(&ctx.locale),
         city,
+        today: super::window::local_today(now, &ctx.timezone),
     })))
 }

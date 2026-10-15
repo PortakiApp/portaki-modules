@@ -12,6 +12,8 @@
   "day.strip": "{weekday} {day}",
   "day.sunday": "So",
   "day.thursday": "Do",
+  "day.today": "Heute",
+  "day.tomorrow": "Morgen",
   "day.tuesday": "Di",
   "day.wednesday": "Mi",
   "email.condition.cloudy": "bedeckter Himmel",

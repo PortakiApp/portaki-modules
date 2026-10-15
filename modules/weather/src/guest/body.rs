@@ -7,7 +7,7 @@ use portaki_sdk::sdui::primitives::{Divider, Grid, Icon, Stack, Temperature, Tex
 use crate::entities::WeatherUnits;
 use crate::weather::{
     convert_temp, format_day_strip_label, format_temp_label, icon_name_for_condition,
-    tone_for_temp_c, ForecastDayView, WeatherCurrent, WeatherForecast,
+    parse_forecast_date, tone_for_temp_c, ForecastDayView, WeatherCurrent, WeatherForecast,
 };
 
 /// Glance body for the home card: hero + forecast strip (design: no UV chip).
@@ -16,11 +16,12 @@ pub fn build_weather_glance(
     forecast: &WeatherForecast,
     units: &WeatherUnits,
     city: Option<&str>,
+    today: chrono::NaiveDate,
 ) -> Vec<Component> {
     vec![
         build_current_hero(current, units, city),
         Component::Divider(Divider::new()),
-        build_forecast_strip(forecast, units),
+        build_forecast_strip(forecast, units, today),
     ]
 }
 
@@ -62,25 +63,26 @@ pub fn build_current_hero(
     )
 }
 
-/// `today` : le premier jour de la bande. La maquette l'encadre en couleur de marque pour qu'on
+/// `today` : le jour qui se lit « Aujourd'hui » — avant l'arrivée, la bande commence plus tard et
+/// rien n'est marqué. La maquette l'encadre en couleur de marque pour qu'on
 /// sache d'où on compte, et met les autres en boîte neutre — sans boîte, les cinq colonnes se
 /// lisaient comme un seul bloc de texte.
 fn build_forecast_day_column(
     day: &ForecastDayView,
     unit: &str,
     units: &WeatherUnits,
-    today: bool,
+    today: chrono::NaiveDate,
 ) -> Component {
     let display_temp = convert_temp(day.display_temp_c, *units);
     let mut column = Stack::new().boxed(true).gap(6.0);
-    if today {
+    if parse_forecast_date(&day.date) == Some(today) {
         column = column.tone(Tone::Primary);
     }
     Component::Stack(
         column
             .child(
                 Text::new()
-                    .text(format_day_strip_label(&day.date))
+                    .text(format_day_strip_label(&day.date, today))
                     .variant(TextVariant::Caption),
             )
             .child(
@@ -98,13 +100,16 @@ fn build_forecast_day_column(
     )
 }
 
-fn build_forecast_strip(forecast: &WeatherForecast, units: &WeatherUnits) -> Component {
+fn build_forecast_strip(
+    forecast: &WeatherForecast,
+    units: &WeatherUnits,
+    today: chrono::NaiveDate,
+) -> Component {
     let unit = units.sdui_unit();
     let day_columns: Vec<Component> = forecast
         .days
         .iter()
-        .enumerate()
-        .map(|(rank, day)| build_forecast_day_column(day, unit, units, rank == 0))
+        .map(|day| build_forecast_day_column(day, unit, units, today))
         .collect();
 
     // Une largeur minimale, pas un nombre de colonnes : la grille du livret décide combien de

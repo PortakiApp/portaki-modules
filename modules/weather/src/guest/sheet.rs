@@ -21,7 +21,7 @@ pub fn build_sheet_surface(data: &GuestWeatherData) -> Surface {
                 .text("i18n:explore.forecast.hint")
                 .variant(TextVariant::Title),
         ),
-        build_forecast_table(&data.forecast, &data.units),
+        build_forecast_table(&data.forecast, &data.units, data.today),
     ];
 
     Surface::new(Stack::new().gap(12.0).children(children)).with_id(crate::guest::EXPLORE_FORECAST)

@@ -12,6 +12,8 @@
   "day.strip": "{weekday} {day}",
   "day.sunday": "日",
   "day.thursday": "木",
+  "day.today": "今日",
+  "day.tomorrow": "明日",
   "day.tuesday": "火",
   "day.wednesday": "水",
   "email.condition.cloudy": "くもり",

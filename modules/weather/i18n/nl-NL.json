@@ -12,6 +12,8 @@
   "day.strip": "{weekday} {day}",
   "day.sunday": "Zo",
   "day.thursday": "Do",
+  "day.today": "Vandaag",
+  "day.tomorrow": "Morgen",
   "day.tuesday": "Di",
   "day.wednesday": "Wo",
   "email.condition.cloudy": "bewolkt",
