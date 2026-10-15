@@ -6,7 +6,7 @@ Chaque appareil de la démo ouvre sa fiche.
 
 * Dans la démo du livret, toucher un appareil ouvre sa propre fiche, plus toujours celle des plaques. Rien ne change pour l'hôte ni pour le voyageur.
 
-## 1.12.5
+## 1.13.0
 
 Signaler une panne sans quitter la fiche, et des appareils comme sur la maquette.
 
