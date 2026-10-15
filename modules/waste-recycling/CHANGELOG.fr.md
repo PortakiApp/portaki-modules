@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.12.7
+
+La démo annonce la collecte du jour.
+
+* L'aperçu public et la démo annoncent « Collecte aujourd'hui » au lieu d'un jour nommé, juste quel que soit le jour où on les ouvre.
+
 ## 1.12.1
 
 Montée technique.
