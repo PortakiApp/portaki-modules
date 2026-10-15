@@ -12,8 +12,8 @@
         "id": "trail-garoupe",
         "kind": "poi",
         "label": "Phare de la Garoupe",
-        "lat": 43.5612,
-        "lng": 7.1298
+        "lat": 43.57147,
+        "lng": 7.12761
       },
       {
         "action": {
@@ -24,35 +24,22 @@
         "icon": "mountain",
         "id": "trail-littoral",
         "kind": "poi",
-        "label": "Sentier du littoral du Cap",
-        "lat": 43.5585,
-        "lng": 7.1322
+        "label": "Sentier du littoral (Tire-Poil)",
+        "lat": 43.55529,
+        "lng": 7.13969
       },
       {
         "action": {
-          "to": "trails/brague",
+          "to": "trails/remparts",
           "type": "navigate"
         },
         "category": "hiking",
         "icon": "mountain",
-        "id": "trail-brague",
+        "id": "trail-remparts",
         "kind": "poi",
-        "label": "Vallée de la Brague",
-        "lat": 43.628,
-        "lng": 7.098
-      },
-      {
-        "action": {
-          "to": "trails/baou",
-          "type": "navigate"
-        },
-        "category": "hiking",
-        "icon": "mountain",
-        "id": "trail-baou",
-        "kind": "poi",
-        "label": "Baou de Saint-Jeannet",
-        "lat": 43.757,
-        "lng": 7.148
+        "label": "Des remparts au Fort Carré",
+        "lat": 43.58006,
+        "lng": 7.12808
       }
     ]
   },
@@ -76,7 +63,7 @@
               },
               {
                 "emphasis": "subtle",
-                "text": "4 itinéraires · durées de marche sans les pauses",
+                "text": "3 itinéraires · durées de marche sans les pauses",
                 "type": "Text",
                 "variant": "caption"
               }
@@ -93,7 +80,7 @@
                 },
                 "chevron": true,
                 "leading": "mountain",
-                "subtitle": "1 h · 2.6 km · ↑ 80 m · Aller-retour",
+                "subtitle": "1 h · 2.6 km · ↑ 100 m · Aller-retour",
                 "title": "Phare de la Garoupe",
                 "trailing": {
                   "text": "▲ Facile"
@@ -102,13 +89,13 @@
               },
               {
                 "action": {
-                  "to": "trails/littoral",
+                  "to": "trails/remparts",
                   "type": "navigate"
                 },
                 "chevron": true,
                 "leading": "mountain",
-                "subtitle": "2 h 30 · 8 km · ↑ 60 m · Boucle",
-                "title": "Sentier du littoral du Cap",
+                "subtitle": "1 h · 3 km · ↑ 30 m · Aller-retour",
+                "title": "Des remparts au Fort Carré",
                 "trailing": {
                   "text": "▲ Facile"
                 },
@@ -123,13 +110,13 @@
             "children": [
               {
                 "action": {
-                  "to": "trails/brague",
+                  "to": "trails/littoral",
                   "type": "navigate"
                 },
                 "chevron": true,
                 "leading": "mountain",
-                "subtitle": "3 h · 9.5 km · ↑ 220 m · Aller-retour",
-                "title": "Vallée de la Brague",
+                "subtitle": "2 h · 5 km · ↑ 40 m · Boucle",
+                "title": "Sentier du littoral (Tire-Poil)",
                 "trailing": {
                   "text": "▲▲ Moyen"
                 },
@@ -141,32 +128,11 @@
             "type": "Card"
           },
           {
-            "children": [
-              {
-                "action": {
-                  "to": "trails/baou",
-                  "type": "navigate"
-                },
-                "chevron": true,
-                "leading": "mountain",
-                "subtitle": "4 h · 8 km · ↑ 600 m · Aller-retour",
-                "title": "Baou de Saint-Jeannet",
-                "trailing": {
-                  "text": "▲▲▲ Sportif"
-                },
-                "type": "ListItem"
-              }
-            ],
-            "icon": "mountain",
-            "title": "▲▲▲ Sportif · 1",
-            "type": "Card"
-          },
-          {
             "action": {
               "type": "external",
-              "url": "https://www.antibesjuanlespins.com/randonnees"
+              "url": "https://www.antibesjuanlespins.com/"
             },
-            "href": "https://www.antibesjuanlespins.com/randonnees",
+            "href": "https://www.antibesjuanlespins.com/",
             "label": "i18n:guest.commune.label",
             "type": "Link"
           }
@@ -208,7 +174,7 @@
               },
               {
                 "emphasis": "subtle",
-                "text": "Départ : Chemin du Calvaire, Antibes",
+                "text": "Départ : Plage de la Salis, boulevard James Wyllie, Antibes",
                 "type": "Text",
                 "variant": "caption"
               }
@@ -237,7 +203,7 @@
                 "key": "i18n:guest.tile.elevation",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "80 m"
+                "value": "100 m"
               },
               {
                 "icon": "refresh",
@@ -252,7 +218,7 @@
             "type": "Grid"
           },
           {
-            "text": "Montée courte par le chemin du Calvaire jusqu’au phare et à sa table d’orientation. Vue sur la baie des Anges.",
+            "text": "De la plage de la Salis, montée par le chemin du Calvaire jusqu’au phare et à la chapelle de la Garoupe. Vue sur la baie des Anges et les Alpes.",
             "type": "Text",
             "variant": "body"
           },
@@ -273,15 +239,15 @@
                 "id": "start",
                 "kind": "poi",
                 "label": "i18n:guest.map.start",
-                "lat": 43.5612,
-                "lng": 7.1298
+                "lat": 43.57147,
+                "lng": 7.12761
               }
             ],
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.5612,
-                "lng": 7.1298
+                "lat": 43.57147,
+                "lng": 7.12761
               },
               "zoom": 13.0
             }
@@ -307,7 +273,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://www.visorando.com/randonnee-phare-de-la-garoupe"
+              "url": "https://www.openstreetmap.org/way/670533618"
             },
             "label": "i18n:guest.openTrace",
             "type": "Button"
@@ -315,7 +281,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://www.google.com/maps/search/?api=1&query=43.5612,7.1298"
+              "url": "https://www.google.com/maps/search/?api=1&query=43.57147,7.12761"
             },
             "label": "i18n:guest.routeToStart",
             "type": "Button",
@@ -352,10 +318,6 @@
               {
                 "label": "▲▲ Moyen · 1",
                 "type": "Badge"
-              },
-              {
-                "label": "▲▲▲ Sportif · 1",
-                "type": "Badge"
               }
             ],
             "direction": "horizontal",
@@ -369,7 +331,7 @@
             },
             "chevron": true,
             "leading": "mountain",
-            "subtitle": "1 h · 2.6 km · ↑ 80 m",
+            "subtitle": "1 h · 2.6 km · ↑ 100 m",
             "title": "Phare de la Garoupe",
             "trailing": {
               "text": "▲ Facile"
@@ -383,16 +345,16 @@
             },
             "chevron": true,
             "leading": "mountain",
-            "subtitle": "2 h 30 · 8 km · ↑ 60 m",
-            "title": "Sentier du littoral du Cap",
+            "subtitle": "2 h · 5 km · ↑ 40 m",
+            "title": "Sentier du littoral (Tire-Poil)",
             "trailing": {
-              "text": "▲ Facile"
+              "text": "▲▲ Moyen"
             },
             "type": "ListItem"
           }
         ],
         "icon": "mountain",
-        "subtitle": "4 itinéraires choisis par votre hôte",
+        "subtitle": "3 itinéraires choisis par votre hôte",
         "title": "i18n:home.card.title",
         "type": "Card"
       }
@@ -415,7 +377,7 @@
         "guest.tile.shape": "Type"
       },
       "input": {
-        "trailId": "baou"
+        "trailId": "garoupe"
       },
       "surfaceId": "explore.item",
       "tree": {
@@ -423,17 +385,17 @@
           {
             "children": [
               {
-                "label": "▲▲▲ Sportif",
+                "label": "▲ Facile",
                 "type": "Badge"
               },
               {
-                "text": "Baou de Saint-Jeannet",
+                "text": "Phare de la Garoupe",
                 "type": "Text",
                 "variant": "display"
               },
               {
                 "emphasis": "subtle",
-                "text": "Départ : Saint-Jeannet, place Sainte-Barbe",
+                "text": "Départ : Plage de la Salis, boulevard James Wyllie, Antibes",
                 "type": "Text",
                 "variant": "caption"
               }
@@ -448,21 +410,21 @@
                 "key": "i18n:guest.tile.duration",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "4 h"
+                "value": "1 h"
               },
               {
                 "icon": "compass",
                 "key": "i18n:guest.tile.distance",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "8 km"
+                "value": "2.6 km"
               },
               {
                 "icon": "arrow-up",
                 "key": "i18n:guest.tile.elevation",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "600 m"
+                "value": "100 m"
               },
               {
                 "icon": "refresh",
@@ -477,7 +439,7 @@
             "type": "Grid"
           },
           {
-            "text": "Montée raide jusqu’au sommet du baou, panorama de l’Estérel au cap Ferrat. Passages rocheux, chaussures montantes conseillées.",
+            "text": "De la plage de la Salis, montée par le chemin du Calvaire jusqu’au phare et à la chapelle de la Garoupe. Vue sur la baie des Anges et les Alpes.",
             "type": "Text",
             "variant": "body"
           },
@@ -498,15 +460,15 @@
                 "id": "start",
                 "kind": "poi",
                 "label": "i18n:guest.map.start",
-                "lat": 43.757,
-                "lng": 7.148
+                "lat": 43.57147,
+                "lng": 7.12761
               }
             ],
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.757,
-                "lng": 7.148
+                "lat": 43.57147,
+                "lng": 7.12761
               },
               "zoom": 13.0
             }
@@ -532,7 +494,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://www.visorando.com/randonnee-baou-de-saint-jeannet"
+              "url": "https://www.openstreetmap.org/way/670533618"
             },
             "label": "i18n:guest.openTrace",
             "type": "Button"
@@ -540,7 +502,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://www.google.com/maps/search/?api=1&query=43.757,7.148"
+              "url": "https://www.google.com/maps/search/?api=1&query=43.57147,7.12761"
             },
             "label": "i18n:guest.routeToStart",
             "type": "Button",
@@ -566,7 +528,7 @@
         "guest.tile.shape": "Type"
       },
       "input": {
-        "trailId": "brague"
+        "trailId": "littoral"
       },
       "surfaceId": "explore.item",
       "tree": {
@@ -578,13 +540,13 @@
                 "type": "Badge"
               },
               {
-                "text": "Vallée de la Brague",
+                "text": "Sentier du littoral (Tire-Poil)",
                 "type": "Text",
                 "variant": "display"
               },
               {
                 "emphasis": "subtle",
-                "text": "Départ : Biot, chemin des Combes",
+                "text": "Départ : Plage de la Garoupe, Antibes",
                 "type": "Text",
                 "variant": "caption"
               }
@@ -599,28 +561,28 @@
                 "key": "i18n:guest.tile.duration",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "3 h"
+                "value": "2 h"
               },
               {
                 "icon": "compass",
                 "key": "i18n:guest.tile.distance",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "9.5 km"
+                "value": "5 km"
               },
               {
                 "icon": "arrow-up",
                 "key": "i18n:guest.tile.elevation",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "220 m"
+                "value": "40 m"
               },
               {
                 "icon": "refresh",
                 "key": "i18n:guest.tile.shape",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "Aller-retour"
+                "value": "Boucle"
               }
             ],
             "minColumnWidth": 136.0,
@@ -628,7 +590,7 @@
             "type": "Grid"
           },
           {
-            "text": "Le long de la rivière, sous les chênes, avec plusieurs gués. Agréable par forte chaleur.",
+            "text": "De la plage de la Garoupe à la villa Eilenroc au ras des rochers, retour par les chemins du Cap. Marches taillées, glissantes par mer agitée.",
             "type": "Text",
             "variant": "body"
           },
@@ -649,15 +611,15 @@
                 "id": "start",
                 "kind": "poi",
                 "label": "i18n:guest.map.start",
-                "lat": 43.628,
-                "lng": 7.098
+                "lat": 43.55529,
+                "lng": 7.13969
               }
             ],
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.628,
-                "lng": 7.098
+                "lat": 43.55529,
+                "lng": 7.13969
               },
               "zoom": 13.0
             }
@@ -683,7 +645,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://www.google.com/maps/search/?api=1&query=43.628,7.098"
+              "url": "https://www.google.com/maps/search/?api=1&query=43.55529,7.13969"
             },
             "label": "i18n:guest.routeToStart",
             "type": "Button"
@@ -701,13 +663,14 @@
         "guest.map.label": "Plan du départ",
         "guest.map.property": "Le logement",
         "guest.map.start": "Départ",
+        "guest.routeToStart": "Itinéraire jusqu’au départ",
         "guest.tile.distance": "Distance",
         "guest.tile.duration": "Durée",
         "guest.tile.elevation": "Dénivelé",
         "guest.tile.shape": "Type"
       },
       "input": {
-        "trailId": "littoral"
+        "trailId": "remparts"
       },
       "surfaceId": "explore.item",
       "tree": {
@@ -719,13 +682,13 @@
                 "type": "Badge"
               },
               {
-                "text": "Sentier du littoral du Cap",
+                "text": "Des remparts au Fort Carré",
                 "type": "Text",
                 "variant": "display"
               },
               {
                 "emphasis": "subtle",
-                "text": "Départ : Plage de la Garoupe, Antibes · 950 m",
+                "text": "Départ : Promenade de l’Amiral de Grasse, Antibes",
                 "type": "Text",
                 "variant": "caption"
               }
@@ -740,28 +703,28 @@
                 "key": "i18n:guest.tile.duration",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "2 h 30"
+                "value": "1 h"
               },
               {
                 "icon": "compass",
                 "key": "i18n:guest.tile.distance",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "8 km"
+                "value": "3 km"
               },
               {
                 "icon": "arrow-up",
                 "key": "i18n:guest.tile.elevation",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "60 m"
+                "value": "30 m"
               },
               {
                 "icon": "refresh",
                 "key": "i18n:guest.tile.shape",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "Boucle"
+                "value": "Aller-retour"
               }
             ],
             "minColumnWidth": 136.0,
@@ -769,7 +732,7 @@
             "type": "Grid"
           },
           {
-            "text": "Le tour du Cap au ras des rochers, entre criques et villas. Passages sur des marches taillées, glissants par mer agitée.",
+            "text": "Le long des remparts du vieil Antibes, au pied du musée Picasso, puis tout le port Vauban jusqu’au Fort Carré.",
             "type": "Text",
             "variant": "body"
           },
@@ -790,15 +753,15 @@
                 "id": "start",
                 "kind": "poi",
                 "label": "i18n:guest.map.start",
-                "lat": 43.5585,
-                "lng": 7.1322
+                "lat": 43.58006,
+                "lng": 7.12808
               }
             ],
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.5585,
-                "lng": 7.1322
+                "lat": 43.58006,
+                "lng": 7.12808
               },
               "zoom": 13.0
             }
@@ -820,6 +783,14 @@
             "surface": "elevated",
             "title": "i18n:guest.before.title",
             "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.google.com/maps/search/?api=1&query=43.58006,7.12808"
+            },
+            "label": "i18n:guest.routeToStart",
+            "type": "Button"
           }
         ],
         "gap": 14.0,

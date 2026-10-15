@@ -20,7 +20,7 @@
               },
               {
                 "emphasis": "subtle",
-                "text": "4 itinéraires · durées de marche sans les pauses",
+                "text": "3 itinéraires · durées de marche sans les pauses",
                 "type": "Text",
                 "variant": "caption"
               }
@@ -37,7 +37,7 @@
                 },
                 "chevron": true,
                 "leading": "mountain",
-                "subtitle": "1 h · 2.6 km · ↑ 80 m · Aller-retour",
+                "subtitle": "1 h · 2.6 km · ↑ 100 m · Aller-retour",
                 "title": "Phare de la Garoupe",
                 "trailing": {
                   "text": "▲ Facile"
@@ -46,13 +46,13 @@
               },
               {
                 "action": {
-                  "to": "trails/littoral",
+                  "to": "trails/remparts",
                   "type": "navigate"
                 },
                 "chevron": true,
                 "leading": "mountain",
-                "subtitle": "2 h 30 · 8 km · ↑ 60 m · Boucle",
-                "title": "Sentier du littoral du Cap",
+                "subtitle": "1 h · 3 km · ↑ 30 m · Aller-retour",
+                "title": "Des remparts au Fort Carré",
                 "trailing": {
                   "text": "▲ Facile"
                 },
@@ -67,13 +67,13 @@
             "children": [
               {
                 "action": {
-                  "to": "trails/brague",
+                  "to": "trails/littoral",
                   "type": "navigate"
                 },
                 "chevron": true,
                 "leading": "mountain",
-                "subtitle": "3 h · 9.5 km · ↑ 220 m · Aller-retour",
-                "title": "Vallée de la Brague",
+                "subtitle": "2 h · 5 km · ↑ 40 m · Boucle",
+                "title": "Sentier du littoral (Tire-Poil)",
                 "trailing": {
                   "text": "▲▲ Moyen"
                 },
@@ -85,32 +85,11 @@
             "type": "Card"
           },
           {
-            "children": [
-              {
-                "action": {
-                  "to": "trails/baou",
-                  "type": "navigate"
-                },
-                "chevron": true,
-                "leading": "mountain",
-                "subtitle": "4 h · 8 km · ↑ 600 m · Aller-retour",
-                "title": "Baou de Saint-Jeannet",
-                "trailing": {
-                  "text": "▲▲▲ Sportif"
-                },
-                "type": "ListItem"
-              }
-            ],
-            "icon": "mountain",
-            "title": "▲▲▲ Sportif · 1",
-            "type": "Card"
-          },
-          {
             "action": {
               "type": "external",
-              "url": "https://www.antibesjuanlespins.com/randonnees"
+              "url": "https://www.antibesjuanlespins.com/"
             },
-            "href": "https://www.antibesjuanlespins.com/randonnees",
+            "href": "https://www.antibesjuanlespins.com/",
             "label": "i18n:guest.commune.label",
             "type": "Link"
           }
@@ -152,7 +131,7 @@
               },
               {
                 "emphasis": "subtle",
-                "text": "Départ : Chemin du Calvaire, Antibes",
+                "text": "Départ : Plage de la Salis, boulevard James Wyllie, Antibes",
                 "type": "Text",
                 "variant": "caption"
               }
@@ -181,7 +160,7 @@
                 "key": "i18n:guest.tile.elevation",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "80 m"
+                "value": "100 m"
               },
               {
                 "icon": "refresh",
@@ -196,7 +175,7 @@
             "type": "Grid"
           },
           {
-            "text": "Montée courte par le chemin du Calvaire jusqu’au phare et à sa table d’orientation. Vue sur la baie des Anges.",
+            "text": "De la plage de la Salis, montée par le chemin du Calvaire jusqu’au phare et à la chapelle de la Garoupe. Vue sur la baie des Anges et les Alpes.",
             "type": "Text",
             "variant": "body"
           },
@@ -217,15 +196,15 @@
                 "id": "start",
                 "kind": "poi",
                 "label": "i18n:guest.map.start",
-                "lat": 43.5612,
-                "lng": 7.1298
+                "lat": 43.57147,
+                "lng": 7.12761
               }
             ],
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.5612,
-                "lng": 7.1298
+                "lat": 43.57147,
+                "lng": 7.12761
               },
               "zoom": 13.0
             }
@@ -251,7 +230,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://www.visorando.com/randonnee-phare-de-la-garoupe"
+              "url": "https://www.openstreetmap.org/way/670533618"
             },
             "label": "i18n:guest.openTrace",
             "type": "Button"
@@ -259,7 +238,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://www.google.com/maps/search/?api=1&query=43.5612,7.1298"
+              "url": "https://www.google.com/maps/search/?api=1&query=43.57147,7.12761"
             },
             "label": "i18n:guest.routeToStart",
             "type": "Button",

@@ -6,7 +6,8 @@ mod previews;
 use serde_json::json;
 use trails::{map_markers, render_explore_detail, render_explore_item, render_home_card};
 
-/// Quatre randonnées autour du Cap d'Antibes : les trois niveaux, avec et sans fiche tierce.
+/// Trois balades autour du Cap d'Antibes, départs relevés sur OpenStreetMap : deux faciles, une
+/// moyenne, avec et sans fiche tierce.
 fn sample_config() -> serde_json::Value {
     json!({
             "trails": [
@@ -20,76 +21,56 @@ fn sample_config() -> serde_json::Value {
                             },
                             "duration_min": 60,
                             "distance_km": 2.6,
-                            "elevation_m": 80,
+                            "elevation_m": 100,
                             "description": {
-                                    "fr": "Montée courte par le chemin du Calvaire jusqu’au phare et à sa table d’orientation. Vue sur la baie des Anges.",
-                                    "en": "A short climb up the Calvaire path to the lighthouse and its orientation table. View over the Baie des Anges."
+                                    "fr": "De la plage de la Salis, montée par le chemin du Calvaire jusqu’au phare et à la chapelle de la Garoupe. Vue sur la baie des Anges et les Alpes.",
+                                    "en": "From La Salis beach, up the Calvaire path to the lighthouse and the Garoupe chapel. Views over the Baie des Anges and the Alps."
                             },
-                            "address": "Chemin du Calvaire, Antibes",
-                            "lat": 43.5612,
-                            "lng": 7.1298,
-                            "link_url": "https://www.visorando.com/randonnee-phare-de-la-garoupe"
+                            "address": "Plage de la Salis, boulevard James Wyllie, Antibes",
+                            "lat": 43.57147,
+                            "lng": 7.12761,
+                            "link_url": "https://www.openstreetmap.org/way/670533618"
                     },
                     {
                             "id": "littoral",
-                            "level": "easy",
+                            "level": "moderate",
                             "shape": "loop",
                             "title": {
-                                    "fr": "Sentier du littoral du Cap",
-                                    "en": "Cap coastal path"
+                                    "fr": "Sentier du littoral (Tire-Poil)",
+                                    "en": "Coastal path (Tire-Poil)"
                             },
-                            "duration_min": 150,
-                            "distance_km": 8,
-                            "elevation_m": 60,
+                            "duration_min": 120,
+                            "distance_km": 5,
+                            "elevation_m": 40,
                             "description": {
-                                    "fr": "Le tour du Cap au ras des rochers, entre criques et villas. Passages sur des marches taillées, glissants par mer agitée.",
-                                    "en": "Around the Cap at water level, between coves and villas. Carved steps, slippery in rough seas."
+                                    "fr": "De la plage de la Garoupe à la villa Eilenroc au ras des rochers, retour par les chemins du Cap. Marches taillées, glissantes par mer agitée.",
+                                    "en": "From La Garoupe beach to Villa Eilenroc along the rocks, back through the lanes of the Cap. Carved steps, slippery in rough seas."
                             },
                             "address": "Plage de la Garoupe, Antibes",
-                            "lat": 43.5585,
-                            "lng": 7.1322
+                            "lat": 43.55529,
+                            "lng": 7.13969
                     },
                     {
-                            "id": "brague",
-                            "level": "moderate",
+                            "id": "remparts",
+                            "level": "easy",
                             "shape": "round_trip",
                             "title": {
-                                    "fr": "Vallée de la Brague",
-                                    "en": "Brague valley"
+                                    "fr": "Des remparts au Fort Carré",
+                                    "en": "From the ramparts to Fort Carré"
                             },
-                            "duration_min": 180,
-                            "distance_km": 9.5,
-                            "elevation_m": 220,
+                            "duration_min": 60,
+                            "distance_km": 3,
+                            "elevation_m": 30,
                             "description": {
-                                    "fr": "Le long de la rivière, sous les chênes, avec plusieurs gués. Agréable par forte chaleur.",
-                                    "en": "Along the river, under the oaks, with several fords. Pleasant in hot weather."
+                                    "fr": "Le long des remparts du vieil Antibes, au pied du musée Picasso, puis tout le port Vauban jusqu’au Fort Carré.",
+                                    "en": "Along the ramparts of old Antibes, below the Picasso museum, then the length of Port Vauban to Fort Carré."
                             },
-                            "address": "Biot, chemin des Combes",
-                            "lat": 43.628,
-                            "lng": 7.098
-                    },
-                    {
-                            "id": "baou",
-                            "level": "hard",
-                            "shape": "round_trip",
-                            "title": {
-                                    "fr": "Baou de Saint-Jeannet",
-                                    "en": "Baou de Saint-Jeannet"
-                            },
-                            "duration_min": 240,
-                            "distance_km": 8,
-                            "elevation_m": 600,
-                            "description": {
-                                    "fr": "Montée raide jusqu’au sommet du baou, panorama de l’Estérel au cap Ferrat. Passages rocheux, chaussures montantes conseillées.",
-                                    "en": "A steep climb to the top of the baou, panorama from the Estérel to Cap Ferrat. Rocky sections, ankle boots advised."
-                            },
-                            "address": "Saint-Jeannet, place Sainte-Barbe",
-                            "lat": 43.757,
-                            "lng": 7.148,
-                            "link_url": "https://www.visorando.com/randonnee-baou-de-saint-jeannet"
+                            "address": "Promenade de l’Amiral de Grasse, Antibes",
+                            "lat": 43.58006,
+                            "lng": 7.12808
                     }
             ],
-            "commune_url": "https://www.antibesjuanlespins.com/randonnees"
+            "commune_url": "https://www.antibesjuanlespins.com/"
     })
 }
 
@@ -111,8 +92,8 @@ fn previews_match_the_rendered_surfaces() {
     let markers = previews::guest(root)
         .with_config(&sample_config())
         .run(|ctx| map_markers(ctx).expect("repères"));
-    // Les autres fiches : la démo ouvre celle de l'itinéraire tapé, pas toujours la même.
-    let variants = ["littoral", "brague", "baou"]
+    // Chaque fiche : la démo ouvre celle de l'itinéraire tapé, pas toujours la même.
+    let variants = ["garoupe", "littoral", "remparts"]
         .into_iter()
         .map(|id| {
             let input = json!({ "trailId": id });
