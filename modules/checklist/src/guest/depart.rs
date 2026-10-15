@@ -4,19 +4,38 @@
 
 use chrono::{DateTime, Datelike, Days, FixedOffset, NaiveDate, TimeZone, Timelike, Utc, Weekday};
 
+use portaki_sdk::host::time::{relative_day, short_date, RelativeDay};
 use portaki_sdk::t;
 
 /// Formats the checkout instant as a localized departure line, or `None` when absent.
-pub fn format_departure(checkout_at: Option<DateTime<Utc>>, timezone: &str) -> Option<String> {
+///
+/// The day reads from `now`: « Départ demain à 11:00 » the eve, « aujourd'hui » on the day,
+/// « hier » after, the weekday within the week, else the date — a weekday alone would name next
+/// week's Monday too.
+pub fn format_departure(
+    checkout_at: Option<DateTime<Utc>>,
+    now: DateTime<Utc>,
+    timezone: &str,
+    locale: &str,
+) -> Option<String> {
     let at = checkout_at?;
     let local = at.with_timezone(&offset_for_iana(timezone, at));
-    let weekday_key = weekday_key(local.weekday());
-    let weekday = t!(&weekday_key).unwrap_or(weekday_key);
+    let today = now.with_timezone(&offset_for_iana(timezone, now));
+    let key = match relative_day(local.naive_local(), today.naive_local()) {
+        RelativeDay::Today | RelativeDay::Tonight => "day.today".to_string(),
+        RelativeDay::Tomorrow => "day.tomorrow".to_string(),
+        RelativeDay::Yesterday => "day.yesterday".to_string(),
+        RelativeDay::Weekday(day) => weekday_key(day),
+        RelativeDay::Date(date) => return Some(summary(&short_date(date, locale), local)),
+    };
+    Some(summary(&t!(&key).unwrap_or(key), local))
+}
+
+/// « Départ {weekday} à {time} », `weekday` being the day as the guest reads it.
+fn summary(weekday: &str, local: DateTime<FixedOffset>) -> String {
     let time = format!("{:02}:{:02}", local.hour(), local.minute());
-    Some(
-        t!("guest.departSummary", weekday = &weekday, time = &time)
-            .unwrap_or_else(|_| format!("Départ {weekday} · {time}")),
-    )
+    t!("guest.departSummary", weekday = weekday, time = &time)
+        .unwrap_or_else(|_| format!("Départ {weekday} · {time}"))
 }
 
 fn weekday_key(weekday: Weekday) -> String {

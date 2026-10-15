@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.10.0
+
+Le départ dit « demain ».
+
+* La carte annonce « Départ demain à 11:00 » la veille, « aujourd'hui » le jour même, le jour de la semaine avant, la date au-delà.
+* La démo « pendant le séjour » montre la liste réglée sur « Pendant tout le séjour », au troisième jour.
+
 ## 1.9.4
 
 Pas de carte tant que la liste n'est pas ouverte.
