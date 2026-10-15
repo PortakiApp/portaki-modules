@@ -255,5 +255,277 @@
         "type": "Card"
       }
     }
+  ],
+  "variants": [
+    {
+      "i18n": {
+        "explore.item.contactHost": "Un souci avec cet appareil ?",
+        "explore.item.howto": "Mode d'emploi"
+      },
+      "input": {
+        "deviceId": "lave-linge"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "emoji": "🌀",
+                "size": 64.0,
+                "type": "Icon"
+              },
+              {
+                "children": [
+                  {
+                    "text": "Lave-linge",
+                    "type": "Text",
+                    "variant": "display"
+                  },
+                  {
+                    "emphasis": "subtle",
+                    "text": "Salle de bain",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 4.0,
+                "type": "Stack"
+              }
+            ],
+            "direction": "horizontal",
+            "gap": 12.0,
+            "type": "Stack"
+          },
+          {
+            "message": "Merci de ne pas lancer de machine après 22 h.",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "text": "i18n:explore.item.howto",
+                "type": "Eyebrow"
+              },
+              {
+                "content": "{\"content\":[{\"content\":[{\"text\":\"Programme « Coton 40° » pour un lavage courant, lessive dans le placard du dessous.\",\"type\":\"text\"}],\"type\":\"paragraph\"}],\"type\":\"doc\"}",
+                "type": "RichText"
+              }
+            ],
+            "surface": "elevated",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "params": {
+                "category": "appliance",
+                "summary": "Lave-linge"
+              },
+              "to": "issue-report/form",
+              "type": "navigate"
+            },
+            "label": "i18n:explore.item.contactHost",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "explore.item.contactHost": "Un souci avec cet appareil ?",
+        "explore.item.howto": "Mode d'emploi",
+        "explore.item.manual": "Notice / manuel",
+        "explore.item.manuals": "Notices"
+      },
+      "input": {
+        "deviceId": "plaques"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "emoji": "🍳",
+                "size": 64.0,
+                "type": "Icon"
+              },
+              {
+                "children": [
+                  {
+                    "text": "Plaques à induction",
+                    "type": "Text",
+                    "variant": "display"
+                  },
+                  {
+                    "emphasis": "subtle",
+                    "text": "Cuisine",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 4.0,
+                "type": "Stack"
+              }
+            ],
+            "direction": "horizontal",
+            "gap": 12.0,
+            "type": "Stack"
+          },
+          {
+            "message": "La surface reste chaude quelques minutes après l'arrêt.",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "text": "i18n:explore.item.howto",
+                "type": "Eyebrow"
+              },
+              {
+                "children": [
+                  {
+                    "leading": {
+                      "index": 1
+                    },
+                    "title": "Posez une casserole à fond aimanté au centre du foyer.",
+                    "type": "ListItem"
+                  },
+                  {
+                    "alt": "Schéma 1 : Posez une casserole à fond aimanté au centre du foyer.",
+                    "aspectRatio": "4 / 3",
+                    "type": "Image",
+                    "url": "portaki-file:plaques-induction-1"
+                  }
+                ],
+                "gap": 6.0,
+                "type": "Stack"
+              },
+              {
+                "leading": {
+                  "index": 2
+                },
+                "title": "Appuyez 2 secondes sur la touche marche, puis choisissez la puissance.",
+                "type": "ListItem"
+              },
+              {
+                "content": "{\"content\":[{\"content\":[{\"text\":\"Appuyez 2 secondes sur la touche marche, puis choisissez le foyer.\",\"type\":\"text\"}],\"type\":\"paragraph\"},{\"content\":[{\"text\":\"Seules les casseroles à fond aimanté chauffent.\",\"type\":\"text\"}],\"type\":\"paragraph\"}],\"type\":\"doc\"}",
+                "type": "RichText"
+              }
+            ],
+            "surface": "elevated",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "action": {
+                  "type": "external",
+                  "url": "https://example.com/notice-plaques.pdf"
+                },
+                "chevron": true,
+                "leading": "file-text",
+                "title": "i18n:explore.item.manual",
+                "type": "ListItem"
+              }
+            ],
+            "icon": "file-text",
+            "surface": "elevated",
+            "title": "i18n:explore.item.manuals",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "params": {
+                "category": "appliance",
+                "summary": "Plaques à induction"
+              },
+              "to": "issue-report/form",
+              "type": "navigate"
+            },
+            "label": "i18n:explore.item.contactHost",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "explore.item.contactHost": "Un souci avec cet appareil ?",
+        "explore.item.howto": "Mode d'emploi"
+      },
+      "input": {
+        "deviceId": "tv"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "emoji": "📺",
+                "size": 64.0,
+                "type": "Icon"
+              },
+              {
+                "children": [
+                  {
+                    "text": "Télévision",
+                    "type": "Text",
+                    "variant": "display"
+                  },
+                  {
+                    "emphasis": "subtle",
+                    "text": "Salon",
+                    "type": "Text",
+                    "variant": "caption"
+                  }
+                ],
+                "gap": 4.0,
+                "type": "Stack"
+              }
+            ],
+            "direction": "horizontal",
+            "gap": 12.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "text": "i18n:explore.item.howto",
+                "type": "Eyebrow"
+              },
+              {
+                "content": "{\"content\":[{\"content\":[{\"text\":\"Allumez avec la télécommande noire ; la source « HDMI 1 » donne accès aux applications.\",\"type\":\"text\"}],\"type\":\"paragraph\"}],\"type\":\"doc\"}",
+                "type": "RichText"
+              }
+            ],
+            "surface": "elevated",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "params": {
+                "category": "appliance",
+                "summary": "Télévision"
+              },
+              "to": "issue-report/form",
+              "type": "navigate"
+            },
+            "label": "i18n:explore.item.contactHost",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    }
   ]
 }
