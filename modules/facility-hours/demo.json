@@ -241,7 +241,7 @@
                 "layout": "tile",
                 "mono": true,
                 "type": "KeyValue",
-                "value": "dès 17:00"
+                "value": "dès 16:00"
               },
               {
                 "icon": "clock",
@@ -249,7 +249,7 @@
                 "layout": "tile",
                 "mono": true,
                 "type": "KeyValue",
-                "value": "avant 12:00"
+                "value": "avant 11:00"
               }
             ],
             "minColumnWidth": 120.0,
