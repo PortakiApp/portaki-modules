@@ -451,6 +451,7 @@ fn deadline_label(ctx: &GuestContext, window_days: u32) -> Option<String> {
         Ok(RelativeDay::Tomorrow) => "tomorrow",
         Ok(RelativeDay::Weekday(weekday)) => ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
             [weekday.num_days_from_monday() as usize],
+        // Hier, une date lointaine, ou un cas que le SDK ajouterait : la date.
         _ => {
             let formatted = time::long_date(day, &ctx.locale);
             return t!("form.deadline.title", date = formatted).ok();
