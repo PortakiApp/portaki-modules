@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.5](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v1.7.4...guest-reviews-v1.7.5) (2026-10-15)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.14.0 ([d99e0d9](https://github.com/PortakiApp/portaki-modules/commit/d99e0d958ee72228d9f24e4b7ce425b2a52a95f2))
+
 ## [1.7.4](https://github.com/PortakiApp/portaki-modules/compare/guest-reviews-v1.7.3...guest-reviews-v1.7.4) (2026-10-15)
 
 

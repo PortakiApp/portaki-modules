@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.11.0](https://github.com/PortakiApp/portaki-modules/compare/events-v1.10.5...events-v1.11.0) (2026-10-15)
+
+
+### Features
+
+* **events:** relative day labels for guests ([6aa4099](https://github.com/PortakiApp/portaki-modules/commit/6aa409977887d2b6f620cde045612ad7e124d83e))
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.14.0 ([d99e0d9](https://github.com/PortakiApp/portaki-modules/commit/d99e0d958ee72228d9f24e4b7ce425b2a52a95f2))
+
 ## [1.10.5](https://github.com/PortakiApp/portaki-modules/compare/events-v1.10.4...events-v1.10.5) (2026-10-15)
 
 
