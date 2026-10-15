@@ -192,6 +192,8 @@ pub fn day_label(
         RelativeDay::Tomorrow => "tomorrow",
         RelativeDay::Yesterday => "yesterday",
         RelativeDay::Weekday(day) => crate::config::WEEKDAYS[day.num_days_from_monday() as usize],
+        // Un cas que le SDK ajouterait : la date, qui reste juste.
+        _ => return Some(short_date(crate::config::local(at, tz).date(), locale)),
     };
     let key = format!("guest.day.{key}");
     Some(t!(&key).unwrap_or(key))

@@ -26,7 +26,8 @@ pub fn format_departure(
         RelativeDay::Tomorrow => "day.tomorrow".to_string(),
         RelativeDay::Yesterday => "day.yesterday".to_string(),
         RelativeDay::Weekday(day) => weekday_key(day),
-        RelativeDay::Date(date) => return Some(summary(&short_date(date, locale), local)),
+        // `Date`, et tout cas que le SDK ajouterait : la date.
+        _ => return Some(summary(&short_date(local.date_naive(), locale), local)),
     };
     Some(summary(&t!(&key).unwrap_or(key), local))
 }
