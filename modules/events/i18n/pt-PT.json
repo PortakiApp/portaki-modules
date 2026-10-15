@@ -44,6 +44,7 @@
   "guest.teaser": "O que se passa à sua volta",
   "guest.tile.duration": "Duração",
   "guest.tile.price": "Preço",
+  "guest.tile.drive": "De carro",
   "guest.tile.walk": "A pé",
   "guest.walk.minutes": "cerca de {count} min",
   "guest.weekday.fri": "sex.",

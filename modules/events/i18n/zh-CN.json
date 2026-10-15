@@ -44,6 +44,7 @@
   "guest.teaser": "身边正在发生什么",
   "guest.tile.duration": "时长",
   "guest.tile.price": "价格",
+  "guest.tile.drive": "驾车",
   "guest.tile.walk": "步行",
   "guest.walk.minutes": "步行约 {count} 分钟",
   "guest.weekday.fri": "周五",

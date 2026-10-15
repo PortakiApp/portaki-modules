@@ -17,18 +17,32 @@
             "isStatic": true,
             "markers": [
               {
-                "id": "marche-nocturne",
+                "id": "marche-provencal",
                 "kind": "poi",
-                "label": "Marché nocturne des artisans",
-                "lat": 43.553,
-                "lng": 7.124
+                "label": "Marché provençal",
+                "lat": 43.58093,
+                "lng": 7.12758
+              },
+              {
+                "id": "picasso",
+                "kind": "poi",
+                "label": "Les collections du musée Picasso",
+                "lat": 43.58071,
+                "lng": 7.12826
+              },
+              {
+                "id": "concert",
+                "kind": "poi",
+                "label": "Concert au théâtre Anthéa",
+                "lat": 43.59031,
+                "lng": 7.11821
               }
             ],
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.553,
-                "lng": 7.124
+                "lat": 43.58398333333334,
+                "lng": 7.1246833333333335
               },
               "zoom": 13.0
             }
@@ -40,27 +54,47 @@
           },
           {
             "action": {
-              "to": "events/detail/marche-nocturne",
+              "to": "events/detail/marche-provencal",
               "type": "navigate"
             },
             "chevron": true,
             "children": [
               {
-                "text": "Une trentaine d'artisans, de la poterie au miel du pays.",
+                "text": "Producteurs du pays sous la halle du vieil Antibes : fruits, fromages, olives, fleurs.",
                 "type": "Text",
                 "variant": "caption"
               }
             ],
             "leading": {
-              "time": "18:00"
+              "time": "07:00"
             },
-            "subtitle": "Place du village · à 18:00",
-            "title": "Marché nocturne des artisans",
+            "subtitle": "Cours Masséna · à 07:00 · Tous les mardis, mercredis, jeudis, vendredis, samedis et dimanches",
+            "title": "Marché provençal",
             "type": "ListItem"
           },
           {
             "text": "i18n:guest.next",
             "type": "Eyebrow"
+          },
+          {
+            "action": {
+              "to": "events/detail/picasso",
+              "type": "navigate"
+            },
+            "chevron": true,
+            "children": [
+              {
+                "text": "Les œuvres que Picasso a peintes ici en 1946, dans le château qui domine la mer.",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "leading": {
+              "time": "10:00"
+            },
+            "subtitle": "Château Grimaldi · à 10:00",
+            "title": "Les collections du musée Picasso",
+            "type": "ListItem"
           },
           {
             "action": {
@@ -72,9 +106,9 @@
               {
                 "action": {
                   "type": "external",
-                  "url": "https://example.com/concert"
+                  "url": "https://www.anthea-antibes.fr/"
                 },
-                "href": "https://example.com/concert",
+                "href": "https://www.anthea-antibes.fr/",
                 "label": "i18n:guest.openLink",
                 "type": "Link"
               }
@@ -82,21 +116,8 @@
             "leading": {
               "time": "20:30"
             },
-            "subtitle": "Jardin public · à 20:30",
-            "title": "Concert de jazz en plein air",
-            "type": "ListItem"
-          },
-          {
-            "action": {
-              "to": "events/detail/vide-grenier",
-              "type": "navigate"
-            },
-            "chevron": true,
-            "leading": {
-              "time": "08:00"
-            },
-            "subtitle": "Parking de la plage · à 08:00",
-            "title": "Vide-grenier du dimanche",
+            "subtitle": "Anthéa, théâtre d'Antibes · à 20:30",
+            "title": "Concert au théâtre Anthéa",
             "type": "ListItem"
           }
         ],
@@ -124,17 +145,22 @@
           {
             "children": [
               {
-                "label": "à 18:00",
+                "label": "à 07:00",
                 "type": "Badge"
               },
               {
-                "text": "Marché nocturne des artisans",
+                "text": "Marché provençal",
                 "type": "Text",
                 "variant": "display"
               },
               {
+                "text": "Tous les mardis, mercredis, jeudis, vendredis, samedis et dimanches",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
                 "emphasis": "subtle",
-                "text": "Place du village",
+                "text": "Cours Masséna",
                 "type": "Text",
                 "variant": "caption"
               }
@@ -143,7 +169,7 @@
             "type": "Stack"
           },
           {
-            "text": "Une trentaine d'artisans, de la poterie au miel du pays.",
+            "text": "Producteurs du pays sous la halle du vieil Antibes : fruits, fromages, olives, fleurs.",
             "type": "Text",
             "variant": "body"
           },
@@ -154,7 +180,7 @@
                 "key": "i18n:guest.tile.duration",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "4 h"
+                "value": "6 h"
               },
               {
                 "icon": "star",
@@ -168,7 +194,7 @@
                 "key": "i18n:guest.tile.walk",
                 "layout": "tile",
                 "type": "KeyValue",
-                "value": "environ 4 min"
+                "value": "environ 41 min"
               }
             ],
             "minColumnWidth": 96.0,
@@ -183,9 +209,9 @@
               {
                 "id": "event",
                 "kind": "poi",
-                "label": "Marché nocturne des artisans",
-                "lat": 43.553,
-                "lng": 7.124
+                "label": "Marché provençal",
+                "lat": 43.58093,
+                "lng": 7.12758
               },
               {
                 "id": "property",
@@ -198,8 +224,8 @@
             "type": "Map",
             "viewport": {
               "center": {
-                "lat": 43.553,
-                "lng": 7.124
+                "lat": 43.58093,
+                "lng": 7.12758
               },
               "zoom": 14.0
             }
@@ -208,12 +234,12 @@
             "children": [
               {
                 "leading": "compass",
-                "title": "Place piétonne, accès de plain-pied",
+                "title": "Halle couverte, accès de plain-pied",
                 "type": "ListItem"
               },
               {
                 "leading": "compass",
-                "title": "Parking de l'église à 200 m",
+                "title": "Parking du Pré aux Pêcheurs à 300 m",
                 "type": "ListItem"
               }
             ],
@@ -226,12 +252,12 @@
             "children": [
               {
                 "leading": "info-circle",
-                "title": "Venez avant 19 h, la place se remplit vite.",
+                "title": "Venez avant 10 h, la halle se remplit vite.",
                 "type": "ListItem"
               },
               {
                 "leading": "info-circle",
-                "title": "Le stand de socca est au fond, côté fontaine.",
+                "title": "La socca se vend chaude au bout de la halle.",
                 "type": "ListItem"
               }
             ],
@@ -243,7 +269,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://www.google.com/maps/search/?api=1&query=43.553,7.124"
+              "url": "https://www.google.com/maps/search/?api=1&query=43.58093,7.12758"
             },
             "label": "i18n:guest.route",
             "type": "Button"
@@ -251,7 +277,7 @@
           {
             "action": {
               "type": "external",
-              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260602T160000Z/20260602T200000Z&text=March%C3%A9+nocturne+des+artisans&location=Place+du+village"
+              "url": "https://calendar.google.com/calendar/render?action=TEMPLATE&dates=20260602T050000Z/20260602T110000Z&text=March%C3%A9+proven%C3%A7al&location=Cours+Mass%C3%A9na"
             },
             "label": "i18n:guest.addToCalendar",
             "type": "Button",
@@ -281,7 +307,7 @@
         },
         "children": [
           {
-            "text": "Marché nocturne des artisans · à 18:00",
+            "text": "Marché provençal · à 07:00",
             "type": "Text",
             "variant": "caption"
           }

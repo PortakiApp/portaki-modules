@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.10.5
+
+La voiture pour les événements éloignés.
+
+* Au-delà de 45 minutes de marche, la fiche d'un événement donne le temps en voiture plutôt qu'à pied.
+* L'aperçu public et la démo montrent trois rendez-vous réels d'Antibes, chacun avec sa fiche et sa place exacte sur la carte.
+
 ## 1.10.4
 
 Un événement tapé sur la carte ouvre sa fiche.

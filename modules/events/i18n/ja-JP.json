@@ -44,6 +44,7 @@
   "guest.teaser": "まわりで開かれていること",
   "guest.tile.duration": "所要時間",
   "guest.tile.price": "料金",
+  "guest.tile.drive": "車",
   "guest.tile.walk": "徒歩",
   "guest.walk.minutes": "徒歩約 {count} 分",
   "guest.weekday.fri": "金",

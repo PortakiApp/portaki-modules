@@ -140,11 +140,7 @@ fn measures(data: &GuestData, event: &EventRow) -> Option<Component> {
         ));
     }
     if let Some(metres) = walking_metres(data, event) {
-        tiles.push(tile(
-            IconName::Users,
-            "i18n:guest.tile.walk",
-            format_walking(metres),
-        ));
+        tiles.push(travel_tile(metres));
     }
     (!tiles.is_empty()).then(|| {
         Grid::new()
@@ -153,6 +149,24 @@ fn measures(data: &GuestData, event: &EventRow) -> Option<Component> {
             .children(tiles)
             .into()
     })
+}
+
+/// À pied jusqu'à 45 min de marche (3,75 km) ; au-delà, « environ 268 min » à pied ne renseigne
+/// personne : la voiture, à 30 km/h.
+fn travel_tile(metres: f64) -> Component {
+    if metres <= 3_750.0 {
+        tile(
+            IconName::Users,
+            "i18n:guest.tile.walk",
+            format_minutes(metres, 5.0),
+        )
+    } else {
+        tile(
+            IconName::Car,
+            "i18n:guest.tile.drive",
+            format_minutes(metres, 30.0),
+        )
+    }
 }
 
 fn tile(icon: IconName, label: &str, value: String) -> Component {
@@ -180,13 +194,14 @@ fn format_duration(minutes: i64) -> String {
     }
 }
 
-/// « 15 min » à pied, comptés à 5 km/h — la vitesse d'une marche de ville.
+/// « environ 15 min » à `kmh` : 5 km/h, la vitesse d'une marche de ville ; 30 km/h, une voiture
+/// qui s'arrête aux feux.
 ///
 /// Arrondi à la minute supérieure : annoncer 14 min pour un trajet de 14 min 40 ferait rater le
 /// début. Pas d'itinéraire calculé : la distance est à vol d'oiseau, et le dire serait mentir sur
 /// la précision — d'où « environ », porté par la traduction.
-fn format_walking(metres: f64) -> String {
-    let minutes = (metres / 1000.0 * 12.0).ceil().max(1.0) as i64;
+fn format_minutes(metres: f64, kmh: f64) -> String {
+    let minutes = (metres / 1000.0 / kmh * 60.0).ceil().max(1.0) as i64;
     t!("guest.walk.minutes", count = minutes).unwrap_or_else(|_| format!("{minutes} min"))
 }
 
@@ -367,4 +382,19 @@ fn urlencode(raw: &str) -> String {
         }
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn far_events_show_the_drive_not_the_walk() {
+        let key = |metres| serde_json::to_value(travel_tile(metres)).expect("tile")["key"].clone();
+        assert_eq!(key(3_750.0), "i18n:guest.tile.walk");
+        assert_eq!(key(4_430.0), "i18n:guest.tile.drive");
+        // 1 km à 5 km/h = 12 min ; 4,5 km à 30 km/h = 9 min.
+        assert!(format_minutes(1_000.0, 5.0).ends_with("12 min"));
+        assert!(format_minutes(4_500.0, 30.0).ends_with("9 min"));
+    }
 }

@@ -44,6 +44,7 @@
   "guest.teaser": "Cosa succede intorno a te",
   "guest.tile.duration": "Durata",
   "guest.tile.price": "Prezzo",
+  "guest.tile.drive": "In auto",
   "guest.tile.walk": "A piedi",
   "guest.walk.minutes": "circa {count} min",
   "guest.weekday.fri": "ven",
