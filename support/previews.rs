@@ -35,8 +35,9 @@ const DEMO_FILE: &str = "demo.json";
 /// identifiant tiré au hasard.
 ///
 /// Un aperçu est figé, le livret de démo non : il place son séjour autour du jour réel. Ce qu'un
-/// module date pour le voyageur s'écrit donc relativement (« Demain », « Samedi », via
-/// `host::time::relative_day`), et se lit juste à n'importe quelle date.
+/// module date pour le voyageur s'écrit donc relativement, via `host::time::relative_day` — et
+/// seulement « Aujourd'hui », « Ce soir », « Demain » ou « Hier » : un jour nommé (« Samedi ») ne
+/// tombe juste que par hasard, le jour réel de la semaine n'étant jamais celui de l'horloge figée.
 pub fn guest(module_root: &str) -> portaki_test_utils::MockContextBuilder {
     let stay = StayContext {
         stay_id: Uuid::from_u128(0x2222_2222_2222_2222_2222_2222_2222_2222),
@@ -85,15 +86,15 @@ pub const NOW: &str = "2026-05-31T10:00:00Z";
 #[allow(dead_code)]
 pub const AFTER: &str = "2026-06-09T10:00:00Z";
 
-/// Le troisième jour d'un séjour de sept nuits — la phase `stay` de la démo (`demo-sejour`).
+/// La veille du départ — la phase `stay` de la démo (`demo-sejour`, « Nuit 7 sur 7 », la dernière).
 ///
-/// Le livret cale `demo-sejour` sur le même modèle (arrivée l'avant-veille, `demoStayDates`) :
-/// un « Ce soir » ou un « Demain » rendu ici se lit juste quel que soit le jour réel. Les trois
+/// Le livret cale `demo-sejour` sur le même modèle (`demoStayDates`, départ demain) : un
+/// « Ce soir » ou un « Demain » rendu ici se lit juste quel que soit le jour réel. Les trois
 /// horloges forment un seul calendrier : [`NOW`] la veille de l'arrivée (`demo-guest`), celle-ci,
-/// et [`AFTER`] le lendemain du départ (`demo-apres`). Mercredi 3 juin : samedi tombe dans le
-/// séjour, de quoi montrer un jour nommé.
+/// et [`AFTER`] le lendemain du départ (`demo-apres`). La veille du départ plutôt que le troisième
+/// jour : le départ s'y dit « demain », et non par un nom de jour que le jour réel dément.
 #[allow(dead_code)]
-pub const DURING: &str = "2026-06-03T10:00:00Z";
+pub const DURING: &str = "2026-06-07T10:00:00Z";
 
 /// Un contexte voyageur à une autre heure que celle des aperçus.
 ///
@@ -219,8 +220,8 @@ pub fn check_all_with_variants(
 ///
 /// <p>`phased_variants` porte `(phase, surfaceId, input, rendu)`. Une fiche qui date son élément
 /// (« Ce soir », « Demain ») le date depuis l'horloge où elle est rendue : sans son rendu de
-/// phase, la démo `stay` ouvrait la fiche de la veille d'arrivée sous une liste rendue au troisième
-/// jour. Le livret prend la variante de sa phase d'abord, celle des aperçus sinon.
+/// phase, la démo `stay` ouvrait la fiche de la veille d'arrivée sous une liste rendue la veille
+/// du départ. Le livret prend la variante de sa phase d'abord, celle des aperçus sinon.
 #[allow(dead_code, clippy::too_many_arguments)]
 pub fn check_all_with_phased_variants(
     module_root: &str,
