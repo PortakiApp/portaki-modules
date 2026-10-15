@@ -33,6 +33,10 @@ const DEMO_FILE: &str = "demo.json";
 /// Le logement des fixtures, un séjour du 1er au 8 juin 2026 et une horloge figée la veille
 /// de l'arrivée : un aperçu ne doit dépendre ni du jour où le test tourne, ni d'un
 /// identifiant tiré au hasard.
+///
+/// Un aperçu est figé, le livret de démo non : il place son séjour autour du jour réel. Ce qu'un
+/// module date pour le voyageur s'écrit donc relativement (« Demain », « Samedi », via
+/// `host::time::relative_day`), et se lit juste à n'importe quelle date.
 pub fn guest(module_root: &str) -> portaki_test_utils::MockContextBuilder {
     let stay = StayContext {
         stay_id: Uuid::from_u128(0x2222_2222_2222_2222_2222_2222_2222_2222),
@@ -69,7 +73,7 @@ pub fn guest(module_root: &str) -> portaki_test_utils::MockContextBuilder {
         .with_now(at(NOW))
 }
 
-/// L'instant des aperçus : la veille de l'arrivée.
+/// L'instant des aperçus : la veille de l'arrivée — `demo-guest`, « vous arrivez demain ».
 pub const NOW: &str = "2026-05-31T10:00:00Z";
 
 /// Le lendemain du départ — pour ce qu'un module ne montre qu'après.
@@ -79,12 +83,15 @@ pub const NOW: &str = "2026-05-31T10:00:00Z";
 #[allow(dead_code)]
 pub const AFTER: &str = "2026-06-09T10:00:00Z";
 
-/// La veille du départ, en plein séjour — la phase `stay` de la démo (`demo-sejour`).
+/// Le troisième jour d'un séjour de sept nuits — la phase `stay` de la démo (`demo-sejour`).
 ///
-/// Ce qu'un module n'ouvre qu'en fin de séjour (une liste de départ, à 48 h du départ par défaut)
-/// y est ouvert : la démo le montre en service plutôt que masqué.
+/// Le livret cale `demo-sejour` sur le même modèle (arrivée l'avant-veille, `demoStayDates`) :
+/// un « Ce soir » ou un « Demain » rendu ici se lit juste quel que soit le jour réel. Les trois
+/// horloges forment un seul calendrier : [`NOW`] la veille de l'arrivée (`demo-guest`), celle-ci,
+/// et [`AFTER`] le lendemain du départ (`demo-apres`). Mercredi 3 juin : samedi tombe dans le
+/// séjour, de quoi montrer un jour nommé.
 #[allow(dead_code)]
-pub const DURING: &str = "2026-06-07T10:00:00Z";
+pub const DURING: &str = "2026-06-03T10:00:00Z";
 
 /// Un contexte voyageur à une autre heure que celle des aperçus.
 ///
@@ -194,6 +201,35 @@ pub fn check_all_with_variants(
     phases: Vec<(&str, Vec<(&str, Surface)>)>,
     variants: Vec<(&str, Value, Surface)>,
 ) {
+    check_all_with_phased_variants(
+        module_root,
+        emissions,
+        rendered,
+        extra,
+        markers,
+        phases,
+        variants,
+        Vec::new(),
+    );
+}
+
+/// Comme [`check_all_with_variants`], plus des fiches rendues à l'heure d'une phase.
+///
+/// <p>`phased_variants` porte `(phase, surfaceId, input, rendu)`. Une fiche qui date son élément
+/// (« Ce soir », « Demain ») le date depuis l'horloge où elle est rendue : sans son rendu de
+/// phase, la démo `stay` ouvrait la fiche de la veille d'arrivée sous une liste rendue au troisième
+/// jour. Le livret prend la variante de sa phase d'abord, celle des aperçus sinon.
+#[allow(dead_code, clippy::too_many_arguments)]
+pub fn check_all_with_phased_variants(
+    module_root: &str,
+    emissions: &str,
+    rendered: Vec<(&str, Surface)>,
+    extra: Vec<(&str, Surface)>,
+    markers: Option<Value>,
+    phases: Vec<(&str, Vec<(&str, Surface)>)>,
+    variants: Vec<(&str, Value, Surface)>,
+    phased_variants: Vec<(&str, &str, Value, Surface)>,
+) {
     let demo: Vec<(&str, Value)> = rendered
         .iter()
         .chain(extra.iter())
@@ -214,10 +250,17 @@ pub fn check_all_with_variants(
             (name, trees)
         })
         .collect();
-    let variants: Vec<(&str, Value, Value)> = variants
+    let variants: Vec<(Option<&str>, &str, Value, Value)> = variants
         .into_iter()
-        .map(|(id, input, surface)| {
+        .map(|(id, input, surface)| (None, id, input, surface))
+        .chain(
+            phased_variants
+                .into_iter()
+                .map(|(phase, id, input, surface)| (Some(phase), id, input, surface)),
+        )
+        .map(|(phase, id, input, surface)| {
             (
+                phase,
                 id,
                 input,
                 serde_json::to_value(&surface.root).expect("arbre SDUI"),
@@ -320,7 +363,7 @@ fn check_demo(
     rendered: Vec<(&str, Value)>,
     markers: Option<Value>,
     phases: Vec<(&str, Vec<(&str, Value)>)>,
-    variants: Vec<(&str, Value, Value)>,
+    variants: Vec<(Option<&str>, &str, Value, Value)>,
 ) {
     let root = Path::new(module_root);
     let bundle = fr_bundle(module_root);
@@ -385,16 +428,30 @@ fn check_demo(
         let mut ids = Vec::new();
         let mut list: Vec<Value> = variants
             .into_iter()
-            .map(|(surface_id, input, mut tree)| {
+            .map(|(phase, surface_id, input, mut tree)| {
                 stable_uuids(&mut tree, &mut ids);
                 let i18n: Map<String, Value> = i18n_refs(&tree)
                     .into_iter()
                     .filter_map(|key| bundle.get(&key).map(|value| (key, value.clone())))
                     .collect();
-                json!({ "surfaceId": surface_id, "input": input, "tree": tree, "i18n": i18n })
+                let mut variant =
+                    json!({ "surfaceId": surface_id, "input": input, "tree": tree, "i18n": i18n });
+                if let Some(phase) = phase {
+                    variant["phase"] = Value::String(phase.to_string());
+                }
+                variant
             })
             .collect();
-        list.sort_by_key(|v| (v["surfaceId"].to_string(), v["input"].to_string()));
+        // Sans phase d'abord : un lecteur qui ignore `phase` prend la première variante dont
+        // l'entrée correspond, et doit tomber sur celle des aperçus.
+        list.sort_by_key(|v| {
+            (
+                v.get("phase").is_some(),
+                v["surfaceId"].to_string(),
+                v["input"].to_string(),
+                v["phase"].to_string(),
+            )
+        });
         document["variants"] = Value::Array(list);
     }
     check_item_variants(&document, &routes);
