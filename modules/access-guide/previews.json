@@ -4,8 +4,6 @@
     {
       "i18n": {
         "guest.address": "Adresse",
-        "guest.building.gateCode": "Digicode",
-        "guest.building.intercom": "Interphone",
         "guest.instructions": "Instructions",
         "guest.keybox.code": "Code boîte à clés",
         "guest.keybox.location": "Emplacement",
@@ -14,7 +12,11 @@
         "guest.note.title": "À savoir",
         "guest.openMaps": "Ouvrir dans Maps",
         "guest.parking": "Parking",
+        "guest.parking.kind": "Stationnement",
+        "guest.parking.spot": "Place",
+        "host.parking.kind.private": "Place privée",
         "host.step.kind.door": "Porte",
+        "host.step.kind.gate": "Portail",
         "host.step.kind.parking": "Parking",
         "nav.access-guide": "Accès & parking"
       },
@@ -23,7 +25,7 @@
       "tree": {
         "children": [
           {
-            "message": "Merci de refermer la boîte à clés après usage.",
+            "message": "Merci de refermer la boîte à clés et le portail après usage.",
             "title": "i18n:guest.note.title",
             "type": "InfoBanner"
           },
@@ -61,7 +63,7 @@
           {
             "key": "i18n:guest.keybox.location",
             "type": "KeyValue",
-            "value": "À droite de la porte d'entrée, sous la boîte aux lettres"
+            "value": "Sur le mur de pierre, à droite de la porte d'entrée"
           },
           {
             "key": "i18n:guest.keybox.code",
@@ -75,20 +77,19 @@
             "value": "Composez le code, tirez le volet vers le bas : les clés sont sur le crochet."
           },
           {
-            "key": "i18n:guest.building.gateCode",
-            "mono": true,
+            "key": "i18n:guest.parking.kind",
             "type": "KeyValue",
-            "value": "A17B"
+            "value": "i18n:host.parking.kind.private"
           },
           {
-            "key": "i18n:guest.building.intercom",
+            "key": "i18n:guest.parking.spot",
             "type": "KeyValue",
-            "value": "Appartement 3, 2e étage"
+            "value": "Allée devant la maison"
           },
           {
             "key": "i18n:guest.parking",
             "type": "KeyValue",
-            "value": "Place n° 8 au sous-sol, badge sur le trousseau."
+            "value": "Allée privée derrière le portail, gratuite, deux places."
           },
           {
             "action": {
@@ -103,8 +104,23 @@
             "leading": {
               "index": 1
             },
-            "subtitle": "Rampe à gauche de l'immeuble, place n° 8.",
-            "title": "Garez-vous au sous-sol",
+            "subtitle": "Portail en bois vert au bout du chemin ; il s'ouvre à la main. Refermez-le derrière vous.",
+            "title": "Ouvrez le portail",
+            "trailing": {
+              "badge": {
+                "dot": true,
+                "label": "i18n:host.step.kind.gate",
+                "tone": "neutral"
+              }
+            },
+            "type": "ListItem"
+          },
+          {
+            "leading": {
+              "index": 2
+            },
+            "subtitle": "Deux voitures tiennent sur le gravier, devant l'ancienne bergerie.",
+            "title": "Garez-vous dans l'allée",
             "trailing": {
               "badge": {
                 "dot": true,
@@ -116,10 +132,10 @@
           },
           {
             "leading": {
-              "index": 2
+              "index": 3
             },
-            "subtitle": "Digicode au portail, puis ascenseur jusqu'au 2e étage.",
-            "title": "Entrez dans l'immeuble",
+            "subtitle": "Les clés sont dans la boîte, sur le mur à droite de la porte.",
+            "title": "Entrez par la porte d'entrée",
             "trailing": {
               "badge": {
                 "dot": true,
