@@ -32,10 +32,27 @@ fn previews_match_the_rendered_surfaces() {
     let upcoming = context
         .clone()
         .run(|ctx| render_upcoming_card(ctx).expect("render"));
+    // Chaque départ du tableau ouvre sa fiche dans la démo, pas toujours le premier.
+    let variants = [
+        "20261004-0812-17654",
+        "20261004-0842-86021",
+        "20261004-0930-86099",
+        "20261005-0521-nice-ville--nice-",
+    ]
+    .into_iter()
+    .map(|id| {
+        let input = serde_json::json!({ "departureId": id });
+        let tree = context.clone().run(|mut ctx| {
+            ctx.input = input.clone();
+            render_explore_item(ctx).expect("render")
+        });
+        ("explore.item", input, tree)
+    })
+    .collect();
     // La carte d'accueil n'a pas de chemin : hors de `previews.json`, mais c'est elle
     // que la démo du livret montre en premier.
     let home = context.run(render_home_card).expect("home");
-    previews::check_all(
+    previews::check_all_with_variants(
         root,
         concat!(env!("OUT_DIR"), "/portaki-emissions"),
         vec![
@@ -45,5 +62,7 @@ fn previews_match_the_rendered_surfaces() {
         ],
         vec![("home.card", home)],
         None,
+        Vec::new(),
+        variants,
     );
 }
