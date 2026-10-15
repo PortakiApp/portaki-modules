@@ -459,5 +459,441 @@
         "type": "Card"
       }
     }
+  ],
+  "variants": [
+    {
+      "i18n": {
+        "explore.detail.laterDay": "Demain",
+        "explore.item.day": "Jour",
+        "explore.item.departure": "Départ",
+        "explore.item.network": "Réseau",
+        "explore.item.route": "Itinéraire vers la gare",
+        "explore.item.station": "Aller à la gare",
+        "explore.item.stationName": "Gare",
+        "explore.item.ticket": "Acheter un billet"
+      },
+      "input": {
+        "departureId": "20261004-0812-17654"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "label": "+2 min",
+                "tone": "warning",
+                "type": "Badge"
+              },
+              {
+                "text": "Gare d'Antibes → Nice-Ville (Nice)",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "17654",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "message": "L’heure affichée, 08:12, tient déjà compte du retard.",
+            "title": "Retard estimé de 2 min",
+            "tone": "warning",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "icon": "clock-circle",
+                "key": "i18n:explore.item.departure",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "08:12"
+              },
+              {
+                "icon": "calendar",
+                "key": "i18n:explore.item.day",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "i18n:explore.detail.laterDay"
+              },
+              {
+                "icon": "train",
+                "key": "i18n:explore.item.network",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "TER Sud Provence-Alpes-Côte d'Azur"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "children": [
+              {
+                "key": "i18n:explore.item.stationName",
+                "type": "KeyValue",
+                "value": "Gare d'Antibes"
+              }
+            ],
+            "icon": "map-pin",
+            "surface": "elevated",
+            "title": "i18n:explore.item.station",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.google.com/maps/search/?api=1&query=Gare+d'Antibes"
+            },
+            "icon": "map-pin",
+            "label": "i18n:explore.item.route",
+            "type": "Button"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.sncf-connect.com"
+            },
+            "label": "i18n:explore.item.ticket",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "explore.detail.laterDay": "Demain",
+        "explore.item.day": "Jour",
+        "explore.item.departure": "Départ",
+        "explore.item.network": "Réseau",
+        "explore.item.route": "Itinéraire vers la gare",
+        "explore.item.scheduled": "Horaire théorique, pas du temps réel",
+        "explore.item.station": "Aller à la gare",
+        "explore.item.stationName": "Gare",
+        "explore.item.ticket": "Acheter un billet"
+      },
+      "input": {
+        "departureId": "20261004-0842-86021"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "label": "TGV INOUI",
+                "tone": "neutral",
+                "type": "Badge"
+              },
+              {
+                "text": "Gare d'Antibes → Cannes (Cannes)",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "86021",
+                "type": "Text",
+                "variant": "caption"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "i18n:explore.item.scheduled",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "icon": "clock-circle",
+                "key": "i18n:explore.item.departure",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "08:42"
+              },
+              {
+                "icon": "calendar",
+                "key": "i18n:explore.item.day",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "i18n:explore.detail.laterDay"
+              },
+              {
+                "icon": "train",
+                "key": "i18n:explore.item.network",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "SNCF"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "children": [
+              {
+                "key": "i18n:explore.item.stationName",
+                "type": "KeyValue",
+                "value": "Gare d'Antibes"
+              }
+            ],
+            "icon": "map-pin",
+            "surface": "elevated",
+            "title": "i18n:explore.item.station",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.google.com/maps/search/?api=1&query=Gare+d'Antibes"
+            },
+            "icon": "map-pin",
+            "label": "i18n:explore.item.route",
+            "type": "Button"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.sncf-connect.com"
+            },
+            "label": "i18n:explore.item.ticket",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "explore.detail.laterDay": "Demain",
+        "explore.item.cancelled.message": "Ce train ne circule pas. Choisissez un autre départ.",
+        "explore.item.cancelled.title": "Train supprimé",
+        "explore.item.day": "Jour",
+        "explore.item.departure": "Départ",
+        "explore.item.network": "Réseau",
+        "explore.item.route": "Itinéraire vers la gare",
+        "explore.item.station": "Aller à la gare",
+        "explore.item.stationName": "Gare",
+        "explore.item.ticket": "Acheter un billet"
+      },
+      "input": {
+        "departureId": "20261004-0930-86099"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "label": "Supprimé",
+                "tone": "danger",
+                "type": "Badge"
+              },
+              {
+                "text": "Gare d'Antibes → Vintimille (Vintimille)",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "86099",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "message": "i18n:explore.item.cancelled.message",
+            "title": "i18n:explore.item.cancelled.title",
+            "tone": "danger",
+            "type": "InfoBanner"
+          },
+          {
+            "children": [
+              {
+                "icon": "clock-circle",
+                "key": "i18n:explore.item.departure",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "09:30"
+              },
+              {
+                "icon": "calendar",
+                "key": "i18n:explore.item.day",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "i18n:explore.detail.laterDay"
+              },
+              {
+                "icon": "train",
+                "key": "i18n:explore.item.network",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "TER"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "children": [
+              {
+                "key": "i18n:explore.item.stationName",
+                "type": "KeyValue",
+                "value": "Gare d'Antibes"
+              }
+            ],
+            "icon": "map-pin",
+            "surface": "elevated",
+            "title": "i18n:explore.item.station",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.google.com/maps/search/?api=1&query=Gare+d'Antibes"
+            },
+            "icon": "map-pin",
+            "label": "i18n:explore.item.route",
+            "type": "Button"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.sncf-connect.com"
+            },
+            "label": "i18n:explore.item.ticket",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    },
+    {
+      "i18n": {
+        "explore.detail.laterDay": "Demain",
+        "explore.item.day": "Jour",
+        "explore.item.departure": "Départ",
+        "explore.item.network": "Réseau",
+        "explore.item.route": "Itinéraire vers la gare",
+        "explore.item.scheduled": "Horaire théorique, pas du temps réel",
+        "explore.item.station": "Aller à la gare",
+        "explore.item.stationName": "Gare",
+        "explore.item.ticket": "Acheter un billet"
+      },
+      "input": {
+        "departureId": "20261005-0521-nice-ville--nice-"
+      },
+      "surfaceId": "explore.item",
+      "tree": {
+        "children": [
+          {
+            "children": [
+              {
+                "label": "TER",
+                "tone": "neutral",
+                "type": "Badge"
+              },
+              {
+                "text": "Gare d'Antibes → Nice-Ville (Nice)",
+                "type": "Text",
+                "variant": "display"
+              },
+              {
+                "emphasis": "subtle",
+                "text": "i18n:explore.item.scheduled",
+                "type": "Text",
+                "variant": "caption"
+              }
+            ],
+            "gap": 6.0,
+            "type": "Stack"
+          },
+          {
+            "children": [
+              {
+                "icon": "clock-circle",
+                "key": "i18n:explore.item.departure",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "05:21"
+              },
+              {
+                "icon": "calendar",
+                "key": "i18n:explore.item.day",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "i18n:explore.detail.laterDay"
+              },
+              {
+                "icon": "train",
+                "key": "i18n:explore.item.network",
+                "layout": "tile",
+                "type": "KeyValue",
+                "value": "TER"
+              }
+            ],
+            "minColumnWidth": 96.0,
+            "plain": true,
+            "type": "Grid"
+          },
+          {
+            "children": [
+              {
+                "key": "i18n:explore.item.stationName",
+                "type": "KeyValue",
+                "value": "Gare d'Antibes"
+              }
+            ],
+            "icon": "map-pin",
+            "surface": "elevated",
+            "title": "i18n:explore.item.station",
+            "type": "Card"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.google.com/maps/search/?api=1&query=Gare+d'Antibes"
+            },
+            "icon": "map-pin",
+            "label": "i18n:explore.item.route",
+            "type": "Button"
+          },
+          {
+            "action": {
+              "type": "external",
+              "url": "https://www.sncf-connect.com"
+            },
+            "label": "i18n:explore.item.ticket",
+            "type": "Button",
+            "variant": "outline"
+          }
+        ],
+        "gap": 14.0,
+        "type": "Stack"
+      }
+    }
   ]
 }

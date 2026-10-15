@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.5.5
+
+Chaque départ de la démo ouvre sa fiche.
+
+* Dans la démo du livret, toucher un départ ouvre sa propre fiche, plus toujours celle du premier train. Rien ne change pour l'hôte ni pour le voyageur.
+
 ## 2.5.1
 
 Montée technique.
