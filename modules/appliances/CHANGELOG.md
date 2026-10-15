@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.3](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.13.2...appliances-v1.13.3) (2026-10-15)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.14.1 ([3e3743e](https://github.com/PortakiApp/portaki-modules/commit/3e3743e9309f8e53a1952f28ad768572e9675267))
+
 ## [1.13.2](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.13.1...appliances-v1.13.2) (2026-10-15)
 
 

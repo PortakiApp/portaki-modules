@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.7](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v1.8.6...ical-sync-v1.8.7) (2026-10-15)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.14.1 ([3e3743e](https://github.com/PortakiApp/portaki-modules/commit/3e3743e9309f8e53a1952f28ad768572e9675267))
+
 ## [1.8.6](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v1.8.5...ical-sync-v1.8.6) (2026-10-15)
 
 
