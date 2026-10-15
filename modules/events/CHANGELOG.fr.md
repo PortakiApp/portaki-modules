@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.11.2
+
+Les rendez-vous de la démo, ce soir et demain.
+
+* La démo d'avant l'arrivée date ses trois rendez-vous demain, celle du séjour ce soir, demain matin et demain soir : plus aucun par un nom de jour qui ne tombe juste que par hasard.
+* Après le départ, la démo montre les rendez-vous de la veille.
+
 ## 1.11.0
 
 Le jour de chaque événement, dit comme on le dit.

@@ -12,20 +12,22 @@ use serde_json::json;
 /// positions relevées sur OpenStreetMap. L'agenda OpenAgenda reste éteint : il demande un appel
 /// réseau, et l'aperçu montre ce que l'hôte maîtrise.
 ///
-/// Datés depuis [`previews::DURING`], le mercredi 3 juin : le concert ce soir, le marché demain
-/// matin, le musée samedi — chaque forme du jour (« Ce soir », « Demain », « Samedi ») se voit
-/// dans la démo `stay`. La veille d'arrivée, ce sont des jours nommés.
-fn sample_config() -> serde_json::Value {
+/// Datés depuis le jour où ils sont rendus — le concert le soir de `today`, le marché le matin et
+/// le musée le soir de `tomorrow`. La veille du départ : ce soir, demain matin, demain soir. Un rendu figé ne dit ainsi que « Ce soir »
+/// et « Demain », justes quel que soit le jour réel ; un rendez-vous à deux jours ou plus se lirait
+/// « Samedi » ou « 6 juin », que le jour où l'on ouvre la démo dément.
+///
+/// La démo n'a pas un agenda mais trois livrets, chacun figé à sa propre heure : chaque rendu
+/// reçoit les dates de son jour.
+fn sample_config((today, tomorrow): (&str, &str)) -> serde_json::Value {
     json!({
         "events": [
             {
                 "id": "marche-provencal",
                 "title": { "fr": "Marché provençal", "en": "Provençal market" },
                 "place": { "fr": "Cours Masséna", "en": "Cours Masséna" },
-                "starts_at": "2026-06-02T07:00:00",
-                "ends_at": "2026-06-02T13:00:00",
-                "recurrence": "weekly",
-                "weekdays": ["tue", "wed", "thu", "fri", "sat", "sun"],
+                "starts_at": format!("{tomorrow}T07:00:00"),
+                "ends_at": format!("{tomorrow}T13:00:00"),
                 "note": { "fr": "Producteurs du pays sous la halle du vieil Antibes : fruits, fromages, olives, fleurs.", "en": "Local growers under the covered hall of old Antibes: fruit, cheese, olives, flowers." },
                 "price": "Entrée libre",
                 "tips": {
@@ -43,8 +45,8 @@ fn sample_config() -> serde_json::Value {
                 "id": "picasso",
                 "title": { "fr": "Les collections du musée Picasso", "en": "The Picasso museum collections" },
                 "place": { "fr": "Château Grimaldi", "en": "Château Grimaldi" },
-                "starts_at": "2026-06-06T10:00:00",
-                "ends_at": "2026-06-06T18:00:00",
+                "starts_at": format!("{tomorrow}T19:00:00"),
+                "ends_at": format!("{tomorrow}T22:00:00"),
                 "note": { "fr": "Les œuvres que Picasso a peintes ici en 1946, dans le château qui domine la mer.", "en": "The works Picasso painted here in 1946, in the castle above the sea." },
                 "address": "Place Mariejol, Antibes",
                 "lat": 43.58071, "lng": 7.12826
@@ -53,7 +55,7 @@ fn sample_config() -> serde_json::Value {
                 "id": "concert",
                 "title": { "fr": "Concert au théâtre Anthéa", "en": "Concert at Anthéa theatre" },
                 "place": { "fr": "Anthéa, théâtre d'Antibes", "en": "Anthéa, Antibes theatre" },
-                "starts_at": "2026-06-03T20:30:00",
+                "starts_at": format!("{today}T20:30:00"),
                 "url": "https://www.anthea-antibes.fr/",
                 "address": "260 avenue Jules Grec, Antibes",
                 "lat": 43.59031, "lng": 7.11821
@@ -64,10 +66,20 @@ fn sample_config() -> serde_json::Value {
     })
 }
 
+/// Le lendemain de [`previews::NOW`], deux fois : la veille de l'arrivée, les trois rendez-vous
+/// sont demain, le jour où l'on arrive. Un concert « ce soir » s'y lirait sous un livret qui dit
+/// « Demain, vous y êtes ».
+const EVE_OF_ARRIVAL: (&str, &str) = ("2026-06-01", "2026-06-01");
+/// Le jour de [`previews::DURING`] et son lendemain.
+const EVE_OF_DEPARTURE: (&str, &str) = ("2026-06-07", "2026-06-08");
+/// La veille de [`previews::AFTER`], deux fois : après le départ, les trois rendez-vous d'hier.
+/// Ceux de la veille du départ, rendus le lendemain du départ, se liraient « 7 juin ».
+const DAY_OF_DEPARTURE: (&str, &str) = ("2026-06-08", "2026-06-08");
+
 #[test]
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
-    let context = previews::guest(root).with_config(&sample_config());
+    let context = previews::guest(root).with_config(&sample_config(EVE_OF_ARRIVAL));
     let detail = context
         .clone()
         .run(|ctx| render_explore_detail(ctx).expect("surface"));
@@ -99,10 +111,17 @@ fn previews_match_the_rendered_surfaces() {
     let home = context.run(render_home_card).expect("home");
     /*
      * Les mêmes surfaces aux deux autres heures de la démo. Un événement se date depuis l'heure
-     * où il est rendu (« Ce soir », « Demain ») : rendu la veille d'arrivée et servi au troisième
-     * jour, il annoncerait le mauvais soir. Après le départ, la fenêtre du séjour est close.
+     * où il est rendu (« Ce soir », « Demain ») : rendu la veille d'arrivée et servi la veille du
+     * départ, il annoncerait le mauvais soir. Après le départ, la fenêtre du séjour est close.
      */
-    let at = |instant: &str| previews::guest_at(root, instant).with_config(&sample_config());
+    let at = |instant: &str| {
+        let days = if instant == previews::AFTER {
+            DAY_OF_DEPARTURE
+        } else {
+            EVE_OF_DEPARTURE
+        };
+        previews::guest_at(root, instant).with_config(&sample_config(days))
+    };
     let lists = |instant: &str| {
         vec![
             (
