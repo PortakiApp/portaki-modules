@@ -81,8 +81,9 @@ Patch, `pin` et `digest` fusionnent seuls quand `quality` est vert ; les majeure
 en `0.x` jamais. Toute montée attend **trois jours** après publication — sauf un correctif de
 sécurité, où la version récente est justement ce qu'on veut.
 
-La configuration vit dans `PortakiApp/renovate-config` ; ce dépôt n'en garde que ce qui lui est
-propre, ci-dessous.
+Toute la configuration vit dans `renovate.json`. Elle étendait un preset partagé dans un dépôt
+privé, mais Mend ne lit jamais un preset privé depuis un dépôt public (404) : Renovate est resté
+figé ici du 10 septembre au 15 octobre. Ce qui est propre à ce dépôt, ci-dessous.
 
 ### Le SDK ne monte pas tout seul
 
