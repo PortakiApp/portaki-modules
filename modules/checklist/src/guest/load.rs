@@ -28,6 +28,8 @@ pub struct GuestChecklistData {
     /// Departure instant (UTC) — rendered as the card title in the property timezone.
     pub checkout_at: Option<chrono::DateTime<chrono::Utc>>,
     pub property_timezone: String,
+    /// L'heure de l'hôte, pour dire « demain » plutôt que le nom du jour.
+    pub now: chrono::DateTime<chrono::Utc>,
     /// « Étapes visibles » and « Message final » of the first open list.
     pub display: storage::display::Display,
 }
@@ -78,6 +80,7 @@ pub fn load_guest_checklist(ctx: &GuestContext, departure_only: bool) -> Result<
         property_locale: ctx.property.locale.clone(),
         checkout_at,
         property_timezone: ctx.property.timezone.clone(),
+        now,
         display,
     }))
 }

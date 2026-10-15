@@ -17,12 +17,17 @@ pub fn build_home_card(data: &GuestChecklistData, surface_id: SurfaceId) -> Surf
     // Le titre nomme le moment, le sous-titre le situe : « Avant de partir », puis « Départ samedi
     // à 10:00 · cochez au fur et à mesure ». Sans date de séjour, le nom du module suffit.
     let title = t!("home.card.beforeLeaving").unwrap_or_else(|_| "i18n:home.card.title".into());
-    let subtitle =
-        match super::depart::format_departure(data.checkout_at, &data.property_timezone) {
-            Some(departure) => t!("guest.cardSubtitle", departure = &departure)
-                .unwrap_or_else(|_| departure.clone()),
-            None => t!("guest.rowTeaser").unwrap_or_else(|_| "i18n:guest.rowTeaser".into()),
-        };
+    let subtitle = match super::depart::format_departure(
+        data.checkout_at,
+        data.now,
+        &data.property_timezone,
+        &data.locale,
+    ) {
+        Some(departure) => {
+            t!("guest.cardSubtitle", departure = &departure).unwrap_or_else(|_| departure.clone())
+        }
+        None => t!("guest.rowTeaser").unwrap_or_else(|_| "i18n:guest.rowTeaser".into()),
+    };
 
     let named = data.lists.len() > 1;
     let mut choices: Vec<ChoiceOption> = Vec::new();

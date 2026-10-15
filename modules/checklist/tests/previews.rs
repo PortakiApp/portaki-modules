@@ -4,8 +4,8 @@
 mod previews;
 
 use checklist::{
-    create_checklist, render_home_card, render_post_stay_card, reset_test_store,
-    CreateChecklistArgs,
+    create_checklist, list_checklists, render_home_card, render_post_stay_card, reset_test_store,
+    update_config, CreateChecklistArgs, UpdateConfigArgs,
 };
 use serial_test::serial;
 
@@ -33,16 +33,30 @@ fn previews_match_the_rendered_surfaces() {
         render_post_stay_card(ctx).expect("post-stay")
     });
     /*
-     * La carte d'accueil, rendue la veille du départ : la liste ouverte et cochable.
+     * La carte d'accueil, rendue au troisième jour du séjour : la liste ouverte et cochable.
      *
      * <p>À l'heure des aperçus — la veille d'une arrivée — la liste n'est pas ouverte, et la carte
      * se masque (un état vide sans texte). Le catalogue n'aurait rien montré du module, et la démo
      * « pendant le séjour » non plus : elle prend ce rendu en phase `stay`.
+     *
+     * <p>La liste de départ s'ouvre la veille du départ ; au troisième jour, elle est réglée sur
+     * « Pendant tout le séjour », un choix d'hôte du formulaire. Rendue à la veille du départ, la
+     * carte dirait « Départ demain » sous un séjour que la démo place au troisième jour.
      */
     reset_test_store();
     let during = || {
         previews::guest_at(root, previews::DURING).run(|ctx| {
             seed(&ctx);
+            let list = list_checklists().expect("lists")[0].id;
+            update_config(
+                ctx.clone(),
+                UpdateConfigArgs {
+                    id: list.to_string(),
+                    trigger: "duringStay".into(),
+                    ..UpdateConfigArgs::default()
+                },
+            )
+            .expect("trigger");
             render_home_card(ctx).expect("card")
         })
     };
