@@ -6,9 +6,7 @@
         "guest.chargerPin": "PIN borne",
         "guest.chargerType": "Prise",
         "guest.copyChargerPin": "Copier le PIN borne",
-        "guest.copyParkingCode": "Copier le code barrière",
         "guest.openMap": "Ouvrir la carte",
-        "guest.parkingCode": "Code barrière",
         "guest.pricing": "Recharge",
         "guest.pricing.included": "Incluse",
         "guest.spot": "Votre place",
@@ -22,20 +20,10 @@
           {
             "key": "i18n:guest.spot",
             "type": "KeyValue",
-            "value": "Place n° 8, niveau -1"
+            "value": "Garage de la maison, à gauche du portail"
           },
           {
             "children": [
-              {
-                "copy": true,
-                "copyLabel": "i18n:guest.copyParkingCode",
-                "icon": "car",
-                "key": "i18n:guest.parkingCode",
-                "layout": "tile",
-                "mono": true,
-                "type": "KeyValue",
-                "value": "1357"
-              },
               {
                 "copy": true,
                 "copyLabel": "i18n:guest.copyChargerPin",
@@ -84,9 +72,7 @@
       "i18n": {
         "guest.chargerPin": "PIN borne",
         "guest.copyChargerPin": "Copier le PIN borne",
-        "guest.copyParkingCode": "Copier le code barrière",
         "guest.openMap": "Ouvrir la carte",
-        "guest.parkingCode": "Code barrière",
         "guest.pricing": "Recharge",
         "guest.pricing.included": "Incluse",
         "nav.ev-parking": "Parking VE"
@@ -105,16 +91,6 @@
         "children": [
           {
             "children": [
-              {
-                "copy": true,
-                "copyLabel": "i18n:guest.copyParkingCode",
-                "icon": "car",
-                "key": "i18n:guest.parkingCode",
-                "layout": "tile",
-                "mono": true,
-                "type": "KeyValue",
-                "value": "1357"
-              },
               {
                 "copy": true,
                 "copyLabel": "i18n:guest.copyChargerPin",
@@ -151,7 +127,7 @@
           }
         ],
         "icon": "zap",
-        "subtitle": "Place n° 8, niveau -1",
+        "subtitle": "Garage de la maison, à gauche du portail",
         "title": "i18n:nav.ev-parking",
         "type": "Card"
       }
