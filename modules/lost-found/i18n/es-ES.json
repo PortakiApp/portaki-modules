@@ -18,6 +18,8 @@
   "form.category.toy": "Juguete, peluche",
   "form.contactHint.label": "Cómo localizarle (opcional)",
   "form.contactHint.placeholder": "Teléfono o correo",
+  "form.deadline.afterCheckout": "Hasta {days} días después de tu salida",
+  "form.deadline.afterCheckout.one": "Hasta el día después de tu salida",
   "form.deadline.day.fri": "el viernes",
   "form.deadline.day.mon": "el lunes",
   "form.deadline.day.sat": "el sábado",

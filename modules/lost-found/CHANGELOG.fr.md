@@ -2,9 +2,10 @@
 
 ## 1.14.2
 
-Le délai de la démo finit demain.
+Le délai se lit sans date à recalculer.
 
 * La démo « après le séjour » annonce « Jusqu'à demain » au lieu d'un jour nommé, juste quel que soit le jour où on l'ouvre.
+* Avant le départ, le délai se compte depuis le départ : « Jusqu'à 7 jours après votre départ » plutôt qu'une date à recalculer.
 
 ## 1.14.0
 

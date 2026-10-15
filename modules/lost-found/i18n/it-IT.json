@@ -18,6 +18,8 @@
   "form.category.toy": "Giocattolo, peluche",
   "form.contactHint.label": "Come contattarti (facoltativo)",
   "form.contactHint.placeholder": "Telefono o e-mail",
+  "form.deadline.afterCheckout": "Fino a {days} giorni dopo la partenza",
+  "form.deadline.afterCheckout.one": "Fino al giorno dopo la partenza",
   "form.deadline.day.fri": "venerdì",
   "form.deadline.day.mon": "lunedì",
   "form.deadline.day.sat": "sabato",

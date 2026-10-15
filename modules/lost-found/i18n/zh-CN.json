@@ -18,6 +18,8 @@
   "form.category.toy": "玩具、安抚物",
   "form.contactHint.label": "怎么联系您（选填）",
   "form.contactHint.placeholder": "电话或邮箱",
+  "form.deadline.afterCheckout": "截至离店后 {days} 天",
+  "form.deadline.afterCheckout.one": "截至离店次日",
   "form.deadline.day.fri": "星期五",
   "form.deadline.day.mon": "星期一",
   "form.deadline.day.sat": "星期六",

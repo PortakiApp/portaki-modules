@@ -18,6 +18,8 @@
   "form.category.toy": "おもちゃ、ぬいぐるみ",
   "form.contactHint.label": "ご連絡先（任意）",
   "form.contactHint.placeholder": "電話番号またはメール",
+  "form.deadline.afterCheckout": "チェックアウトから{days}日後まで",
+  "form.deadline.afterCheckout.one": "チェックアウトの翌日まで",
   "form.deadline.day.fri": "金曜日",
   "form.deadline.day.mon": "月曜日",
   "form.deadline.day.sat": "土曜日",
