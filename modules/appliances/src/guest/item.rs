@@ -5,26 +5,29 @@ use crate::content::{
     HowToStep,
 };
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::action::Action;
+use portaki_sdk::sdui::action::{Action, NavigateTarget};
 use portaki_sdk::sdui::common::{Leading, LeadingVisual, SurfaceLevel};
 use portaki_sdk::sdui::primitives::{
     Button, Card, EmptyState, Eyebrow, Icon, Image, InfoBanner, ListItem, RichText, Stack, Text,
 };
 use portaki_sdk::sdui::surface::Surface;
 
-/// Ce que « Un souci avec cet appareil ? » confie au livret. Le livret choisit la suite (le
-/// formulaire de signalement s'il est installé, la messagerie sinon) et passe les scalaires dans
-/// l'adresse : `category` et `summary` sont les noms que lit le formulaire d'`issue-report`.
-/// Pas de mode d'emploi ici — il finissait dans une URL.
+/// Ce que « Un souci avec cet appareil ? » passe au formulaire de signalement, dans l'adresse :
+/// `category` et `summary` sont les noms que lit le contrat `report.issue`. Pas de mode d'emploi
+/// ici — il finirait dans une URL.
 #[portaki_sdk::wire(serialize)]
-struct OpenHostChatPayload<'a> {
-    appliance_id: &'a str,
-    appliance_name: &'a str,
+struct ReportIssueParams<'a> {
     category: &'static str,
     summary: &'a str,
 }
 
-pub fn build_item_detail(payload: &AppliancesPayload, device_id: Option<&str>) -> Surface {
+/// La fiche d'un appareil. `report_path` : où s'ouvre le signalement d'un souci, quand un module
+/// installé le fournit ; sans lui, pas de bouton.
+pub fn build_item_detail(
+    payload: &AppliancesPayload,
+    device_id: Option<&str>,
+    report_path: Option<&str>,
+) -> Surface {
     let device = device_id.and_then(|id| {
         payload
             .guest_devices()
@@ -52,6 +55,7 @@ pub fn build_item_detail(payload: &AppliancesPayload, device_id: Option<&str>) -
     Surface::new(Stack::new().gap(14.0).children(device_detail_children(
         device,
         &payload.paper_manuals_location,
+        report_path,
     )))
     .with_id(crate::guest::EXPLORE_ITEM)
 }
@@ -125,7 +129,11 @@ fn manuals_card(device: &Appliance, paper_location: &str) -> Option<Component> {
     ))
 }
 
-fn device_detail_children(device: &Appliance, paper_manuals_location: &str) -> Vec<Component> {
+fn device_detail_children(
+    device: &Appliance,
+    paper_manuals_location: &str,
+    report_path: Option<&str>,
+) -> Vec<Component> {
     let mut children = vec![header_row(device)];
     // La consigne de sécurité en tête de fiche, avant le mode d'emploi (§2.2).
     if !device.safety_note.trim().is_empty() {
@@ -223,22 +231,21 @@ fn device_detail_children(device: &Appliance, paper_manuals_location: &str) -> V
         children.push(card);
     }
 
-    let contact_action = Action::emit(
-        crate::ids::OPEN_HOST_CHAT,
-        Some(json_value(OpenHostChatPayload {
-            appliance_id: &device.id,
-            appliance_name: &device.name,
-            category: "appliance",
-            summary: &device.name,
-        })),
-    );
-
-    children.push(Component::Button(
-        Button::new()
-            .label("i18n:explore.item.contactHost")
-            .variant(ButtonVariant::Outline)
-            .action(contact_action),
-    ));
+    if let Some(path) = report_path {
+        let report = Action::navigate(
+            NavigateTarget::path(path),
+            Some(json_value(ReportIssueParams {
+                category: "appliance",
+                summary: &device.name,
+            })),
+        );
+        children.push(Component::Button(
+            Button::new()
+                .label("i18n:explore.item.contactHost")
+                .variant(ButtonVariant::Outline)
+                .action(report),
+        ));
+    }
 
     children
 }

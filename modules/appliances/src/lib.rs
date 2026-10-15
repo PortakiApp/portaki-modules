@@ -6,7 +6,6 @@ mod entities;
 mod guest;
 mod host;
 mod i18n;
-mod ids;
 mod queries;
 mod store;
 mod suggest;
@@ -44,3 +43,9 @@ portaki_sdk::portaki_module!(
 
 #[portaki_sdk::capability(required, id = "core.storage")]
 pub const STORAGE: &str = "core.storage";
+
+/// « Un souci avec cet appareil ? » ouvre le module qui sait recevoir un signalement, s'il y en a
+/// un sur le logement : pas d'id de module ici, le fournisseur se trouve par cette capacité, et
+/// sans lui le bouton disparaît.
+#[portaki_sdk::capability(optional, id = "report.issue")]
+pub const REPORT_ISSUE: &str = "report.issue";

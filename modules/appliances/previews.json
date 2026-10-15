@@ -182,14 +182,12 @@
           },
           {
             "action": {
-              "event": "openHostChat",
-              "payload": {
-                "applianceId": "plaques",
-                "applianceName": "Plaques à induction",
+              "params": {
                 "category": "appliance",
                 "summary": "Plaques à induction"
               },
-              "type": "emit"
+              "to": "issue-report/form",
+              "type": "navigate"
             },
             "label": "i18n:explore.item.contactHost",
             "type": "Button",
