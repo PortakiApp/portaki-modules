@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.14.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.13.4...lost-found-v1.14.0) (2026-10-15)
+
+
+### Features
+
+* **lost-found:** relative report deadline ([80a34e8](https://github.com/PortakiApp/portaki-modules/commit/80a34e8ad1b32bd7b7dd9985d25b3a56d3984186))
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.14.0 ([d99e0d9](https://github.com/PortakiApp/portaki-modules/commit/d99e0d958ee72228d9f24e4b7ce425b2a52a95f2))
+
 ## [1.13.4](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.13.3...lost-found-v1.13.4) (2026-10-15)
 
 

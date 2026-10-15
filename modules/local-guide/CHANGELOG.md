@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.8](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.14.7...local-guide-v1.14.8) (2026-10-15)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.14.0 ([d99e0d9](https://github.com/PortakiApp/portaki-modules/commit/d99e0d958ee72228d9f24e4b7ce425b2a52a95f2))
+
 ## [1.14.7](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.14.6...local-guide-v1.14.7) (2026-10-15)
 
 

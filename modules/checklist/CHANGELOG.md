@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.10.0](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.9.5...checklist-v1.10.0) (2026-10-15)
+
+
+### Features
+
+* **checklist:** relative departure day ([58cbe82](https://github.com/PortakiApp/portaki-modules/commit/58cbe821f950c2869e179743b27f64b2c65a7510))
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.14.0 ([d99e0d9](https://github.com/PortakiApp/portaki-modules/commit/d99e0d958ee72228d9f24e4b7ce425b2a52a95f2))
+
 ## [1.9.5](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.9.4...checklist-v1.9.5) (2026-10-15)
 
 
