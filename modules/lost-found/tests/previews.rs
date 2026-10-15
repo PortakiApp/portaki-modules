@@ -20,38 +20,49 @@ fn sample_config() -> Vec<u8> {
 #[test]
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
-    reset_test_store();
-    let (card, form, post_stay) = previews::guest(root)
-        .with_kv("config", sample_config())
-        .run(|ctx| {
-            submit(
-                ctx.clone(),
-                SubmitArgs {
-                    kind: "lost".into(),
-                    item_description: "Chargeur de téléphone blanc".into(),
-                    contact_hint: None,
-                    details: Some("Sans doute branché près du lit de la chambre 2.".into()),
-                    return_address: None,
-                    ..Default::default()
-                },
-            )
-            .expect("submit");
-            (
-                render_home_card(ctx.clone()).expect("guest surface"),
-                render_guest_form(ctx.clone()).expect("guest surface"),
-                render_post_stay_card(ctx).expect("guest surface"),
-            )
-        });
-    previews::check_all(
-        root,
-        concat!(env!("OUT_DIR"), "/portaki-emissions"),
+    /*
+     * Rendu la veille de l'arrivée (les aperçus), puis le lendemain du départ (la démo
+     * `demo-apres`) : la fin du délai s'y lit « Jusqu'à lundi », pas une date de juin servie en
+     * octobre.
+     */
+    let render = |instant: &str| {
+        reset_test_store();
+        previews::guest_at(root, instant)
+            .with_kv("config", sample_config())
+            .run(|ctx| {
+                submit(
+                    ctx.clone(),
+                    SubmitArgs {
+                        kind: "lost".into(),
+                        item_description: "Chargeur de téléphone blanc".into(),
+                        contact_hint: None,
+                        details: Some("Sans doute branché près du lit de la chambre 2.".into()),
+                        return_address: None,
+                        ..Default::default()
+                    },
+                )
+                .expect("submit");
+                (
+                    render_home_card(ctx.clone()).expect("guest surface"),
+                    render_guest_form(ctx.clone()).expect("guest surface"),
+                    render_post_stay_card(ctx).expect("guest surface"),
+                )
+            })
+    };
+    let surfaces = |(card, form, post_stay)| {
         vec![
             ("home.card", card),
             ("guest.form", form),
             ("post-stay.card", post_stay),
-        ],
+        ]
+    };
+    previews::check_all_phased(
+        root,
+        concat!(env!("OUT_DIR"), "/portaki-emissions"),
+        surfaces(render(previews::NOW)),
         // Toutes les surfaces ont un chemin : rien à ajouter pour la démo.
         Vec::new(),
         None,
+        vec![("post-stay", surfaces(render(previews::AFTER)))],
     );
 }
