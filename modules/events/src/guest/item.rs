@@ -68,12 +68,12 @@ pub fn build_event_item(data: &GuestData, event: &EventRow) -> Surface {
 /// Quand, quoi, où — dans cet ordre : on ouvre une fiche d'événement pour l'heure.
 fn header(data: &GuestData, event: &EventRow) -> Component {
     let mut children: Vec<Component> = Vec::new();
-    let when = crate::time_format::event_when(event, data.tz.as_ref());
+    let when = data.when(event);
     if !when.trim().is_empty() {
         children.push(Badge::new().label(when).into());
     }
-    if data.is_tonight(event) {
-        children.push(super::body::tonight_badge());
+    if let Some(key) = data.today_key(event) {
+        children.push(super::body::today_badge(key));
     }
     children.push(
         Text::new()

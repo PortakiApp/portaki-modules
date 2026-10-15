@@ -1027,11 +1027,9 @@ mod tests {
         let past = event.next_from(utc_at("2026-09-01T00:00:00Z"), Some(&tz));
         assert_eq!(past.starts_at, "2026-08-14T19:00:00+00:00");
         // Dans la fenêtre d'un séjour du 20 au 27 juillet : le 24, pas le 3.
-        let window = Some((
-            utc_at("2026-07-19T00:00:00Z"),
-            utc_at("2026-07-28T00:00:00Z"),
-        ));
-        let kept = crate::time_format::events_within(&[event], window, Some(&tz));
+        let from = utc_at("2026-07-19T00:00:00Z");
+        let window = Some((from, utc_at("2026-07-28T00:00:00Z")));
+        let kept = crate::time_format::events_within(&[event], window, Some(&tz), from);
         assert_eq!(kept.len(), 1);
         assert_eq!(kept[0].starts_at, "2026-07-24T19:00:00+00:00");
     }

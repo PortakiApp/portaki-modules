@@ -61,8 +61,14 @@ pub fn resolve_events(
     // Un import double le vôtre à n'importe laquelle de ses dates du séjour, pas seulement la
     // prochaine : le marché de chaque mardi double l'import du deuxième mardi aussi.
     let own_dates = occurrences_within(&all_manual, window, tz.as_ref());
-    let mut manual = crate::time_format::sort_events_by_start(all_manual);
-    manual = crate::time_format::events_within(&manual, window, tz.as_ref());
+    // Trié après la fenêtre : un événement qui se répète y avance à sa prochaine date, et le
+    // marché de chaque matin ne passe plus devant le concert de ce soir.
+    let mut manual = crate::time_format::sort_events_by_start(crate::time_format::events_within(
+        &all_manual,
+        window,
+        tz.as_ref(),
+        now,
+    ));
     if for_home_card {
         manual = crate::time_format::events_for_home_card(&manual, now, tz.as_ref());
     }
@@ -77,9 +83,13 @@ pub fn resolve_events(
     };
 
     let nearby = load_nearby(ctx, config, point.lat, point.lng).unwrap_or_else(|_| Vec::new());
-    let nearby = nearby.into_iter().map(anchored).collect();
-    let mut nearby = crate::time_format::sort_events_by_start(nearby);
-    nearby = crate::time_format::events_within(&nearby, window, tz.as_ref());
+    let nearby: Vec<EventRow> = nearby.into_iter().map(anchored).collect();
+    let mut nearby = crate::time_format::sort_events_by_start(crate::time_format::events_within(
+        &nearby,
+        window,
+        tz.as_ref(),
+        now,
+    ));
     if for_home_card {
         nearby = crate::time_format::events_for_home_card(&nearby, now, tz.as_ref());
         nearby.truncate(HOME_NEARBY_CAP);

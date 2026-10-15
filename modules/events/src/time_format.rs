@@ -1,10 +1,10 @@
 //! Event datetime parsing and guest display labels.
 
-use chrono::{DateTime, Duration, NaiveDateTime, Utc};
+use chrono::{DateTime, Duration, NaiveDateTime, Timelike, Utc};
 use portaki_sdk::prelude::*;
 
 use portaki_sdk::context::StayContext;
-use portaki_sdk::host::time::PropertyTz;
+use portaki_sdk::host::time::{relative_day, short_date, PropertyTz, RelativeDay};
 
 use crate::config::EventRow;
 
@@ -81,18 +81,22 @@ pub fn stay_window(stay: Option<&StayContext>) -> Option<(DateTime<Utc>, DateTim
 ///
 /// Un événement sans date lisible est gardé : il vient de l'hôte, qui a écrit quelque chose, et
 /// l'écarter sur une date qu'on n'a pas su lire effacerait son travail.
+///
+/// Un événement qui se répète y tombe à sa prochaine occurrence depuis `now`, ou depuis l'ouverture
+/// de la fenêtre si elle est encore à venir : le troisième jour du séjour, le marché de chaque
+/// matin est celui de demain, pas celui du premier jour.
 pub fn events_within(
     events: &[EventRow],
     window: Option<(DateTime<Utc>, DateTime<Utc>)>,
     tz: Option<&PropertyTz>,
+    now: DateTime<Utc>,
 ) -> Vec<EventRow> {
     let Some((from, to)) = window else {
         return events.to_vec();
     };
     events
         .iter()
-        // Un événement qui se répète tombe dans la fenêtre à sa prochaine occurrence.
-        .map(|event| event.next_from(from, tz))
+        .map(|event| event.next_from(from.max(now), tz))
         .filter(|event| match parse_starts_at(&event.starts_at) {
             Some(at) => at >= from && at <= to,
             None => true,
@@ -148,23 +152,68 @@ pub fn sort_events_by_start(mut events: Vec<EventRow>) -> Vec<EventRow> {
     events
 }
 
-/// Le badge « quand » d'un événement : annulé d'abord, puis toute la journée, sinon l'heure.
-pub fn event_when(event: &EventRow, tz: Option<&PropertyTz>) -> String {
+/// Le badge « quand » d'un événement : annulé d'abord, puis toute la journée, sinon l'heure —
+/// précédés du jour quand ce n'est pas aujourd'hui : « Demain à 20:30 », « Samedi · Toute la
+/// journée ». Aujourd'hui, c'est le badge « Ce soir » / « Aujourd'hui » qui le dit.
+///
+/// Sans jour, un événement de la semaine du séjour ne se distinguait pas de celui du soir même.
+pub fn event_when(
+    event: &EventRow,
+    tz: Option<&PropertyTz>,
+    now: DateTime<Utc>,
+    locale: &str,
+) -> String {
     if event.cancelled {
         return "i18n:guest.event.cancelled".to_string();
     }
-    if event.all_day {
-        return "i18n:guest.event.allDay".to_string();
+    let day = parse_starts_at(&event.starts_at).and_then(|at| day_label(at, now, tz, locale));
+    match (day, event.all_day) {
+        (None, true) => "i18n:guest.event.allDay".to_string(),
+        (None, false) => format_starts_at_display(&event.starts_at, tz),
+        (Some(day), true) => {
+            let all_day = t!("guest.event.allDay").unwrap_or_else(|_| "guest.event.allDay".into());
+            format!("{day} · {all_day}")
+        }
+        (Some(day), false) => format!("{day} {}", format_starts_at_display(&event.starts_at, tz)),
     }
-    format_starts_at_display(&event.starts_at, tz)
 }
 
-/// « Ce soir » (§9 #2) : l'événement commence aujourd'hui, à l'heure du logement — pas celle
+/// « Demain », « Samedi », « Hier », « 12 juin » : le jour de `at` vu de `now`, à l'heure du logement.
+/// `None` pour aujourd'hui, que le badge du jour annonce.
+pub fn day_label(
+    at: DateTime<Utc>,
+    now: DateTime<Utc>,
+    tz: Option<&PropertyTz>,
+    locale: &str,
+) -> Option<String> {
+    let key = match relative_day(crate::config::local(at, tz), crate::config::local(now, tz)) {
+        RelativeDay::Today | RelativeDay::Tonight => return None,
+        RelativeDay::Date(date) => return Some(short_date(date, locale)),
+        RelativeDay::Tomorrow => "tomorrow",
+        RelativeDay::Yesterday => "yesterday",
+        RelativeDay::Weekday(day) => crate::config::WEEKDAYS[day.num_days_from_monday() as usize],
+    };
+    let key = format!("guest.day.{key}");
+    Some(t!(&key).unwrap_or(key))
+}
+
+/// La clé du badge d'un événement du jour : « Ce soir » à partir de 18 h, « Aujourd'hui » avant.
+pub fn today_key(event: &EventRow, tz: Option<&PropertyTz>) -> &'static str {
+    let evening = parse_starts_at(&event.starts_at).is_some_and(|at| {
+        crate::config::local(at, tz).hour() >= portaki_sdk::host::time::EVENING_FROM_HOUR
+    });
+    if evening {
+        "guest.event.tonight"
+    } else {
+        "guest.day.today"
+    }
+}
+
+/// Le badge du jour (§9 #2) : l'événement commence aujourd'hui, à l'heure du logement — pas celle
 /// du serveur : 22 h 30 UTC, c'est déjà demain à Paris. Sans fuseau connu, pas de badge plutôt
 /// qu'un « ce soir » deviné. Ni annulé, ni toute la journée, ni déjà fini (sa fin, sinon son
-/// début, passé) : le badge annonce une soirée à venir.
-// ponytail: « aujourd'hui » plutôt qu'un seuil d'heure — un concert à 11 h porte aussi le badge ;
-// un seuil (17 h ?) quand un hôte s'en plaindra.
+/// début, passé) : le badge annonce un moment à venir — « Ce soir », ou « Aujourd'hui » avant
+/// 18 h ([`today_key`]).
 pub fn is_tonight(
     event: &EventRow,
     now: DateTime<Utc>,
@@ -278,7 +327,7 @@ mod tests {
             row("le mois prochain", "2026-09-15T20:00:00Z"),
             row("sans date", ""),
         ];
-        let kept: Vec<String> = events_within(&events, Some((from, to)), None)
+        let kept: Vec<String> = events_within(&events, Some((from, to)), None, from)
             .into_iter()
             .map(|e| e.title.get("fr").to_string())
             .collect();
@@ -291,7 +340,10 @@ mod tests {
     fn no_stay_no_window() {
         assert_eq!(stay_window(None), None);
         let events = [row("un jour", "2027-01-01T20:00:00Z")];
-        assert_eq!(events_within(&events, None, None).len(), 1);
+        assert_eq!(
+            events_within(&events, None, None, at("2026-08-01T00:00:00Z")).len(),
+            1
+        );
     }
 
     /// Le jour est celui du logement : 22 h 30 UTC le 14, c'est 00 h 30 le 15 à Paris.
@@ -347,7 +399,11 @@ mod tests {
                 let tz = PropertyTz::parse(tz);
                 let event = anchored(event.clone(), tz.as_ref());
                 let starts = local_time(at(&event.starts_at), tz.as_ref());
-                (event_when(&event, tz.as_ref()), starts, event)
+                (
+                    event_when(&event, tz.as_ref(), at(&event.starts_at), "fr-FR"),
+                    starts,
+                    event,
+                )
             };
             let when = |time: &str| {
                 t!("guest.event.startsAt", time = time).unwrap_or_else(|_| time.to_string())

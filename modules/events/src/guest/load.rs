@@ -12,7 +12,7 @@ pub struct GuestData {
     pub show_map: bool,
     /// Le repère du logement, pour la marche et le plan de la fiche.
     pub property_coords: Option<(f64, f64)>,
-    /// L'heure et le fuseau du logement, pour le badge « Ce soir ».
+    /// L'heure et le fuseau du logement, pour le jour d'un événement et le badge « Ce soir ».
     pub now: chrono::DateTime<chrono::Utc>,
     pub tz: Option<portaki_sdk::host::time::PropertyTz>,
 }
@@ -20,6 +20,17 @@ pub struct GuestData {
 impl GuestData {
     pub fn is_tonight(&self, event: &EventRow) -> bool {
         crate::time_format::is_tonight(event, self.now, self.tz.as_ref())
+    }
+
+    /// « Demain à 20:30 », « à 20:30 » aujourd'hui — voir [`crate::time_format::event_when`].
+    pub fn when(&self, event: &EventRow) -> String {
+        crate::time_format::event_when(event, self.tz.as_ref(), self.now, &self.locale)
+    }
+
+    /// La clé du badge du jour, pour un événement d'aujourd'hui pas encore fini.
+    pub fn today_key(&self, event: &EventRow) -> Option<&'static str> {
+        self.is_tonight(event)
+            .then(|| crate::time_format::today_key(event, self.tz.as_ref()))
     }
 }
 
