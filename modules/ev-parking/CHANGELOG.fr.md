@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.5
+
+Un aperçu fidèle à la maison de démonstration.
+
+* L'aperçu public et la démo du livret placent la borne dans le garage de la maison, sans code de barrière. Rien ne change pour l'hôte.
+
 ## 1.9.1
 
 Montée technique.
