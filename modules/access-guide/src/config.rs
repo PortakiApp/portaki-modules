@@ -267,7 +267,7 @@ impl ParkingLayer {
     }
 }
 
-/// Le stationnement (§2.8). « Pas de parking » est la case du parking décochée.
+/// Le stationnement (§2.8). « Pas de parking » (`none`) est une option du champ, pas un type.
 pub const PARKING_KINDS: [&str; 4] = ["private", "street", "public", "garage"];
 /// L'ascenseur (§2.7), non précisé d'abord : c'est le défaut.
 pub const LIFT_CHOICES: [&str; 3] = ["unknown", "yes", "no"];
@@ -660,7 +660,7 @@ pub struct HostConfig {
     pub parking_map_url: String,
     #[field(
         kind = "select",
-        options = ["private", "street", "public", "garage"],
+        options = ["none", "private", "street", "public", "garage"],
         label = "host.parking.kind"
     )]
     pub parking_type: String,

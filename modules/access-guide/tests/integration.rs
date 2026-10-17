@@ -1677,3 +1677,20 @@ fn the_settings_are_one_section_per_block() {
     assert!(!keybox.contains("parking_spot"));
     assert!(render(json!({ "parking_type": "street" })).contains("parking_price"));
 }
+
+/// Un premier enregistrement, sans parking : la carte « Pas de parking » est choisie et envoie
+/// `parking_type = "none"`, que la plateforme refusait (`config_field_invalid`) tant que le
+/// schéma ne le déclarait pas.
+#[test]
+#[serial]
+fn a_first_save_without_parking_is_accepted() {
+    MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .run(|ctx| {
+            let surface = render_host_main(ctx).expect("host main");
+            let saved = config_save::save(EMISSIONS, &surface, &json!({}), "fr");
+            assert_eq!(saved["parking_type"], "none");
+            let config: HostConfig = serde_json::from_value(saved).unwrap();
+            assert!(!config.parking_on());
+        });
+}

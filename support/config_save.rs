@@ -66,7 +66,10 @@ pub fn form_args(surface: &Surface) -> Map<String, Value> {
     fn walk(value: &Value, out: &mut Vec<(String, Value)>) {
         match value {
             Value::Object(object) => {
-                if let Some(Value::String(name)) = object.get("name") {
+                // Une `SelectableCard` n'envoie que si elle est la carte choisie.
+                let unpicked = object.get("type").and_then(Value::as_str) == Some("SelectableCard")
+                    && object.get("selected") != Some(&Value::Bool(true));
+                if let Some(Value::String(name)) = object.get("name").filter(|_| !unpicked) {
                     if let Some(sent) = object.get("value").or_else(|| object.get("checked")) {
                         out.push((name.clone(), sent.clone()));
                     }
@@ -121,6 +124,17 @@ pub fn save(emissions: &str, surface: &Surface, stored: &Value, lang: &str) -> V
                 Some(text) => serde_json::from_str(&text.replace(',', ".")).unwrap_or(value),
                 None => value,
             },
+            // `isDeclaredOption` de la plateforme : vide, ou une des `options` déclarées.
+            "select" => {
+                let options = field["options"].as_array().filter(|o| !o.is_empty());
+                let text = value.as_str().unwrap_or_default();
+                assert!(
+                    text.is_empty() || options.is_none_or(|o| o.contains(&value)),
+                    "the form sends `{key}` = {value}, which the config does not declare \
+                     (config_field_invalid)"
+                );
+                value
+            }
             "structured" if field["item"].is_object() && value.is_array() => {
                 rows(&field["item"], out.get(&key), &value, lang)
             }
