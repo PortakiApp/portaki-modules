@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.8
+
+Le premier enregistrement passe sans parking.
+
+* Un hôte qui configure l'accès sans parking enregistre ses réglages du premier coup : « Pas de parking » est accepté, plus besoin de choisir un type de stationnement pour pouvoir enregistrer.
+
 ## 1.10.5
 
 Un aperçu fidèle à la maison de démonstration.
