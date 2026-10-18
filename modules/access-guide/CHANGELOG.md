@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.10](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.9...access-guide-v1.10.10) (2026-10-18)
+
+
+### Bug Fixes
+
+* **access-guide:** drop 'below' from email callouts ([b4682f4](https://github.com/PortakiApp/portaki-modules/commit/b4682f4678b6c2ba4b5a841f33f5bda49a9d5ceb))
+
 ## [1.10.9](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.8...access-guide-v1.10.9) (2026-10-18)
 
 
