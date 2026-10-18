@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.9](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.8...access-guide-v1.10.9) (2026-10-18)
+
+
+### Bug Fixes
+
+* **access-guide:** name the entry code action ([13fcd44](https://github.com/PortakiApp/portaki-modules/commit/13fcd4425706907b2fcc25f7219eec8bc2870bc2))
+
 ## [1.10.8](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.7...access-guide-v1.10.8) (2026-10-18)
 
 
