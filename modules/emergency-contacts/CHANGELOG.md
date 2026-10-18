@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.8](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.9.7...emergency-contacts-v1.9.8) (2026-10-18)
+
+
+### Bug Fixes
+
+* **emergency-contacts:** group phones, explain 114 ([9964119](https://github.com/PortakiApp/portaki-modules/commit/9964119e066969d872656d711cb6ae99006f0168))
+
 ## [1.9.7](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.9.6...emergency-contacts-v1.9.7) (2026-10-15)
 
 
