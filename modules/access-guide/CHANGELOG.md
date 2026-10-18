@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.12](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.11...access-guide-v1.10.12) (2026-10-18)
+
+
+### Bug Fixes
+
+* **access-guide:** say entry code on stay labels ([8045db5](https://github.com/PortakiApp/portaki-modules/commit/8045db56386fe4aa2446815da3c8e18bcc97d6fe))
+
 ## [1.10.11](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.10...access-guide-v1.10.11) (2026-10-18)
 
 
