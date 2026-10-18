@@ -248,7 +248,7 @@
   "publish.reveal.always": "De code is zichtbaar vanaf de boeking, ook als het verblijf later wordt geannuleerd.",
   "reveal.availableFrom.datetime": "{weekday} {day} {month} om {time}",
   "reveal.locked.generic": "De codes worden kort voor de check-in beschikbaar.",
-  "reveal.locked.withWhen": "Beschikbaar vanaf {when}",
+  "reveal.locked.withWhen": "Beschikbaar vanaf {when}.",
   "catalog.host.stay": "Toegang",
   "catalog.host.tasks": "Ontbrekende codes",
   "host.stay.title": "Toegang",

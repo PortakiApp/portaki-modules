@@ -248,7 +248,7 @@
   "publish.reveal.always": "预订后即可看到密码，即使之后取消入住也一样。",
   "reveal.availableFrom.datetime": "{month}{day}日（{weekday}）{time}",
   "reveal.locked.generic": "临近入住时密码就会开放。",
-  "reveal.locked.withWhen": "{when} 起可用",
+  "reveal.locked.withWhen": "{when} 起可用。",
   "catalog.host.stay": "入住方式",
   "catalog.host.tasks": "缺少的密码",
   "host.stay.title": "入住方式",

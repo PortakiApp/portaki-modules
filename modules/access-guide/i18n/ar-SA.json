@@ -248,7 +248,7 @@
   "publish.reveal.always": "سيظهر الرمز منذ الحجز، حتى لو أُلغيت الإقامة لاحقًا.",
   "reveal.availableFrom.datetime": "{weekday} {day} {month} الساعة {time}",
   "reveal.locked.generic": "ستصبح الرموز متاحة باقتراب تسجيل الوصول.",
-  "reveal.locked.withWhen": "متاحة من {when}",
+  "reveal.locked.withWhen": "متاحة من {when}.",
   "catalog.host.stay": "الوصول",
   "catalog.host.tasks": "رموز مفقودة",
   "host.stay.title": "الوصول",
