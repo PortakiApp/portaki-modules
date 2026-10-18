@@ -201,7 +201,7 @@ fn arrival_callout(
 ) -> Result<String> {
     let method = config.method.primary_method();
 
-    // Timed lock: keep method framing, never promise "the code below".
+    // Timed lock: keep method framing, never point at "the code".
     if !decision.revealed && extract_entry_code(config).is_some() {
         let when = decision
             .available_from
@@ -298,7 +298,7 @@ mod tests {
             .with_translation("email.label.keybox", "Code boîte à clés")
             .with_translation(
                 "email.callout.keybox.withCode",
-                "Arrivée autonome : le code ci-dessous ouvre la boîte à clés dès {time}. Pas besoin d'attendre l'hôte.",
+                "Arrivée autonome : le code indiqué dans cet e-mail ouvre la boîte à clés dès {time}. Pas besoin d'attendre l'hôte.",
             )
             .with_translation(
                 "email.callout.locked.selfCheckin",
