@@ -427,6 +427,33 @@ fn an_open_network_has_no_password_field() {
         });
 }
 
+/// « Laisser vide pour conserver » seulement quand un mot de passe est enregistré.
+#[test]
+#[serial]
+fn the_keep_hint_shows_only_over_a_saved_password() {
+    let render = |config: &ModuleConfig| {
+        MockContext::host()
+            .with_capabilities(&[capability::core::STORAGE])
+            .with_config(config)
+            .run(|ctx| serde_json::to_string(&render_host_main(ctx).unwrap()).unwrap())
+    };
+    let hint = "i18n:host.password.placeholder";
+    assert!(render(&sample_config()).contains(hint));
+    let first = ModuleConfig {
+        networks: vec![network("main", "Islette_Guest", "")],
+        ..sample_config()
+    };
+    assert!(!render(&first).contains(hint));
+    // Le réseau d'avant la liste : le vide ne garde rien, il faut le retaper.
+    let flat = serde_json::json!({ "ssid": "Villa", "password": "soleil2026" });
+    let legacy = MockContext::host()
+        .with_capabilities(&[capability::core::STORAGE])
+        .with_config(&flat)
+        .run(|ctx| serde_json::to_string(&render_host_main(ctx).unwrap()).unwrap());
+    assert!(legacy.contains("i18n:host.password.retype"));
+    assert!(!legacy.contains(hint));
+}
+
 /// « Personnalisé » : de 1 à 168 heures, l'erreur sous le champ.
 #[test]
 #[serial]

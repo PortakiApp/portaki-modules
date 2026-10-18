@@ -199,18 +199,15 @@ fn network_row(
         );
     }
     if security != WifiSecurity::Nopass {
-        children.push(
-            field(
-                "password",
-                "i18n:host.password.label",
-                SecretInput::new()
-                    .name(name("password"))
-                    .value(String::new())
-                    .placeholder("i18n:host.password.placeholder")
-                    .into(),
-            )
-            .into(),
-        );
+        let mut password = SecretInput::new()
+            .name(name("password"))
+            .value(String::new());
+        // « Laisser vide pour conserver » seulement quand il y a de quoi conserver : ni au premier
+        // réglage, ni pour le réseau d'avant la liste, dont le vide ne garde rien.
+        if !network.password.trim().is_empty() && network.id != crate::config::LEGACY_NETWORK_ID {
+            password = password.placeholder("i18n:host.password.placeholder");
+        }
+        children.push(field("password", "i18n:host.password.label", password.into()).into());
         if network.id == crate::config::LEGACY_NETWORK_ID {
             // Le réseau d'avant la liste : la plateforme n'a pas de ligne d'où garder son mot de
             // passe. Retapé, il est enregistré ; sinon « Publier » le réclame — le voyageur garde
