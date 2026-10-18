@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.9
+
+Les numéros d'urgence du pays du logement, dans toutes les langues.
+
+* Un voyageur qui lit le livret en anglais ou en espagnol voit aussi le 15, le 17, le 18, le 114 et la pharmacie de garde, plus seulement le 112.
+* Le 112 est présenté comme le numéro qui répond en plusieurs langues.
+
 ## 1.9.8
 
 Des numéros plus faciles à lire.
