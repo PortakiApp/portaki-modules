@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.11
+
+La phrase d'arrivée se termine enfin par un point.
+
+* « Disponible dès lundi 4 janvier à 16 h » finit sa phrase : elle ne se colle plus à la suivante dans l'e-mail ni dans le livret.
+
 ## 1.10.10
 
 L'e-mail d'arrivée ne renvoie plus le voyageur au mauvais endroit.
