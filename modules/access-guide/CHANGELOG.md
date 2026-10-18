@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.11](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.10...access-guide-v1.10.11) (2026-10-18)
+
+
+### Bug Fixes
+
+* **access-guide:** end reveal sentence with a period ([a7ec392](https://github.com/PortakiApp/portaki-modules/commit/a7ec3920b2ee3084b15c7fea02a5494b26d49d41))
+
 ## [1.10.10](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.9...access-guide-v1.10.10) (2026-10-18)
 
 
