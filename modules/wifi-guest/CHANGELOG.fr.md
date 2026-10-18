@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.7
+
+L'heure du mot de passe se lit en toutes lettres.
+
+* Le livret annonce le mot de passe « dès lundi 19 octobre à 16 h », ou « demain à 16 h », au lieu d'une date en chiffres.
+
 ## 1.10.1
 
 Montée technique.
