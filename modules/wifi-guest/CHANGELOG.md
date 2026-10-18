@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.8](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.10.7...wifi-guest-v1.10.8) (2026-10-18)
+
+
+### Bug Fixes
+
+* **wifi-guest:** keep hint only over saved password ([9d4bc26](https://github.com/PortakiApp/portaki-modules/commit/9d4bc262ed51c1fafe98e4ff32b5b99537b7bfb5))
+
 ## [1.10.7](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.10.6...wifi-guest-v1.10.7) (2026-10-18)
 
 
