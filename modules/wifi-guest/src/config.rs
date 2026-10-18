@@ -212,16 +212,27 @@ fn legacy(mut old: Value) -> Value {
 
 impl ModuleConfig {
     /// The networks to show and edit: the list, or the one network of a config of before it.
+    /// The SSID comes back trimmed: a space typed around it is never part of the name, and the
+    /// host's next save writes it without.
     pub fn networks(&self) -> Vec<Network> {
+        let trimmed = || {
+            self.networks
+                .iter()
+                .map(|n| Network {
+                    ssid: n.ssid.trim().to_string(),
+                    ..n.clone()
+                })
+                .collect()
+        };
         if self.networks.iter().any(|n| !n.ssid.trim().is_empty()) {
-            return self.networks.clone();
+            return trimmed();
         }
         if self.legacy_ssid.trim().is_empty() {
-            return self.networks.clone();
+            return trimmed();
         }
         vec![Network {
             id: LEGACY_NETWORK_ID.into(),
-            ssid: self.legacy_ssid.clone(),
+            ssid: self.legacy_ssid.trim().to_string(),
             label: None,
             security: self.legacy_security.unwrap_or_default(),
             password: self.legacy_password.clone(),
@@ -275,11 +286,8 @@ impl ModuleConfig {
     pub fn problems(&self) -> Vec<Problem> {
         let mut problems = Vec::new();
         let networks = self.networks();
-        let filled: Vec<&Network> = networks
-            .iter()
-            .filter(|n| !n.ssid.trim().is_empty())
-            .collect();
-        if filled.is_empty() {
+        // A row saved blank says so under its own field; this is for no row at all.
+        if networks.is_empty() {
             problems.push(problem(
                 "config.networks",
                 "host.networks.label",
@@ -298,7 +306,7 @@ impl ModuleConfig {
         for (index, network) in networks.iter().enumerate() {
             let at = |key: &str| format!("config.networks[{index}].{key}");
             let ssid = network.ssid.trim();
-            if ssid.is_empty() && networks.len() > 1 {
+            if ssid.is_empty() {
                 problems.push(problem(
                     &at("ssid"),
                     "host.ssid.label",
@@ -663,5 +671,28 @@ mod tests {
         .unwrap();
         let ids: Vec<String> = config.problems().into_iter().map(|p| p.id).collect();
         assert_eq!(ids, ["config.networks[1].label", "config.note"]);
+    }
+    /// Un nom fait d'espaces n'est pas un nom : erreur sous le champ, en langue de l'hôte ; les
+    /// espaces autour d'un vrai nom tombent à la lecture.
+    #[test]
+    fn a_blank_ssid_is_refused_and_spaces_around_are_trimmed() {
+        let config = ModuleConfig {
+            networks: vec![wpa("   ", "soleil2026")],
+            ..ModuleConfig::default()
+        };
+        assert_eq!(
+            config.error_of("config.networks[0].ssid", "fr").as_deref(),
+            Some("Indiquez le nom du réseau.")
+        );
+        assert_eq!(
+            config.error_of("config.networks[0].ssid", "en").as_deref(),
+            Some("Enter the network name.")
+        );
+        let config = ModuleConfig {
+            networks: vec![wpa("  Villa ", "soleil2026")],
+            ..ModuleConfig::default()
+        };
+        assert_eq!(config.networks()[0].ssid, "Villa");
+        assert!(config.problems().is_empty());
     }
 }
