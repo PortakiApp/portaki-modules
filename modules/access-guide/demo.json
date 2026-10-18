@@ -213,7 +213,7 @@
                 "layout": "tile",
                 "mono": true,
                 "type": "KeyValue",
-                "value": "16:00"
+                "value": "16 h"
               }
             ],
             "minColumnWidth": 130.0,

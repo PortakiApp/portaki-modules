@@ -7,7 +7,9 @@ use portaki_sdk::sdui::common::GeoPoint;
 use portaki_sdk::sdui::hours;
 
 use crate::config::{has_content, HostConfig, ModuleConfig, UnlockWindow};
-use crate::reveal::{evaluate_reveal, format_available_from, locked_message, RevealDecision};
+use crate::reveal::{
+    clock, evaluate_reveal, format_available_from_near, locked_message, RevealDecision,
+};
 use crate::texts::ModuleTexts;
 
 pub struct GuestData {
@@ -28,7 +30,7 @@ pub struct GuestData {
     /// check-in to count from. The status cell puts it under the masked value.
     pub reveal_at_label: Option<String>,
     pub stay_id: Option<Uuid>,
-    /// L'heure d'arrivée, à l'heure du logement — « 16:00 ». `None` sans séjour ou sans fuseau
+    /// L'heure d'arrivée, à l'heure du logement — « 16 h ». `None` sans séjour ou sans fuseau
     /// lisible : une heure dans le mauvais fuseau fait sonner à la porte trop tôt.
     pub checkin_hour: Option<String>,
     /// La consigne d'arrivée tardive de l'hôte, quand le voyageur en a annoncé une.
@@ -97,9 +99,9 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<GuestLoad> {
         coordinates: ctx.property.coordinates,
         property_name: ctx.property.name.trim().to_string(),
         secrets_revealed: decision.revealed,
-        reveal_locked_message: locked_banner(&decision, &property_timezone),
+        reveal_locked_message: locked_banner(&decision, now, &property_timezone),
         reveal_ended: decision.ended,
-        reveal_at_label: reveal_at_label(&decision, &property_timezone),
+        reveal_at_label: reveal_at_label(&decision, now, &property_timezone),
         stay_id,
         checkin_hour: checkin_hour(ctx, &property_timezone),
         late_arrival_note,
@@ -135,27 +137,35 @@ fn property_timezone(ctx: &GuestContext) -> String {
     "Europe/Paris".to_string()
 }
 
-fn locked_banner(decision: &RevealDecision, property_timezone: &str) -> Option<String> {
+fn locked_banner(
+    decision: &RevealDecision,
+    now: chrono::DateTime<chrono::Utc>,
+    property_timezone: &str,
+) -> Option<String> {
     if decision.revealed || decision.ended {
         return None;
     }
     let when = decision
         .available_from
-        .map(|at| format_available_from(at, property_timezone));
+        .map(|at| format_available_from_near(at, now, property_timezone));
     Some(locked_message(when.as_deref()))
 }
 
 /// The reveal instant alone, without the sentence around it.
 ///
-/// The banner reads « Disponible à partir du 23/08/2026 à 16:00 », which is too long for a cell
-/// of the status strip: the cell shows the date on its own line under the masked value.
-fn reveal_at_label(decision: &RevealDecision, property_timezone: &str) -> Option<String> {
+/// The banner reads « Disponible dès dimanche 23 août à 16 h », which is too long for a cell of
+/// the status strip: the cell shows the date on its own line under the masked value.
+fn reveal_at_label(
+    decision: &RevealDecision,
+    now: chrono::DateTime<chrono::Utc>,
+    property_timezone: &str,
+) -> Option<String> {
     if decision.revealed || decision.ended {
         return None;
     }
     decision
         .available_from
-        .map(|at| format_available_from(at, property_timezone))
+        .map(|at| format_available_from_near(at, now, property_timezone))
 }
 
 /// « 16:00 », à l'heure du logement.
@@ -235,5 +245,5 @@ fn checkin_local_hour(ctx: &GuestContext, property_timezone: &str) -> Option<u32
 fn checkin_hour(ctx: &GuestContext, property_timezone: &str) -> Option<String> {
     let checkin_at = ctx.stay.as_ref().and_then(|stay| stay.checkin_at)?;
     let tz = portaki_sdk::host::time::PropertyTz::parse(property_timezone)?;
-    Some(tz.to_local(checkin_at).format("%H:%M").to_string())
+    Some(clock(tz.to_local(checkin_at)))
 }
