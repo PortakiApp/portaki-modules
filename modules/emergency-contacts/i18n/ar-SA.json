@@ -23,7 +23,7 @@
   "guest.numbers.general": "الطوارئ",
   "guest.numbers.medical": "الإسعاف",
   "guest.numbers.police": "الشرطة",
-  "guest.numbers.sms": "عبر الرسائل القصيرة",
+  "guest.numbers.sms": "عبر الرسائل القصيرة (للصم وضعاف السمع)",
   "guest.pharmacy.closed": "مغلقة",
   "guest.pharmacy.openUntil": "مفتوحة حتى {time}",
   "guest.teaser": "المضيف وأرقام الطوارئ والأرقام المفيدة",

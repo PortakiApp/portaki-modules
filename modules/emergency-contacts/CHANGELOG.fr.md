@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.8
+
+Des numéros plus faciles à lire.
+
+* Les numéros français s'affichent groupés par deux (« 06 12 34 56 78 ») ; l'appel compose toujours le bon numéro.
+* La tuile du 114 précise qu'elle s'adresse aux personnes sourdes ou malentendantes.
+
 ## 1.9.2
 
 Montée technique.

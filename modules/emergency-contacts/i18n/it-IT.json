@@ -23,7 +23,7 @@
   "guest.numbers.general": "Emergenze",
   "guest.numbers.medical": "Ambulanza",
   "guest.numbers.police": "Polizia",
-  "guest.numbers.sms": "Via SMS",
+  "guest.numbers.sms": "Via SMS (persone sorde)",
   "guest.pharmacy.closed": "Chiusa",
   "guest.pharmacy.openUntil": "Aperta fino alle {time}",
   "guest.teaser": "Host, emergenze e numeri utili",
