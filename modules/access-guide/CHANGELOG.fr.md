@@ -5,7 +5,7 @@
 Le premier enregistrement passe sans parking, et l'heure des codes se lit en toutes lettres.
 
 * Un hôte sans parking enregistre ses réglages du premier coup : « Pas de parking » est accepté, sans choisir de type de stationnement.
-* Le livret annonce les codes « dès lundi 19 octobre à 16 h », ou « demain à 16 h », au lieu d'une date en chiffres ; l'heure d'arrivée se lit « 16 h ».
+* Les codes s'annoncent « dès lundi 19 octobre à 16 h » ou « demain à 16 h », plus en chiffres ; l'arrivée se lit « 16 h ».
 
 ## 1.10.5
 
