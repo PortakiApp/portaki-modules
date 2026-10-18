@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.8
+
+Le champ mot de passe ne parle plus d'un mot de passe qui n'existe pas.
+
+* « Laisser vide pour conserver le mot de passe actuel » ne s'affiche que si un mot de passe est déjà enregistré.
+
 ## 1.10.7
 
 L'heure du mot de passe se lit en toutes lettres.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.9
+
+Le bouton qui change le code d'entrée dit enfin ce qu'il fait.
+
+* L'action « Changer le code de ce séjour » devient « Changer le code d'entrée » : on ne la confond plus avec le lien du voyageur.
+
 ## 1.10.8
 
 Le premier enregistrement passe sans parking, et l'heure des codes se lit en toutes lettres.
