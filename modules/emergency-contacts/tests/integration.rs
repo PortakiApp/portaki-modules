@@ -391,19 +391,21 @@ fn the_profile_alone_is_enough_to_show_the_card() {
 
 /// Les numéros d'urgence sont ceux du **logement**, pas de la langue du voyageur.
 ///
-/// Le module lisait `ctx.locale`, qui est celle du lecteur dès qu'il a choisi une langue. Un
-/// francophone en Espagne recevait donc le 15 et le 18 — qui ne sonnent nulle part là-bas — et un
-/// anglophone en France perdait les deux. On ne compose pas un numéro mort en urgence.
+/// Ils se lisent dans le fuseau du logement : `ctx.property.locale` est une copie de la locale du
+/// lecteur (enveloppe du SDK), et un anglophone en France perdait le 15, le 17, le 18 et le 114.
+/// La locale du logement vaut ici celle du lecteur, comme en production.
 #[test]
 #[serial]
 fn the_numbers_follow_the_property_not_the_reader() {
-    for (property_locale, reader, expect_national) in
-        [("fr-FR", "en-US", true), ("es-ES", "fr-FR", false)]
-    {
+    for (timezone, reader, expect_national) in [
+        ("Europe/Paris", "en-US", true),
+        ("Europe/Madrid", "fr-FR", false),
+    ] {
         MockContext::guest()
             .with_capabilities(&[capability::core::STORAGE])
             .with_property(Property {
-                locale: property_locale.into(),
+                locale: reader.into(),
+                timezone: timezone.into(),
                 ..Property::default()
             })
             .run(|ctx| {
@@ -415,9 +417,10 @@ fn the_numbers_follow_the_property_not_the_reader() {
                 assert_eq!(
                     json.contains("\"15\""),
                     expect_national,
-                    "{property_locale} lu en {reader} : {json}"
+                    "{timezone} lu en {reader} : {json}"
                 );
                 assert_eq!(json.contains("\"18\""), expect_national, "{json}");
+                assert_eq!(json.contains("sms:114"), expect_national, "{json}");
             });
     }
 }
@@ -525,11 +528,11 @@ fn the_pharmacy_hours_say_whether_it_is_open() {
 #[test]
 #[serial]
 fn the_on_duty_pharmacy_and_the_sms_number_follow_the_country() {
-    for (locale, french) in [("fr-FR", true), ("es-ES", false)] {
+    for (timezone, french) in [("Europe/Paris", true), ("Europe/Madrid", false)] {
         MockContext::guest()
             .with_capabilities(&[capability::core::STORAGE])
             .with_property(Property {
-                locale: locale.into(),
+                timezone: timezone.into(),
                 ..Property::default()
             })
             .run(|ctx| {

@@ -11,12 +11,13 @@ pub struct GuestData {
     pub contacts: Vec<ContactRow>,
     pub host_phone: String,
     pub locale: String,
-    /// La locale du **logement**, d'où se tirent les numéros d'urgence du pays.
+    /// Le fuseau du **logement**, d'où se tirent les numéros d'urgence du pays
+    /// ([`crate::numbers::country_of`]).
     ///
-    /// Pas celle du lecteur : un voyageur francophone en Espagne verrait sinon le 15 et le 18,
-    /// qui ne sonnent nulle part là-bas. Les libellés, eux, restent dans sa langue — ce sont des
-    /// clés que le livret résout.
-    pub property_locale: String,
+    /// Pas la langue du lecteur : un anglophone en France doit voir le 15 et le 18 autant qu'un
+    /// francophone. Les libellés, eux, restent dans sa langue — ce sont des clés que le livret
+    /// résout.
+    pub property_timezone: String,
     /// « Pharmacie : Pharmacie du Port · Hôpital : CHU d'Antibes (3.1 km) » — les lieux sans
     /// numéro ; vide quand l'hôte n'en a pas donné.
     pub useful_line: String,
@@ -58,7 +59,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         contacts: config.parse_contacts(),
         host_phone,
         locale: ctx.locale.clone(),
-        property_locale: ctx.property.locale.clone(),
+        property_timezone: ctx.property.timezone.clone(),
         useful_line: useful_line(&config, &away),
         host_hours: config
             .host_hours()
@@ -95,7 +96,7 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         })
         .collect(),
         pharmacy_state: pharmacy_state(&config.pharmacy_hours, &ctx.property.timezone),
-        on_duty_pharmacy: crate::numbers::on_duty_pharmacy(&ctx.property.locale),
+        on_duty_pharmacy: crate::numbers::on_duty_pharmacy(&ctx.property.timezone),
     }))
 }
 
