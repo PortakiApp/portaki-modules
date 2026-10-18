@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.9
+
+Le nom du réseau Wi-Fi ne peut plus rester vide.
+
+* Un nom de réseau vide, ou fait seulement d'espaces, est signalé sous le champ ; les espaces autour du nom sont retirés.
+
 ## 1.10.8
 
 Le champ mot de passe ne parle plus d'un mot de passe qui n'existe pas.
