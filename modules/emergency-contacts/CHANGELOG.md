@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.9](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.9.8...emergency-contacts-v1.9.9) (2026-10-18)
+
+
+### Bug Fixes
+
+* **emergency-contacts:** country numbers from tz ([3176750](https://github.com/PortakiApp/portaki-modules/commit/31767502b4c30ebc0728130c5c8d514e05cf6c61))
+
 ## [1.9.8](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.9.7...emergency-contacts-v1.9.8) (2026-10-18)
 
 

@@ -1,9 +1,9 @@
 {
-  "modules/access-guide": "1.10.10",
+  "modules/access-guide": "1.10.11",
   "modules/appliances": "1.13.3",
   "modules/checklist": "1.10.2",
   "modules/consumables": "2.11.6",
-  "modules/emergency-contacts": "1.9.8",
+  "modules/emergency-contacts": "1.9.9",
   "modules/ev-parking": "1.9.7",
   "modules/events": "1.11.2",
   "modules/facility-hours": "1.14.8",
