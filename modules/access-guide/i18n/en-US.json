@@ -248,7 +248,7 @@
   "publish.reveal.always": "The code will be visible as soon as the stay is booked, even if it is cancelled later.",
   "reveal.availableFrom.datetime": "{weekday}, {month} {day} at {time}",
   "reveal.locked.generic": "Codes will be available closer to check-in.",
-  "reveal.locked.withWhen": "Available from {when}",
+  "reveal.locked.withWhen": "Available from {when}.",
   "catalog.host.stay": "Access",
   "catalog.host.tasks": "Missing codes",
   "host.stay.title": "Access",

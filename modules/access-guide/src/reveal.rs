@@ -323,7 +323,7 @@ fn word(key: &str, vars: &[(&str, &str)]) -> Option<String> {
 pub fn locked_message(available_from_label: Option<&str>) -> String {
     match available_from_label {
         Some(when) => t!("reveal.locked.withWhen", when = when)
-            .unwrap_or_else(|_| format!("Available from {when}")),
+            .unwrap_or_else(|_| format!("Available from {when}.")),
         None => t!("reveal.locked.generic")
             .unwrap_or_else(|_| "Codes will be available closer to check-in.".into()),
     }

@@ -248,7 +248,7 @@
   "publish.reveal.always": "予約時点からコードが表示されます。後で滞在がキャンセルされても同様です。",
   "reveal.availableFrom.datetime": "{month}{day}日（{weekday}）{time}",
   "reveal.locked.generic": "コードはチェックインが近づくと利用できるようになります。",
-  "reveal.locked.withWhen": "{when} から利用できます",
+  "reveal.locked.withWhen": "{when} から利用できます。",
   "catalog.host.stay": "アクセス",
   "catalog.host.tasks": "不足しているコード",
   "host.stay.title": "アクセス",

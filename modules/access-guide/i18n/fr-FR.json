@@ -248,7 +248,7 @@
   "publish.reveal.always": "Le code sera visible dès la réservation, même si le séjour est annulé ensuite.",
   "reveal.availableFrom.datetime": "{weekday} {day} {month} à {time}",
   "reveal.locked.generic": "Les codes seront disponibles à l’approche du check-in.",
-  "reveal.locked.withWhen": "Disponible dès {when}",
+  "reveal.locked.withWhen": "Disponible dès {when}.",
   "catalog.host.stay": "Accès",
   "catalog.host.tasks": "Codes manquants",
   "host.stay.title": "Accès",

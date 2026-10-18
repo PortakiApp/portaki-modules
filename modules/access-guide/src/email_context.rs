@@ -292,23 +292,14 @@ mod tests {
         }
     }
 
+    /// Le vrai bundle fr du module : un e-mail se relit tel que le voyageur le reçoit.
     fn fr_email_host() -> MockContext {
-        MockContext::guest()
-            .with_capabilities(&[capability::core::STORAGE])
-            .with_translation("email.label.keybox", "Code boîte à clés")
-            .with_translation(
-                "email.callout.keybox.withCode",
-                "Arrivée autonome : le code indiqué dans cet e-mail ouvre la boîte à clés dès {time}. Pas besoin d'attendre l'hôte.",
-            )
-            .with_translation(
-                "email.callout.locked.selfCheckin",
-                "Arrivée autonome dès {time}. {locked} Les détails d'accès sont sur votre page de séjour.",
-            )
-            .with_translation("reveal.locked.withWhen", "Disponible à partir du {when}")
-            .with_translation(
-                "reveal.availableFrom.datetime",
-                "{day}/{month}/{year} à {hour}:{minute}",
-            )
+        let bundle: serde_json::Map<String, serde_json::Value> =
+            serde_json::from_str(include_str!("../i18n/fr-FR.json")).expect("fr bundle");
+        bundle.into_iter().fold(
+            MockContext::guest().with_capabilities(&[capability::core::STORAGE]),
+            |b, (k, v)| b.with_translation(&k, v.as_str().unwrap_or_default()),
+        )
     }
 
     #[test]
@@ -379,11 +370,14 @@ mod tests {
             .expect("ok");
             assert!(!response.secrets_revealed);
             assert!(response.entry_access_code.is_none());
-            assert!(response
-                .arrival_callout
-                .as_deref()
-                .unwrap_or("")
-                .contains("Disponible"));
+            // Le 1er janvier 2099, 16 h à Paris : en toutes lettres, et la phrase se termine.
+            assert_eq!(
+                response.arrival_callout.as_deref(),
+                Some(
+                    "Arrivée autonome dès 16:00. Disponible dès jeudi 1er janvier à 16 h. \
+                     Les détails d'accès sont sur votre page de séjour."
+                )
+            );
             assert!(!response
                 .arrival_callout
                 .as_deref()
