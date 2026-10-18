@@ -285,36 +285,106 @@ fn last_sunday_of_month(year: i32, month: u32) -> NaiveDate {
         .expect("sunday")
 }
 
-pub fn format_available_from(available_from: DateTime<Utc>, property_timezone: &str) -> String {
-    let offset = offset_for_iana(property_timezone, available_from);
-    let local = available_from.with_timezone(&offset);
-    let day = format!("{:02}", local.day());
-    let month = format!("{:02}", local.month());
-    let year = local.year().to_string();
-    let hour = format!("{:02}", local.hour());
-    let minute = format!("{:02}", local.minute());
-    let fallback = format!("{day}/{month}/{year} {hour}:{minute}");
-    match t!(
-        "reveal.availableFrom.datetime",
-        day = &day,
-        month = &month,
-        year = &year,
-        hour = &hour,
-        minute = &minute
-    ) {
-        Ok(text) if !looks_like_i18n_key(&text) => text,
-        Ok(text) if text.contains('{') => apply_vars(
-            &text,
-            &[
-                ("day", day.as_str()),
-                ("month", month.as_str()),
-                ("year", year.as_str()),
-                ("hour", hour.as_str()),
-                ("minute", minute.as_str()),
-            ],
+/// `available_from` à l'heure du logement, écrit en toutes lettres : « lundi 19 octobre à 16 h »,
+/// ou « aujourd'hui à 16 h » / « demain à 16 h » vu de `now`.
+///
+/// Jamais « 19/10/2026 à 16:00 » : un voyageur âgé lit mal une date en chiffres, et l'ordre
+/// jour/mois change d'un pays à l'autre. Les mots viennent des bundles du module, qui parlent les
+/// dix langues du livret — les tables du SDK n'en parlent que six. Même écriture que
+/// `access-guide` : les deux dates se lisent côte à côte dans le livret.
+pub fn format_available_from_near(
+    available_from: DateTime<Utc>,
+    now: DateTime<Utc>,
+    property_timezone: &str,
+) -> String {
+    use portaki_sdk::host::time::{relative_day, RelativeDay};
+
+    let local = available_from.with_timezone(&offset_for_iana(property_timezone, available_from));
+    let today = now.with_timezone(&offset_for_iana(property_timezone, now));
+    let key = match relative_day(local.naive_local(), today.naive_local()) {
+        RelativeDay::Today | RelativeDay::Tonight => "reveal.availableFrom.today",
+        RelativeDay::Tomorrow => "reveal.availableFrom.tomorrow",
+        // Plus loin, ou un cas que le SDK ajouterait : la date entière, qui reste juste.
+        _ => return written_date(local),
+    };
+    word(key, &[("time", &clock(local))]).unwrap_or_else(|| written_date(local))
+}
+
+/// « lundi 19 octobre à 16 h », « Monday, October 19 at 4 pm ».
+fn written_date(local: DateTime<FixedOffset>) -> String {
+    const WEEKDAYS: [&str; 7] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+    let weekday = word(
+        &format!(
+            "date.weekday.{}",
+            WEEKDAYS[local.weekday().num_days_from_monday() as usize]
         ),
-        _ => fallback,
+        &[],
+    );
+    let month = word(&format!("date.month.{}", local.month()), &[]);
+    let day = match local.day() {
+        1 => word("date.firstOfMonth", &[]),
+        day => Some(day.to_string()),
+    };
+    let time = clock(local);
+    let fallback = || {
+        format!(
+            "{:02}/{:02}/{} {:02}:{:02}",
+            local.day(),
+            local.month(),
+            local.year(),
+            local.hour(),
+            local.minute()
+        )
+    };
+    let (Some(weekday), Some(month), Some(day)) = (weekday, month, day) else {
+        return fallback();
+    };
+    word(
+        "reveal.availableFrom.datetime",
+        &[
+            ("weekday", &weekday),
+            ("day", &day),
+            ("month", &month),
+            ("time", &time),
+        ],
+    )
+    .unwrap_or_else(fallback)
+}
+
+/// L'heure comme on la dit : « 16 h », « 16 h 30 », « 4 pm », « 16:30 » selon la langue.
+fn clock(at: impl Timelike) -> String {
+    let (hour, minute) = (at.hour(), at.minute());
+    let key = if minute == 0 {
+        "time.onTheHour"
+    } else {
+        "time.withMinutes"
+    };
+    let hour12 = match hour % 12 {
+        0 => 12,
+        h => h,
+    };
+    word(
+        key,
+        &[
+            ("hour", &hour.to_string()),
+            ("hour2", &format!("{hour:02}")),
+            ("minute", &format!("{minute:02}")),
+            ("hour12", &hour12.to_string()),
+            ("ampm", if hour < 12 { "am" } else { "pm" }),
+        ],
+    )
+    .unwrap_or_else(|| format!("{hour:02}:{minute:02}"))
+}
+
+/// Un texte du bundle, `None` quand la clé manque — l'hôte la renvoie alors telle quelle.
+fn word(key: &str, vars: &[(&str, &str)]) -> Option<String> {
+    let mut bag = portaki_sdk::host::i18n::Vars::new();
+    for (name, value) in vars {
+        bag.set(*name, *value);
     }
+    portaki_sdk::host::i18n::translate(key, &bag)
+        .ok()
+        .filter(|text| text != key)
 }
 
 pub fn locked_message(available_from_label: Option<&str>, locale: &str) -> String {
@@ -323,7 +393,7 @@ pub fn locked_message(available_from_label: Option<&str>, locale: &str) -> Strin
         Some(when) => match t!("reveal.locked.withWhen", when = when) {
             Ok(text) if text.contains(when) && !looks_like_i18n_key(&text) => text,
             Ok(text) if text.contains("{when}") => text.replace("{when}", when),
-            _ if is_fr => format!("Disponible à partir du {when}"),
+            _ if is_fr => format!("Disponible dès {when}"),
             _ => format!("Available from {when}"),
         },
         None => match t!("reveal.locked.generic") {
@@ -338,18 +408,52 @@ fn looks_like_i18n_key(text: &str) -> bool {
     !text.contains(' ') && text.contains('.')
 }
 
-fn apply_vars(template: &str, vars: &[(&str, &str)]) -> String {
-    let mut text = template.to_string();
-    for (name, value) in vars {
-        text = text.replace(&format!("{{{name}}}"), value);
-    }
-    text
-}
-
 #[cfg(test)]
 #[allow(clippy::disallowed_methods)] // tests natifs : l'horloge du système y est disponible
 mod tests {
     use super::*;
+
+    /// Le bundle fr du module, pour lire la date comme le voyageur.
+    fn fr() -> portaki_test_utils::MockContextBuilder {
+        let bundle: serde_json::Map<String, serde_json::Value> =
+            serde_json::from_str(include_str!("../i18n/fr-FR.json")).expect("fr bundle");
+        bundle
+            .into_iter()
+            .fold(portaki_test_utils::MockContext::guest(), |b, (k, v)| {
+                b.with_translation(&k, v.as_str().unwrap_or_default())
+            })
+    }
+
+    #[test]
+    #[serial_test::serial]
+    fn the_reveal_date_reads_in_words() {
+        fr().run(|_| {
+            // Lundi 19 octobre 2026, 16 h à Paris (CEST).
+            let at = utc("2026-10-19T14:00:00Z");
+            let tz = "Europe/Paris";
+            assert_eq!(
+                format_available_from_near(at, utc("2026-10-10T08:00:00Z"), tz),
+                "lundi 19 octobre à 16 h"
+            );
+            assert_eq!(
+                format_available_from_near(at, utc("2026-10-18T20:00:00Z"), tz),
+                "demain à 16 h"
+            );
+            assert_eq!(
+                format_available_from_near(at, utc("2026-10-19T06:00:00Z"), tz),
+                "aujourd’hui à 16 h"
+            );
+            // Le 1er, et des minutes.
+            assert_eq!(
+                format_available_from_near(
+                    utc("2026-06-01T14:30:00Z"),
+                    utc("2026-05-01T08:00:00Z"),
+                    tz
+                ),
+                "lundi 1er juin à 16 h 30"
+            );
+        });
+    }
 
     fn utc(s: &str) -> DateTime<Utc> {
         DateTime::parse_from_rfc3339(s)

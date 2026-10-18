@@ -5,7 +5,8 @@ use portaki_sdk::prelude::*;
 
 use crate::config::{ModuleConfig, Network};
 use crate::reveal::{
-    evaluate_reveal, format_available_from, locked_message, RevealDecision, Schedule, SECRET_MASK,
+    evaluate_reveal, format_available_from_near, locked_message, RevealDecision, Schedule,
+    SECRET_MASK,
 };
 
 pub struct GuestData {
@@ -51,8 +52,8 @@ pub fn load_guest_data(ctx: &GuestContext) -> Result<Option<GuestData>> {
         networks,
         locale: ctx.locale.clone(),
         password_revealed: decision.revealed,
-        reveal_locked_message: locked_banner(&decision, &property_timezone, &ctx.locale),
-        reveal_at_label: reveal_at_label(&decision, &property_timezone),
+        reveal_locked_message: locked_banner(&decision, now, &property_timezone, &ctx.locale),
+        reveal_at_label: reveal_at_label(&decision, now, &property_timezone),
     }))
 }
 
@@ -87,6 +88,7 @@ fn property_timezone(ctx: &GuestContext) -> String {
 
 fn locked_banner(
     decision: &RevealDecision,
+    now: chrono::DateTime<chrono::Utc>,
     property_timezone: &str,
     locale: &str,
 ) -> Option<String> {
@@ -95,18 +97,22 @@ fn locked_banner(
     }
     let when = decision
         .available_from
-        .map(|at| format_available_from(at, property_timezone));
+        .map(|at| format_available_from_near(at, now, property_timezone));
     Some(locked_message(when.as_deref(), locale))
 }
 
 /// Quand les secrets s'ouvrent, écrit pour le voyageur. `None` une fois révélés, une fois le séjour
 /// fini, ou sans date calculable — la ligne masquée se passe alors de promesse plutôt que d'en
 /// inventer une.
-fn reveal_at_label(decision: &RevealDecision, property_timezone: &str) -> Option<String> {
+fn reveal_at_label(
+    decision: &RevealDecision,
+    now: chrono::DateTime<chrono::Utc>,
+    property_timezone: &str,
+) -> Option<String> {
     if decision.revealed || decision.ended {
         return None;
     }
     decision
         .available_from
-        .map(|at| format_available_from(at, property_timezone))
+        .map(|at| format_available_from_near(at, now, property_timezone))
 }
