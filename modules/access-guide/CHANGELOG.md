@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.8](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.7...access-guide-v1.10.8) (2026-10-18)
+
+
+### Bug Fixes
+
+* **access-guide:** accept no-parking on first save ([3fbd45b](https://github.com/PortakiApp/portaki-modules/commit/3fbd45bdd5aa40b7b5f7277c2a710695f35a7b38))
+* **access-guide:** write reveal dates in words ([d91ca20](https://github.com/PortakiApp/portaki-modules/commit/d91ca207240fbe1c6257ebd8b487c9f23e0237f6))
+
 ## [1.10.7](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.6...access-guide-v1.10.7) (2026-10-15)
 
 

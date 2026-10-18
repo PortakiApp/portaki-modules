@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.7](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.10.6...wifi-guest-v1.10.7) (2026-10-18)
+
+
+### Bug Fixes
+
+* **wifi-guest:** write reveal dates in words ([e6fbb1e](https://github.com/PortakiApp/portaki-modules/commit/e6fbb1e0589cc24348d57409ce2104595b16c74d))
+
 ## [1.10.6](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.10.5...wifi-guest-v1.10.6) (2026-10-15)
 
 
