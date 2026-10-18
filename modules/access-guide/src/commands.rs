@@ -107,7 +107,7 @@ pub fn on_config_updated(ctx: Context, args: ConfigUpdatedArgs) -> Result<()> {
     })
 }
 
-/// « Changer le code de ce séjour » (`stay-action`) : le code saisi, ou six chiffres tirés au
+/// « Changer le code d'entrée » (`stay-action`) : le code saisi, ou six chiffres tirés au
 /// hasard. `code` vient du formulaire de la modale.
 #[portaki_sdk::wire]
 #[portaki_sdk::params]

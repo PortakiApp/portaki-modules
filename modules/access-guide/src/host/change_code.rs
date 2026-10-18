@@ -1,4 +1,4 @@
-//! Bouton du séjour (spec Accès §1) : « Changer le code de ce séjour ». Le corps de la modale
+//! Bouton du séjour (spec Accès §1) : « Changer le code d'entrée ». Le corps de la modale
 //! seulement — son titre et « Fermer » sont au dashboard. La modale est la confirmation : elle
 //! avertit quand le voyageur voit déjà son code (§5), et un bouton enregistre.
 
