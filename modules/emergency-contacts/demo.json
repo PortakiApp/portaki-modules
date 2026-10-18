@@ -4,13 +4,13 @@
     {
       "i18n": {
         "guest.call": "Appeler",
-        "guest.emergency.message": "En cas d’urgence vitale, composez le 112 ou le 15 (SAMU) selon les consignes locales.",
+        "guest.emergency.message": "En cas d’urgence vitale, composez le 112 : on vous répond en plusieurs langues.",
         "guest.emergency.title": "Urgence vitale",
         "guest.health.onDuty": "Pharmacie de garde",
         "guest.host.label": "Votre hôte",
         "guest.host.outOfHours": "En dehors, appelez le 112 en cas d'urgence.",
         "guest.numbers.fire": "Pompiers",
-        "guest.numbers.general": "Urgences",
+        "guest.numbers.general": "Urgences · multilingue",
         "guest.numbers.medical": "SAMU",
         "guest.numbers.police": "Police",
         "guest.numbers.sms": "Par SMS (sourds, malentendants)"
@@ -209,7 +209,7 @@
         "guest.host.label": "Votre hôte",
         "guest.host.outOfHours": "En dehors, appelez le 112 en cas d'urgence.",
         "guest.numbers.fire": "Pompiers",
-        "guest.numbers.general": "Urgences",
+        "guest.numbers.general": "Urgences · multilingue",
         "guest.numbers.medical": "SAMU",
         "guest.numbers.police": "Police",
         "guest.numbers.sms": "Par SMS (sourds, malentendants)",

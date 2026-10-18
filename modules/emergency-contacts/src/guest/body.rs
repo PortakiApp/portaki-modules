@@ -150,8 +150,8 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
 ///
 /// Elles passent avant les contacts de l'hôte : en urgence, on compose avant de lire. Le premier
 /// porte le ton danger — c'est celui qu'on fait sans savoir lequel faire.
-pub fn country_numbers(locale: &str) -> Component {
-    let tiles: Vec<Component> = crate::numbers::for_locale(locale)
+pub fn country_numbers(timezone: &str) -> Component {
+    let tiles: Vec<Component> = crate::numbers::for_timezone(timezone)
         .iter()
         .map(|number| {
             let mut tile = ListItem::new()

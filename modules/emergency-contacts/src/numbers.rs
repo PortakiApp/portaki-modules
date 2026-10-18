@@ -49,38 +49,35 @@ const FRANCE: &[EmergencyNumber] = &[
     },
 ];
 
-/// Le pays, lu dans le sous-tag de région de la locale du logement (`fr-FR` → `FR`).
+/// Le pays du logement, lu dans son fuseau horaire (`Europe/Paris` → `FR`) ; `None` quand cette
+/// table ne le connaît pas : 112 seul.
 ///
-/// **La locale du logement, jamais celle du lecteur.** Les surfaces passaient `ctx.locale`, qui est
-/// celle du voyageur quand il en a choisi une : un francophone en Espagne recevait le 15 et le 18,
-/// qui ne sonnent nulle part là-bas, et un anglophone en France perdait les deux.
+/// **Le fuseau, jamais une locale.** `ctx.property.locale` n'est pas celle du logement : l'enveloppe
+/// du SDK y recopie la locale de la requête, donc celle du lecteur. Un anglophone en France perdait
+/// le 15, le 17, le 18 et le 114 ; un francophone en Espagne les aurait reçus. Le fuseau, lui, vient
+/// du logement (`ModuleRuntimeInvocationAssembler`).
 ///
-/// ponytail: la locale est ce que le contexte donne ; un vrai code pays sur la propriété serait
-/// plus sûr — un hôte belge qui garde `fr-FR` reçoit les numéros français. Le 112 reste juste
-/// dans les deux cas, et c'est lui qu'on affiche en premier.
-fn region_of(locale: &str) -> Option<&str> {
-    locale.split(['-', '_']).nth(1).filter(|r| r.len() == 2)
-}
-
-/// Le pays du logement quand cette table le connaît (`FR`), sinon `None` : 112 seul.
-pub fn country_of(locale: &str) -> Option<&'static str> {
-    match region_of(locale).map(str::to_ascii_uppercase).as_deref() {
-        Some("FR") => Some("FR"),
+/// ponytail: un fuseau n'est pas un pays — la plateforme met `Europe/Paris` à un logement qui n'en a
+/// pas, et la Belgique a le sien. Un vrai code pays dans le contexte le remplacera ; d'ici là, le
+/// 112 reste juste partout et c'est lui qu'on affiche en premier.
+pub fn country_of(timezone: &str) -> Option<&'static str> {
+    match timezone.trim() {
+        "Europe/Paris" => Some("FR"),
         _ => None,
     }
 }
 
-/// Les numéros à afficher pour ce logement.
-pub fn for_locale(locale: &str) -> &'static [EmergencyNumber] {
-    match country_of(locale) {
+/// Les numéros à afficher pour ce logement, d'après son fuseau.
+pub fn for_timezone(timezone: &str) -> &'static [EmergencyNumber] {
+    match country_of(timezone) {
         Some("FR") => FRANCE,
         _ => std::slice::from_ref(&EU_GENERAL),
     }
 }
 
 /// La pharmacie de garde du pays (spec §2.3) : le 3237 en France, rien ailleurs.
-pub fn on_duty_pharmacy(locale: &str) -> Option<&'static str> {
-    country_of(locale).map(|_| "3237")
+pub fn on_duty_pharmacy(timezone: &str) -> Option<&'static str> {
+    country_of(timezone).map(|_| "3237")
 }
 
 #[cfg(test)]
@@ -89,12 +86,12 @@ mod tests {
 
     #[test]
     fn la_france_porte_ses_cinq_numeros() {
-        let numbers = for_locale("fr-FR");
+        let numbers = for_timezone("Europe/Paris");
         let dialled: Vec<&str> = numbers.iter().map(|n| n.number).collect();
         assert_eq!(dialled, ["112", "15", "17", "18", "114"]);
         assert!(numbers[4].sms, "le 114 se joint par SMS");
-        assert_eq!(on_duty_pharmacy("fr-FR"), Some("3237"));
-        assert_eq!(on_duty_pharmacy("es-ES"), None);
+        assert_eq!(on_duty_pharmacy("Europe/Paris"), Some("3237"));
+        assert_eq!(on_duty_pharmacy("Europe/Madrid"), None);
         assert_eq!(numbers[0].number, "112");
         assert!(
             numbers[0].primary,
@@ -105,16 +102,16 @@ mod tests {
     /// Jamais de numéro inventé : composer un mauvais numéro en urgence coûte des minutes.
     #[test]
     fn un_pays_inconnu_ne_recoit_que_le_112() {
-        for locale in ["es-ES", "de-DE", "ja-JP", "en-US", "xx", ""] {
-            let numbers = for_locale(locale);
-            assert_eq!(numbers.len(), 1, "{locale}");
+        for timezone in [
+            "Europe/Madrid",
+            "Europe/Brussels",
+            "Asia/Tokyo",
+            "fr-FR",
+            "",
+        ] {
+            let numbers = for_timezone(timezone);
+            assert_eq!(numbers.len(), 1, "{timezone}");
             assert_eq!(numbers[0].number, "112");
         }
-    }
-
-    #[test]
-    fn la_region_se_lit_quel_que_soit_le_separateur() {
-        assert_eq!(for_locale("fr_FR").len(), 5);
-        assert_eq!(for_locale("fr-fr").len(), 5);
     }
 }
