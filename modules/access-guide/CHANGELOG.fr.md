@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.10
+
+L'e-mail d'arrivée ne renvoie plus le voyageur au mauvais endroit.
+
+* « le code ci-dessous » devient « le code indiqué dans cet e-mail » : le code est au-dessus du message, le voyageur ne le cherche plus plus bas.
+
 ## 1.10.9
 
 Le bouton qui change le code d'entrée dit enfin ce qu'il fait.
