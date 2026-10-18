@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.9](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.10.8...wifi-guest-v1.10.9) (2026-10-18)
+
+
+### Bug Fixes
+
+* **wifi-guest:** trim SSID and refuse blank ([82c6238](https://github.com/PortakiApp/portaki-modules/commit/82c6238513b27d4a36a4c1f3ad24290b0c6a4b23))
+
 ## [1.10.8](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.10.7...wifi-guest-v1.10.8) (2026-10-18)
 
 

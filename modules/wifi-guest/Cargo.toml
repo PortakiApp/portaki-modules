@@ -1,6 +1,6 @@
 [package]
 name = "wifi-guest"
-version = "1.10.8"
+version = "1.10.9"
 edition.workspace = true
 license.workspace = true
 description = "Portaki guest Wi-Fi module — SSID, password, and reveal timing"
