@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.12
+
+Le code de la porte s'appelle partout « code d'entrée ».
+
+* Les libellés du séjour disent « code d'entrée » : on ne le confond plus avec le lien du voyageur.
+
 ## 1.10.11
 
 La phrase d'arrivée se termine enfin par un point.
