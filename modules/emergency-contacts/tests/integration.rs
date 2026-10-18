@@ -340,7 +340,9 @@ fn a_number_the_host_typed_here_wins_over_the_profile() {
             });
             let json = serde_json::to_string(&render_explore_detail(ctx).expect("detail"))
                 .expect("surface json");
-            assert!(json.contains("+33 6 12 34 56 78"), "{json}");
+            // Lu en paires à la française, composé en E.164.
+            assert!(json.contains("\"06 12 34 56 78\""), "{json}");
+            assert!(json.contains("tel:+33612345678"), "{json}");
             assert!(!json.contains("+33600000000"), "{json}");
         });
 }
@@ -477,7 +479,7 @@ fn placed_places_show_their_distance_from_the_property() {
     // La pharmacie est sur le logement : 50 m, jamais « 0 m ». Le médecin n'a pas de position.
     // (La phrase de l'hôpital, sans numéro, ne se lit pas ici : le `t!` du mock rend la clé seule.)
     assert!(
-        placed.contains("+33 4 93 34 00 00 · guest.distance.metres"),
+        placed.contains("04 93 34 00 00 · guest.distance.metres"),
         "{placed}"
     );
     assert_eq!(placed.matches("guest.distance").count(), 1, "{placed}");

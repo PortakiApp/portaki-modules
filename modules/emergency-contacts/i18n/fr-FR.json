@@ -23,7 +23,7 @@
   "guest.numbers.general": "Urgences",
   "guest.numbers.medical": "SAMU",
   "guest.numbers.police": "Police",
-  "guest.numbers.sms": "Par SMS",
+  "guest.numbers.sms": "Par SMS (sourds, malentendants)",
   "guest.pharmacy.closed": "Fermée",
   "guest.pharmacy.openUntil": "Ouverte jusqu'à {time}",
   "guest.teaser": "Hôte, urgences et numéros utiles",

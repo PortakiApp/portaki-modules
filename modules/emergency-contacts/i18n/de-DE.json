@@ -23,7 +23,7 @@
   "guest.numbers.general": "Notruf",
   "guest.numbers.medical": "Rettungsdienst",
   "guest.numbers.police": "Polizei",
-  "guest.numbers.sms": "Per SMS",
+  "guest.numbers.sms": "Per SMS (gehörlos, schwerhörig)",
   "guest.pharmacy.closed": "Geschlossen",
   "guest.pharmacy.openUntil": "Geöffnet bis {time}",
   "guest.teaser": "Gastgeber, Notruf und nützliche Nummern",

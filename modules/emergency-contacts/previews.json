@@ -13,7 +13,7 @@
         "guest.numbers.general": "Urgences",
         "guest.numbers.medical": "SAMU",
         "guest.numbers.police": "Police",
-        "guest.numbers.sms": "Par SMS",
+        "guest.numbers.sms": "Par SMS (sourds, malentendants)",
         "nav.emergency-contacts": "Urgences & utiles"
       },
       "surfaceId": "explore.detail",
@@ -116,7 +116,7 @@
               }
             ],
             "leading": "users",
-            "subtitle": "+33639981234",
+            "subtitle": "06 39 98 12 34",
             "title": "i18n:guest.host.label",
             "trailing": "i18n:guest.call",
             "type": "ListItem"
@@ -134,7 +134,7 @@
               }
             ],
             "leading": "phone",
-            "subtitle": "+33639980012",
+            "subtitle": "06 39 98 00 12",
             "title": "Paulette, la voisine",
             "trailing": "i18n:guest.call",
             "type": "ListItem"
@@ -152,7 +152,7 @@
               }
             ],
             "leading": "phone",
-            "subtitle": "+33199001234",
+            "subtitle": "01 99 00 12 34",
             "title": "Plombier",
             "trailing": "i18n:guest.call",
             "type": "ListItem"
@@ -170,7 +170,7 @@
               }
             ],
             "leading": "heart-handshake",
-            "subtitle": "+33199005678",
+            "subtitle": "01 99 00 56 78",
             "title": "Pharmacie du Port",
             "trailing": "i18n:guest.call",
             "type": "ListItem"
@@ -181,7 +181,7 @@
               "url": "tel:+33199009012"
             },
             "leading": "heart-handshake",
-            "subtitle": "+33199009012",
+            "subtitle": "01 99 00 90 12",
             "title": "Dr Le Gall",
             "trailing": "i18n:guest.call",
             "type": "ListItem"

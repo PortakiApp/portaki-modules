@@ -23,7 +23,7 @@
   "guest.numbers.general": "Noodgevallen",
   "guest.numbers.medical": "Ambulance",
   "guest.numbers.police": "Politie",
-  "guest.numbers.sms": "Via sms",
+  "guest.numbers.sms": "Via sms (doven, slechthorenden)",
   "guest.pharmacy.closed": "Gesloten",
   "guest.pharmacy.openUntil": "Open tot {time}",
   "guest.teaser": "Gastheer, noodnummers en handige nummers",

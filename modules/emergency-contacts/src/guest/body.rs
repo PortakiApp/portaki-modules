@@ -7,6 +7,31 @@ use portaki_sdk::sdui::primitives::{Grid, InfoBanner, ListItem, Text};
 
 use super::load::GuestData;
 
+/// Le numéro comme on le lit : « 06 12 34 56 78 » pour un français en français, « +33 6 12 34 56
+/// 78 » sinon. Le lien `tel:` garde la forme composable ([`tel_action`]).
+///
+/// ponytail: la France seulement, la seule que le module connaisse (`numbers.rs`). Un autre
+/// indicatif reste tel que l'hôte l'a saisi — il l'a souvent déjà espacé.
+fn display_phone(phone: &str, locale: &str) -> String {
+    let compact = crate::config::compact(phone);
+    let Some(national) = compact
+        .strip_prefix("+33")
+        .filter(|rest| rest.len() == 9 && rest.bytes().all(|b| b.is_ascii_digit()))
+    else {
+        return phone.trim().to_string();
+    };
+    let pairs = national.as_bytes()[1..]
+        .chunks(2)
+        .map(|pair| std::str::from_utf8(pair).unwrap_or_default())
+        .collect::<Vec<_>>()
+        .join(" ");
+    if locale.to_ascii_lowercase().starts_with("fr") {
+        format!("0{} {pairs}", &national[..1])
+    } else {
+        format!("+33 {} {pairs}", &national[..1])
+    }
+}
+
 fn tel_action(phone: &str) -> Action {
     let tel = phone.replace(|c: char| c.is_whitespace(), "");
     Action::external(format!("tel:{tel}"))
@@ -28,7 +53,7 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
         // un `Pressable` enveloppant ajoutait un niveau que rien ne lit.
         let mut host = ListItem::new()
             .title("i18n:guest.host.label")
-            .subtitle(data.host_phone.clone())
+            .subtitle(display_phone(&data.host_phone, &data.locale))
             // L'hôte mène par son pictogramme, comme chaque rangée de la maquette : c'est la
             // ligne qu'on cherche en premier, et c'était la seule sans repère.
             .leading(Leading::Icon("users".into()))
@@ -53,7 +78,7 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
         let label = contact.label.get(&data.locale);
         let mut item = ListItem::new()
             .title(label)
-            .subtitle(contact.phone.clone())
+            .subtitle(display_phone(&contact.phone, &data.locale))
             .trailing(Trailing::Text("i18n:guest.call".into()));
         // Sans catégorie, le combiné : une liste où une rangée sur deux porte un repère se lit
         // de travers, et un numéro de téléphone sous une icône de téléphone ne dit rien de faux.
@@ -81,8 +106,8 @@ pub fn build_contacts_body(data: &GuestData, show_emergency_banner: bool) -> Vec
         let mut item = ListItem::new()
             .title(title)
             .subtitle(match distance {
-                Some(distance) => format!("{phone} · {distance}"),
-                None => phone.clone(),
+                Some(distance) => format!("{} · {distance}", display_phone(phone, &data.locale)),
+                None => display_phone(phone, &data.locale),
             })
             .leading(Leading::Icon("heart-handshake".into()))
             .trailing(Trailing::Text("i18n:guest.call".into()));
@@ -153,4 +178,23 @@ pub fn country_numbers(locale: &str) -> Component {
         .collect();
 
     Component::Grid(Grid::new().minColumnWidth(90.0).plain(true).children(tiles))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::display_phone;
+
+    #[test]
+    fn a_french_number_reads_in_pairs() {
+        assert_eq!(display_phone("+33612345678", "fr-FR"), "06 12 34 56 78");
+        assert_eq!(display_phone("+33 6 12 34 56 78", "fr"), "06 12 34 56 78");
+        assert_eq!(display_phone("+33612345678", "en-US"), "+33 6 12 34 56 78");
+        assert_eq!(display_phone("+33493123456", "de-DE"), "+33 4 93 12 34 56");
+        // Ni français ni court : tel que saisi.
+        assert_eq!(
+            display_phone(" +44 20 7946 0958 ", "fr-FR"),
+            "+44 20 7946 0958"
+        );
+        assert_eq!(display_phone("3237", "fr-FR"), "3237");
+    }
 }
