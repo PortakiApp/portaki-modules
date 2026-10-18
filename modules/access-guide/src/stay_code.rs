@@ -5,7 +5,7 @@
 //!
 //! Aucun code n'est inventé au premier affichage : une boîte à clés ou un digicode ne connaît que
 //! le code que l'hôte y a programmé. Sans code, le voyageur lit « Votre hôte vous communiquera le
-//! code » et l'hôte a sa tâche « Code manquant » (§9 cas 2).
+//! code » et l'hôte a sa tâche « Code d'entrée manquant » (§9 cas 2).
 
 use portaki_sdk::host::{random, stay_secrets};
 use portaki_sdk::prelude::*;

@@ -34,7 +34,7 @@ const STEP_SLOTS: usize = crate::config::MAX_STEPS;
 const DEFAULT_DESK_HOURS: &str = "mon=07:00-22:00;tue=07:00-22:00;wed=07:00-22:00;\
 thu=07:00-22:00;fri=07:00-22:00;sat=07:00-22:00;sun=07:00-22:00";
 
-// « Code manquant · séjour de Marie · arrivée dans 2 j » dans À venir : `crate::tasks`.
+// « Code d'entrée manquant · séjour de Marie · arrivée dans 2 j » dans À venir : `crate::tasks`.
 #[portaki_sdk::nav(
     placement = HostPlacement::WorkspaceTimelineTask,
     path = "tasks",

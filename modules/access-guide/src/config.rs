@@ -481,7 +481,7 @@ impl ModuleConfig {
     /// un module émet ses codes elle-même ; le code de secours n'est qu'un repli.
     pub fn entry_code_missing(&self) -> bool {
         match &self.method {
-            // Le code fixe n'est pas attendu : chaque séjour a le sien (tâche « Code manquant »).
+            // Le code fixe n'est pas attendu : chaque séjour a le sien (tâche « Code d'entrée manquant »).
             _ if self.code_per_stay => false,
             MethodFields::Keybox { .. } => self.keybox_code().is_none(),
             MethodFields::DoorCode { code, .. } => code.trim().is_empty(),

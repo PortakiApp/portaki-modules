@@ -1471,7 +1471,7 @@ fn a_missing_code_is_a_task_for_each_arrival_to_come() {
     let tasks = missing_code_tasks(&missing, &args, now, "Europe/Paris");
     assert_eq!(tasks.len(), 1);
     assert_eq!(tasks[0].stay_id, Some(args.stays[1].id));
-    assert_eq!(tasks[0].title.get("fr"), "Code manquant");
+    assert_eq!(tasks[0].title.get("fr"), "Code d'entrée manquant");
     assert_eq!(
         tasks[0].context.get("fr"),
         "Séjour de Marie · arrivée dans 2 j"

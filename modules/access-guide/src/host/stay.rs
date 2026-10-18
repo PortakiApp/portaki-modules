@@ -1,5 +1,5 @@
 //! L'encart du séjour (spec Accès §1) : « Boîte à clés · codes révélés le 23/08/2026 à 16:00 »,
-//! ou « Code manquant » quand la méthode en demande un et que l'hôte ne l'a pas saisi. Le code
+//! ou « Code d'entrée manquant » quand la méthode en demande un et que l'hôte ne l'a pas saisi. Le code
 //! fixe n'y est jamais ; le code « À chaque séjour » oui — c'est ici que l'hôte le retrouve.
 
 use chrono::{DateTime, Utc};

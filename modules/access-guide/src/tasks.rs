@@ -1,4 +1,4 @@
-//! « Code manquant · séjour de Marie · arrivée dans 2 j » (spec Accès §1, §9 cas 1–2) et
+//! « Code d'entrée manquant · séjour de Marie · arrivée dans 2 j » (spec Accès §1, §9 cas 1–2) et
 //! « Changer le code de la boîte à clés · après le départ du 29/08 » (§2.2) : `timelineTasks`,
 //! `taskToggle`, `taskComplete`. Calculées, jamais stockées.
 //!
