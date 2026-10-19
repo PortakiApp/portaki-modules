@@ -1,4 +1,4 @@
--- rules: the collections the SDK stores (#[collection]) — written by portaki build.
+-- rules: the collections and records the SDK stores — written by portaki build.
 
 CREATE SCHEMA IF NOT EXISTS module_rules;
 
@@ -8,9 +8,13 @@ CREATE TABLE IF NOT EXISTS module_rules.portaki_resource (
     resource TEXT NOT NULL,
     rows_json TEXT NOT NULL DEFAULT '[]',
     meta_json TEXT NOT NULL DEFAULT '{}',
+    stay_id UUID,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS portaki_resource_property_resource_idx
+CREATE INDEX IF NOT EXISTS portaki_resource_property_resource_idx
     ON module_rules.portaki_resource (property_id, resource);
+
+CREATE INDEX IF NOT EXISTS portaki_resource_stay_idx
+    ON module_rules.portaki_resource (stay_id);
