@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.10](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.9.9...emergency-contacts-v1.9.10) (2026-10-19)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.15.0 ([11e0c9a](https://github.com/PortakiApp/portaki-modules/commit/11e0c9a8bba0ab0fb79270ad0d28731f1dc5daaa))
+* **emergency-contacts:** numbers from property country ([e89818d](https://github.com/PortakiApp/portaki-modules/commit/e89818d3487e83f7819c3d2d52eeba7c2fccda77))
+
 ## [1.9.9](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.9.8...emergency-contacts-v1.9.9) (2026-10-18)
 
 
