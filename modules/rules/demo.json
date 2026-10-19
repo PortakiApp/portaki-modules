@@ -2,7 +2,12 @@
   "locale": "fr-FR",
   "surfaces": [
     {
-      "i18n": {},
+      "i18n": {
+        "rule.theme.noise": "Bruit",
+        "rule.theme.parties": "Fêtes",
+        "rule.theme.pets": "Animaux",
+        "rule.theme.smoking": "Tabac"
+      },
       "labelKey": "nav.rules",
       "path": "rules",
       "surfaceId": "explore.detail",
@@ -19,7 +24,7 @@
                 "children": [
                   {
                     "leading": "clock-circle",
-                    "subtitle": "Merci de penser au voisinage",
+                    "subtitle": "Merci de penser au voisinage · 22:00 – 08:00",
                     "title": "Calme après 22 h",
                     "trailing": {
                       "badge": {
@@ -36,7 +41,7 @@
             ],
             "icon": "scale",
             "surface": "elevated",
-            "title": "Voisinage",
+            "title": "i18n:rule.theme.noise",
             "type": "Card"
           },
           {
@@ -54,14 +59,28 @@
                       }
                     },
                     "type": "ListItem"
-                  },
+                  }
+                ],
+                "gap": 0.0,
+                "type": "Stack"
+              }
+            ],
+            "icon": "scale",
+            "surface": "elevated",
+            "title": "i18n:rule.theme.smoking",
+            "type": "Card"
+          },
+          {
+            "children": [
+              {
+                "children": [
                   {
                     "leading": "users",
                     "title": "Pas de fête ni d'événement",
                     "trailing": {
                       "badge": {
-                        "label": "Important",
-                        "tone": "warning"
+                        "label": "Interdit",
+                        "tone": "neutral"
                       }
                     },
                     "type": "ListItem"
@@ -73,7 +92,7 @@
             ],
             "icon": "scale",
             "surface": "elevated",
-            "title": "Logement",
+            "title": "i18n:rule.theme.parties",
             "type": "Card"
           },
           {
@@ -81,7 +100,7 @@
               {
                 "children": [
                   {
-                    "leading": "check-circle",
+                    "leading": "gift",
                     "subtitle": "Prévenez-nous avant votre arrivée",
                     "title": "Animaux bienvenus",
                     "trailing": {
@@ -99,7 +118,7 @@
             ],
             "icon": "scale",
             "surface": "elevated",
-            "title": "Animaux",
+            "title": "i18n:rule.theme.pets",
             "type": "Card"
           },
           {
@@ -107,7 +126,7 @@
               {
                 "children": [
                   {
-                    "leading": "clock-circle",
+                    "leading": "check-circle",
                     "subtitle": "Laissez les clés sur la table de la cuisine",
                     "title": "Départ avant 10 h",
                     "type": "ListItem"
@@ -117,9 +136,7 @@
                 "type": "Stack"
               }
             ],
-            "icon": "scale",
             "surface": "elevated",
-            "title": "Départ",
             "type": "Card"
           }
         ],
@@ -145,7 +162,7 @@
         "children": [
           {
             "leading": "clock-circle",
-            "subtitle": "Merci de penser au voisinage",
+            "subtitle": "Merci de penser au voisinage · 22:00 – 08:00",
             "title": "Calme après 22 h",
             "trailing": {
               "badge": {
@@ -172,14 +189,14 @@
             "title": "Pas de fête ni d'événement",
             "trailing": {
               "badge": {
-                "label": "Important",
-                "tone": "warning"
+                "label": "Interdit",
+                "tone": "neutral"
               }
             },
             "type": "ListItem"
           },
           {
-            "leading": "check-circle",
+            "leading": "gift",
             "subtitle": "Prévenez-nous avant votre arrivée",
             "title": "Animaux bienvenus",
             "trailing": {

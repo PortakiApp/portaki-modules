@@ -52,3 +52,10 @@ extism-pdk = "1.4"
 opt-level = "s"
 lto = true
 codegen-units = 1
+
+# Preuve SDK 11 (PREUVE-SDK11.md) : le SDK de la branche feat/sdk11-resources, jamais publié.
+[patch.crates-io]
+portaki-sdk = { path = "../portaki-sdk-sdk11/crates/portaki-sdk" }
+portaki-sdk-macros = { path = "../portaki-sdk-sdk11/crates/portaki-sdk-macros" }
+portaki-test-utils = { path = "../portaki-sdk-sdk11/crates/portaki-test-utils" }
+portaki-connectors = { path = "../portaki-sdk-sdk11/crates/portaki-connectors" }

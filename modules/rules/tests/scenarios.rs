@@ -1,41 +1,21 @@
 //! Les sept cas pathologiques de la sandbox — voir `support/scenarios.rs`.
 
+mod sample;
+
+use rules as _; // lie la crate : ses déclarations sont ce que les scénarios parcourent
 #[path = "../../../support/scenarios.rs"]
 mod scenarios;
 
-use portaki_test_utils::MockContextBuilder;
-use rules::{reset_test_store, save_content, SaveContentArgs};
-use serde_json::json;
-
-/// Le règlement type d'une location de vacances.
-fn setup(builder: MockContextBuilder) -> MockContextBuilder {
-    reset_test_store();
-    builder.clone().run(|ctx| {
-        let content_fr = json!({
-            "items": [
-                { "icon": "clock-circle", "title": "Calme après 22 h", "subtitle": "Merci de penser au voisinage", "status": "important", "theme": "Voisinage" },
-                { "icon": "x", "title": "Logement non-fumeur", "subtitle": "", "status": "important", "theme": "Logement" },
-                { "icon": "check-circle", "title": "Animaux bienvenus", "subtitle": "Prévenez-nous avant votre arrivée", "status": "allowed", "theme": "Animaux" }
-            ]
-        });
-        let args = SaveContentArgs {
-            rules: None,
-            card_limit: None,
-            items: Vec::new(),
-            content_fr: content_fr.to_string(),
-            content_en: String::new(),
-        };
-        save_content(ctx, args).expect("save");
-    });
-    builder
-}
-
 #[test]
 fn every_surface_holds_on_every_case() {
-    scenarios::check_surfaces(env!("CARGO_MANIFEST_DIR"), setup);
+    scenarios::check_surfaces(env!("CARGO_MANIFEST_DIR"), sample::seeded);
 }
 
 #[test]
 fn every_example_runs() {
-    scenarios::check_examples(concat!(env!("OUT_DIR"), "/portaki-emissions"), setup, &[]);
+    scenarios::check_examples(
+        concat!(env!("OUT_DIR"), "/portaki-emissions"),
+        sample::seeded,
+        &[],
+    );
 }

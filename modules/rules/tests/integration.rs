@@ -1,857 +1,100 @@
-//! Integration-style unit tests with `portaki-test-utils`.
+//! Ce que le règlement fait de plus que la collection du SDK : la carte, la page, le modèle,
+//! l'éditeur, les e-mails. La fusion, l'import et les contrôles sont ceux du SDK, testés là-bas.
 
-#![allow(clippy::disallowed_methods)] // tests natifs : l'horloge du système y est disponible
+mod sample;
 
-use chrono::Utc;
-use portaki_sdk::capability;
-use serial_test::serial;
-use uuid::Uuid;
-
-use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
+use portaki_sdk::prelude::*;
+use portaki_test_utils::{MockContext, SurfaceAssertions};
+use rules::{apply_template, render_explore_detail, render_home_card, render_host_main, Rules};
 use serde_json::json;
 
-use rules::{
-    apply_template, get_content, publish_readiness, render_explore_detail, render_home_card,
-    render_host_main, reset_test_store, save_content, update_config, ApplyTemplateArgs,
-    GetContentArgs, RuleItemInput, RuleSlot, RulesContent, SaveContentArgs,
-};
-
-fn sample_payload() -> String {
-    json!({
-        "items": [
-            {"icon": "clock-circle", "title": "Calme après 22 h", "subtitle": "Merci pour le voisinage"},
-            {"icon": "x", "title": "Logement non-fumeur", "subtitle": "Terrasse autorisée"},
-            {"icon": "users", "title": "Pas de fête ni d'événement", "subtitle": ""},
-            {"icon": "check-circle", "title": "Animaux bienvenus", "subtitle": "Prévenez-nous"}
-        ]
-    })
-    .to_string()
+#[test]
+fn the_home_card_lists_the_first_rules_and_offers_the_rest() {
+    let surface = sample::seeded(MockContext::guest()).run(|ctx| render_home_card(ctx).unwrap());
+    let tree = serde_json::to_value(&surface).unwrap().to_string();
+    assert_eq!(SurfaceAssertions::new(&surface).count_type("ListItem"), 4);
+    assert!(
+        tree.contains("Calme après 22 h") && tree.contains("22:00 – 08:00"),
+        "{tree}"
+    );
+    assert!(
+        SurfaceAssertions::new(&surface).contains_type("Button"),
+        "five rules, four shown"
+    );
 }
 
 #[test]
-#[serial]
-fn home_card_renders_empty_without_content() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            let surface = render_home_card(ctx).expect("render");
-            assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
-        });
+fn the_card_limit_is_the_hosts() {
+    let surface = MockContext::guest()
+        .with_resource("rules", sample::rules(), json!({ "card_limit": 2 }))
+        .run(|ctx| render_home_card(ctx).unwrap());
+    assert_eq!(SurfaceAssertions::new(&surface).count_type("ListItem"), 2);
 }
 
 #[test]
-#[serial]
-fn home_card_renders_list_items_with_content() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            save_content(
-                ctx.clone(),
-                SaveContentArgs {
-                    rules: None,
-                    card_limit: None,
-                    items: Vec::new(),
-                    content_fr: sample_payload(),
-                    content_en: sample_payload(),
-                },
-            )
-            .expect("save");
-            let surface = render_home_card(ctx).expect("render");
-            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
-        });
-}
-
-/// Six règles : la carte en montre quatre et propose le reste (§2.8).
-#[test]
-#[serial]
-fn the_card_offers_the_rules_it_does_not_show() {
-    reset_test_store();
-    let six = json!({
-        "items": [
-            {"icon": "clock-circle", "title": "Calme après 22 h"},
-            {"icon": "x", "title": "Logement non-fumeur"},
-            {"icon": "users", "title": "Pas de fête"},
-            {"icon": "check-circle", "title": "Animaux bienvenus"},
-            {"icon": "key", "title": "Rendre les clés avant 11 h"},
-            {"icon": "trash", "title": "Sortir les poubelles le mardi"}
-        ]
-    })
-    .to_string();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            save_content(
-                ctx.clone(),
-                SaveContentArgs {
-                    rules: None,
-                    card_limit: None,
-                    items: Vec::new(),
-                    content_fr: six.clone(),
-                    content_en: six.clone(),
-                },
-            )
-            .expect("save");
-            let surface = render_home_card(ctx).expect("render");
-            let json = serde_json::to_string(&surface).expect("json");
-
-            assert!(json.contains("Calme après 22 h"));
-            // La cinquième et la sixième attendent dans la page.
-            assert!(!json.contains("Rendre les clés"), "{json}");
-            assert!(
-                SurfaceAssertions::new(&surface).contains_type("Button"),
-                "{json}"
-            );
-        });
-}
-
-/// Quatre règles ou moins : pas de bouton. Il ouvrirait une page identique à la carte (§2.8).
-#[test]
-#[serial]
-fn no_button_when_the_card_already_shows_every_rule() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            save_content(
-                ctx.clone(),
-                SaveContentArgs {
-                    rules: None,
-                    card_limit: None,
-                    items: Vec::new(),
-                    content_fr: sample_payload(),
-                    content_en: sample_payload(),
-                },
-            )
-            .expect("save");
-            let surface = render_home_card(ctx).expect("render");
-
-            assert!(!SurfaceAssertions::new(&surface).contains_type("Button"));
-        });
+fn the_page_groups_by_theme_in_the_hosts_order() {
+    let surface =
+        sample::seeded(MockContext::guest()).run(|ctx| render_explore_detail(ctx).unwrap());
+    let tree = serde_json::to_value(&surface).unwrap().to_string();
+    assert!(
+        tree.contains("rule.theme.noise") && tree.contains("rule.theme.pets"),
+        "{tree}"
+    );
+    assert_eq!(SurfaceAssertions::new(&surface).count_type("ListItem"), 5);
 }
 
 #[test]
-#[serial]
-fn explore_detail_renders_full_list() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            save_content(
-                ctx.clone(),
-                SaveContentArgs {
-                    rules: None,
-                    card_limit: None,
-                    items: Vec::new(),
-                    content_fr: sample_payload(),
-                    content_en: sample_payload(),
-                },
-            )
-            .expect("save");
-            let surface = render_explore_detail(ctx).expect("render");
-            assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("Stack"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("ListItem"));
-            let json = serde_json::to_string(&surface).expect("json");
-            assert!(json.contains("Calme après 22 h"));
-        });
+fn no_rule_is_the_empty_state() {
+    let surface = MockContext::guest().run(|ctx| render_home_card(ctx).unwrap());
+    assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
 }
 
 #[test]
-#[serial]
-fn get_content_returns_saved_items() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            save_content(
-                ctx.clone(),
-                SaveContentArgs {
-                    rules: None,
-                    card_limit: None,
-                    items: Vec::new(),
-                    content_fr: sample_payload(),
-                    content_en: String::new(),
-                },
-            )
-            .expect("save");
-            let view = get_content(
-                ctx,
-                GetContentArgs {
-                    locale: Some("fr-FR".into()),
-                },
-            )
-            .expect("get");
-            assert_eq!(view.items.len(), 4);
-            assert_eq!(view.items[0].title, "Calme après 22 h");
-        });
-}
-
-#[test]
-#[serial]
-fn host_main_is_a_sortable_table_in_two_sections() {
-    reset_test_store();
-    MockContext::host()
-        .with_property(Property::default())
-        .run(|ctx| {
-            let surface = render_host_main(ctx);
-            assert!(SurfaceAssertions::new(&surface).contains_type("Section"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("DataTable"));
-            assert!(SurfaceAssertions::new(&surface).contains_type("Form"));
-            let json = serde_json::to_string(&surface).expect("json");
-            for needle in [
-                r#""sortable":true"#,
-                r#""panel":"dialog""#,
-                r#""dividerAfter":4"#,
-                "host.rules.divider",
-                "host.rules.add",
-                // Vide : « Partir d'un modèle ».
-                r#""name":"applyTemplate""#,
-            ] {
-                assert!(json.contains(needle), "{needle} absent : {json}");
-            }
-        });
-}
-
-#[test]
-#[serial]
-fn update_config_persists_items_for_locale() {
-    reset_test_store();
-    MockContext::host()
-        .with_property(Property::default())
-        .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                SaveContentArgs {
-                    rules: None,
-                    card_limit: None,
-                    items: vec![RuleItemInput {
-                        icon: "clock-circle".into(),
-                        title: "Calme après 22 h".into(),
-                        subtitle: "Merci pour le voisinage".into(),
-                        ..Default::default()
-                    }],
-                    content_fr: String::new(),
-                    content_en: String::new(),
-                },
-            )
-            .expect("updateConfig");
-            let view = get_content(
-                ctx,
-                GetContentArgs {
-                    locale: Some("fr-FR".into()),
-                },
-            )
-            .expect("get");
-            assert_eq!(view.items.len(), 1);
-            assert_eq!(view.items[0].title, "Calme après 22 h");
-        });
-}
-
-#[test]
-#[serial]
-fn seed_row_shape_matches_entity() {
-    let now = Utc::now();
-    let row = RulesContent {
-        id: Uuid::new_v4(),
-        content_fr: sample_payload(),
-        content_en: String::new(),
-        created_at: now,
-        updated_at: now,
-    };
-    assert!(!row.content_fr.is_empty());
-}
-
-#[test]
-#[serial]
-fn publish_readiness_requires_one_rule() {
-    reset_test_store();
-    MockContext::host()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            assert!(
-                !publish_readiness(ctx.clone())
-                    .expect("publishReadiness")
-                    .items[0]
-                    .ok
-            );
-            save_content(
-                ctx.clone(),
-                SaveContentArgs {
-                    rules: None,
-                    card_limit: None,
-                    items: Vec::new(),
-                    content_fr: sample_payload(),
-                    content_en: String::new(),
-                },
-            )
-            .expect("save");
-            assert!(publish_readiness(ctx).expect("publishReadiness").items[0].ok);
-        });
-}
-
-/// La carte montre les premières, dans l'ordre de l'hôte (§2.2) : une règle importante posée en
-/// cinquième position attend dans la page.
-#[test]
-#[serial]
-fn the_card_shows_the_first_rules_in_the_host_order() {
-    reset_test_store();
-    let five = json!({
-        "items": [
-            {"icon": "x", "title": "Pas de chaussures à l'intérieur"},
-            {"icon": "users", "title": "Visiteurs en journée seulement"},
-            {"icon": "minus", "title": "Barbecue à éteindre après usage"},
-            {"icon": "check-circle", "title": "Vélos au garage"},
-            {"icon": "clock-circle", "title": "Calme après 22 h", "status": "important"}
-        ]
-    })
-    .to_string();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            save_content(
-                ctx.clone(),
-                SaveContentArgs {
-                    rules: None,
-                    card_limit: None,
-                    items: Vec::new(),
-                    content_fr: five.clone(),
-                    content_en: String::new(),
-                },
-            )
-            .expect("save");
-            let surface = render_home_card(ctx).expect("render");
-            let json = serde_json::to_string(&surface).expect("json");
-
-            assert!(json.contains("Vélos au garage"), "{json}");
-            assert!(!json.contains("Calme après 22 h"), "{json}");
-        });
-}
-
-/// Les étiquettes : warning « Important », success « Autorisé », et rien du tout sur une neutre —
-/// une étiquette « Normal » partout affaiblirait les deux autres (§2.8).
-#[test]
-#[serial]
-fn only_important_and_allowed_rules_wear_a_badge() {
-    reset_test_store();
-    let three = json!({
-        "items": [
-            {"icon": "clock-circle", "title": "Calme après 22 h", "status": "important"},
-            {"icon": "check-circle", "title": "Animaux bienvenus", "status": "allowed"},
-            {"icon": "users", "title": "Six personnes maximum"}
-        ]
-    })
-    .to_string();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            save_content(
-                ctx.clone(),
-                SaveContentArgs {
-                    rules: None,
-                    card_limit: None,
-                    items: Vec::new(),
-                    content_fr: three.clone(),
-                    content_en: String::new(),
-                },
-            )
-            .expect("save");
-            let tree = serde_json::to_value(render_home_card(ctx).expect("render")).expect("json");
-            let rows = find_list_items(&tree);
-            assert_eq!(rows.len(), 3, "{tree}");
-
-            let badge = |row: &serde_json::Value| -> Option<(String, String)> {
-                let b = row.get("trailing")?.get("badge")?;
-                Some((
-                    b.get("label")?.as_str()?.to_string(),
-                    b.get("tone")?.as_str()?.to_string(),
-                ))
-            };
-            // Le libellé passe par `t!`, donc il vaut la clé tant qu'aucun bundle n'est chargé —
-            // c'est `previews.json` qui vérifie le texte rendu. Ici c'est le ton qui compte.
-            assert_eq!(
-                badge(&rows[0]),
-                Some(("rule.status.important".into(), "warning".into())),
-                "{tree}"
-            );
-            assert_eq!(
-                badge(&rows[1]),
-                // Jamais vert pour « Autorisé » (spec Règlement §2.2).
-                Some(("rule.status.allowed".into(), "neutral".into())),
-                "{tree}"
-            );
-            assert_eq!(badge(&rows[2]), None, "{tree}");
-        });
-}
-
-/// Le détail groupe par thème, dans l'ordre où l'hôte a posé les règles ; un thème unique ne vaut
-/// pas un en-tête (§2.8).
-#[test]
-#[serial]
-fn the_detail_groups_by_theme_but_not_when_there_is_only_one() {
-    reset_test_store();
-    let grouped = json!({
-        "items": [
-            {"icon": "clock-circle", "title": "Calme après 22 h", "theme": "Voisinage"},
-            {"icon": "x", "title": "Pas de verre au bord du bassin", "theme": "Piscine"},
-            {"icon": "sun", "title": "Piscine de 8 h à 20 h", "theme": "piscine"}
-        ]
-    })
-    .to_string();
-    let single = json!({
-        "items": [
-            {"icon": "clock-circle", "title": "Calme après 22 h", "theme": "Voisinage"},
-            {"icon": "users", "title": "Six personnes maximum", "theme": "Voisinage"}
-        ]
-    })
-    .to_string();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            save_content(
-                ctx.clone(),
-                SaveContentArgs {
-                    rules: None,
-                    card_limit: None,
-                    items: Vec::new(),
-                    content_fr: grouped.clone(),
-                    content_en: String::new(),
-                },
-            )
-            .expect("save");
-            let json = serde_json::to_string(&render_explore_detail(ctx.clone()).expect("render"))
-                .unwrap();
-            // Deux thèmes, deux cartes titrées — et « piscine » rejoint « Piscine ».
-            assert!(json.contains("\"title\":\"Voisinage\""), "{json}");
-            assert_eq!(json.matches("\"title\":\"Piscine\"").count(), 1, "{json}");
-            assert!(!json.contains("\"title\":\"piscine\""), "{json}");
-
-            save_content(
-                ctx.clone(),
-                SaveContentArgs {
-                    rules: None,
-                    card_limit: None,
-                    items: Vec::new(),
-                    content_fr: single.clone(),
-                    content_en: String::new(),
-                },
-            )
-            .expect("save");
-            let json = serde_json::to_string(&render_explore_detail(ctx).expect("render")).unwrap();
-            assert!(
-                !json.contains("Voisinage"),
-                "un seul thème, pas d'en-tête : {json}"
-            );
-        });
-}
-
-/// Le statut ne dépend pas de la langue : l'hôte qui marque une règle importante en français la
-/// retrouve importante en anglais, sinon le voyageur anglophone lit un règlement plus mou.
-#[test]
-#[serial]
-fn the_status_follows_the_rule_into_every_language() {
-    reset_test_store();
-    let bilingual = json!({
-        "items": [
-            {"icon": "clock-circle", "title": "Calme après 22 h"},
-            {"icon": "check-circle", "title": "Animaux bienvenus"}
-        ]
-    })
-    .to_string();
-    let en = json!({
-        "items": [
-            {"icon": "clock-circle", "title": "Quiet after 10 pm"},
-            {"icon": "check-circle", "title": "Pets welcome"}
-        ]
-    })
-    .to_string();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            save_content(
-                ctx.clone(),
-                SaveContentArgs {
-                    rules: None,
-                    card_limit: None,
-                    items: Vec::new(),
-                    content_fr: bilingual.clone(),
-                    content_en: en.clone(),
-                },
-            )
-            .expect("save");
-            // L'hôte repasse en français et pose les statuts.
-            save_content(
-                ctx.clone(),
-                SaveContentArgs {
-                    rules: None,
-                    card_limit: None,
-                    items: vec![
-                        RuleItemInput {
-                            icon: "clock-circle".into(),
-                            title: "Calme après 22 h".into(),
-                            status: "important".into(),
-                            theme: "Voisinage".into(),
-                            ..RuleItemInput::default()
-                        },
-                        RuleItemInput {
-                            icon: "check-circle".into(),
-                            title: "Animaux bienvenus".into(),
-                            status: "allowed".into(),
-                            theme: "Animaux".into(),
-                            ..RuleItemInput::default()
-                        },
-                    ],
-                    content_fr: String::new(),
-                    content_en: String::new(),
-                },
-            )
-            .expect("save");
-
-            let view = get_content(
-                ctx,
-                GetContentArgs {
-                    locale: Some("en-US".into()),
-                },
-            )
-            .expect("view");
-            assert_eq!(view.items[0].title, "Quiet after 10 pm");
-            assert_eq!(view.items[0].status, rules::RuleStatus::Important);
-            assert_eq!(view.items[1].status, rules::RuleStatus::Allowed);
-            // Le thème, lui, est un texte : il reste dans la langue où il a été écrit.
-            assert!(view.items[0].theme.is_empty(), "{:?}", view.items[0]);
-        });
-}
-
-/// Un hôte qui n'a rangé qu'une partie de ses règles garde son groupement, et le reste se lit à la
-/// fin — jamais un bloc sans titre coincé entre deux blocs titrés, ni en tête de page.
-#[test]
-#[serial]
-fn unthemed_rules_close_the_detail_instead_of_breaking_it_up() {
-    reset_test_store();
-    let mixed = json!({
-        "items": [
-            {"icon": "clock-circle", "title": "Calme après 22 h", "theme": "Voisinage"},
-            {"icon": "users", "title": "Six personnes maximum"},
-            {"icon": "sun", "title": "Piscine de 8 h à 20 h", "theme": "Piscine"}
-        ]
-    })
-    .to_string();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            save_content(
-                ctx.clone(),
-                SaveContentArgs {
-                    rules: None,
-                    card_limit: None,
-                    items: Vec::new(),
-                    content_fr: mixed.clone(),
-                    content_en: String::new(),
-                },
-            )
-            .expect("save");
-            let json = serde_json::to_string(&render_explore_detail(ctx).expect("render")).unwrap();
-
-            // Jamais de carte sans titre au milieu : la règle sans thème ferme la page.
-            let voisinage = json.find("Voisinage").expect("Voisinage");
-            let piscine = json.find("Piscine de 8 h").expect("Piscine");
-            let sans_theme = json.find("Six personnes maximum").expect("sans thème");
-            assert!(voisinage < piscine, "{json}");
-            assert!(piscine < sans_theme, "{json}");
-        });
-}
-
-/// Toutes les `ListItem` d'un arbre rendu, dans l'ordre.
-fn find_list_items(node: &serde_json::Value) -> Vec<serde_json::Value> {
-    let mut out = Vec::new();
-    if node.get("type").and_then(|t| t.as_str()) == Some("ListItem") {
-        out.push(node.clone());
-    }
-    match node {
-        serde_json::Value::Object(map) => {
-            for value in map.values() {
-                out.extend(find_list_items(value));
-            }
-        }
-        serde_json::Value::Array(items) => {
-            for value in items {
-                out.extend(find_list_items(value));
-            }
-        }
-        _ => {}
-    }
-    out
-}
-
-/// Le dialogue d'une règle porte le type, le thème et les heures (§2.2) — ici sur le modèle.
-#[test]
-#[serial]
-fn host_rows_carry_status_and_theme() {
-    reset_test_store();
-    MockContext::host()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            apply_template(ctx.clone(), ApplyTemplateArgs {}).expect("template");
-            let surface = render_host_main(ctx);
-            let json = serde_json::to_string(&surface).expect("json");
-            assert!(json.contains("rules.0.status"), "{json}");
-            assert!(json.contains("rules.0.theme"), "{json}");
-            assert!(json.contains("rule.status.important"), "{json}");
-            assert!(json.contains("rule.theme.noise"), "{json}");
-            assert!(
-                json.contains(r#""type":"TimeRange","name":"rules.0.hours","value":"22:00-08:00""#),
-                "{json}"
-            );
-            assert!(json.contains(r#""name":"card_limit""#), "{json}");
-        });
-}
-
-/// Une précision sans titre n'est plus écartée en silence : la ligne reste, « Écrivez la règle. »
-/// sous son titre, et la publication attend. Une ligne vidée, elle, s'en va sans erreur (§2.2).
-#[test]
-#[serial]
-fn a_detail_without_a_title_keeps_its_row_and_its_error() {
-    reset_test_store();
-    MockContext::host()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                SaveContentArgs {
-                    rules: None,
-                    card_limit: None,
-                    items: vec![
-                        RuleItemInput {
-                            title: "Pas de fête".into(),
-                            ..Default::default()
-                        },
-                        RuleItemInput {
-                            subtitle: "Merci pour le voisinage".into(),
-                            ..Default::default()
-                        },
-                        RuleItemInput::default(),
-                    ],
-                    content_fr: String::new(),
-                    content_en: String::new(),
-                },
-            )
-            .expect("updateConfig");
-
-            let view = get_content(
-                ctx.clone(),
-                GetContentArgs {
-                    locale: Some("fr-FR".into()),
-                },
-            )
-            .expect("get");
-            assert_eq!(view.items.len(), 2, "la ligne vidée s'en va");
-            assert_eq!(view.items[1].subtitle, "Merci pour le voisinage");
-
-            let readiness = publish_readiness(ctx.clone()).expect("publishReadiness");
-            let title = readiness
-                .items
-                .iter()
-                .find(|item| item.id == "config.rules.1.title")
-                .expect("erreur du titre");
-            assert!(!title.ok);
-            assert_eq!(title.hint.get("fr"), "Écrivez la règle.");
-            assert_eq!(readiness.items.len(), 2, "{:?}", readiness.items);
-
-            let json = serde_json::to_string(&render_host_main(ctx)).expect("json");
-            assert!(json.contains("rules.1.detail"), "{json}");
-            assert!(json.contains(r#""error":"Écrivez la règle.""#), "{json}");
-            assert!(!json.contains("rules.2.title"), "{json}");
-        });
-}
-
-/// Une règle seule, sans titre : rien n'est publié, mais elle reste dans le formulaire.
-#[test]
-#[serial]
-fn a_lone_untitled_rule_is_not_a_rule_yet() {
-    reset_test_store();
-    MockContext::host()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                SaveContentArgs {
-                    rules: None,
-                    card_limit: None,
-                    items: vec![RuleItemInput {
-                        subtitle: "Merci pour le voisinage".into(),
-                        ..Default::default()
-                    }],
-                    content_fr: String::new(),
-                    content_en: String::new(),
-                },
-            )
-            .expect("updateConfig");
-            assert!(!publish_readiness(ctx.clone()).expect("readiness").items[0].ok);
-            let json = serde_json::to_string(&render_host_main(ctx)).expect("json");
-            // Pas le modèle par défaut à la place du brouillon.
-            assert!(json.contains("Merci pour le voisinage"), "{json}");
-            assert!(!json.contains("Logement non-fumeur"), "{json}");
-        });
-}
-
-fn slot(id: &str) -> RuleSlot {
-    RuleSlot {
-        id: id.into(),
-        ..RuleSlot::default()
-    }
-}
-
-fn save_rules(ctx: &portaki_sdk::prelude::Context, rules: Vec<RuleSlot>) {
-    update_config(
-        ctx.clone(),
-        SaveContentArgs {
-            rules: Some(rules),
-            card_limit: None,
-            items: Vec::new(),
-            content_fr: String::new(),
-            content_en: String::new(),
-        },
-    )
-    .expect("updateConfig");
-}
-
-fn titles(ctx: &portaki_sdk::prelude::Context, locale: &str) -> Vec<String> {
-    get_content(
-        ctx.clone(),
-        GetContentArgs {
-            locale: Some(locale.into()),
-        },
-    )
-    .expect("get")
-    .items
-    .into_iter()
-    .map(|item| item.title)
-    .collect()
-}
-
-/// Le tableau : une ligne jamais ouverte n'envoie que son id et garde tout ; l'ordre reçu vaut pour
-/// chaque langue ; une règle retirée l'est partout ; les anciennes règles reçoivent `r{rang}`.
-#[test]
-#[serial]
-fn the_table_reorders_and_deletes_by_id_in_every_language() {
-    reset_test_store();
-    let legacy = |a: &str, b: &str, c: &str| {
-        json!({ "items": [
-            { "title": a, "status": "important", "hours": "22:00 – 08:00" },
-            { "title": b }, { "title": c }
-        ] })
-        .to_string()
-    };
-    MockContext::host()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            save_content(
-                ctx.clone(),
-                SaveContentArgs {
-                    rules: None,
-                    card_limit: None,
-                    items: Vec::new(),
-                    content_fr: legacy("Silence", "Pas de fête", "Non-fumeur"),
-                    content_en: legacy("Quiet", "No parties", "No smoking"),
-                },
-            )
-            .expect("seed");
-            // Non-fumeur remonte, Pas de fête est supprimée, Silence n'a pas été ouverte.
-            save_rules(
-                &ctx,
-                vec![
-                    RuleSlot {
-                        title: Some("Non-fumeur, même au balcon".into()),
-                        ..slot("r2")
-                    },
-                    slot("r0"),
-                ],
-            );
-            assert_eq!(
-                titles(&ctx, "fr-FR"),
-                ["Non-fumeur, même au balcon", "Silence"]
-            );
-            assert_eq!(titles(&ctx, "en-US"), ["No smoking", "Quiet"]);
-            let view = get_content(
-                ctx.clone(),
-                GetContentArgs {
-                    locale: Some("en-US".into()),
-                },
-            )
-            .expect("get");
-            assert_eq!(view.items[1].status, rules::RuleStatus::Important);
-            assert_eq!(view.items[1].hours, "22:00 – 08:00");
-        });
-}
-
-/// « Partir d'un modèle » : cinq règles dans la langue de l'hôte, et un second clic n'écrase rien.
-#[test]
-#[serial]
 fn the_template_fills_an_empty_rulebook_once() {
-    reset_test_store();
     MockContext::host()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
+        .with_translation("host.template.silence.title", "Calme après 22 h")
         .run(|ctx| {
-            apply_template(ctx.clone(), ApplyTemplateArgs {}).expect("template");
-            let first = titles(&ctx, "fr-FR");
-            assert_eq!(first.len(), 5, "{first:?}");
-            save_rules(&ctx, vec![slot("t-silence")]);
-            apply_template(ctx.clone(), ApplyTemplateArgs {}).expect("template");
-            assert_eq!(titles(&ctx, "fr-FR").len(), 1);
-            // Les heures du modèle, au format du `TimeRange`, se lisent « 22:00 – 08:00 ».
-            let json =
-                serde_json::to_string(&render_home_card(ctx.clone()).expect("card")).expect("json");
-            assert!(json.contains("22:00 – 08:00"), "{json}");
+            apply_template(ctx.clone(), EmptyArgs {}).unwrap();
+            let rules = Rules::load(&ctx).unwrap();
+            assert_eq!(rules.len(), 5);
+            assert_eq!(rules.rows()[0].title.get("fr"), "Calme après 22 h");
+            apply_template(ctx.clone(), EmptyArgs {}).unwrap();
+            assert_eq!(
+                Rules::load(&ctx).unwrap().len(),
+                5,
+                "a second click writes nothing"
+            );
         });
 }
 
-/// Au-delà de 30 : rien n'est refusé, la publication attend avec « 30 règles au maximum. ».
 #[test]
-#[serial]
-fn more_than_thirty_rules_block_publishing_not_saving() {
-    reset_test_store();
-    MockContext::host()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            save_rules(
-                &ctx,
-                (0..31)
-                    .map(|i| RuleSlot {
-                        title: Some(format!("Règle {i}")),
-                        ..slot(&format!("x{i}"))
-                    })
-                    .collect(),
-            );
-            assert_eq!(titles(&ctx, "fr-FR").len(), 31);
-            let readiness = publish_readiness(ctx.clone()).expect("readiness");
-            let check = readiness
-                .items
-                .iter()
-                .find(|item| item.id == "config.rules")
-                .expect("30 au plus");
-            assert_eq!(check.hint.get("fr"), "30 règles au maximum.");
-            // Plus de bouton « Ajouter ».
-            let json = serde_json::to_string(&render_host_main(ctx)).expect("json");
-            assert!(!json.contains("host.rules.add"), "{json}");
-        });
+fn the_editor_marks_the_status_and_draws_the_card_line() {
+    let surface = sample::seeded(MockContext::host()).run(|ctx| render_host_main(ctx).unwrap());
+    let tree = serde_json::to_value(&surface).unwrap().to_string();
+    assert!(tree.contains(r#""glyph":"!""#), "{tree}");
+    assert!(tree.contains(r#""dividerAfter":4"#), "{tree}");
+    assert!(tree.contains(r#""name":"rules.4.title""#), "{tree}");
+}
+
+#[test]
+fn the_arrival_email_carries_three_rules() {
+    let vars = sample::seeded(MockContext::guest()).run(|ctx| {
+        rules::email_vars(
+            ctx,
+            EmailContextArgs {
+                template_key: Some(EmailTemplateKey::Arrival),
+                ..Default::default()
+            },
+        )
+        .unwrap()
+    });
+    let text = vars
+        .get(EmailVar::HouseRulesTeaser)
+        .unwrap_or_default()
+        .to_string();
+    assert!(
+        text.contains("Calme après 22 h — Merci de penser au voisinage"),
+        "{text}"
+    );
+    assert!(!text.contains("Animaux"), "three rules only");
 }
