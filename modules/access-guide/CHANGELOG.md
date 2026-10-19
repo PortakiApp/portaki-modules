@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.13](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.12...access-guide-v1.10.13) (2026-10-19)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.15.0 ([11e0c9a](https://github.com/PortakiApp/portaki-modules/commit/11e0c9a8bba0ab0fb79270ad0d28731f1dc5daaa))
+
 ## [1.10.12](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.11...access-guide-v1.10.12) (2026-10-18)
 
 

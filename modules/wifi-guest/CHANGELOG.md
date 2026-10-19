@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.10](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.10.9...wifi-guest-v1.10.10) (2026-10-19)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.15.0 ([11e0c9a](https://github.com/PortakiApp/portaki-modules/commit/11e0c9a8bba0ab0fb79270ad0d28731f1dc5daaa))
+
 ## [1.10.9](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.10.8...wifi-guest-v1.10.9) (2026-10-18)
 
 

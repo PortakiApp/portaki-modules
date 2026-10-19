@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.3](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.14.2...lost-found-v1.14.3) (2026-10-19)
+
+
+### Bug Fixes
+
+* **deps:** bump portaki-sdk to 10.15.0 ([11e0c9a](https://github.com/PortakiApp/portaki-modules/commit/11e0c9a8bba0ab0fb79270ad0d28731f1dc5daaa))
+
 ## [1.14.2](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.14.1...lost-found-v1.14.2) (2026-10-15)
 
 
