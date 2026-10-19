@@ -45,7 +45,7 @@ jobs:
       any: ${{ steps.detect.outputs.any }}
       reason: ${{ steps.detect.outputs.reason }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
@@ -59,7 +59,7 @@ jobs:
             echo "ref=${{ github.event.before }}" >>"$GITHUB_OUTPUT"
           fi
 
-      - uses: PortakiApp/portaki-release-action/install@v2
+      - uses: PortakiApp/portaki-release-action/install@ab76c697ec3459805675a884a925b63a1ea612f8 # v2
 
       # `portaki ci modules` lit la disposition dans les crates et rend `modules`,
       # `any` et `reason` dans GITHUB_OUTPUT. Il remplace `changed-modules.sh` —
@@ -84,9 +84,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           components: rustfmt, clippy
 
@@ -129,10 +129,10 @@ jobs:
       matrix:
         module: ${{ fromJson(needs.changes.outputs.modules) }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       # rustfmt et clippy : la porte de `ci build` est celle de `portaki check` (CLI avec L4).
-      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           targets: wasm32-unknown-unknown
           components: rustfmt, clippy
@@ -152,7 +152,7 @@ jobs:
       # champ d'entité, SDK du lock = CLI. Ce que faisaient `check-changelog-fr.sh`,
       # `check-permission-reasons.sh` et `check-entity-columns.py` — sans eux une stable reste en
       # brouillon, ou casse chaque écriture en production, sans que rien ne rougisse.
-      - uses: PortakiApp/portaki-release-action/build@v2
+      - uses: PortakiApp/portaki-release-action/build@ab76c697ec3459805675a884a925b63a1ea612f8 # v2
         with:
           working-directory: modules/${{ matrix.module }}
           artifact: wasm-${{ matrix.module }}
@@ -175,7 +175,7 @@ jobs:
       modules: ${{ steps.pick.outputs.modules }}
       any: ${{ steps.pick.outputs.any }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
@@ -246,9 +246,9 @@ jobs:
         module: ${{ fromJson(needs.bumped.outputs.modules) }}
     steps:
       # Les sources sont lues (Cargo.lock, CHANGELOG, listing.json), jamais compilées.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: PortakiApp/portaki-release-action@v2
+      - uses: PortakiApp/portaki-release-action@ab76c697ec3459805675a884a925b63a1ea612f8 # v2
         with:
           working-directory: modules/${{ matrix.module }}
           artifact: wasm-${{ matrix.module }}
