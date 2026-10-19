@@ -6,7 +6,7 @@ use serial_test::serial;
 use emergency_contacts::{render_explore_detail, render_home_card, render_host_main};
 use portaki_sdk::host::module::ModuleStatus;
 use portaki_sdk::sdui::GeoPoint;
-use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
+use portaki_test_utils::{MockContext, SurfaceAssertions};
 use serde_json::{json, Value};
 
 #[path = "../../../support/config_form.rs"]
@@ -391,36 +391,36 @@ fn the_profile_alone_is_enough_to_show_the_card() {
 
 /// Les numéros d'urgence sont ceux du **logement**, pas de la langue du voyageur.
 ///
-/// Ils se lisent dans le fuseau du logement : `ctx.property.locale` est une copie de la locale du
-/// lecteur (enveloppe du SDK), et un anglophone en France perdait le 15, le 17, le 18 et le 114.
-/// La locale du logement vaut ici celle du lecteur, comme en production.
+/// Ils se lisent dans le pays du logement (`ctx.property.country`) : un anglophone en France voit le
+/// 15, le 18 et le 114, un francophone en Espagne le 112 seul, et La Réunion a ses numéros.
 #[test]
 #[serial]
 fn the_numbers_follow_the_property_not_the_reader() {
-    for (timezone, reader, expect_national) in [
-        ("Europe/Paris", "en-US", true),
-        ("Europe/Madrid", "fr-FR", false),
+    for (country, reader, national, sms) in [
+        (Some("FR"), "en-US", true, true),
+        (Some("RE"), "en-US", true, false),
+        (Some("ES"), "fr-FR", false, false),
+        (None, "fr-FR", false, false),
     ] {
         MockContext::guest()
             .with_capabilities(&[capability::core::STORAGE])
-            .with_property(Property {
-                locale: reader.into(),
-                timezone: timezone.into(),
-                ..Property::default()
-            })
+            .with_country(country)
+            .with_locale(reader)
             .run(|ctx| {
-                let mut ctx = ctx;
-                ctx.locale = reader.to_string();
+                assert_eq!(
+                    ctx.property.locale, "fr",
+                    "la langue du logement reste la sienne"
+                );
                 let json =
                     serde_json::to_string(&render_home_card(ctx).expect("carte")).expect("json");
                 assert!(json.contains("\"112\""), "{json}");
                 assert_eq!(
                     json.contains("\"15\""),
-                    expect_national,
-                    "{timezone} lu en {reader} : {json}"
+                    national,
+                    "{country:?} lu en {reader} : {json}"
                 );
-                assert_eq!(json.contains("\"18\""), expect_national, "{json}");
-                assert_eq!(json.contains("sms:114"), expect_national, "{json}");
+                assert_eq!(json.contains("\"18\""), national, "{json}");
+                assert_eq!(json.contains("sms:114"), sms, "{json}");
             });
     }
 }
@@ -528,13 +528,10 @@ fn the_pharmacy_hours_say_whether_it_is_open() {
 #[test]
 #[serial]
 fn the_on_duty_pharmacy_and_the_sms_number_follow_the_country() {
-    for (timezone, french) in [("Europe/Paris", true), ("Europe/Madrid", false)] {
+    for (country, french) in [(Some("FR"), true), (Some("ES"), false)] {
         MockContext::guest()
             .with_capabilities(&[capability::core::STORAGE])
-            .with_property(Property {
-                timezone: timezone.into(),
-                ..Property::default()
-            })
+            .with_country(country)
             .run(|ctx| {
                 let json =
                     serde_json::to_string(&render_explore_detail(ctx).expect("detail")).unwrap();

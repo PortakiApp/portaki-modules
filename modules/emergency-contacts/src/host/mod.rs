@@ -48,14 +48,14 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
 
 /// Les numéros que le livret affiche en tête, en lecture seule : le 112 d'abord.
 fn country_section(ctx: &HostContext) -> Component {
-    let timezone = &ctx.property.timezone;
-    let help = numbers::country_of(timezone)
+    let country = ctx.property.country.as_deref();
+    let help = numbers::country_of(country)
         .and_then(|code| {
             let country = t!(&format!("host.country.{code}")).ok()?;
             t!("host.section.country.help", country = country).ok()
         })
         .unwrap_or_else(|| "i18n:host.section.country.helpUnknown".into());
-    let tiles: Vec<Component> = numbers::for_timezone(timezone)
+    let tiles: Vec<Component> = numbers::for_country(country)
         .iter()
         .map(|number| {
             Stat::new()
@@ -320,10 +320,10 @@ fn health_section(config: &ModuleConfig, ctx: &HostContext) -> Component {
     );
     let mut children: Vec<Component> = vec![pharmacy.into()];
     // La pharmacie de garde : lecture seule, le numéro du pays (le 3237 en France), rien ailleurs.
-    let timezone = &ctx.property.timezone;
+    let country = ctx.property.country.as_deref();
     if let (Some(number), Some(code)) = (
-        numbers::on_duty_pharmacy(timezone),
-        numbers::country_of(timezone),
+        numbers::on_duty_pharmacy(country),
+        numbers::country_of(country),
     ) {
         if let Some(line) = t!(&format!("host.country.{code}"))
             .ok()
@@ -419,5 +419,5 @@ fn named(config: &ModuleConfig, ctx: &HostContext, name: impl Into<String>) -> F
 
 /// L'indicatif proposé d'abord : celui du pays du logement, la France sinon.
 fn default_country(ctx: &HostContext) -> &'static str {
-    numbers::country_of(&ctx.property.timezone).unwrap_or("FR")
+    numbers::country_of(ctx.property.country.as_deref()).unwrap_or("FR")
 }

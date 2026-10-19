@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.10
+
+Les numéros d'urgence suivent le pays du logement.
+
+* Le pays se lit dans l'adresse du logement, plus dans son fuseau horaire.
+* En Guadeloupe, Martinique, Guyane, à La Réunion et à Mayotte, le livret affiche le 15, le 17 et le 18 en plus du 112.
+
 ## 1.9.9
 
 Les numéros d'urgence du pays du logement, dans toutes les langues.
