@@ -153,7 +153,7 @@ pub struct ModuleConfig {
     )]
     pub reveal_policy: RevealPolicy,
     /// « Personnalisé » seulement.
-    #[field(label = "host.reveal.hours")]
+    #[field(label = "host.reveal.hours", visible_when = "reveal_policy=custom")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reveal_hours: Option<u32>,
 

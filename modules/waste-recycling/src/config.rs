@@ -28,7 +28,8 @@ pub struct ModuleConfig {
     #[field(
         kind = "select",
         options = ["evening", "before7", "before9"],
-        label = "host.putOut.label"
+        label = "host.putOut.label",
+        visible_when = "has_collection=true",
     )]
     pub put_out: String,
     #[field(label = "config.bins")]
@@ -36,30 +37,54 @@ pub struct ModuleConfig {
     /// La phrase que l'hôte a écrite. Conservée : elle s'affiche tant qu'aucun jour n'est coché, et
     /// reste en second sous le jour calculé — elle dit souvent ce que des cases ne disent pas
     /// (« avant 7 h », « bac vert la semaine paire »).
-    #[field(label = "host.collectionNote.label")]
+    #[field(
+        label = "host.collectionNote.label",
+        visible_when = "has_collection=true"
+    )]
     pub collection_schedule: I18nText,
     /// Les jours de collecte, un champ par jour (§2.7). Sept booléens plutôt qu'une liste : le
     /// formulaire hôte envoie des champs plats, et une liste de chaînes n'a pas de ligne à
     /// fusionner — elle ne reviendrait jamais de l'enregistrement.
-    #[field(label = "host.collection.day.mon")]
+    #[field(
+        label = "host.collection.day.mon",
+        visible_when = "has_collection=true"
+    )]
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub collects_mon: bool,
-    #[field(label = "host.collection.day.tue")]
+    #[field(
+        label = "host.collection.day.tue",
+        visible_when = "has_collection=true"
+    )]
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub collects_tue: bool,
-    #[field(label = "host.collection.day.wed")]
+    #[field(
+        label = "host.collection.day.wed",
+        visible_when = "has_collection=true"
+    )]
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub collects_wed: bool,
-    #[field(label = "host.collection.day.thu")]
+    #[field(
+        label = "host.collection.day.thu",
+        visible_when = "has_collection=true"
+    )]
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub collects_thu: bool,
-    #[field(label = "host.collection.day.fri")]
+    #[field(
+        label = "host.collection.day.fri",
+        visible_when = "has_collection=true"
+    )]
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub collects_fri: bool,
-    #[field(label = "host.collection.day.sat")]
+    #[field(
+        label = "host.collection.day.sat",
+        visible_when = "has_collection=true"
+    )]
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub collects_sat: bool,
-    #[field(label = "host.collection.day.sun")]
+    #[field(
+        label = "host.collection.day.sun",
+        visible_when = "has_collection=true"
+    )]
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub collects_sun: bool,
     /// La consigne de sortie : où et quand poser le bac dehors. Mise en avant quand le voyageur
@@ -80,13 +105,17 @@ pub struct ModuleConfig {
     #[field(label = "host.compost.enabled")]
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub compost_enabled: bool,
-    #[field(local, label = "host.compost.location")]
+    #[field(
+        local,
+        label = "host.compost.location",
+        visible_when = "compost_enabled=true"
+    )]
     pub compost_location: I18nText,
     /// Un élément par ligne.
-    #[field(label = "host.compost.accepted")]
+    #[field(label = "host.compost.accepted", visible_when = "compost_enabled=true")]
     pub compost_accepted: I18nText,
     /// Un élément par ligne.
-    #[field(label = "host.compost.refused")]
+    #[field(label = "host.compost.refused", visible_when = "compost_enabled=true")]
     pub compost_refused: I18nText,
     /// Le chemin jusqu'au local poubelles, une étape par ligne (§2.7).
     ///
@@ -98,20 +127,32 @@ pub struct ModuleConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bin_room_enabled: Option<bool>,
     /// Où se trouve le local — la ligne en gras du bloc.
-    #[field(local, label = "host.binRoom.where")]
+    #[field(
+        local,
+        label = "host.binRoom.where",
+        visible_when = "bin_room_enabled=true"
+    )]
     pub bin_room_where: I18nText,
-    #[field(label = "host.binRoom.label")]
+    #[field(label = "host.binRoom.label", visible_when = "bin_room_enabled=true")]
     pub bin_room_steps: I18nText,
     /// L'épingle du local (spec Tri §2.3) : un repère sur la Carte du livret. Le sélecteur de
     /// carte l'envoie en texte (`"43.5"`) ou en nombre.
-    #[field(local, label = "host.binRoom.position")]
+    #[field(
+        local,
+        label = "host.binRoom.position",
+        visible_when = "bin_room_enabled=true"
+    )]
     #[serde(
         default,
         deserialize_with = "coord",
         skip_serializing_if = "Option::is_none"
     )]
     pub bin_room_lat: Option<f64>,
-    #[field(local, label = "host.binRoom.position")]
+    #[field(
+        local,
+        label = "host.binRoom.position",
+        visible_when = "bin_room_enabled=true"
+    )]
     #[serde(
         default,
         deserialize_with = "coord",
@@ -119,7 +160,11 @@ pub struct ModuleConfig {
     )]
     pub bin_room_lng: Option<f64>,
     /// L'adresse telle que le sélecteur l'a résolue, pour la relire dans le formulaire.
-    #[field(local, label = "host.binRoom.position")]
+    #[field(
+        local,
+        label = "host.binRoom.position",
+        visible_when = "bin_room_enabled=true"
+    )]
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub bin_room_address: String,
     /// Le code de la porte du local, s'il y en a une (§2.7).
@@ -143,11 +188,14 @@ pub struct ModuleConfig {
     ///
     /// Du texte et non deux heures : un local fermé le dimanche n'a pas d'horaire à comparer, et
     /// c'est ce qu'un gardien affiche sur sa porte.
-    #[field(label = "host.binRoom.hours.legacy")]
+    #[field(
+        label = "host.binRoom.hours.legacy",
+        visible_when = "bin_room_enabled=true"
+    )]
     pub bin_room_hours: I18nText,
     /// Les heures d'accès en plage, `07:00-21:00` (spec Tri §2.3) : ce que `TimeRange` envoie. La
     /// phrase de [`Self::bin_room_hours`] reste lue tant que la plage est vide.
-    #[field(label = "host.binRoom.hours")]
+    #[field(label = "host.binRoom.hours", visible_when = "bin_room_enabled=true")]
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub bin_room_hours_range: String,
 }

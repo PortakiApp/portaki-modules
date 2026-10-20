@@ -97,7 +97,11 @@ pub struct ModuleConfig {
     /// Les avis montrés sur la page publique, 2 à 6 : le séjour de chacun (`stay:<id>:review`),
     /// pris parmi les avis consentis. Le choix multiple envoie un vrai tableau, que seul un champ
     /// `structured` accepte (un `text` exige une chaîne).
-    #[field(kind = "structured", label = "host.public.reviews.label")]
+    #[field(
+        kind = "structured",
+        label = "host.public.reviews.label",
+        visible_when = "public_enabled=true"
+    )]
     #[serde(deserialize_with = "id_list")]
     pub public_reviews: Vec<String>,
 

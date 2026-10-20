@@ -34,29 +34,41 @@ pub struct ModuleConfig {
     pub disclaimer: I18nText,
     #[field(label = "host.activities.enabled")]
     pub activities_enabled: bool,
-    #[field(label = "host.activities.destination")]
+    #[field(
+        label = "host.activities.destination",
+        visible_when = "partners_enabled=true"
+    )]
     pub activities_destination: String,
-    #[field(label = "host.activities.intro")]
+    #[field(
+        label = "host.activities.intro",
+        visible_when = "partners_enabled=true"
+    )]
     pub activities_intro: I18nText,
     /// « Vos choix dans le catalogue » : les liens collés par l'hôte, `{ url, label, tip }`, cinq
     /// en avant au plus. Copiés « À vérifier » (`local`).
-    #[field(structured, local, label = "host.section.activities")]
+    #[field(
+        structured,
+        local,
+        label = "host.section.activities",
+        visible_when = "partners_enabled=true"
+    )]
     pub activities: Vec<ActivityRow>,
     #[field(label = "host.tiqets.enabled")]
     pub tiqets_enabled: bool,
     #[field(
         kind = "select",
         options = ["5", "10", "20", "40"],
-        label = "host.tiqets.radius"
+        label = "host.tiqets.radius",
+        visible_when = "partners_enabled=true",
     )]
     #[serde(deserialize_with = "deserialize_radius")]
     pub tiqets_radius_km: u32,
-    #[field(kind = "select", options = ["0", "3", "4"], label = "host.tiqets.minRating")]
+    #[field(kind = "select", options = ["0", "3", "4"], label = "host.tiqets.minRating", visible_when = "partners_enabled=true")]
     #[serde(deserialize_with = "deserialize_min_rating")]
     pub tiqets_min_rating: u8,
     #[field(label = "host.viator.enabled")]
     pub viator_enabled: bool,
-    #[field(kind = "select", options = ["0", "3", "4"], label = "host.viator.minRating")]
+    #[field(kind = "select", options = ["0", "3", "4"], label = "host.viator.minRating", visible_when = "partners_enabled=true")]
     #[serde(deserialize_with = "deserialize_viator_min_rating")]
     pub viator_min_rating: u8,
     /// Le bloc « Adresses » de la page publique du logement. Éteint par défaut.
@@ -66,7 +78,11 @@ pub struct ModuleConfig {
     ///
     /// À plat et en `structured` : le choix multiple envoie un vrai tableau, qu'un champ `text`
     /// ferait refuser par la plateforme.
-    #[field(kind = "structured", label = "host.public.spots")]
+    #[field(
+        kind = "structured",
+        label = "host.public.spots",
+        visible_when = "public_enabled=true"
+    )]
     #[serde(deserialize_with = "id_list")]
     pub public_spots: Vec<String>,
     // §2.2 Activités des partenaires. Absents tant que l'hôte n'a pas enregistré la nouvelle
@@ -77,7 +93,11 @@ pub struct ModuleConfig {
     pub partners_enabled: Option<bool>,
     /// Les fournisseurs choisis, [`PROVIDERS`]. Absent : ceux que les anciens interrupteurs
     /// allumaient.
-    #[field(kind = "structured", label = "host.partners.providers")]
+    #[field(
+        kind = "structured",
+        label = "host.partners.providers",
+        visible_when = "partners_enabled=true"
+    )]
     #[serde(
         default,
         deserialize_with = "optional_id_list",
@@ -85,7 +105,7 @@ pub struct ModuleConfig {
     )]
     pub providers: Option<Vec<String>>,
     /// Un seul rayon pour tous les fournisseurs, 1 à 50 km. Absent : celui de Tiqets d'avant.
-    #[field(label = "host.partners.radius")]
+    #[field(label = "host.partners.radius", visible_when = "partners_enabled=true")]
     #[serde(
         default,
         deserialize_with = "optional_number",
@@ -93,7 +113,10 @@ pub struct ModuleConfig {
     )]
     pub partner_radius_km: Option<u32>,
     /// Prix maximum, en euros, 1 à 1 000. Absent : pas de filtre.
-    #[field(label = "host.partners.maxPrice")]
+    #[field(
+        label = "host.partners.maxPrice",
+        visible_when = "partners_enabled=true"
+    )]
     #[serde(
         default,
         deserialize_with = "optional_number",
@@ -101,7 +124,7 @@ pub struct ModuleConfig {
     )]
     pub partner_max_price: Option<u32>,
     /// Note minimale commune. Absente : celle de chaque fournisseur d'avant.
-    #[field(kind = "select", options = ["0", "3", "4"], label = "host.partners.minRating")]
+    #[field(kind = "select", options = ["0", "3", "4"], label = "host.partners.minRating", visible_when = "partners_enabled=true")]
     #[serde(
         default,
         deserialize_with = "optional_number",

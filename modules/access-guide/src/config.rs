@@ -568,7 +568,7 @@ pub struct HostConfig {
     )]
     pub primary_method: String,
     /// « Autre » : comment le voyageur récupère les clés, ≤ 80 (§2.1).
-    #[field(label = "host.methodOther")]
+    #[field(label = "host.methodOther", visible_when = "primary_method=other")]
     pub method_other: I18nText,
     /// `fixed` : le même code pour tous les séjours ; `stay` : un code par séjour, saisi dans la
     /// fiche du séjour ; `lock` : généré par la serrure (§2.2).
@@ -582,7 +582,7 @@ pub struct HostConfig {
     /// Une tâche « Changer le code de la boîte à clés » après chaque départ (§2.2).
     #[field(label = "host.rotate")]
     pub rotate_reminder: bool,
-    #[field(label = "host.keybox.location")]
+    #[field(label = "host.keybox.location", visible_when = "primary_method=keybox")]
     pub keybox_location: I18nText,
     #[field(
         secret,
@@ -593,7 +593,8 @@ pub struct HostConfig {
     #[field(
         kind = "select",
         options = ["gate", "building", "apartment"],
-        label = "host.doorCode.target"
+        label = "host.doorCode.target",
+        visible_when = "primary_method=door_code",
     )]
     pub door_code_target: String,
     #[field(
@@ -603,7 +604,10 @@ pub struct HostConfig {
     )]
     pub door_code: String,
     /// A select whose options are the installed smart-lock modules: free text for the platform.
-    #[field(label = "host.smartLock.provider")]
+    #[field(
+        label = "host.smartLock.provider",
+        visible_when = "primary_method=smart_lock"
+    )]
     pub smart_lock_provider_module_id: String,
     #[field(
         secret,
@@ -611,31 +615,65 @@ pub struct HostConfig {
         label = "host.smartLock.manualCode"
     )]
     pub smart_lock_manual_code: String,
-    #[field(local, label = "host.inPerson.meetingPlace")]
+    #[field(
+        local,
+        label = "host.inPerson.meetingPlace",
+        visible_when = "primary_method=in_person"
+    )]
     pub in_person_meeting_place: I18nText,
-    #[field(local, label = "host.inPerson.lat")]
+    #[field(
+        local,
+        label = "host.inPerson.lat",
+        visible_when = "primary_method=in_person"
+    )]
     pub in_person_meeting_lat: Option<f64>,
-    #[field(local, label = "host.inPerson.lng")]
+    #[field(
+        local,
+        label = "host.inPerson.lng",
+        visible_when = "primary_method=in_person"
+    )]
     pub in_person_meeting_lng: Option<f64>,
-    #[field(label = "host.inPerson.timeHint")]
+    #[field(
+        label = "host.inPerson.timeHint",
+        visible_when = "primary_method=in_person"
+    )]
     pub in_person_time_hint: I18nText,
-    #[field(label = "host.inPerson.contact")]
+    #[field(
+        label = "host.inPerson.contact",
+        visible_when = "primary_method=in_person"
+    )]
     pub in_person_contact: String,
     #[field(
         kind = "select",
         options = ["reception", "caretaker"],
-        label = "host.buildingStaff.kind"
+        label = "host.buildingStaff.kind",
+        visible_when = "primary_method=building_staff",
     )]
     pub building_staff_kind: String,
-    #[field(label = "host.buildingStaff.deskLocation")]
+    #[field(
+        label = "host.buildingStaff.deskLocation",
+        visible_when = "primary_method=building_staff"
+    )]
     pub building_staff_desk_location: I18nText,
-    #[field(label = "host.buildingStaff.hours")]
+    #[field(
+        label = "host.buildingStaff.hours",
+        visible_when = "primary_method=building_staff"
+    )]
     pub building_staff_hours: I18nText,
-    #[field(label = "host.buildingStaff.contact")]
+    #[field(
+        label = "host.buildingStaff.contact",
+        visible_when = "primary_method=building_staff"
+    )]
     pub building_staff_contact: String,
-    #[field(label = "host.hostGreets.contactNote")]
+    #[field(
+        label = "host.hostGreets.contactNote",
+        visible_when = "primary_method=host_greets"
+    )]
     pub host_greets_contact_note: I18nText,
-    #[field(label = "host.hostGreets.etaHint")]
+    #[field(
+        label = "host.hostGreets.etaHint",
+        visible_when = "primary_method=in_person"
+    )]
     pub host_greets_eta_hint: I18nText,
     #[field(label = "host.building.enabled")]
     pub building_access_enabled: bool,
@@ -645,14 +683,21 @@ pub struct HostConfig {
         label = "host.building.gateCode"
     )]
     pub building_access_gate_code: String,
-    #[field(label = "host.building.intercom")]
+    #[field(
+        label = "host.building.intercom",
+        visible_when = "building_access_enabled=true"
+    )]
     pub building_access_intercom: I18nText,
-    #[field(label = "host.building.floor")]
+    #[field(
+        label = "host.building.floor",
+        visible_when = "building_access_enabled=true"
+    )]
     pub building_floor: I18nText,
     #[field(
         kind = "select",
         options = ["unknown", "yes", "no"],
-        label = "host.building.lift"
+        label = "host.building.lift",
+        visible_when = "building_access_enabled=true",
     )]
     pub building_lift: String,
     #[field(label = "host.parking.enabled")]
@@ -697,13 +742,16 @@ pub struct HostConfig {
     )]
     pub reveal_policy: String,
     /// « Personnalisé » : 1 à 168 heures avant l'arrivée, 24 par défaut (§2.3).
-    #[field(label = "host.reveal.hours")]
+    #[field(label = "host.reveal.hours", visible_when = "reveal_policy=custom")]
     pub reveal_hours: Option<u32>,
     #[field(label = "host.steps.label")]
     pub steps: Vec<StepRow>,
     #[field(label = "config.methodInstructions")]
     pub method_instructions: I18nText,
-    #[field(label = "config.buildingNote")]
+    #[field(
+        label = "config.buildingNote",
+        visible_when = "building_access_enabled=true"
+    )]
     pub building_note: I18nText,
     #[field(label = "config.parkingInfo")]
     pub parking_info: I18nText,
@@ -724,30 +772,53 @@ pub struct HostConfig {
     )]
     pub unlock_window: String,
     /// Le créneau de remise des clés, `16:00-19:00` (§2.5).
-    #[field(local, label = "host.handover.slot")]
+    #[field(
+        local,
+        label = "host.handover.slot",
+        visible_when = "primary_method=in_person"
+    )]
     pub handover_slot: String,
     /// Le créneau d'avant `handover_slot`, en deux heures : lu tant que `handover_slot` est vide.
-    #[field(local, label = "host.handover.from")]
+    #[field(
+        local,
+        label = "host.handover.from",
+        visible_when = "primary_method=in_person"
+    )]
     pub handover_slot_from: String,
-    #[field(local, label = "host.handover.until")]
+    #[field(
+        local,
+        label = "host.handover.until",
+        visible_when = "primary_method=in_person"
+    )]
     pub handover_slot_until: String,
     #[field(
         kind = "select",
         options = ["me", "other"],
-        label = "host.handover.person"
+        label = "host.handover.person",
+        visible_when = "primary_method=in_person",
     )]
     pub handover_person: String,
-    #[field(label = "host.handover.name")]
+    #[field(label = "host.handover.name", visible_when = "handover_person=other")]
     pub handover_name: String,
-    #[field(label = "host.handover.phone")]
+    #[field(label = "host.handover.phone", visible_when = "handover_person=other")]
     pub handover_phone: String,
-    #[field(label = "host.desk.phone")]
+    #[field(
+        label = "host.desk.phone",
+        visible_when = "primary_method=building_staff"
+    )]
     pub desk_phone: String,
-    #[field(label = "host.desk.afterHours")]
+    #[field(
+        label = "host.desk.afterHours",
+        visible_when = "primary_method=building_staff"
+    )]
     pub desk_after_hours: I18nText,
     /// Les horaires de la réception, `mon=07:00-22:00;…` (§2.6). Vide : l'ancien texte libre
     /// `building_staff_hours`, montré tel quel.
-    #[field(local, label = "host.desk.hours")]
+    #[field(
+        local,
+        label = "host.desk.hours",
+        visible_when = "primary_method=building_staff"
+    )]
     pub desk_hours: String,
 }
 

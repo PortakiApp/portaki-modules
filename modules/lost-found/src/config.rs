@@ -66,20 +66,25 @@ pub struct ModuleConfig {
     pub return_pickup: Option<bool>,
     /// Où et quand récupérer l'objet, sous « Je viens le chercher ». Propre au logement : copié
     /// ailleurs, il y est marqué « À vérifier ».
-    #[field(local, label = "host.pickupNote.label")]
+    #[field(
+        local,
+        label = "host.pickupNote.label",
+        visible_when = "return_pickup=true"
+    )]
     pub pickup_note: I18nText,
     /// Don de l'objet proposé.
     #[field(label = "host.return.donate")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub return_donate: Option<bool>,
     /// L'association qui reçoit les dons. Un nom propre : pas traduit.
-    #[field(label = "host.donateOrg.label")]
+    #[field(label = "host.donateOrg.label", visible_when = "return_donate=true")]
     pub donate_org: String,
     /// `guest` ou `host` — qui paie le renvoi, quand le renvoi est proposé.
     #[field(
         kind = "select",
         options = ["guest", "host"],
-        label = "host.shipping.label"
+        label = "host.shipping.label",
+        visible_when = "return_ship=true",
     )]
     pub shipping_paid_by: String,
     /// Le délai sous lequel l'hôte répond à une déclaration : « sous 48 h » (§2.18).

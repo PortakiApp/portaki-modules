@@ -112,7 +112,10 @@ pub struct ModuleConfig {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub booking_required: bool,
     /// Comment réserver : « Prévenez-moi la veille ».
-    #[field(label = "host.bookingNote.label")]
+    #[field(
+        label = "host.bookingNote.label",
+        visible_when = "booking_required=true"
+    )]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub booking_note: Option<I18nText>,
     /// La position de la borne (spec Parking VE §2.1) : un repère ⚡ sur la Carte du livret. Le

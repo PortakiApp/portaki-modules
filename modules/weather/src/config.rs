@@ -28,11 +28,23 @@ pub struct ModuleConfig {
     #[field(local, label = "host.locationOverride.label")]
     pub location_override: bool,
     /// L'adresse cherchée dans le sélecteur ; seule la position compte pour les prévisions.
-    #[field(local, label = "host.locationOverride.address")]
+    #[field(
+        local,
+        label = "host.locationOverride.address",
+        visible_when = "location_override=true"
+    )]
     pub location_address: String,
-    #[field(local, label = "host.locationOverride.lat")]
+    #[field(
+        local,
+        label = "host.locationOverride.lat",
+        visible_when = "location_override=true"
+    )]
     pub location_lat: Option<f64>,
-    #[field(local, label = "host.locationOverride.lng")]
+    #[field(
+        local,
+        label = "host.locationOverride.lng",
+        visible_when = "location_override=true"
+    )]
     pub location_lng: Option<f64>,
     /// La carte du fil avant l'arrivée, à partir de J-5.
     #[field(label = "host.showUpcoming.label")]
@@ -41,7 +53,10 @@ pub struct ModuleConfig {
     #[field(label = "host.publicEnabled.label")]
     pub public_enabled: bool,
     /// Les moyennes des six mois de la saison sous la température du jour (`public.monthlyAverages`).
-    #[field(label = "host.publicMonthlyAverages.label")]
+    #[field(
+        label = "host.publicMonthlyAverages.label",
+        visible_when = "public_enabled=true"
+    )]
     pub public_monthly_averages: bool,
 }
 
