@@ -6,34 +6,17 @@
 //! liés » non plus, qui dépendraient d'un lien Signaler → appareil. Sans statistiques du livret
 //! (`views` absent), la tuile affiche « — » et le détail le dit.
 
-use portaki_sdk::contracts::stats::{self, StatsSummary, StatsSummaryArgs, StatsViews};
+use portaki_sdk::contracts::stats::StatsViews;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{EmptyState, Grid, Page, Stat};
 use portaki_sdk::sdui::surface::Surface;
 
 /// La fiche d'un appareil : ce que la tuile compte.
-const ITEM: &str = "explore.item";
+pub(crate) const ITEM: &str = "explore.item";
 /// La liste des appareils.
 const LIST: &str = "explore.detail";
 /// Les sorties du livret, dans l'ordre du détail.
 const CLICKS: [&str; 4] = ["link", "call", "directions", "mail"];
-
-#[portaki_sdk::query(
-    name = "statsSummary",
-    example(
-        label = "Modes d'emploi sur 30 jours",
-        input = r#"{"propertyId":"5f0c2b1e-8a4d-4c6f-9e21-3b7d9a6c4e10","period":30,"key":"appliances-views","views":{"opens":9,"surfaces":{"explore.item":7,"explore.detail":2},"clicks":{"link":3}}}"#
-    )
-)]
-pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummary> {
-    let value = args
-        .views
-        .map_or_else(|| "—".to_owned(), |views| views.surface(ITEM).to_string());
-    Ok(stats::summary(
-        value,
-        portaki_sdk::bundle_text!("stats.tile"),
-    ))
-}
 
 #[portaki_sdk::surface(
     host,

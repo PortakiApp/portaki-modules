@@ -5,7 +5,7 @@ use portaki_sdk::sdui::common::ListItemLayout;
 use portaki_sdk::sdui::primitives::{Button, Card, Grid};
 
 use super::explore_detail::EXPLORE_DETAIL;
-use super::{device_list_item, no_appliances};
+use super::row::{device_list_item, no_appliances};
 use crate::domain::{Appliance, Guide};
 
 #[portaki_sdk::surface(guest, id = "home.card")]
