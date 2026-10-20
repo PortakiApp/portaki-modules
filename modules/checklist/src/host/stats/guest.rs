@@ -77,7 +77,7 @@ pub(crate) fn departures(
 }
 
 /// One stay in the feed: its dates, how much was ticked, and its status.
-pub(crate) fn stay_row(stay: &GuestStay, fr: bool) -> Component {
+pub(crate) fn stay_row(stay: &GuestStay, fr: bool, tz: Option<PropertyTz>) -> Component {
     let (label, tone) = if stay.complete() {
         ("i18n:stats.checklist.status.complete", Tone::Success)
     } else if stay.ticked.is_empty() {
@@ -88,22 +88,22 @@ pub(crate) fn stay_row(stay: &GuestStay, fr: bool) -> Component {
     let title = match stay.window {
         Some((check_in, check_out)) => t!(
             "stats.checklist.row.stay",
-            from = short_date(check_in, fr),
-            to = short_date(check_out, fr)
+            from = short_date(local(check_in, tz), fr),
+            to = short_date(local(check_out, tz), fr)
         ),
         None => t!(
             "stats.checklist.row.title",
-            date = short_date(stay.last_at, fr)
+            date = short_date(local(stay.last_at, tz), fr)
         ),
     }
     .unwrap_or_default();
     let date = match stay.window {
         Some((_, check_out)) => t!(
             "stats.checklist.row.departure",
-            date = short_date(check_out, fr)
+            date = short_date(local(check_out, tz), fr)
         )
         .unwrap_or_default(),
-        None => format_time(stay.last_at),
+        None => format_time(local(stay.last_at, tz)),
     };
     FeedItem::new()
         .title(title)

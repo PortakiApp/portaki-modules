@@ -8,9 +8,10 @@ pub(crate) fn cleaning_date(
     task: &CleaningTask<'_>,
     timing: Timing,
     at: DateTime<Utc>,
+    tz: Option<PropertyTz>,
     fr: bool,
 ) -> Result<String> {
-    let (date, time) = (short_date(at, fr), format_time(at));
+    let (date, time) = (short_date(local(at, tz), fr), format_time(local(at, tz)));
     match (task.finished(), task.deadline(), task.done.is_empty()) {
         (true, Some(due), _) if timing == Timing::Late => t!(
             "stats.cleaning.row.lateBy",
@@ -21,8 +22,8 @@ pub(crate) fn cleaning_date(
         (true, _, _) => t!("stats.cleaning.row.doneAt", date = date, time = time),
         (false, Some(due), _) => t!(
             "stats.cleaning.row.dueAt",
-            date = short_date(due, fr),
-            time = format_time(due)
+            date = short_date(local(due, tz), fr),
+            time = format_time(local(due, tz))
         ),
         (false, None, true) => Ok(String::new()),
         (false, None, false) => t!("stats.cleaning.row.lastAt", date = date, time = time),
@@ -64,7 +65,12 @@ pub(crate) fn per_week(
 }
 
 /// One cleaning in the feed: when, who, how much, and against its deadline.
-pub(crate) fn task_row(task: &CleaningTask<'_>, now: DateTime<Utc>, locale: &str) -> Component {
+pub(crate) fn task_row(
+    task: &CleaningTask<'_>,
+    now: DateTime<Utc>,
+    locale: &str,
+    tz: Option<PropertyTz>,
+) -> Component {
     let fr = is_fr(locale);
     let at = task.last_at().unwrap_or(now);
     let timing = task.timing(now);
@@ -88,11 +94,12 @@ pub(crate) fn task_row(task: &CleaningTask<'_>, now: DateTime<Utc>, locale: &str
     }
     let title = match task.plan {
         Some((departure, _)) => {
-            t!("stats.cleaning.row.after", date = short_date(departure, fr)).unwrap_or_default()
+            let date = short_date(local(departure, tz), fr);
+            t!("stats.cleaning.row.after", date = date).unwrap_or_default()
         }
-        None => format!("{name} · {}", short_date(at, fr)),
+        None => format!("{name} · {}", short_date(local(at, tz), fr)),
     };
-    let date = cleaning_date(task, timing, at, fr).unwrap_or_default();
+    let date = cleaning_date(task, timing, at, tz, fr).unwrap_or_default();
     FeedItem::new()
         .title(title)
         .meta(meta)

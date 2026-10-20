@@ -21,6 +21,7 @@ pub fn render_stats_checklist(ctx: HostContext) -> Surface {
     let now = time::now().unwrap_or(DateTime::<Utc>::UNIX_EPOCH);
     let since = now - Duration::days(period_days(&ctx));
     let fr = is_fr(&ctx.locale);
+    let tz = portaki_sdk::host::time::PropertyTz::parse(&ctx.property.timezone);
     let items = crate::domain::guest_items().unwrap_or_default();
     let stays = match period_stays(&ctx) {
         Some(period) => departures(
@@ -59,7 +60,7 @@ pub fn render_stats_checklist(ctx: HostContext) -> Surface {
         let feed = stays
             .iter()
             .take(10)
-            .map(|stay| stay_row(stay, fr))
+            .map(|stay| stay_row(stay, fr, tz))
             .collect();
 
         Stack::new()
