@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.8](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.11.7...pre-arrival-form-v1.11.8) (2026-10-20)
+
+
+### Bug Fixes
+
+* read module texts with bundle_text! ([6c1cd79](https://github.com/PortakiApp/portaki-modules/commit/6c1cd798e9549ee4b1addbdaf0feab9d5fe085d2))
+
 ## [1.11.7](https://github.com/PortakiApp/portaki-modules/compare/pre-arrival-form-v1.11.6...pre-arrival-form-v1.11.7) (2026-10-19)
 
 

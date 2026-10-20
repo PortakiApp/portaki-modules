@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.9](https://github.com/PortakiApp/portaki-modules/compare/train-v2.5.8...train-v2.5.9) (2026-10-20)
+
+
+### Bug Fixes
+
+* read module texts with bundle_text! ([6c1cd79](https://github.com/PortakiApp/portaki-modules/commit/6c1cd798e9549ee4b1addbdaf0feab9d5fe085d2))
+
 ## [2.5.8](https://github.com/PortakiApp/portaki-modules/compare/train-v2.5.7...train-v2.5.8) (2026-10-19)
 
 

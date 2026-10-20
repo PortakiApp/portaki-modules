@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.11.8](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.11.7...consumables-v2.11.8) (2026-10-20)
+
+
+### Bug Fixes
+
+* read module texts with bundle_text! ([6c1cd79](https://github.com/PortakiApp/portaki-modules/commit/6c1cd798e9549ee4b1addbdaf0feab9d5fe085d2))
+
 ## [2.11.7](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.11.6...consumables-v2.11.7) (2026-10-19)
 
 

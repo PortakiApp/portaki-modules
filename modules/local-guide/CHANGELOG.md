@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.11](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.14.10...local-guide-v1.14.11) (2026-10-20)
+
+
+### Bug Fixes
+
+* read module texts with bundle_text! ([6c1cd79](https://github.com/PortakiApp/portaki-modules/commit/6c1cd798e9549ee4b1addbdaf0feab9d5fe085d2))
+
 ## [1.14.10](https://github.com/PortakiApp/portaki-modules/compare/local-guide-v1.14.9...local-guide-v1.14.10) (2026-10-19)
 
 
