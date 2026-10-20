@@ -6,9 +6,24 @@ use portaki_sdk::sdui::common::Leading;
 use portaki_sdk::sdui::primitives::{Card, ListItem, Pill, Stack, Text};
 use portaki_sdk::sdui::surface::Surface;
 
-use super::load::GuestConsumablesData;
+use super::empty::empty_catalog_card;
+use super::load::{load_guest_consumables, GuestConsumablesData};
 use crate::entities::ConsumableReport;
 use crate::{level, status};
+
+/// Guest home card — teaser + open form overlay.
+#[portaki_sdk::surface(
+    guest,
+    id = "home.card",
+    path = "consumables",
+    label_key = "nav.consumables"
+)]
+pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
+    Ok(match load_guest_consumables(&ctx)? {
+        Some(data) => build_home_card(&data),
+        None => empty_catalog_card(HOME_CARD),
+    })
+}
 
 pub fn build_home_card(data: &GuestConsumablesData) -> Surface {
     let open_form = Action::open_overlay(
@@ -64,7 +79,7 @@ pub fn build_home_card(data: &GuestConsumablesData) -> Surface {
                 .title("i18n:home.card.title")
                 .child(Stack::new().gap(12.0).children(children)),
         )
-        .with_id(crate::guest::HOME_CARD);
+        .with_id(HOME_CARD);
     }
 
     children.push(
@@ -83,7 +98,7 @@ pub fn build_home_card(data: &GuestConsumablesData) -> Surface {
             .action(open_form)
             .child(Stack::new().gap(12.0).children(children)),
     )
-    .with_id(crate::guest::HOME_CARD)
+    .with_id(HOME_CARD)
 }
 
 /// La demande, où en est l'hôte (« Prévu », « Livré ») et ce qu'il a répondu.

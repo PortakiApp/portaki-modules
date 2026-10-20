@@ -33,7 +33,7 @@ pub struct GuestConsumablesData {
 pub fn load_guest_consumables(ctx: &GuestContext) -> Result<Option<GuestConsumablesData>> {
     // Un produit sans nom n'a rien à afficher sur sa tuile : il attend que l'hôte le nomme.
     let products = crate::Products::load(ctx)?;
-    let items: Vec<Shown> = crate::domain::named_products(ctx)?
+    let items: Vec<Shown> = crate::domain::product::named_products(ctx)?
         .iter()
         .map(|product| Shown {
             id: product.uuid(),

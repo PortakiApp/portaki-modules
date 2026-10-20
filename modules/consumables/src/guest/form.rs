@@ -7,6 +7,7 @@ use portaki_sdk::sdui::primitives::{
 };
 use portaki_sdk::sdui::surface::Surface;
 
+use super::empty::empty_catalog_card;
 use super::load::{load_guest_consumables, GuestConsumablesData};
 use crate::level;
 
@@ -20,7 +21,7 @@ use crate::level;
 pub fn render_guest_form(ctx: GuestContext) -> Result<Surface> {
     Ok(match load_guest_consumables(&ctx)? {
         Some(data) => build_form_surface(&data),
-        None => super::empty_catalog_card(GUEST_FORM),
+        None => empty_catalog_card(GUEST_FORM),
     })
 }
 
