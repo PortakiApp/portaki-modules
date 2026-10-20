@@ -79,5 +79,5 @@ pub struct Display {
     pub card_limit: u32,
 }
 
-#[portaki_sdk::collection(name = "rules", item = Rule, meta = Display, max = 30, required, import)]
+#[portaki_sdk::collection(name = "rules", item = Rule, meta = Display, max = 30, required, import, legacy = commands::earlier::earlier_rules)]
 pub struct Rules;
