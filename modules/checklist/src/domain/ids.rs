@@ -1,8 +1,8 @@
 //! Event types and catalog id for this module.
 
-use portaki_sdk::prelude::*;
+use portaki_sdk::ModuleId;
 
-define_event_types! {
+portaki_sdk::define_event_types! {
     PROGRESS_UPDATED = "checklist.progress-updated",
     COMPLETED = "checklist.completed",
     WORKSPACE_ACTIVITY_RECORD = "workspace-activity.record",

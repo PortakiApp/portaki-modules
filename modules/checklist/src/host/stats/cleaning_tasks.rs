@@ -4,17 +4,17 @@
 use super::*;
 
 /// Ticks of one task of a host cleaning list.
-pub(super) struct CleaningTask<'a> {
-    pub(super) list: &'a List,
-    pub(super) items: Vec<&'a Step>,
-    pub(super) done: Vec<&'a TaskItemState>,
+pub(crate) struct CleaningTask<'a> {
+    pub(crate) list: &'a List,
+    pub(crate) items: Vec<&'a Step>,
+    pub(crate) done: Vec<&'a TaskItemState>,
     /// `(departure, deadline)` when the platform passed the stays.
-    pub(super) plan: Option<(DateTime<Utc>, Option<DateTime<Utc>>)>,
+    pub(crate) plan: Option<(DateTime<Utc>, Option<DateTime<Utc>>)>,
 }
 
 /// Where a cleaning stands against its deadline.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum Timing {
+pub(crate) enum Timing {
     Open,
     OnTime,
     /// Finished after its deadline, or not finished once it has passed.
@@ -22,15 +22,15 @@ pub(super) enum Timing {
 }
 
 impl CleaningTask<'_> {
-    pub(super) fn finished(&self) -> bool {
+    pub(crate) fn finished(&self) -> bool {
         self.done.len() >= self.items.len()
     }
 
-    pub(super) fn deadline(&self) -> Option<DateTime<Utc>> {
+    pub(crate) fn deadline(&self) -> Option<DateTime<Utc>> {
         self.plan.and_then(|(_, due)| due)
     }
 
-    pub(super) fn timing(&self, now: DateTime<Utc>) -> Timing {
+    pub(crate) fn timing(&self, now: DateTime<Utc>) -> Timing {
         match (self.finished(), self.deadline(), self.last_at()) {
             (true, Some(due), Some(at)) if at > due => Timing::Late,
             (true, _, _) => Timing::OnTime,
@@ -39,15 +39,15 @@ impl CleaningTask<'_> {
         }
     }
 
-    pub(super) fn first_at(&self) -> Option<DateTime<Utc>> {
+    pub(crate) fn first_at(&self) -> Option<DateTime<Utc>> {
         self.done.iter().filter_map(|state| state.done_at).min()
     }
 
-    pub(super) fn last_at(&self) -> Option<DateTime<Utc>> {
+    pub(crate) fn last_at(&self) -> Option<DateTime<Utc>> {
         self.done.iter().filter_map(|state| state.done_at).max()
     }
 
-    pub(super) fn photos(&self) -> usize {
+    pub(crate) fn photos(&self) -> usize {
         self.done
             .iter()
             .filter(|state| state.photo.is_some())
@@ -56,15 +56,15 @@ impl CleaningTask<'_> {
 }
 
 /// Everything `CleaningTask` borrows from, loaded once.
-pub(super) struct CleaningData {
-    pub(super) lists: Vec<List>,
+pub(crate) struct CleaningData {
+    pub(crate) lists: Vec<List>,
     /// Every step, with the id of its list.
-    pub(super) items: Vec<(Uuid, Step)>,
-    pub(super) states: Vec<TaskItemState>,
+    pub(crate) items: Vec<(Uuid, Step)>,
+    pub(crate) states: Vec<TaskItemState>,
 }
 
 impl CleaningData {
-    pub(super) fn steps_of(&self, list: &List) -> Vec<&Step> {
+    pub(crate) fn steps_of(&self, list: &List) -> Vec<&Step> {
         let id = list.uuid();
         self.items
             .iter()
@@ -74,7 +74,7 @@ impl CleaningData {
     }
 }
 
-pub(super) fn cleaning_data() -> Result<CleaningData> {
+pub(crate) fn cleaning_data() -> Result<CleaningData> {
     let lists: Vec<List> = crate::domain::all_lists()?
         .into_iter()
         .filter(|list| {
@@ -98,7 +98,7 @@ pub(super) fn cleaning_data() -> Result<CleaningData> {
 }
 
 /// Tasks ticked since `since`, most recent activity first.
-pub(super) fn cleaning_tasks_of(
+pub(crate) fn cleaning_tasks_of(
     data: &CleaningData,
     since: DateTime<Utc>,
 ) -> Vec<CleaningTask<'_>> {
@@ -131,7 +131,7 @@ pub(super) fn cleaning_tasks_of(
 
 /// One task per departure of `(since, now]` the list's trigger applies to — ticked or not — with
 /// its deadline, most recent departure first.
-pub(super) fn planned_cleanings<'a>(
+pub(crate) fn planned_cleanings<'a>(
     data: &'a CleaningData,
     stays: &[TimelineStay],
     timezone: &str,

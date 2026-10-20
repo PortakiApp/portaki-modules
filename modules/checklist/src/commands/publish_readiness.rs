@@ -1,31 +1,9 @@
-//! Les lectures : les étapes du livret, les coches du séjour, et ce qui bloque la publication.
+//! `publishReadiness` : ce qui bloque la publication.
 
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
-use uuid::Uuid;
 
-use crate::{Lists, Step};
-
-/// Les étapes des listes que le livret montre ([`crate::domain::booklet_lists`]), liste par liste.
-pub fn guest_items() -> Result<Vec<Step>> {
-    Ok(crate::domain::booklet_lists()?
-        .iter()
-        .flat_map(crate::List::written_steps)
-        .collect())
-}
-
-#[portaki_sdk::query(name = "listCompletions", example(label = "Tâches cochées du séjour"))]
-pub fn list_completions(ctx: Context) -> Result<Vec<Uuid>> {
-    let stay_id = ctx
-        .guest
-        .as_ref()
-        .map(|guest| guest.session_id)
-        .ok_or_else(|| PortakiError::Host("stay_id_required".to_string()))?;
-    Ok(crate::storage::list_completions(Some(stay_id))?
-        .into_iter()
-        .map(|row| row.item_id)
-        .collect())
-}
+use crate::Lists;
 
 /// Ce que le SDK relève, plus l'avertissement d'un code écrit en clair dans une étape du livret :
 /// il se lit sans calendrier de révélation (spec Checklist §3). Il ne bloque pas.
