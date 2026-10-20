@@ -37,10 +37,10 @@ rust-version = "1.75"
 #
 # Le prix est vingt-deux endroits à tenir ensemble. `scripts/check-sdk-pin.sh` les compare à
 # chaque CI.
-portaki-sdk = "10.15.0"
-portaki-sdk-macros = "10.15.0"
+portaki-sdk = "10.17.0"
+portaki-sdk-macros = "10.17.0"
 portaki-connectors = "10.0.0"
-portaki-test-utils = "10.15.0"
+portaki-test-utils = "10.17.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 uuid = { version = "1", features = ["serde", "v4", "rng-getrandom"] }
@@ -52,11 +52,3 @@ extism-pdk = "1.4"
 opt-level = "s"
 lto = true
 codegen-units = 1
-
-# SDK 11 : `main` du SDK, en attendant la release 10.17.0 (PortakiApp/portaki-sdk#369). À retirer à
-# sa publication : le pin `portaki-sdk = "…"` des modules portés passe alors à cette version.
-[patch.crates-io]
-portaki-sdk = { git = "https://github.com/PortakiApp/portaki-sdk", branch = "main" }
-portaki-sdk-macros = { git = "https://github.com/PortakiApp/portaki-sdk", branch = "main" }
-portaki-test-utils = { git = "https://github.com/PortakiApp/portaki-sdk", branch = "main" }
-portaki-connectors = { git = "https://github.com/PortakiApp/portaki-sdk", branch = "main" }
