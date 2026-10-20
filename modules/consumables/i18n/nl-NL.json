@@ -121,5 +121,5 @@
   "status.restocked": "Geleverd",
   "surface.host.main.subtitle": "Stel de lijst op — gasten melden tijdens het verblijf wat er op is.",
   "surface.host.main.title": "Verbruiksartikelen",
-  "task.title": "{item} gevraagd"
+  "task.title": "{item_label} gevraagd"
 }

@@ -121,5 +121,5 @@
   "status.restocked": "お届け済み",
   "surface.host.main.subtitle": "リストを決めておくと、滞在中にゲストが足りないものを知らせてくれます。",
   "surface.host.main.title": "消耗品",
-  "task.title": "{item} のリクエスト"
+  "task.title": "{item_label} のリクエスト"
 }

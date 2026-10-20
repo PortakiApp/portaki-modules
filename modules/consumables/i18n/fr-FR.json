@@ -121,5 +121,5 @@
   "status.restocked": "Livré",
   "surface.host.main.subtitle": "Définissez la liste — les voyageurs signalent ce qui manque pendant le séjour.",
   "surface.host.main.title": "Consommables",
-  "task.title": "{item} demandé"
+  "task.title": "{item_label} demandé"
 }
