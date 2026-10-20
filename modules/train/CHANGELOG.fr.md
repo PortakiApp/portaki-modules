@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.5.9
+
+Les messages du formulaire dans toutes les langues.
+
+* Les erreurs sous les champs et les points à compléter avant publication s'affichent dans la langue de l'hôte, plus seulement en français ou en anglais.
+
 ## 2.5.5
 
 Chaque départ de la démo ouvre sa fiche.

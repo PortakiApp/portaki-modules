@@ -10,6 +10,12 @@ Le catalogue et les demandes passent sur la nouvelle base de Portaki.
 * Un produit sans nom, que le voyageur ne voyait pas, n'est pas repris.
 * Le bouton d'import CSV, annoncé « Bientôt », est retiré.
 
+## 2.11.8
+
+Les messages du formulaire dans toutes les langues.
+
+* Les erreurs sous les champs et les points à compléter avant publication s'affichent dans la langue de l'hôte, plus seulement en français ou en anglais.
+
 ## 2.11.1
 
 Montée technique.

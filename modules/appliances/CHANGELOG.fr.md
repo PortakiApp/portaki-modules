@@ -9,6 +9,12 @@ Les appareils passent sur la nouvelle base des listes de Portaki.
 * Une vidéo qu'aucun lecteur ne lit, ou trop d'appareils mis en avant pour la carte, bloque désormais la publication.
 * Le bouton d'import CSV, annoncé « Bientôt », est retiré.
 
+## 1.13.5
+
+Les messages du formulaire dans toutes les langues.
+
+* Les erreurs sous les champs et les points à compléter avant publication s'affichent dans la langue de l'hôte, plus seulement en français ou en anglais.
+
 ## 1.13.1
 
 Chaque appareil de la démo ouvre sa fiche.

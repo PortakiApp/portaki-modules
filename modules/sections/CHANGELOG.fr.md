@@ -7,6 +7,12 @@ Les sections passent sur la nouvelle base des listes de Portaki.
 * Les sections se gèrent dans un tableau ; chacune s'ouvre dans un panneau pour son titre et son texte.
 * Les sections déjà écrites sont reprises à la première ouverture, dans le même ordre ; une section vide n'est pas reprise.
 
+## 1.7.7
+
+Montée technique.
+
+* Le module passe à la dernière base technique de Portaki ; rien ne change pour l'hôte ni pour le voyageur.
+
 ## 1.7.1
 
 Montée technique.

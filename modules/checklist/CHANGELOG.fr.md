@@ -9,6 +9,13 @@ Les checklists passent sur la nouvelle base des listes de Portaki.
 * Une étape laissée vide disparaît à l'enregistrement.
 * Décocher une tâche de ménage dans la frise la rouvre.
 
+## 1.10.4
+
+Les messages du formulaire dans toutes les langues.
+
+* Les erreurs sous les champs et les points à compléter avant publication s'affichent dans la langue de l'hôte, plus seulement en français ou en anglais.
+* Les heures du ménage s'affichent à l'heure du logement, et non plus à celle du serveur.
+
 ## 1.10.2
 
 La démo dit « Départ demain ».
