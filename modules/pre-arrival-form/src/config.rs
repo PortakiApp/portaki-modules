@@ -5,6 +5,7 @@
 //! - which questions are enabled (`ask_*`)
 
 use chrono::{DateTime, Duration, Utc};
+use portaki_sdk::bundle_text;
 use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::host::time::PropertyTz;
@@ -311,12 +312,12 @@ impl ModuleConfig {
         if self.custom_questions.len() > MAX_CUSTOM_QUESTIONS {
             problems.push((
                 "custom_questions".into(),
-                crate::i18n::text("host.custom.tooMany"),
+                bundle_text!("host.custom.tooMany"),
             ));
         }
         for (index, question) in self.custom_questions.iter().enumerate() {
             let label = if question.label.is_blank() {
-                Some(crate::i18n::text("host.custom.label.required"))
+                Some(bundle_text!("host.custom.label.required"))
             } else {
                 too_long(&question.label, 120)
             };
@@ -326,7 +327,7 @@ impl ModuleConfig {
             if question.kind == QuestionKind::Choice {
                 let options = question.options();
                 let error = if options.len() < MIN_OPTIONS {
-                    Some(crate::i18n::text("host.custom.options.min"))
+                    Some(bundle_text!("host.custom.options.min"))
                 } else {
                     options.iter().find_map(|option| too_long(option, 40))
                 };

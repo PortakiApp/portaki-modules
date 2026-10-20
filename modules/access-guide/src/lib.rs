@@ -7,7 +7,6 @@ mod email_context;
 mod email_i18n;
 mod guest;
 mod host;
-mod i18n;
 mod queries;
 mod reveal;
 mod stay_code;

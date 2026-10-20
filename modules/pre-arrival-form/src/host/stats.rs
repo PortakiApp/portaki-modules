@@ -5,13 +5,14 @@
 //! et le module ne connaît un séjour qu'une fois son formulaire rempli. Le pourcentage viendra
 //! quand la plateforme passera les séjours de la période à `statsSummary`.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::stats::{self, Period, StatsSummary, StatsSummaryArgs};
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{EmptyState, Page, Stat};
 use portaki_sdk::sdui::surface::Surface;
 
-use crate::{i18n, storage};
+use crate::storage;
 
 /// Formulaires remplis sur la période.
 fn filled(period: Period) -> Result<usize> {
@@ -28,7 +29,7 @@ fn filled(period: Period) -> Result<usize> {
 pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummary> {
     Ok(stats::summary(
         filled(args.period())?.to_string(),
-        i18n::text("stats.tile"),
+        bundle_text!("stats.tile"),
     ))
 }
 

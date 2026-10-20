@@ -1,6 +1,7 @@
 //! Module queries — stay reports, host recent list, email context.
 
 use chrono::{DateTime, Utc};
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
@@ -95,7 +96,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             id: format!("config.{field}"),
             level: PublishLevel::Required,
             ok: false,
-            label: crate::i18n::text(field_label(field), &[]),
+            label: bundle_text!(field_label(field)),
             hint: error,
         })
         .collect();

@@ -5,6 +5,7 @@
 //! Airbnb link is not known here. The platform passes the period's stays to the detail page
 //! (`input.stays`): the response rate is the reviews of the period over its departures.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::stats::{self, StatsSummary, StatsSummaryArgs};
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
@@ -13,7 +14,6 @@ use portaki_sdk::sdui::surface::Surface;
 use portaki_sdk::sdui::{ChartKind, ChartPoint, FeedStatus};
 
 use crate::commands::{load_reviews, StoredReview};
-use crate::i18n;
 
 /// Words that bring a theme up, French and English, matched in lower case.
 const THEMES: &[(&str, &[&str])] = &[
@@ -92,7 +92,7 @@ pub fn stats_summary(ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummar
     let count = reviews.len().to_string();
     Ok(stats::summary(
         value,
-        i18n::text(&format!("stats.tile.{days}"), &[("count", &count)]),
+        bundle_text!(&format!("stats.tile.{days}"), &[("count", &count)]),
     ))
 }
 

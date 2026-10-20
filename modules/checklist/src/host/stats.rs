@@ -6,6 +6,7 @@
 //! with them, a stay that never opened its list shows as « Non remplie » and a cleaning is judged
 //! against its deadline. Without them (developer preview, older platform), both stay unknown.
 
+use portaki_sdk::bundle_text;
 use std::collections::BTreeMap;
 
 use chrono::{DateTime, Duration, Utc};
@@ -21,8 +22,8 @@ use uuid::Uuid;
 use crate::entities::{Checklist, ChecklistItem, TaskItemState};
 use crate::labels;
 use crate::lists;
+use crate::storage;
 use crate::tasks::{parse_task_id, plan_tasks, task_id};
-use crate::{i18n, storage};
 
 #[portaki_sdk::query(
     name = "statsSummary",
@@ -41,10 +42,7 @@ pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSumma
         "checklist" => {
             let stays = guest_stays(since)?;
             let value = percent(complete_count(&stays), stays.len());
-            Ok(stats::summary(
-                value,
-                i18n::text("stats.checklist.tile", &[]),
-            ))
+            Ok(stats::summary(value, bundle_text!("stats.checklist.tile")))
         }
         "cleaning" => {
             let data = cleaning_data()?;
@@ -53,7 +51,7 @@ pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSumma
             let finished = tasks.len() - open;
             let tile = stats::summary(
                 percent(finished, tasks.len()),
-                i18n::text("stats.cleaning.tile", &[]),
+                bundle_text!("stats.cleaning.tile"),
             );
             if open == 0 {
                 return Ok(tile);
@@ -61,7 +59,7 @@ pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSumma
             let count = open.to_string();
             Ok(tile.attention(
                 AttentionLevel::Action,
-                i18n::text("stats.cleaning.attention", &[("count", &count)]),
+                bundle_text!("stats.cleaning.attention", &[("count", &count)]),
             ))
         }
         other => Err(PortakiError::Host(format!("unknown_stats_key:{other}"))),

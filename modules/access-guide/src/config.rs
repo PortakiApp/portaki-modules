@@ -5,6 +5,7 @@
 //! platform held it, the module kept a nested blob in KV `config` and its copy per language in
 //! `texts/{lang}`: [`legacy`] maps both onto the declared keys.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::hours;
@@ -759,7 +760,6 @@ impl HostConfig {
     /// secret revient masqué, et le juger sur son masque le dirait faux à tort.
     pub fn problems(&self) -> Vec<(String, I18nText)> {
         use portaki_sdk::config::check;
-        let text = crate::i18n::text;
         let too_long = |value: &I18nText, max: usize| {
             value
                 .by_language()
@@ -777,7 +777,7 @@ impl HostConfig {
         push(
             "method_other".into(),
             if other && self.method_other.is_blank() && self.method_instructions.is_blank() {
-                Some(text("host.other.required"))
+                Some(bundle_text!("host.other.required"))
             } else {
                 too_long(&self.method_other, 80)
             },
@@ -791,7 +791,7 @@ impl HostConfig {
                 "reveal_hours".into(),
                 self.reveal_hours
                     .is_some_and(|hours| !(1..=168).contains(&hours))
-                    .then(|| text("host.reveal.hours.invalid")),
+                    .then(|| bundle_text!("host.reveal.hours.invalid")),
             );
         }
         push(
@@ -801,7 +801,8 @@ impl HostConfig {
         push("building_note".into(), too_long(&self.building_note, 280));
         push(
             "arrival_video_url".into(),
-            (!is_video_url(self.arrival_video_url.trim())).then(|| text("host.video.invalid")),
+            (!is_video_url(self.arrival_video_url.trim()))
+                .then(|| bundle_text!("host.video.invalid")),
         );
         push(
             "keybox_location".into(),
@@ -824,13 +825,13 @@ impl HostConfig {
         if self.method() == Some(PrimaryMethod::InPerson) {
             push(
                 "handover_slot".into(),
-                (self.handover_slot().is_err()).then(|| text("host.handover.slot.invalid")),
+                (self.handover_slot().is_err()).then(|| bundle_text!("host.handover.slot.invalid")),
             );
             if self.handover_by_other() {
                 push(
                     "handover_name".into(),
                     if self.handover_name.trim().is_empty() {
-                        Some(text("host.handover.name.required"))
+                        Some(bundle_text!("host.handover.name.required"))
                     } else {
                         check::max_chars(&self.handover_name, 60)
                     },
@@ -855,7 +856,7 @@ impl HostConfig {
         let steps = self.steps.iter().filter(|s| !s.is_blank()).count();
         push(
             "steps".into(),
-            (steps > MAX_STEPS).then(|| text("host.steps.tooMany")),
+            (steps > MAX_STEPS).then(|| bundle_text!("host.steps.tooMany")),
         );
         for (index, step) in self.steps.iter().enumerate() {
             if step.is_blank() {
@@ -864,7 +865,7 @@ impl HostConfig {
             push(
                 format!("steps.{index}.title"),
                 if step.title.is_blank() {
-                    Some(text("host.step.title.required"))
+                    Some(bundle_text!("host.step.title.required"))
                 } else {
                     too_long(&step.title, 60)
                 },
@@ -890,10 +891,7 @@ impl HostConfig {
             && self.desk_hours.trim().is_empty()
             && !self.building_staff_hours.is_blank()
         {
-            warnings.push((
-                "desk_hours".into(),
-                crate::i18n::text("host.desk.hours.legacy"),
-            ));
+            warnings.push(("desk_hours".into(), bundle_text!("host.desk.hours.legacy")));
         }
         // Le tarif, dans la rue ou en parking public (§2.8). Un avertissement : les parkings
         // saisis avant ce champ ne bloquent pas la publication.
@@ -901,7 +899,7 @@ impl HostConfig {
         {
             warnings.push((
                 "parking_price".into(),
-                crate::i18n::text("host.parking.price.missing"),
+                bundle_text!("host.parking.price.missing"),
             ));
         }
         warnings
@@ -1227,14 +1225,14 @@ fn desk_hours_overlap(raw: &str) -> Option<I18nText> {
         .zip(&week)
         .find(|(_, ranges)| hours::overlaps(ranges))?
         .0;
-    let name = crate::i18n::text(&format!("day.{day}"));
+    let name = bundle_text!(&format!("day.{day}"));
     // « le mardi » : en français, le jour garde sa minuscule au milieu d'une phrase.
     let message = |lang: &str| {
         let day = match lang {
             "fr" => name.get(lang).to_lowercase(),
             _ => name.get(lang).to_string(),
         };
-        crate::i18n::text_vars("host.desk.hours.overlap", &[("day", &day)])
+        bundle_text!("host.desk.hours.overlap", &[("day", &day)])
             .get(lang)
             .to_string()
     };

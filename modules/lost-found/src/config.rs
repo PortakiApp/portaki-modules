@@ -4,6 +4,7 @@
 //! décrits dans une phrase de l'interface hôte sans exister nulle part. Deux cas de la maquette
 //! étaient donc inatteignables — *délai dépassé* et *renvoi aux frais du voyageur*.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Serialize};
@@ -119,20 +120,19 @@ impl ModuleConfig {
     /// Un délai hors bornes est corrigé à la lecture (`window_days()` le borne) : l'erreur dit à
     /// l'hôte que sa valeur n'est pas celle que le voyageur lira.
     pub fn problems(&self) -> Vec<(&'static str, I18nText)> {
-        let text = crate::i18n::text;
         let out_of = |value: f64, min: u32, max: u32| {
             value != 0.0 && !(f64::from(min)..=f64::from(max)).contains(&value)
         };
         let mut problems = Vec::new();
         if out_of(self.window_days, MIN_WINDOW_DAYS, MAX_WINDOW_DAYS) {
-            problems.push(("window_days", text("host.window.error", &[])));
+            problems.push(("window_days", bundle_text!("host.window.error")));
         }
         if out_of(self.keep_days, MIN_KEEP_DAYS, MAX_KEEP_DAYS) {
-            problems.push(("keep_days", text("host.keep.error", &[])));
+            problems.push(("keep_days", bundle_text!("host.keep.error")));
         }
         let offered = self.chosen_options();
         if offered.is_empty() {
-            problems.push(("return", text("host.return.error", &[])));
+            problems.push(("return", bundle_text!("host.return.error")));
         }
         if offered.contains(&"pickup") {
             for (_, note) in self.pickup_note.by_language() {
@@ -144,7 +144,7 @@ impl ModuleConfig {
         }
         if offered.contains(&"donate") {
             if self.donate_org.trim().is_empty() {
-                problems.push(("donate_org", text("host.donateOrg.error", &[])));
+                problems.push(("donate_org", bundle_text!("host.donateOrg.error")));
             } else if let Some(error) = check::max_chars(&self.donate_org, DONATE_ORG_MAX) {
                 problems.push(("donate_org", error));
             }

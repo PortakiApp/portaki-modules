@@ -6,12 +6,11 @@
 //! par adresse : la plateforme compte par surface du manifeste. Sans statistiques du livret
 //! (`views` absent), la tuile affiche « — » et le détail le dit.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::stats::{self, StatsSummary, StatsSummaryArgs, StatsViews};
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{EmptyState, Grid, Page, Stat};
 use portaki_sdk::sdui::surface::Surface;
-
-use crate::i18n;
 
 /// La fiche d'une adresse.
 const SPOT: &str = "explore.item";
@@ -33,7 +32,7 @@ pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSumma
     let value = args
         .views
         .map_or_else(|| "—".to_owned(), |views| viewed(&views).to_string());
-    Ok(stats::summary(value, i18n::text("stats.tile")))
+    Ok(stats::summary(value, bundle_text!("stats.tile")))
 }
 
 #[portaki_sdk::surface(

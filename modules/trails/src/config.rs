@@ -1,5 +1,6 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Serialize};
@@ -84,14 +85,13 @@ impl ModuleConfig {
     /// formulaire, et dans `publishReadiness`. `property` est la position réelle du logement :
     /// sans elle, le départ n'est pas jugé trop loin.
     pub fn problems(&self, property: Option<(f64, f64)>) -> Vec<(String, I18nText)> {
-        let text = crate::i18n::text;
         let mut problems: Vec<(String, I18nText)> = Vec::new();
         if let Some(error) = check::https_url(self.commune_url.trim()) {
             problems.push(("commune_url".into(), error));
         }
         let filled = self.trails.iter().filter(|t| !t.is_blank()).count();
         if filled > MAX_TRAILS {
-            problems.push(("trails".into(), text("host.trails.tooMany")));
+            problems.push(("trails".into(), bundle_text!("host.trails.tooMany")));
         }
         let out_of = |value: Option<f64>, (min, max): (f64, f64)| {
             value.is_some_and(|v| !(min..=max).contains(&v))
@@ -101,7 +101,7 @@ impl ModuleConfig {
                 continue;
             }
             let title = if trail.title.is_blank() {
-                Some(text("host.trails.title.required"))
+                Some(bundle_text!("host.trails.title.required"))
             } else {
                 trail
                     .title
@@ -118,9 +118,9 @@ impl ModuleConfig {
             let (season_from, season_to) = (trail.season_from.trim(), trail.season_to.trim());
             let season = |own: &str, other: &str| {
                 if own.is_empty() && !other.is_empty() {
-                    Some(text("host.trails.season.both"))
+                    Some(bundle_text!("host.trails.season.both"))
                 } else if !own.is_empty() && parse_month_day(own).is_none() {
-                    Some(text("host.trails.season.format"))
+                    Some(bundle_text!("host.trails.season.format"))
                 } else {
                     None
                 }
@@ -132,22 +132,22 @@ impl ModuleConfig {
                     trail
                         .level_key()
                         .is_none()
-                        .then(|| text("host.trails.level.required")),
+                        .then(|| bundle_text!("host.trails.level.required")),
                 ),
                 (
                     "duration_min",
                     out_of(trail.duration_total(), DURATION_MIN)
-                        .then(|| text("host.trails.duration.range")),
+                        .then(|| bundle_text!("host.trails.duration.range")),
                 ),
                 (
                     "distance_km",
                     out_of(trail.distance_km, DISTANCE_KM)
-                        .then(|| text("host.trails.distance.range")),
+                        .then(|| bundle_text!("host.trails.distance.range")),
                 ),
                 (
                     "elevation_m",
                     out_of(trail.elevation_m, ELEVATION_M)
-                        .then(|| text("host.trails.elevation.range")),
+                        .then(|| bundle_text!("host.trails.elevation.range")),
                 ),
                 ("link_url", check::https_url(trail.link_url.trim())),
                 (
@@ -159,7 +159,7 @@ impl ModuleConfig {
                 ),
                 (
                     "lat",
-                    start_misplaced.then(|| text("host.trails.start.required")),
+                    start_misplaced.then(|| bundle_text!("host.trails.start.required")),
                 ),
                 ("tips", trail.tips_problem()),
                 ("season_from", season(season_from, season_to)),
@@ -480,7 +480,7 @@ impl TrailRow {
         self.tips.by_language().find_map(|(_, text)| {
             let lines: Vec<&str> = text.lines().filter(|l| !l.trim().is_empty()).collect();
             if lines.len() > MAX_TIPS {
-                Some(crate::i18n::text("host.trails.tips.tooMany"))
+                Some(bundle_text!("host.trails.tips.tooMany"))
             } else {
                 lines
                     .iter()

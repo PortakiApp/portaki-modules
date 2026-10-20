@@ -10,7 +10,6 @@ mod email_text;
 mod entities;
 mod guest;
 mod host;
-mod i18n;
 mod ids;
 mod kind;
 mod queries;

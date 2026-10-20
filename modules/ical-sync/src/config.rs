@@ -1,5 +1,6 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::booking_channel::{BookingChannel, ChannelSignal};
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::prelude::*;
@@ -270,7 +271,7 @@ impl ModuleConfig {
         if self.calendars.is_empty() {
             problems.push((
                 "calendars".to_string(),
-                crate::i18n::text("host.calendars.required", &[]),
+                bundle_text!("host.calendars.required"),
             ));
         }
         for (index, feed) in self.calendars.iter().enumerate() {
@@ -302,7 +303,7 @@ impl ModuleConfig {
             .map(|(index, _)| {
                 (
                     format!("calendars.{index}.url"),
-                    crate::i18n::text("host.calendar.url.unreachable", &[]),
+                    bundle_text!("host.calendar.url.unreachable"),
                 )
             })
             .collect()

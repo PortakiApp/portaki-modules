@@ -1,5 +1,6 @@
 //! Structured house-rules payload (not TipTap).
 
+use portaki_sdk::bundle_text;
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
@@ -207,7 +208,7 @@ impl RuleItem {
     pub fn problems(&self) -> Vec<(&'static str, portaki_sdk::contracts::i18n::I18nText)> {
         use portaki_sdk::config::check::max_chars;
         let title = if self.title.trim().is_empty() && !self.is_blank() {
-            Some(crate::i18n::text("host.rule.title.required"))
+            Some(bundle_text!("host.rule.title.required"))
         } else {
             max_chars(&self.title, TITLE_MAX)
         };

@@ -8,6 +8,7 @@
 //! the same one `publishReadiness` reports; no Save button — the shell autosaves through
 //! `updateConfig`.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::i18n::I18nText;
 mod stats;
 
@@ -387,7 +388,7 @@ fn spot_panel(
         }
     } else if !spot.is_blank() {
         position = position.error(
-            crate::i18n::text("host.spot.position.required")
+            bundle_text!("host.spot.position.required")
                 .get(&ctx.locale)
                 .to_string(),
         );

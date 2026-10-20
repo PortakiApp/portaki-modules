@@ -5,7 +5,6 @@ mod config;
 mod email_i18n;
 mod email_send;
 mod host;
-mod i18n;
 mod ics;
 mod queries;
 mod sync_state;

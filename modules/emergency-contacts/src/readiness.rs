@@ -1,6 +1,7 @@
 //! Publication readiness: the field errors of [`ModuleConfig::problems`], each naming its field,
 //! and the warning of a contact that repeats the host's own number (spec Urgences §3).
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 
@@ -13,7 +14,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         .problems()
         .into_iter()
         .map(|(field, error)| PublishCheck {
-            label: crate::i18n::text(field_label(&field)),
+            label: bundle_text!(field_label(&field)),
             id: format!("config.{field}"),
             level: PublishLevel::Required,
             ok: false,
@@ -41,8 +42,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
                 id: format!("config.contacts.{index}.phone"),
                 level: PublishLevel::Recommended,
                 ok: false,
-                label: crate::i18n::text("host.contact.phone"),
-                hint: crate::i18n::text("publish.duplicate.hint"),
+                label: bundle_text!("host.contact.phone"),
+                hint: bundle_text!("publish.duplicate.hint"),
             });
         }
     }
@@ -59,8 +60,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
                         id: format!("config.{key}_lat"),
                         level: PublishLevel::Recommended,
                         ok: false,
-                        label: crate::i18n::text(&format!("host.{key}.position")),
-                        hint: crate::i18n::text(&format!("publish.far.{key}")),
+                        label: bundle_text!(&format!("host.{key}.position")),
+                        hint: bundle_text!(&format!("publish.far.{key}")),
                     });
                 }
             }

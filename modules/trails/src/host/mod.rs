@@ -6,6 +6,7 @@
 //! le lien de la commune ; « Sur votre page publique ». Une erreur s'affiche sous son champ et
 //! bloque « Publier » (`publishReadiness`), jamais l'enregistrement.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::i18n::I18nText;
 mod stats;
 
@@ -155,7 +156,7 @@ fn trails_section(view: &View, ctx: &HostContext) -> Component {
     // de `problems`.
     let error = view.error("trails", ctx).or_else(|| {
         view.config.parse_trails().is_empty().then(|| {
-            crate::i18n::text("publish.trails.hint")
+            bundle_text!("publish.trails.hint")
                 .get(&ctx.locale)
                 .to_string()
         })
@@ -347,7 +348,7 @@ fn trail_panel(
     // La trace en premier : elle calcule le reste.
     let mut gpx = field("gpx_file", "i18n:host.trails.gpx");
     if let Some(Err(refusal)) = &read {
-        gpx = gpx.error(crate::i18n::text(refusal).get(&ctx.locale).to_string());
+        gpx = gpx.error(bundle_text!(refusal).get(&ctx.locale).to_string());
     }
     children.push(
         gpx.child(
@@ -396,7 +397,7 @@ fn trail_panel(
     let mut elevation = field("elevation_m", "i18n:host.trails.elevation");
     if track.is_some_and(|t| !t.has_elevation) && values.elevation.is_none() {
         elevation = elevation.error(
-            crate::i18n::text("host.trails.gpx.noElevation")
+            bundle_text!("host.trails.gpx.noElevation")
                 .get(&ctx.locale)
                 .to_string(),
         );
@@ -577,7 +578,7 @@ fn start_field(
     // Trop loin bloque ; absent avertit, avec le même message.
     let error = error.or_else(|| {
         (values.start.is_none() && !trail.is_blank()).then(|| {
-            crate::i18n::text("host.trails.start.required")
+            bundle_text!("host.trails.start.required")
                 .get(&ctx.locale)
                 .to_string()
         })

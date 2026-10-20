@@ -6,6 +6,7 @@
 //! that and numbers alike. The old KV blob went through [`legacy`].
 
 use chrono::{Datelike, NaiveDate, Weekday};
+use portaki_sdk::bundle_text;
 use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::sdui::hours;
@@ -381,7 +382,7 @@ impl ActivityRow {
         [
             (
                 "url",
-                refused.then(|| crate::i18n::text("host.activities.error.badUrl")),
+                refused.then(|| bundle_text!("host.activities.error.badUrl")),
             ),
             ("tip", too_long(&self.tip, 200)),
         ]
@@ -423,7 +424,7 @@ impl ModuleConfig {
         let mut problems: Vec<(String, I18nText)> = Vec::new();
         let filled = self.spots.iter().filter(|s| !s.is_blank()).count();
         if filled > MAX_SPOTS {
-            problems.push(("spots".into(), crate::i18n::text("host.spots.tooMany")));
+            problems.push(("spots".into(), bundle_text!("host.spots.tooMany")));
         }
         for (index, spot) in self.spots.iter().enumerate() {
             for (key, error) in spot.problems() {
@@ -438,7 +439,7 @@ impl ModuleConfig {
         if activities > MAX_HOST_ACTIVITIES {
             problems.push((
                 "host_activities".into(),
-                crate::i18n::text("host.hostActivities.tooMany"),
+                bundle_text!("host.hostActivities.tooMany"),
             ));
         }
         for (index, activity) in self.host_activities.iter().enumerate() {
@@ -452,7 +453,7 @@ impl ModuleConfig {
             if self.providers.as_ref().is_some_and(Vec::is_empty) && !self.activities_enabled {
                 problems.push((
                     "providers".into(),
-                    crate::i18n::text("host.partners.providers.required"),
+                    bundle_text!("host.partners.providers.required"),
                 ));
             }
             let (min, max) = PARTNER_RADIUS_KM;
@@ -462,7 +463,7 @@ impl ModuleConfig {
             {
                 problems.push((
                     "partner_radius_km".into(),
-                    crate::i18n::text("host.partners.radius.range"),
+                    bundle_text!("host.partners.radius.range"),
                 ));
             }
             let (min, max) = PARTNER_MAX_PRICE;
@@ -472,14 +473,14 @@ impl ModuleConfig {
             {
                 problems.push((
                     "partner_max_price".into(),
-                    crate::i18n::text("host.partners.maxPrice.range"),
+                    bundle_text!("host.partners.maxPrice.range"),
                 ));
             }
             let links = self.activities.iter().filter(|a| !a.is_blank()).count();
             if links > crate::affiliate::MAX_CURATED_LINKS {
                 problems.push((
                     "activities".into(),
-                    crate::i18n::text("host.activities.error.tooMany"),
+                    bundle_text!("host.activities.error.tooMany"),
                 ));
             }
             for (index, link) in self.activities.iter().enumerate() {
@@ -943,13 +944,13 @@ impl SpotRow {
         let season = [&self.season_from, &self.season_to]
             .into_iter()
             .any(|day| day.as_deref().is_some_and(|d| day_of_year(d).is_none()))
-            .then(|| crate::i18n::text("host.spot.season.invalid"));
+            .then(|| bundle_text!("host.spot.season.invalid"));
         let note = self.note.as_ref().and_then(|note| too_long(note, 280));
         [
             (
                 "title",
                 if self.title.is_blank() {
-                    Some(crate::i18n::text("host.spot.title.required"))
+                    Some(bundle_text!("host.spot.title.required"))
                 } else {
                     too_long(&self.title, 60)
                 },
@@ -958,7 +959,7 @@ impl SpotRow {
                 "category",
                 self.category
                     .is_none()
-                    .then(|| crate::i18n::text("host.spot.category.required")),
+                    .then(|| bundle_text!("host.spot.category.required")),
             ),
             ("perk", too_long(&self.perk, 120)),
             ("note", note),

@@ -7,6 +7,7 @@
 //! (`input.stays`) — and « when to buy again » the delay between a restock and the next shortage.
 
 use chrono::{DateTime, Datelike, Duration, Utc};
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::stats::{self, AttentionLevel, StatsSummary, StatsSummaryArgs};
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
@@ -18,7 +19,7 @@ use uuid::Uuid;
 
 use crate::entities::{ConsumableItem, ConsumableReport};
 use crate::labels::{labels_from_item, pick_label};
-use crate::{i18n, status, storage};
+use crate::{status, storage};
 
 /// Where an item of the catalog stands.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -98,7 +99,7 @@ pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSumma
         .into_iter()
         .filter(|r| r.created_at >= since)
         .collect();
-    let tile = stats::summary(period.len().to_string(), i18n::text("stats.tile", &[]));
+    let tile = stats::summary(period.len().to_string(), bundle_text!("stats.tile"));
     let Some(top) = top_item(&period) else {
         return Ok(tile);
     };
@@ -114,7 +115,7 @@ pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSumma
         }
         None => (top.item_label.clone(), top.item_label.clone()),
     };
-    let mut text = i18n::text("stats.tile.top", &[]);
+    let mut text = bundle_text!("stats.tile.top");
     text.fr = text.fr.replace("{item}", &fr);
     text.en = text.en.replace("{item}", &en);
     Ok(tile.attention(AttentionLevel::Warning, text))

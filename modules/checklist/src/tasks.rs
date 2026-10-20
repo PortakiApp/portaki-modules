@@ -4,6 +4,7 @@
 //! stored (`task_item_state`). Its id is `<checklistId>:<stayId>`.
 
 use chrono::{DateTime, Duration, NaiveTime, TimeZone, Utc};
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::contracts::timeline::{
     self, TaskCompleteArgs, TaskToggleArgs, TaskUpdated, TimelineStay, TimelineTask,
@@ -19,7 +20,7 @@ use crate::entities::{Checklist, ChecklistItem, TaskItemState};
 use crate::guest::depart::offset_for_iana;
 use crate::labels;
 use crate::lists;
-use crate::{i18n, storage};
+use crate::storage;
 
 #[portaki_sdk::query(
     name = "timelineTasks",
@@ -98,11 +99,11 @@ pub fn plan_tasks(list: &Checklist, stays: &[TimelineStay], timezone: &str) -> V
             _ => None,
         };
         let context = match (arrival_trigger, next) {
-            (true, _) => i18n::text("task.context.beforeArrival", &[("guest", &stay.guest_name)]),
+            (true, _) => bundle_text!("task.context.beforeArrival", &[("guest", &stay.guest_name)]),
             (false, Some(next)) if list.trigger != lists::AT_DEPARTURE_BEFORE_CLEANING => {
-                i18n::text("task.context.beforeArrival", &[("guest", &next.guest_name)])
+                bundle_text!("task.context.beforeArrival", &[("guest", &next.guest_name)])
             }
-            _ => i18n::text(
+            _ => bundle_text!(
                 "task.context.afterDeparture",
                 &[("guest", &stay.guest_name)],
             ),

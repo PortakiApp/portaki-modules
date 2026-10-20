@@ -1,5 +1,6 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::sdui::hours;
@@ -200,7 +201,6 @@ impl ModuleConfig {
     /// Ce qui ne va pas, champ par champ — sous le champ dans le formulaire, et dans
     /// `publishReadiness`, pour que les deux disent la même chose.
     pub fn problems(&self) -> Vec<(String, I18nText)> {
-        let text = crate::i18n::text;
         let mut problems: Vec<(String, I18nText)> = Vec::new();
         let mut push = |field: String, error: Option<I18nText>| {
             if let Some(error) = error {
@@ -218,7 +218,7 @@ impl ModuleConfig {
         let filled = self.contacts.iter().filter(|c| !c.is_blank()).count();
         push(
             "contacts".into(),
-            (filled > MAX_CONTACTS).then(|| text("host.contacts.tooMany")),
+            (filled > MAX_CONTACTS).then(|| bundle_text!("host.contacts.tooMany")),
         );
         for (index, contact) in self.contacts.iter().enumerate() {
             for (key, error) in contact.problems() {
@@ -284,7 +284,6 @@ impl ContactRow {
         if self.is_blank() {
             return Vec::new();
         }
-        let text = crate::i18n::text;
         let too_long = |value: &I18nText, max: usize| {
             value
                 .by_language()
@@ -295,7 +294,7 @@ impl ContactRow {
             (
                 "label",
                 if self.label.is_blank() {
-                    Some(text("host.contact.label.required"))
+                    Some(bundle_text!("host.contact.label.required"))
                 } else {
                     too_long(&self.label, LABEL_MAX)
                 },
@@ -303,7 +302,7 @@ impl ContactRow {
             (
                 "phone",
                 if phone.is_empty() {
-                    Some(text("host.contact.phone.required"))
+                    Some(bundle_text!("host.contact.phone.required"))
                 } else {
                     phone_error(phone)
                 },

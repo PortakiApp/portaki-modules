@@ -6,6 +6,7 @@
 //! per-day run history written by `applyFeeds`.
 
 use chrono::{DateTime, Datelike, Duration, Utc};
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::booking_channel::BookingChannel;
 use portaki_sdk::contracts::stats::{self, AttentionLevel, StatsSummary, StatsSummaryArgs};
 use portaki_sdk::host::time;
@@ -15,7 +16,6 @@ use portaki_sdk::sdui::surface::Surface;
 use portaki_sdk::sdui::{ChartKind, ChartPoint};
 
 use crate::config::ModuleConfig;
-use crate::i18n;
 use crate::sync_state::{load_sync_state, SeenStay, SyncState};
 
 /// Days shown by « Synchronisations par jour ».
@@ -45,7 +45,7 @@ pub fn stats_summary(ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummar
     let imported = imported_since(&state, now - Duration::days(i64::from(args.period)));
     let tile = stats::summary(
         value,
-        i18n::text("stats.tile", &[("count", &imported.to_string())]),
+        bundle_text!("stats.tile", &[("count", &imported.to_string())]),
     );
     let conflicts = count_conflicts(&upcoming(&state, now));
     if conflicts == 0 {
@@ -53,7 +53,7 @@ pub fn stats_summary(ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummar
     }
     Ok(tile.attention(
         AttentionLevel::Action,
-        i18n::text("stats.tile.conflicts", &[("count", &conflicts.to_string())]),
+        bundle_text!("stats.tile.conflicts", &[("count", &conflicts.to_string())]),
     ))
 }
 

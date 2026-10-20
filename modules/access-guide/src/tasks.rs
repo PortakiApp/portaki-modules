@@ -8,6 +8,7 @@
 //! gardée, en KV, par tâche.
 
 use chrono::{DateTime, Utc};
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::timeline::{
     self, TaskCompleteArgs, TaskToggleArgs, TimelineTask, TimelineTaskItem, TimelineTasks,
     TimelineTasksArgs,
@@ -16,7 +17,6 @@ use portaki_sdk::host::{kv, time};
 use portaki_sdk::prelude::*;
 
 use crate::config::ModuleConfig;
-use crate::i18n;
 use crate::reveal::reveal_at;
 
 #[portaki_sdk::query(
@@ -126,14 +126,14 @@ pub fn rotate_code_tasks(
                 None => stay.check_out.format("%d/%m").to_string(),
             };
             let id = rotate_task_id(stay.id);
-            let mut item = TimelineTaskItem::new(ROTATE_ITEM, i18n::text("task.rotateCode.item"));
+            let mut item = TimelineTaskItem::new(ROTATE_ITEM, bundle_text!("task.rotateCode.item"));
             item.done = done(&id);
             timeline::task(
                 id,
                 stay.check_out,
                 args.property_id,
-                i18n::text("task.rotateCode.title"),
-                i18n::text_vars("task.rotateCode.context", &[("date", &date)]),
+                bundle_text!("task.rotateCode.title"),
+                bundle_text!("task.rotateCode.context", &[("date", &date)]),
             )
             .stay(stay.id)
             .items(vec![item])
@@ -198,9 +198,9 @@ fn code_tasks(
             let days = (stay.check_in - now).num_days().max(1).to_string();
             let guest = stay.guest_name.trim();
             let context = if guest.is_empty() {
-                i18n::text_vars("task.missingCode.context.anonymous", &[("days", &days)])
+                bundle_text!("task.missingCode.context.anonymous", &[("days", &days)])
             } else {
-                i18n::text_vars(
+                bundle_text!(
                     "task.missingCode.context",
                     &[("guest", guest), ("days", &days)],
                 )
@@ -209,7 +209,7 @@ fn code_tasks(
                 format!("missing-code:{}", stay.id),
                 at,
                 args.property_id,
-                i18n::text("task.missingCode.title"),
+                bundle_text!("task.missingCode.title"),
                 context,
             )
             .stay(stay.id)

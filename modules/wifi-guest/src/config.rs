@@ -1,5 +1,6 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Serialize};
@@ -403,7 +404,7 @@ fn problem(id: &str, label: &'static str, message: &str, blocking: bool) -> Prob
     Problem {
         id: id.into(),
         label,
-        message: crate::i18n::text(message),
+        message: bundle_text!(message),
         blocking,
     }
 }

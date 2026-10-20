@@ -4,6 +4,7 @@
 //! form may send the radius and the event coordinates as text (`radius_km: "15"`, `lat: "43.5"`);
 //! the readers below accept that and numbers alike.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::host::time::PropertyTz;
@@ -79,7 +80,6 @@ impl ModuleConfig {
     /// et dans `publishReadiness`, qui bloque dessus. `home`, le repère du logement : sans lui, la
     /// distance au rayon ne se mesure pas.
     pub fn problems(&self, home: Option<(f64, f64)>) -> Vec<(String, I18nText)> {
-        let text = crate::i18n::text;
         let too_long = |value: &I18nText, max: usize| {
             value
                 .by_language()
@@ -88,10 +88,10 @@ impl ModuleConfig {
         let mut problems: Vec<(String, I18nText)> = Vec::new();
         let filled = self.events.iter().filter(|e| !e.is_blank()).count();
         if !(MIN_RADIUS_KM..=MAX_RADIUS_KM).contains(&self.radius_km) {
-            problems.push(("radius_km".into(), text("host.nearby.radius.range")));
+            problems.push(("radius_km".into(), bundle_text!("host.nearby.radius.range")));
         }
         if filled > MAX_EVENTS {
-            problems.push(("events".into(), text("host.events.tooMany")));
+            problems.push(("events".into(), bundle_text!("host.events.tooMany")));
         }
         for (index, event) in self.events.iter().enumerate() {
             if event.is_blank() {
@@ -105,7 +105,7 @@ impl ModuleConfig {
             push(
                 "title",
                 if event.title.is_blank() {
-                    Some(text("host.event.title.required"))
+                    Some(bundle_text!("host.event.title.required"))
                 } else {
                     too_long(&event.title, TITLE_MAX)
                 },
@@ -119,7 +119,7 @@ impl ModuleConfig {
                 .is_some_and(|(ends, starts)| ends < starts);
             push(
                 "end_time",
-                ends_before.then(|| text("host.event.ends.beforeStart")),
+                ends_before.then(|| bundle_text!("host.event.ends.beforeStart")),
             );
             push("url", event.url.as_deref().and_then(check::https_url));
             push(
@@ -149,11 +149,11 @@ impl ModuleConfig {
             push(
                 "lat",
                 match (event.lat, event.lng, home) {
-                    _ if !event.has_coords() => Some(text("host.event.where.required")),
+                    _ if !event.has_coords() => Some(bundle_text!("host.event.where.required")),
                     (Some(lat), Some(lng), Some((home_lat, home_lng)))
                         if !check::within_km(lat, lng, home_lat, home_lng, radius) =>
                     {
-                        Some(text("host.event.where.tooFar"))
+                        Some(bundle_text!("host.event.where.tooFar"))
                     }
                     _ => None,
                 },
@@ -165,7 +165,6 @@ impl ModuleConfig {
     /// Ce qui mérite un coup d'œil sans bloquer la publication (§2.2) : des contrôles venus
     /// après les données, qu'un hôte déjà publié ne doit pas découvrir en se voyant refuser.
     pub fn warnings(&self) -> Vec<(String, I18nText)> {
-        let text = crate::i18n::text;
         let mut warnings = Vec::new();
         for (index, event) in self.events.iter().enumerate() {
             if event.is_blank() {
@@ -174,11 +173,11 @@ impl ModuleConfig {
             match event.recurrence() {
                 "weekly" if event.weekdays.is_empty() => warnings.push((
                     format!("events.{index}.weekdays"),
-                    text("host.event.weekdays.required"),
+                    bundle_text!("host.event.weekdays.required"),
                 )),
                 "dates" if event.chosen_dates().is_empty() => warnings.push((
                     format!("events.{index}.dates"),
-                    text("host.event.weekdays.required"),
+                    bundle_text!("host.event.weekdays.required"),
                 )),
                 _ => {}
             }
@@ -189,7 +188,7 @@ impl ModuleConfig {
             if too_many_tips {
                 warnings.push((
                     format!("events.{index}.tips"),
-                    text("host.event.tips.tooMany"),
+                    bundle_text!("host.event.tips.tooMany"),
                 ));
             }
         }

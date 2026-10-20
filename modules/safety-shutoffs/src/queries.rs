@@ -1,5 +1,7 @@
 //! Module queries — la porte de publication.
 
+use portaki_sdk::bundle_text;
+use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 
@@ -17,8 +19,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         id: "shutoffs".into(),
         level: PublishLevel::Required,
         ok: !config.parse_shutoffs().is_empty(),
-        label: crate::i18n::text("publish.shutoffs.label"),
-        hint: crate::i18n::text("host.shutoffs.required"),
+        label: bundle_text!("publish.shutoffs.label"),
+        hint: bundle_text!("host.shutoffs.required"),
     }];
 
     // Une ligne sans emplacement ne s'affiche pas : « N emplacements vides ne seront pas
@@ -29,8 +31,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             id: "incomplete".into(),
             level: PublishLevel::Recommended,
             ok: false,
-            label: crate::i18n::text("publish.incomplete.label"),
-            hint: crate::i18n::empty_rows(incomplete),
+            label: bundle_text!("publish.incomplete.label"),
+            hint: empty_rows(incomplete),
         });
     }
 
@@ -50,7 +52,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         .filter(|(field, _)| !missing_location(field))
         .collect();
     items.extend(blocking.into_iter().map(|(field, error)| PublishCheck {
-        label: crate::i18n::text(field_label(&field)),
+        label: bundle_text!(field_label(&field)),
         id: format!("config.{field}"),
         level: PublishLevel::Required,
         ok: false,
@@ -70,4 +72,14 @@ fn field_label(field: &str) -> &'static str {
         "instruction" => "host.shutoffs.instruction",
         _ => "publish.shutoffs.label",
     }
+}
+
+/// « 1 emplacement vide… » / « N emplacements vides… ».
+pub(crate) fn empty_rows(count: usize) -> I18nText {
+    let key = if count == 1 {
+        "host.shutoffs.empty.one"
+    } else {
+        "host.shutoffs.empty.other"
+    };
+    bundle_text!(key, &[("count", &count.to_string())])
 }

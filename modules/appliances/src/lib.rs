@@ -5,7 +5,6 @@ mod content;
 mod entities;
 mod guest;
 mod host;
-mod i18n;
 mod queries;
 mod store;
 mod suggest;

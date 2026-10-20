@@ -10,7 +10,6 @@ mod entities;
 mod events;
 mod guest;
 mod host;
-mod i18n;
 mod ids;
 mod queries;
 mod readiness;

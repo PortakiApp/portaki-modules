@@ -2,6 +2,7 @@
 //! public review link (any platform, detected from the domain), whether it follows the stay's
 //! booking platform, the private comment. The thank-you message stays.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::config::check;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::{ChoiceListLayout, Tone};
@@ -16,7 +17,6 @@ use crate::config::{
     AskFrom, ChannelMode, ModuleConfig, ReviewPlatform, PUBLIC_REVIEWS_MAX, PUBLIC_REVIEWS_MIN,
 };
 use crate::email_text::clip_chars;
-use crate::i18n::text;
 
 #[portaki_sdk::surface(
     host,
@@ -169,7 +169,7 @@ fn public_card(config: &ModuleConfig, consented: &[(String, StoredReview)], loca
                 .into(),
         ]));
     if let Some(key) = public_reviews_problem(config, consented) {
-        reviews = reviews.error(text(key, &[]).get(locale).to_string());
+        reviews = reviews.error(bundle_text!(key).get(locale).to_string());
     }
     Card::new()
         .title("i18n:host.section.public")

@@ -1,5 +1,6 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
+use portaki_sdk::bundle_text;
 use std::collections::BTreeSet;
 
 use crate::schedule::{parse_hm, week_index, DayHours, DaySpan, Schedule};
@@ -151,7 +152,7 @@ impl ModuleConfig {
         if filled > MAX_FACILITIES {
             problems.push((
                 "facilities".to_string(),
-                crate::i18n::text("host.facilities.tooMany"),
+                bundle_text!("host.facilities.tooMany"),
             ));
         }
         for (index, row) in self.facilities.iter().enumerate() {
@@ -493,7 +494,7 @@ impl FacilityRow {
         if self.title.is_blank() {
             problems.push((
                 "title".to_string(),
-                crate::i18n::text("host.facility.name.required"),
+                bundle_text!("host.facility.name.required"),
             ));
         } else if let Some(error) = self
             .title
@@ -505,7 +506,7 @@ impl FacilityRow {
         if self.mode() == MODE_ON_REQUEST && self.note.is_blank() {
             problems.push((
                 "note".to_string(),
-                crate::i18n::text("host.facility.note.required"),
+                bundle_text!("host.facility.note.required"),
             ));
         } else if let Some(error) = self
             .note
@@ -532,17 +533,14 @@ impl FacilityRow {
             if let (true, Some(key)) = (overlaps(&valid), last) {
                 problems.push((
                     key.to_string(),
-                    crate::i18n::text("host.facility.ranges.overlap"),
+                    bundle_text!("host.facility.ranges.overlap"),
                 ));
             }
         }
         if self.mode() == MODE_BY_DAY && !self.week.trim().is_empty() {
             let week = parse_week(&self.week);
             if let Some(day) = (0..7).find(|&day| overlaps(&week[day])) {
-                problems.push((
-                    "week".to_string(),
-                    crate::i18n::overlap_on(crate::schedule::WEEK[day]),
-                ));
+                problems.push(("week".to_string(), overlap_on(crate::schedule::WEEK[day])));
             }
         }
         if self.season_from.trim().is_empty() != self.season_to.trim().is_empty() {
@@ -553,7 +551,7 @@ impl FacilityRow {
             };
             problems.push((
                 missing.to_string(),
-                crate::i18n::text("host.facility.season.both"),
+                bundle_text!("host.facility.season.both"),
             ));
         }
         for (index, entry) in self.dated().enumerate() {
@@ -593,7 +591,7 @@ impl FacilityRow {
             .map(|(index, _)| {
                 (
                     format!("exceptions.{index}.date"),
-                    crate::i18n::text("host.exception.past"),
+                    bundle_text!("host.exception.past"),
                 )
             })
             .collect();
@@ -602,7 +600,7 @@ impl FacilityRow {
         if self.mode() == MODE_SAME && prose && self.same_ranges().is_empty() {
             warnings.push((
                 "hours".to_string(),
-                crate::i18n::text("host.facility.hours.legacy"),
+                bundle_text!("host.facility.hours.legacy"),
             ));
         }
         warnings
@@ -734,6 +732,27 @@ impl FacilityRow {
             .map(String::from)
             .collect()
     }
+}
+
+/// « … le samedi » : le jour dans la langue de chaque texte, en minuscule en français (« le
+/// samedi »), tel quel ailleurs (« on Saturday »).
+fn overlap_on(day: chrono::Weekday) -> I18nText {
+    let mut text = bundle_text!("host.facility.ranges.overlapOn");
+    let fill = |lang: &str, template: &mut String| {
+        let name = portaki_sdk::host::time::weekday_name(day, lang);
+        let name = if lang == "fr" {
+            name.to_lowercase()
+        } else {
+            name.to_string()
+        };
+        *template = template.replace("{day}", &name);
+    };
+    fill("fr", &mut text.fr);
+    fill("en", &mut text.en);
+    for (lang, template) in &mut text.others {
+        fill(lang, template);
+    }
+    text
 }
 
 #[cfg(test)]

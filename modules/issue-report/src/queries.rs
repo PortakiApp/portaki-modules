@@ -1,6 +1,7 @@
 //! Module queries — stay reports and host recent list.
 
 use chrono::{DateTime, Utc};
+use portaki_sdk::bundle_text;
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
@@ -81,7 +82,7 @@ pub fn publish_readiness(
             id: format!("config.{field}"),
             level: PublishLevel::Required,
             ok: false,
-            label: crate::i18n::text(
+            label: bundle_text!(
                 match field {
                     "categories" => "host.category.title",
                     "phases" => "host.phase.title",

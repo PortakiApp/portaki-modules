@@ -8,7 +8,6 @@ mod email_send;
 mod entities;
 mod guest;
 mod host;
-mod i18n;
 mod ids;
 mod queries;
 mod show_when;

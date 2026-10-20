@@ -1,10 +1,10 @@
 //! Module queries — publication readiness.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 
 use crate::config::ModuleConfig;
-use crate::i18n::text;
 
 /// A guest needs a keypad code, or remote unlock: the Nuki Web key (a connector the host adds
 /// in Integrations) plus the lock ID. A rule across the config and a grant, which the declared
@@ -17,8 +17,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         id: "guest-access".into(),
         level: PublishLevel::Required,
         ok: !config.keypad_code_trimmed().is_empty() || remote,
-        label: text("publish.access.label"),
-        hint: text("publish.access.hint"),
+        label: bundle_text!("publish.access.label"),
+        hint: bundle_text!("publish.access.hint"),
     }];
     items.extend(
         config
@@ -28,7 +28,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
                 id: format!("config.{field}"),
                 level: PublishLevel::Required,
                 ok: false,
-                label: text(match field {
+                label: bundle_text!(match field {
                     "keypad_code" => "host.keypadCode.label",
                     _ => "host.deviceName.label",
                 }),

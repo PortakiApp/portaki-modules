@@ -1,5 +1,6 @@
 //! Publication readiness: the field errors of [`ModuleConfig::problems`], each naming its field.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::host::time::{self, PropertyTz};
 use portaki_sdk::prelude::*;
@@ -16,7 +17,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
     // Les erreurs bloquent ; une date passée ou des horaires en texte libre se signalent seulement.
     let check = |level: PublishLevel| {
         move |(field, hint): (String, _)| PublishCheck {
-            label: crate::i18n::text(field_label(&field)),
+            label: bundle_text!(field_label(&field)),
             id: format!("config.{field}"),
             level,
             ok: false,

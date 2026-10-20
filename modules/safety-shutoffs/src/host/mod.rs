@@ -5,6 +5,7 @@
 //! `shutoffs.<i>.<clé>`. Chaque saisie s'enregistre par `updateConfig` ; une erreur s'affiche sous
 //! son champ et bloque « Publier » (`publishReadiness`), jamais l'enregistrement.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::{ChoiceListLayout, Tone};
 use portaki_sdk::sdui::primitives::{
@@ -111,8 +112,7 @@ fn shutoffs_section(config: &ModuleConfig, rows: &[ShutoffRow], ctx: &HostContex
     // « Ajoutez au moins un emplacement. » tant qu'aucune ligne n'a d'emplacement ; « 20 au
     // maximum » vient de `problems`.
     let error = config.error_of("shutoffs").or_else(|| {
-        (!rows.iter().any(ShutoffRow::is_complete))
-            .then(|| crate::i18n::text("host.shutoffs.required"))
+        (!rows.iter().any(ShutoffRow::is_complete)).then(|| bundle_text!("host.shutoffs.required"))
     });
     if let Some(error) = error {
         children.push(
@@ -167,7 +167,7 @@ fn shutoffs_section(config: &ModuleConfig, rows: &[ShutoffRow], ctx: &HostContex
         children.push(
             InlineNotice::new()
                 .tone(Tone::Warning)
-                .message(crate::i18n::empty_rows(empty).get(&ctx.locale))
+                .message(crate::queries::empty_rows(empty).get(&ctx.locale))
                 .into(),
         );
     }
