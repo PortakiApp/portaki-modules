@@ -232,7 +232,7 @@ pub fn task_toggle(ctx: Context, args: TaskToggleArgs) -> Result<()> {
 
     storage::set_task_item(&args.task_id, item.uuid(), args.done, photo, time::now()?)?;
     let restocked = args.done && is_restock(item);
-    after_change(&ctx, &list, &items, &args.task_id, stay_id, restocked)
+    after_change(&ctx, &list, &args.task_id, stay_id, restocked)
 }
 
 #[portaki_sdk::command(
@@ -259,7 +259,7 @@ pub fn task_complete(ctx: Context, args: TaskCompleteArgs) -> Result<()> {
         storage::set_task_item(&args.task_id, item.uuid(), true, None, now)?;
     }
     let restocked = open.iter().any(|item| is_restock(item));
-    after_change(&ctx, &list, &items, &args.task_id, stay_id, restocked)
+    after_change(&ctx, &list, &args.task_id, stay_id, restocked)
 }
 
 fn load_task(ctx: &Context, task_id: &str) -> Result<(List, Vec<Step>, Uuid)> {
@@ -283,11 +283,11 @@ fn is_restock(item: &Step) -> bool {
 fn after_change(
     ctx: &Context,
     list: &List,
-    items: &[Step],
     task_id: &str,
     stay_id: Uuid,
     restocked: bool,
 ) -> Result<()> {
+    let items = list.written_steps();
     let states = storage::task_states(Some(task_id))?;
     let done = items
         .iter()
