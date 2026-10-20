@@ -1,6 +1,7 @@
 //! Publication readiness: the field errors of [`ModuleConfig::problems`], each naming its field,
 //! and a warning for an address without a pin (spec Bons plans §2.1).
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 
@@ -13,7 +14,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         .problems()
         .into_iter()
         .map(|(field, error)| PublishCheck {
-            label: crate::i18n::text(field_label(&field)),
+            label: bundle_text!(field_label(&field)),
             level: level_of(&field),
             id: format!("config.{field}"),
             ok: false,
@@ -31,8 +32,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             id: format!("config.spots.{index}.lat"),
             level: PublishLevel::Recommended,
             ok: false,
-            label: crate::i18n::text("host.spot.address"),
-            hint: crate::i18n::text("host.spot.position.required"),
+            label: bundle_text!("host.spot.address"),
+            hint: bundle_text!("host.spot.position.required"),
         });
     }
     // Loin du logement : sans doute mal placée (§2.1, 50 km). Un avertissement, pas un refus.
@@ -52,8 +53,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
                 id: format!("config.spots.{index}.lat"),
                 level: PublishLevel::Recommended,
                 ok: false,
-                label: crate::i18n::text("host.spot.address"),
-                hint: crate::i18n::text("host.spot.position.far"),
+                label: bundle_text!("host.spot.address"),
+                hint: bundle_text!("host.spot.position.far"),
             });
         }
     }
@@ -67,8 +68,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             id: format!("config.spots.{index}.perk_agreement"),
             level: PublishLevel::Recommended,
             ok: false,
-            label: crate::i18n::text("host.spot.perk"),
-            hint: crate::i18n::text("host.spot.perkAgreement.warning"),
+            label: bundle_text!("host.spot.perk"),
+            hint: bundle_text!("host.spot.perkAgreement.warning"),
         });
     }
     // La page publique n'empêche jamais de publier le livret : hors bornes, son bloc se masque
@@ -81,8 +82,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             id: "config.public_enabled".into(),
             level: PublishLevel::Recommended,
             ok: false,
-            label: crate::i18n::text("host.public.title"),
-            hint: crate::i18n::text("publish.public.hint"),
+            label: bundle_text!("host.public.title"),
+            hint: bundle_text!("publish.public.hint"),
         });
     }
     Ok(PublishReadiness { items })

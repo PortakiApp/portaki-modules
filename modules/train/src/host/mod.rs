@@ -1,5 +1,6 @@
 //! L'écran de l'hôte : la gare, les destinations, un conseil, et l'état du fournisseur d'horaires.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::{ChoiceListLayout, Tone};
 use portaki_sdk::sdui::primitives::{
@@ -139,7 +140,7 @@ fn destinations_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
         .child(FieldHint::new().text("i18n:host.destinations.hint"));
     if proposed.len() > MAX_DESTINATIONS {
         destinations = destinations.error(
-            crate::i18n::text("config.destinations.max")
+            bundle_text!("config.destinations.max")
                 .get(&ctx.locale)
                 .to_string(),
         );
@@ -173,7 +174,7 @@ fn message_card(config: &ModuleConfig, ctx: &HostContext) -> Component {
 }
 
 fn unknown_station(ctx: &HostContext) -> String {
-    crate::i18n::text("config.station.unknown")
+    bundle_text!("config.station.unknown")
         .get(&ctx.locale)
         .to_string()
 }

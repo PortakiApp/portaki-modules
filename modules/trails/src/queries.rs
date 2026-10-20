@@ -1,5 +1,6 @@
 //! Module queries — la porte de publication et les repères de la carte du livret.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::{MapMarker, MapMarkerKind};
@@ -15,8 +16,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         id: "trails".into(),
         level: PublishLevel::Required,
         ok: !config.parse_trails().is_empty(),
-        label: crate::i18n::text("publish.trails.label"),
-        hint: crate::i18n::text("publish.trails.hint"),
+        label: bundle_text!("publish.trails.label"),
+        hint: bundle_text!("publish.trails.hint"),
     }];
 
     // Les erreurs du formulaire bloquent, chacune sur son champ — un niveau manquant compris
@@ -27,7 +28,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             .problems(property)
             .into_iter()
             .map(|(field, error)| PublishCheck {
-                label: crate::i18n::text(field_label(&field)),
+                label: bundle_text!(field_label(&field)),
                 id: format!("config.{field}"),
                 level: PublishLevel::Required,
                 ok: false,
@@ -42,8 +43,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             id: format!("config.trails.{index}.lat"),
             level: PublishLevel::Recommended,
             ok: false,
-            label: crate::i18n::text("host.trails.start"),
-            hint: crate::i18n::text("host.trails.start.required"),
+            label: bundle_text!("host.trails.start"),
+            hint: bundle_text!("host.trails.start.required"),
         });
     }
 
@@ -63,8 +64,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
                     id: format!("config.trails.{index}.gpx_file"),
                     level: PublishLevel::Required,
                     ok: false,
-                    label: crate::i18n::text("host.trails.gpx"),
-                    hint: crate::i18n::text(refusal),
+                    label: bundle_text!("host.trails.gpx"),
+                    hint: bundle_text!(refusal),
                 })
             }),
     );
@@ -76,8 +77,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             id: "measures".into(),
             level: PublishLevel::Recommended,
             ok: false,
-            label: crate::i18n::text("publish.measures.label"),
-            hint: crate::i18n::text("publish.measures.hint"),
+            label: bundle_text!("publish.measures.label"),
+            hint: bundle_text!("publish.measures.hint"),
         });
     }
 
@@ -91,8 +92,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             id: "config.public_enabled".into(),
             level: PublishLevel::Recommended,
             ok: false,
-            label: crate::i18n::text("host.public.title"),
-            hint: crate::i18n::text("publish.public.hint"),
+            label: bundle_text!("host.public.title"),
+            hint: bundle_text!("publish.public.hint"),
         });
     }
 

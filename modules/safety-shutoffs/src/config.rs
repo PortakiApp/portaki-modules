@@ -1,5 +1,6 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::prelude::*;
@@ -104,30 +105,27 @@ impl ModuleConfig {
         }
         let filled = self.rows().iter().filter(|row| !row.is_blank()).count();
         if filled > MAX_SHUTOFFS {
-            problems.push((
-                "shutoffs".into(),
-                crate::i18n::text("host.shutoffs.tooMany"),
-            ));
+            problems.push(("shutoffs".into(), bundle_text!("host.shutoffs.tooMany")));
         }
         for (index, row) in self.rows().iter().enumerate() {
             if row.is_blank() {
                 continue;
             }
             let location = if row.location.is_blank() {
-                Some(crate::i18n::text("host.shutoffs.location.required"))
+                Some(bundle_text!("host.shutoffs.location.required"))
             } else {
                 too_long(&row.location, LOCATION_MAX)
             };
             // Sans nom, le type le donne (§4) — sauf « autre », qui ne nomme rien.
             let title = if row.title.is_blank() && row.kind_raw() == KIND_OTHER {
-                Some(crate::i18n::text("host.shutoffs.title.required"))
+                Some(bundle_text!("host.shutoffs.title.required"))
             } else {
                 too_long(&row.title, TITLE_MAX)
             };
             let kind = row
                 .kind_raw()
                 .is_empty()
-                .then(|| crate::i18n::text("host.shutoffs.kind.required"));
+                .then(|| bundle_text!("host.shutoffs.kind.required"));
             for (key, error) in [
                 ("kind", kind),
                 ("title", title),

@@ -1,11 +1,11 @@
 //! Module queries — house rules content.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::content::{RulesBundle, RulesPayload, MAX_CARD_LIMIT, MAX_RULES, MIN_CARD_LIMIT};
-use crate::i18n::text;
 use crate::store;
 
 /// Arguments for `getContent` (locale optional — defaults to context locale).
@@ -59,8 +59,8 @@ pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
         id: "rules".into(),
         level: PublishLevel::Required,
         ok,
-        label: text("publish.rules.label"),
-        hint: text("publish.rules.hint"),
+        label: bundle_text!("publish.rules.label"),
+        hint: bundle_text!("publish.rules.hint"),
     }];
     // « 30 règles au maximum. » : rien n'est refusé à l'enregistrement, la publication attend.
     if bundle
@@ -72,8 +72,8 @@ pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
             id: "config.rules".into(),
             level: PublishLevel::Required,
             ok: false,
-            label: text("host.rules.title"),
-            hint: text("host.rules.tooMany"),
+            label: bundle_text!("host.rules.title"),
+            hint: bundle_text!("host.rules.tooMany"),
         });
     }
     if let Some(error) = bundle.card_limit.and_then(|n| {
@@ -87,7 +87,7 @@ pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
             id: "config.card_limit".into(),
             level: PublishLevel::Required,
             ok: false,
-            label: text("host.cardLimit.label"),
+            label: bundle_text!("host.cardLimit.label"),
             hint: error,
         });
     }
@@ -103,7 +103,7 @@ pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
                         id,
                         level: PublishLevel::Required,
                         ok: false,
-                        label: text(&format!("host.rule.{field}")),
+                        label: bundle_text!(&format!("host.rule.{field}")),
                         hint: error,
                     });
                 }

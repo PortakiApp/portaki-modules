@@ -1,5 +1,6 @@
 //! Appliances payload — single-language device list (TipTap description).
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::sdui::common::RichTextDoc;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -170,14 +171,11 @@ impl AppliancesPayload {
             let limit = self.featured_limit().to_string();
             problems.push((
                 "featuredLimit".to_string(),
-                crate::i18n::text_with("host.featured.tooMany", &[("count", &limit)]),
+                bundle_text!("host.featured.tooMany", &[("count", &limit)]),
             ));
         }
         if self.devices.len() > MAX_APPLIANCES {
-            problems.push((
-                "devices".to_string(),
-                crate::i18n::text("host.devices.tooMany"),
-            ));
+            problems.push(("devices".to_string(), bundle_text!("host.devices.tooMany")));
         }
         for (index, device) in self.devices.iter().enumerate() {
             // Pas de « Donnez un nom à l'appareil. » ici : `saveAppliance` refuse déjà un nom vide,
@@ -208,7 +206,7 @@ impl AppliancesPayload {
         let mut warnings = Vec::new();
         for (index, device) in self.devices.iter().enumerate() {
             let steps = if device.steps.len() > MAX_STEPS {
-                Some(crate::i18n::text("host.device.steps.tooMany"))
+                Some(bundle_text!("host.device.steps.tooMany"))
             } else {
                 device
                     .steps
@@ -216,7 +214,7 @@ impl AppliancesPayload {
                     .find_map(|step| check::max_chars(&step.text, MAX_STEP_CHARS))
             };
             let video = (!is_video_url(device.video_url.trim()))
-                .then(|| crate::i18n::text("host.video.invalid"));
+                .then(|| bundle_text!("host.video.invalid"));
             for (key, warning) in [
                 ("model", check::max_chars(&device.model, 60)),
                 ("videoUrl", video),
@@ -247,7 +245,7 @@ impl AppliancesPayload {
             if device.name.trim().is_empty() && !named {
                 problems.push((
                     format!("devices.{index}.name"),
-                    crate::i18n::text("host.device.name.required"),
+                    bundle_text!("host.device.name.required"),
                 ));
             }
         }

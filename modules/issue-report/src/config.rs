@@ -4,6 +4,7 @@
 //! pastilles pour tous les logements. Un gîte sans voisin n'a pas de catégorie « Bruit » à
 //! proposer, et une pastille qu'on ne choisit jamais encombre un formulaire qu'on remplit vite.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Serialize};
@@ -216,13 +217,10 @@ impl ModuleConfig {
     pub fn problems(&self) -> Vec<(&'static str, I18nText)> {
         let mut problems = Vec::new();
         if self.chosen_categories().is_empty() {
-            problems.push((
-                "categories",
-                crate::i18n::text("host.category.required", &[]),
-            ));
+            problems.push(("categories", bundle_text!("host.category.required")));
         }
         if self.chosen_phases().is_empty() {
-            problems.push(("phases", crate::i18n::text("host.phase.required", &[])));
+            problems.push(("phases", bundle_text!("host.phase.required")));
         }
         if self.urgent_phone() {
             if let Some(error) = check::phone(&compact(&self.urgent_number)) {

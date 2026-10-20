@@ -3,6 +3,7 @@
 //! une tâche disparaît quand le conflit ou la panne cesse.
 
 use chrono::{DateTime, Duration, NaiveDate, Utc};
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::contracts::timeline::{
     self, TimelineStay, TimelineTask, TimelineTasks, TimelineTasksArgs,
@@ -12,7 +13,6 @@ use portaki_sdk::prelude::*;
 
 use crate::config::ModuleConfig;
 use crate::email_send::source_label;
-use crate::i18n;
 use crate::sync_state::{load_sync_state, SyncState};
 
 /// Une panne plus courte n'est pas une tâche : la synchro suivante peut la lever.
@@ -56,7 +56,7 @@ fn conflicts(
                     format!("conflict:{}:{}", a.id, b.id),
                     start.max(args.from),
                     args.property_id,
-                    i18n::text("task.conflict.title", &[]),
+                    bundle_text!("task.conflict.title"),
                     I18nText::new(&context, &context),
                 )
                 .stay(later(a, b).id),
@@ -112,11 +112,11 @@ fn feeds_down(
                 format!("feed-down:{}", feed.id),
                 late_at.max(args.from),
                 args.property_id,
-                i18n::text(
+                bundle_text!(
                     "task.feedDown.title",
                     &[("source", &source), ("days", &days)],
                 ),
-                i18n::text("task.feedDown.context", &[]),
+                bundle_text!("task.feedDown.context"),
             ))
         })
         .collect()

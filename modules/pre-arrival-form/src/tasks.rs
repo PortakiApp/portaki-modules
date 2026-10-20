@@ -5,13 +5,13 @@
 //!   limite (`deadline`) est passée ou tombe dans les 24 h.
 
 use chrono::{DateTime, Datelike, Duration, Utc};
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::contracts::timeline::{self, TimelineTask, TimelineTasks, TimelineTasksArgs};
 use portaki_sdk::host::time::{self, PropertyTz};
 use portaki_sdk::prelude::*;
 
 use crate::config::ModuleConfig;
-use crate::i18n;
 use crate::show_when::is_form_available;
 use crate::slots::{checkin_hour, minutes_of};
 use crate::storage;
@@ -51,7 +51,7 @@ pub fn unfilled_form_tasks(
                 format!("unfilled:{}", stay.id),
                 stay.check_in,
                 args.property_id,
-                i18n::text("task.unfilled.title"),
+                bundle_text!("task.unfilled.title"),
                 arrival_context(stay.guest_name.trim(), stay.check_in, now, timezone),
             )
             .stay(stay.id)
@@ -86,7 +86,7 @@ fn arrival_context(
         vars.push(("guest", guest));
         format!("task.unfilled.context.{when}")
     };
-    i18n::text_vars(&key, &vars)
+    bundle_text!(&key, &vars)
 }
 
 /// Une tâche par arrivée de la fenêtre annoncée à `late_from` ou après. Rien quand l'hôte a vidé
@@ -114,9 +114,9 @@ pub fn late_arrival_tasks(
         .map(|(stay, time)| {
             let guest = stay.guest_name.trim();
             let title = if guest.is_empty() {
-                i18n::text_vars("task.lateArrival.title.anonymous", &[("time", &time)])
+                bundle_text!("task.lateArrival.title.anonymous", &[("time", &time)])
             } else {
-                i18n::text_vars(
+                bundle_text!(
                     "task.lateArrival.title",
                     &[("guest", guest), ("time", &time)],
                 )

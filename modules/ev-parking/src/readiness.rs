@@ -1,5 +1,6 @@
 //! Publication readiness: the field errors of [`ModuleConfig::problems`], each naming its field.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 
@@ -15,7 +16,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             id: format!("config.{field}"),
             level: PublishLevel::Required,
             ok: false,
-            label: crate::i18n::text(match field {
+            label: bundle_text!(match field {
                 "spot_label" => "host.spotLabel.label",
                 "parking_code" => "host.parkingCode.label",
                 "power_kw" => "host.power.label",
@@ -35,8 +36,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             id: "config.charger_lat".into(),
             level: PublishLevel::Recommended,
             ok: false,
-            label: crate::i18n::text("host.position.label"),
-            hint: crate::i18n::text("host.position.far"),
+            label: bundle_text!("host.position.label"),
+            hint: bundle_text!("host.position.far"),
         });
     }
     Ok(PublishReadiness { items })

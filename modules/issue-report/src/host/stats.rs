@@ -6,6 +6,7 @@
 //! sits under the panels — the module has no config tab.
 
 use chrono::{DateTime, Datelike, Duration, Utc};
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::stats::{self, AttentionLevel, StatsSummary, StatsSummaryArgs};
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
@@ -15,7 +16,7 @@ use portaki_sdk::sdui::{ChartKind, ChartPoint};
 
 use crate::category;
 use crate::entities::IssueReport;
-use crate::{i18n, storage};
+use crate::storage;
 
 /// Tile: reports of the period, and the open ones to handle.
 #[portaki_sdk::query(
@@ -31,7 +32,7 @@ pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSumma
     let open = reports.iter().filter(|r| r.resolved_at.is_none()).count();
     let tile = stats::summary(
         reports.len().to_string(),
-        i18n::text(&format!("stats.tile.{}", period_key(days)), &[]),
+        bundle_text!(&format!("stats.tile.{}", period_key(days)), &[]),
     );
     if open == 0 {
         return Ok(tile);
@@ -39,7 +40,7 @@ pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSumma
     let count = open.to_string();
     Ok(tile.attention(
         AttentionLevel::Action,
-        i18n::text("stats.tile.open", &[("count", &count)]),
+        bundle_text!("stats.tile.open", &[("count", &count)]),
     ))
 }
 

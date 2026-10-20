@@ -1,12 +1,12 @@
 //! Module queries — pre-arrival form status.
 
 use chrono::{DateTime, Utc};
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
 use crate::config::ModuleConfig;
-use crate::i18n::text;
 use crate::storage;
 
 /// Status DTO returned by `getStatus`.
@@ -76,7 +76,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         .problems()
         .into_iter()
         .map(|(field, error)| PublishCheck {
-            label: text(match field.as_str() {
+            label: bundle_text!(match field.as_str() {
                 "slots_until" => "host.slots.until",
                 "late_from" => "host.lateFrom",
                 _ => "host.custom.title",

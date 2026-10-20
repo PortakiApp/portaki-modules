@@ -1,5 +1,6 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
+use portaki_sdk::bundle_text;
 use std::collections::BTreeSet;
 
 use portaki_sdk::config::check;
@@ -166,6 +167,21 @@ fn line_too_long(value: &I18nText, max: usize) -> Option<I18nText> {
 }
 
 /// La première lettre en capitale : « yellow bin » en tête de rangée devient « Yellow bin ».
+/// `{var}` of each language of `text` filled with `value` in that same language, in lowercase
+/// (« Bac jaune », « Yellow bin »).
+fn with_text(mut text: I18nText, var: &str, value: &I18nText) -> I18nText {
+    let placeholder = format!("{{{var}}}");
+    let fill = |lang: &str, template: &mut String| {
+        *template = template.replace(&placeholder, &value.get(lang).to_lowercase());
+    };
+    fill("fr", &mut text.fr);
+    fill("en", &mut text.en);
+    for (lang, template) in &mut text.others {
+        fill(lang, template);
+    }
+    text
+}
+
 pub fn capitalized(text: &str) -> String {
     let mut chars = text.chars();
     match chars.next() {
@@ -309,7 +325,6 @@ impl ModuleConfig {
     /// Ce qui ne va pas, champ par champ (`bins.<i>.title`…) — sous le champ dans le formulaire,
     /// et dans `publishReadiness`, pour que les deux disent la même chose.
     pub fn problems(&self) -> Vec<(String, I18nText)> {
-        let text = crate::i18n::text;
         let mut problems: Vec<(String, I18nText)> = Vec::new();
         let mut push = |field: String, error: Option<I18nText>| {
             if let Some(error) = error {
@@ -319,7 +334,7 @@ impl ModuleConfig {
         let bins = self.bins.iter().filter(|bin| !bin.is_blank()).count();
         push(
             "bins".into(),
-            (bins > MAX_BINS).then(|| text("host.bins.tooMany")),
+            (bins > MAX_BINS).then(|| bundle_text!("host.bins.tooMany")),
         );
         for (index, bin) in self.bins.iter().enumerate() {
             if bin.is_blank() {
@@ -334,7 +349,7 @@ impl ModuleConfig {
                 format!("bins.{index}.items"),
                 bin.items
                     .is_blank()
-                    .then(|| text("host.bin.items.required")),
+                    .then(|| bundle_text!("host.bin.items.required")),
             );
         }
 
@@ -342,7 +357,7 @@ impl ModuleConfig {
             push(
                 "bin_room_where".into(),
                 if self.bin_room_where.is_blank() {
-                    Some(text("host.binRoom.where.required"))
+                    Some(bundle_text!("host.binRoom.where.required"))
                 } else {
                     too_long(&self.bin_room_where, WHERE_MAX)
                 },
@@ -351,16 +366,16 @@ impl ModuleConfig {
             push(
                 "bin_room_code".into(),
                 (code > 0 && !(CODE_MIN..=CODE_MAX).contains(&code))
-                    .then(|| text("host.binRoom.code.length")),
+                    .then(|| bundle_text!("host.binRoom.code.length")),
             );
             push(
                 "bin_room_hours_range".into(),
                 match self.bin_room_hours_range.trim() {
                     "" => None,
                     raw => match parse_range(raw) {
-                        None => Some(text("host.binRoom.hours.format")),
+                        None => Some(bundle_text!("host.binRoom.hours.format")),
                         Some((from, until)) if from == until => {
-                            Some(text("host.binRoom.hours.same"))
+                            Some(bundle_text!("host.binRoom.hours.same"))
                         }
                         Some(_) => None,
                     },
@@ -371,7 +386,7 @@ impl ModuleConfig {
         let points = self.dropoff_points.iter().filter(|p| !p.is_blank()).count();
         push(
             "dropoff_points".into(),
-            (points > MAX_DROPOFF_POINTS).then(|| text("host.dropoff.tooMany")),
+            (points > MAX_DROPOFF_POINTS).then(|| bundle_text!("host.dropoff.tooMany")),
         );
         for (index, point) in self.dropoff_points.iter().enumerate() {
             if point.is_blank() {
@@ -380,7 +395,7 @@ impl ModuleConfig {
             push(
                 format!("dropoff_points.{index}.title"),
                 if point.title.is_blank() {
-                    Some(text("host.dropoff.title.required"))
+                    Some(bundle_text!("host.dropoff.title.required"))
                 } else {
                     too_long(&point.title, DROPOFF_TITLE_MAX)
                 },
@@ -390,14 +405,14 @@ impl ModuleConfig {
                 point
                     .coordinates()
                     .is_none()
-                    .then(|| text("host.dropoff.position.required")),
+                    .then(|| bundle_text!("host.dropoff.position.required")),
             );
             push(
                 format!("dropoff_points.{index}.accepts_household"),
                 point
                     .accepted_keys()
                     .is_empty()
-                    .then(|| text("host.dropoff.accepts.required")),
+                    .then(|| bundle_text!("host.dropoff.accepts.required")),
             );
         }
 
@@ -405,7 +420,7 @@ impl ModuleConfig {
             push(
                 "compost_location".into(),
                 if self.compost_location.is_blank() {
-                    Some(text("host.compost.location.required"))
+                    Some(bundle_text!("host.compost.location.required"))
                 } else {
                     too_long(&self.compost_location, WHERE_MAX)
                 },
@@ -458,7 +473,7 @@ impl ModuleConfig {
             push(
                 "bin_room_steps".into(),
                 if steps > MAX_BIN_ROOM_STEPS {
-                    Some(crate::i18n::text("host.binRoom.steps.tooMany"))
+                    Some(bundle_text!("host.binRoom.steps.tooMany"))
                 } else {
                     line_too_long(&self.bin_room_steps, LINE_MAX)
                 },
@@ -467,7 +482,7 @@ impl ModuleConfig {
                 "bin_room_lat".into(),
                 self.bin_room_position()
                     .filter(|(lat, lng)| far(*lat, *lng, BIN_ROOM_RADIUS_KM))
-                    .map(|_| crate::i18n::text("host.binRoom.position.far")),
+                    .map(|_| bundle_text!("host.binRoom.position.far")),
             );
         }
         for (index, point) in self.dropoff_points.iter().enumerate() {
@@ -483,7 +498,7 @@ impl ModuleConfig {
                 point
                     .coordinates()
                     .filter(|(lat, lng)| far(*lat, *lng, DROPOFF_RADIUS_KM))
-                    .map(|_| crate::i18n::text("host.dropoff.position.far")),
+                    .map(|_| bundle_text!("host.dropoff.position.far")),
             );
         }
         if self.compost_enabled {
@@ -662,21 +677,27 @@ impl BinRow {
         if !self.title.is_blank() {
             return self.title.clone();
         }
-        let name = crate::i18n::text_with_text(
-            "bin.defaultName",
+        let mut name = with_text(
+            bundle_text!("bin.defaultName"),
             "color",
-            &crate::i18n::text(&format!("host.bin.color.{}", self.color_key())),
+            &bundle_text!(&format!("host.bin.color.{}", self.color_key())),
         );
-        I18nText::new(capitalized(name.get("fr")), capitalized(name.get("en")))
+        for text in [&mut name.fr, &mut name.en]
+            .into_iter()
+            .chain(name.others.values_mut())
+        {
+            *text = capitalized(text);
+        }
+        name
     }
 
     /// « Le bac jaune n'a pas de jour de collecte. » (§3) : sous la liste des bacs, et dans
     /// `publishReadiness`, pour que les deux disent la même chose.
     pub fn no_days_warning(&self) -> I18nText {
-        crate::i18n::text_with_text(
-            "publish.days.bin",
+        with_text(
+            bundle_text!("publish.days.bin"),
             "color",
-            &crate::i18n::text(&format!("host.bin.color.{}", self.color_key())),
+            &bundle_text!(&format!("host.bin.color.{}", self.color_key())),
         )
     }
 

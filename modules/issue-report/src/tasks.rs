@@ -6,6 +6,7 @@
 //! tâche disparaît au calcul suivant.
 
 use chrono::{DateTime, Duration, Utc};
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::contracts::timeline::{
     self, TaskCompleteArgs, TaskToggleArgs, TimelineTaskItem, TimelineTasks, TimelineTasksArgs,
@@ -15,7 +16,7 @@ use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
 use crate::entities::IssueReport;
-use crate::{i18n, storage};
+use crate::storage;
 
 const ITEM: &str = "resolve";
 
@@ -36,14 +37,14 @@ pub fn timeline_tasks(_ctx: Context, args: TimelineTasksArgs) -> Result<Timeline
                     report.id.to_string(),
                     at,
                     args.property_id,
-                    i18n::text("task.title", &[]),
+                    bundle_text!("task.title"),
                     // Le résumé du voyageur, tel qu'il l'a écrit.
                     I18nText::new(&report.summary, &report.summary),
                 )
                 .stay(report.stay_id)
                 .items(vec![TimelineTaskItem::new(
                     ITEM,
-                    i18n::text("host.detail.resolve", &[]),
+                    bundle_text!("host.detail.resolve"),
                 )])
             })
             .collect(),

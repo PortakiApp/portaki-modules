@@ -4,12 +4,12 @@
 //! demandes vivent en KV. Les contrôles portent donc sur ce qui est stocké, et la même liste nourrit
 //! le message sous le champ et `publishReadiness`, pour que les deux disent la même chose.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 
 use crate::entities::ConsumableItem;
 use crate::host::MAX_ITEMS;
-use crate::i18n::text;
 use crate::labels::{labels_from_item, location_from_item};
 use crate::storage::settings::{Settings, MAX_MAX_REQUESTS, MIN_MAX_REQUESTS};
 
@@ -32,12 +32,12 @@ impl Stored<'_> {
     pub fn problems(&self) -> Vec<(String, I18nText)> {
         let mut problems = Vec::new();
         if self.items.len() > MAX_ITEMS {
-            problems.push(("items".into(), text("host.products.tooMany", &[])));
+            problems.push(("items".into(), bundle_text!("host.products.tooMany")));
         }
         for (index, item) in self.items.iter().enumerate() {
             let labels = labels_from_item(item);
             let error = if labels.is_empty() {
-                Some(text("host.product.name.required", &[]))
+                Some(bundle_text!("host.product.name.required"))
             } else {
                 labels
                     .values()
@@ -65,7 +65,7 @@ impl Stored<'_> {
             problems.push(("restock_delay".into(), error));
         }
         if self.settings.notify().is_empty() {
-            problems.push(("notify".into(), text("host.notify.required", &[])));
+            problems.push(("notify".into(), bundle_text!("host.notify.required")));
         }
         if let Some(error) = self.settings.max_requests.and_then(|max| {
             check::between(

@@ -1,6 +1,7 @@
 //! Publication readiness: the field errors of [`ModuleConfig::problems`], each naming its field
 //! and blocking, then the warnings (spec Événements §2.2).
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 
@@ -16,7 +17,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         .map(|point| (point.lat, point.lng));
     let check = |level: PublishLevel| {
         move |(field, hint): (String, portaki_sdk::contracts::i18n::I18nText)| PublishCheck {
-            label: crate::i18n::text(field_label(&field)),
+            label: bundle_text!(field_label(&field)),
             level,
             id: format!("config.{field}"),
             ok: false,

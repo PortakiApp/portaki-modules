@@ -5,7 +5,6 @@ mod format;
 pub mod gpx;
 mod guest;
 mod host;
-mod i18n;
 mod queries;
 
 pub use config::{ModuleConfig, TrailRow, LEVELS, MAX_TRAILS, SHAPES};

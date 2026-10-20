@@ -1,5 +1,6 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::i18n::I18nText;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -235,7 +236,6 @@ impl ModuleConfig {
     /// Ce qui ne va pas, champ par champ — sous le champ, et dans `publishReadiness`.
     pub fn problems(&self) -> Vec<(&'static str, I18nText)> {
         use portaki_sdk::config::check;
-        let text = crate::i18n::text;
         let too_long = |value: Option<&I18nText>, max: usize| {
             value.and_then(|value| {
                 value
@@ -254,14 +254,14 @@ impl ModuleConfig {
         push(
             "spot_label",
             if self.spot_label.is_blank() {
-                Some(text("host.spotLabel.required"))
+                Some(bundle_text!("host.spotLabel.required"))
             } else {
                 too_long(Some(&self.spot_label), 60)
             },
         );
         let code = |code: &str| {
             let length = code.trim().chars().count();
-            (length != 0 && !CODE_CHARS.contains(&length)).then(|| text("host.code.length"))
+            (length != 0 && !CODE_CHARS.contains(&length)).then(|| bundle_text!("host.code.length"))
         };
         push("parking_code", code(self.barrier_code()));
         push(
@@ -269,7 +269,7 @@ impl ModuleConfig {
             (self.power_kw != 0.0)
                 .then(|| check::between(self.power_kw, POWER_KW.0, POWER_KW.1))
                 .flatten()
-                .map(|_| text("host.power.range")),
+                .map(|_| bundle_text!("host.power.range")),
         );
         push("charger_pin", code(&self.charger_pin));
         push("instructions", too_long(self.instructions.as_ref(), 280));
@@ -278,7 +278,7 @@ impl ModuleConfig {
             push(
                 "price",
                 if self.price.trim().is_empty() {
-                    Some(text("host.price.required"))
+                    Some(bundle_text!("host.price.required"))
                 } else {
                     check::max_chars(&self.price, 30)
                 },

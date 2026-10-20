@@ -1,5 +1,6 @@
 //! Module queries — porte de publication et points pour la carte du livret.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 
@@ -30,8 +31,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         id: "where".into(),
         level: PublishLevel::Recommended,
         ok: has_source,
-        label: crate::i18n::text("publish.where.label"),
-        hint: crate::i18n::text("publish.where.hint"),
+        label: bundle_text!("publish.where.label"),
+        hint: bundle_text!("publish.where.hint"),
     }];
 
     // Un bac ramassé devant la porte, mais sans jour : le bandeau ne peut rien en dire (§3).
@@ -44,7 +45,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             },
             level: PublishLevel::Recommended,
             ok: false,
-            label: crate::i18n::text("host.collection.days"),
+            label: bundle_text!("host.collection.days"),
             hint: bin.no_days_warning(),
         });
     }
@@ -54,7 +55,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             .problems()
             .into_iter()
             .map(|(field, error)| PublishCheck {
-                label: crate::i18n::text(field_label(&field)),
+                label: bundle_text!(field_label(&field)),
                 id: format!("config.{field}"),
                 level: PublishLevel::Required,
                 ok: false,
@@ -69,7 +70,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             .warnings(ctx.property.coordinates)
             .into_iter()
             .map(|(field, warning)| PublishCheck {
-                label: crate::i18n::text(field_label(&field)),
+                label: bundle_text!(field_label(&field)),
                 id: format!("config.{field}"),
                 level: PublishLevel::Recommended,
                 ok: false,

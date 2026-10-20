@@ -6,6 +6,7 @@
 //! row's `itemId`: the item, its follow-up and « Marquer comme rendu » (`updateStatus`).
 
 use chrono::{DateTime, Duration, Utc};
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::stats::{self, AttentionLevel, StatsSummary, StatsSummaryArgs};
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
@@ -19,7 +20,7 @@ use uuid::Uuid;
 
 use crate::commands::UpdateStatusArgs;
 use crate::entities::LostFoundReport;
-use crate::{i18n, status, storage};
+use crate::{status, storage};
 
 use super::status_ui::{format_short_date, report_title, source_label};
 
@@ -72,7 +73,7 @@ pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSumma
     let reports = storage::list_since(now - Duration::days(days))?;
     let tile = stats::summary(
         reports.len().to_string(),
-        i18n::text(&format!("stats.tile.{days}"), &[]),
+        bundle_text!(&format!("stats.tile.{days}")),
     );
     let waiting = count(&reports, now, Stage::Waiting) + count(&reports, now, Stage::NoAnswer);
     if waiting == 0 {
@@ -81,7 +82,7 @@ pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSumma
     let waiting = waiting.to_string();
     Ok(tile.attention(
         AttentionLevel::Warning,
-        i18n::text("stats.tile.waiting", &[("count", &waiting)]),
+        bundle_text!("stats.tile.waiting", &[("count", &waiting)]),
     ))
 }
 

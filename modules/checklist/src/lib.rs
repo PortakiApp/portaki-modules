@@ -6,7 +6,6 @@ mod email_i18n;
 mod entities;
 mod guest;
 mod host;
-mod i18n;
 mod ids;
 mod labels;
 mod lists;

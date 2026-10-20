@@ -1,13 +1,13 @@
 //! Module queries — catalog, stay reports, open count.
 
 use chrono::{DateTime, Utc};
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
 use crate::config::{field_label, Stored};
 use crate::entities::{ConsumableItem, ConsumableReport};
-use crate::i18n::text;
 use crate::storage;
 
 /// Public item DTO returned by `listItems`.
@@ -147,7 +147,7 @@ pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
             .problems()
             .into_iter()
             .map(|(field, error)| PublishCheck {
-                label: text(field_label(&field), &[]),
+                label: bundle_text!(field_label(&field)),
                 id: format!("config.{field}"),
                 level: PublishLevel::Required,
                 ok: false,

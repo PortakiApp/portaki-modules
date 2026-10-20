@@ -1,10 +1,10 @@
 //! Module queries — the publication check the declared config cannot express.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 
 use crate::config::{MethodFields, ModuleConfig};
-use crate::i18n::text;
 
 /// A code-bearing access method needs its code — the platform already blocks on the method.
 #[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
@@ -14,7 +14,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         .problems()
         .into_iter()
         .map(|(field, error)| PublishCheck {
-            label: text(field_label(&field)),
+            label: bundle_text!(field_label(&field)),
             id: format!("config.{field}"),
             level: PublishLevel::Required,
             ok: false,
@@ -26,7 +26,7 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
         host.warnings()
             .into_iter()
             .map(|(field, hint)| PublishCheck {
-                label: text(field_label(&field)),
+                label: bundle_text!(field_label(&field)),
                 id: format!("config.{field}"),
                 level: PublishLevel::Recommended,
                 ok: false,
@@ -39,8 +39,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             id: "config.reveal_policy".into(),
             level: PublishLevel::Recommended,
             ok: false,
-            label: text("config.revealPolicy"),
-            hint: text("publish.reveal.always"),
+            label: bundle_text!("config.revealPolicy"),
+            hint: bundle_text!("publish.reveal.always"),
         });
     }
     if host.parking_too_far(ctx.property.coordinates) {
@@ -48,8 +48,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             id: "config.parking_position".into(),
             level: PublishLevel::Recommended,
             ok: false,
-            label: text("host.parking.position"),
-            hint: text("publish.parking.far"),
+            label: bundle_text!("host.parking.position"),
+            hint: bundle_text!("publish.parking.far"),
         });
     }
 
@@ -62,8 +62,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             id: "config.smart_lock_manual_code".into(),
             level: PublishLevel::Recommended,
             ok: false,
-            label: text("host.smartLock.manualCode"),
-            hint: text("publish.backupCode.missing"),
+            label: bundle_text!("host.smartLock.manualCode"),
+            hint: bundle_text!("publish.backupCode.missing"),
         });
     }
     if !matches!(
@@ -87,8 +87,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
             id: "entry-code".into(),
             level: PublishLevel::Required,
             ok,
-            label: text("publish.entry-code.label"),
-            hint: text(hint),
+            label: bundle_text!("publish.entry-code.label"),
+            hint: bundle_text!(hint),
         },
     );
     Ok(PublishReadiness { items })

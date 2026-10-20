@@ -3,11 +3,11 @@
 //! The same functions put the error under the field (`host`) and here, so the drawer and the
 //! publication say the same thing. A point is listed only when it is not met.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 
 use crate::config::ModuleConfig;
-use crate::i18n::text;
 
 #[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
 pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
@@ -43,7 +43,7 @@ fn checks(
             "config.location_lat",
             PublishLevel::Recommended,
             "host.locationOverride.position",
-            text("host.locationOverride.far"),
+            bundle_text!("host.locationOverride.far"),
         ));
     }
     // Cas 4 : ni adresse géocodée ni position corrigée, pas de prévisions — le module reste
@@ -53,7 +53,7 @@ fn checks(
             "config.location_override",
             PublishLevel::Recommended,
             "host.location.label",
-            text("host.location.missing"),
+            bundle_text!("host.location.missing"),
         ));
     }
     items
@@ -69,7 +69,7 @@ fn point(
         id: id.into(),
         level,
         ok: false,
-        label: text(label),
+        label: bundle_text!(label),
         hint,
     }
 }

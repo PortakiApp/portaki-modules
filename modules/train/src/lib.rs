@@ -9,7 +9,6 @@ mod board;
 mod config;
 mod guest;
 mod host;
-mod i18n;
 mod readiness;
 mod sncf;
 

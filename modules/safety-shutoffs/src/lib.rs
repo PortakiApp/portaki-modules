@@ -4,7 +4,6 @@ mod amenities;
 mod config;
 mod guest;
 mod host;
-mod i18n;
 mod queries;
 
 pub use amenities::amenities_list;

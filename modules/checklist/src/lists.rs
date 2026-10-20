@@ -1,6 +1,6 @@
 //! Checklist wire values and the templates a new list starts from.
 
-use crate::i18n;
+use portaki_sdk::bundle_text;
 
 pub const GUEST: &str = "guest";
 pub const HOST: &str = "host";
@@ -145,7 +145,7 @@ pub fn template(id: &str) -> Option<&'static Template> {
 impl Template {
     /// `(fr, en)` of the list name.
     pub fn name(&self) -> (String, String) {
-        let text = i18n::text(&format!("template.{}.name", self.id), &[]);
+        let text = bundle_text!(&format!("template.{}.name", self.id));
         (text.fr, text.en)
     }
 
@@ -153,7 +153,7 @@ impl Template {
     pub fn item_labels(&self) -> Vec<(String, String, bool)> {
         (0..self.items)
             .map(|index| {
-                let text = i18n::text(&format!("template.{}.item.{index}", self.id), &[]);
+                let text = bundle_text!(&format!("template.{}.item.{index}", self.id));
                 (text.fr, text.en, self.photo == Some(index))
             })
             .collect()
@@ -168,7 +168,7 @@ impl Template {
         (0..self.items)
             .map(|index| match self.group_key(index) {
                 Some(key) => {
-                    let text = i18n::text(key, &[]);
+                    let text = bundle_text!(key);
                     (text.fr, text.en)
                 }
                 None => (String::new(), String::new()),
@@ -189,7 +189,7 @@ impl Template {
 
 /// Ticking this item of a host list means the consumables were restocked.
 pub fn is_restock_label(fr: &str, en: &str) -> bool {
-    let restock = i18n::text("template.cleaning.item.5", &[]);
+    let restock = bundle_text!("template.cleaning.item.5");
     fr.trim().eq_ignore_ascii_case(&restock.fr) || en.trim().eq_ignore_ascii_case(&restock.en)
 }
 

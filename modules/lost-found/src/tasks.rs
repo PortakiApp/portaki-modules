@@ -6,6 +6,7 @@
 //! renvoyé », passe l'objet à « Renvoyé » : la tâche disparaît au calcul suivant.
 
 use chrono::{DateTime, Utc};
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::contracts::timeline::{
     self, TaskCompleteArgs, TaskToggleArgs, TimelineStay, TimelineTaskItem, TimelineTasks,
@@ -16,7 +17,7 @@ use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
 use crate::entities::LostFoundReport;
-use crate::{description, i18n, storage};
+use crate::{description, storage};
 
 const ITEM: &str = "shipped";
 
@@ -41,13 +42,10 @@ pub fn timeline_tasks(_ctx: Context, args: TimelineTasksArgs) -> Result<Timeline
                     at,
                     args.property_id,
                     title(guest_of(&args.stays, report.stay_id)),
-                    i18n::text("task.context", &[("item", &item), ("days", &days)]),
+                    bundle_text!("task.context", &[("item", &item), ("days", &days)]),
                 )
                 .stay(report.stay_id)
-                .items(vec![TimelineTaskItem::new(
-                    ITEM,
-                    i18n::text("task.item", &[]),
-                )])
+                .items(vec![TimelineTaskItem::new(ITEM, bundle_text!("task.item"))])
             })
             .collect(),
     })
@@ -56,8 +54,8 @@ pub fn timeline_tasks(_ctx: Context, args: TimelineTasksArgs) -> Result<Timeline
 /// « Objet à renvoyer à Marie », ou sans prénom connu « Objet à renvoyer ».
 fn title(guest: Option<&str>) -> I18nText {
     match guest {
-        Some(guest) => i18n::text("task.title.named", &[("guest", guest)]),
-        None => i18n::text("task.title", &[]),
+        Some(guest) => bundle_text!("task.title.named", &[("guest", guest)]),
+        None => bundle_text!("task.title"),
     }
 }
 

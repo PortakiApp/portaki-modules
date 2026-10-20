@@ -8,12 +8,12 @@
 //! Nuki seulement). Le catalogue rend l'objet entier ; on n'en garde que ces trois champs.
 //! Le même état sert au livret : hors ligne, `getGuestCredential` donne le code de secours.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::timeline::{self, TimelineTask, TimelineTasks, TimelineTasksArgs};
 use portaki_sdk::host;
 use portaki_sdk::prelude::*;
 
 use crate::config::ModuleConfig;
-use crate::i18n;
 
 /// Sous ce seuil, la batterie est faible (spec Nuki §9).
 const LOW_BATTERY_PERCENT: i64 = 20;
@@ -107,22 +107,22 @@ fn tasks(
             "lock-offline",
             now,
             args.property_id,
-            i18n::text("task.offline.title"),
-            i18n::text(context),
+            bundle_text!("task.offline.title"),
+            bundle_text!(context),
         ));
     }
     if let Some(charge) = health.low_battery() {
         let context = match charge {
             Some(charge) => {
-                i18n::text_vars("task.battery.context", &[("charge", &charge.to_string())])
+                bundle_text!("task.battery.context", &[("charge", &charge.to_string())])
             }
-            None => i18n::text("task.battery.context.critical"),
+            None => bundle_text!("task.battery.context.critical"),
         };
         tasks.push(timeline::task(
             "battery-low",
             now,
             args.property_id,
-            i18n::text("task.battery.title"),
+            bundle_text!("task.battery.title"),
             context,
         ));
     }

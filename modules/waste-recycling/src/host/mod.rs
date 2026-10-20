@@ -10,6 +10,7 @@
 //! A field the spec dropped stays on the page only while it still holds something, so the host
 //! can read and clear it.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui;
@@ -684,7 +685,7 @@ fn compost_section(config: &ModuleConfig, ctx: &HostContext) -> Component {
             lines = t!(&proposed)
                 .ok()
                 .filter(|text| *text != proposed)
-                .unwrap_or_else(|| crate::i18n::text(&proposed).get(&ctx.locale).to_string());
+                .unwrap_or_else(|| bundle_text!(&proposed).get(&ctx.locale).to_string());
         }
         children.push(
             field(

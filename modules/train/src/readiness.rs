@@ -1,10 +1,10 @@
 //! `publishReadiness` — the rules of the drawer, checked again before « Publier ».
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 
 use crate::config::{ModuleConfig, MAX_DESTINATIONS};
-use crate::i18n::text;
 use crate::sncf::{self, BoardError};
 
 #[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
@@ -25,8 +25,8 @@ pub fn publish_readiness(ctx: Context) -> Result<PublishReadiness> {
                 id: "config.station.far".into(),
                 level: PublishLevel::Recommended,
                 ok: false,
-                label: text("config.station"),
-                hint: text("host.station.far.message"),
+                label: bundle_text!("config.station"),
+                hint: bundle_text!("host.station.far.message"),
             }),
         _ => {}
     }
@@ -52,7 +52,7 @@ fn blocking(id: &str, label: &str, hint: &str) -> PublishCheck {
         id: id.into(),
         level: PublishLevel::Required,
         ok: false,
-        label: text(label),
-        hint: text(hint),
+        label: bundle_text!(label),
+        hint: bundle_text!(hint),
     }
 }

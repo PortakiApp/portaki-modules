@@ -6,7 +6,6 @@ mod commands;
 mod config;
 mod connectors;
 mod host;
-mod i18n;
 mod queries;
 mod stay_code;
 mod tasks;

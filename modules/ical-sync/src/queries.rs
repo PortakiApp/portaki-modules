@@ -1,5 +1,6 @@
 //! Host queries — feed sources + apply parsed ICS bodies (platformFetch path).
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -352,7 +353,7 @@ pub fn publish_readiness(
     let items = blocking
         .chain(warnings)
         .map(|((field, error), level)| PublishCheck {
-            label: crate::i18n::text(
+            label: bundle_text!(
                 if field == "calendars" {
                     "host.calendars.label"
                 } else if field.ends_with(".url") {

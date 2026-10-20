@@ -1,5 +1,6 @@
 //! Host configuration, held by the platform (`#[portaki_sdk::config]`).
 
+use portaki_sdk::bundle_text;
 use serde::{Deserialize, Serialize};
 
 /// The keys are the names of the host form fields: the platform takes `updateConfig`.
@@ -42,7 +43,7 @@ impl ModuleConfig {
         let valid_code =
             code.len() == 6 && code.bytes().all(|b| b.is_ascii_digit()) && !code.starts_with('0');
         if !code.is_empty() && !valid_code {
-            problems.push(("keypad_code", crate::i18n::text("host.keypadCode.invalid")));
+            problems.push(("keypad_code", bundle_text!("host.keypadCode.invalid")));
         }
         if let Some(error) = portaki_sdk::config::check::max_chars(&self.device_name, 40) {
             problems.push(("device_name", error));

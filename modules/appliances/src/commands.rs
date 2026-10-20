@@ -1,5 +1,6 @@
 //! Module commands — save / delete / reorder appliances.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -495,11 +496,7 @@ fn parse_labels(raw: &serde_json::Value) -> Vec<String> {
 
 /// Un refus dit à l'hôte dans sa langue, avec le message de la spec — pas une phrase de développeur.
 fn refusal(ctx: &Context, key: &str, vars: &[(&str, &str)]) -> PortakiError {
-    PortakiError::Host(
-        crate::i18n::text_with(key, vars)
-            .get(&ctx.locale)
-            .to_string(),
-    )
+    PortakiError::Host(bundle_text!(key, vars).get(&ctx.locale).to_string())
 }
 
 /// Les étapes saisies : les rangées de l'`EditableList` (`[{ label }]`, en JSON ou en tableau) ou

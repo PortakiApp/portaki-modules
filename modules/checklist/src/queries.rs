@@ -1,5 +1,6 @@
 //! Module queries — guest items and stay completions.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
@@ -8,7 +9,6 @@ use portaki_sdk::config::check;
 use portaki_sdk::contracts::i18n::I18nText;
 
 use crate::entities::{Checklist, ChecklistItem};
-use crate::i18n::text;
 use crate::lists;
 use crate::storage;
 
@@ -75,8 +75,8 @@ pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
         id: "checklist".into(),
         level: PublishLevel::Required,
         ok: !storage::list_items()?.is_empty(),
-        label: text("publish.checklist.label", &[]),
-        hint: text("publish.checklist.hint", &[]),
+        label: bundle_text!("publish.checklist.label"),
+        hint: bundle_text!("publish.checklist.hint"),
     }];
     for list in storage::list_checklists()? {
         let steps: Vec<&ChecklistItem> = all.iter().filter(|i| i.checklist_id == list.id).collect();
@@ -91,7 +91,7 @@ pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
                 id,
                 level: PublishLevel::Required,
                 ok: false,
-                label: text("publish.steps.label", &[("list", &name)]),
+                label: bundle_text!("publish.steps.label", &[("list", &name)]),
                 hint: error,
             });
         }
@@ -108,8 +108,8 @@ pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
                 id: format!("code.{}", list.id),
                 level: PublishLevel::Recommended,
                 ok: false,
-                label: text("publish.steps.label", &[("list", &name)]),
-                hint: text("publish.code.hint", &[]),
+                label: bundle_text!("publish.steps.label", &[("list", &name)]),
+                hint: bundle_text!("publish.code.hint"),
             });
         }
     }
@@ -125,7 +125,7 @@ pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
 pub fn list_problems(list: &Checklist, steps: &[&ChecklistItem]) -> Vec<(&'static str, I18nText)> {
     let mut problems = Vec::new();
     if steps.len() > MAX_STEPS {
-        problems.push(("steps", text("publish.steps.tooMany", &[])));
+        problems.push(("steps", bundle_text!("publish.steps.tooMany")));
     }
     if let Some(error) = steps.iter().find_map(|step| step_problem(step)) {
         problems.push(("labels", error));
@@ -155,7 +155,7 @@ pub fn list_problems(list: &Checklist, steps: &[&ChecklistItem]) -> Vec<(&'stati
 pub(crate) fn step_problem(step: &ChecklistItem) -> Option<I18nText> {
     let labels = crate::labels::labels_from_item(step);
     if labels.is_empty() {
-        return Some(text("publish.step.required", &[]));
+        return Some(bundle_text!("publish.step.required"));
     }
     let over = |raw: &str, max: usize| {
         crate::labels::decode_map(raw)

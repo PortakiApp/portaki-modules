@@ -6,6 +6,7 @@
 //! « Marquer livré », clôt la demande et la tâche disparaît au calcul suivant.
 
 use chrono::{DateTime, Utc};
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::contracts::timeline::{
     self, TaskCompleteArgs, TaskToggleArgs, TimelineTaskItem, TimelineTasks, TimelineTasksArgs,
@@ -14,7 +15,7 @@ use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
 use crate::entities::ConsumableReport;
-use crate::{i18n, status, storage};
+use crate::{status, storage};
 
 const ITEM: &str = "restocked";
 
@@ -45,13 +46,13 @@ pub fn timeline_tasks(_ctx: Context, args: TimelineTasksArgs) -> Result<Timeline
                     report.id.to_string(),
                     at,
                     args.property_id,
-                    i18n::text("task.title", &[("item", &report.item_label)]),
+                    bundle_text!("task.title", &[("item", &report.item_label)]),
                     I18nText::new(guest, guest),
                 )
                 .stay(report.stay_id)
                 .items(vec![TimelineTaskItem::new(
                     ITEM,
-                    i18n::text("host.main.markRestocked", &[]),
+                    bundle_text!("host.main.markRestocked"),
                 )])
             })
             .collect(),

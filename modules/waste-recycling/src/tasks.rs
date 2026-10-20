@@ -7,6 +7,7 @@
 //! lui-même au titre.
 
 use chrono::{DateTime, Datelike, Days, NaiveDate, Utc};
+use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::contracts::timeline::{
     self, TaskCompleteArgs, TaskToggleArgs, TimelineTask, TimelineTaskItem, TimelineTasks,
@@ -18,7 +19,6 @@ use portaki_sdk::prelude::*;
 
 use crate::collection::parse_day;
 use crate::config::ModuleConfig;
-use crate::i18n;
 
 const ITEM: &str = "out";
 const PREFIX: &str = "bins:";
@@ -94,11 +94,11 @@ fn context(config: &ModuleConfig, collection: NaiveDate) -> I18nText {
         .map(|bin| bin.name_text())
         .collect();
     if names.is_empty() {
-        return i18n::text("task.context");
+        return bundle_text!("task.context");
     }
     let in_language = |language: &str| {
         let bins: Vec<&str> = names.iter().map(|name| name.get(language)).collect();
-        i18n::text_with("task.context.bins", &[("bins", &bins.join(", "))])
+        bundle_text!("task.context.bins", &[("bins", &bins.join(", "))])
             .get(language)
             .to_string()
     };
@@ -112,10 +112,10 @@ fn task(
     context: I18nText,
 ) -> Result<TimelineTask> {
     let id = task_id(collection);
-    let mut item = TimelineTaskItem::new(ITEM, i18n::text("task.item"));
+    let mut item = TimelineTaskItem::new(ITEM, bundle_text!("task.item"));
     item.done = kv::get(&kv_key(&id))?.is_some();
     Ok(
-        timeline::task(id, at, property_id, i18n::text("task.title"), context)
+        timeline::task(id, at, property_id, bundle_text!("task.title"), context)
             .due_at(at)
             .items(vec![item]),
     )

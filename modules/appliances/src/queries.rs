@@ -1,5 +1,6 @@
 //! Module queries — appliance guide content.
 
+use portaki_sdk::bundle_text;
 use portaki_sdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -78,7 +79,7 @@ pub fn publish_readiness(
     let items = required
         .chain(recommended)
         .map(|((field, error), level)| PublishCheck {
-            label: crate::i18n::text(match field.rsplit('.').next().unwrap_or_default() {
+            label: bundle_text!(match field.rsplit('.').next().unwrap_or_default() {
                 "paperManualsLocation" => "host.paperManuals.label",
                 "featuredLimit" => "host.featured.label",
                 "manualUrl" => "host.device.manualUrl",
