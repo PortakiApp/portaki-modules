@@ -3,6 +3,7 @@
 //! Le SDK stocke, fusionne, importe et dessine l'éditeur (`#[collection]`) ; le module dit ce
 //! qu'est une section et comment le livret montre le mot.
 
+mod commands;
 mod guest;
 mod host;
 
@@ -36,5 +37,10 @@ pub struct Section {
     pub body: I18nText,
 }
 
-#[portaki_sdk::collection(name = "sections", item = Section, import)]
+#[portaki_sdk::collection(
+    name = "sections",
+    item = Section,
+    import,
+    legacy = commands::earlier::earlier_sections
+)]
 pub struct Sections;
