@@ -8,10 +8,7 @@ use serde_json::json;
 use serial_test::serial;
 use uuid::Uuid;
 
-use consumables::{
-    list_for_stay, render_guest_form, render_host_main, render_host_stay, reset_test_store, submit,
-    update_status, ListForStayArgs, SubmitArgs, UpdateStatusArgs,
-};
+use consumables::{render_guest_form, render_host_main, render_host_stay, SubmitArgs};
 use portaki_sdk::host::email::EmailAudience;
 use portaki_test_utils::{MockContext, MockContextBuilder};
 
@@ -47,7 +44,6 @@ fn an_empty_table_offers_the_starter_list_and_adds_a_row() {
 #[test]
 #[serial]
 fn the_table_shows_the_emoji_the_place_and_the_filter() {
-    reset_test_store();
     let rows = json!([{ "id": sample::id(0).to_string(), "label": { "fr": "Thé vert" },
                         "location": { "fr": "Tiroir" } }]);
     MockContext::host()
@@ -103,17 +99,21 @@ fn at_least_one_channel_while_requests_are_open() {
     });
 }
 
-fn one_request(builder: MockContextBuilder) -> (Uuid, usize) {
+fn ask(ctx: &portaki_sdk::prelude::Context) -> Uuid {
+    let args = SubmitArgs {
+        item_ids: vec![sample::id(0)],
+        item_id: None,
+        level: "missing".into(),
+        note: None,
+    };
+    sample::submit(ctx, args).expect("submit");
+    sample::requests(ctx)[0].id
+}
+
+fn one_request(builder: MockContextBuilder) -> usize {
     builder.run_with(|ctx, host| {
-        let args = SubmitArgs {
-            item_ids: vec![sample::id(0)],
-            item_id: None,
-            level: "missing".into(),
-            note: None,
-        };
-        submit(ctx.clone(), args).expect("submit");
-        let report = list_for_stay(ctx, ListForStayArgs::default()).expect("list")[0].id;
-        (report, host.sent_emails().len())
+        ask(&ctx);
+        host.sent_emails().len()
     })
 }
 
@@ -121,14 +121,10 @@ fn one_request(builder: MockContextBuilder) -> (Uuid, usize) {
 #[test]
 #[serial]
 fn the_host_email_follows_the_notify_setting() {
-    reset_test_store();
     let coffee = [("Café", "", "☕")];
     let app_only = sample::with_meta(MockContext::guest(), &coffee, json!({ "notify": ["app"] }));
-    assert_eq!(one_request(app_only).1, 0);
-    assert_eq!(
-        one_request(sample::with(MockContext::guest(), &coffee)).1,
-        1
-    );
+    assert_eq!(one_request(app_only), 0);
+    assert_eq!(one_request(sample::with(MockContext::guest(), &coffee)), 1);
 }
 
 /// La table des demandes, l'encart du séjour, et « Répondre » par e-mail au voyageur — une seule
@@ -136,11 +132,11 @@ fn the_host_email_follows_the_notify_setting() {
 #[test]
 #[serial]
 fn requests_table_stay_summary_and_reply_by_email() {
-    reset_test_store();
     let coffee = [("Café", "", "☕")];
-    let (report, _) = one_request(sample::with(MockContext::guest(), &coffee));
-
-    sample::with(MockContext::host(), &coffee).run_with(|ctx, host| {
+    sample::with(MockContext::guest(), &coffee).run_with(|guest, host| {
+        let report = ask(&guest);
+        let ctx = sample::as_host(&guest);
+        let sent = host.sent_emails().len();
         let json = host_json(&ctx);
         assert!(json.contains("host.received.title"), "{json}");
         assert!(json.contains("i18n:status.open"), "{json}");
@@ -149,26 +145,21 @@ fn requests_table_stay_summary_and_reply_by_email() {
         assert!(json.contains("host.filter.recent"), "{json}");
 
         let reply = |text: &str| {
-            let args = UpdateStatusArgs {
-                report_id: report,
-                status: "open".into(),
-                host_reply: Some(text.into()),
-            };
-            update_status(ctx.clone(), args).expect("reply")
+            let args = json!({ "id": report, "text": text });
+            consumables::__portaki_requests_note(ctx.clone(), serde_json::from_value(args).unwrap())
+                .expect("reply")
         };
         reply("Je passe ce soir.");
         reply("Je passe ce soir.");
-        let emails = host.sent_emails();
+        let emails = &host.sent_emails()[sent..];
         assert_eq!(emails.len(), 1);
         assert_eq!(emails[0].audience, EmailAudience::Guest);
         assert!(emails[0].email_id.starts_with("host-reply-"));
         assert!(emails[0].content.body.fr.contains("Je passe ce soir."));
-    });
 
-    let stay = MockContext::guest().run(|ctx| ctx.guest.unwrap().session_id);
-    MockContext::host().run(|mut ctx| {
-        ctx.input = json!({ "stayId": stay.to_string() });
-        let json = serde_json::to_string(&render_host_stay(ctx)).unwrap();
+        let mut stay = ctx.clone();
+        stay.input = json!({ "stayId": guest.guest.as_ref().unwrap().session_id.to_string() });
+        let json = serde_json::to_string(&render_host_stay(stay)).unwrap();
         assert!(json.contains("host.stay.seeAll"), "{json}");
         assert!(json.contains("/modules/consumables"), "{json}");
     });

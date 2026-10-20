@@ -12,8 +12,8 @@ use portaki_sdk::sdui::primitives::{Grid, Stat};
 use uuid::Uuid;
 
 use super::charts::short_date;
-use crate::entities::ConsumableReport;
-use crate::{status, Product};
+use crate::domain::request::Asked;
+use crate::{Entry, Level, Product};
 
 /// Where an item of the catalog stands.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -24,12 +24,12 @@ pub(super) enum Stock {
 }
 
 /// The item's open reports decide: one « missing » is a stock-out.
-pub(super) fn stock(item: &Product, reports: &[ConsumableReport]) -> Stock {
-    let open: Vec<&ConsumableReport> = reports
+pub(super) fn stock(item: &Product, reports: &[Entry]) -> Stock {
+    let open: Vec<&Entry> = reports
         .iter()
-        .filter(|r| r.item_id == item.uuid() && status::is_pending(&r.status))
+        .filter(|r| r.product() == item.uuid() && r.pending())
         .collect();
-    if open.iter().any(|r| r.level == "missing") {
+    if open.iter().any(|r| r.item.level == Level::Missing) {
         Stock::Out
     } else if open.is_empty() {
         Stock::Ok
@@ -61,14 +61,14 @@ pub(super) fn departures(
 }
 
 /// Mean days between a restock of `item` and its next shortage report, over all its history.
-pub(super) fn days_between_restocks(item: &Product, reports: &[ConsumableReport]) -> Option<i64> {
-    let mine: Vec<&ConsumableReport> = reports
+pub(super) fn days_between_restocks(item: &Product, reports: &[Entry]) -> Option<i64> {
+    let mine: Vec<&Entry> = reports
         .iter()
-        .filter(|r| r.item_id == item.uuid())
+        .filter(|r| r.product() == item.uuid())
         .collect();
     let gaps: Vec<i64> = mine
         .iter()
-        .filter_map(|r| r.restocked_at)
+        .filter_map(|r| r.restocked_at())
         .filter_map(|restocked| {
             let next = mine
                 .iter()
@@ -89,7 +89,7 @@ pub(super) fn label(item: &Product, locale: &str) -> String {
 /// Suivis, à racheter, demandés sur la période, dernier réassort.
 pub(super) fn tiles(
     items: &[Product],
-    reports: &[ConsumableReport],
+    reports: &[Entry],
     asked: usize,
     days: i64,
     fr: bool,
@@ -98,7 +98,7 @@ pub(super) fn tiles(
         .iter()
         .filter(|item| stock(item, reports) != Stock::Ok)
         .count();
-    let last_restock = reports.iter().filter_map(|r| r.restocked_at).max();
+    let last_restock = reports.iter().filter_map(|r| r.restocked_at()).max();
     Grid::new().minColumnWidth(170.0).gap(12.0).children(vec![
         Stat::new()
             .label("i18n:stats.tracked")
@@ -129,23 +129,34 @@ pub(super) fn tiles(
 mod tests {
     use super::*;
     use chrono::Duration;
+    use portaki_sdk::resource::{Actor, HistoryEvent, HistoryLine};
 
-    fn report(item: Uuid, created: i64, restocked: Option<i64>) -> ConsumableReport {
+    fn report(item: Uuid, created: i64, restocked: Option<i64>) -> Entry {
         let day = |d: i64| DateTime::<Utc>::UNIX_EPOCH + Duration::days(d);
-        ConsumableReport {
+        let history = restocked
+            .map(|d| HistoryLine {
+                at: day(d),
+                actor: Actor::Host,
+                event: HistoryEvent::Status {
+                    to: "restocked".into(),
+                },
+            })
+            .into_iter()
+            .collect();
+        Entry {
             id: Uuid::new_v4(),
-            stay_id: Uuid::new_v4(),
-            item_id: item,
-            item_label: String::new(),
-            level: "missing".into(),
-            note: None,
-            status: status::DEFAULT.into(),
+            item: crate::Request {
+                item_id: item.to_string(),
+                ..Default::default()
+            },
+            status: restocked.map_or(crate::Status::Open, |_| crate::Status::Restocked),
+            stay_id: Some(Uuid::new_v4()),
             created_at: day(created),
-            restocked_at: restocked.map(day),
-            host_reply: None,
+            actor: Actor::Guest,
             guest_name: String::new(),
-            stay_check_in: None,
-            stay_check_out: None,
+            check_in: None,
+            check_out: None,
+            history,
         }
     }
 

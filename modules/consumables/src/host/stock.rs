@@ -8,8 +8,7 @@ use portaki_sdk::sdui::surface::Surface;
 
 use super::charts::{per_stay_chart, reports_chart, restock_chart, stock_row};
 use super::stats::{departures, tiles};
-use crate::entities::ConsumableReport;
-use crate::{storage, Products};
+use crate::{Entry, Products, Restocks};
 
 #[portaki_sdk::surface(
     host,
@@ -31,8 +30,8 @@ pub fn render_host_stats(ctx: HostContext) -> Surface {
     let items = Products::load(&ctx)
         .map(|products| products.rows().to_vec())
         .unwrap_or_default();
-    let reports = storage::list_all().unwrap_or_default();
-    let period: Vec<&ConsumableReport> = reports
+    let reports = Restocks::list(&ctx).unwrap_or_default();
+    let period: Vec<&Entry> = reports
         .iter()
         .filter(|r| r.created_at >= now - Duration::days(days))
         .collect();

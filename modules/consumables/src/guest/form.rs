@@ -1,6 +1,7 @@
 //! Guest bottom-sheet form surface opened from the home card.
 
 use portaki_sdk::prelude::*;
+use portaki_sdk::resource::Choice;
 use portaki_sdk::sdui::common::Tone;
 use portaki_sdk::sdui::primitives::{
     Button, ChoiceList, Field, FieldHint, Form, Icon, InfoBanner, Stack, Text, TextArea,
@@ -9,7 +10,7 @@ use portaki_sdk::sdui::surface::Surface;
 
 use super::empty::empty_catalog_card;
 use super::load::{load_guest_consumables, GuestConsumablesData};
-use crate::level;
+use crate::{Level, Status};
 
 /// Bottom-sheet consumables shortage form (inputs live here — not on the home card).
 #[portaki_sdk::surface(
@@ -64,7 +65,8 @@ fn sheet_header() -> Component {
 }
 
 fn build_form(data: &GuestConsumablesData) -> Form {
-    let submit_action = crate::ids::module_id().command_empty(crate::commands::SUBMIT);
+    let submit_action =
+        crate::ids::module_id().command_empty(portaki_sdk::ids::OperationName::new("submit"));
     Form::new()
         .child(sheet_header())
         .child(
@@ -130,10 +132,12 @@ fn notice(data: &GuestConsumablesData) -> String {
 fn open_report_level(data: &GuestConsumablesData, item_id: uuid::Uuid) -> Option<&'static str> {
     data.reports
         .iter()
-        .find(|report| report.item_id == item_id && crate::status::is_pending(&report.status))
-        .map(|report| match report.level.as_str() {
-            "missing" => "i18n:form.item.reported.missing",
-            _ => "i18n:form.item.reported.low",
+        .find(|report| {
+            report.item.item_id == item_id.to_string() && report.status != Status::Restocked
+        })
+        .map(|report| match report.item.level {
+            Level::Missing => "i18n:form.item.reported.missing",
+            Level::Low => "i18n:form.item.reported.low",
         })
 }
 
@@ -181,7 +185,7 @@ fn level_choice_list() -> ChoiceList {
     ChoiceList::new()
         .name("level")
         .layout(ChoiceListLayout::Segmented)
-        .value(level::DEFAULT)
+        .value(Level::Missing.wire())
         .choices(vec![
             // « Il n'y en a plus » porte le ton d'alerte du dessin : les deux segments ne
             // demandent pas la même chose à l'hôte.

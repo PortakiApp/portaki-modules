@@ -4,8 +4,7 @@ use portaki_sdk::prelude::*;
 
 use uuid::Uuid;
 
-use crate::entities::ConsumableReport;
-use crate::storage;
+use crate::{Entry, Restocks};
 
 /// Un produit, dans la langue du voyageur.
 pub struct Shown {
@@ -17,7 +16,7 @@ pub struct Shown {
 
 pub struct GuestConsumablesData {
     pub items: Vec<Shown>,
-    pub reports: Vec<ConsumableReport>,
+    pub reports: Vec<Entry>,
     /// Le délai que l'hôte annonce, dans la langue du voyageur ; « dans la journée » quand il n'a
     /// rien écrit.
     pub restock_delay: Option<String>,
@@ -47,7 +46,7 @@ pub fn load_guest_consumables(ctx: &GuestContext) -> Result<Option<GuestConsumab
     }
 
     let reports = match ctx.guest.as_ref() {
-        Some(guest) => storage::list_by_stay(guest.session_id)?,
+        Some(guest) => Restocks::for_stay(ctx, guest.session_id)?,
         None => Vec::new(),
     };
 

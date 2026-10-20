@@ -121,5 +121,5 @@
   "status.restocked": "Delivered",
   "surface.host.main.subtitle": "Define the list — guests report what is missing during the stay.",
   "surface.host.main.title": "Consumables",
-  "task.title": "{item} requested"
+  "task.title": "{item_label} requested"
 }

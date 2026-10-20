@@ -121,5 +121,5 @@
   "status.restocked": "Geliefert",
   "surface.host.main.subtitle": "Legen Sie die Liste fest — Gäste melden während des Aufenthalts, was fehlt.",
   "surface.host.main.title": "Verbrauchsmaterial",
-  "task.title": "{item} angefragt"
+  "task.title": "{item_label} angefragt"
 }

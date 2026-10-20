@@ -2,8 +2,10 @@
 //! réassort que le voyageur envoie depuis le livret.
 //!
 //! Le catalogue et les réglages des demandes sont une collection déclarée : le SDK les stocke,
-//! les fusionne, les importe, les contrôle et dessine leur éditeur. Les demandes restent du code
-//! du module (entité, envoi, statuts, tâches, e-mails, statistiques).
+//! les fusionne, les importe, les contrôle et dessine leur éditeur. Les demandes sont un dépôt
+//! déclaré (`#[record]`) : le SDK les stocke avec leur statut et leur historique, et dérive
+//! l'envoi, les statuts, la réponse et les tâches de la frise ; le module dit ce qu'est une
+//! demande, quand elle est acceptée, et ce que disent les e-mails.
 
 mod commands;
 mod config;
@@ -14,22 +16,9 @@ mod host;
 
 use portaki_sdk::contracts::i18n::I18nText;
 
-use self::email as email_i18n;
-use commands::reports as storage;
-use domain::{entities, ids, level, status, suggest};
-use email::text as email_text;
+use domain::{ids, suggest};
 
-pub use commands::reports::reset_test_store;
-pub use commands::{
-    amenities_list, list_for_stay, list_open_count, list_recent, ConsumableReportRow,
-    ListForStayArgs, OpenCountDto,
-};
-pub use commands::{seed_defaults, submit, update_status, SubmitArgs, UpdateStatusArgs};
-pub use commands::{stats_summary, task_complete, task_toggle, timeline_tasks};
-pub use domain::entities::ConsumableReport;
-pub use domain::level::DEFAULT as LEVEL_DEFAULT;
-pub use domain::status::DEFAULT as STATUS_DEFAULT;
-pub use email::text::GUEST_TEXT_EMAIL_MAX_CHARS;
+pub use commands::{amenities_list, seed_defaults, stats_summary, SubmitArgs};
 pub use guest::{render_guest_form, render_home_card};
 pub use host::{render_host_main, render_host_stats, render_host_stay};
 
@@ -99,3 +88,42 @@ pub struct Requests {
 
 #[portaki_sdk::collection(name = "products", item = Product, meta = Requests, max = 30, check = config::problems, import, legacy = commands::earlier::earlier_products)]
 pub struct Products;
+
+/// Où en est une demande : À traiter → Prévu → Livré.
+#[portaki_sdk::choice(label = "status")]
+pub enum Status {
+    #[initial]
+    Open,
+    Planned,
+    #[done]
+    Restocked,
+}
+
+/// « Il n'y en a plus » ou « Bientôt vide ».
+#[portaki_sdk::choice(label = "level")]
+pub enum Level {
+    Missing,
+    Low,
+}
+
+/// Une demande : un produit, tel que le voyageur l'a vu, et ce qu'il en dit.
+#[portaki_sdk::item(key = "item_label")]
+pub struct Request {
+    #[field(required, label = "form.item.label")]
+    pub item_id: String,
+    #[field(required, label = "host.column.product")]
+    pub item_label: String,
+    #[field(required, label = "form.level.label")]
+    pub level: Level,
+    #[field(label = "form.note.label")]
+    pub note: String,
+}
+
+/// Une demande enregistrée, son statut et son historique.
+pub type Entry = portaki_sdk::resource::Entry<Request, Status>;
+
+/// Une demande à traiter est une tâche de la frise dès son envoi ; la cocher la passe « Livré ».
+#[portaki_sdk::record(name = "requests", item = Request, status = Status, due_hours = 0,
+    task_title = "task.title", task_done = "host.main.markRestocked", hooks,
+    note_email = "host-reply")]
+pub struct Restocks;

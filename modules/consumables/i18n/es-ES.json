@@ -121,5 +121,5 @@
   "status.restocked": "Entregado",
   "surface.host.main.subtitle": "Defina la lista — los huéspedes avisan de lo que falta durante la estancia.",
   "surface.host.main.title": "Consumibles",
-  "task.title": "{item} solicitado"
+  "task.title": "{item_label} solicitado"
 }

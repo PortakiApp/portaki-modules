@@ -121,5 +121,5 @@
   "status.restocked": "تم التسليم",
   "surface.host.main.subtitle": "حدِّد القائمة — يُبلغك الضيوف بما ينقص أثناء الإقامة.",
   "surface.host.main.title": "المستلزمات",
-  "task.title": "طُلب {item}"
+  "task.title": "طُلب {item_label}"
 }
