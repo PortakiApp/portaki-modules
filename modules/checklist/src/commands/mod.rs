@@ -4,7 +4,6 @@ pub mod complete_item;
 pub mod create_checklist;
 pub mod earlier;
 pub mod email_context;
-pub mod entities;
 pub mod list_completions;
 mod progress;
 pub mod publish_readiness;

@@ -16,7 +16,7 @@ use uuid::Uuid;
 
 use super::templates::is_restock_label;
 use crate::domain::timezone::offset_for_iana;
-use crate::entities::TaskItemState;
+use crate::TaskItemState;
 use crate::{lists, storage, List, Step};
 
 /// Where a task of `list` sits for one stay, before its items are attached.

@@ -2,7 +2,6 @@
 
 use portaki_sdk::contracts::timeline::TaskToggleArgs;
 use portaki_sdk::files::FileRef;
-use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
@@ -39,7 +38,7 @@ pub fn task_toggle(ctx: Context, args: TaskToggleArgs) -> Result<()> {
     let stored = state_of(&states, &args.task_id, item.uuid()).and_then(|s| s.photo.clone());
     task_item(&list, item, None).check_toggle(args.done, photo.as_deref().or(stored.as_deref()))?;
 
-    storage::set_task_item(&args.task_id, item.uuid(), args.done, photo, time::now()?)?;
+    storage::set_task_item(&args.task_id, item.uuid(), args.done, photo)?;
     let restocked = args.done && is_restock(item);
     after_change(&ctx, &list, &args.task_id, stay_id, restocked)
 }
