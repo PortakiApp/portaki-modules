@@ -33,7 +33,11 @@ pub struct ModuleConfig {
     #[field(label = "host.nearby.enabled")]
     pub nearby_enabled: bool,
     /// Search radius in kilometers (bbox approximation for OpenAgenda `geo`).
-    #[field(kind = "number", label = "host.nearby.radius")]
+    #[field(
+        kind = "number",
+        label = "host.nearby.radius",
+        visible_when = "nearby_enabled=true"
+    )]
     #[serde(deserialize_with = "deserialize_radius")]
     pub radius_km: u32,
 }

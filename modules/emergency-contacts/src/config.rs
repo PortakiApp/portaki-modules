@@ -20,20 +20,21 @@ pub struct ModuleConfig {
     #[field(
         kind = "select",
         options = ["always", "hours"],
-        label = "host.availability.label"
+        label = "host.availability.label",
+        visible_when = "show_host=true",
     )]
     pub host_availability: String,
     /// La plage où l'hôte répond, la valeur d'un `TimeRange` : `HH:MM-HH:MM`. Vide : celle des
     /// deux champs d'avant, sinon 08:00 – 21:00.
-    #[field(label = "host.hours.label")]
+    #[field(label = "host.hours.label", visible_when = "host_availability=hours")]
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub host_hours: String,
     /// Les deux champs d'avant `host_hours`, lus tant qu'une plage n'a pas été choisie : plus
     /// dessinés, la plateforme garde leur valeur (`updateConfig` fusionne).
-    #[field(label = "host.hours.label")]
+    #[field(label = "host.hours.label", visible_when = "host_availability=hours")]
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub host_hours_from: String,
-    #[field(label = "host.hours.label")]
+    #[field(label = "host.hours.label", visible_when = "host_availability=hours")]
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub host_hours_to: String,
     /// Copiés vers un autre logement, marqués « À vérifier » (`local`) ; fusionnés ligne par
@@ -45,7 +46,7 @@ pub struct ModuleConfig {
     /// Une surface hôte ne lit pas le profil de l'hôte de façon sûre : le champ reste, et le
     /// livret retombe sur le téléphone du profil (`ctx.host`) quand il est vide. Rempli, il gagne :
     /// c'est un choix délibéré, par exemple une ligne dédiée aux voyageurs.
-    #[field(label = "host.phone.label")]
+    #[field(label = "host.phone.label", visible_when = "show_host=true")]
     pub host_visible_phone: String,
     // §2.3 Santé : propres au lieu, jamais copiés vers un autre logement (`local`).
     /// La pharmacie : son nom, non traduit.

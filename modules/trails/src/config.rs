@@ -75,7 +75,11 @@ pub struct ModuleConfig {
     ///
     /// À plat et en `structured` : le choix multiple envoie un vrai tableau, qu'un champ `text`
     /// ferait refuser par la plateforme.
-    #[field(kind = "structured", label = "host.public.trails")]
+    #[field(
+        kind = "structured",
+        label = "host.public.trails",
+        visible_when = "public_enabled=true"
+    )]
     #[serde(deserialize_with = "id_list")]
     pub public_trails: Vec<String>,
 }
