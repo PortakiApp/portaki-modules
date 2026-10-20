@@ -3,23 +3,15 @@
 #[path = "../../../support/previews.rs"]
 mod previews;
 
-use checklist::{
-    create_checklist, list_checklists, render_home_card, render_post_stay_card, reset_test_store,
-    update_config, CreateChecklistArgs, UpdateConfigArgs,
-};
+mod sample;
+
+use checklist::{render_home_card, render_post_stay_card, reset_test_store};
 use serial_test::serial;
 
 /// La liste de départ que le module propose en un clic : celle qu'un hôte obtient sans rien
 /// écrire, et donc celle qu'un aperçu doit montrer.
-fn seed(ctx: &portaki_sdk::Context) {
-    create_checklist(
-        ctx.clone(),
-        CreateChecklistArgs {
-            template: "departure".into(),
-            id: None,
-        },
-    )
-    .expect("create");
+fn departure() -> serde_json::Value {
+    sample::lists(&["departure"])
 }
 
 #[test]
@@ -28,10 +20,8 @@ fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
     reset_test_store();
     let context = previews::guest(root);
-    let post_stay = context.run(|ctx| {
-        seed(&ctx);
-        render_post_stay_card(ctx).expect("post-stay")
-    });
+    let post_stay = sample::with(context, departure())
+        .run(|ctx| render_post_stay_card(ctx).expect("post-stay"));
     /*
      * La carte d'accueil, rendue la veille du départ : la liste ouverte et cochable, « Départ
      * demain à 11:00 ».
@@ -46,20 +36,10 @@ fn previews_match_the_rendered_surfaces() {
      */
     reset_test_store();
     let during = || {
-        previews::guest_at(root, previews::DURING).run(|ctx| {
-            seed(&ctx);
-            let list = list_checklists().expect("lists")[0].id;
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    id: list.to_string(),
-                    trigger: "duringStay".into(),
-                    ..UpdateConfigArgs::default()
-                },
-            )
-            .expect("trigger");
-            render_home_card(ctx).expect("card")
-        })
+        let mut lists = departure();
+        lists[0]["guest_trigger"] = "duringStay".into();
+        sample::with(previews::guest_at(root, previews::DURING), lists)
+            .run(|ctx| render_home_card(ctx).expect("card"))
     };
     let card = during();
     reset_test_store();
@@ -73,10 +53,8 @@ fn previews_match_the_rendered_surfaces() {
      *
      */
     reset_test_store();
-    let after = previews::guest_at(root, previews::AFTER).run(|ctx| {
-        seed(&ctx);
-        render_post_stay_card(ctx).expect("post-stay")
-    });
+    let after = sample::with(previews::guest_at(root, previews::AFTER), departure())
+        .run(|ctx| render_post_stay_card(ctx).expect("post-stay"));
 
     previews::check_all_phased(
         root,

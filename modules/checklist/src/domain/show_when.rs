@@ -52,7 +52,7 @@ mod tests {
     fn a_retired_or_unknown_trigger_is_always_available() {
         let now = utc("2026-07-01T10:00:00Z");
         assert!(is_checklist_available(
-            lists::BEFORE_ARRIVAL,
+            "beforeArrival",
             now,
             None,
             None,
