@@ -7,7 +7,7 @@ use portaki_sdk::sdui::primitives::{
     Button, Card, EmptyState, Eyebrow, Icon, Image, InfoBanner, ListItem, RichText, Stack, Text,
 };
 
-use super::no_appliances;
+use super::row::no_appliances;
 use crate::domain::{extract_howto_steps, is_video_url, Appliance, Guide, HowToStep};
 
 /// Ce que « Un souci avec cet appareil ? » passe au formulaire de signalement : les noms que lit
