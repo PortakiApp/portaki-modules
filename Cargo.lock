@@ -874,7 +874,7 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 [[package]]
 name = "portaki-connectors"
 version = "10.15.0"
-source = "git+https://github.com/PortakiApp/portaki-sdk?branch=feat%2Fsdk11-resources#5dfeab1efc6402f1bd1170979062ddfc74834bf6"
+source = "git+https://github.com/PortakiApp/portaki-sdk?branch=feat%2Fsdk11-resources#59a907cbf1b79046dc63497968e6bed5ed453935"
 dependencies = [
  "portaki-sdk",
  "serde",
@@ -885,7 +885,7 @@ dependencies = [
 [[package]]
 name = "portaki-sdk"
 version = "10.15.0"
-source = "git+https://github.com/PortakiApp/portaki-sdk?branch=feat%2Fsdk11-resources#5dfeab1efc6402f1bd1170979062ddfc74834bf6"
+source = "git+https://github.com/PortakiApp/portaki-sdk?branch=feat%2Fsdk11-resources#59a907cbf1b79046dc63497968e6bed5ed453935"
 dependencies = [
  "base64 0.23.1",
  "chrono",
@@ -902,7 +902,7 @@ dependencies = [
 [[package]]
 name = "portaki-sdk-macros"
 version = "10.15.0"
-source = "git+https://github.com/PortakiApp/portaki-sdk?branch=feat%2Fsdk11-resources#5dfeab1efc6402f1bd1170979062ddfc74834bf6"
+source = "git+https://github.com/PortakiApp/portaki-sdk?branch=feat%2Fsdk11-resources#59a907cbf1b79046dc63497968e6bed5ed453935"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -913,7 +913,7 @@ dependencies = [
 [[package]]
 name = "portaki-test-utils"
 version = "10.15.0"
-source = "git+https://github.com/PortakiApp/portaki-sdk?branch=feat%2Fsdk11-resources#5dfeab1efc6402f1bd1170979062ddfc74834bf6"
+source = "git+https://github.com/PortakiApp/portaki-sdk?branch=feat%2Fsdk11-resources#59a907cbf1b79046dc63497968e6bed5ed453935"
 dependencies = [
  "chrono",
  "jsonschema",
