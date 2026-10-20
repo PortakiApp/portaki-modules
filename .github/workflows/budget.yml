@@ -1,0 +1,118 @@
+name: budget
+
+# Le budget des modules SDK 11 (feature `unstable` du SDK) : arborescence, complexité, exceptions.
+# `portaki build` les impose, sans drapeau pour les couper ; ce job le lance sur chaque module SDK 11
+# que la PR touche, et colle dans la PR la liste des exceptions (`portaki check --report`).
+#
+# Il tourne sur TOUTE PR, sans filtre de chemins : c'est un check obligatoire de `main`, et un check
+# requis qu'un filtre empêche de démarrer laisse la PR en attente pour toujours. Sans module SDK 11
+# touché, il passe en quelques secondes.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: budget-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  budget:
+    name: module budget
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      # Les modules SDK 11 que la PR touche — tous quand elle touche le lock ou le plafond.
+      - name: Detect SDK 11 modules
+        id: detect
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          changed="$(git diff --name-only "$BASE"...HEAD)"
+          all=false
+          grep -qxE 'Cargo.lock|portaki-budget.toml' <<<"$changed" && all=true
+          modules=""
+          for manifest in modules/*/Cargo.toml; do
+            grep -Eq '^portaki-sdk *=.*"unstable"' "$manifest" || continue
+            module="$(basename "$(dirname "$manifest")")"
+            if $all || grep -q "^modules/${module}/" <<<"$changed"; then
+              modules="$modules $module"
+            fi
+          done
+          echo "modules=${modules# }" >>"$GITHUB_OUTPUT"
+          # Le SDK que le lock épingle : une branche git pendant une preuve, crates.io sinon.
+          source="$(awk '/^name = "portaki-sdk"$/{f=1} f && /^source/{print; exit}' Cargo.lock)"
+          if [[ "$source" == *'git+'* ]]; then
+            url="${source#*git+}"; url="${url%\"}"
+            echo "git=${url%%\?*}" >>"$GITHUB_OUTPUT"
+            echo "rev=${url##*#}" >>"$GITHUB_OUTPUT"
+          fi
+
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        if: steps.detect.outputs.modules != ''
+        with:
+          targets: wasm32-unknown-unknown
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        if: steps.detect.outputs.modules != ''
+        with:
+          cache-bin: "false"
+          shared-key: budget
+
+      - uses: PortakiApp/portaki-release-action/install@ab76c697ec3459805675a884a925b63a1ea612f8 # v2
+        if: steps.detect.outputs.modules != '' && steps.detect.outputs.git == ''
+
+      - name: Install portaki from the pinned SDK commit
+        if: steps.detect.outputs.modules != '' && steps.detect.outputs.git != ''
+        env:
+          GIT: ${{ steps.detect.outputs.git }}
+          REV: ${{ steps.detect.outputs.rev }}
+        run: cargo install --locked --git "$GIT" --rev "$REV" portaki-cli
+
+      # `portaki build` : arborescence, pureté de `domain/`, exceptions et leur plafond,
+      # complexité, puis la compilation (dont les assertions de fichier des macros).
+      - name: Budget
+        if: steps.detect.outputs.modules != ''
+        env:
+          MODULES: ${{ steps.detect.outputs.modules }}
+        run: |
+          set -euo pipefail
+          {
+            echo "<!-- portaki-budget -->"
+            echo "# Budget des modules SDK 11"
+            echo
+            echo "Une exception de plus change \`EXCEPTIONS.md\` : CODEOWNERS la fait relire."
+            echo
+          } >budget.md
+          status=0
+          for module in $MODULES; do
+            (cd "modules/$module" && portaki check --report) >>budget.md
+            echo >>budget.md
+            (cd "modules/$module" && portaki build) || status=1
+          done
+          exit "$status"
+
+      # Un seul commentaire par PR, mis à jour à chaque poussée.
+      - name: Post the exceptions
+        if: always() && hashFiles('budget.md') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          id="$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+            --jq '.[] | select(.body | startswith("<!-- portaki-budget -->")) | .id' | head -n 1)"
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$id" -F body=@budget.md >/dev/null
+          else
+            gh api -X POST "repos/$REPO/issues/$PR/comments" -F body=@budget.md >/dev/null
+          fi

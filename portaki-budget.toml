@@ -1,0 +1,4 @@
+# Le plafond d'exceptions au budget, par module SDK 11 : `#[allow(…, reason = "…")]` d'une règle
+# du budget et `// portaki: allow(file-length, …)` compris. Au-delà, `portaki build` refuse, même
+# avec des raisons. Lu par le CLI à la racine du dépôt, jamais dans le dossier d'un module.
+exceptions = 3
