@@ -8,6 +8,12 @@ Les signalements passent sur la nouvelle base de Portaki.
 * Décocher la tâche d'un signalement dans la frise le rouvre, au lieu d'être refusé.
 * Une même réponse envoyée deux fois (double clic) ne part qu'une fois au voyageur.
 
+## 1.10.4
+
+Les messages du formulaire dans toutes les langues.
+
+* Les erreurs sous les champs et les points à compléter avant publication s'affichent dans la langue de l'hôte, plus seulement en français ou en anglais.
+
 ## 1.10.0
 
 Le formulaire s'ouvre depuis les autres modules.

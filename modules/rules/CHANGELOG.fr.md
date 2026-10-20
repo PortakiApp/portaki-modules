@@ -8,6 +8,12 @@ Le règlement passe sur la nouvelle base des listes de Portaki.
 * Un ancien thème écrit à la main devient « Autre » ; une règle sans titre, que le livret ne montrait pas, n'est pas reprise.
 * Des règles importées s'ajoutent à celles déjà là, sans doublon et sans rien écraser.
 
+## 1.9.8
+
+Les messages du formulaire dans toutes les langues.
+
+* Les erreurs sous les champs et les points à compléter avant publication s'affichent dans la langue de l'hôte, plus seulement en français ou en anglais.
+
 ## 1.9.1
 
 Montée technique.
