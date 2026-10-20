@@ -1,0 +1,7 @@
+{
+  "id": "29fc628e-1223-45b4-9831-92b6258ad35b",
+  "content_fr": "{\"devices\":[{\"emoji\":\"🔥\",\"featured\":true,\"id\":\"four\",\"location\":\"Cuisine\",\"name\":\"Four\",\"order\":1,\"status\":\"active\"},{\"id\":\"clim\",\"location\":\"Chambre\",\"name\":\"Climatisation\",\"order\":0,\"status\":\"hidden\"}],\"safetyNotice\":\"\"}",
+  "content_en": "{\"devices\":[{\"emoji\":\"🔥\",\"featured\":true,\"id\":\"four\",\"location\":\"Kitchen\",\"name\":\"Oven\",\"order\":1,\"status\":\"active\"},{\"id\":\"clim\",\"location\":\"Bedroom\",\"name\":\"Air conditioning\",\"order\":0,\"status\":\"hidden\"}],\"safetyNotice\":\"\"}",
+  "created_at": "2026-10-20T10:19:27.580186Z",
+  "updated_at": "2026-10-20T10:19:27.580186Z"
+}

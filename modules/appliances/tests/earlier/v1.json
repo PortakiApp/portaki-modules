@@ -1,0 +1,7 @@
+{
+  "id": "b2018c65-4bc9-4dcb-931d-c650d59e5318",
+  "content_fr": "{\"devices\":[{\"icon\":\"📺\",\"steps\":[\"Allumez avec la télécommande noire\",\"Source HDMI 1\"],\"subtitle\":\"Salon\",\"tip\":\"La télécommande est sur le meuble.\",\"title\":\"Télévision\"},{\"icon\":\"wifi\",\"manualUrl\":\"https://example.com/box.pdf\",\"subtitle\":\"\",\"title\":\"Box internet\"}],\"safety_notice\":\"Coupez l'eau en cas de fuite.\"}",
+  "content_en": "{\"devices\":[{\"icon\":\"📺\",\"steps\":[\"Turn on with the black remote\",\"HDMI 1\"],\"subtitle\":\"Living room\",\"title\":\"TV\"},{\"icon\":\"wifi\",\"title\":\"Internet box\"}],\"safety_notice\":\"\"}",
+  "created_at": "2026-10-20T10:19:27.580336Z",
+  "updated_at": "2026-10-20T10:19:27.580336Z"
+}
