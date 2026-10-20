@@ -1,8 +1,8 @@
 # Changelog
 
-## 1.10.15
+## 1.11.0
 
-L'e-mail « code changé » suit le type de parking choisi.
+L'e-mail « code changé » suit le type de parking, et les champs masqués restent privés.
 
 * Changer le code du parking prévient les voyageurs dès qu'un type de parking est choisi, même si l'ancien interrupteur n'a pas été touché.
 * Avec « Pas de parking », aucun e-mail n'annonce plus un code que le voyageur ne voit pas dans son livret.
@@ -159,6 +159,7 @@ Le code d'entrée dans la langue du voyageur.
 ## 1.0.0 (2026-09-29)
 
 Première version stable. Le guide d'accès dit au voyageur comment entrer, et garde les codes masqués jusqu'au moment choisi par l'hôte.
+* Un champ que le livret ne montre pas, comme votre numéro quand « Afficher mon numéro » est décoché, reste privé pour les outils qui lisent le livret.
 
 * Le voyageur voit le moyen d'entrée, l'accès à l'immeuble, le parking et le parcours jusqu'à la porte, avec une carte et une vidéo facultative.
 * Les codes restent masqués jusqu'au moment choisi par l'hôte : dès la réservation, 24 h avant, la veille à 16 h ou à l'arrivée.
