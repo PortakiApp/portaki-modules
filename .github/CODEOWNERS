@@ -1,0 +1,14 @@
+# Le budget des modules. GitHub attribue des fichiers, pas des lignes : une exception au budget
+# (`#[allow(…, reason = "…")]`, `// portaki: allow(file-length, …)`) n'est acceptée par
+# `portaki build` que si elle figure dans l'`EXCEPTIONS.md` du module. En ajouter une change donc
+# ce fichier, et c'est lui qu'on fait relire.
+/modules/*/EXCEPTIONS.md @cyrilcolinet
+# Le plafond d'exceptions, que le module ne fixe pas.
+/portaki-budget.toml @cyrilcolinet
+# Ce qui pourrait relâcher le budget d'un module sans toucher à son code.
+/modules/*/clippy.toml @cyrilcolinet
+/modules/*/.cargo/ @cyrilcolinet
+/clippy.toml @cyrilcolinet
+# Le job qui le vérifie, et ce fichier.
+/.github/workflows/budget.yml @cyrilcolinet
+/.github/CODEOWNERS @cyrilcolinet
