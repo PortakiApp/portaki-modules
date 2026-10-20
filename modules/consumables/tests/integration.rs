@@ -7,12 +7,11 @@ use uuid::Uuid;
 mod sample;
 
 use consumables::{
-    list_for_stay, list_open_count, render_guest_form, render_home_card, render_host_main,
-    render_host_stats, render_host_stay, reset_test_store, seed_defaults, stats_summary, submit,
-    task_complete, timeline_tasks, update_status, ListForStayArgs, SubmitArgs, UpdateStatusArgs,
-    GUEST_TEXT_EMAIL_MAX_CHARS, LEVEL_DEFAULT, STATUS_DEFAULT,
+    render_guest_form, render_home_card, render_host_main, render_host_stats, render_host_stay,
+    seed_defaults, stats_summary, Level, Status, SubmitArgs,
 };
 use portaki_sdk::contracts::stats::StatsSummaryArgs;
+use portaki_sdk::host::email::GUEST_TEXT_MAX_CHARS as GUEST_TEXT_EMAIL_MAX_CHARS;
 use portaki_sdk::limits;
 use portaki_sdk::prelude::EmptyArgs;
 use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
@@ -20,7 +19,6 @@ use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
 #[test]
 #[serial]
 fn home_card_empty_when_no_items() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -34,7 +32,6 @@ fn home_card_empty_when_no_items() {
 #[test]
 #[serial]
 fn home_card_opens_form_overlay_with_catalog() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -66,7 +63,6 @@ fn home_card_opens_form_overlay_with_catalog() {
 #[test]
 #[serial]
 fn one_submit_reports_every_product_the_guest_picked() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -75,12 +71,12 @@ fn one_submit_reports_every_product_the_guest_picked() {
             let items = consumables::Products::load(&ctx).unwrap().rows().to_vec();
             assert_eq!(items.len(), 2);
 
-            submit(
-                ctx.clone(),
+            sample::submit(
+                &ctx,
                 SubmitArgs {
                     item_ids: vec![items[0].uuid(), items[1].uuid()],
                     item_id: None,
-                    level: LEVEL_DEFAULT.into(),
+                    level: "missing".into(),
                     note: None,
                 },
             )
@@ -88,7 +84,7 @@ fn one_submit_reports_every_product_the_guest_picked() {
 
             // Un signalement par produit, et non un pour le lot : l'hôte clôt l'un sans clore
             // l'autre, et chaque e-mail garde le lien vers le sien.
-            let rows = list_for_stay(ctx.clone(), ListForStayArgs::default()).expect("list");
+            let rows = sample::requests(&ctx);
             assert_eq!(rows.len(), 2);
         });
 }
@@ -97,7 +93,6 @@ fn one_submit_reports_every_product_the_guest_picked() {
 #[test]
 #[serial]
 fn the_single_product_field_is_still_accepted() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -107,23 +102,18 @@ fn the_single_product_field_is_still_accepted() {
             );
             let item_id = sample::id(0);
 
-            submit(
-                ctx.clone(),
+            sample::submit(
+                &ctx,
                 SubmitArgs {
                     item_ids: Vec::new(),
                     item_id: Some(item_id),
-                    level: LEVEL_DEFAULT.into(),
+                    level: "missing".into(),
                     note: None,
                 },
             )
             .expect("submit");
 
-            assert_eq!(
-                list_for_stay(ctx, ListForStayArgs::default())
-                    .expect("list")
-                    .len(),
-                1
-            );
+            assert_eq!(sample::requests(&ctx).len(), 1);
         });
 }
 
@@ -131,7 +121,6 @@ fn the_single_product_field_is_still_accepted() {
 #[test]
 #[serial]
 fn the_product_grid_starts_with_nothing_picked() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -157,7 +146,6 @@ fn the_product_grid_starts_with_nothing_picked() {
 #[test]
 #[serial]
 fn submit_creates_open_report_and_lists_on_card() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -170,22 +158,23 @@ fn submit_creates_open_report_and_lists_on_card() {
             assert_eq!(items.len(), 1);
             let item_id = items[0].uuid();
 
-            submit(
-                ctx.clone(),
+            sample::submit(
+                &ctx,
                 SubmitArgs {
                     item_ids: Vec::new(),
                     item_id: Some(item_id),
-                    level: LEVEL_DEFAULT.into(),
+                    level: "missing".into(),
                     note: Some("Salle de bain".into()),
                 },
             )
             .expect("submit");
 
-            let rows = list_for_stay(ctx.clone(), ListForStayArgs::default()).expect("list");
+            let rows = sample::requests(&ctx);
             assert_eq!(rows.len(), 1);
-            assert_eq!(rows[0].status, STATUS_DEFAULT);
-            assert_eq!(rows[0].level, LEVEL_DEFAULT);
-            assert!(rows[0].item_label.contains("Papier") || rows[0].item_label.contains("Toilet"));
+            assert_eq!(rows[0].status, Status::Open);
+            assert_eq!(rows[0].item.level, Level::Missing);
+            let label = &rows[0].item.item_label;
+            assert!(label.contains("Papier") || label.contains("Toilet"));
 
             let surface = render_home_card(ctx).expect("render");
             let json = serde_json::to_string(&surface).expect("surface json");
@@ -207,35 +196,24 @@ fn stock_args() -> StatsSummaryArgs {
 #[serial]
 fn host_mark_restocked_clears_open_list() {
     const ITEMS: [(&str, &str, &str); 1] = [("Savon", "Soap", "")];
-    reset_test_store();
-    let mut report_id = Uuid::nil();
-    let mut stay_id = Uuid::nil();
-    let mut item_id = Uuid::nil();
-
     sample::with(MockContext::guest(), &ITEMS)
         .with_property(Property::default())
-        .run(|ctx| {
-            item_id = sample::id(0);
-            submit(
-                ctx.clone(),
+        .run(|guest| {
+            sample::submit(
+                &guest,
                 SubmitArgs {
                     item_ids: Vec::new(),
-                    item_id: Some(item_id),
+                    item_id: Some(sample::id(0)),
                     level: "low".into(),
                     note: None,
                 },
             )
             .expect("submit");
-            let report = &list_for_stay(ctx, ListForStayArgs::default()).expect("list")[0];
-            report_id = report.id;
-            stay_id = report.stay_id;
-        });
+            let report = sample::requests(&guest).remove(0);
+            let stay_id = report.stay_id.expect("stay");
+            let ctx = sample::as_host(&guest);
 
-    sample::with(MockContext::host(), &ITEMS)
-        .with_property(Property::default())
-        .run(|ctx| {
-            let open = list_open_count(ctx.clone()).expect("open count");
-            assert_eq!(open.open_count, 1);
+            assert_eq!(sample::open_count(&ctx), 1);
             // « Demandes de réassort · 1 », « Savon en tête ».
             let tile = stats_summary(ctx.clone(), stock_args()).expect("tile");
             assert_eq!(tile.value, "1");
@@ -249,18 +227,13 @@ fn host_mark_restocked_clears_open_list() {
                 Some("Soap on top")
             );
 
-            update_status(
+            consumables::__portaki_requests_set_status(
                 ctx.clone(),
-                UpdateStatusArgs {
-                    report_id,
-                    status: "restocked".into(),
-                    host_reply: None,
-                },
+                serde_json::from_value(json!({ "id": report.id, "status": "restocked" })).unwrap(),
             )
             .expect("restock");
 
-            let open = list_open_count(ctx.clone()).expect("open after");
-            assert_eq!(open.open_count, 0);
+            assert_eq!(sample::open_count(&ctx), 0);
             // Une demande livrée reste une demande de la période.
             assert_eq!(
                 stats_summary(ctx.clone(), stock_args())
@@ -307,7 +280,6 @@ fn host_mark_restocked_clears_open_list() {
 #[test]
 #[serial]
 fn seed_defaults_fills_empty_catalog() {
-    reset_test_store();
     MockContext::host()
         .with_property(Property::default())
         .run(|ctx| {
@@ -331,7 +303,6 @@ fn seed_defaults_fills_empty_catalog() {
 #[test]
 #[serial]
 fn the_host_s_restocking_time_reaches_the_guest() {
-    reset_test_store();
     let delay = json!({ "restock_delay": { "fr": "sous 24 h" } });
     let form = sample::with_meta(MockContext::guest(), &[("Café", "", "")], delay)
         .with_translation("form.notice.delay", "Votre hôte réapprovisionne sous 24 h.")
@@ -357,7 +328,6 @@ fn the_host_s_restocking_time_reaches_the_guest() {
 #[test]
 #[serial]
 fn host_main_and_stats_render() {
-    reset_test_store();
     MockContext::host()
         .with_property(Property::default())
         .run(|ctx| {
@@ -376,7 +346,6 @@ fn host_main_and_stats_render() {
 #[test]
 #[serial]
 fn host_stay_empty_state_when_no_reports() {
-    reset_test_store();
     let stay_id = Uuid::new_v4();
 
     MockContext::host()
@@ -397,12 +366,11 @@ fn host_stay_empty_state_when_no_reports() {
 #[test]
 #[serial]
 fn submit_rejects_unknown_item() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            let err = submit(
-                ctx,
+            let err = sample::submit(
+                &ctx,
                 SubmitArgs {
                     item_ids: Vec::new(),
                     item_id: Some(Uuid::new_v4()),
@@ -419,7 +387,6 @@ fn submit_rejects_unknown_item() {
 #[test]
 #[serial]
 fn long_note_is_stored_whole_and_quoted_in_the_host_email() {
-    reset_test_store();
     let note = format!("{}!", "serviette ".repeat(2_000).trim_end());
     assert_eq!(note.chars().count(), 20_000);
 
@@ -432,19 +399,19 @@ fn long_note_is_stored_whole_and_quoted_in_the_host_email() {
             );
             let item_id = sample::id(0);
 
-            submit(
-                ctx.clone(),
+            sample::submit(
+                &ctx,
                 SubmitArgs {
                     item_ids: Vec::new(),
                     item_id: Some(item_id),
-                    level: LEVEL_DEFAULT.into(),
+                    level: "missing".into(),
                     note: Some(note.clone()),
                 },
             )
             .expect("submit");
 
-            let rows = list_for_stay(ctx.clone(), ListForStayArgs::default()).expect("list");
-            assert_eq!(rows[0].note.as_deref(), Some(note.as_str()));
+            let rows = sample::requests(&ctx);
+            assert_eq!(rows[0].item.note, note);
 
             let email = host.sent_emails().into_iter().last().expect("host email");
             for (body, prefix) in [
@@ -475,7 +442,6 @@ fn long_note_is_stored_whole_and_quoted_in_the_host_email() {
 #[test]
 #[serial]
 fn an_empty_catalog_does_not_block_publication() {
-    reset_test_store();
     MockContext::host().run(|ctx| {
         assert_eq!(sample::blocking(&ctx, "rows"), None);
         seed_defaults(ctx.clone(), EmptyArgs {}).expect("seed");
@@ -565,7 +531,6 @@ fn max_requests_out_of_range_is_reported_not_clamped() {
 #[test]
 #[serial]
 fn an_already_reported_product_says_so_until_it_is_restocked() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -579,8 +544,8 @@ fn an_already_reported_product_says_so_until_it_is_restocked() {
                 .expect("json");
             assert!(!before.contains("form.item.reported"), "{before}");
 
-            submit(
-                ctx.clone(),
+            sample::submit(
+                &ctx,
                 SubmitArgs {
                     item_ids: vec![item_id],
                     item_id: None,
@@ -601,7 +566,6 @@ fn an_already_reported_product_says_so_until_it_is_restocked() {
 #[test]
 #[serial]
 fn the_stay_cap_stops_requests() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .with_resource(
@@ -612,12 +576,12 @@ fn the_stay_cap_stops_requests() {
         .run(|ctx| {
             let item_id = sample::id(0);
             let ask = |ctx: &portaki_sdk::prelude::Context| {
-                submit(
-                    ctx.clone(),
+                sample::submit(
+                    ctx,
                     SubmitArgs {
                         item_ids: Vec::new(),
                         item_id: Some(item_id),
-                        level: LEVEL_DEFAULT.into(),
+                        level: "missing".into(),
                         note: None,
                     },
                 )
@@ -636,116 +600,107 @@ fn the_stay_cap_stops_requests() {
 #[serial]
 fn planned_with_a_reply_reaches_the_guest_and_ends_the_task() {
     const ITEMS: [(&str, &str, &str); 1] = [("Café", "Coffee", "")];
-    reset_test_store();
-    let mut stay_id = Uuid::nil();
-    sample::with(MockContext::guest(), &ITEMS)
-        .with_property(Property::default())
-        .run(|ctx| {
-            let item_id = sample::id(0);
-            submit(
-                ctx.clone(),
-                SubmitArgs {
-                    item_ids: vec![item_id],
-                    item_id: None,
-                    level: "missing".into(),
-                    note: None,
-                },
-            )
-            .expect("submit");
-            stay_id = list_for_stay(ctx, ListForStayArgs::default()).expect("list")[0].stay_id;
-        });
-
-    let tasks_args = || {
-        serde_json::from_value(json!({
-            "propertyId": Uuid::nil(),
-            "from": "2000-01-01T00:00:00Z",
-            "to": "2100-01-01T00:00:00Z",
-            "stays": [{
-                "id": stay_id,
-                "checkIn": "2000-01-01T00:00:00Z",
-                "checkOut": "2100-01-01T00:00:00Z",
-                "guestName": "Marie",
-                "status": "CHECKED_IN",
-            }],
-        }))
-        .expect("timeline args")
-    };
-
-    let mut report_id = Uuid::nil();
-    sample::with(MockContext::host(), &ITEMS)
-        .with_property(Property::default())
-        .run(|ctx| {
-            let tasks = timeline_tasks(ctx.clone(), tasks_args())
-                .expect("tasks")
-                .tasks;
-            assert_eq!(tasks.len(), 1);
-            assert_eq!(tasks[0].title.fr, "Café demandé");
-            assert_eq!(tasks[0].context.fr, "Marie");
-            assert_eq!(tasks[0].stay_id, Some(stay_id));
-            report_id = tasks[0].id.parse().expect("task id is the report id");
-
-            // Le formulaire de l'hôte : ses boutons portent le statut, la coquille y fusionne le
-            // champ de réponse sous son nom de fil.
-            let main = serde_json::to_string(&render_host_main(ctx.clone()).expect("render"))
-                .expect("json");
-            assert!(main.contains("host.main.markPlanned"), "{main}");
-            assert!(main.contains(r#""name":"hostReply""#), "{main}");
-            let args: UpdateStatusArgs = serde_json::from_value(json!({
-                "reportId": report_id,
-                "status": "planned",
-                "hostReply": "  Je passe ce soir vers 18 h.  ",
+    let mut guest = MockContext::guest().with_property(Property::default());
+    guest = sample::with(guest, &ITEMS);
+    guest.run_with(|guest, backend| {
+        let mut named = guest.clone();
+        if let Some(g) = named.guest.as_mut() {
+            g.display_name = Some("Marie".into());
+        }
+        sample::submit(
+            &named,
+            SubmitArgs {
+                item_ids: vec![sample::id(0)],
+                item_id: None,
+                level: "missing".into(),
+                note: None,
+            },
+        )
+        .expect("submit");
+        let stay_id = sample::requests(&guest)[0].stay_id.expect("stay");
+        let ctx = sample::as_host(&guest);
+        let tasks_args = || {
+            serde_json::from_value(json!({
+                "propertyId": Uuid::nil(),
+                "from": "2000-01-01T00:00:00Z",
+                "to": "2100-01-01T00:00:00Z",
+                "stays": [],
             }))
-            .expect("form payload");
-            update_status(ctx.clone(), args).expect("planned");
+            .expect("timeline args")
+        };
 
-            assert_eq!(list_open_count(ctx.clone()).expect("open").open_count, 1);
-            assert!(timeline_tasks(ctx.clone(), tasks_args())
+        let tasks = consumables::__portaki_requests_timeline_tasks(ctx.clone(), tasks_args())
+            .expect("tasks")
+            .tasks;
+        assert_eq!(tasks.len(), 1);
+        assert_eq!(tasks[0].title.fr, "Café demandé");
+        assert_eq!(tasks[0].context.fr, "Marie");
+        assert_eq!(tasks[0].stay_id, Some(stay_id));
+        let report_id: Uuid = tasks[0].id.parse().expect("task id is the report id");
+
+        // Le formulaire de l'hôte : « Répondre » porte le champ de réponse, les statuts leurs
+        // propres boutons.
+        let main =
+            serde_json::to_string(&render_host_main(ctx.clone()).expect("render")).expect("json");
+        assert!(main.contains("host.main.markPlanned"), "{main}");
+        assert!(main.contains(r#""name":"text""#), "{main}");
+        consumables::__portaki_requests_note(
+            ctx.clone(),
+            serde_json::from_value(
+                json!({ "id": report_id, "text": "  Je passe ce soir vers 18 h.  " }),
+            )
+            .unwrap(),
+        )
+        .expect("reply");
+        consumables::__portaki_requests_set_status(
+            ctx.clone(),
+            serde_json::from_value(json!({ "id": report_id, "status": "planned" })).unwrap(),
+        )
+        .expect("planned");
+        let reply = backend
+            .sent_emails()
+            .into_iter()
+            .last()
+            .expect("guest email");
+        assert!(
+            reply.email_id.starts_with("host-reply-"),
+            "{}",
+            reply.email_id
+        );
+
+        assert_eq!(sample::open_count(&ctx), 1);
+        assert!(
+            consumables::__portaki_requests_timeline_tasks(ctx.clone(), tasks_args())
                 .expect("tasks")
                 .tasks
-                .is_empty());
-            let row = &list_for_stay(
-                ctx.clone(),
-                ListForStayArgs {
-                    stay_id: Some(stay_id),
-                },
-            )
-            .expect("rows")[0];
-            assert_eq!(row.status, "planned");
-            assert_eq!(
-                row.host_reply.as_deref(),
-                Some("Je passe ce soir vers 18 h.")
-            );
-            // « Prévu » n'est pas un réassort.
-            let stats = serde_json::to_string(&render_host_stats(ctx.clone())).expect("json");
-            assert!(!stats.contains("stats.row.restockedAt"), "{stats}");
-        });
+                .is_empty()
+        );
+        let row = &consumables::Restocks::for_stay(&ctx, stay_id).expect("rows")[0];
+        assert_eq!(row.status, Status::Planned);
+        assert_eq!(row.notes().last(), Some("Je passe ce soir vers 18 h."));
+        // « Prévu » n'est pas un réassort.
+        let stats = serde_json::to_string(&render_host_stats(ctx.clone())).expect("json");
+        assert!(!stats.contains("stats.row.restockedAt"), "{stats}");
 
-    sample::with(MockContext::guest(), &ITEMS)
-        .with_property(Property::default())
-        .run(|ctx| {
-            let card =
-                serde_json::to_string(&render_home_card(ctx.clone()).expect("card")).expect("json");
-            assert!(card.contains("status.planned"), "{card}");
-            assert!(card.contains("home.card.reply"), "{card}");
-            // Toujours pas livré : pas de doublon.
-            let form = serde_json::to_string(&render_guest_form(ctx).expect("form")).expect("json");
-            assert!(form.contains("form.item.reported.missing"), "{form}");
-        });
+        let card =
+            serde_json::to_string(&render_home_card(guest.clone()).expect("card")).expect("json");
+        assert!(card.contains("status.planned"), "{card}");
+        assert!(card.contains("home.card.reply"), "{card}");
+        // Toujours pas livré : pas de doublon.
+        let form = serde_json::to_string(&render_guest_form(guest).expect("form")).expect("json");
+        assert!(form.contains("form.item.reported.missing"), "{form}");
 
-    sample::with(MockContext::host(), &ITEMS)
-        .with_property(Property::default())
-        .run(|ctx| {
-            task_complete(
-                ctx.clone(),
-                serde_json::from_value(json!({
-                    "propertyId": Uuid::nil(),
-                    "taskId": report_id.to_string(),
-                }))
-                .expect("complete args"),
-            )
-            .expect("delivered");
-            assert_eq!(list_open_count(ctx).expect("open").open_count, 0);
-        });
+        consumables::__portaki_requests_task_complete(
+            ctx.clone(),
+            serde_json::from_value(json!({
+                "propertyId": Uuid::nil(),
+                "taskId": report_id.to_string(),
+            }))
+            .expect("complete args"),
+        )
+        .expect("delivered");
+        assert_eq!(sample::open_count(&ctx), 0);
+    });
 }
 
 /// L'orchestrateur n'appelle `timelineTasks` que pour un module qui déclare la nav

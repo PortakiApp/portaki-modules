@@ -73,3 +73,28 @@ pub fn blocking(ctx: &Context, field: &str) -> Option<String> {
         .find(|item| item.id.ends_with(field))
         .map(|item| item.hint.get("fr").to_string())
 }
+
+/// Le formulaire du voyageur, envoyé à la commande `submit` générée.
+pub fn submit(ctx: &Context, args: consumables::SubmitArgs) -> portaki_sdk::Result<()> {
+    consumables::__portaki_requests_submit(ctx.clone(), serde_json::to_value(args).unwrap())
+}
+
+/// Les demandes du logement, les plus récentes d'abord.
+pub fn requests(ctx: &Context) -> Vec<consumables::Entry> {
+    consumables::Restocks::list(ctx).expect("requests")
+}
+
+/// Les demandes pas encore livrées.
+pub fn open_count(ctx: &Context) -> usize {
+    requests(ctx)
+        .iter()
+        .filter(|r| r.status != consumables::Status::Restocked)
+        .count()
+}
+
+/// Le même logement, vu du tableau de bord.
+pub fn as_host(ctx: &Context) -> Context {
+    let mut host = ctx.clone();
+    host.guest = None;
+    host
+}

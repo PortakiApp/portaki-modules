@@ -121,5 +121,5 @@
   "status.restocked": "已送达",
   "surface.host.main.subtitle": "先定好清单 — 房客在住期间会告诉您缺了什么。",
   "surface.host.main.title": "易耗品",
-  "task.title": "已请求{item}"
+  "task.title": "已请求{item_label}"
 }
