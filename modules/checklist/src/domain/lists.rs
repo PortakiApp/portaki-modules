@@ -1,7 +1,5 @@
 //! Checklist wire values and the templates a new list starts from.
 
-use portaki_sdk::bundle_text;
-
 pub const GUEST: &str = "guest";
 pub const HOST: &str = "host";
 
@@ -12,53 +10,23 @@ pub const HOST: &str = "host";
 pub const DURING_STAY: &str = "duringStay";
 pub const AT_DEPARTURE: &str = "atDeparture";
 pub const DEPARTURE_DAY: &str = "departureDay";
-/// `beforeArrival` is not in the spec; kept last so a list stored with it keeps opening before
-/// arrival, and is never the fallback.
-pub const BEFORE_ARRIVAL: &str = "beforeArrival";
-pub const GUEST_TRIGGERS: &[&str] = &[DURING_STAY, AT_DEPARTURE, DEPARTURE_DAY, BEFORE_ARRIVAL];
 
 /// The lists the guest ticks on their way out — also shown on the post-stay card.
 pub fn is_departure_trigger(trigger: &str) -> bool {
     trigger == AT_DEPARTURE || trigger == DEPARTURE_DAY
 }
 
-/// Guest placement: the booklet, or the booklet plus an e-mail the day before departure.
-pub const BOOKLET: &str = "booklet";
-pub const BOOKLET_EMAIL: &str = "booklet+email";
-pub const PLACEMENTS: &[&str] = &[BOOKLET, BOOKLET_EMAIL];
-
 /// Host triggers: which stays get a task.
 pub const BEFORE_EACH_ARRIVAL: &str = "beforeEachArrival";
 pub const AT_DEPARTURE_BEFORE_CLEANING: &str = "atDepartureBeforeCleaning";
 pub const AFTER_EACH_DEPARTURE: &str = "afterEachDeparture";
 pub const ONLY_IF_NEXT_ARRIVAL: &str = "onlyIfNextArrival";
-pub const HOST_TRIGGERS: &[&str] = &[
-    BEFORE_EACH_ARRIVAL,
-    AT_DEPARTURE_BEFORE_CLEANING,
-    AFTER_EACH_DEPARTURE,
-    ONLY_IF_NEXT_ARRIVAL,
-];
 
 /// Host deadlines.
 pub const ARRIVAL: &str = "arrival";
 pub const NEXT_ARRIVAL: &str = "nextArrival";
 pub const NEXT_ARRIVAL_MINUS_2H: &str = "nextArrivalMinus2h";
 pub const DEPARTURE_EVENING: &str = "departureEvening";
-pub const DEADLINES: &[&str] = &[
-    ARRIVAL,
-    NEXT_ARRIVAL,
-    NEXT_ARRIVAL_MINUS_2H,
-    DEPARTURE_EVENING,
-];
-
-/// Returns `raw` when it is one of `allowed`, else the first allowed value.
-pub fn pick(raw: &str, allowed: &[&'static str]) -> &'static str {
-    allowed
-        .iter()
-        .copied()
-        .find(|value| *value == raw.trim())
-        .unwrap_or(allowed[0])
-}
 
 /// A list to start from. Labels come from the module bundles (`template.<id>.*`).
 pub struct Template {
@@ -145,7 +113,7 @@ pub fn template(id: &str) -> Option<&'static Template> {
 impl Template {
     /// `(fr, en)` of the list name.
     pub fn name(&self) -> (String, String) {
-        let text = bundle_text!(&format!("template.{}.name", self.id));
+        let text = portaki_sdk::bundle_text!(&format!("template.{}.name", self.id), &[]);
         (text.fr, text.en)
     }
 
@@ -153,7 +121,8 @@ impl Template {
     pub fn item_labels(&self) -> Vec<(String, String, bool)> {
         (0..self.items)
             .map(|index| {
-                let text = bundle_text!(&format!("template.{}.item.{index}", self.id));
+                let text =
+                    portaki_sdk::bundle_text!(&format!("template.{}.item.{index}", self.id), &[]);
                 (text.fr, text.en, self.photo == Some(index))
             })
             .collect()
@@ -168,7 +137,7 @@ impl Template {
         (0..self.items)
             .map(|index| match self.group_key(index) {
                 Some(key) => {
-                    let text = bundle_text!(key);
+                    let text = portaki_sdk::bundle_text!(key, &[]);
                     (text.fr, text.en)
                 }
                 None => (String::new(), String::new()),
@@ -189,7 +158,7 @@ impl Template {
 
 /// Ticking this item of a host list means the consumables were restocked.
 pub fn is_restock_label(fr: &str, en: &str) -> bool {
-    let restock = bundle_text!("template.cleaning.item.5");
+    let restock = portaki_sdk::bundle_text!("template.cleaning.item.5", &[]);
     fr.trim().eq_ignore_ascii_case(&restock.fr) || en.trim().eq_ignore_ascii_case(&restock.en)
 }
 
@@ -211,11 +180,5 @@ mod tests {
         assert_eq!(cleaning.len(), 7);
         assert!(cleaning[6].2);
         assert!(is_restock_label(&cleaning[5].0, ""));
-    }
-
-    #[test]
-    fn pick_falls_back_to_first_value() {
-        assert_eq!(pick("atDeparture", GUEST_TRIGGERS), AT_DEPARTURE);
-        assert_eq!(pick("bogus", GUEST_TRIGGERS), DURING_STAY);
     }
 }

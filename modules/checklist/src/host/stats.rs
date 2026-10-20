@@ -6,24 +6,22 @@
 //! with them, a stay that never opened its list shows as « Non remplie » and a cleaning is judged
 //! against its deadline. Without them (developer preview, older platform), both stay unknown.
 
-use portaki_sdk::bundle_text;
 use std::collections::BTreeMap;
 
-use chrono::{DateTime, Duration, NaiveDateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use portaki_sdk::contracts::stats::{self, AttentionLevel, StatsSummary, StatsSummaryArgs};
 use portaki_sdk::contracts::timeline::TimelineStay;
-use portaki_sdk::host::time::{self, PropertyTz};
+use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{Card, Chart, EmptyState, FeedItem, Grid, Page, Stack, Stat};
 use portaki_sdk::sdui::surface::Surface;
 use portaki_sdk::sdui::{ChartKind, ChartPoint, FeedStatus};
 use uuid::Uuid;
 
-use crate::entities::{Checklist, ChecklistItem, TaskItemState};
-use crate::labels;
-use crate::lists;
+use crate::entities::TaskItemState;
 use crate::storage;
 use crate::tasks::{parse_task_id, plan_tasks, task_id};
+use crate::{lists, List, Step};
 
 #[portaki_sdk::query(
     name = "statsSummary",
@@ -42,7 +40,10 @@ pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSumma
         "checklist" => {
             let stays = guest_stays(since)?;
             let value = percent(complete_count(&stays), stays.len());
-            Ok(stats::summary(value, bundle_text!("stats.checklist.tile")))
+            Ok(stats::summary(
+                value,
+                portaki_sdk::bundle_text!("stats.checklist.tile", &[]),
+            ))
         }
         "cleaning" => {
             let data = cleaning_data()?;
@@ -51,7 +52,7 @@ pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSumma
             let finished = tasks.len() - open;
             let tile = stats::summary(
                 percent(finished, tasks.len()),
-                bundle_text!("stats.cleaning.tile"),
+                portaki_sdk::bundle_text!("stats.cleaning.tile", &[]),
             );
             if open == 0 {
                 return Ok(tile);
@@ -59,7 +60,7 @@ pub fn stats_summary(_ctx: Context, args: StatsSummaryArgs) -> Result<StatsSumma
             let count = open.to_string();
             Ok(tile.attention(
                 AttentionLevel::Action,
-                bundle_text!("stats.cleaning.attention", &[("count", &count)]),
+                portaki_sdk::bundle_text!("stats.cleaning.attention", &[("count", &count)]),
             ))
         }
         other => Err(PortakiError::Host(format!("unknown_stats_key:{other}"))),
@@ -135,7 +136,7 @@ fn ticks_by_stay(since: DateTime<Utc>) -> Result<BTreeMap<Uuid, GuestStay>> {
     let items = crate::queries::guest_items()?;
     let mut by_stay: BTreeMap<Uuid, GuestStay> = BTreeMap::new();
     for row in storage::list_completions(None)? {
-        if row.completed_at < since || !items.iter().any(|item| item.id == row.item_id) {
+        if row.completed_at < since || !items.iter().any(|item| item.uuid() == row.item_id) {
             continue;
         }
         let stay = by_stay.entry(row.stay_id).or_insert(GuestStay {
@@ -195,8 +196,7 @@ fn departures(
 pub fn render_stats_checklist(ctx: HostContext) -> Surface {
     let now = time::now().unwrap_or(DateTime::<Utc>::UNIX_EPOCH);
     let since = now - Duration::days(period_days(&ctx));
-    let fr = labels::lang_code(&ctx.locale) == "fr";
-    let tz = PropertyTz::parse(&ctx.property.timezone);
+    let fr = is_fr(&ctx.locale);
     let items = crate::queries::guest_items().unwrap_or_default();
     let stays = match period_stays(&ctx) {
         Some(period) => departures(
@@ -215,7 +215,7 @@ pub fn render_stats_checklist(ctx: HostContext) -> Surface {
         let rates = item_rates(&items, |item| {
             stays
                 .iter()
-                .filter(|stay| stay.ticked.contains(&item.id))
+                .filter(|stay| stay.ticked.contains(&item.uuid()))
                 .count()
         });
         let ticked: usize = stays.iter().map(|stay| stay.ticked.len()).sum();
@@ -264,22 +264,22 @@ pub fn render_stats_checklist(ctx: HostContext) -> Surface {
                 let title = match stay.window {
                     Some((check_in, check_out)) => t!(
                         "stats.checklist.row.stay",
-                        from = short_date(local(check_in, tz), fr),
-                        to = short_date(local(check_out, tz), fr)
+                        from = short_date(check_in, fr),
+                        to = short_date(check_out, fr)
                     ),
                     None => t!(
                         "stats.checklist.row.title",
-                        date = short_date(local(stay.last_at, tz), fr)
+                        date = short_date(stay.last_at, fr)
                     ),
                 }
                 .unwrap_or_default();
                 let date = match stay.window {
                     Some((_, check_out)) => t!(
                         "stats.checklist.row.departure",
-                        date = short_date(local(check_out, tz), fr)
+                        date = short_date(check_out, fr)
                     )
                     .unwrap_or_default(),
-                    None => format_time(local(stay.last_at, tz)),
+                    None => format_time(stay.last_at),
                 };
                 FeedItem::new()
                     .title(title)
@@ -331,8 +331,8 @@ pub fn render_stats_checklist(ctx: HostContext) -> Surface {
 
 /// Ticks of one task of a host cleaning list.
 struct CleaningTask<'a> {
-    list: &'a Checklist,
-    items: Vec<&'a ChecklistItem>,
+    list: &'a List,
+    items: Vec<&'a Step>,
     done: Vec<&'a TaskItemState>,
     /// `(departure, deadline)` when the platform passed the stays.
     plan: Option<(DateTime<Utc>, Option<DateTime<Utc>>)>,
@@ -383,23 +383,42 @@ impl CleaningTask<'_> {
 
 /// Everything `CleaningTask` borrows from, loaded once.
 struct CleaningData {
-    lists: Vec<Checklist>,
-    items: Vec<ChecklistItem>,
+    lists: Vec<List>,
+    /// Every step, with the id of its list.
+    items: Vec<(Uuid, Step)>,
     states: Vec<TaskItemState>,
 }
 
+impl CleaningData {
+    fn steps_of(&self, list: &List) -> Vec<&Step> {
+        let id = list.uuid();
+        self.items
+            .iter()
+            .filter(|(owner, _)| *owner == id)
+            .map(|(_, step)| step)
+            .collect()
+    }
+}
+
 fn cleaning_data() -> Result<CleaningData> {
-    let lists = storage::list_checklists()?
+    let lists: Vec<List> = crate::domain::all_lists()?
         .into_iter()
         .filter(|list| {
-            list.audience == lists::HOST
+            !list.is_guest()
                 && [lists::AFTER_EACH_DEPARTURE, lists::ONLY_IF_NEXT_ARRIVAL]
-                    .contains(&list.trigger.as_str())
+                    .contains(&list.trigger())
+        })
+        .collect();
+    let items = lists
+        .iter()
+        .flat_map(|list| {
+            let id = list.uuid();
+            list.written_steps().into_iter().map(move |step| (id, step))
         })
         .collect();
     Ok(CleaningData {
         lists,
-        items: storage::list_items()?,
+        items,
         states: storage::task_states(None)?,
     })
 }
@@ -409,7 +428,7 @@ fn cleaning_tasks_of(data: &CleaningData, since: DateTime<Utc>) -> Vec<CleaningT
     let mut by_task: BTreeMap<&str, CleaningTask<'_>> = BTreeMap::new();
     for state in data.states.iter().filter(|state| state.done) {
         let Some(list) = parse_task_id(&state.task_id)
-            .and_then(|(list_id, _)| data.lists.iter().find(|list| list.id == list_id))
+            .and_then(|(list_id, _)| data.lists.iter().find(|list| list.uuid() == list_id))
         else {
             continue;
         };
@@ -417,15 +436,11 @@ fn cleaning_tasks_of(data: &CleaningData, since: DateTime<Utc>) -> Vec<CleaningT
             .entry(&state.task_id)
             .or_insert_with(|| CleaningTask {
                 list,
-                items: data
-                    .items
-                    .iter()
-                    .filter(|item| item.checklist_id == list.id)
-                    .collect(),
+                items: data.steps_of(list),
                 done: Vec::new(),
                 plan: None,
             });
-        if task.items.iter().any(|item| item.id == state.item_id) {
+        if task.items.iter().any(|item| item.uuid() == state.item_id) {
             task.done.push(state);
         }
     }
@@ -448,11 +463,7 @@ fn planned_cleanings<'a>(
 ) -> Vec<CleaningTask<'a>> {
     let mut tasks = Vec::new();
     for list in &data.lists {
-        let items: Vec<&ChecklistItem> = data
-            .items
-            .iter()
-            .filter(|item| item.checklist_id == list.id)
-            .collect();
+        let items = data.steps_of(list);
         if items.is_empty() {
             continue;
         }
@@ -460,14 +471,14 @@ fn planned_cleanings<'a>(
             if plan.at <= since || plan.at > now {
                 continue;
             }
-            let id = task_id(list.id, plan.stay_id);
+            let id = task_id(list.uuid(), plan.stay_id);
             let done = data
                 .states
                 .iter()
                 .filter(|state| {
                     state.done
                         && state.task_id == id
-                        && items.iter().any(|item| item.id == state.item_id)
+                        && items.iter().any(|item| item.uuid() == state.item_id)
                 })
                 .collect();
             tasks.push(CleaningTask {
@@ -494,8 +505,7 @@ pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
     let now = time::now().unwrap_or(DateTime::<Utc>::UNIX_EPOCH);
     let days = period_days(&ctx);
     let since = now - Duration::days(days);
-    let fr = labels::lang_code(&ctx.locale) == "fr";
-    let tz = PropertyTz::parse(&ctx.property.timezone);
+    let fr = is_fr(&ctx.locale);
     let data = cleaning_data().unwrap_or(CleaningData {
         lists: Vec::new(),
         items: Vec::new(),
@@ -516,16 +526,11 @@ pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
             .filter_map(|task| Some(task.last_at()? - task.first_at()?))
             .collect();
         // ponytail: rates over every cleaning task; per list if a property runs several.
-        let items: Vec<ChecklistItem> = data
-            .items
-            .iter()
-            .filter(|item| data.lists.iter().any(|list| list.id == item.checklist_id))
-            .cloned()
-            .collect();
+        let items: Vec<Step> = data.items.iter().map(|(_, step)| step.clone()).collect();
         let rates = item_rates(&items, |item| {
             tasks
                 .iter()
-                .filter(|task| task.done.iter().any(|state| state.item_id == item.id))
+                .filter(|task| task.done.iter().any(|state| state.item_id == item.uuid()))
                 .count()
         });
         let with_photo = finished.iter().filter(|task| task.photos() > 0).count();
@@ -582,32 +587,27 @@ pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
                     Timing::Late => ("i18n:stats.cleaning.status.late", Tone::Danger),
                     Timing::Open => ("i18n:stats.cleaning.status.open", Tone::Warning),
                 };
-                let name = if fr {
-                    &task.list.name_fr
-                } else {
-                    &task.list.name_en
-                };
+                let name = task.list.name.get(&ctx.locale);
                 let mut meta = t!(
                     "stats.cleaning.row.meta",
                     done = task.done.len(),
                     total = task.items.len()
                 )
                 .unwrap_or_default();
-                if let Some(assignee) = &task.list.assignee_name {
+                if let (Some(assignee), _) = task.list.assignee() {
                     meta = format!("{assignee} · {meta}");
                 }
                 if task.photos() > 0 {
                     meta.push_str(&t!("stats.cleaning.row.photo").unwrap_or_default());
                 }
                 let title = match task.plan {
-                    Some((departure, _)) => t!(
-                        "stats.cleaning.row.after",
-                        date = short_date(local(departure, tz), fr)
-                    )
-                    .unwrap_or_default(),
-                    None => format!("{name} · {}", short_date(local(at, tz), fr)),
+                    Some((departure, _)) => {
+                        t!("stats.cleaning.row.after", date = short_date(departure, fr))
+                            .unwrap_or_default()
+                    }
+                    None => format!("{name} · {}", short_date(at, fr)),
                 };
-                let date = cleaning_date(task, timing, at, tz, fr).unwrap_or_default();
+                let date = cleaning_date(task, timing, at, fr).unwrap_or_default();
                 FeedItem::new()
                     .title(title)
                     .meta(meta)
@@ -645,10 +645,9 @@ fn cleaning_date(
     task: &CleaningTask<'_>,
     timing: Timing,
     at: DateTime<Utc>,
-    tz: Option<PropertyTz>,
     fr: bool,
 ) -> Result<String> {
-    let (date, time) = (short_date(local(at, tz), fr), format_time(local(at, tz)));
+    let (date, time) = (short_date(at, fr), format_time(at));
     match (task.finished(), task.deadline(), task.done.is_empty()) {
         (true, Some(due), _) if timing == Timing::Late => t!(
             "stats.cleaning.row.lateBy",
@@ -659,8 +658,8 @@ fn cleaning_date(
         (true, _, _) => t!("stats.cleaning.row.doneAt", date = date, time = time),
         (false, Some(due), _) => t!(
             "stats.cleaning.row.dueAt",
-            date = short_date(local(due, tz), fr),
-            time = format_time(local(due, tz))
+            date = short_date(due, fr),
+            time = format_time(due)
         ),
         (false, None, true) => Ok(String::new()),
         (false, None, false) => t!("stats.cleaning.row.lastAt", date = date, time = time),
@@ -699,17 +698,13 @@ fn per_week(tasks: &[&CleaningTask<'_>], now: DateTime<Utc>, days: i64, fr: bool
 // --- Shared ---------------------------------------------------------------------------------
 
 /// `(item, how many stays or tasks ticked it)`, least ticked last.
-fn item_rates(
-    items: &[ChecklistItem],
-    ticked: impl Fn(&ChecklistItem) -> usize,
-) -> Vec<(&ChecklistItem, usize)> {
-    let mut rates: Vec<(&ChecklistItem, usize)> =
-        items.iter().map(|item| (item, ticked(item))).collect();
+fn item_rates(items: &[Step], ticked: impl Fn(&Step) -> usize) -> Vec<(&Step, usize)> {
+    let mut rates: Vec<(&Step, usize)> = items.iter().map(|item| (item, ticked(item))).collect();
     rates.sort_by_key(|(_, n)| std::cmp::Reverse(*n));
     rates
 }
 
-fn rate_chart(rates: &[(&ChecklistItem, usize)], of: usize, swatch: Swatch) -> Component {
+fn rate_chart(rates: &[(&Step, usize)], of: usize, swatch: Swatch) -> Component {
     Chart::new()
         .kind(ChartKind::HorizontalBars)
         .swatch(swatch)
@@ -719,8 +714,7 @@ fn rate_chart(rates: &[(&ChecklistItem, usize)], of: usize, swatch: Swatch) -> C
                 .iter()
                 .map(|(item, n)| {
                     let rate = (n * 100).checked_div(of).unwrap_or(0);
-                    ChartPoint::new(labels::i18n_label(item).fr, rate as f64)
-                        .display(format!("{rate} %"))
+                    ChartPoint::new(item.label.fr.clone(), rate as f64).display(format!("{rate} %"))
                 })
                 .collect(),
         )
@@ -729,13 +723,13 @@ fn rate_chart(rates: &[(&ChecklistItem, usize)], of: usize, swatch: Swatch) -> C
 
 /// « La plus oubliée » — only once something was missed.
 fn most_forgotten(
-    rates: &[(&ChecklistItem, usize)],
+    rates: &[(&Step, usize)],
     of: usize,
     fr: bool,
     prefix: &str,
 ) -> Option<Component> {
     let (item, ticked) = rates.last().filter(|(_, n)| *n < of)?;
-    let label = labels::i18n_label(item);
+    let label = item.label.clone();
     Some(
         Stat::new()
             .label(format!("i18n:{prefix}.forgotten"))
@@ -808,16 +802,11 @@ fn decimal(value: f64, fr: bool) -> String {
     }
 }
 
-/// `at` on the property's clock — what the host reads; UTC only when its zone is unknown.
-fn local(at: DateTime<Utc>, tz: Option<PropertyTz>) -> NaiveDateTime {
-    tz.map_or(at.naive_utc(), |tz| tz.to_local(at).naive_local())
-}
-
-fn format_time(at: NaiveDateTime) -> String {
+fn format_time(at: DateTime<Utc>) -> String {
     at.format("%H:%M").to_string()
 }
 
-fn short_date(at: NaiveDateTime, fr: bool) -> String {
+fn short_date(at: DateTime<Utc>, fr: bool) -> String {
     use chrono::Datelike;
     const FR: [&str; 12] = [
         "janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.",
@@ -847,19 +836,8 @@ mod tests {
         assert_eq!(percent(7, 9), "77 %");
         assert_eq!(percent(0, 0), "—");
     }
+}
 
-    #[test]
-    fn times_read_on_the_property_clock() {
-        let at = "2026-08-09T22:30:00Z".parse::<DateTime<Utc>>().unwrap();
-        let paris = PropertyTz::parse("Europe/Paris");
-        // 22:30 UTC in August is 00:30 the next day in Paris (CEST).
-        assert_eq!(format_time(local(at, paris)), "00:30");
-        assert_eq!(short_date(local(at, paris), true), "10 août");
-        let winter = "2026-01-09T12:00:00Z".parse::<DateTime<Utc>>().unwrap();
-        assert_eq!(format_time(local(winter, paris)), "13:00");
-        assert_eq!(
-            format_time(local(at, PropertyTz::parse("Mars/Olympus"))),
-            "22:30"
-        );
-    }
+fn is_fr(locale: &str) -> bool {
+    locale.trim().to_ascii_lowercase().starts_with("fr")
 }

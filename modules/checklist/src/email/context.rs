@@ -2,8 +2,6 @@
 
 use portaki_sdk::prelude::*;
 
-use crate::labels::{get_label, labels_from_item, pick_label};
-
 const MAX_TIPS: usize = 3;
 
 /// Gateway `emailContext` args — shared SDK wire type.
@@ -47,22 +45,8 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
 
     let tips: Vec<String> = items
         .iter()
-        .filter_map(|item| {
-            let labels = labels_from_item(item);
-            let label = pick_label(&labels, locale, property_locale);
-            let trimmed = label.trim();
-            if trimmed.is_empty() {
-                let fallback = get_label(item, locale);
-                let fallback = fallback.trim();
-                if fallback.is_empty() {
-                    None
-                } else {
-                    Some(fallback.to_string())
-                }
-            } else {
-                Some(trimmed.to_string())
-            }
-        })
+        .map(|item| crate::domain::pick(&item.label, locale, property_locale))
+        .filter(|label| !label.is_empty())
         .take(MAX_TIPS)
         .collect();
 
@@ -80,16 +64,15 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{lists, storage};
+    use crate::domain::{add_from_template, lists};
     use portaki_test_utils::MockContext;
 
     #[test]
     fn when_lost_found_then_returns_top_tips() {
-        storage::reset_test_store();
         MockContext::guest()
             .with_capabilities(&[capability::core::STORAGE])
             .run(|ctx| {
-                storage::create_from_template(lists::template("departure").unwrap(), None).unwrap();
+                add_from_template(lists::template("departure").unwrap(), None).unwrap();
                 let out = build_email_context(
                     ctx,
                     EmailContextArgs {
