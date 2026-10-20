@@ -50,10 +50,10 @@ pub fn send_departure_reminder(ctx: Context, _args: EmptyArgs) -> Result<()> {
         .map(|row| row.item_id)
         .collect();
     let mut unfinished = false;
-    for list in storage::booklet_lists()? {
-        if !storage::display::read(list.id).remind()
+    for list in crate::domain::booklet_lists()? {
+        if !list.remind()
             || !is_checklist_available(
-                &list.trigger,
+                list.trigger(),
                 now,
                 checkin_at,
                 checkout_at,
@@ -62,9 +62,10 @@ pub fn send_departure_reminder(ctx: Context, _args: EmptyArgs) -> Result<()> {
         {
             continue;
         }
-        if storage::items_of(list.id)?
+        if list
+            .written_steps()
             .iter()
-            .any(|item| !done.contains(&item.id))
+            .any(|item| !done.contains(&item.uuid()))
         {
             unfinished = true;
             break;

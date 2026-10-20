@@ -4,10 +4,8 @@ use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
-use crate::entities::{Checklist, ChecklistItem};
-use crate::lists;
 use crate::show_when::is_checklist_available;
-use crate::storage;
+use crate::{lists, storage, List, Step};
 
 pub enum GuestLoad {
     NoItems,
@@ -21,27 +19,25 @@ pub enum GuestLoad {
 /// livret à partir de ce qui est coché, et les calculer ici revenait à décider deux fois.
 pub struct GuestChecklistData {
     /// Guest lists open right now, each with its items.
-    pub lists: Vec<(Checklist, Vec<ChecklistItem>)>,
-    pub completed: Vec<Uuid>,
+    pub lists: Vec<(List, Vec<Step>)>,
     pub locale: String,
     pub property_locale: String,
+    pub completed: Vec<Uuid>,
     /// Departure instant (UTC) — rendered as the card title in the property timezone.
     pub checkout_at: Option<chrono::DateTime<chrono::Utc>>,
     pub property_timezone: String,
     /// L'heure de l'hôte, pour dire « demain » plutôt que le nom du jour.
     pub now: chrono::DateTime<chrono::Utc>,
-    /// « Étapes visibles » and « Message final » of the first open list.
-    pub display: storage::display::Display,
 }
 
 /// `departure_only` keeps the departure lists (post-stay card).
 pub fn load_guest_checklist(ctx: &GuestContext, departure_only: bool) -> Result<GuestLoad> {
     let mut guest_lists = Vec::new();
-    for list in storage::booklet_lists()? {
-        if departure_only && !lists::is_departure_trigger(&list.trigger) {
+    for list in crate::domain::booklet_lists()? {
+        if departure_only && !lists::is_departure_trigger(list.trigger()) {
             continue;
         }
-        let items = storage::items_of(list.id)?;
+        let items = list.written_steps();
         if !items.is_empty() {
             guest_lists.push((list, items));
         }
@@ -55,7 +51,7 @@ pub fn load_guest_checklist(ctx: &GuestContext, departure_only: bool) -> Result<
     let now = time::now()?;
     let timezone = ctx.property.timezone.as_str();
     guest_lists.retain(|(list, _)| {
-        is_checklist_available(&list.trigger, now, checkin_at, checkout_at, timezone)
+        is_checklist_available(list.trigger(), now, checkin_at, checkout_at, timezone)
     });
     if guest_lists.is_empty() {
         return Ok(GuestLoad::NotYet);
@@ -72,7 +68,6 @@ pub fn load_guest_checklist(ctx: &GuestContext, departure_only: bool) -> Result<
     // ponytail: the card is one list for every open guest list, so it follows the first one's
     // display settings — the spec shows a single « Voyageur · Départ » list at a time. Per-list
     // folding needs a `ChoiceList` per list.
-    let display = storage::display::read(guest_lists[0].0.id);
     Ok(GuestLoad::Ready(GuestChecklistData {
         lists: guest_lists,
         completed,
@@ -81,6 +76,5 @@ pub fn load_guest_checklist(ctx: &GuestContext, departure_only: bool) -> Result<
         checkout_at,
         property_timezone: ctx.property.timezone.clone(),
         now,
-        display,
     }))
 }
