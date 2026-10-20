@@ -6,7 +6,6 @@
 //! « Marquer livré », clôt la demande et la tâche disparaît au calcul suivant.
 
 use chrono::{DateTime, Utc};
-use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::contracts::timeline::{
     self, TaskCompleteArgs, TaskToggleArgs, TimelineTaskItem, TimelineTasks, TimelineTasksArgs,
@@ -26,9 +25,9 @@ const ITEM: &str = "restocked";
         input = r#"{"propertyId":"5f0c2b1e-8a4d-4c6f-9e21-3b7d9a6c4e10","from":"2026-06-15T00:00:00Z","to":"2026-06-22T00:00:00Z","stays":[]}"#
     )
 )]
-pub fn timeline_tasks(_ctx: Context, args: TimelineTasksArgs) -> Result<TimelineTasks> {
+pub fn timeline_tasks(ctx: Context, args: TimelineTasksArgs) -> Result<TimelineTasks> {
     // Demandes fermées : l'onglet et les tâches sont inactifs (§3).
-    if !storage::settings::read().requests_enabled() {
+    if !crate::Products::load(&ctx)?.meta().enabled() {
         return Ok(TimelineTasks { tasks: Vec::new() });
     }
     let reports = storage::list_all()?;
@@ -46,13 +45,13 @@ pub fn timeline_tasks(_ctx: Context, args: TimelineTasksArgs) -> Result<Timeline
                     report.id.to_string(),
                     at,
                     args.property_id,
-                    bundle_text!("task.title", &[("item", &report.item_label)]),
+                    portaki_sdk::bundle_text!("task.title", &[("item", &report.item_label)]),
                     I18nText::new(guest, guest),
                 )
                 .stay(report.stay_id)
                 .items(vec![TimelineTaskItem::new(
                     ITEM,
-                    bundle_text!("host.main.markRestocked"),
+                    portaki_sdk::bundle_text!("host.main.markRestocked", &[]),
                 )])
             })
             .collect(),

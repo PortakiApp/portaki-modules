@@ -4,13 +4,13 @@ use serde_json::json;
 use serial_test::serial;
 use uuid::Uuid;
 
+mod sample;
+
 use consumables::{
-    list_for_stay, list_items, list_open_count, publish_readiness, render_guest_form,
-    render_home_card, render_host_main, render_host_stats, render_host_stay, replace_items,
-    reset_test_store, seed_defaults, stats_summary, submit, task_complete, timeline_tasks,
-    update_config, update_status, ConsumableItemInput, ListForStayArgs, ReplaceItemsArgs,
-    SubmitArgs, UpdateConfigArgs, UpdateStatusArgs, GUEST_TEXT_EMAIL_MAX_CHARS, LEVEL_DEFAULT,
-    STATUS_DEFAULT,
+    list_for_stay, list_open_count, render_guest_form, render_home_card, render_host_main,
+    render_host_stats, render_host_stay, reset_test_store, seed_defaults, stats_summary, submit,
+    task_complete, timeline_tasks, update_status, ListForStayArgs, SubmitArgs, UpdateStatusArgs,
+    GUEST_TEXT_EMAIL_MAX_CHARS, LEVEL_DEFAULT, STATUS_DEFAULT,
 };
 use portaki_sdk::contracts::stats::StatsSummaryArgs;
 use portaki_sdk::limits;
@@ -38,23 +38,10 @@ fn home_card_opens_form_overlay_with_catalog() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            replace_items(
-                ctx.clone(),
-                ReplaceItemsArgs {
-                    items: vec![ConsumableItemInput {
-                        emoji: String::new(),
-                        label: None,
-                        label_fr: "Café".into(),
-                        label_en: "Coffee".into(),
-                        sort_order: 0,
-                        low_threshold: 0,
-                        id: None,
-                        location: None,
-                    }],
-                    items_json: None,
-                },
-            )
-            .expect("replace");
+            sample::save(
+                &ctx,
+                json!({ "products": sample::products(&[("Café", "Coffee", "")]) }),
+            );
 
             let surface = render_home_card(ctx.clone()).expect("render");
             assert!(SurfaceAssertions::new(&surface).contains_type("Card"));
@@ -83,43 +70,15 @@ fn one_submit_reports_every_product_the_guest_picked() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            replace_items(
-                ctx.clone(),
-                ReplaceItemsArgs {
-                    items: vec![
-                        ConsumableItemInput {
-                            emoji: String::new(),
-                            label: None,
-                            label_fr: "Papier toilette".into(),
-                            label_en: "Toilet paper".into(),
-                            sort_order: 0,
-                            low_threshold: 0,
-                            id: None,
-                            location: None,
-                        },
-                        ConsumableItemInput {
-                            emoji: String::new(),
-                            label: None,
-                            label_fr: "Café".into(),
-                            label_en: "Coffee".into(),
-                            sort_order: 1,
-                            low_threshold: 0,
-                            id: None,
-                            location: None,
-                        },
-                    ],
-                    items_json: None,
-                },
-            )
-            .expect("replace");
+            sample::save(&ctx, json!({ "products": sample::products(&[("Papier toilette", "Toilet paper", ""), ("Café", "Coffee", "")]) }));
 
-            let items = list_items(ctx.clone()).expect("list items");
+            let items = consumables::Products::load(&ctx).unwrap().rows().to_vec();
             assert_eq!(items.len(), 2);
 
             submit(
                 ctx.clone(),
                 SubmitArgs {
-                    item_ids: vec![items[0].id, items[1].id],
+                    item_ids: vec![items[0].uuid(), items[1].uuid()],
                     item_id: None,
                     level: LEVEL_DEFAULT.into(),
                     note: None,
@@ -142,24 +101,11 @@ fn the_single_product_field_is_still_accepted() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            replace_items(
-                ctx.clone(),
-                ReplaceItemsArgs {
-                    items: vec![ConsumableItemInput {
-                        emoji: String::new(),
-                        label: None,
-                        label_fr: "Papier toilette".into(),
-                        label_en: "Toilet paper".into(),
-                        sort_order: 0,
-                        low_threshold: 0,
-                        id: None,
-                        location: None,
-                    }],
-                    items_json: None,
-                },
-            )
-            .expect("replace");
-            let item_id = list_items(ctx.clone()).expect("items")[0].id;
+            sample::save(
+                &ctx,
+                json!({ "products": sample::products(&[("Papier toilette", "Toilet paper", "")]) }),
+            );
+            let item_id = sample::id(0);
 
             submit(
                 ctx.clone(),
@@ -189,23 +135,10 @@ fn the_product_grid_starts_with_nothing_picked() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            replace_items(
-                ctx.clone(),
-                ReplaceItemsArgs {
-                    items: vec![ConsumableItemInput {
-                        emoji: String::new(),
-                        label: None,
-                        label_fr: "Papier toilette".into(),
-                        label_en: "Toilet paper".into(),
-                        sort_order: 0,
-                        low_threshold: 0,
-                        id: None,
-                        location: None,
-                    }],
-                    items_json: None,
-                },
-            )
-            .expect("replace");
+            sample::save(
+                &ctx,
+                json!({ "products": sample::products(&[("Papier toilette", "Toilet paper", "")]) }),
+            );
 
             let form = render_guest_form(ctx).expect("render");
             let json = serde_json::to_string(&form).expect("json");
@@ -228,27 +161,14 @@ fn submit_creates_open_report_and_lists_on_card() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            replace_items(
-                ctx.clone(),
-                ReplaceItemsArgs {
-                    items: vec![ConsumableItemInput {
-                        emoji: String::new(),
-                        label: None,
-                        label_fr: "Papier toilette".into(),
-                        label_en: "Toilet paper".into(),
-                        sort_order: 0,
-                        low_threshold: 0,
-                        id: None,
-                        location: None,
-                    }],
-                    items_json: None,
-                },
-            )
-            .expect("replace");
+            sample::save(
+                &ctx,
+                json!({ "products": sample::products(&[("Papier toilette", "Toilet paper", "")]) }),
+            );
 
-            let items = list_items(ctx.clone()).expect("list items");
+            let items = consumables::Products::load(&ctx).unwrap().rows().to_vec();
             assert_eq!(items.len(), 1);
-            let item_id = items[0].id;
+            let item_id = items[0].uuid();
 
             submit(
                 ctx.clone(),
@@ -286,32 +206,16 @@ fn stock_args() -> StatsSummaryArgs {
 #[test]
 #[serial]
 fn host_mark_restocked_clears_open_list() {
+    const ITEMS: [(&str, &str, &str); 1] = [("Savon", "Soap", "")];
     reset_test_store();
     let mut report_id = Uuid::nil();
     let mut stay_id = Uuid::nil();
     let mut item_id = Uuid::nil();
 
-    MockContext::guest()
+    sample::with(MockContext::guest(), &ITEMS)
         .with_property(Property::default())
         .run(|ctx| {
-            replace_items(
-                ctx.clone(),
-                ReplaceItemsArgs {
-                    items: vec![ConsumableItemInput {
-                        emoji: String::new(),
-                        label: None,
-                        label_fr: "Savon".into(),
-                        label_en: "Soap".into(),
-                        sort_order: 0,
-                        low_threshold: 0,
-                        id: None,
-                        location: None,
-                    }],
-                    items_json: None,
-                },
-            )
-            .expect("replace");
-            item_id = list_items(ctx.clone()).expect("items")[0].id;
+            item_id = sample::id(0);
             submit(
                 ctx.clone(),
                 SubmitArgs {
@@ -327,7 +231,7 @@ fn host_mark_restocked_clears_open_list() {
             stay_id = report.stay_id;
         });
 
-    MockContext::host()
+    sample::with(MockContext::host(), &ITEMS)
         .with_property(Property::default())
         .run(|ctx| {
             let open = list_open_count(ctx.clone()).expect("open count");
@@ -391,7 +295,7 @@ fn host_mark_restocked_clears_open_list() {
             assert!(stats.contains("stats.perStay.title"));
             assert!(stats.contains("\"50 %\""));
 
-            let surface = render_host_main(ctx);
+            let surface = render_host_main(ctx).expect("render");
             assert!(SurfaceAssertions::new(&surface).contains_type("DataTable"));
             let json = serde_json::to_string(&surface).expect("surface json");
             // Livrée, la demande reste dans la table et quitte « À traiter ».
@@ -408,197 +312,46 @@ fn seed_defaults_fills_empty_catalog() {
         .with_property(Property::default())
         .run(|ctx| {
             seed_defaults(ctx.clone(), EmptyArgs {}).expect("seed");
-            let items = list_items(ctx.clone()).expect("items");
+            let items = consumables::Products::load(&ctx).unwrap().rows().to_vec();
             assert_eq!(items.len(), 6);
 
             seed_defaults(ctx.clone(), EmptyArgs {}).expect("seed again");
-            assert_eq!(list_items(ctx).expect("items").len(), 6);
+            assert_eq!(
+                consumables::Products::load(&ctx)
+                    .unwrap()
+                    .rows()
+                    .to_vec()
+                    .len(),
+                6
+            );
         });
 }
 
-/// L'emoji suit son produit, et un champ vide ne l'efface pas (§2.5).
-///
-/// Vide, il ne l'efface pas parce que l'hôte qui renomme un produit dans une autre langue ne doit
-/// pas perdre le pictogramme qu'il avait choisi — le formulaire ne porte qu'une langue à la fois.
-#[test]
-#[serial]
-fn an_emoji_follows_its_product_and_an_empty_field_does_not_erase_it() {
-    reset_test_store();
-    let save = |emoji: &str, label: &str| ConsumableItemInput {
-        emoji: emoji.into(),
-        label: Some(label.into()),
-        label_fr: String::new(),
-        label_en: String::new(),
-        sort_order: 0,
-        low_threshold: 0,
-        id: None,
-        location: None,
-    };
-    MockContext::host()
-        .with_property(Property::default())
-        .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    requests_enabled: None,
-                    notify: None,
-                    max_requests: None,
-                    restock_delay: Some(Default::default()),
-                    items: vec![save("☕", "Café")],
-                },
-            )
-            .expect("premier enregistrement");
-            // Même produit, nouveau nom, emoji laissé vide par le formulaire.
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    requests_enabled: None,
-                    notify: None,
-                    max_requests: None,
-                    restock_delay: Some(Default::default()),
-                    items: vec![save("", "Coffee")],
-                },
-            )
-            .expect("second enregistrement");
-            let form = serde_json::to_string(&render_guest_form(ctx).expect("formulaire")).unwrap();
-            assert!(form.contains("☕"), "{form}");
-            // L'emoji remplace le colis du vocabulaire, il ne s'y ajoute pas.
-            assert!(!form.contains("\"icon\":\"package\""), "{form}");
-        });
-}
-
-/// Le délai de l'hôte remplace la phrase générique, et un délai effacé la ramène (§2.5).
-///
-/// Deux contextes parce que le KV du bac à sable est propre à chacun : l'écriture se vérifie là où
-/// elle a lieu, la lecture sur une entrée posée d'avance.
+/// Le délai de l'hôte remplace la phrase générique ; sans délai, « dans la journée » (§2.2, §2.5).
 #[test]
 #[serial]
 fn the_host_s_restocking_time_reaches_the_guest() {
     reset_test_store();
-    let item = || ConsumableItemInput {
-        emoji: String::new(),
-        label: Some("Café".into()),
-        label_fr: String::new(),
-        label_en: String::new(),
-        sort_order: 0,
-        low_threshold: 0,
-        id: None,
-        location: None,
-    };
-
-    // Écriture : l'hôte enregistre, et son propre écran le relit.
-    MockContext::host()
-        .with_property(Property::default())
-        .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    requests_enabled: None,
-                    notify: None,
-                    max_requests: None,
-                    restock_delay: Some(
-                        serde_json::from_value(json!({ "fr": "sous 24 h" })).expect("délai"),
-                    ),
-                    items: vec![item()],
-                },
-            )
-            .expect("enregistrement");
-            let host = serde_json::to_string(&render_host_main(ctx.clone())).unwrap();
-            assert!(host.contains("sous 24 h"), "{host}");
-
-            // Demandes fermées, le champ masqué n'est pas envoyé : le délai reste.
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    requests_enabled: Some(json!(false)),
-                    notify: None,
-                    max_requests: None,
-                    restock_delay: None,
-                    items: vec![item()],
-                },
-            )
-            .expect("demandes fermées");
-            assert!(portaki_sdk::host::kv::get("restock_delay")
-                .expect("kv")
-                .is_some());
-
-            // Effacé, le réglage disparaît — l'hôte doit pouvoir reprendre sa promesse.
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    requests_enabled: None,
-                    notify: None,
-                    max_requests: None,
-                    restock_delay: Some(Default::default()),
-                    items: vec![item()],
-                },
-            )
-            .expect("effacement");
-            let host = serde_json::to_string(&render_host_main(ctx)).unwrap();
-            assert!(!host.contains("sous 24 h"), "{host}");
-        });
-
-    // Lecture : le bandeau du voyageur dit le délai au lieu de la phrase générique.
-    let stored = serde_json::to_vec(&json!({ "fr": "sous 24 h" })).expect("octets");
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_kv("restock_delay", stored)
+    let delay = json!({ "restock_delay": { "fr": "sous 24 h" } });
+    let form = sample::with_meta(MockContext::guest(), &[("Café", "", "")], delay)
         .with_translation("form.notice.delay", "Votre hôte réapprovisionne sous 24 h.")
-        .run(|ctx| {
-            let form = serde_json::to_string(&render_guest_form(ctx).expect("formulaire")).unwrap();
-            assert!(
-                form.contains("Votre hôte réapprovisionne sous 24 h."),
-                "{form}"
-            );
-            assert!(!form.contains("\"i18n:form.notice\""), "{form}");
-        });
+        .run(|ctx| serde_json::to_string(&render_guest_form(ctx).expect("formulaire")).unwrap());
+    assert!(
+        form.contains("Votre hôte réapprovisionne sous 24 h."),
+        "{form}"
+    );
+    assert!(!form.contains("\"i18n:form.notice\""), "{form}");
 
-    // Sans réglage, « dans la journée », le défaut de la spec (§2.2).
-    MockContext::guest()
-        .with_property(Property::default())
+    let form = sample::with(MockContext::guest(), &[("Café", "", "")])
         .with_translation(
             "form.notice.delay",
             "Votre hôte réapprovisionne dans la journée.",
         )
-        .run(|ctx| {
-            let form = serde_json::to_string(&render_guest_form(ctx).expect("formulaire")).unwrap();
-            assert!(
-                form.contains("Votre hôte réapprovisionne dans la journée."),
-                "{form}"
-            );
-        });
-}
-
-#[test]
-#[serial]
-fn update_config_replaces_catalog() {
-    reset_test_store();
-    MockContext::host()
-        .with_property(Property::default())
-        .run(|ctx| {
-            update_config(
-                ctx.clone(),
-                UpdateConfigArgs {
-                    requests_enabled: None,
-                    notify: None,
-                    max_requests: None,
-                    restock_delay: Some(Default::default()),
-                    items: vec![ConsumableItemInput {
-                        emoji: String::new(),
-                        label: Some("Coffee pods".into()),
-                        label_fr: String::new(),
-                        label_en: String::new(),
-                        sort_order: 0,
-                        low_threshold: 0,
-                        id: None,
-                        location: None,
-                    }],
-                },
-            )
-            .expect("updateConfig");
-            let items = list_items(ctx).expect("items");
-            assert_eq!(items.len(), 1);
-        });
+        .run(|ctx| serde_json::to_string(&render_guest_form(ctx).expect("formulaire")).unwrap());
+    assert!(
+        form.contains("Votre hôte réapprovisionne dans la journée."),
+        "{form}"
+    );
 }
 
 #[test]
@@ -608,7 +361,7 @@ fn host_main_and_stats_render() {
     MockContext::host()
         .with_property(Property::default())
         .run(|ctx| {
-            let main = render_host_main(ctx.clone());
+            let main = render_host_main(ctx.clone()).expect("render");
             assert!(SurfaceAssertions::new(&main).contains_type("Page"));
             assert!(SurfaceAssertions::new(&main).contains_type("DataTable"));
             assert!(SurfaceAssertions::new(&main).contains_type("Section"));
@@ -673,24 +426,11 @@ fn long_note_is_stored_whole_and_quoted_in_the_host_email() {
     MockContext::guest()
         .with_property(Property::default())
         .run_with(|ctx, host| {
-            replace_items(
-                ctx.clone(),
-                ReplaceItemsArgs {
-                    items: vec![ConsumableItemInput {
-                        emoji: String::new(),
-                        label: None,
-                        label_fr: "Serviettes".into(),
-                        label_en: "Towels".into(),
-                        sort_order: 0,
-                        low_threshold: 0,
-                        id: None,
-                        location: None,
-                    }],
-                    items_json: None,
-                },
-            )
-            .expect("replace");
-            let item_id = list_items(ctx.clone()).expect("items")[0].id;
+            sample::save(
+                &ctx,
+                json!({ "products": sample::products(&[("Serviettes", "Towels", "")]) }),
+            );
+            let item_id = sample::id(0);
 
             submit(
                 ctx.clone(),
@@ -732,197 +472,88 @@ fn long_note_is_stored_whole_and_quoted_in_the_host_email() {
         });
 }
 
-/// Un catalogue vide ne bloque pas la publication (spec §9 n° 1) : le livret montre son état vide.
 #[test]
 #[serial]
 fn an_empty_catalog_does_not_block_publication() {
     reset_test_store();
-    MockContext::host()
-        .with_property(Property::default())
-        .run(|ctx| {
-            assert!(publish_readiness(ctx.clone())
-                .expect("readiness")
-                .items
-                .is_empty());
-            seed_defaults(ctx.clone(), EmptyArgs {}).expect("seed");
-            assert!(publish_readiness(ctx).expect("readiness").items.is_empty());
-        });
-}
-
-fn named_item(emoji: &str, label: &str) -> ConsumableItemInput {
-    ConsumableItemInput {
-        emoji: emoji.into(),
-        label: Some(label.into()),
-        label_fr: String::new(),
-        label_en: String::new(),
-        sort_order: 0,
-        low_threshold: 0,
-        id: None,
-        location: None,
-    }
-}
-
-fn save(
-    ctx: &portaki_sdk::prelude::Context,
-    items: Vec<ConsumableItemInput>,
-    restock_delay: &str,
-    max_requests: Option<f64>,
-) {
-    update_config(
-        ctx.clone(),
-        UpdateConfigArgs {
-            requests_enabled: None,
-            notify: None,
-            max_requests,
-            restock_delay: Some(
-                serde_json::from_value(json!({ "fr": restock_delay })).expect("délai"),
-            ),
-            items,
-        },
-    )
-    .expect("enregistrement");
-}
-
-/// Le message français de `config.<field>`, et la même erreur sous le champ du formulaire.
-fn blocking(ctx: &portaki_sdk::prelude::Context, field: &str) -> Option<String> {
-    let readiness = publish_readiness(ctx.clone()).expect("readiness");
-    let check = readiness
-        .items
-        .into_iter()
-        .find(|check| check.id == format!("config.{field}"))?;
-    assert!(!check.ok);
-    assert_eq!(
-        check.level,
-        portaki_sdk::contracts::publish::PublishLevel::Required
-    );
-    let fr = check.hint.get("fr").to_string();
-    let host = serde_json::to_string(&render_host_main(ctx.clone())).expect("json");
-    assert!(host.contains(&format!("\"error\":\"{fr}\"")), "{host}");
-    Some(fr)
+    MockContext::host().run(|ctx| {
+        assert_eq!(sample::blocking(&ctx, "rows"), None);
+        seed_defaults(ctx.clone(), EmptyArgs {}).expect("seed");
+        assert_eq!(
+            sample::blocking(&ctx, ""),
+            None,
+            "the starter list is publishable"
+        );
+    });
 }
 
 #[test]
 #[serial]
 fn more_than_thirty_products_blocks_publication() {
-    reset_test_store();
-    MockContext::host()
-        .with_property(Property::default())
-        .run(|ctx| {
-            let items = (1..=31)
-                .map(|n| named_item("", &format!("Produit {n}")))
-                .collect();
-            replace_items(
-                ctx.clone(),
-                ReplaceItemsArgs {
-                    items,
-                    items_json: None,
-                },
-            )
-            .expect("replace");
-            let readiness = publish_readiness(ctx).expect("readiness");
-            let check = readiness
-                .items
-                .iter()
-                .find(|check| check.id == "config.items")
-                .expect("config.items");
-            assert_eq!(check.hint.get("fr"), "30 produits au maximum.");
-        });
+    let names: Vec<String> = (1..=31).map(|n| format!("Produit {n}")).collect();
+    let items: Vec<(&str, &str, &str)> = names.iter().map(|n| (n.as_str(), "", "")).collect();
+    sample::with(MockContext::host(), &items).run(|ctx| {
+        assert_eq!(
+            sample::blocking(&ctx, "products.rows").as_deref(),
+            Some("30 produits au maximum.")
+        );
+    });
 }
 
-/// Effacer le nom d'un produit le retire, même si son emoji reste dans la case : c'est le geste
-/// de suppression du formulaire (« laissez vide pour masquer »), et il ne doit rien bloquer.
-#[test]
-#[serial]
-fn clearing_a_product_name_removes_it_even_with_its_emoji() {
-    reset_test_store();
-    MockContext::host()
-        .with_property(Property::default())
-        .run(|ctx| {
-            save(&ctx, vec![named_item("☕", "Café")], "", None);
-            save(&ctx, vec![named_item("☕", "")], "", None);
-            assert!(list_items(ctx.clone()).expect("items").is_empty());
-            assert!(publish_readiness(ctx).expect("readiness").items.is_empty());
-        });
-}
-
-/// Une ligne sans nom n'arrive que par l'API (`items_json`) : elle dit « Donnez un nom au
-/// produit. », et le voyageur ne voit pas de tuile vide.
 #[test]
 #[serial]
 fn a_product_without_a_name_is_flagged_and_hidden_from_the_guest() {
-    reset_test_store();
-    MockContext::host()
-        .with_property(Property::default())
-        .run(|ctx| {
-            replace_items(
-                ctx.clone(),
-                ReplaceItemsArgs {
-                    items: Vec::new(),
-                    items_json: Some(r#"[{"emoji":"☕"},{"emoji":"🧻","label":"Papier"}]"#.into()),
-                },
-            )
-            .expect("replace");
-            assert_eq!(
-                blocking(&ctx, "items.0.label").as_deref(),
-                Some("Donnez un nom au produit.")
-            );
-        });
-    MockContext::guest()
-        .with_property(Property::default())
-        .run(|ctx| {
-            let json = serde_json::to_string(&render_guest_form(ctx).expect("render")).unwrap();
-            assert!(json.contains("🧻"), "{json}");
-            assert!(!json.contains("☕"), "{json}");
-        });
+    let items = [("", "", "☕"), ("Papier", "", "🧻")];
+    sample::with(MockContext::host(), &items).run(|ctx| {
+        let field = format!("{}.label", sample::id(0));
+        assert_eq!(
+            sample::blocking(&ctx, &field).as_deref(),
+            Some("Donnez un nom au produit.")
+        );
+    });
+    let json = sample::with(MockContext::guest(), &items)
+        .run(|ctx| serde_json::to_string(&render_guest_form(ctx).expect("render")).unwrap());
+    assert!(json.contains("🧻") && !json.contains("☕"), "{json}");
 }
 
 #[test]
 #[serial]
 fn a_product_name_past_forty_characters_is_flagged() {
-    reset_test_store();
-    MockContext::host()
-        .with_property(Property::default())
-        .run(|ctx| {
-            save(&ctx, vec![named_item("", &"c".repeat(41))], "", None);
-            assert_eq!(
-                blocking(&ctx, "items.0.label").as_deref(),
-                Some("40 caractères au maximum.")
-            );
-        });
+    let name = "c".repeat(41);
+    sample::with(MockContext::host(), &[(name.as_str(), "", "")]).run(|ctx| {
+        let field = format!("{}.label", sample::id(0));
+        assert_eq!(
+            sample::blocking(&ctx, &field).as_deref(),
+            Some("40 caractères au maximum.")
+        );
+    });
 }
 
 #[test]
 #[serial]
 fn a_restock_delay_past_forty_characters_is_flagged() {
-    reset_test_store();
-    MockContext::host()
-        .with_property(Property::default())
-        .run(|ctx| {
-            save(&ctx, vec![named_item("", "Café")], &"d".repeat(41), None);
-            assert_eq!(
-                blocking(&ctx, "restock_delay").as_deref(),
-                Some("40 caractères au maximum.")
-            );
-        });
+    let delay = json!({ "restock_delay": { "fr": "d".repeat(41) } });
+    sample::with_meta(MockContext::host(), &[("Café", "", "")], delay).run(|ctx| {
+        assert_eq!(
+            sample::blocking(&ctx, "restock_delay").as_deref(),
+            Some("40 caractères au maximum.")
+        );
+    });
 }
 
-/// Hors de 1 à 20, la valeur est gardée et l'erreur affichée — plus de bornage silencieux.
 #[test]
 #[serial]
 fn max_requests_out_of_range_is_reported_not_clamped() {
-    for typed in [0.0, 25.0] {
-        reset_test_store();
-        MockContext::host()
-            .with_property(Property::default())
-            .run(|ctx| {
-                save(&ctx, vec![named_item("", "Café")], "", Some(typed));
-                assert_eq!(
-                    blocking(&ctx, "max_requests").as_deref(),
-                    Some("Entre 1 et 20.")
-                );
-                save(&ctx, vec![named_item("", "Café")], "", Some(5.0));
-                assert_eq!(blocking(&ctx, "max_requests"), None);
-            });
+    for typed in [0, 25] {
+        sample::with(MockContext::host(), &[("Café", "", "")]).run(|ctx| {
+            sample::save(&ctx, json!({ "max_requests": typed }));
+            assert_eq!(
+                sample::blocking(&ctx, "max_requests").as_deref(),
+                Some("Entre 1 et 20.")
+            );
+            sample::save(&ctx, json!({ "max_requests": "5" }));
+            assert_eq!(sample::blocking(&ctx, "max_requests"), None);
+        });
     }
 }
 
@@ -938,24 +569,11 @@ fn an_already_reported_product_says_so_until_it_is_restocked() {
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
-            replace_items(
-                ctx.clone(),
-                ReplaceItemsArgs {
-                    items: vec![ConsumableItemInput {
-                        emoji: String::new(),
-                        label: None,
-                        label_fr: "Café".into(),
-                        label_en: "Coffee".into(),
-                        sort_order: 0,
-                        low_threshold: 0,
-                        id: None,
-                        location: None,
-                    }],
-                    items_json: None,
-                },
-            )
-            .expect("replace");
-            let item_id = list_items(ctx.clone()).expect("items")[0].id;
+            sample::save(
+                &ctx,
+                json!({ "products": sample::products(&[("Café", "Coffee", "")]) }),
+            );
+            let item_id = sample::id(0);
 
             let before = serde_json::to_string(&render_guest_form(ctx.clone()).expect("form"))
                 .expect("json");
@@ -986,26 +604,13 @@ fn the_stay_cap_stops_requests() {
     reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
-        .with_kv("settings", br#"{"max_requests":1}"#.to_vec())
+        .with_resource(
+            "products",
+            sample::products(&[("Café", "Coffee", "")]),
+            json!({ "max_requests": 1 }),
+        )
         .run(|ctx| {
-            replace_items(
-                ctx.clone(),
-                ReplaceItemsArgs {
-                    items: vec![ConsumableItemInput {
-                        emoji: String::new(),
-                        label: None,
-                        label_fr: "Café".into(),
-                        label_en: "Coffee".into(),
-                        sort_order: 0,
-                        low_threshold: 0,
-                        id: None,
-                        location: None,
-                    }],
-                    items_json: None,
-                },
-            )
-            .expect("replace");
-            let item_id = list_items(ctx.clone()).expect("list items")[0].id;
+            let item_id = sample::id(0);
             let ask = |ctx: &portaki_sdk::prelude::Context| {
                 submit(
                     ctx.clone(),
@@ -1030,29 +635,13 @@ fn the_stay_cap_stops_requests() {
 #[test]
 #[serial]
 fn planned_with_a_reply_reaches_the_guest_and_ends_the_task() {
+    const ITEMS: [(&str, &str, &str); 1] = [("Café", "Coffee", "")];
     reset_test_store();
     let mut stay_id = Uuid::nil();
-    MockContext::guest()
+    sample::with(MockContext::guest(), &ITEMS)
         .with_property(Property::default())
         .run(|ctx| {
-            replace_items(
-                ctx.clone(),
-                ReplaceItemsArgs {
-                    items: vec![ConsumableItemInput {
-                        emoji: String::new(),
-                        label: None,
-                        label_fr: "Café".into(),
-                        label_en: "Coffee".into(),
-                        sort_order: 0,
-                        low_threshold: 0,
-                        id: None,
-                        location: None,
-                    }],
-                    items_json: None,
-                },
-            )
-            .expect("replace");
-            let item_id = list_items(ctx.clone()).expect("items")[0].id;
+            let item_id = sample::id(0);
             submit(
                 ctx.clone(),
                 SubmitArgs {
@@ -1083,7 +672,7 @@ fn planned_with_a_reply_reaches_the_guest_and_ends_the_task() {
     };
 
     let mut report_id = Uuid::nil();
-    MockContext::host()
+    sample::with(MockContext::host(), &ITEMS)
         .with_property(Property::default())
         .run(|ctx| {
             let tasks = timeline_tasks(ctx.clone(), tasks_args())
@@ -1097,7 +686,8 @@ fn planned_with_a_reply_reaches_the_guest_and_ends_the_task() {
 
             // Le formulaire de l'hôte : ses boutons portent le statut, la coquille y fusionne le
             // champ de réponse sous son nom de fil.
-            let main = serde_json::to_string(&render_host_main(ctx.clone())).expect("json");
+            let main = serde_json::to_string(&render_host_main(ctx.clone()).expect("render"))
+                .expect("json");
             assert!(main.contains("host.main.markPlanned"), "{main}");
             assert!(main.contains(r#""name":"hostReply""#), "{main}");
             let args: UpdateStatusArgs = serde_json::from_value(json!({
@@ -1130,7 +720,7 @@ fn planned_with_a_reply_reaches_the_guest_and_ends_the_task() {
             assert!(!stats.contains("stats.row.restockedAt"), "{stats}");
         });
 
-    MockContext::guest()
+    sample::with(MockContext::guest(), &ITEMS)
         .with_property(Property::default())
         .run(|ctx| {
             let card =
@@ -1142,7 +732,7 @@ fn planned_with_a_reply_reaches_the_guest_and_ends_the_task() {
             assert!(form.contains("form.item.reported.missing"), "{form}");
         });
 
-    MockContext::host()
+    sample::with(MockContext::host(), &ITEMS)
         .with_property(Property::default())
         .run(|ctx| {
             task_complete(
