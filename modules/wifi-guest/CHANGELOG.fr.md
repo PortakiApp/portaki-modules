@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.11
+
+Les messages du formulaire dans toutes les langues.
+
+* Les erreurs sous les champs et les points à compléter avant publication s'affichent dans la langue de l'hôte, plus seulement en français ou en anglais.
+
 ## 1.10.9
 
 Le nom du réseau Wi-Fi ne peut plus rester vide.
