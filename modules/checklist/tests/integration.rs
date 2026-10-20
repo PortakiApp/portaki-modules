@@ -19,9 +19,9 @@ use uuid::Uuid;
 use checklist::{
     __portaki_lists_update_config, all_lists, booklet_lists, complete_item, create_checklist,
     list_completions, publish_readiness, render_home_card, render_host_main, render_host_stay,
-    render_post_stay_card, render_stats_checklist, render_stats_cleaning, reset_test_store,
-    send_departure_reminder, set_completed, stats_summary, task_complete, task_toggle,
-    timeline_tasks, uncomplete_item, CreateChecklistArgs, ItemIdArgs, List, SetCompletedArgs,
+    render_post_stay_card, render_stats_checklist, render_stats_cleaning, send_departure_reminder,
+    set_completed, stats_summary, task_complete, task_toggle, timeline_tasks, uncomplete_item,
+    CreateChecklistArgs, ItemIdArgs, List, SetCompletedArgs,
 };
 use portaki_test_utils::{Booking, MockContext, Property, SurfaceAssertions};
 
@@ -118,7 +118,6 @@ fn with_period_stays(mut ctx: Context, stays: &[TimelineStay]) -> Context {
 #[test]
 #[serial]
 fn a_cleaning_is_judged_against_the_next_arrival() {
-    reset_test_store();
     MockContext::host().run(|ctx| {
         create(&ctx, "cleaning");
         let now = Utc::now();
@@ -172,7 +171,6 @@ fn a_cleaning_is_judged_against_the_next_arrival() {
 #[test]
 #[serial]
 fn a_stay_that_never_opened_its_list_shows_unfilled() {
-    reset_test_store();
     MockContext::host().run(|ctx| {
         create(&ctx, "departure");
         let now = Utc::now();
@@ -194,7 +192,6 @@ fn a_stay_that_never_opened_its_list_shows_unfilled() {
 #[test]
 #[serial]
 fn the_departure_template_carries_its_groups() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -213,7 +210,6 @@ fn the_departure_template_carries_its_groups() {
 #[test]
 #[serial]
 fn set_completed_replaces_the_whole_set() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -273,7 +269,6 @@ fn set_completed_replaces_the_whole_set() {
 #[test]
 #[serial]
 fn home_card_empty_when_no_list() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -284,7 +279,6 @@ fn home_card_empty_when_no_list() {
 #[test]
 #[serial]
 fn guest_list_waits_for_its_trigger() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|mut ctx| {
@@ -308,7 +302,6 @@ fn guest_list_waits_for_its_trigger() {
 #[test]
 #[serial]
 fn departure_template_renders_toggles_and_ticks() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -341,7 +334,6 @@ fn departure_template_renders_toggles_and_ticks() {
 #[test]
 #[serial]
 fn photo_item_refuses_a_tick_without_photo() {
-    reset_test_store();
     MockContext::host().run(|ctx| {
         create(&ctx, "cleaning");
         let stays = stays_around();
@@ -406,7 +398,6 @@ fn photo_item_refuses_a_tick_without_photo() {
 #[test]
 #[serial]
 fn guest_ticks_feed_the_checklist_stats() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -436,7 +427,6 @@ fn guest_ticks_feed_the_checklist_stats() {
 #[test]
 #[serial]
 fn the_card_hands_the_booklet_what_is_already_ticked() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -457,7 +447,6 @@ fn the_card_hands_the_booklet_what_is_already_ticked() {
 #[test]
 #[serial]
 fn the_stay_detail_tells_the_stay_progress() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -506,7 +495,6 @@ fn the_stay_detail_tells_the_stay_progress() {
 #[serial]
 fn the_departure_reminder_goes_only_to_an_unfinished_list() {
     for case in ["unfinished", "finished", "off", "gone"] {
-        reset_test_store();
         let builder = MockContext::guest().with_property(Property::default());
         let stay_id = builder.context().guest.expect("guest").session_id;
         let booking = Booking {
@@ -554,7 +542,6 @@ fn the_departure_reminder_goes_only_to_an_unfinished_list() {
 #[test]
 #[serial]
 fn only_the_first_departure_list_reaches_the_booklet() {
-    reset_test_store();
     MockContext::host().run(|ctx| {
         create(&ctx, "departure");
         create(&ctx, "departure");
@@ -577,7 +564,6 @@ fn only_the_first_departure_list_reaches_the_booklet() {
 #[test]
 #[serial]
 fn a_guest_cannot_tick_a_host_item() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -597,7 +583,6 @@ fn a_guest_cannot_tick_a_host_item() {
 #[test]
 #[serial]
 fn set_completed_refuses_a_host_item() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -619,7 +604,6 @@ fn set_completed_refuses_a_host_item() {
 #[test]
 #[serial]
 fn a_removed_step_does_not_move_the_ticks_of_the_others() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -645,7 +629,6 @@ fn a_removed_step_does_not_move_the_ticks_of_the_others() {
 #[test]
 #[serial]
 fn the_editor_is_a_table_of_lists_and_the_templates() {
-    reset_test_store();
     MockContext::host().run(|ctx| {
         let empty = json_of(&render_host_main(ctx.clone()).expect("render"));
         assert!(empty.contains("createChecklist") && empty.contains("template.cleaning.name"));
@@ -666,7 +649,6 @@ fn the_editor_is_a_table_of_lists_and_the_templates() {
 #[test]
 #[serial]
 fn publication_waits_for_a_written_step_and_warns_on_a_code() {
-    reset_test_store();
     MockContext::host().run(|ctx| {
         assert!(readiness_hint(&ctx, "steps").is_some());
         create(&ctx, "emptyGuest");
@@ -696,7 +678,6 @@ fn publication_waits_for_a_written_step_and_warns_on_a_code() {
 #[test]
 #[serial]
 fn the_display_settings_reach_the_card() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -729,7 +710,6 @@ fn the_display_settings_reach_the_card() {
 #[test]
 #[serial]
 fn the_host_group_and_line_reach_the_guest() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|ctx| {
@@ -747,7 +727,6 @@ fn the_host_group_and_line_reach_the_guest() {
 #[test]
 #[serial]
 fn a_before_arrival_list_keeps_opening_before_arrival() {
-    reset_test_store();
     MockContext::guest()
         .with_property(Property::default())
         .run(|mut ctx| {
@@ -772,7 +751,6 @@ fn a_before_arrival_list_keeps_opening_before_arrival() {
 #[test]
 #[serial]
 fn a_template_lands_once_under_its_id() {
-    reset_test_store();
     MockContext::host().run(|ctx| {
         let id = Uuid::new_v4();
         for _ in 0..2 {

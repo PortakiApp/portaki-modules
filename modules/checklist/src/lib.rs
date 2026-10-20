@@ -2,8 +2,9 @@
 //! deviennent des tâches datées autour de chaque séjour.
 //!
 //! Les listes et leurs étapes sont une collection déclarée : le SDK les stocke, les fusionne, les
-//! importe, les contrôle et dessine leur éditeur. Restent du code du module : les coches du
-//! voyageur, les tâches de l'équipe et leur état, le rappel, les statistiques.
+//! importe, les contrôle et dessine leur éditeur. Les coches du voyageur et l'état des tâches de
+//! l'équipe sont deux dépôts déclarés, un enregistrement par séjour et par étape. Restent du code
+//! du module : les tâches de l'équipe, le rappel, les statistiques.
 
 mod commands;
 mod config;
@@ -15,19 +16,18 @@ mod host;
 use portaki_sdk::contracts::i18n::I18nText;
 
 use self::email as email_i18n;
-use commands::{entities, storage};
+use commands::storage;
 use domain::{ids, lists, show_when};
 
 pub use commands::complete_item::{complete_item, ItemIdArgs};
 pub use commands::create_checklist::{create_checklist, CreateChecklistArgs};
 pub use commands::email_context::{email_context, EmailContextArgs, EmailContextResponse};
-pub use commands::entities::{ChecklistCompletion, TaskItemState};
 pub use commands::list_completions::list_completions;
 pub use commands::publish_readiness::publish_readiness;
 pub use commands::send_departure_reminder::send_departure_reminder;
 pub use commands::set_completed::{set_completed, SetCompletedArgs};
 pub use commands::stats_summary::stats_summary;
-pub use commands::storage::reset_test_store;
+pub use commands::storage::{ChecklistCompletion, TaskItemState};
 pub use commands::task::task_id;
 pub use commands::task_complete::task_complete;
 pub use commands::task_toggle::task_toggle;
@@ -157,3 +157,29 @@ pub struct List {
 
 #[portaki_sdk::collection(name = "lists", item = List, check = config::problems, readiness = false, import, legacy = commands::earlier::earlier_lists)]
 pub struct Lists;
+
+/// Une étape cochée ou non.
+#[portaki_sdk::choice(label = "stats.cleaning.status")]
+pub enum Tick {
+    #[initial]
+    Open,
+    #[done]
+    Done,
+}
+
+/// L'étape d'un séjour : cochée par le voyageur, ou par l'équipe dans une tâche, avec sa photo.
+#[portaki_sdk::item(key = "step")]
+pub struct Ticked {
+    #[field(required, label = "host.step.label")]
+    pub step: String,
+    #[field(kind = "photo", label = "host.step.photo")]
+    pub photo: String,
+    /// La tâche d'équipe, `<checklistId>:<stayId>` ; vide pour une coche du voyageur.
+    pub task: String,
+}
+
+#[portaki_sdk::record(name = "completions", item = Ticked, status = Tick, commands = false)]
+pub struct Completions;
+
+#[portaki_sdk::record(name = "task_states", item = Ticked, status = Tick, commands = false)]
+pub struct TaskStates;

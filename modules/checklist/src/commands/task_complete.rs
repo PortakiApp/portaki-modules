@@ -1,7 +1,6 @@
 //! `taskComplete`: every open item of a host task ticked at once.
 
 use portaki_sdk::contracts::timeline::TaskCompleteArgs;
-use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 
 use super::task::{after_change, is_restock, load_task, state_of, task_item};
@@ -26,9 +25,8 @@ pub fn task_complete(ctx: Context, args: TaskCompleteArgs) -> Result<()> {
         let stored = state_of(&states, &args.task_id, item.uuid()).and_then(|s| s.photo.as_deref());
         task_item(&list, item, None).check_toggle(true, stored)?;
     }
-    let now = time::now()?;
     for item in &open {
-        storage::set_task_item(&args.task_id, item.uuid(), true, None, now)?;
+        storage::set_task_item(&args.task_id, item.uuid(), true, None)?;
     }
     let restocked = open.iter().any(|item| is_restock(item));
     after_change(&ctx, &list, &args.task_id, stay_id, restocked)
