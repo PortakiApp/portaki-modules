@@ -1,97 +1,21 @@
-//! Guest booklet surfaces. The SDK renders the inactive / incomplete / error states.
+//! Livret : la carte d'accueil en tuiles, la liste par pièce, la fiche d'un appareil.
 
-mod home;
-mod item;
-mod page;
+mod explore_detail;
+mod explore_item;
+mod home_card;
 
 use portaki_sdk::prelude::*;
-use portaki_sdk::sdui::primitives::EmptyState;
-use portaki_sdk::sdui::surface::Surface;
+use portaki_sdk::sdui::common::{Leading, LeadingVisual};
+use portaki_sdk::sdui::primitives::{EmptyState, ListItem};
 
-use home::build_home_card;
-use item::build_item_detail;
-use page::build_detail_page;
+pub use explore_detail::render_explore_detail;
+pub use explore_item::render_explore_item;
+pub use home_card::render_home_card;
 
-use crate::content::AppliancesPayload;
-use crate::queries::load_payload;
+use crate::domain::Appliance;
 
-#[portaki_sdk::surface(guest, id = "home.card")]
-pub fn render_home_card(ctx: GuestContext) -> Result<Surface> {
-    render_with_payload(&ctx, HOME_CARD, build_home_card)
-}
-
-#[portaki_sdk::surface(
-    guest,
-    id = "explore.detail",
-    path = "appliances",
-    label_key = "nav.appliances"
-)]
-pub fn render_explore_detail(ctx: GuestContext) -> Result<Surface> {
-    // `room` arrive par les paramètres de route quand le voyageur a touché un filtre de pièce.
-    let room = ctx
-        .input
-        .get("room")
-        .and_then(|value| value.as_str())
-        .map(str::to_string);
-    let payload = load_payload(&ctx)?;
-    if payload.is_empty_for_guest() {
-        return Ok(no_appliances_state(EXPLORE_DETAIL));
-    }
-    Ok(build_detail_page(&payload, room.as_deref()))
-}
-
-/// Device detail. `deviceId` arrives via guest route params → render `input` → `ctx.input`.
-#[portaki_sdk::surface(
-    guest,
-    id = "explore.item",
-    path = "appliances/:deviceId",
-    label_key = "nav.appliance"
-)]
-pub fn render_explore_item(ctx: GuestContext) -> Result<Surface> {
-    let device_id = ctx
-        .input
-        .get("deviceId")
-        .and_then(|value| value.as_str())
-        .map(str::to_string);
-    load_for_item(&ctx, device_id.as_deref())
-}
-
-fn render_with_payload(
-    ctx: &GuestContext,
-    surface_id: SurfaceId,
-    build: fn(&AppliancesPayload) -> Surface,
-) -> Result<Surface> {
-    let payload = load_payload(ctx)?;
-    if payload.is_empty_for_guest() {
-        return Ok(no_appliances_state(surface_id));
-    }
-    Ok(build(&payload))
-}
-
-fn load_for_item(ctx: &GuestContext, device_id: Option<&str>) -> Result<Surface> {
-    let payload = load_payload(ctx)?;
-    if payload.is_empty_for_guest() {
-        return Ok(no_appliances_state(EXPLORE_ITEM));
-    }
-    Ok(build_item_detail(
-        &payload,
-        device_id,
-        report_issue_path().as_deref(),
-    ))
-}
-
-/// Le chemin du formulaire de signalement, quand un module installé le fournit ; sinon `None`, et
-/// la fiche ne montre pas de bouton qui ne mènerait nulle part. Une erreur de la plateforme coûte
-/// le bouton, pas la fiche.
-fn report_issue_path() -> Option<String> {
-    portaki_sdk::host::module::list_by_capability(crate::REPORT_ISSUE)
-        .ok()?
-        .into_iter()
-        .find_map(|peer| peer.path)
-}
-
-/// No appliance published yet.
-fn no_appliances_state(surface_id: SurfaceId) -> Surface {
+/// Aucun appareil publié.
+fn no_appliances(surface_id: SurfaceId) -> Surface {
     Surface::new(
         EmptyState::new()
             .title("i18n:home.card.empty.title")
@@ -99,4 +23,28 @@ fn no_appliances_state(surface_id: SurfaceId) -> Surface {
             .icon(IconName::Plug),
     )
     .with_id(surface_id)
+}
+
+/// Une ligne de la liste : l'emoji, le nom, la pièce ; elle ouvre la fiche.
+fn device_list_item(device: &Appliance) -> Component {
+    let action = Action::navigate(
+        NavigateTarget::path(format!("appliances/{}", device.id)),
+        None,
+    );
+    let mut item = ListItem::new()
+        .title(device.name.clone())
+        .chevron(true)
+        .action(action);
+    if !device.emoji.is_empty() {
+        // `emoji`, pas la forme nue `Leading::Icon` : nue, le livret la prend pour une icône et la
+        // pose sur la pastille teintée ; nommée, il dessine la pastille blanche de la maquette.
+        item = item.leading(Leading::Visual(Box::new(LeadingVisual {
+            emoji: Some(device.emoji.clone()),
+            ..LeadingVisual::default()
+        })));
+    }
+    if !device.location.is_empty() {
+        item = item.subtitle(device.location.clone());
+    }
+    Component::ListItem(item)
 }
