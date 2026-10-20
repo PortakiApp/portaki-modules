@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.0
+
+Les champs masqués du livret restent privés.
+
+* Un champ que le livret ne montre pas, comme votre numéro quand « Afficher mon numéro » est décoché, reste privé pour les outils qui lisent le livret.
+
 ## 0.9.9
 
 Les messages du formulaire dans toutes les langues.
