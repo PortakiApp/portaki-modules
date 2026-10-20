@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0
+
+Le catalogue et les demandes passent sur la nouvelle base de Portaki.
+
+* Le catalogue et les réglages des demandes sont repris à la première ouverture ; les demandes déjà reçues restent liées à leurs produits.
+* « Répondre » montre la dernière réponse au-dessus du champ ; « Prévu » et « Marquer livré » changent le statut de la demande.
+* Décocher une demande dans la frise la rouvre, et une même réponse envoyée deux fois ne part qu'une fois.
+* Un produit sans nom, que le voyageur ne voyait pas, n'est pas repris.
+* Le bouton d'import CSV, annoncé « Bientôt », est retiré.
+
 ## 2.11.1
 
 Montée technique.

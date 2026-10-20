@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.10.15
+
+L'e-mail « code changé » suit le type de parking choisi.
+
+* Changer le code du parking prévient les voyageurs dès qu'un type de parking est choisi, même si l'ancien interrupteur n'a pas été touché.
+* Avec « Pas de parking », aucun e-mail n'annonce plus un code que le voyageur ne voit pas dans son livret.
+
 ## 1.10.12
 
 Le code de la porte s'appelle partout « code d'entrée ».

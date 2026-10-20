@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.10.0
+
+Le règlement passe sur la nouvelle base des listes de Portaki.
+
+* Les règles déjà saisies sont reprises à la première ouverture, dans le même ordre et dans chaque langue : rien n'est à ressaisir.
+* Un ancien thème écrit à la main devient « Autre » ; une règle sans titre, que le livret ne montrait pas, n'est pas reprise.
+* Des règles importées s'ajoutent à celles déjà là, sans doublon et sans rien écraser.
+
 ## 1.9.1
 
 Montée technique.
