@@ -1,0 +1,7 @@
+{
+  "id": "788e35a3-a21a-47c1-acee-48a0ff26d542",
+  "content_fr": "{\"by_lang\":{\"en\":{\"items\":[{\"id\":\"r0\",\"icon\":\"\",\"title\":\"Quiet after 10 pm\",\"subtitle\":\"\",\"status\":\"neutral\",\"theme\":\"\"},{\"id\":\"r1\",\"icon\":\"\",\"title\":\"No parties\",\"subtitle\":\"\",\"status\":\"neutral\",\"theme\":\"\"}]},\"fr\":{\"items\":[{\"id\":\"r0\",\"icon\":\"\",\"title\":\"Calme après 22 h\",\"subtitle\":\"Pensez aux voisins.\",\"status\":\"neutral\",\"theme\":\"noise\"},{\"id\":\"r1\",\"icon\":\"\",\"title\":\"Pas de fête\",\"subtitle\":\"\",\"status\":\"neutral\",\"theme\":\"parties\"},{\"id\":\"r2\",\"icon\":\"\",\"title\":\"Animaux bienvenus\",\"subtitle\":\"Prévenez-nous.\",\"status\":\"allowed\",\"theme\":\"pets\"}]}},\"card_limit\":3}",
+  "content_en": "",
+  "created_at": "2026-10-20T10:14:12.515343Z",
+  "updated_at": "2026-10-20T10:14:12.515449Z"
+}
