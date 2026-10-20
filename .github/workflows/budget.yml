@@ -100,9 +100,11 @@ jobs:
           done
           exit "$status"
 
-      # Un seul commentaire par PR, mis à jour à chaque poussée.
+      # Un seul commentaire par PR, mis à jour à chaque poussée. Sur une PR venue d'un fork le jeton
+      # est en lecture seule : le commentaire manque, le check obligatoire ne rougit pas pour autant.
       - name: Post the exceptions
         if: always() && hashFiles('budget.md') != ''
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
