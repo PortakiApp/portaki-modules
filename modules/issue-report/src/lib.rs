@@ -4,6 +4,7 @@
 //! réception, le formulaire et la tâche de frise ; le module dit ce qu'est un signalement, quand
 //! il est accepté, et ce que disent les e-mails.
 
+pub mod commands;
 mod config;
 mod email;
 mod guest;
@@ -77,7 +78,8 @@ pub struct Report {
 }
 
 #[portaki_sdk::record(name = "reports", item = Report, status = Status, due_hours = 24,
-    task_title = "task.title", task_done = "host.detail.resolve", hooks)]
+    task_title = "task.title", task_done = "host.detail.resolve", hooks,
+    legacy = commands::earlier::earlier_reports)]
 pub struct Reports;
 
 impl RecordHooks for Reports {
