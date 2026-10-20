@@ -125,5 +125,5 @@ pub type Entry = portaki_sdk::resource::Entry<Request, Status>;
 /// Une demande à traiter est une tâche de la frise dès son envoi ; la cocher la passe « Livré ».
 #[portaki_sdk::record(name = "requests", item = Request, status = Status, due_hours = 0,
     task_title = "task.title", task_done = "host.main.markRestocked", hooks,
-    note_email = "host-reply")]
+    note_email = "host-reply", legacy = commands::legacy::earlier_requests)]
 pub struct Restocks;

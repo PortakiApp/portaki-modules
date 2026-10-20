@@ -178,8 +178,10 @@ pub struct Ticked {
     pub task: String,
 }
 
-#[portaki_sdk::record(name = "completions", item = Ticked, status = Tick, commands = false)]
+#[portaki_sdk::record(name = "completions", item = Ticked, status = Tick, commands = false,
+    legacy = commands::legacy::earlier_completions)]
 pub struct Completions;
 
-#[portaki_sdk::record(name = "task_states", item = Ticked, status = Tick, commands = false)]
+#[portaki_sdk::record(name = "task_states", item = Ticked, status = Tick, commands = false,
+    legacy = commands::legacy::earlier_task_states)]
 pub struct TaskStates;

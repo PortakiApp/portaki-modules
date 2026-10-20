@@ -4,6 +4,7 @@
 
 pub mod amenities_list;
 pub mod earlier;
+pub mod legacy;
 pub mod seed_defaults;
 pub mod stats_summary;
 pub mod submit;
