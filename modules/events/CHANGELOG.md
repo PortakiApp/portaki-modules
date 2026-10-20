@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.4](https://github.com/PortakiApp/portaki-modules/compare/events-v1.11.3...events-v1.11.4) (2026-10-20)
+
+
+### Bug Fixes
+
+* read module texts with bundle_text! ([6c1cd79](https://github.com/PortakiApp/portaki-modules/commit/6c1cd798e9549ee4b1addbdaf0feab9d5fe085d2))
+
 ## [1.11.3](https://github.com/PortakiApp/portaki-modules/compare/events-v1.11.2...events-v1.11.3) (2026-10-19)
 
 

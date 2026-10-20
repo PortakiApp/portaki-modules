@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.5](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.13.4...appliances-v1.13.5) (2026-10-20)
+
+
+### Bug Fixes
+
+* read module texts with bundle_text! ([6c1cd79](https://github.com/PortakiApp/portaki-modules/commit/6c1cd798e9549ee4b1addbdaf0feab9d5fe085d2))
+
 ## [1.13.4](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.13.3...appliances-v1.13.4) (2026-10-19)
 
 

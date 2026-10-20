@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.9](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v1.8.8...ical-sync-v1.8.9) (2026-10-20)
+
+
+### Bug Fixes
+
+* read module texts with bundle_text! ([6c1cd79](https://github.com/PortakiApp/portaki-modules/commit/6c1cd798e9549ee4b1addbdaf0feab9d5fe085d2))
+
 ## [1.8.8](https://github.com/PortakiApp/portaki-modules/compare/ical-sync-v1.8.7...ical-sync-v1.8.8) (2026-10-19)
 
 

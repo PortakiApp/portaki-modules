@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.9](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.9.8...trails-v0.9.9) (2026-10-20)
+
+
+### Bug Fixes
+
+* read module texts with bundle_text! ([6c1cd79](https://github.com/PortakiApp/portaki-modules/commit/6c1cd798e9549ee4b1addbdaf0feab9d5fe085d2))
+
 ## [0.9.8](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.9.7...trails-v0.9.8) (2026-10-19)
 
 

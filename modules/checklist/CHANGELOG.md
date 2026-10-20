@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.4](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.10.3...checklist-v1.10.4) (2026-10-20)
+
+
+### Bug Fixes
+
+* **checklist:** show cleaning times in property tz ([132471f](https://github.com/PortakiApp/portaki-modules/commit/132471f9ac9b152c9c194a0035203fc3dcbd5836))
+* read module texts with bundle_text! ([6c1cd79](https://github.com/PortakiApp/portaki-modules/commit/6c1cd798e9549ee4b1addbdaf0feab9d5fe085d2))
+
 ## [1.10.3](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.10.2...checklist-v1.10.3) (2026-10-19)
 
 
