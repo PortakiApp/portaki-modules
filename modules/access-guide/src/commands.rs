@@ -12,6 +12,7 @@ const SWITCH_KEYS: &[&str] = &[
     "primary_method",
     "building_access_enabled",
     "parking_enabled",
+    "parking_type",
 ];
 
 /// What the platform sends after a save that changed keys: their names, never their values.
@@ -54,7 +55,7 @@ fn active_codes(config: &HostConfig) -> Vec<(&'static str, &str)> {
         &config.building_access_gate_code,
     ));
     let parking = config
-        .parking_enabled
+        .parking_on()
         .then_some(("parking_code", &config.parking_code));
     [method, building, parking]
         .into_iter()
@@ -149,4 +150,38 @@ pub fn set_stay_code(ctx: Context, args: StayCodeArgs) -> Result<()> {
             .ok_or_else(|| PortakiError::Host("stay_code_invalid".into()))?
     };
     portaki_sdk::host::stay_secrets::set(args.stay_id, crate::stay_code::KEY, &code)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parking(kind: &str, enabled: bool) -> HostConfig {
+        HostConfig {
+            parking_type: kind.into(),
+            parking_enabled: enabled,
+            parking_code: "P4RK".into(),
+            ..HostConfig::default()
+        }
+    }
+
+    fn changed(keys: &[&str]) -> ConfigUpdatedArgs {
+        ConfigUpdatedArgs {
+            changed_keys: keys.iter().map(|k| k.to_string()).collect(),
+            ..ConfigUpdatedArgs::default()
+        }
+    }
+
+    #[test]
+    fn a_chosen_parking_type_makes_its_code_reach_the_guest() {
+        let config = parking("garage", false);
+        assert!(changed(&["parking_code"]).changes_the_guest_code(&config));
+        assert!(changed(&["parking_type"]).changes_the_guest_code(&config));
+    }
+
+    #[test]
+    fn no_parking_type_sends_nothing_even_with_the_old_switch_on() {
+        let config = parking("none", true);
+        assert!(!changed(&["parking_code"]).changes_the_guest_code(&config));
+    }
 }
