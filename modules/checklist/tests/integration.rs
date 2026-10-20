@@ -769,3 +769,49 @@ fn a_template_lands_once_under_its_id() {
         assert_eq!(lists[0].assignee(), (None, None));
     });
 }
+
+/// Les coches d'avant le dépôt déclaré sont reprises une fois, datées comme avant.
+#[test]
+#[serial]
+fn earlier_ticks_are_taken_over() {
+    let stay = MockContext::guest().run(|ctx| ctx.guest.unwrap().session_id);
+    let step = Uuid::from_u128(42);
+    MockContext::guest()
+        .with_rows(
+            "ChecklistCompletion",
+            vec![
+                json!({ "id": Uuid::from_u128(1), "stay_id": stay, "item_id": step,
+                "completed_at": "2026-10-01T08:00:00Z" }),
+            ],
+        )
+        .run(|ctx| {
+            assert_eq!(ctx.guest.as_ref().unwrap().session_id, stay);
+            assert_eq!(list_completions(ctx.clone()).expect("done"), vec![step]);
+            let rows = checklist::Completions::list(&ctx).expect("records");
+            assert_eq!(rows.len(), 1);
+            assert_eq!(rows[0].created_at.to_rfc3339(), "2026-10-01T08:00:00+00:00");
+        });
+}
+
+/// Les états de tâche d'avant sont repris une fois, photo et séjour gardés.
+#[test]
+#[serial]
+fn earlier_task_states_are_taken_over() {
+    let stay = Uuid::from_u128(7);
+    let task = format!("{}:{stay}", Uuid::from_u128(9));
+    MockContext::host()
+        .with_rows(
+            "TaskItemState",
+            vec![
+                json!({ "id": Uuid::from_u128(1), "task_id": task, "item_id": Uuid::from_u128(42),
+                "done": true, "photo": "portaki-file:abc", "done_at": "2026-10-01T08:00:00Z" }),
+            ],
+        )
+        .run(|ctx| {
+            let rows = checklist::TaskStates::list(&ctx).expect("records");
+            assert_eq!(rows.len(), 1);
+            assert_eq!(rows[0].stay_id, Some(stay));
+            assert_eq!(rows[0].item.photo, "portaki-file:abc");
+            assert_eq!(rows[0].item.task, task);
+        });
+}
