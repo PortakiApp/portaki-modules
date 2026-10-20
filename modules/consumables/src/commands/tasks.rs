@@ -6,61 +6,17 @@
 //! « Marquer livré », clôt la demande et la tâche disparaît au calcul suivant.
 
 use chrono::{DateTime, Utc};
-use portaki_sdk::contracts::i18n::I18nText;
-use portaki_sdk::contracts::timeline::{
-    self, TaskCompleteArgs, TaskToggleArgs, TimelineTaskItem, TimelineTasks, TimelineTasksArgs,
-};
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
 use crate::entities::ConsumableReport;
 use crate::{status, storage};
 
-const ITEM: &str = "restocked";
-
-#[portaki_sdk::query(
-    name = "timelineTasks",
-    example(
-        label = "Semaine en cours",
-        input = r#"{"propertyId":"5f0c2b1e-8a4d-4c6f-9e21-3b7d9a6c4e10","from":"2026-06-15T00:00:00Z","to":"2026-06-22T00:00:00Z","stays":[]}"#
-    )
-)]
-pub fn timeline_tasks(ctx: Context, args: TimelineTasksArgs) -> Result<TimelineTasks> {
-    // Demandes fermées : l'onglet et les tâches sont inactifs (§3).
-    if !crate::Products::load(&ctx)?.meta().enabled() {
-        return Ok(TimelineTasks { tasks: Vec::new() });
-    }
-    let reports = storage::list_all()?;
-    Ok(TimelineTasks {
-        tasks: to_handle(&reports, args.from, args.to)
-            .into_iter()
-            .map(|(report, at)| {
-                let guest = args
-                    .stays
-                    .iter()
-                    .find(|stay| stay.id == report.stay_id)
-                    .map(|stay| stay.guest_name.trim())
-                    .unwrap_or_default();
-                timeline::task(
-                    report.id.to_string(),
-                    at,
-                    args.property_id,
-                    portaki_sdk::bundle_text!("task.title", &[("item", &report.item_label)]),
-                    I18nText::new(guest, guest),
-                )
-                .stay(report.stay_id)
-                .items(vec![TimelineTaskItem::new(
-                    ITEM,
-                    portaki_sdk::bundle_text!("host.main.markRestocked", &[]),
-                )])
-            })
-            .collect(),
-    })
-}
+pub(super) const ITEM: &str = "restocked";
 
 /// Les demandes à traiter et où les poser : à l'envoi, ramené au début de la fenêtre quand c'est
 /// plus tôt — une demande oubliée reste à faire, elle ne sort pas de la frise.
-pub fn to_handle(
+pub(super) fn to_handle(
     reports: &[ConsumableReport],
     from: DateTime<Utc>,
     to: DateTime<Utc>,
@@ -74,38 +30,7 @@ pub fn to_handle(
     out
 }
 
-#[portaki_sdk::command(
-    name = "taskToggle",
-    example(
-        label = "Marquer livré",
-        input = r#"{"propertyId":"5a1c9e2b-4f3d-4b8a-8e7f-6d2c1b0a9f8e","taskId":"9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a","itemId":"restocked","done":true}"#
-    )
-)]
-pub fn task_toggle(_ctx: Context, args: TaskToggleArgs) -> Result<()> {
-    if args.item_id != ITEM {
-        return Err(PortakiError::Host("item_not_found".to_string()));
-    }
-    // Décocher rouvre la demande : l'hôte s'est trompé de ligne.
-    let next = if args.done {
-        status::RESTOCKED
-    } else {
-        status::DEFAULT
-    };
-    set_status(&args.task_id, next)
-}
-
-#[portaki_sdk::command(
-    name = "taskComplete",
-    example(
-        label = "Marquer livré",
-        input = r#"{"propertyId":"5a1c9e2b-4f3d-4b8a-8e7f-6d2c1b0a9f8e","taskId":"9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a"}"#
-    )
-)]
-pub fn task_complete(_ctx: Context, args: TaskCompleteArgs) -> Result<()> {
-    set_status(&args.task_id, status::RESTOCKED)
-}
-
-fn set_status(task_id: &str, next: &str) -> Result<()> {
+pub(super) fn set_status(task_id: &str, next: &str) -> Result<()> {
     let report_id =
         Uuid::parse_str(task_id).map_err(|_| PortakiError::Host("task_not_found".to_string()))?;
     storage::update_status(report_id, next.to_string(), None).map(|_| ())

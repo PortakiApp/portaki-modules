@@ -15,6 +15,9 @@ use portaki_sdk::PortakiError;
 /// Longest guest-typed field quoted in an email, in chars (not bytes).
 pub const GUEST_TEXT_EMAIL_MAX_CHARS: usize = 500;
 
+/// Longest item label in the report lines, in chars.
+pub(crate) const ITEM_ROW_MAX_CHARS: usize = 120;
+
 /// How far back from the cut a word boundary is looked for, in chars.
 const WORD_BOUNDARY_WINDOW_CHARS: usize = 40;
 
@@ -31,7 +34,7 @@ pub struct Quoted {
 }
 
 /// `text` quoted within [`GUEST_TEXT_EMAIL_MAX_CHARS`].
-pub fn quote_guest_text(text: &str) -> Quoted {
+pub(crate) fn quote_guest_text(text: &str) -> Quoted {
     clip_chars(text, GUEST_TEXT_EMAIL_MAX_CHARS)
 }
 
@@ -39,7 +42,7 @@ pub fn quote_guest_text(text: &str) -> Quoted {
 ///
 /// The cut backs off to the last whitespace within the final [`WORD_BOUNDARY_WINDOW_CHARS`]
 /// chars when there is one, so a word is not split; otherwise it falls exactly at `max`.
-pub fn clip_chars(text: &str, max: usize) -> Quoted {
+pub(crate) fn clip_chars(text: &str, max: usize) -> Quoted {
     let Some((cut, _)) = text.char_indices().nth(max) else {
         return Quoted {
             text: text.to_string(),
@@ -68,7 +71,7 @@ pub fn clip_chars(text: &str, max: usize) -> Quoted {
 }
 
 /// CTA label: « Voir plus » when a quote was cut, the email's own label otherwise.
-pub fn cta_label(truncated: bool, own: LocalizedEmailText) -> LocalizedEmailText {
+pub(crate) fn cta_label(truncated: bool, own: LocalizedEmailText) -> LocalizedEmailText {
     if truncated {
         crate::email_i18n::text(SEE_MORE_CTA_KEY)
     } else {
@@ -77,7 +80,7 @@ pub fn cta_label(truncated: bool, own: LocalizedEmailText) -> LocalizedEmailText
 }
 
 /// Logs an email refused after the record was saved — the command still succeeds.
-pub fn log_send_failure(message: &str, error: &PortakiError) {
+pub(crate) fn log_send_failure(message: &str, error: &PortakiError) {
     let mut fields = log::Fields::new();
     fields.insert("error", &error.to_string());
     let _ = log::warn(message, &fields);

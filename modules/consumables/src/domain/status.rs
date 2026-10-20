@@ -1,6 +1,6 @@
 //! Report status wire values (host workflow): À traiter → Prévu → Livré.
 
-use portaki_sdk::prelude::*;
+use portaki_sdk::{PortakiError, Result};
 
 /// Allowed status values on the wire.
 pub const WIRE_VALUES: &[&str] = &["open", "planned", "restocked"];
