@@ -1,0 +1,50 @@
+[
+  {
+    "alert_host": false,
+    "assignee_name": null,
+    "assignee_role": null,
+    "audience": "guest",
+    "created_at": "2026-10-20T10:19:33.079277Z",
+    "deadline": null,
+    "icon": "logout",
+    "id": "dcaed22c-19d1-49f1-92db-3ed66a0e9cce",
+    "name_en": "Avant de partir",
+    "name_fr": "Avant de partir",
+    "notify_assignee": false,
+    "placement": "booklet",
+    "sort_order": 0,
+    "trigger": "departureDay"
+  },
+  {
+    "alert_host": false,
+    "assignee_name": null,
+    "assignee_role": null,
+    "audience": "guest",
+    "created_at": "2026-10-20T10:19:33.101573Z",
+    "deadline": null,
+    "icon": "key",
+    "id": "dd5bb3e0-356e-4d8c-8d1a-f14ad75de489",
+    "name_en": "Arrival",
+    "name_fr": "Arrivée",
+    "notify_assignee": false,
+    "placement": "booklet",
+    "sort_order": 1,
+    "trigger": "duringStay"
+  },
+  {
+    "alert_host": true,
+    "assignee_name": "Julie Martin",
+    "assignee_role": "Ménage",
+    "audience": "host",
+    "created_at": "2026-10-20T10:19:33.109019Z",
+    "deadline": "departureEvening",
+    "icon": "sparkles",
+    "id": "8fda8916-a9f3-463d-95a1-392224c774ef",
+    "name_en": "Cleaning",
+    "name_fr": "Ménage",
+    "notify_assignee": false,
+    "placement": "booklet",
+    "sort_order": 2,
+    "trigger": "onlyIfNextArrival"
+  }
+]
