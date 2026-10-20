@@ -1,6 +1,7 @@
 //! Guest home booklet card — teaser + open form overlay.
 
 use portaki_sdk::prelude::*;
+use portaki_sdk::resource::Choice;
 
 use portaki_sdk::sdui::common::Leading;
 use portaki_sdk::sdui::primitives::{Card, ListItem, Pill, Stack, Text};
@@ -8,8 +9,7 @@ use portaki_sdk::sdui::surface::Surface;
 
 use super::empty::empty_catalog_card;
 use super::load::{load_guest_consumables, GuestConsumablesData};
-use crate::entities::ConsumableReport;
-use crate::{level, status};
+use crate::{Entry, Status};
 
 /// Guest home card — teaser + open form overlay.
 #[portaki_sdk::surface(
@@ -102,20 +102,14 @@ pub fn build_home_card(data: &GuestConsumablesData) -> Surface {
 }
 
 /// La demande, où en est l'hôte (« Prévu », « Livré ») et ce qu'il a répondu.
-fn report_list_item(report: &ConsumableReport) -> ListItem {
-    let subtitle = level::level_label_key(report.level.as_str());
+fn report_list_item(report: &Entry) -> ListItem {
     let mut row = ListItem::new()
-        .title(report.item_label.clone())
-        .subtitle(format!("i18n:{subtitle}"));
-    if report.status != status::DEFAULT {
-        row = row
-            .child(Pill::new().label(format!("i18n:{}", status::status_label_key(&report.status))));
+        .title(report.item.item_label.clone())
+        .subtitle(report.item.level.label_key());
+    if report.status != Status::Open {
+        row = row.child(Pill::new().label(report.status.label_key()));
     }
-    if let Some(reply) = report
-        .host_reply
-        .as_deref()
-        .filter(|r| !r.trim().is_empty())
-    {
+    if let Some(reply) = report.notes().last().filter(|r| !r.trim().is_empty()) {
         row = row.child(
             Text::new()
                 .text(

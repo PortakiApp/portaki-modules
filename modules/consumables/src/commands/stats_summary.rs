@@ -5,8 +5,8 @@ use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
-use crate::entities::ConsumableReport;
-use crate::{storage, Products};
+use crate::domain::request::Asked;
+use crate::{Entry, Products, Restocks};
 
 /// Tile (spec §1) : « Demandes de réassort · 6 » over the period, « Café en tête » as its note.
 #[portaki_sdk::query(
@@ -18,7 +18,7 @@ use crate::{storage, Products};
 )]
 pub fn stats_summary(ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummary> {
     let since = args.period().since(time::now()?);
-    let period: Vec<ConsumableReport> = storage::list_all()?
+    let period: Vec<Entry> = Restocks::list(&ctx)?
         .into_iter()
         .filter(|r| r.created_at >= since)
         .collect();
@@ -32,9 +32,9 @@ pub fn stats_summary(ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummar
     // One text per language: the item is named in each — the catalog's names, or the snapshot
     // the guest saw when the item has left the catalog since.
     let products = Products::load(&ctx)?;
-    let (fr, en) = match products.rows().iter().find(|p| p.uuid() == top.item_id) {
+    let (fr, en) = match products.rows().iter().find(|p| p.uuid() == top.product()) {
         Some(item) => (item.name("fr"), item.name("en")),
-        None => (top.item_label.clone(), top.item_label.clone()),
+        None => (top.item.item_label.clone(), top.item.item_label.clone()),
     };
     let mut text = portaki_sdk::bundle_text!("stats.tile.top", &[]);
     text.fr = text.fr.replace("{item}", &fr);
@@ -43,11 +43,11 @@ pub fn stats_summary(ctx: Context, args: StatsSummaryArgs) -> Result<StatsSummar
 }
 
 /// The most requested item of the period (the most recent request breaks a tie).
-fn top_item(period: &[ConsumableReport]) -> Option<&ConsumableReport> {
-    let count = |id: Uuid| period.iter().filter(|r| r.item_id == id).count();
+fn top_item(period: &[Entry]) -> Option<&Entry> {
+    let count = |id: Uuid| period.iter().filter(|r| r.product() == id).count();
     period.iter().max_by(|a, b| {
-        count(a.item_id)
-            .cmp(&count(b.item_id))
+        count(a.product())
+            .cmp(&count(b.product()))
             .then(a.created_at.cmp(&b.created_at))
     })
 }

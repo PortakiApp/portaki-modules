@@ -1,49 +1,42 @@
-//! Module-owned transactional emails via `host::email::send`.
-//!
-//! Guest-typed text is quoted within a fixed length — the report keeps it whole; see
-//! [`crate::email_text`].
+//! A guest asked: the e-mail to the host.
 
 use portaki_sdk::host::email::{
-    self, EmailAudience, EmailBlock, EmailPair, LocalizedEmailText, ModuleEmailCta,
+    self, clip, quote_guest, EmailAudience, EmailBlock, EmailPair, LocalizedEmailText,
     ModuleEmailSdui, SendEmailArgs,
 };
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
-use crate::email_text::{self, ITEM_ROW_MAX_CHARS};
-use crate::entities::ConsumableReport;
+use super::{cta, ITEM_ROW_MAX_CHARS};
+use crate::{Entry, Level};
 
-/// Guest shortage report → notify workspace owner.
-pub fn notify_host_submitted(property_id: Uuid, report: &ConsumableReport) -> Result<()> {
-    let (stay_id, report_id, item_label) = (report.stay_id, report.id, &report.item_label);
-    let note = report.note.as_deref();
-    let level = report.level.as_str();
-    let level_fr = match level {
-        "low" => "bientôt vide",
-        _ => "manque",
-    };
-    let level_en = match level {
-        "low" => "running low",
-        _ => "missing",
+/// Guest shortage request → notify workspace owner.
+pub fn to_host(property_id: Uuid, entry: &Entry) -> Result<()> {
+    let request = &entry.item;
+    let (level_fr, level_en) = match request.level {
+        Level::Low => ("bientôt vide", "running low"),
+        Level::Missing => ("manque", "missing"),
     };
 
     // A block line holds 200 chars: the item is cut shorter than a body quote.
-    let item = email_text::clip_chars(item_label, ITEM_ROW_MAX_CHARS);
-    let note = note.map(email_text::quote_guest_text);
-    let truncated = item.truncated || note.as_ref().is_some_and(|quoted| quoted.truncated);
+    let (item, item_cut) = clip(&request.item_label, ITEM_ROW_MAX_CHARS);
+    let note = Some(request.note.trim())
+        .filter(|n| !n.is_empty())
+        .map(quote_guest);
+    let truncated = item_cut || note.as_ref().is_some_and(|(_, cut)| *cut);
 
     let mut body_fr = format!("Un voyageur signale un consommable ({level_fr}).");
     let mut body_en = format!("A guest reported a consumable ({level_en}).");
-    if let Some(extra) = &note {
+    if let Some((extra, _)) = &note {
         body_fr.push_str("\n\nPrécision : ");
-        body_fr.push_str(&extra.text);
+        body_fr.push_str(extra);
         body_en.push_str("\n\nNote: ");
-        body_en.push_str(&extra.text);
+        body_en.push_str(extra);
     }
     let blocks = vec![EmailBlock::rows([
         EmailPair::new(
             LocalizedEmailText::new("Article", "Item"),
-            LocalizedEmailText::both(item.text),
+            LocalizedEmailText::both(item),
         ),
         EmailPair::new(
             LocalizedEmailText::new("Niveau", "Level"),
@@ -52,7 +45,7 @@ pub fn notify_host_submitted(property_id: Uuid, report: &ConsumableReport) -> Re
     ])];
 
     email::send(&SendEmailArgs {
-        email_id: format!("submitted-{report_id}"),
+        email_id: format!("submitted-{}", entry.id),
         audience: EmailAudience::Host,
         content: ModuleEmailSdui {
             subject: LocalizedEmailText::new(
@@ -65,19 +58,16 @@ pub fn notify_host_submitted(property_id: Uuid, report: &ConsumableReport) -> Re
                 "New stock report",
             )),
             body: LocalizedEmailText::new(body_fr, body_en),
-            cta: Some(ModuleEmailCta {
-                // No URL: with `property_id` set, the platform links the property page.
-                label: email_text::cta_label(
-                    truncated,
-                    LocalizedEmailText::new("Voir le logement", "View property"),
-                ),
-                url: None,
-                portaki_action: None,
-            }),
+            // No URL: with `property_id` set, the platform links the property page.
+            cta: Some(cta(
+                truncated,
+                LocalizedEmailText::new("Voir le logement", "View property"),
+                None,
+            )),
             blocks,
             ..Default::default()
         },
-        stay_id: Some(stay_id),
+        stay_id: entry.stay_id,
         property_id: Some(property_id),
         action_url: None,
     })

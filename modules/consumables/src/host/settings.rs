@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use chrono::{DateTime, Utc};
 use portaki_sdk::host::time;
 use portaki_sdk::prelude::*;
-use portaki_sdk::resource::CollectionEditor;
+use portaki_sdk::resource::{Choice, CollectionEditor};
 use portaki_sdk::sdui::primitives::{
     Button, DataTable, EmptyState, Form, InlineNotice, List, Page, Section, Stack, Text,
 };
@@ -14,8 +14,8 @@ use serde_json::{json, Value};
 use uuid::Uuid;
 
 use super::report_ui::{build_report_block, format_relative_when, short_date};
-use crate::entities::ConsumableReport;
-use crate::{status, storage, suggest, Product, Products};
+use crate::domain::request::Asked;
+use crate::{suggest, Entry, Product, Products, Restocks};
 
 /// « Demandés récemment » : une demande dans les trente derniers jours.
 const RECENT_DAYS: i64 = 30;
@@ -37,7 +37,7 @@ const RECENT_DAYS: i64 = 30;
 )]
 pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
     let products = Products::load(&ctx)?;
-    let reports = storage::list_all().unwrap_or_default();
+    let reports = Restocks::list(&ctx).unwrap_or_default();
     let now = time::now().unwrap_or(DateTime::<Utc>::UNIX_EPOCH);
     let last = last_requests(&reports);
     let (locale, when, filter) = (ctx.locale.clone(), last.clone(), last);
@@ -91,10 +91,10 @@ fn shown(product: &Product, locale: &str) -> String {
 }
 
 /// La dernière demande de chaque produit.
-fn last_requests(reports: &[ConsumableReport]) -> HashMap<Uuid, DateTime<Utc>> {
+fn last_requests(reports: &[Entry]) -> HashMap<Uuid, DateTime<Utc>> {
     let mut last: HashMap<Uuid, DateTime<Utc>> = HashMap::new();
     for report in reports {
-        let at = last.entry(report.item_id).or_insert(report.created_at);
+        let at = last.entry(report.product()).or_insert(report.created_at);
         *at = (*at).max(report.created_at);
     }
     last
@@ -113,7 +113,7 @@ fn requested(last: Option<&DateTime<Utc>>, now: DateTime<Utc>) -> String {
 /// Les demandes reçues : la table de toutes, puis celles à traiter avec leurs actions.
 fn received_section(
     products: &portaki_sdk::resource::Collection<Product, crate::Requests>,
-    reports: &[ConsumableReport],
+    reports: &[Entry],
     now: DateTime<Utc>,
     locale: &str,
 ) -> Component {
@@ -123,7 +123,7 @@ fn received_section(
         let notice = InlineNotice::new().message("i18n:host.received.disabled");
         children.push(notice.into());
     }
-    let recent: Vec<&ConsumableReport> = reports.iter().take(40).collect();
+    let recent: Vec<&Entry> = reports.iter().take(40).collect();
     if recent.is_empty() && enabled {
         let empty = EmptyState::new()
             .title("i18n:host.received.empty")
@@ -135,7 +135,7 @@ fn received_section(
         children.push(received_table(products.rows(), &recent, now, locale));
         let pending: Vec<Component> = recent
             .iter()
-            .filter(|report| status::is_pending(&report.status))
+            .filter(|report| report.pending())
             .map(|report| build_report_block(report, now, locale))
             .collect();
         if !pending.is_empty() {
@@ -154,7 +154,7 @@ fn received_section(
 
 fn received_table(
     products: &[Product],
-    recent: &[&ConsumableReport],
+    recent: &[&Entry],
     now: DateTime<Utc>,
     locale: &str,
 ) -> Component {
@@ -177,8 +177,8 @@ fn received_table(
                 "date": format_relative_when(report.created_at, now, locale),
                 "stay": stay_dates(report, locale),
                 "guest": guest,
-                "product": format!("{} {}", emoji_of(report.item_id), report.item_label).trim().to_string(),
-                "status": format!("i18n:{}", status::status_label_key(&report.status)),
+                "product": format!("{} {}", emoji_of(report.product()), report.item.item_label).trim().to_string(),
+                "status": report.status.label_key(),
             })
         })
         .collect();
@@ -195,8 +195,8 @@ fn received_table(
 }
 
 /// « 12 oct. – 15 oct. », ou « — » pour une demande d'avant la colonne.
-fn stay_dates(report: &ConsumableReport, locale: &str) -> String {
-    match (report.stay_check_in, report.stay_check_out) {
+fn stay_dates(report: &Entry, locale: &str) -> String {
+    match (report.check_in, report.check_out) {
         (Some(from), Some(to)) => {
             format!("{} – {}", short_date(from, locale), short_date(to, locale))
         }

@@ -1,15 +1,17 @@
-//! `submit` — la demande du voyageur.
+//! Ce que le module ajoute aux demandes générées par `#[record]` : un envoi demande plusieurs
+//! produits d'un coup, une demande n'est une tâche que tant qu'elle est à traiter, et les e-mails.
 
+use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::prelude::*;
+use portaki_sdk::resource::record::item_from;
+use portaki_sdk::resource::RecordHooks;
+use serde_json::{json, Value};
 use uuid::Uuid;
 
-use super::stay::require_guest_stay_id;
-use crate::email::to_host::notify_host_submitted;
-use crate::{email_text, level, storage, Products};
+use crate::{email, Entry, Products, Request, Restocks, Status};
 
-/// Arguments for guest `submit`.
+/// Ce que le formulaire du voyageur envoie.
 #[portaki_sdk::wire]
-#[portaki_sdk::params]
 pub struct SubmitArgs {
     /// Les produits signalés d'un coup (§2.5 : grille de tuiles, choix multiple).
     #[serde(default)]
@@ -36,87 +38,67 @@ impl SubmitArgs {
     }
 }
 
-#[portaki_sdk::command(
-    name = "submit",
-    guest,
-    example(
-        label = "Plus de papier toilette",
-        input = r#"{"itemIds":["3f2b8c1e-7a4d-4e9b-9c61-2d5e8f0a1b47"],"level":"missing","note":"Plus un rouleau dans la salle de bain"}"#
-    ),
-    example(
-        label = "Café presque fini",
-        input = r#"{"itemId":"3f2b8c1e-7a4d-4e9b-9c61-2d5e8f0a1b47","level":"low"}"#
-    )
-)]
-pub fn submit(ctx: Context, args: SubmitArgs) -> Result<()> {
-    let stay_id = require_guest_stay_id(&ctx)?;
-    let level = level::parse_level(&args.level)?;
-    // Demandes fermées, ou plafond du séjour atteint : un écran resté ouvert ne passe pas non plus.
-    let products = Products::load(&ctx)?;
-    let settings = products.meta();
-    if !settings.enabled() {
-        return Err(PortakiError::Host("requests_disabled".to_string()));
-    }
-    if storage::list_by_stay(stay_id)?.len() >= settings.max() as usize {
-        return Err(PortakiError::Host("requests_limit".to_string()));
-    }
-    // Les produits d'abord : `note` consomme `args`, et la liste se lit encore par référence.
-    let selected = args.selected_items();
-    let asked = storage::Asked {
-        level,
-        note: normalize_optional(args.note),
-    };
+impl RecordHooks for Restocks {
+    type Item = Request;
+    type Status = Status;
 
-    if selected.is_empty() {
-        return Err(PortakiError::Host("item_not_found".to_string()));
-    }
-    let guest = storage::GuestSnapshot {
-        name: ctx
-            .guest
-            .as_ref()
-            .and_then(|guest| guest.display_name.as_deref())
-            .map(str::trim)
-            .unwrap_or_default()
-            .to_string(),
-        check_in: ctx.stay.as_ref().and_then(|stay| stay.checkin_at),
-        check_out: ctx.stay.as_ref().and_then(|stay| stay.checkout_at),
-    };
-
-    // Un signalement par produit, et non un pour le lot : l'hôte coche « Papier toilette » sans
-    // clore « Café », et chaque e-mail garde le lien vers son propre signalement.
-    for item_id in selected {
-        let item = products
-            .rows()
-            .iter()
-            .find(|product| product.uuid() == item_id)
-            .ok_or_else(|| PortakiError::Host("item_not_found".to_string()))?;
-        let item_label = item.label.for_ctx(&ctx).trim().to_string();
-        if item_label.trim().is_empty() {
-            return Err(PortakiError::Host("item_label_empty".to_string()));
+    /// Une demande par produit, et non une pour le lot : l'hôte coche « Papier toilette » sans
+    /// clore « Café ». Demandes fermées, ou plafond du séjour atteint (compté une fois, avant le
+    /// lot) : un écran resté ouvert ne passe pas non plus.
+    fn deposits(ctx: &Context, args: &Value) -> Result<Vec<Request>> {
+        let args: SubmitArgs = serde_json::from_value(args.clone())?;
+        let products = Products::load(ctx)?;
+        let settings = products.meta();
+        if !settings.enabled() {
+            return Err(PortakiError::Host("requests_disabled".into()));
         }
-
-        let report = storage::create_report(stay_id, item_id, item_label, &asked, &guest)?;
-
-        // ponytail: sent at once, day or night — the platform has no account quiet hours to
-        // group a 2 am request into a wake-up notification (spec §9 n° 6).
-        if !settings.notifies_by_email() {
-            continue;
+        let stay = ctx.guest.as_ref().map(|g| g.session_id).unwrap_or_default();
+        if Restocks::for_stay(ctx, stay)?.len() >= settings.max() as usize {
+            return Err(PortakiError::Host("requests_limit".into()));
         }
-        // The report is saved: a refused email is logged, it does not fail the guest's submit.
-        if let Err(error) = notify_host_submitted(ctx.property_id, &report) {
-            email_text::log_send_failure("consumables_host_email_failed", &error);
+        let selected = args.selected_items();
+        if selected.is_empty() {
+            return Err(PortakiError::Host("item_not_found".into()));
         }
+        let note = args.note.as_deref().map(str::trim).unwrap_or_default();
+        selected
+            .into_iter()
+            .map(|id| {
+                let product = products
+                    .rows()
+                    .iter()
+                    .find(|p| p.uuid() == id)
+                    .ok_or_else(|| PortakiError::Host("item_not_found".into()))?;
+                let label = product.label.for_ctx(ctx).trim();
+                if label.is_empty() {
+                    return Err(PortakiError::Host("item_label_empty".into()));
+                }
+                let row = json!({ "item_id": id, "item_label": label, "level": args.level.trim(), "note": note });
+                item_from(&row, &ctx.lang())
+            })
+            .collect()
     }
-    Ok(())
-}
 
-fn normalize_optional(value: Option<String>) -> Option<String> {
-    value.and_then(|raw| {
-        let trimmed = raw.trim().to_string();
-        if trimmed.is_empty() {
-            None
-        } else {
-            Some(trimmed)
+    /// « Prévu » n'est plus une tâche : l'hôte l'a vue. Demandes fermées : pas de tâche (§3).
+    fn needs_action(ctx: &Context, entry: &Entry) -> bool {
+        entry.status == Status::Open && Products::load(ctx).is_ok_and(|p| p.meta().enabled())
+    }
+
+    /// « Café demandé », puis le voyageur.
+    fn task_context(entry: &Entry) -> I18nText {
+        I18nText::from(entry.guest_name.as_str())
+    }
+
+    // ponytail: sent at once, day or night — the platform has no account quiet hours to group a
+    // 2 am request into a wake-up notification (spec §9 n° 6).
+    fn on_created(ctx: &Context, entry: &Entry) -> Result<()> {
+        if !Products::load(ctx)?.meta().notifies_by_email() {
+            return Ok(());
         }
-    })
+        email::to_host::to_host(ctx.property_id, entry)
+    }
+
+    fn on_note(_: &Context, entry: &Entry, text: &str) -> Result<()> {
+        email::to_guest::to_guest(entry, text)
+    }
 }

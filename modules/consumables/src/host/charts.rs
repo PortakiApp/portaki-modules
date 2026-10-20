@@ -7,8 +7,8 @@ use portaki_sdk::sdui::{ChartKind, ChartPoint, FeedStatus};
 use uuid::Uuid;
 
 use super::stats::{days_between_restocks, label, stock, Stock};
-use crate::entities::ConsumableReport;
-use crate::{status, Product};
+use crate::domain::request::Asked;
+use crate::{Entry, Product};
 
 pub(super) fn panel(key: &str, body: Component) -> Component {
     Card::new()
@@ -37,7 +37,7 @@ pub(super) fn nothing(description: &str) -> Component {
 /// Share of the period's departures where a guest reported the item missing or low.
 pub(super) fn per_stay_chart(
     items: &[Product],
-    period: &[&ConsumableReport],
+    period: &[&Entry],
     stays: &[Uuid],
     locale: &str,
 ) -> Component {
@@ -46,8 +46,8 @@ pub(super) fn per_stay_chart(
         .map(|item| {
             let mut short: Vec<Uuid> = period
                 .iter()
-                .filter(|r| r.item_id == item.uuid() && stays.contains(&r.stay_id))
-                .map(|r| r.stay_id)
+                .filter(|r| r.product() == item.uuid())
+                .filter_map(|r| r.stay_id.filter(|s| stays.contains(s)))
                 .collect();
             short.sort();
             short.dedup();
@@ -73,15 +73,11 @@ pub(super) fn per_stay_chart(
 }
 
 /// Reports per item over the period, most reported first — when no stay came with the request.
-pub(super) fn reports_chart(
-    items: &[Product],
-    period: &[&ConsumableReport],
-    locale: &str,
-) -> Component {
+pub(super) fn reports_chart(items: &[Product], period: &[&Entry], locale: &str) -> Component {
     let mut per_item: Vec<(String, usize)> = items
         .iter()
         .map(|item| {
-            let n = period.iter().filter(|r| r.item_id == item.uuid()).count();
+            let n = period.iter().filter(|r| r.product() == item.uuid()).count();
             (label(item, locale), n)
         })
         .filter(|(_, n)| *n > 0)
@@ -106,11 +102,7 @@ pub(super) fn reports_chart(
 }
 
 /// « Quand il faut racheter » : the soonest to run out first.
-pub(super) fn restock_chart(
-    items: &[Product],
-    reports: &[ConsumableReport],
-    locale: &str,
-) -> Component {
+pub(super) fn restock_chart(items: &[Product], reports: &[Entry], locale: &str) -> Component {
     let mut delays: Vec<(String, i64)> = items
         .iter()
         .filter_map(|item| Some((label(item, locale), days_between_restocks(item, reports)?)))
@@ -136,7 +128,7 @@ pub(super) fn restock_chart(
 
 pub(super) fn stock_row(
     item: &Product,
-    reports: &[ConsumableReport],
+    reports: &[Entry],
     locale: &str,
     fr: bool,
     action: Action,
@@ -146,9 +138,9 @@ pub(super) fn stock_row(
         Stock::Low => ("i18n:stats.stock.low", Tone::Warning),
         Stock::Ok => ("i18n:stats.stock.ok", Tone::Success),
     };
-    let mine = || reports.iter().filter(|r| r.item_id == item.uuid());
-    let open = mine().find(|r| status::is_pending(&r.status));
-    let date = match (open, mine().filter_map(|r| r.restocked_at).max()) {
+    let mine = || reports.iter().filter(|r| r.product() == item.uuid());
+    let open = mine().find(|r| r.pending());
+    let date = match (open, mine().filter_map(|r| r.restocked_at()).max()) {
         (Some(report), _) => t!(
             "stats.row.reportedAt",
             date = short_date(report.created_at, fr)
@@ -163,7 +155,7 @@ pub(super) fn stock_row(
         .dotTone(tone)
         .status(FeedStatus::new(label_key, tone))
         .action(action);
-    if let Some(note) = open.and_then(|r| r.note.clone()) {
+    if let Some(note) = open.and_then(|r| r.note().map(str::to_string)) {
         row = row.meta(note);
     }
     row.into()

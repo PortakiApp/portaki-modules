@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use portaki_sdk::host::time;
 
-use crate::storage;
+use crate::{Restocks, Status};
 
 use super::report_ui::build_report_block;
 
@@ -40,7 +40,7 @@ pub fn render_host_stay(ctx: HostContext) -> Surface {
             .variant(TextVariant::Caption)
             .into()],
         Some(stay_id) => {
-            let reports = storage::list_by_stay(stay_id).unwrap_or_default();
+            let reports = Restocks::for_stay(&ctx, stay_id).unwrap_or_default();
             if reports.is_empty() {
                 vec![empty_stay_card()]
             } else {
@@ -52,7 +52,7 @@ pub fn render_host_stay(ctx: HostContext) -> Surface {
                 // « 2 demandes · 1 à traiter », puis le lien vers toutes les demandes du logement.
                 let open = reports
                     .iter()
-                    .filter(|report| report.status == crate::status::DEFAULT)
+                    .filter(|report| report.status == Status::Open)
                     .count();
                 let summary =
                     t!("host.stay.summary", count = reports.len(), open = open).unwrap_or_default();
