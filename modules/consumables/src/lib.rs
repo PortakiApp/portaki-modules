@@ -1,40 +1,35 @@
-//! Portaki consumables module — host catalog + guest shortage reports.
+//! Consommables : le catalogue des produits de base que l'hôte fournit, et les demandes de
+//! réassort que le voyageur envoie depuis le livret.
+//!
+//! Le catalogue et les réglages des demandes sont une collection déclarée : le SDK les stocke,
+//! les fusionne, les importe, les contrôle et dessine leur éditeur. Les demandes restent du code
+//! du module (entité, envoi, statuts, tâches, e-mails, statistiques).
 
-mod amenities;
 mod commands;
-mod config;
-mod email_i18n;
-mod email_send;
-mod email_text;
-mod entities;
+mod domain;
+mod email;
 mod guest;
 mod host;
-mod ids;
-mod labels;
-mod level;
-mod queries;
-mod status;
-mod storage;
-mod suggest;
-mod tasks;
 
-pub use amenities::amenities_list;
-pub use commands::{
-    replace_items, seed_defaults, submit, update_config, update_status, ConsumableItemInput,
-    ReplaceItemsArgs, SubmitArgs, UpdateConfigArgs, UpdateStatusArgs,
+use portaki_sdk::contracts::i18n::I18nText;
+
+use self::email as email_i18n;
+use domain::{entities, ids, level, status, storage, suggest};
+use email::{send as email_send, text as email_text};
+
+pub use commands::amenities::amenities_list;
+pub use commands::queries::{
+    list_for_stay, list_open_count, list_recent, ConsumableReportRow, ListForStayArgs, OpenCountDto,
 };
-pub use email_text::GUEST_TEXT_EMAIL_MAX_CHARS;
-pub use entities::{ConsumableItem, ConsumableReport};
+pub use commands::tasks::{task_complete, task_toggle, timeline_tasks};
+pub use commands::{seed_defaults, submit, update_status, SubmitArgs, UpdateStatusArgs};
+pub use domain::entities::ConsumableReport;
+pub use domain::level::DEFAULT as LEVEL_DEFAULT;
+pub use domain::status::DEFAULT as STATUS_DEFAULT;
+pub use domain::storage::reset_test_store;
+pub use email::text::GUEST_TEXT_EMAIL_MAX_CHARS;
 pub use guest::{render_guest_form, render_home_card};
 pub use host::{render_host_main, render_host_stats, render_host_stay, stats_summary};
-pub use level::DEFAULT as LEVEL_DEFAULT;
-pub use queries::{
-    list_for_stay, list_items, list_open_count, list_recent, publish_readiness, ConsumableItemDto,
-    ConsumableReportRow, ListForStayArgs, OpenCountDto,
-};
-pub use status::DEFAULT as STATUS_DEFAULT;
-pub use storage::reset_test_store;
-pub use tasks::{task_complete, task_toggle, timeline_tasks};
 
 portaki_sdk::portaki_module!(
     id = "consumables",
@@ -53,3 +48,52 @@ pub const STORAGE: &str = "core.storage";
 
 #[portaki_sdk::capability(provided, id = "amenities.provide")]
 pub const AMENITIES: &str = "amenities.provide";
+
+/// « Prévenir par » (§2.2) : pas de SMS sur la plateforme.
+#[portaki_sdk::choice(label = "host.notify")]
+pub enum Channel {
+    Email,
+    App,
+}
+
+/// Un produit du catalogue (§2.1).
+#[portaki_sdk::item(key = "label")]
+pub struct Product {
+    #[field(required, max_chars = 40, label = "host.product.name")]
+    pub label: I18nText,
+    #[field(label = "host.product.emoji")]
+    pub emoji: String,
+    #[field(max_chars = 80, label = "host.product.location")]
+    pub location: I18nText,
+}
+
+/// Les demandes (§2.2) : ouvertes ou non, et, ouvertes, le délai annoncé, les canaux et le plafond
+/// par séjour. Rien d'enregistré : ouvertes, par e-mail et notification, 5 par séjour.
+#[portaki_sdk::item(meta)]
+pub struct Requests {
+    #[field(default = true, label = "host.requests.enabled")]
+    pub requests_enabled: Option<bool>,
+    #[field(
+        max_chars = 40,
+        visible_when = "requests_enabled=true",
+        label = "host.main.restockDelay"
+    )]
+    pub restock_delay: I18nText,
+    #[field(
+        kind = "choices",
+        default = "[\"email\",\"app\"]",
+        visible_when = "requests_enabled=true",
+        label = "host.notify"
+    )]
+    pub notify: Option<Vec<Channel>>,
+    #[field(
+        between(1, 20),
+        default = 5,
+        visible_when = "requests_enabled=true",
+        label = "host.requests.max"
+    )]
+    pub max_requests: Option<u32>,
+}
+
+#[portaki_sdk::collection(name = "products", item = Product, meta = Requests, max = 30, check = domain::problems, import)]
+pub struct Products;

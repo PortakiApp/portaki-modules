@@ -1,37 +1,11 @@
-//! Module queries — catalog, stay reports, open count.
+//! Les lectures des demandes : d'un séjour, les dernières, le compte de celles ouvertes.
 
 use chrono::{DateTime, Utc};
-use portaki_sdk::bundle_text;
-use portaki_sdk::contracts::publish::{PublishCheck, PublishLevel, PublishReadiness};
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
-use crate::config::{field_label, Stored};
-use crate::entities::{ConsumableItem, ConsumableReport};
-use crate::storage;
-
-/// Public item DTO returned by `listItems`.
-#[portaki_sdk::wire]
-#[derive(PartialEq, Eq)]
-pub struct ConsumableItemDto {
-    pub id: Uuid,
-    pub label_fr: String,
-    pub label_en: String,
-    pub sort_order: i32,
-    pub low_threshold: i32,
-}
-
-impl From<ConsumableItem> for ConsumableItemDto {
-    fn from(value: ConsumableItem) -> Self {
-        Self {
-            id: value.id,
-            label_fr: value.label_fr,
-            label_en: value.label_en,
-            sort_order: value.sort_order,
-            low_threshold: value.low_threshold,
-        }
-    }
-}
+use crate::entities::ConsumableReport;
+use crate::{storage, Products};
 
 /// Row returned by report list queries.
 #[portaki_sdk::wire]
@@ -64,14 +38,6 @@ impl From<ConsumableReport> for ConsumableReportRow {
             host_reply: row.host_reply,
         }
     }
-}
-
-#[portaki_sdk::query(name = "listItems", example(label = "Catalogue"))]
-pub fn list_items(_ctx: Context) -> Result<Vec<ConsumableItemDto>> {
-    Ok(storage::list_items()?
-        .into_iter()
-        .map(ConsumableItemDto::from)
-        .collect())
 }
 
 /// Optional host override — guest sessions ignore and use the guest stay id.
@@ -115,10 +81,10 @@ pub struct OpenCountDto {
 }
 
 #[portaki_sdk::query(name = "listOpenCount", example(label = "Signalements ouverts"))]
-pub fn list_open_count(_ctx: Context) -> Result<OpenCountDto> {
+pub fn list_open_count(ctx: Context) -> Result<OpenCountDto> {
     Ok(OpenCountDto {
         open_count: storage::count_open()? as u32,
-        catalog_count: storage::list_items()?.len() as u32,
+        catalog_count: Products::load(&ctx)?.len() as u32,
     })
 }
 
@@ -127,32 +93,4 @@ fn resolve_list_stay_id(ctx: &Context, stay_id: Option<Uuid>) -> Result<Uuid> {
         return Ok(guest.session_id);
     }
     stay_id.ok_or_else(|| PortakiError::Host("stay_id_required".to_string()))
-}
-
-/// Ce qui bloque la publication : les réglages en défaut, champ par champ (`config.<champ>`).
-///
-/// Un catalogue vide ne bloque pas (spec §9 n° 1) : le livret montre alors son état vide.
-#[portaki_sdk::query(name = "publishReadiness", example(label = "Prêt à publier ?"))]
-pub fn publish_readiness(_ctx: Context) -> Result<PublishReadiness> {
-    let items = storage::list_items()?;
-    let restock_delay = storage::restock_delay::read();
-    let settings = storage::settings::read();
-    let stored = Stored {
-        items: &items,
-        restock_delay: restock_delay.as_ref(),
-        settings: &settings,
-    };
-    Ok(PublishReadiness {
-        items: stored
-            .problems()
-            .into_iter()
-            .map(|(field, error)| PublishCheck {
-                label: bundle_text!(field_label(&field)),
-                id: format!("config.{field}"),
-                level: PublishLevel::Required,
-                ok: false,
-                hint: error,
-            })
-            .collect(),
-    })
 }
