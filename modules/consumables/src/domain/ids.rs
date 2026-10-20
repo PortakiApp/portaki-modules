@@ -1,6 +1,6 @@
 //! Event types and catalog id for this module.
 
-use portaki_sdk::prelude::*;
+use portaki_sdk::ModuleId;
 
 /// Catalog module id (`consumables`).
 pub fn module_id() -> ModuleId {

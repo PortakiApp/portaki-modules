@@ -6,6 +6,7 @@
 //! du module (entité, envoi, statuts, tâches, e-mails, statistiques).
 
 mod commands;
+mod config;
 mod domain;
 mod email;
 mod guest;
@@ -14,22 +15,23 @@ mod host;
 use portaki_sdk::contracts::i18n::I18nText;
 
 use self::email as email_i18n;
-use domain::{entities, ids, level, status, storage, suggest};
-use email::{send as email_send, text as email_text};
+use commands::reports as storage;
+use domain::{entities, ids, level, status, suggest};
+use email::text as email_text;
 
-pub use commands::amenities::amenities_list;
-pub use commands::queries::{
-    list_for_stay, list_open_count, list_recent, ConsumableReportRow, ListForStayArgs, OpenCountDto,
+pub use commands::reports::reset_test_store;
+pub use commands::{
+    amenities_list, list_for_stay, list_open_count, list_recent, ConsumableReportRow,
+    ListForStayArgs, OpenCountDto,
 };
-pub use commands::tasks::{task_complete, task_toggle, timeline_tasks};
 pub use commands::{seed_defaults, submit, update_status, SubmitArgs, UpdateStatusArgs};
+pub use commands::{stats_summary, task_complete, task_toggle, timeline_tasks};
 pub use domain::entities::ConsumableReport;
 pub use domain::level::DEFAULT as LEVEL_DEFAULT;
 pub use domain::status::DEFAULT as STATUS_DEFAULT;
-pub use domain::storage::reset_test_store;
 pub use email::text::GUEST_TEXT_EMAIL_MAX_CHARS;
 pub use guest::{render_guest_form, render_home_card};
-pub use host::{render_host_main, render_host_stats, render_host_stay, stats_summary};
+pub use host::{render_host_main, render_host_stats, render_host_stay};
 
 portaki_sdk::portaki_module!(
     id = "consumables",
@@ -95,5 +97,5 @@ pub struct Requests {
     pub max_requests: Option<u32>,
 }
 
-#[portaki_sdk::collection(name = "products", item = Product, meta = Requests, max = 30, check = domain::problems, import)]
+#[portaki_sdk::collection(name = "products", item = Product, meta = Requests, max = 30, check = config::problems, import)]
 pub struct Products;

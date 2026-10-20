@@ -1,6 +1,6 @@
 //! Report level wire values (ChoiceList / storage).
 
-use portaki_sdk::prelude::*;
+use portaki_sdk::{PortakiError, Result};
 
 /// Allowed level values on the wire.
 pub const WIRE_VALUES: &[&str] = &["missing", "low"];
