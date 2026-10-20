@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.11.0](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.10.4...checklist-v1.11.0) (2026-10-20)
+
+
+### Features
+
+* **checklist:** lists as declared collection ([3612e74](https://github.com/PortakiApp/portaki-modules/commit/3612e7467ef2c184e98fc1cdf8242dd050e937c5))
+* **checklist:** take the earlier lists over ([e3f6bbe](https://github.com/PortakiApp/portaki-modules/commit/e3f6bbe561de933508ccc4a89a1b7b165121b77f))
+* **consumables,checklist:** take earlier data over ([e3d540f](https://github.com/PortakiApp/portaki-modules/commit/e3d540fc21aaf1d4a0b08e79096a354b0ca575b1))
+
+
+### Bug Fixes
+
+* **checklist:** show cleaning times in property tz ([ce45c39](https://github.com/PortakiApp/portaki-modules/commit/ce45c39535e83cb19b3899bc3ab106f5f1cb0c03))
+
 ## [1.10.4](https://github.com/PortakiApp/portaki-modules/compare/checklist-v1.10.3...checklist-v1.10.4) (2026-10-20)
 
 

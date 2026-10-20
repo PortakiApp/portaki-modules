@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/sections-v1.7.7...sections-v1.8.0) (2026-10-20)
+
+
+### Features
+
+* open guest-facing collections to read ([8a15958](https://github.com/PortakiApp/portaki-modules/commit/8a1595860f17c5572567b461826997ed4f874f03))
+* **sections:** port to declared collection ([21a55f6](https://github.com/PortakiApp/portaki-modules/commit/21a55f6bdee0c8e0e6dd8d4396b6ee4326207503))
+* **sections:** take the earlier sections over ([992bb55](https://github.com/PortakiApp/portaki-modules/commit/992bb55e39a6711a37a2e18bd2f536c63d6acf23))
+
 ## [1.7.7](https://github.com/PortakiApp/portaki-modules/compare/sections-v1.7.6...sections-v1.7.7) (2026-10-19)
 
 

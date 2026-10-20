@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/PortakiApp/portaki-modules/compare/events-v1.11.4...events-v1.12.0) (2026-10-20)
+
+
+### Features
+
+* **config:** visible_when sur les champs masqués ([f01856d](https://github.com/PortakiApp/portaki-modules/commit/f01856d2aab453d34c20bc0bc19677a9326adf18))
+
 ## [1.11.4](https://github.com/PortakiApp/portaki-modules/compare/events-v1.11.3...events-v1.11.4) (2026-10-20)
 
 

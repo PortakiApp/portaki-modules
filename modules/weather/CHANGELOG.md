@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.7.10...weather-v1.8.0) (2026-10-20)
+
+
+### Features
+
+* **config:** visible_when sur les champs masqués ([f01856d](https://github.com/PortakiApp/portaki-modules/commit/f01856d2aab453d34c20bc0bc19677a9326adf18))
+
 ## [1.7.10](https://github.com/PortakiApp/portaki-modules/compare/weather-v1.7.9...weather-v1.7.10) (2026-10-20)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.9.11...emergency-contacts-v1.10.0) (2026-10-20)
+
+
+### Features
+
+* **config:** visible_when sur les champs masqués ([f01856d](https://github.com/PortakiApp/portaki-modules/commit/f01856d2aab453d34c20bc0bc19677a9326adf18))
+
 ## [1.9.11](https://github.com/PortakiApp/portaki-modules/compare/emergency-contacts-v1.9.10...emergency-contacts-v1.9.11) (2026-10-20)
 
 

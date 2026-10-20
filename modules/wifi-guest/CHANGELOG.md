@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.10.11...wifi-guest-v1.11.0) (2026-10-20)
+
+
+### Features
+
+* **config:** visible_when sur les champs masqués ([f01856d](https://github.com/PortakiApp/portaki-modules/commit/f01856d2aab453d34c20bc0bc19677a9326adf18))
+
 ## [1.10.11](https://github.com/PortakiApp/portaki-modules/compare/wifi-guest-v1.10.10...wifi-guest-v1.10.11) (2026-10-20)
 
 

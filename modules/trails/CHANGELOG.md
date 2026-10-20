@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.9.9...trails-v0.10.0) (2026-10-20)
+
+
+### Features
+
+* **config:** visible_when sur les champs masqués ([f01856d](https://github.com/PortakiApp/portaki-modules/commit/f01856d2aab453d34c20bc0bc19677a9326adf18))
+
 ## [0.9.9](https://github.com/PortakiApp/portaki-modules/compare/trails-v0.9.8...trails-v0.9.9) (2026-10-20)
 
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.10.0](https://github.com/PortakiApp/portaki-modules/compare/rules-v1.9.8...rules-v1.10.0) (2026-10-20)
+
+
+### Features
+
+* **issue-report:** port to declared record ([4d6299c](https://github.com/PortakiApp/portaki-modules/commit/4d6299c716d5b5c0dc5762c62969bfa647530380))
+* open guest-facing collections to read ([8a15958](https://github.com/PortakiApp/portaki-modules/commit/8a1595860f17c5572567b461826997ed4f874f03))
+* **rules:** port to declared collection ([8defa22](https://github.com/PortakiApp/portaki-modules/commit/8defa228ff59af1462223eb15d3820f90ff83ee4))
+* **rules:** take the earlier rulebook over ([c128fc7](https://github.com/PortakiApp/portaki-modules/commit/c128fc730f8f538be6cc551a30aecd9ba3ebdb7e))
+
 ## [1.9.8](https://github.com/PortakiApp/portaki-modules/compare/rules-v1.9.7...rules-v1.9.8) (2026-10-20)
 
 

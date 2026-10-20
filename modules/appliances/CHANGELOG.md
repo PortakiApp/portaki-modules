@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.14.0](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.13.5...appliances-v1.14.0) (2026-10-20)
+
+
+### Features
+
+* **appliances:** port to declared collection ([8371da0](https://github.com/PortakiApp/portaki-modules/commit/8371da0328dee4c7efc29e53578b2c68ecd16d9d))
+* **appliances:** take the earlier guide over ([a4db565](https://github.com/PortakiApp/portaki-modules/commit/a4db56591c6deb252fca911a27d38bd13f104c84))
+* open guest-facing collections to read ([8a15958](https://github.com/PortakiApp/portaki-modules/commit/8a1595860f17c5572567b461826997ed4f874f03))
+
 ## [1.13.5](https://github.com/PortakiApp/portaki-modules/compare/appliances-v1.13.4...appliances-v1.13.5) (2026-10-20)
 
 

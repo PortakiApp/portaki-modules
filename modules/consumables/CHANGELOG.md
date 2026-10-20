@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.12.0](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.11.8...consumables-v2.12.0) (2026-10-20)
+
+
+### Features
+
+* **consumables,checklist:** take earlier data over ([e3d540f](https://github.com/PortakiApp/portaki-modules/commit/e3d540fc21aaf1d4a0b08e79096a354b0ca575b1))
+* **consumables:** catalog as declared collection ([2685675](https://github.com/PortakiApp/portaki-modules/commit/2685675302281aee6d52c8274bd66b06870b27ce))
+* **consumables:** take the earlier catalog over ([9caf4c2](https://github.com/PortakiApp/portaki-modules/commit/9caf4c2d179ca7ad034f9f035ff312c152d50248))
+* open guest-facing collections to read ([8a15958](https://github.com/PortakiApp/portaki-modules/commit/8a1595860f17c5572567b461826997ed4f874f03))
+
+
+### Bug Fixes
+
+* **issue-report:** declare the host-reply email again ([fe39d12](https://github.com/PortakiApp/portaki-modules/commit/fe39d124bcb4b375dd392c87e812c58743952ee5))
+
 ## [2.11.8](https://github.com/PortakiApp/portaki-modules/compare/consumables-v2.11.7...consumables-v2.11.8) (2026-10-20)
 
 

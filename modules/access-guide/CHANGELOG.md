@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.11.0](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.14...access-guide-v1.11.0) (2026-10-20)
+
+
+### Features
+
+* **config:** visible_when sur les champs masqués ([f01856d](https://github.com/PortakiApp/portaki-modules/commit/f01856d2aab453d34c20bc0bc19677a9326adf18))
+
+
+### Bug Fixes
+
+* **access-guide:** follow parking_type for code email ([eaa45a0](https://github.com/PortakiApp/portaki-modules/commit/eaa45a09e133e7d120147337ea5dd9f7f19fbf95))
+
 ## [1.10.14](https://github.com/PortakiApp/portaki-modules/compare/access-guide-v1.10.13...access-guide-v1.10.14) (2026-10-20)
 
 
