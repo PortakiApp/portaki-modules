@@ -93,7 +93,7 @@ pub fn list_completions(stay_id: Option<Uuid>) -> Result<Vec<ChecklistCompletion
 
 /// Marks an item complete for the stay (idempotent).
 pub fn complete_item(stay_id: Uuid, item_id: Uuid) -> Result<()> {
-    if super::find_step(item_id)?.is_none() {
+    if crate::domain::find_step(item_id)?.is_none() {
         return Err(PortakiError::Host("item_not_found".to_string()));
     }
     if list_completions(Some(stay_id))?

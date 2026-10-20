@@ -4,13 +4,13 @@
 use super::*;
 
 /// `(item, how many stays or tasks ticked it)`, least ticked last.
-pub(super) fn item_rates(items: &[Step], ticked: impl Fn(&Step) -> usize) -> Vec<(&Step, usize)> {
+pub(crate) fn item_rates(items: &[Step], ticked: impl Fn(&Step) -> usize) -> Vec<(&Step, usize)> {
     let mut rates: Vec<(&Step, usize)> = items.iter().map(|item| (item, ticked(item))).collect();
     rates.sort_by_key(|(_, n)| std::cmp::Reverse(*n));
     rates
 }
 
-pub(super) fn rate_chart(rates: &[(&Step, usize)], of: usize, swatch: Swatch) -> Component {
+pub(crate) fn rate_chart(rates: &[(&Step, usize)], of: usize, swatch: Swatch) -> Component {
     Chart::new()
         .kind(ChartKind::HorizontalBars)
         .swatch(swatch)
@@ -28,7 +28,7 @@ pub(super) fn rate_chart(rates: &[(&Step, usize)], of: usize, swatch: Swatch) ->
 }
 
 /// « La plus oubliée » — only once something was missed.
-pub(super) fn most_forgotten(
+pub(crate) fn most_forgotten(
     rates: &[(&Step, usize)],
     of: usize,
     fr: bool,
@@ -53,7 +53,7 @@ pub(super) fn most_forgotten(
     )
 }
 
-pub(super) fn panels(left: (&str, Component), right: (&str, Component)) -> Component {
+pub(crate) fn panels(left: (&str, Component), right: (&str, Component)) -> Component {
     let card = |(key, body): (&str, Component)| -> Component {
         Card::new()
             .title(format!("i18n:{key}.title"))
@@ -68,7 +68,7 @@ pub(super) fn panels(left: (&str, Component), right: (&str, Component)) -> Compo
         .into()
 }
 
-pub(super) fn feed_card(key: &str, rows: Vec<Component>) -> Component {
+pub(crate) fn feed_card(key: &str, rows: Vec<Component>) -> Component {
     Card::new()
         .title(format!("i18n:{key}.title"))
         .subtitle(format!("i18n:{key}.subtitle"))
@@ -76,7 +76,7 @@ pub(super) fn feed_card(key: &str, rows: Vec<Component>) -> Component {
         .into()
 }
 
-pub(super) fn empty(description: &str, icon: IconName) -> Component {
+pub(crate) fn empty(description: &str, icon: IconName) -> Component {
     EmptyState::new()
         .title("i18n:stats.empty")
         .description(description)
@@ -84,13 +84,13 @@ pub(super) fn empty(description: &str, icon: IconName) -> Component {
         .into()
 }
 
-pub(super) fn average(durations: &[Duration]) -> Option<Duration> {
+pub(crate) fn average(durations: &[Duration]) -> Option<Duration> {
     let n = i32::try_from(durations.len()).ok().filter(|n| *n > 0)?;
     Some(durations.iter().copied().sum::<Duration>() / n)
 }
 
 /// « 40 min », « 2 h 10 ».
-pub(super) fn format_duration(duration: Duration) -> String {
+pub(crate) fn format_duration(duration: Duration) -> String {
     let minutes = duration.num_minutes().max(0);
     match (minutes / 60, minutes % 60) {
         (0, m) => format!("{m} min"),
@@ -99,7 +99,7 @@ pub(super) fn format_duration(duration: Duration) -> String {
     }
 }
 
-pub(super) fn decimal(value: f64, fr: bool) -> String {
+pub(crate) fn decimal(value: f64, fr: bool) -> String {
     let text = format!("{value:.1}");
     if fr {
         text.replace('.', ",")
@@ -108,11 +108,11 @@ pub(super) fn decimal(value: f64, fr: bool) -> String {
     }
 }
 
-pub(super) fn format_time(at: DateTime<Utc>) -> String {
+pub(crate) fn format_time(at: DateTime<Utc>) -> String {
     at.format("%H:%M").to_string()
 }
 
-pub(super) fn short_date(at: DateTime<Utc>, fr: bool) -> String {
+pub(crate) fn short_date(at: DateTime<Utc>, fr: bool) -> String {
     use chrono::Datelike;
     const FR: [&str; 12] = [
         "janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.",

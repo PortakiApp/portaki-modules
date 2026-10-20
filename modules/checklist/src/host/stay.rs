@@ -7,7 +7,7 @@ use portaki_sdk::sdui::primitives::{Card, Page, Text};
 use portaki_sdk::sdui::surface::Surface;
 use uuid::Uuid;
 
-use crate::guest::depart::offset_for_iana;
+use crate::domain::timezone::offset_for_iana;
 use crate::storage;
 
 #[portaki_sdk::surface(
@@ -39,7 +39,7 @@ pub fn render_host_stay(ctx: HostContext) -> Result<Surface> {
     for list in crate::domain::all_lists()? {
         let items = list.written_steps();
         let ticks: Vec<DateTime<Utc>> = if !list.is_guest() {
-            storage::task_states(Some(&crate::tasks::task_id(list.uuid(), stay_id)))?
+            storage::task_states(Some(&crate::commands::task::task_id(list.uuid(), stay_id)))?
                 .into_iter()
                 .filter(|state| state.done && items.iter().any(|item| item.uuid() == state.item_id))
                 .filter_map(|state| state.done_at)
