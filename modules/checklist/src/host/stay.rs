@@ -8,7 +8,6 @@ use portaki_sdk::sdui::surface::Surface;
 use uuid::Uuid;
 
 use crate::guest::depart::offset_for_iana;
-use crate::lists;
 use crate::storage;
 
 #[portaki_sdk::surface(
@@ -29,33 +28,35 @@ pub fn render_host_stay(ctx: HostContext) -> Result<Surface> {
         card = card.child(body("i18n:host.stay.missingStay".to_string()));
         return Ok(Surface::new(Page::new().child(card)).with_id(STAY));
     };
-    let fr = crate::labels::lang_code(&ctx.locale) == "fr";
     let completions = storage::list_completions(Some(stay_id))?;
-    let booklet: Vec<Uuid> = storage::booklet_lists()?.iter().map(|l| l.id).collect();
+    let booklet: Vec<String> = crate::domain::booklet_lists()?
+        .into_iter()
+        .map(|l| l.id)
+        .collect();
     let mut lines = Vec::new();
     // Une ligne par liste : celles du livret d'après ce que le voyageur a coché, celles de
     // l'équipe d'après leur tâche sur ce séjour — quand elle a commencé.
-    for list in storage::list_checklists()? {
-        let items = storage::items_of(list.id)?;
-        let ticks: Vec<DateTime<Utc>> = if list.audience == lists::HOST {
-            storage::task_states(Some(&crate::tasks::task_id(list.id, stay_id)))?
+    for list in crate::domain::all_lists()? {
+        let items = list.written_steps();
+        let ticks: Vec<DateTime<Utc>> = if !list.is_guest() {
+            storage::task_states(Some(&crate::tasks::task_id(list.uuid(), stay_id)))?
                 .into_iter()
-                .filter(|state| state.done && items.iter().any(|item| item.id == state.item_id))
+                .filter(|state| state.done && items.iter().any(|item| item.uuid() == state.item_id))
                 .filter_map(|state| state.done_at)
                 .collect()
         } else if booklet.contains(&list.id) {
             completions
                 .iter()
-                .filter(|row| items.iter().any(|item| item.id == row.item_id))
+                .filter(|row| items.iter().any(|item| item.uuid() == row.item_id))
                 .map(|row| row.completed_at)
                 .collect()
         } else {
             continue;
         };
-        if items.is_empty() || (list.audience == lists::HOST && ticks.is_empty()) {
+        if items.is_empty() || (!list.is_guest() && ticks.is_empty()) {
             continue;
         }
-        let name = if fr { &list.name_fr } else { &list.name_en };
+        let name = list.name.get(&ctx.locale);
         lines.push(format!(
             "{name} · {}",
             line(items.len(), &ticks, &ctx.property.timezone)

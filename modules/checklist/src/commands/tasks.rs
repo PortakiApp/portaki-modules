@@ -4,7 +4,6 @@
 //! stored (`task_item_state`). Its id is `<checklistId>:<stayId>`.
 
 use chrono::{DateTime, Duration, NaiveTime, TimeZone, Utc};
-use portaki_sdk::bundle_text;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::contracts::timeline::{
     self, TaskCompleteArgs, TaskToggleArgs, TaskUpdated, TimelineStay, TimelineTask,
@@ -16,11 +15,9 @@ use portaki_sdk::prelude::*;
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::entities::{Checklist, ChecklistItem, TaskItemState};
+use crate::entities::TaskItemState;
 use crate::guest::depart::offset_for_iana;
-use crate::labels;
-use crate::lists;
-use crate::storage;
+use crate::{lists, storage, List, Step};
 
 #[portaki_sdk::query(
     name = "timelineTasks",
@@ -30,21 +27,17 @@ use crate::storage;
     )
 )]
 pub fn timeline_tasks(ctx: Context, args: TimelineTasksArgs) -> Result<TimelineTasks> {
-    let lists: Vec<Checklist> = storage::list_checklists()?
+    let lists: Vec<List> = crate::domain::all_lists()?
         .into_iter()
-        .filter(|list| list.audience == lists::HOST)
+        .filter(|list| !list.is_guest())
         .collect();
     if lists.is_empty() {
         return Ok(TimelineTasks::default());
     }
-    let items = storage::list_items()?;
     let states = storage::task_states(None)?;
     let mut tasks = Vec::new();
     for list in &lists {
-        let list_items: Vec<&ChecklistItem> = items
-            .iter()
-            .filter(|item| item.checklist_id == list.id)
-            .collect();
+        let list_items = list.written_steps();
         if list_items.is_empty() {
             continue;
         }
@@ -75,15 +68,15 @@ pub struct TaskPlan {
 }
 
 /// One plan per stay the list's trigger applies to.
-pub fn plan_tasks(list: &Checklist, stays: &[TimelineStay], timezone: &str) -> Vec<TaskPlan> {
+pub fn plan_tasks(list: &List, stays: &[TimelineStay], timezone: &str) -> Vec<TaskPlan> {
     let live: Vec<&TimelineStay> = stays.iter().filter(|stay| !is_cancelled(stay)).collect();
     let mut plans = Vec::new();
     for (index, stay) in live.iter().enumerate() {
         let next = live[index + 1..]
             .iter()
             .find(|next| next.check_in >= stay.check_out);
-        let arrival_trigger = list.trigger == lists::BEFORE_EACH_ARRIVAL;
-        if list.trigger == lists::ONLY_IF_NEXT_ARRIVAL && next.is_none() {
+        let arrival_trigger = list.trigger() == lists::BEFORE_EACH_ARRIVAL;
+        if list.trigger() == lists::ONLY_IF_NEXT_ARRIVAL && next.is_none() {
             continue;
         }
         // The arrival a deadline refers to: this stay's for an arrival task, else the next one.
@@ -92,18 +85,24 @@ pub fn plan_tasks(list: &Checklist, stays: &[TimelineStay], timezone: &str) -> V
         } else {
             next.map(|next| next.check_in)
         };
-        let due_at = match list.deadline.as_deref() {
+        let due_at = match list.deadline() {
             Some(lists::ARRIVAL | lists::NEXT_ARRIVAL) => arrival,
             Some(lists::NEXT_ARRIVAL_MINUS_2H) => arrival.map(|at| at - Duration::hours(2)),
             Some(lists::DEPARTURE_EVENING) => Some(evening_of(stay.check_out, timezone)),
             _ => None,
         };
         let context = match (arrival_trigger, next) {
-            (true, _) => bundle_text!("task.context.beforeArrival", &[("guest", &stay.guest_name)]),
-            (false, Some(next)) if list.trigger != lists::AT_DEPARTURE_BEFORE_CLEANING => {
-                bundle_text!("task.context.beforeArrival", &[("guest", &next.guest_name)])
+            (true, _) => portaki_sdk::bundle_text!(
+                "task.context.beforeArrival",
+                &[("guest", &stay.guest_name)]
+            ),
+            (false, Some(next)) if list.trigger() != lists::AT_DEPARTURE_BEFORE_CLEANING => {
+                portaki_sdk::bundle_text!(
+                    "task.context.beforeArrival",
+                    &[("guest", &next.guest_name)]
+                )
             }
-            _ => bundle_text!(
+            _ => portaki_sdk::bundle_text!(
                 "task.context.afterDeparture",
                 &[("guest", &stay.guest_name)],
             ),
@@ -141,32 +140,32 @@ fn evening_of(at: DateTime<Utc>, timezone: &str) -> DateTime<Utc> {
 
 fn build_task(
     property_id: Uuid,
-    list: &Checklist,
-    items: &[&ChecklistItem],
+    list: &List,
+    items: &[Step],
     states: &[TaskItemState],
     plan: TaskPlan,
 ) -> TimelineTask {
-    let task_id = task_id(list.id, plan.stay_id);
+    let task_id = task_id(list.uuid(), plan.stay_id);
     let mut task = timeline::task(
         task_id.clone(),
         plan.at,
         property_id,
-        I18nText::new(list.name_fr.clone(), list.name_en.clone()),
+        list.name.clone(),
         plan.context,
     )
     .stay(plan.stay_id)
     .items(
         items
             .iter()
-            .map(|item| task_item(item, state_of(states, &task_id, item.id)))
+            .map(|item| task_item(list, item, state_of(states, &task_id, item.uuid())))
             .collect(),
     );
     if let Some(due_at) = plan.due_at {
         task = task.due_at(due_at);
     }
-    if let Some(name) = list.assignee_name.as_deref() {
-        let role = list.assignee_role.clone().unwrap_or_default();
-        task = task.assignee(name, I18nText::new(role.clone(), role));
+    if let (Some(name), role) = list.assignee() {
+        let role = role.unwrap_or_default();
+        task = task.assignee(&name, I18nText::new(role.clone(), role));
     }
     task
 }
@@ -181,9 +180,9 @@ fn state_of<'a>(
         .find(|state| state.task_id == task_id && state.item_id == item_id)
 }
 
-fn task_item(item: &ChecklistItem, state: Option<&TaskItemState>) -> TimelineTaskItem {
-    let mut out = TimelineTaskItem::new(item.id.to_string(), labels::i18n_label(item));
-    out.photo_required = item.photo_required;
+fn task_item(list: &List, item: &Step, state: Option<&TaskItemState>) -> TimelineTaskItem {
+    let mut out = TimelineTaskItem::new(item.id.clone(), item.label.clone());
+    out.photo_required = item.needs_photo(list);
     if let Some(state) = state.filter(|state| state.done) {
         out.done = true;
         out.photo = state.photo.clone();
@@ -212,7 +211,7 @@ pub fn task_toggle(ctx: Context, args: TaskToggleArgs) -> Result<()> {
     let (list, items, stay_id) = load_task(&ctx, &args.task_id)?;
     let item = Uuid::parse_str(&args.item_id)
         .ok()
-        .and_then(|id| items.iter().find(|item| item.id == id))
+        .and_then(|id| items.iter().find(|item| item.uuid() == id))
         .ok_or_else(|| PortakiError::Host("item_not_found".to_string()))?;
     let photo = match args
         .photo
@@ -228,10 +227,10 @@ pub fn task_toggle(ctx: Context, args: TaskToggleArgs) -> Result<()> {
         ),
     };
     let states = storage::task_states(Some(&args.task_id))?;
-    let stored = state_of(&states, &args.task_id, item.id).and_then(|s| s.photo.clone());
-    task_item(item, None).check_toggle(args.done, photo.as_deref().or(stored.as_deref()))?;
+    let stored = state_of(&states, &args.task_id, item.uuid()).and_then(|s| s.photo.clone());
+    task_item(&list, item, None).check_toggle(args.done, photo.as_deref().or(stored.as_deref()))?;
 
-    storage::set_task_item(&args.task_id, item.id, args.done, photo, time::now()?)?;
+    storage::set_task_item(&args.task_id, item.uuid(), args.done, photo, time::now()?)?;
     let restocked = args.done && is_restock(item);
     after_change(&ctx, &list, &items, &args.task_id, stay_id, restocked)
 }
@@ -246,46 +245,45 @@ pub fn task_toggle(ctx: Context, args: TaskToggleArgs) -> Result<()> {
 pub fn task_complete(ctx: Context, args: TaskCompleteArgs) -> Result<()> {
     let (list, items, stay_id) = load_task(&ctx, &args.task_id)?;
     let states = storage::task_states(Some(&args.task_id))?;
-    let open: Vec<&ChecklistItem> = items
+    let open: Vec<&Step> = items
         .iter()
-        .filter(|item| !state_of(&states, &args.task_id, item.id).is_some_and(|s| s.done))
+        .filter(|item| !state_of(&states, &args.task_id, item.uuid()).is_some_and(|s| s.done))
         .collect();
     // Refuse before ticking anything: a half-completed task would be worse than none.
     for item in &open {
-        let stored = state_of(&states, &args.task_id, item.id).and_then(|s| s.photo.as_deref());
-        task_item(item, None).check_toggle(true, stored)?;
+        let stored = state_of(&states, &args.task_id, item.uuid()).and_then(|s| s.photo.as_deref());
+        task_item(&list, item, None).check_toggle(true, stored)?;
     }
     let now = time::now()?;
     for item in &open {
-        storage::set_task_item(&args.task_id, item.id, true, None, now)?;
+        storage::set_task_item(&args.task_id, item.uuid(), true, None, now)?;
     }
     let restocked = open.iter().any(|item| is_restock(item));
     after_change(&ctx, &list, &items, &args.task_id, stay_id, restocked)
 }
 
-fn load_task(ctx: &Context, task_id: &str) -> Result<(Checklist, Vec<ChecklistItem>, Uuid)> {
+fn load_task(ctx: &Context, task_id: &str) -> Result<(List, Vec<Step>, Uuid)> {
     if ctx.guest.is_some() {
         return Err(PortakiError::Host("host_only".to_string()));
     }
     let not_found = || PortakiError::Host("task_not_found".to_string());
     let (list_id, stay_id) = parse_task_id(task_id).ok_or_else(not_found)?;
-    let list = storage::list_checklists()?
+    let list = crate::domain::all_lists()?
         .into_iter()
-        .find(|list| list.id == list_id && list.audience == lists::HOST)
+        .find(|list| list.uuid() == list_id && !list.is_guest())
         .ok_or_else(not_found)?;
-    let items = storage::items_of(list.id)?;
+    let items = list.written_steps();
     Ok((list, items, stay_id))
 }
 
-fn is_restock(item: &ChecklistItem) -> bool {
-    let label = labels::i18n_label(item);
-    lists::is_restock_label(&label.fr, &label.en)
+fn is_restock(item: &Step) -> bool {
+    lists::is_restock_label(&item.label.fr, &item.label.en)
 }
 
 fn after_change(
     ctx: &Context,
-    list: &Checklist,
-    items: &[ChecklistItem],
+    list: &List,
+    items: &[Step],
     task_id: &str,
     stay_id: Uuid,
     restocked: bool,
@@ -293,7 +291,7 @@ fn after_change(
     let states = storage::task_states(Some(task_id))?;
     let done = items
         .iter()
-        .filter(|item| state_of(&states, task_id, item.id).is_some_and(|s| s.done))
+        .filter(|item| state_of(&states, task_id, item.uuid()).is_some_and(|s| s.done))
         .count() as u32;
     let total = items.len() as u32;
     events::emit(
@@ -304,7 +302,7 @@ fn after_change(
             task_id: task_id.to_string(),
             done,
             total,
-            assignee_name: list.assignee_name.clone(),
+            assignee_name: list.assignee().0,
         },
     )?;
     let progress = format!("{done}/{total}");
@@ -315,7 +313,7 @@ fn after_change(
             "propertyId": ctx.property_id,
             "payload": { "taskId": task_id, "stayId": stay_id, "done": done, "total": total },
             "display": { "chips": [
-                { "label": list.name_fr, "value": progress },
+                { "label": list.name.get("fr"), "value": progress },
             ] },
         }),
     )?;
@@ -348,22 +346,17 @@ mod tests {
         }
     }
 
-    fn list(trigger: &str, deadline: Option<&str>) -> Checklist {
-        Checklist {
-            id: Uuid::new_v4(),
-            name_fr: "Ménage".into(),
-            name_en: "Cleaning".into(),
-            audience: lists::HOST.into(),
-            icon: portaki_sdk::vocab::IconName::Sparkles.to_string(),
-            trigger: trigger.into(),
-            placement: lists::BOOKLET.into(),
-            assignee_name: None,
-            assignee_role: None,
-            deadline: deadline.map(str::to_string),
-            notify_assignee: false,
-            alert_host: false,
-            sort_order: 0,
-            created_at: DateTime::<Utc>::UNIX_EPOCH,
+    fn list(trigger: &str, deadline: Option<&str>) -> List {
+        use portaki_sdk::resource::Choice;
+        List {
+            id: Uuid::new_v4().to_string(),
+            name: I18nText::new("Ménage", "Cleaning"),
+            audience: crate::Audience::Host,
+            host_trigger: crate::HostTrigger::from_wire(trigger).unwrap(),
+            deadline: deadline
+                .and_then(crate::Deadline::from_wire)
+                .unwrap_or_default(),
+            ..List::default()
         }
     }
 

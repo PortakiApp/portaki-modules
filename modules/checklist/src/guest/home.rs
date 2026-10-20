@@ -11,7 +11,6 @@ use portaki_sdk::sdui::primitives::{Card, ChoiceList};
 use portaki_sdk::sdui::surface::Surface;
 
 use super::load::GuestChecklistData;
-use crate::labels;
 
 pub fn build_home_card(data: &GuestChecklistData, surface_id: SurfaceId) -> Surface {
     // Le titre nomme le moment, le sous-titre le situe : « Avant de partir », puis « Départ samedi
@@ -33,36 +32,20 @@ pub fn build_home_card(data: &GuestChecklistData, surface_id: SurfaceId) -> Surf
     let mut choices: Vec<ChoiceOption> = Vec::new();
     for (list, items) in &data.lists {
         for item in items {
-            let label = labels::pick_label(
-                &labels::labels_from_item(item),
-                &data.locale,
-                &data.property_locale,
-            );
+            let label = pick(&item.label, data);
             if label.trim().is_empty() {
                 continue;
             }
             let mut choice = ChoiceOption::new(item.id.to_string(), label);
-            let description = labels::pick_label(
-                &labels::decode_map(&item.description_i18n),
-                &data.locale,
-                &data.property_locale,
-            );
+            let description = pick(&item.detail, data);
             if !description.trim().is_empty() {
                 choice.description = Some(description);
             }
             // La rubrique de l'étape, et à défaut le nom de sa liste quand il y en a plusieurs : le
             // voyageur doit savoir d'où vient une étape, sans qu'on lui annonce une liste unique.
-            let group = labels::pick_label(
-                &labels::decode_map(&item.group_i18n),
-                &data.locale,
-                &data.property_locale,
-            );
+            let group = pick(&item.zone, data);
             let group = if group.trim().is_empty() && named {
-                labels::pick_label(
-                    &labels::labels_from_list(list),
-                    &data.locale,
-                    &data.property_locale,
-                )
+                pick(&list.name, data)
             } else {
                 group
             };
@@ -94,7 +77,7 @@ pub fn build_home_card(data: &GuestChecklistData, surface_id: SurfaceId) -> Surf
                     .name("item_ids")
                     .layout(ChoiceListLayout::Checklist)
                     .multi(true)
-                    .limit(data.display.visible_limit())
+                    .limit(data.lists[0].0.visible_limit())
                     // L'état part du serveur : une coche doit survivre à la fermeture du livret.
                     .value(ticked.join(","))
                     .choices(choices)
@@ -111,13 +94,13 @@ pub fn build_home_card(data: &GuestChecklistData, surface_id: SurfaceId) -> Surf
 
 /// « Message final » in the guest's language, else the default thanks (spec Checklist §2.1).
 fn done_message(data: &GuestChecklistData) -> String {
-    let message = labels::pick_label(
-        &labels::decode_map(&data.display.done_message),
-        &data.locale,
-        &data.property_locale,
-    );
+    let message = pick(&data.lists[0].0.done_message, data);
     if !message.trim().is_empty() {
         return message;
     }
     t!("guest.done.message").unwrap_or_else(|_| "i18n:guest.done.message".into())
+}
+
+fn pick(text: &portaki_sdk::contracts::i18n::I18nText, data: &GuestChecklistData) -> String {
+    crate::domain::pick(text, &data.locale, &data.property_locale)
 }
