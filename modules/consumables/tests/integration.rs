@@ -717,3 +717,37 @@ fn timeline_tasks_are_declared_to_the_dashboard() {
     assert_eq!(nav["path"], "tasks");
     assert_eq!(nav["label_key"], "catalog.host.tasks");
 }
+
+/// Les demandes d'avant le dépôt déclaré sont reprises une fois : statut, réponse et date de
+/// livraison gardés, et la carte du voyageur les montre comme avant.
+#[test]
+fn earlier_requests_are_taken_over() {
+    let stay = Uuid::from_u128(7);
+    let old = |id: u128, status: &str, reply: Option<&str>| {
+        json!({
+            "id": Uuid::from_u128(id), "stay_id": stay, "item_id": sample::id(0),
+            "item_label": "Café", "level": "low", "note": null, "status": status,
+            "created_at": "2026-10-01T08:00:00Z", "restocked_at": null,
+            "host_reply": reply, "guest_name": "Marie",
+        })
+    };
+    sample::with(MockContext::host(), &[("Café", "Coffee", "")])
+        .with_rows(
+            "ConsumableReport",
+            vec![
+                old(1, "planned", Some("Ce soir")),
+                old(2, "restocked", None),
+            ],
+        )
+        .run(|ctx| {
+            let rows = sample::requests(&ctx);
+            assert_eq!(rows.len(), 2);
+            let planned = rows.iter().find(|r| r.id == Uuid::from_u128(1)).unwrap();
+            assert_eq!(planned.status, Status::Planned);
+            assert_eq!(planned.item.level, Level::Low);
+            assert_eq!(planned.notes().last(), Some("Ce soir"));
+            assert_eq!(planned.stay_id, Some(stay));
+            // Once taken over, never again: a new request does not bring them back twice.
+            assert_eq!(sample::requests(&ctx).len(), 2);
+        });
+}
