@@ -5,7 +5,7 @@ mod previews;
 
 mod sample;
 
-use checklist::{render_home_card, render_post_stay_card, reset_test_store};
+use checklist::{render_home_card, render_post_stay_card};
 use serial_test::serial;
 
 /// La liste de départ que le module propose en un clic : celle qu'un hôte obtient sans rien
@@ -18,7 +18,6 @@ fn departure() -> serde_json::Value {
 #[serial]
 fn previews_match_the_rendered_surfaces() {
     let root = env!("CARGO_MANIFEST_DIR");
-    reset_test_store();
     let context = previews::guest(root);
     let post_stay = sample::with(context, departure())
         .run(|ctx| render_post_stay_card(ctx).expect("post-stay"));
@@ -34,7 +33,6 @@ fn previews_match_the_rendered_surfaces() {
      * ouverte quelle que soit l'horloge de la phase `stay`, sans dépendre du jour où elle s'ouvre
      * par défaut.
      */
-    reset_test_store();
     let during = || {
         let mut lists = departure();
         lists[0]["guest_trigger"] = "duringStay".into();
@@ -42,7 +40,6 @@ fn previews_match_the_rendered_surfaces() {
             .run(|ctx| render_home_card(ctx).expect("card"))
     };
     let card = during();
-    reset_test_store();
     let stay_card = during();
     /*
      * La carte d'après séjour, rendue après le départ.
@@ -52,7 +49,6 @@ fn previews_match_the_rendered_surfaces() {
      * pourtant cochables une fois le séjour fini.
      *
      */
-    reset_test_store();
     let after = sample::with(previews::guest_at(root, previews::AFTER), departure())
         .run(|ctx| render_post_stay_card(ctx).expect("post-stay"));
 
