@@ -41,7 +41,7 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
     let locale = args.locale_or(ctx.locale.as_str());
     let property_locale = ctx.property.locale.as_str();
 
-    let items = crate::queries::guest_items()?;
+    let items = crate::domain::guest_items()?;
 
     let tips: Vec<String> = items
         .iter()
@@ -64,7 +64,7 @@ pub fn build_email_context(ctx: Context, args: EmailContextArgs) -> Result<Email
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::domain::{add_from_template, lists};
+    use crate::commands::templates::{add_from_template, template};
     use portaki_test_utils::MockContext;
 
     #[test]
@@ -72,7 +72,7 @@ mod tests {
         MockContext::guest()
             .with_capabilities(&[capability::core::STORAGE])
             .run(|ctx| {
-                add_from_template(lists::template("departure").unwrap(), None).unwrap();
+                add_from_template(template("departure").unwrap(), None).unwrap();
                 let out = build_email_context(
                     ctx,
                     EmailContextArgs {

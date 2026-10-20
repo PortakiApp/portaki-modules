@@ -6,6 +6,7 @@
 //! voyageur, les tâches de l'équipe et leur état, le rappel, les statistiques.
 
 mod commands;
+mod config;
 mod domain;
 mod email;
 mod guest;
@@ -14,25 +15,27 @@ mod host;
 use portaki_sdk::contracts::i18n::I18nText;
 
 use self::email as email_i18n;
-use commands::{queries, tasks};
-use domain::{entities, ids, lists, show_when, storage};
+use commands::{entities, storage};
+use domain::{ids, lists, show_when};
 
-pub use commands::queries::{list_completions, publish_readiness};
-pub use commands::remind::send_departure_reminder;
-pub use commands::tasks::{task_complete, task_id, task_toggle, timeline_tasks};
-pub use commands::{
-    complete_item, create_checklist, set_completed, uncomplete_item, CreateChecklistArgs,
-    ItemIdArgs, SetCompletedArgs,
-};
-pub use domain::entities::{ChecklistCompletion, TaskItemState};
-pub use domain::storage::reset_test_store;
+pub use commands::complete_item::{complete_item, ItemIdArgs};
+pub use commands::create_checklist::{create_checklist, CreateChecklistArgs};
+pub use commands::email_context::{email_context, EmailContextArgs, EmailContextResponse};
+pub use commands::entities::{ChecklistCompletion, TaskItemState};
+pub use commands::list_completions::list_completions;
+pub use commands::publish_readiness::publish_readiness;
+pub use commands::send_departure_reminder::send_departure_reminder;
+pub use commands::set_completed::{set_completed, SetCompletedArgs};
+pub use commands::stats_summary::stats_summary;
+pub use commands::storage::reset_test_store;
+pub use commands::task::task_id;
+pub use commands::task_complete::task_complete;
+pub use commands::task_toggle::task_toggle;
+pub use commands::timeline_tasks::timeline_tasks;
+pub use commands::uncomplete_item::uncomplete_item;
 pub use domain::{all_lists, booklet_lists};
-pub use email::context::{email_context, EmailContextArgs, EmailContextResponse};
 pub use guest::{render_home_card, render_post_stay_card};
-pub use host::{
-    render_host_main, render_host_stay, render_stats_checklist, render_stats_cleaning,
-    stats_summary,
-};
+pub use host::{render_host_main, render_host_stay, render_stats_checklist, render_stats_cleaning};
 
 portaki_sdk::portaki_module!(
     id = "checklist",
@@ -152,5 +155,5 @@ pub struct List {
     pub steps: Vec<Step>,
 }
 
-#[portaki_sdk::collection(name = "lists", item = List, check = domain::problems, readiness = false, import)]
+#[portaki_sdk::collection(name = "lists", item = List, check = config::problems, readiness = false, import)]
 pub struct Lists;

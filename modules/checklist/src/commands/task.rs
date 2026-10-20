@@ -1,4 +1,5 @@
-//! Host lists as dated tasks: `timelineTasks`, `taskToggle`, `taskComplete`.
+//! What the three task operations and the host stats share: where a task sits, its id, its items,
+//! and what a change emits.
 //!
 //! A task is computed from a host list and a stay the platform passes; only the ticked state is
 //! stored (`task_item_state`). Its id is `<checklistId>:<stayId>`.
@@ -6,57 +7,17 @@
 use chrono::{DateTime, Duration, NaiveTime, TimeZone, Utc};
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::contracts::timeline::{
-    self, TaskCompleteArgs, TaskToggleArgs, TaskUpdated, TimelineStay, TimelineTask,
-    TimelineTaskItem, TimelineTasks, TimelineTasksArgs, TASK_UPDATED,
+    self, TaskUpdated, TimelineStay, TimelineTask, TimelineTaskItem, TASK_UPDATED,
 };
-use portaki_sdk::files::FileRef;
-use portaki_sdk::host::{events, time};
+use portaki_sdk::host::events;
 use portaki_sdk::prelude::*;
 use serde_json::json;
 use uuid::Uuid;
 
+use super::templates::is_restock_label;
+use crate::domain::timezone::offset_for_iana;
 use crate::entities::TaskItemState;
-use crate::guest::depart::offset_for_iana;
 use crate::{lists, storage, List, Step};
-
-#[portaki_sdk::query(
-    name = "timelineTasks",
-    example(
-        label = "Semaine avec un départ",
-        input = r#"{"propertyId":"5f0c2b1e-8a4d-4c6f-9e21-3b7d9a6c4e10","from":"2026-06-15T00:00:00Z","to":"2026-06-22T00:00:00Z","stays":[{"id":"8d3e6f2a-1b4c-4d5e-9f60-7a8b9c0d1e2f","checkIn":"2026-06-12T14:00:00Z","checkOut":"2026-06-17T09:00:00Z","guestName":"Camille Durand","status":"ACTIVE"},{"id":"2c4e6a8b-0d1f-4a3c-8e5b-7d9f1a3c5e70","checkIn":"2026-06-19T14:00:00Z","checkOut":"2026-06-26T09:00:00Z","guestName":"Lucas Martin","status":"UPCOMING"}]}"#
-    )
-)]
-pub fn timeline_tasks(ctx: Context, args: TimelineTasksArgs) -> Result<TimelineTasks> {
-    let lists: Vec<List> = crate::domain::all_lists()?
-        .into_iter()
-        .filter(|list| !list.is_guest())
-        .collect();
-    if lists.is_empty() {
-        return Ok(TimelineTasks::default());
-    }
-    let states = storage::task_states(None)?;
-    let mut tasks = Vec::new();
-    for list in &lists {
-        let list_items = list.written_steps();
-        if list_items.is_empty() {
-            continue;
-        }
-        for plan in plan_tasks(list, &args.stays, &ctx.property.timezone) {
-            if plan.at < args.from || plan.at > args.to {
-                continue;
-            }
-            tasks.push(build_task(
-                args.property_id,
-                list,
-                &list_items,
-                &states,
-                plan,
-            ));
-        }
-    }
-    tasks.sort_by_key(|task| task.at);
-    Ok(TimelineTasks { tasks })
-}
 
 /// Where a task of `list` sits for one stay, before its items are attached.
 #[derive(Debug, PartialEq)]
@@ -138,7 +99,7 @@ fn evening_of(at: DateTime<Utc>, timezone: &str) -> DateTime<Utc> {
         .map_or(at, |local| local.with_timezone(&Utc))
 }
 
-fn build_task(
+pub(super) fn build_task(
     property_id: Uuid,
     list: &List,
     items: &[Step],
@@ -170,7 +131,7 @@ fn build_task(
     task
 }
 
-fn state_of<'a>(
+pub(super) fn state_of<'a>(
     states: &'a [TaskItemState],
     task_id: &str,
     item_id: Uuid,
@@ -180,7 +141,11 @@ fn state_of<'a>(
         .find(|state| state.task_id == task_id && state.item_id == item_id)
 }
 
-fn task_item(list: &List, item: &Step, state: Option<&TaskItemState>) -> TimelineTaskItem {
+pub(super) fn task_item(
+    list: &List,
+    item: &Step,
+    state: Option<&TaskItemState>,
+) -> TimelineTaskItem {
     let mut out = TimelineTaskItem::new(item.id.clone(), item.label.clone());
     out.photo_required = item.needs_photo(list);
     if let Some(state) = state.filter(|state| state.done) {
@@ -200,69 +165,7 @@ pub fn parse_task_id(task_id: &str) -> Option<(Uuid, Uuid)> {
     Some((Uuid::parse_str(list).ok()?, Uuid::parse_str(stay).ok()?))
 }
 
-#[portaki_sdk::command(
-    name = "taskToggle",
-    example(
-        label = "Cocher une tâche du ménage",
-        input = r#"{"propertyId":"5a1c9e2b-4f3d-4b8a-8e7f-6d2c1b0a9f8e","taskId":"3f2b8c1e-7a4d-4e9b-9c61-2d5e8f0a1b47:7d4e2f1a-9b8c-4a3d-8e6f-5c4b3a2d1e0f","itemId":"8c0e5a4b-1d2f-4e6a-9b7c-3f1d2e4a5b6c","done":true}"#
-    )
-)]
-pub fn task_toggle(ctx: Context, args: TaskToggleArgs) -> Result<()> {
-    let (list, items, stay_id) = load_task(&ctx, &args.task_id)?;
-    let item = Uuid::parse_str(&args.item_id)
-        .ok()
-        .and_then(|id| items.iter().find(|item| item.uuid() == id))
-        .ok_or_else(|| PortakiError::Host("item_not_found".to_string()))?;
-    let photo = match args
-        .photo
-        .as_deref()
-        .map(str::trim)
-        .filter(|p| !p.is_empty())
-    {
-        None => None,
-        Some(raw) => Some(
-            FileRef::parse(raw)
-                .ok_or_else(|| PortakiError::Host("invalid_photo".to_string()))?
-                .to_string(),
-        ),
-    };
-    let states = storage::task_states(Some(&args.task_id))?;
-    let stored = state_of(&states, &args.task_id, item.uuid()).and_then(|s| s.photo.clone());
-    task_item(&list, item, None).check_toggle(args.done, photo.as_deref().or(stored.as_deref()))?;
-
-    storage::set_task_item(&args.task_id, item.uuid(), args.done, photo, time::now()?)?;
-    let restocked = args.done && is_restock(item);
-    after_change(&ctx, &list, &args.task_id, stay_id, restocked)
-}
-
-#[portaki_sdk::command(
-    name = "taskComplete",
-    example(
-        label = "Terminer le ménage",
-        input = r#"{"propertyId":"5a1c9e2b-4f3d-4b8a-8e7f-6d2c1b0a9f8e","taskId":"3f2b8c1e-7a4d-4e9b-9c61-2d5e8f0a1b47:7d4e2f1a-9b8c-4a3d-8e6f-5c4b3a2d1e0f"}"#
-    )
-)]
-pub fn task_complete(ctx: Context, args: TaskCompleteArgs) -> Result<()> {
-    let (list, items, stay_id) = load_task(&ctx, &args.task_id)?;
-    let states = storage::task_states(Some(&args.task_id))?;
-    let open: Vec<&Step> = items
-        .iter()
-        .filter(|item| !state_of(&states, &args.task_id, item.uuid()).is_some_and(|s| s.done))
-        .collect();
-    // Refuse before ticking anything: a half-completed task would be worse than none.
-    for item in &open {
-        let stored = state_of(&states, &args.task_id, item.uuid()).and_then(|s| s.photo.as_deref());
-        task_item(&list, item, None).check_toggle(true, stored)?;
-    }
-    let now = time::now()?;
-    for item in &open {
-        storage::set_task_item(&args.task_id, item.uuid(), true, None, now)?;
-    }
-    let restocked = open.iter().any(|item| is_restock(item));
-    after_change(&ctx, &list, &args.task_id, stay_id, restocked)
-}
-
-fn load_task(ctx: &Context, task_id: &str) -> Result<(List, Vec<Step>, Uuid)> {
+pub(super) fn load_task(ctx: &Context, task_id: &str) -> Result<(List, Vec<Step>, Uuid)> {
     if ctx.guest.is_some() {
         return Err(PortakiError::Host("host_only".to_string()));
     }
@@ -276,11 +179,11 @@ fn load_task(ctx: &Context, task_id: &str) -> Result<(List, Vec<Step>, Uuid)> {
     Ok((list, items, stay_id))
 }
 
-fn is_restock(item: &Step) -> bool {
-    lists::is_restock_label(&item.label.fr, &item.label.en)
+pub(super) fn is_restock(item: &Step) -> bool {
+    is_restock_label(&item.label.fr, &item.label.en)
 }
 
-fn after_change(
+pub(super) fn after_change(
     ctx: &Context,
     list: &List,
     task_id: &str,
