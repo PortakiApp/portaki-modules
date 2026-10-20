@@ -13,8 +13,10 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::resource::{Choice, Entry, RecordHooks};
 
 pub use config::{compact, ModuleConfig, Phase, RESPONSE_TIMES};
-pub use guest::{render_guest_form, render_home_card};
-pub use host::{render_host_main, render_host_reports};
+pub use guest::form::render_guest_form;
+pub use guest::home_card::render_home_card;
+pub use host::reports::render_host_reports;
+pub use host::settings::render_host_main;
 
 portaki_sdk::portaki_module!(
     id = "issue-report",
@@ -102,10 +104,10 @@ impl RecordHooks for Reports {
     }
 
     fn on_created(_: &Context, entry: &Entry<Report, Status>) -> Result<()> {
-        email::to_host(entry)
+        email::to_host::to_host(entry)
     }
 
     fn on_note(_: &Context, entry: &Entry<Report, Status>, text: &str) -> Result<()> {
-        email::to_guest(entry, text)
+        email::to_guest::to_guest(entry, text)
     }
 }
