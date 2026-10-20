@@ -98,5 +98,5 @@ pub struct Display {
     pub paper_manuals_location: I18nText,
 }
 
-#[portaki_sdk::collection(name = "devices", item = Device, meta = Display, max = 60, check = config::problems, import, legacy = commands::earlier::earlier_devices)]
+#[portaki_sdk::collection(name = "devices", item = Device, meta = Display, max = 60, check = config::problems, import, read, legacy = commands::earlier::earlier_devices)]
 pub struct Devices;
