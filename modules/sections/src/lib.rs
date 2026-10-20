@@ -1,24 +1,15 @@
-//! Portaki sections module — editorial title + markdown blocks.
+//! Sections éditoriales : le mot de l'hôte, en blocs de texte mis en forme, dans le livret.
+//!
+//! Le SDK stocke, fusionne, importe et dessine l'éditeur (`#[collection]`) ; le module dit ce
+//! qu'est une section et comment le livret montre le mot.
 
-mod commands;
-mod content;
-mod entities;
 mod guest;
 mod host;
-mod ids;
-mod model;
-mod queries;
-mod store;
 
-pub use commands::{
-    delete_section, reorder, save_section, DeleteSectionArgs, ReorderArgs, SaveSectionArgs,
-};
-pub use entities::{SectionItem, SectionItemLocale};
+use portaki_sdk::contracts::i18n::I18nText;
+
 pub use guest::{render_explore_sheet, render_home_card};
 pub use host::render_host_main;
-pub use model::{SectionLocaleInput, SectionView};
-pub use queries::{list_sections, ListSectionsArgs};
-pub use store::reset_test_store;
 
 portaki_sdk::portaki_module!(
     id = "sections",
@@ -34,3 +25,15 @@ portaki_sdk::portaki_module!(
 
 #[portaki_sdk::capability(required, id = "core.storage")]
 pub const STORAGE: &str = "core.storage";
+
+/// Un bloc du mot : un titre, un texte mis en forme.
+#[portaki_sdk::item(key = "title")]
+pub struct Section {
+    #[field(label = "host.title.label")]
+    pub title: I18nText,
+    #[field(kind = "rich_text", label = "host.body.label")]
+    pub body: I18nText,
+}
+
+#[portaki_sdk::collection(name = "sections", item = Section, import)]
+pub struct Sections;
