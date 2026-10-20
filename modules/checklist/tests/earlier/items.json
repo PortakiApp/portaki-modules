@@ -1,0 +1,167 @@
+[
+  {
+    "checklist_id": "dcaed22c-19d1-49f1-92db-3ed66a0e9cce",
+    "created_at": "2026-10-20T10:19:33.099244Z",
+    "description_i18n": "{\"en\":\"Bathroom included\",\"fr\":\"Y compris la salle de bain\"}",
+    "group_i18n": "{\"en\":\"Inside the home\",\"fr\":\"Dans le logement\"}",
+    "id": "ae276c1c-6204-4307-90ed-d5d8aa921eb9",
+    "label_en": "",
+    "label_fr": "{\"en\":\"Close every window\",\"fr\":\"Fermer toutes les fenêtres\"}",
+    "photo_required": false,
+    "sort_order": 0
+  },
+  {
+    "checklist_id": "dd5bb3e0-356e-4d8c-8d1a-f14ad75de489",
+    "created_at": "2026-10-20T10:19:33.107234Z",
+    "description_i18n": "",
+    "group_i18n": "{\"fr\":\"Entrée\"}",
+    "id": "fb4959f3-38ff-4b57-8853-84661d8de40c",
+    "label_en": "",
+    "label_fr": "{\"en\":\"Pick up the keys\",\"fr\":\"Récupérer les clés\"}",
+    "photo_required": false,
+    "sort_order": 0
+  },
+  {
+    "checklist_id": "8fda8916-a9f3-463d-95a1-392224c774ef",
+    "created_at": "2026-10-20T10:19:33.121647Z",
+    "description_i18n": "",
+    "group_i18n": "",
+    "id": "4325116c-13fe-4294-b6a7-f99990f5cdb9",
+    "label_en": "",
+    "label_fr": "{\"en\":\"Change sheets and towels\",\"fr\":\"Changer draps et serviettes\"}",
+    "photo_required": false,
+    "sort_order": 0
+  },
+  {
+    "checklist_id": "dcaed22c-19d1-49f1-92db-3ed66a0e9cce",
+    "created_at": "2026-10-20T10:19:33.099244Z",
+    "description_i18n": "",
+    "group_i18n": "{\"en\":\"Inside the home\",\"fr\":\"Dans le logement\"}",
+    "id": "a527fe95-a908-49c5-8563-71772a09e95c",
+    "label_en": "",
+    "label_fr": "{\"en\":\"Switch off the water heater\",\"fr\":\"Éteindre le chauffe-eau\"}",
+    "photo_required": false,
+    "sort_order": 1
+  },
+  {
+    "checklist_id": "dd5bb3e0-356e-4d8c-8d1a-f14ad75de489",
+    "created_at": "2026-10-20T10:19:33.107234Z",
+    "description_i18n": "{\"fr\":\"Interrupteur dans le placard\"}",
+    "group_i18n": "",
+    "id": "cc1b8d63-deef-4436-82f6-e778dcf4ece7",
+    "label_en": "",
+    "label_fr": "{\"en\":\"Allumer le chauffe-eau\",\"fr\":\"Allumer le chauffe-eau\"}",
+    "photo_required": false,
+    "sort_order": 1
+  },
+  {
+    "checklist_id": "8fda8916-a9f3-463d-95a1-392224c774ef",
+    "created_at": "2026-10-20T10:19:33.121647Z",
+    "description_i18n": "",
+    "group_i18n": "",
+    "id": "5dab0deb-5acf-47f9-95c6-5647e5b17ac2",
+    "label_en": "",
+    "label_fr": "{\"en\":\"Bathroom and toilet\",\"fr\":\"Salle de bain et WC\"}",
+    "photo_required": false,
+    "sort_order": 1
+  },
+  {
+    "checklist_id": "dcaed22c-19d1-49f1-92db-3ed66a0e9cce",
+    "created_at": "2026-10-20T10:19:33.099244Z",
+    "description_i18n": "",
+    "group_i18n": "{\"en\":\"On your way out\",\"fr\":\"En partant\"}",
+    "id": "f0b71b59-5aab-41b1-9712-06c22ef5d112",
+    "label_en": "",
+    "label_fr": "{\"en\":\"Take out the bins\",\"fr\":\"Sortir les poubelles\"}",
+    "photo_required": false,
+    "sort_order": 2
+  },
+  {
+    "checklist_id": "8fda8916-a9f3-463d-95a1-392224c774ef",
+    "created_at": "2026-10-20T10:19:33.121647Z",
+    "description_i18n": "",
+    "group_i18n": "",
+    "id": "35515e73-a23d-4c57-8dbe-07be3362d119",
+    "label_en": "",
+    "label_fr": "{\"en\":\"Kitchen, fridge emptied\",\"fr\":\"Cuisine, frigo vidé\"}",
+    "photo_required": false,
+    "sort_order": 2
+  },
+  {
+    "checklist_id": "dcaed22c-19d1-49f1-92db-3ed66a0e9cce",
+    "created_at": "2026-10-20T10:19:33.099244Z",
+    "description_i18n": "",
+    "group_i18n": "{\"en\":\"On your way out\",\"fr\":\"En partant\"}",
+    "id": "d0b5a78f-050d-4dca-b645-18bf611e9286",
+    "label_en": "",
+    "label_fr": "{\"en\":\"Leave the keys on the table\",\"fr\":\"Laisser les clés sur la table\"}",
+    "photo_required": false,
+    "sort_order": 3
+  },
+  {
+    "checklist_id": "8fda8916-a9f3-463d-95a1-392224c774ef",
+    "created_at": "2026-10-20T10:19:33.121647Z",
+    "description_i18n": "",
+    "group_i18n": "",
+    "id": "5b115e8c-94c0-40da-8f20-77bb8686fa35",
+    "label_en": "",
+    "label_fr": "{\"en\":\"Vacuum and floors\",\"fr\":\"Aspirateur et sols\"}",
+    "photo_required": false,
+    "sort_order": 3
+  },
+  {
+    "checklist_id": "dcaed22c-19d1-49f1-92db-3ed66a0e9cce",
+    "created_at": "2026-10-20T10:19:33.099244Z",
+    "description_i18n": "",
+    "group_i18n": "{\"en\":\"Inside the home\",\"fr\":\"Dans le logement\"}",
+    "id": "56882f35-93da-4cf9-a17e-f666d6fc5bc9",
+    "label_en": "",
+    "label_fr": "{\"en\":\"Start the dishwasher if needed\",\"fr\":\"Démarrer le lave-vaisselle si besoin\"}",
+    "photo_required": false,
+    "sort_order": 4
+  },
+  {
+    "checklist_id": "8fda8916-a9f3-463d-95a1-392224c774ef",
+    "created_at": "2026-10-20T10:19:33.121647Z",
+    "description_i18n": "",
+    "group_i18n": "",
+    "id": "faf69c75-c447-45e1-bf4f-6a5ebf67df81",
+    "label_en": "",
+    "label_fr": "{\"en\":\"Bins taken out\",\"fr\":\"Poubelles sorties\"}",
+    "photo_required": false,
+    "sort_order": 4
+  },
+  {
+    "checklist_id": "dcaed22c-19d1-49f1-92db-3ed66a0e9cce",
+    "created_at": "2026-10-20T10:19:33.099594Z",
+    "description_i18n": "",
+    "group_i18n": "",
+    "id": "bec6c2b8-6bac-4354-b4e0-6c60f552f44f",
+    "label_en": "",
+    "label_fr": "",
+    "photo_required": false,
+    "sort_order": 5
+  },
+  {
+    "checklist_id": "8fda8916-a9f3-463d-95a1-392224c774ef",
+    "created_at": "2026-10-20T10:19:33.121647Z",
+    "description_i18n": "",
+    "group_i18n": "",
+    "id": "9d89983e-7ab0-4b7b-bcb4-3c56926416d4",
+    "label_en": "",
+    "label_fr": "{\"en\":\"Consumables restocked\",\"fr\":\"Consommables réassortis\"}",
+    "photo_required": false,
+    "sort_order": 5
+  },
+  {
+    "checklist_id": "8fda8916-a9f3-463d-95a1-392224c774ef",
+    "created_at": "2026-10-20T10:19:33.121647Z",
+    "description_i18n": "",
+    "group_i18n": "",
+    "id": "df3e0a94-375d-4c94-aa3c-f867a683fd45",
+    "label_en": "",
+    "label_fr": "{\"en\":\"End-of-cleaning photo\",\"fr\":\"Photo de fin de ménage\"}",
+    "photo_required": true,
+    "sort_order": 6
+  }
+]

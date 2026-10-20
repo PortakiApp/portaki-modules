@@ -155,5 +155,5 @@ pub struct List {
     pub steps: Vec<Step>,
 }
 
-#[portaki_sdk::collection(name = "lists", item = List, check = config::problems, readiness = false, import)]
+#[portaki_sdk::collection(name = "lists", item = List, check = config::problems, readiness = false, import, legacy = commands::earlier::earlier_lists)]
 pub struct Lists;

@@ -1,0 +1,10 @@
+{
+  "display:dcaed22c-19d1-49f1-92db-3ed66a0e9cce": {
+    "done_message": "{\"en\":\"Thanks, safe trip!\",\"fr\":\"Merci, bon retour !\"}",
+    "remind": false,
+    "visible_limit": 7
+  },
+  "display:dd5bb3e0-356e-4d8c-8d1a-f14ad75de489": {
+    "visible_limit": 12
+  }
+}
