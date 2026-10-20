@@ -3,6 +3,7 @@
 //! (le stockage des demandes, le séjour visé, les tâches).
 
 pub mod amenities_list;
+pub mod earlier;
 pub mod list_for_stay;
 pub mod list_open_count;
 pub mod list_recent;

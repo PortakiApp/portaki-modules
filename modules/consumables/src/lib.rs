@@ -97,5 +97,5 @@ pub struct Requests {
     pub max_requests: Option<u32>,
 }
 
-#[portaki_sdk::collection(name = "products", item = Product, meta = Requests, max = 30, check = config::problems, import)]
+#[portaki_sdk::collection(name = "products", item = Product, meta = Requests, max = 30, check = config::problems, import, legacy = commands::earlier::earlier_products)]
 pub struct Products;
