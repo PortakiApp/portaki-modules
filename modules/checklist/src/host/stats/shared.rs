@@ -108,11 +108,16 @@ pub(crate) fn decimal(value: f64, fr: bool) -> String {
     }
 }
 
-pub(crate) fn format_time(at: DateTime<Utc>) -> String {
+/// `at` on the property's clock — what the host reads; UTC only when its zone is unknown.
+pub(crate) fn local(at: DateTime<Utc>, tz: Option<PropertyTz>) -> NaiveDateTime {
+    tz.map_or(at.naive_utc(), |tz| tz.to_local(at).naive_local())
+}
+
+pub(crate) fn format_time(at: NaiveDateTime) -> String {
     at.format("%H:%M").to_string()
 }
 
-pub(crate) fn short_date(at: DateTime<Utc>, fr: bool) -> String {
+pub(crate) fn short_date(at: NaiveDateTime, fr: bool) -> String {
     use chrono::Datelike;
     const FR: [&str; 12] = [
         "janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.",
@@ -126,5 +131,25 @@ pub(crate) fn short_date(at: DateTime<Utc>, fr: bool) -> String {
         format!("{} {}", at.day(), FR[month])
     } else {
         format!("{} {}", EN[month], at.day())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn times_read_on_the_property_clock() {
+        let at = "2026-08-09T22:30:00Z".parse::<DateTime<Utc>>().unwrap();
+        let paris = PropertyTz::parse("Europe/Paris");
+        // 22:30 UTC in August is 00:30 the next day in Paris (CEST).
+        assert_eq!(format_time(local(at, paris)), "00:30");
+        assert_eq!(short_date(local(at, paris), true), "10 août");
+        let winter = "2026-01-09T12:00:00Z".parse::<DateTime<Utc>>().unwrap();
+        assert_eq!(format_time(local(winter, paris)), "13:00");
+        assert_eq!(
+            format_time(local(at, PropertyTz::parse("Mars/Olympus"))),
+            "22:30"
+        );
     }
 }
