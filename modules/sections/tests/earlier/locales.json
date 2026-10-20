@@ -1,0 +1,65 @@
+[
+  {
+    "id": "73fc9b34-a50d-4b16-a4e5-210d7880daf9",
+    "section_id": "438a1307-8206-43a9-b424-a7190ce456ca",
+    "lang": "fr",
+    "title": "Bienvenue",
+    "body_markdown": "Bienvenue à L'Islette !\n\nInstallez-vous.",
+    "created_at": "2026-10-20T10:18:13.929554Z",
+    "updated_at": "2026-10-20T10:18:13.929554Z"
+  },
+  {
+    "id": "eb942953-c037-4f5d-949f-3470994361a0",
+    "section_id": "438a1307-8206-43a9-b424-a7190ce456ca",
+    "lang": "en",
+    "title": "Welcome",
+    "body_markdown": "Welcome to L'Islette!\n\nMake yourself at home.",
+    "created_at": "2026-10-20T10:18:13.929652Z",
+    "updated_at": "2026-10-20T10:18:13.929652Z"
+  },
+  {
+    "id": "32f33174-c16a-48a9-a57c-10509b969d05",
+    "section_id": "be7a73db-fd26-435e-ada4-4730e24d2d76",
+    "lang": "fr",
+    "title": "L'appartement",
+    "body_markdown": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"2 chambres, \"},{\"type\":\"text\",\"marks\":[{\"type\":\"bold\"}],\"text\":\"terrasse vue mer\"}]}]}",
+    "created_at": "2026-10-20T10:18:13.929686Z",
+    "updated_at": "2026-10-20T10:18:13.929686Z"
+  },
+  {
+    "id": "b653837f-06eb-4d74-8cd7-06fb23d2f476",
+    "section_id": "be7a73db-fd26-435e-ada4-4730e24d2d76",
+    "lang": "en",
+    "title": "The flat",
+    "body_markdown": "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\"2 bedrooms, sea-view terrace.\"}]}]}",
+    "created_at": "2026-10-20T10:18:13.929686Z",
+    "updated_at": "2026-10-20T10:18:13.929686Z"
+  },
+  {
+    "id": "62abf23b-66c3-473a-b0fb-eebc633bfa46",
+    "section_id": "1425cb84-50d2-409d-9470-43cea81e7717",
+    "lang": "fr",
+    "title": "",
+    "body_markdown": "Le code du portail est dans la boîte à clés.",
+    "created_at": "2026-10-20T10:18:13.929711Z",
+    "updated_at": "2026-10-20T10:18:13.929711Z"
+  },
+  {
+    "id": "cac11bd4-557e-49a2-b9ac-81d72d48e8ea",
+    "section_id": "776d7599-490a-4e6b-8430-bf20f48fab2d",
+    "lang": "de",
+    "title": "Willkommen",
+    "body_markdown": "Schön, dass Sie da sind.",
+    "created_at": "2026-10-20T10:18:13.929734Z",
+    "updated_at": "2026-10-20T10:18:13.929734Z"
+  },
+  {
+    "id": "f2447ee7-e2e2-4a59-8421-692eaf7e40fe",
+    "section_id": "b2a8e991-9d9e-462c-a8bc-2b6e1d383535",
+    "lang": "fr",
+    "title": "",
+    "body_markdown": "",
+    "created_at": "2026-10-20T10:18:13.929761Z",
+    "updated_at": "2026-10-20T10:18:13.929761Z"
+  }
+]
