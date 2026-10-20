@@ -4,7 +4,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::common::SurfaceLevel;
 use portaki_sdk::sdui::primitives::{Card, EmptyState, FilterBar, FilterChip, Stack};
 
-use super::{device_list_item, no_appliances};
+use super::row::{device_list_item, no_appliances};
 use crate::domain::Guide;
 
 /// Au-delà, la liste gagne un filtre par pièce en tête.

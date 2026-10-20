@@ -1,8 +1,8 @@
 //! Le guide tel que le livret le lit : les appareils visibles, leurs textes dans la langue du
 //! voyageur, et leur rangement par pièce.
 
-use portaki_sdk::prelude::*;
 use portaki_sdk::resource::rich_text;
+use portaki_sdk::{Context, Result};
 
 use super::howto::HowToStep;
 use crate::{Device, Devices};
