@@ -53,10 +53,10 @@ opt-level = "s"
 lto = true
 codegen-units = 1
 
-# Preuve SDK 11 (PREUVE-SDK11.md) : le SDK de la branche feat/sdk11-resources, jamais publié sur
-# crates.io. À retirer quand le SDK 11 sera publié : le pin `portaki-sdk = "…"` des modules suivra.
+# SDK 11 : `main` du SDK, en attendant la release 10.17.0 (PortakiApp/portaki-sdk#369). À retirer à
+# sa publication : le pin `portaki-sdk = "…"` des modules portés passe alors à cette version.
 [patch.crates-io]
-portaki-sdk = { git = "https://github.com/PortakiApp/portaki-sdk", branch = "feat/sdk11-resources" }
-portaki-sdk-macros = { git = "https://github.com/PortakiApp/portaki-sdk", branch = "feat/sdk11-resources" }
-portaki-test-utils = { git = "https://github.com/PortakiApp/portaki-sdk", branch = "feat/sdk11-resources" }
-portaki-connectors = { git = "https://github.com/PortakiApp/portaki-sdk", branch = "feat/sdk11-resources" }
+portaki-sdk = { git = "https://github.com/PortakiApp/portaki-sdk", branch = "main" }
+portaki-sdk-macros = { git = "https://github.com/PortakiApp/portaki-sdk", branch = "main" }
+portaki-test-utils = { git = "https://github.com/PortakiApp/portaki-sdk", branch = "main" }
+portaki-connectors = { git = "https://github.com/PortakiApp/portaki-sdk", branch = "main" }
