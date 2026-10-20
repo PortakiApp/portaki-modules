@@ -22,6 +22,7 @@ pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
     let days = period_days(&ctx);
     let since = now - Duration::days(days);
     let fr = is_fr(&ctx.locale);
+    let tz = portaki_sdk::host::time::PropertyTz::parse(&ctx.property.timezone);
     let data = cleaning_data().unwrap_or(CleaningData {
         lists: Vec::new(),
         items: Vec::new(),
@@ -71,7 +72,7 @@ pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
         let feed = tasks
             .iter()
             .take(10)
-            .map(|task| task_row(task, now, &ctx.locale))
+            .map(|task| task_row(task, now, &ctx.locale, tz))
             .collect();
 
         Stack::new()
