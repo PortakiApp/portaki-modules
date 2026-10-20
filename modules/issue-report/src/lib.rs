@@ -78,7 +78,7 @@ pub struct Report {
 }
 
 #[portaki_sdk::record(name = "reports", item = Report, status = Status, due_hours = 24,
-    task_title = "task.title", task_done = "host.detail.resolve", hooks,
+    task_title = "task.title", task_done = "host.detail.resolve", hooks, note_email = "host-reply",
     legacy = commands::earlier::earlier_reports)]
 pub struct Reports;
 
