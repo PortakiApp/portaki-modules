@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.11
+
+Les messages du formulaire dans toutes les langues.
+
+* Les erreurs sous les champs et les points à compléter avant publication s'affichent dans la langue de l'hôte, plus seulement en français ou en anglais.
+
 ## 1.9.10
 
 Les numéros d'urgence suivent le pays du logement.

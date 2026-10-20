@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.9
+
+Les messages du formulaire dans toutes les langues.
+
+* Les erreurs sous les champs et les points à compléter avant publication s'affichent dans la langue de l'hôte, plus seulement en français ou en anglais.
+
 ## 0.9.5
 
 Des balades vraiment autour du logement de démonstration.
