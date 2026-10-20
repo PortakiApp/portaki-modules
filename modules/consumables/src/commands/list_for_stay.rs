@@ -1,11 +1,12 @@
-//! Les lectures des demandes : d'un séjour, les dernières, le compte de celles ouvertes.
+//! `listForStay` — les demandes d'un séjour.
 
 use chrono::{DateTime, Utc};
 use portaki_sdk::prelude::*;
 use uuid::Uuid;
 
+use super::stay::resolve_list_stay_id;
 use crate::entities::ConsumableReport;
-use crate::{storage, Products};
+use crate::storage;
 
 /// Row returned by report list queries.
 #[portaki_sdk::wire]
@@ -62,35 +63,4 @@ pub fn list_for_stay(ctx: Context, args: ListForStayArgs) -> Result<Vec<Consumab
         .into_iter()
         .map(ConsumableReportRow::from)
         .collect())
-}
-
-#[portaki_sdk::query(name = "listRecent", example(label = "Derniers signalements"))]
-pub fn list_recent(_ctx: Context) -> Result<Vec<ConsumableReportRow>> {
-    Ok(storage::list_recent()?
-        .into_iter()
-        .map(ConsumableReportRow::from)
-        .collect())
-}
-
-/// Open report count for stats cards.
-#[portaki_sdk::wire]
-#[derive(PartialEq, Eq)]
-pub struct OpenCountDto {
-    pub open_count: u32,
-    pub catalog_count: u32,
-}
-
-#[portaki_sdk::query(name = "listOpenCount", example(label = "Signalements ouverts"))]
-pub fn list_open_count(ctx: Context) -> Result<OpenCountDto> {
-    Ok(OpenCountDto {
-        open_count: storage::count_open()? as u32,
-        catalog_count: Products::load(&ctx)?.len() as u32,
-    })
-}
-
-fn resolve_list_stay_id(ctx: &Context, stay_id: Option<Uuid>) -> Result<Uuid> {
-    if let Some(guest) = ctx.guest.as_ref() {
-        return Ok(guest.session_id);
-    }
-    stay_id.ok_or_else(|| PortakiError::Host("stay_id_required".to_string()))
 }

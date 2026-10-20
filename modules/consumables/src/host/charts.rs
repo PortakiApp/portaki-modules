@@ -6,7 +6,7 @@ use portaki_sdk::sdui::primitives::{Card, Chart, EmptyState, FeedItem};
 use portaki_sdk::sdui::{ChartKind, ChartPoint, FeedStatus};
 use uuid::Uuid;
 
-use super::{days_between_restocks, label, stock, Stock};
+use super::stats::{days_between_restocks, label, stock, Stock};
 use crate::entities::ConsumableReport;
 use crate::{status, Product};
 
