@@ -3,8 +3,7 @@
 //! `main`, `tests/earlier/*.json`), relues une fois.
 
 use checklist::{
-    all_lists, complete_item, list_completions, render_home_card, reset_test_store, Audience,
-    ItemIdArgs, List,
+    all_lists, complete_item, list_completions, render_home_card, Audience, ItemIdArgs, List,
 };
 use portaki_test_utils::{MockContext, MockContextBuilder, Property};
 use serde_json::{json, Value};
@@ -52,7 +51,6 @@ fn texts(list: &List) -> Vec<(&str, &str)> {
 #[test]
 #[serial]
 fn the_lists_and_their_steps_become_the_collection() {
-    reset_test_store();
     earlier(MockContext::host()).run(|_ctx| {
         let lists = all_lists().unwrap();
         let ids: Vec<&str> = lists.iter().map(|l| l.id.as_str()).collect();
@@ -112,7 +110,6 @@ fn the_lists_and_their_steps_become_the_collection() {
 #[test]
 #[serial]
 fn a_tick_on_an_old_step_stays_ticked() {
-    reset_test_store();
     earlier(MockContext::guest()).run(|ctx| {
         let item_id = Uuid::parse_str(&first_step_id()).unwrap();
         complete_item(ctx.clone(), ItemIdArgs { item_id }).expect("the old step is found");
@@ -126,7 +123,6 @@ fn a_tick_on_an_old_step_stays_ticked() {
 #[test]
 #[serial]
 fn the_old_show_when_moves_the_first_guest_list() {
-    reset_test_store();
     earlier(MockContext::host())
         .with_kv("config", br#"{"show_when":"always"}"#.to_vec())
         .run(|_ctx| {
@@ -139,7 +135,6 @@ fn the_old_show_when_moves_the_first_guest_list() {
 #[test]
 #[serial]
 fn a_bare_label_and_its_english_column_are_read() {
-    reset_test_store();
     let mut items = rows("items");
     items[0]["label_fr"] = json!("Fermer les volets");
     items[0]["label_en"] = json!("Close the shutters");
@@ -158,7 +153,6 @@ fn a_bare_label_and_its_english_column_are_read() {
 #[test]
 #[serial]
 fn taken_over_once_and_never_over_the_collection() {
-    reset_test_store();
     earlier(MockContext::host())
         .with_resource(
             "lists",

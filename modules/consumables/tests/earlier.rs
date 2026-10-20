@@ -2,9 +2,7 @@
 //! l'ancien module les a écrits (capturés depuis son code sur `main`, `tests/earlier/*.json`),
 //! relus une fois.
 
-use consumables::{
-    list_for_stay, reset_test_store, submit, Channel, ListForStayArgs, Products, SubmitArgs,
-};
+use consumables::{Channel, Products, Restocks, SubmitArgs};
 use portaki_test_utils::{MockContext, MockContextBuilder};
 use serde_json::{json, Value};
 use serial_test::serial;
@@ -83,7 +81,6 @@ fn the_catalog_and_its_settings_become_the_collection() {
 #[test]
 #[serial]
 fn a_plain_french_label_keeps_its_english_and_requests_stay_linked() {
-    reset_test_store();
     seeded(MockContext::guest(), "plain").run(|ctx| {
         let products = Products::load(&ctx).unwrap();
         let labels: Vec<(&str, &str)> = products
@@ -100,18 +97,20 @@ fn a_plain_french_label_keeps_its_english_and_requests_stay_linked() {
         assert_eq!(products.meta().notify, None);
         let tea = products.rows()[0].uuid();
         assert_eq!(tea.to_string(), old_ids("plain")[0]);
-        submit(
+        consumables::__portaki_requests_submit(
             ctx.clone(),
-            SubmitArgs {
+            serde_json::to_value(SubmitArgs {
                 item_ids: vec![tea],
                 item_id: None,
-                level: consumables::LEVEL_DEFAULT.into(),
+                level: "missing".into(),
                 note: None,
-            },
+            })
+            .unwrap(),
         )
         .unwrap();
-        let rows = list_for_stay(ctx, ListForStayArgs::default()).unwrap();
+        let rows = Restocks::list(&ctx).unwrap();
         assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].item.item_id, tea.to_string());
     });
 }
 
