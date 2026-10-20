@@ -3,6 +3,7 @@
 //! Le SDK stocke, fusionne, importe et contrôle la collection (`#[collection]`) ; le module dit
 //! ce qu'est une règle, ses thèmes, et comment le livret la lit.
 
+pub mod commands;
 mod domain;
 pub mod email;
 mod guest;
@@ -11,9 +12,11 @@ mod host;
 use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::prelude::*;
 
-pub use email::email_vars;
-pub use guest::{render_explore_detail, render_home_card};
-pub use host::{apply_template, render_host_main};
+pub use commands::apply_template::apply_template;
+pub use email::vars::email_vars;
+pub use guest::explore_detail::render_explore_detail;
+pub use guest::home_card::render_home_card;
+pub use host::settings::render_host_main;
 
 portaki_sdk::portaki_module!(
     id = "rules",

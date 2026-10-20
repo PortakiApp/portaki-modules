@@ -1,12 +1,13 @@
 //! Réglages hôte (spec Règlement §2) : l'éditeur dérivé de la collection, et ce qui est propre
-//! au règlement — la marque de statut, la limite de la carte, le thème suggéré, le modèle.
+//! au règlement — la marque de statut, la limite de la carte, le thème suggéré.
 
-use portaki_sdk::contracts::i18n::I18nText;
 use portaki_sdk::prelude::*;
 use portaki_sdk::resource::{Choice, CollectionEditor};
 use portaki_sdk::sdui::primitives::{Button, Field, FieldHint, Form, Page, Text};
 
-use crate::{Rule, RuleStatus, Rules, Theme};
+use crate::commands::apply_template::APPLY_TEMPLATE;
+use crate::guest::row::hours_label;
+use crate::{Rule, RuleStatus, Rules};
 
 #[portaki_sdk::surface(
     host,
@@ -42,7 +43,7 @@ pub fn render_host_main(ctx: HostContext) -> Result<Surface> {
         .column("theme")
         .mono("hours")
         .cell("glyph", |r: &Rule| glyph(r.status).into())
-        .cell("hours", |r: &Rule| r.hours_label())
+        .cell("hours", hours_label)
         .divider_after(rules.meta().limit(), "host.rules.divider")
         .when_empty(template)
         .panel_extra(
@@ -68,40 +69,4 @@ fn glyph(status: RuleStatus) -> &'static str {
         RuleStatus::Allowed => "✓",
         RuleStatus::Neutral => "i",
     }
-}
-
-/// « Partir d'un modèle » (§4) : silence, animaux, tabac, fêtes, visiteurs, dans la langue de
-/// l'hôte ; seulement sur un règlement vide, un second clic n'écrase rien.
-#[portaki_sdk::command(
-    name = "applyTemplate",
-    example(label = "Partir d'un modèle", input = "{}")
-)]
-pub fn apply_template(ctx: Context, _args: EmptyArgs) -> Result<()> {
-    let mut rules = Rules::load(&ctx)?;
-    if !rules.is_empty() {
-        return Ok(());
-    }
-    let lang = ctx.lang();
-    let text = |key: &str| I18nText::default().with(lang.clone(), t!(key).unwrap_or_default());
-    let rule = |key: &str, status, theme, hours: &str| Rule {
-        id: format!("t-{key}"),
-        title: text(&format!("host.template.{key}.title")),
-        detail: text(&format!("host.template.{key}.detail")),
-        status,
-        theme,
-        hours: hours.into(),
-    };
-    rules.rows_mut().extend([
-        rule(
-            "silence",
-            RuleStatus::Important,
-            Theme::Noise,
-            "22:00-08:00",
-        ),
-        rule("pets", RuleStatus::Allowed, Theme::Pets, ""),
-        rule("smoking", RuleStatus::Forbidden, Theme::Smoking, ""),
-        rule("parties", RuleStatus::Forbidden, Theme::Parties, ""),
-        rule("visitors", RuleStatus::Neutral, Theme::Visitors, ""),
-    ]);
-    Rules::save(&rules)
 }
