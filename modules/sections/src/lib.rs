@@ -41,6 +41,7 @@ pub struct Section {
     name = "sections",
     item = Section,
     import,
+    read,
     legacy = commands::earlier::earlier_sections
 )]
 pub struct Sections;
