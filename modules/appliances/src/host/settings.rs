@@ -5,7 +5,7 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::resource::CollectionEditor;
 use portaki_sdk::sdui::primitives::{Form, Page};
 
-use crate::domain::too_many_featured;
+use crate::config::too_many_featured;
 use crate::{Device, Devices};
 
 #[portaki_sdk::surface(

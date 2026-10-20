@@ -1,7 +1,4 @@
-//! Côté hôte : la page des réglages et la tuile de statistiques.
+//! Côté hôte : la page des réglages et la tuile de statistiques, une surface par fichier.
 
-mod settings;
-mod stats;
-
-pub use settings::render_host_main;
-pub use stats::{render_host_stats, stats_summary};
+pub mod appliances_views;
+pub mod settings;

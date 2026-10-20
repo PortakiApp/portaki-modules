@@ -8,8 +8,9 @@ mod host;
 
 use portaki_sdk::contracts::i18n::I18nText;
 
-pub use guest::{render_explore_sheet, render_home_card};
-pub use host::render_host_main;
+pub use guest::explore_sheet::render_explore_sheet;
+pub use guest::home_card::render_home_card;
+pub use host::settings::render_host_main;
 
 portaki_sdk::portaki_module!(
     id = "sections",

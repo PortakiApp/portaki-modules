@@ -3,14 +3,20 @@
 //! Le SDK stocke, fusionne, importe et contrôle la collection (`#[collection]`) et dessine
 //! l'éditeur ; le module dit ce qu'est un appareil et comment le livret le montre.
 
+pub mod commands;
+mod config;
 mod domain;
 mod guest;
 mod host;
 
 use portaki_sdk::contracts::i18n::I18nText;
 
-pub use guest::{render_explore_detail, render_explore_item, render_home_card};
-pub use host::{render_host_main, render_host_stats, stats_summary};
+pub use commands::stats_summary::stats_summary;
+pub use guest::explore_detail::render_explore_detail;
+pub use guest::explore_item::render_explore_item;
+pub use guest::home_card::render_home_card;
+pub use host::appliances_views::render_host_stats;
+pub use host::settings::render_host_main;
 
 portaki_sdk::portaki_module!(
     id = "appliances",
@@ -92,5 +98,5 @@ pub struct Display {
     pub paper_manuals_location: I18nText,
 }
 
-#[portaki_sdk::collection(name = "devices", item = Device, meta = Display, max = 60, check = domain::problems, import)]
+#[portaki_sdk::collection(name = "devices", item = Device, meta = Display, max = 60, check = config::problems, import)]
 pub struct Devices;
