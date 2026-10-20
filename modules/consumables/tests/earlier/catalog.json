@@ -1,0 +1,48 @@
+{
+  "items": [
+    {
+      "created_at": "2026-10-20T10:18:31.672846Z",
+      "emoji": "🧻",
+      "id": "de92100f-bf9b-4c7c-8926-322d555ea3cd",
+      "label_en": "",
+      "label_fr": "{\"en\":\"Toilet paper\",\"fr\":\"Papier toilette\"}",
+      "location": "{\"fr\":\"Sous l'évier\"}",
+      "low_threshold": 0,
+      "sort_order": 0
+    },
+    {
+      "created_at": "2026-10-20T10:18:31.672846Z",
+      "emoji": "☕",
+      "id": "f49fc74a-bfdf-42f6-9489-e5557ecd989b",
+      "label_en": "",
+      "label_fr": "{\"en\":\"Coffee\",\"fr\":\"Café\"}",
+      "location": "{\"en\":\"Left cupboard\",\"fr\":\"Placard de gauche\"}",
+      "low_threshold": 0,
+      "sort_order": 1
+    },
+    {
+      "created_at": "2026-10-20T10:18:31.672846Z",
+      "emoji": "",
+      "id": "c33bb1b9-2e8d-4f20-8e0a-ed72be3b0707",
+      "label_en": "",
+      "label_fr": "{\"fr\":\"Sel\"}",
+      "location": "",
+      "low_threshold": 0,
+      "sort_order": 2
+    }
+  ],
+  "kv": {
+    "restock_delay": {
+      "en": "within 24 hours",
+      "fr": "sous 24 h"
+    },
+    "settings": {
+      "max_requests": 8,
+      "notify": [
+        "email",
+        "app"
+      ],
+      "requests_enabled": false
+    }
+  }
+}
