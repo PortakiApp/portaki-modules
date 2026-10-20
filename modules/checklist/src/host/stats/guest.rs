@@ -4,12 +4,12 @@
 use super::*;
 
 /// Guest ticks of one stay over the guest items that still exist.
-pub(super) struct GuestStay {
-    ticked: Vec<Uuid>,
-    total: usize,
-    last_at: DateTime<Utc>,
+pub(crate) struct GuestStay {
+    pub(crate) ticked: Vec<Uuid>,
+    pub(crate) total: usize,
+    pub(crate) last_at: DateTime<Utc>,
     /// `(check-in, check-out)` when the platform passed the stay.
-    window: Option<(DateTime<Utc>, DateTime<Utc>)>,
+    pub(crate) window: Option<(DateTime<Utc>, DateTime<Utc>)>,
 }
 
 impl GuestStay {
@@ -18,13 +18,13 @@ impl GuestStay {
     }
 }
 
-pub(super) fn complete_count(stays: &[GuestStay]) -> usize {
+pub(crate) fn complete_count(stays: &[GuestStay]) -> usize {
     stays.iter().filter(|stay| stay.complete()).count()
 }
 
 /// Guest ticks per stay since `since`.
-pub(super) fn ticks_by_stay(since: DateTime<Utc>) -> Result<BTreeMap<Uuid, GuestStay>> {
-    let items = crate::queries::guest_items()?;
+pub(crate) fn ticks_by_stay(since: DateTime<Utc>) -> Result<BTreeMap<Uuid, GuestStay>> {
+    let items = crate::domain::guest_items()?;
     let mut by_stay: BTreeMap<Uuid, GuestStay> = BTreeMap::new();
     for row in storage::list_completions(None)? {
         if row.completed_at < since || !items.iter().any(|item| item.uuid() == row.item_id) {
@@ -43,7 +43,7 @@ pub(super) fn ticks_by_stay(since: DateTime<Utc>) -> Result<BTreeMap<Uuid, Guest
 }
 
 /// Stays that ticked something since `since`, newest first.
-pub(super) fn guest_stays(since: DateTime<Utc>) -> Result<Vec<GuestStay>> {
+pub(crate) fn guest_stays(since: DateTime<Utc>) -> Result<Vec<GuestStay>> {
     let mut stays: Vec<GuestStay> = ticks_by_stay(since)?.into_values().collect();
     stays.sort_by_key(|stay| std::cmp::Reverse(stay.last_at));
     Ok(stays)
@@ -51,7 +51,7 @@ pub(super) fn guest_stays(since: DateTime<Utc>) -> Result<Vec<GuestStay>> {
 
 /// Every departure of `(since, now]`, newest first, with what its guest ticked — none for a list
 /// never opened. Ticks are read from a week before the period: a guest ticks during the stay.
-pub(super) fn departures(
+pub(crate) fn departures(
     stays: &[TimelineStay],
     mut ticks: BTreeMap<Uuid, GuestStay>,
     total: usize,
@@ -76,90 +76,8 @@ pub(super) fn departures(
     out
 }
 
-#[portaki_sdk::surface(
-    host,
-    id = "checklist",
-    placement = HostPlacement::PropertyStatsCard,
-    placement = HostPlacement::PropertyStatsDetail,
-    label_key = "catalog.host.checklist",
-    icon = IconName::CheckCircle
-)]
-pub fn render_stats_checklist(ctx: HostContext) -> Surface {
-    let now = time::now().unwrap_or(DateTime::<Utc>::UNIX_EPOCH);
-    let since = now - Duration::days(period_days(&ctx));
-    let fr = is_fr(&ctx.locale);
-    let items = crate::queries::guest_items().unwrap_or_default();
-    let stays = match period_stays(&ctx) {
-        Some(period) => departures(
-            &period,
-            ticks_by_stay(since - Duration::days(30)).unwrap_or_default(),
-            items.len(),
-            since,
-            now,
-        ),
-        None => guest_stays(since).unwrap_or_default(),
-    };
-
-    let body: Component = if stays.is_empty() {
-        empty("i18n:stats.checklist.empty", IconName::CheckCircle)
-    } else {
-        let rates = item_rates(&items, |item| {
-            stays
-                .iter()
-                .filter(|stay| stay.ticked.contains(&item.uuid()))
-                .count()
-        });
-        let tiles = checklist_tiles(&stays, items.len(), &rates, fr);
-
-        let recent: Vec<&GuestStay> = stays.iter().take(8).collect();
-        let per_stay =
-            recent
-                .iter()
-                .rev()
-                .enumerate()
-                .map(|(index, stay)| {
-                    ChartPoint::new((index + 1).to_string(), stay.ticked.len() as f64)
-                        .display(format!("{}/{}", stay.ticked.len(), stay.total))
-                })
-                .collect();
-
-        let feed = stays
-            .iter()
-            .take(10)
-            .map(|stay| stay_row(stay, fr))
-            .collect();
-
-        Stack::new()
-            .gap(16.0)
-            .children(vec![
-                Grid::new()
-                    .minColumnWidth(170.0)
-                    .gap(12.0)
-                    .children(tiles)
-                    .into(),
-                panels(
-                    (
-                        "stats.checklist.byItem",
-                        rate_chart(&rates, stays.len(), Swatch::Green),
-                    ),
-                    (
-                        "stats.checklist.perStay",
-                        Chart::new()
-                            .kind(ChartKind::Bars)
-                            .swatch(Swatch::Green)
-                            .points(per_stay)
-                            .into(),
-                    ),
-                ),
-                feed_card("stats.checklist.feed", feed),
-            ])
-            .into()
-    };
-    Surface::new(Page::new().child(body)).with_id(CHECKLIST)
-}
-
 /// One stay in the feed: its dates, how much was ticked, and its status.
-pub(super) fn stay_row(stay: &GuestStay, fr: bool) -> Component {
+pub(crate) fn stay_row(stay: &GuestStay, fr: bool) -> Component {
     let (label, tone) = if stay.complete() {
         ("i18n:stats.checklist.status.complete", Tone::Success)
     } else if stay.ticked.is_empty() {
@@ -204,7 +122,7 @@ pub(super) fn stay_row(stay: &GuestStay, fr: bool) -> Component {
 }
 
 /// Finished, ticked on average, most forgotten.
-pub(super) fn checklist_tiles(
+pub(crate) fn checklist_tiles(
     stays: &[GuestStay],
     total: usize,
     rates: &[(&Step, usize)],

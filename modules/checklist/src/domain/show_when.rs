@@ -2,7 +2,7 @@
 
 use chrono::{DateTime, Days, NaiveTime, TimeZone, Utc};
 
-use crate::guest::depart::offset_for_iana;
+use crate::domain::timezone::offset_for_iana;
 use crate::lists;
 
 /// Whether a guest list with `trigger` should be shown right now (« Afficher », spec §2.1).

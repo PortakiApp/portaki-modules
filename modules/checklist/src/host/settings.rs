@@ -5,8 +5,8 @@ use portaki_sdk::prelude::*;
 use portaki_sdk::resource::CollectionEditor;
 use portaki_sdk::sdui::primitives::{FieldHint, Form, Grid, Page, Section, SelectableCard, Stack};
 
+use crate::commands::templates::TEMPLATES;
 use crate::commands::{CreateChecklistArgs, CREATE_CHECKLIST};
-use crate::lists::TEMPLATES;
 use crate::{List, Lists};
 
 /// La nav dit au dashboard d'appeler `timelineTasks` : les tâches d'équipe dans À venir.
