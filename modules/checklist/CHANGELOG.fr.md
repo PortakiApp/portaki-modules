@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.11.0
+
+Les checklists passent sur la nouvelle base des listes de Portaki.
+
+* Les checklists se gèrent dans un tableau ; chaque liste s'ouvre dans un panneau avec ses étapes.
+* Les listes déjà saisies sont reprises, avec les coches des voyageurs et l'état des tâches de ménage.
+* Une étape laissée vide disparaît à l'enregistrement.
+* Décocher une tâche de ménage dans la frise la rouvre.
+
 ## 1.10.2
 
 La démo dit « Départ demain ».

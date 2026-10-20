@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.11.0
+
+Les signalements passent sur la nouvelle base de Portaki.
+
+* Les signalements déjà reçus sont repris avec leur statut et leur historique : rien n'est perdu.
+* Décocher la tâche d'un signalement dans la frise le rouvre, au lieu d'être refusé.
+* Une même réponse envoyée deux fois (double clic) ne part qu'une fois au voyageur.
+
 ## 1.10.0
 
 Le formulaire s'ouvre depuis les autres modules.

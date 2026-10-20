@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.14.0
+
+Les appareils passent sur la nouvelle base des listes de Portaki.
+
+* Les appareils déjà saisis sont repris à la première ouverture, avec leurs étapes, notices et vidéos : rien n'est à ressaisir.
+* Un appareil sans nom, que le livret ne montrait pas, n'est pas repris.
+* Une vidéo qu'aucun lecteur ne lit, ou trop d'appareils mis en avant pour la carte, bloque désormais la publication.
+* Le bouton d'import CSV, annoncé « Bientôt », est retiré.
+
 ## 1.13.1
 
 Chaque appareil de la démo ouvre sa fiche.
