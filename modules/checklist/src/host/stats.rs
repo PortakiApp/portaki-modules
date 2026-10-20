@@ -9,10 +9,10 @@
 use portaki_sdk::bundle_text;
 use std::collections::BTreeMap;
 
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use portaki_sdk::contracts::stats::{self, AttentionLevel, StatsSummary, StatsSummaryArgs};
 use portaki_sdk::contracts::timeline::TimelineStay;
-use portaki_sdk::host::time;
+use portaki_sdk::host::time::{self, PropertyTz};
 use portaki_sdk::prelude::*;
 use portaki_sdk::sdui::primitives::{Card, Chart, EmptyState, FeedItem, Grid, Page, Stack, Stat};
 use portaki_sdk::sdui::surface::Surface;
@@ -196,6 +196,7 @@ pub fn render_stats_checklist(ctx: HostContext) -> Surface {
     let now = time::now().unwrap_or(DateTime::<Utc>::UNIX_EPOCH);
     let since = now - Duration::days(period_days(&ctx));
     let fr = labels::lang_code(&ctx.locale) == "fr";
+    let tz = PropertyTz::parse(&ctx.property.timezone);
     let items = crate::queries::guest_items().unwrap_or_default();
     let stays = match period_stays(&ctx) {
         Some(period) => departures(
@@ -263,22 +264,22 @@ pub fn render_stats_checklist(ctx: HostContext) -> Surface {
                 let title = match stay.window {
                     Some((check_in, check_out)) => t!(
                         "stats.checklist.row.stay",
-                        from = short_date(check_in, fr),
-                        to = short_date(check_out, fr)
+                        from = short_date(local(check_in, tz), fr),
+                        to = short_date(local(check_out, tz), fr)
                     ),
                     None => t!(
                         "stats.checklist.row.title",
-                        date = short_date(stay.last_at, fr)
+                        date = short_date(local(stay.last_at, tz), fr)
                     ),
                 }
                 .unwrap_or_default();
                 let date = match stay.window {
                     Some((_, check_out)) => t!(
                         "stats.checklist.row.departure",
-                        date = short_date(check_out, fr)
+                        date = short_date(local(check_out, tz), fr)
                     )
                     .unwrap_or_default(),
-                    None => format_time(stay.last_at),
+                    None => format_time(local(stay.last_at, tz)),
                 };
                 FeedItem::new()
                     .title(title)
@@ -494,6 +495,7 @@ pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
     let days = period_days(&ctx);
     let since = now - Duration::days(days);
     let fr = labels::lang_code(&ctx.locale) == "fr";
+    let tz = PropertyTz::parse(&ctx.property.timezone);
     let data = cleaning_data().unwrap_or(CleaningData {
         lists: Vec::new(),
         items: Vec::new(),
@@ -598,13 +600,14 @@ pub fn render_stats_cleaning(ctx: HostContext) -> Surface {
                     meta.push_str(&t!("stats.cleaning.row.photo").unwrap_or_default());
                 }
                 let title = match task.plan {
-                    Some((departure, _)) => {
-                        t!("stats.cleaning.row.after", date = short_date(departure, fr))
-                            .unwrap_or_default()
-                    }
-                    None => format!("{name} · {}", short_date(at, fr)),
+                    Some((departure, _)) => t!(
+                        "stats.cleaning.row.after",
+                        date = short_date(local(departure, tz), fr)
+                    )
+                    .unwrap_or_default(),
+                    None => format!("{name} · {}", short_date(local(at, tz), fr)),
                 };
-                let date = cleaning_date(task, timing, at, fr).unwrap_or_default();
+                let date = cleaning_date(task, timing, at, tz, fr).unwrap_or_default();
                 FeedItem::new()
                     .title(title)
                     .meta(meta)
@@ -642,9 +645,10 @@ fn cleaning_date(
     task: &CleaningTask<'_>,
     timing: Timing,
     at: DateTime<Utc>,
+    tz: Option<PropertyTz>,
     fr: bool,
 ) -> Result<String> {
-    let (date, time) = (short_date(at, fr), format_time(at));
+    let (date, time) = (short_date(local(at, tz), fr), format_time(local(at, tz)));
     match (task.finished(), task.deadline(), task.done.is_empty()) {
         (true, Some(due), _) if timing == Timing::Late => t!(
             "stats.cleaning.row.lateBy",
@@ -655,8 +659,8 @@ fn cleaning_date(
         (true, _, _) => t!("stats.cleaning.row.doneAt", date = date, time = time),
         (false, Some(due), _) => t!(
             "stats.cleaning.row.dueAt",
-            date = short_date(due, fr),
-            time = format_time(due)
+            date = short_date(local(due, tz), fr),
+            time = format_time(local(due, tz))
         ),
         (false, None, true) => Ok(String::new()),
         (false, None, false) => t!("stats.cleaning.row.lastAt", date = date, time = time),
@@ -804,11 +808,16 @@ fn decimal(value: f64, fr: bool) -> String {
     }
 }
 
-fn format_time(at: DateTime<Utc>) -> String {
+/// `at` on the property's clock — what the host reads; UTC only when its zone is unknown.
+fn local(at: DateTime<Utc>, tz: Option<PropertyTz>) -> NaiveDateTime {
+    tz.map_or(at.naive_utc(), |tz| tz.to_local(at).naive_local())
+}
+
+fn format_time(at: NaiveDateTime) -> String {
     at.format("%H:%M").to_string()
 }
 
-fn short_date(at: DateTime<Utc>, fr: bool) -> String {
+fn short_date(at: NaiveDateTime, fr: bool) -> String {
     use chrono::Datelike;
     const FR: [&str; 12] = [
         "janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.",
@@ -837,5 +846,20 @@ mod tests {
         assert_eq!(decimal(5.14, true), "5,1");
         assert_eq!(percent(7, 9), "77 %");
         assert_eq!(percent(0, 0), "—");
+    }
+
+    #[test]
+    fn times_read_on_the_property_clock() {
+        let at = "2026-08-09T22:30:00Z".parse::<DateTime<Utc>>().unwrap();
+        let paris = PropertyTz::parse("Europe/Paris");
+        // 22:30 UTC in August is 00:30 the next day in Paris (CEST).
+        assert_eq!(format_time(local(at, paris)), "00:30");
+        assert_eq!(short_date(local(at, paris), true), "10 août");
+        let winter = "2026-01-09T12:00:00Z".parse::<DateTime<Utc>>().unwrap();
+        assert_eq!(format_time(local(winter, paris)), "13:00");
+        assert_eq!(
+            format_time(local(at, PropertyTz::parse("Mars/Olympus"))),
+            "22:30"
+        );
     }
 }
