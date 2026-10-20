@@ -1,925 +1,212 @@
-//! Integration-style unit tests with `portaki-test-utils`.
+//! Ce que les appareils font de plus que la collection du SDK : la carte, la liste par pièce, la
+//! fiche, les règles de publication, l'éditeur. La fusion et l'import sont ceux du SDK.
 
-use portaki_sdk::capability;
-use serial_test::serial;
-
-use portaki_test_utils::{MockContext, Property, SurfaceAssertions};
-use serde_json::json;
+mod sample;
 
 use appliances::{
-    get_content, publish_readiness, render_explore_detail, render_explore_item, render_home_card,
-    render_host_main, render_host_stats, replace_devices, reset_test_store, save_appliance,
-    save_safety_notice, stats_summary, ApplianceStatus, GetContentArgs, ReplaceDeviceSlot,
-    ReplaceDevicesArgs, SaveApplianceArgs, SaveSafetyNoticeArgs,
+    __portaki_devices_publish_readiness, render_explore_detail, render_explore_item,
+    render_home_card, render_host_main, stats_summary,
 };
+use portaki_sdk::contracts::stats::StatsSummaryArgs;
+use portaki_sdk::prelude::*;
+use portaki_test_utils::{MockContext, MockContextBuilder, SurfaceAssertions};
+use serde_json::{json, Value};
 
-fn seed_two_devices(ctx: portaki_sdk::prelude::Context) {
-    save_appliance(
-        ctx.clone(),
-        SaveApplianceArgs {
-            id: Some("tv".into()),
-            name: "Télévision".into(),
-            emoji: "📺".into(),
-            description: json!({
-                "type": "doc",
-                "content": [{
-                    "type": "bulletList",
-                    "content": [{
-                        "type": "listItem",
-                        "content": [{
-                            "type": "paragraph",
-                            "content": [{ "type": "text", "text": "Allumez avec la télécommande." }]
-                        }]
-                    }]
-                }]
-            })
-            .to_string(),
-            featured: true,
-            order: Some(0),
-            location: "Salon · Samsung 55\"".into(),
-            manual_url: "https://example.com/tv-manual".into(),
-            safety_note: String::new(),
-            status: ApplianceStatus::Active,
-            model: String::new(),
-            video_url: String::new(),
-            steps: None,
-        },
+fn tree(surface: &Surface) -> String {
+    serde_json::to_string(surface).unwrap()
+}
+
+fn item(builder: MockContextBuilder, id: &str) -> String {
+    builder.run(|mut ctx| {
+        ctx.input = json!({ "deviceId": id });
+        tree(&render_explore_item(ctx).unwrap())
+    })
+}
+
+fn readiness(devices: Value, meta: Value) -> Vec<String> {
+    sample::with(MockContext::host(), devices, meta).run(|ctx| {
+        __portaki_devices_publish_readiness(ctx)
+            .unwrap()
+            .items
+            .into_iter()
+            .map(|i| i.id)
+            .collect()
+    })
+}
+
+#[test]
+fn no_appliance_is_the_empty_state() {
+    let surface = MockContext::guest().run(|ctx| render_home_card(ctx).unwrap());
+    assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
+}
+
+#[test]
+fn the_card_tiles_the_featured_and_counts_them_all() {
+    let card = sample::seeded(MockContext::guest()).run(|ctx| render_home_card(ctx).unwrap());
+    assert_eq!(SurfaceAssertions::new(&card).count_type("ListItem"), 1);
+    let card = tree(&card);
+    assert!(
+        card.contains("Plaques à induction") && !card.contains("Télévision"),
+        "{card}"
+    );
+    assert!(card.contains("home.card.seeAll"), "{card}");
+}
+
+#[test]
+fn nothing_featured_shows_the_first_ones() {
+    let devices =
+        json!([ { "id": "a", "name": { "fr": "Four" } }, { "id": "b", "name": { "fr": "Télé" } } ]);
+    let card = sample::with(
+        MockContext::guest(),
+        devices,
+        json!({ "featured_limit": 2 }),
     )
-    .expect("save tv");
-    save_appliance(
-        ctx,
-        SaveApplianceArgs {
-            id: Some("washer".into()),
-            name: "Lave-linge".into(),
-            emoji: "🌀".into(),
-            description: json!({
-                "type": "doc",
-                "content": [{
-                    "type": "paragraph",
-                    "content": [{ "type": "text", "text": "ECO 30°" }]
-                }]
-            })
-            .to_string(),
-            featured: false,
-            order: Some(1),
-            location: "Salle de bain · Bosch".into(),
-            manual_url: String::new(),
-            safety_note: "Pas de machine après 21 h.".into(),
-            status: ApplianceStatus::Active,
-            model: String::new(),
-            video_url: String::new(),
-            steps: None,
-        },
+    .run(|ctx| render_home_card(ctx).unwrap());
+    assert_eq!(SurfaceAssertions::new(&card).count_type("ListItem"), 2);
+    assert!(tree(&card).contains("🔥"), "the name proposes the emoji");
+}
+
+#[test]
+fn the_list_is_one_card_per_room_in_the_hosts_order() {
+    let list = sample::with(
+        MockContext::guest(),
+        sample::devices(),
+        json!({ "room_order": ["Salon", "Cuisine"] }),
     )
-    .expect("save washer");
+    .run(|ctx| tree(&render_explore_detail(ctx).unwrap()));
+    let salon = list.find("\"title\":\"Salon\"").unwrap();
+    let cuisine = list.find("\"title\":\"Cuisine\"").unwrap();
+    assert!(salon < cuisine, "{list}");
 }
 
 #[test]
-#[serial]
-fn home_card_empty_without_content() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            let surface = render_home_card(ctx).expect("render");
-            assert!(SurfaceAssertions::new(&surface).contains_type("EmptyState"));
-        });
+fn a_hidden_or_unnamed_appliance_stays_off_the_booklet() {
+    let devices = json!([
+        { "id": "a", "name": { "fr": "Four" }, "hidden": true },
+        { "id": "b", "name": { "fr": "" }, "emoji": "📺" },
+        { "id": "c", "name": { "fr": "Bouilloire" } }
+    ]);
+    let list = sample::with(MockContext::guest(), devices, json!({}))
+        .run(|ctx| tree(&render_explore_detail(ctx).unwrap()));
+    assert!(list.contains("Bouilloire") && !list.contains("Four") && !list.contains("📺"));
 }
 
 #[test]
-#[serial]
-fn home_card_featured_only_and_detail_list() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            seed_two_devices(ctx.clone());
-            let card = render_home_card(ctx.clone()).expect("render");
-            assert!(SurfaceAssertions::new(&card).contains_type("Card"));
-            assert!(SurfaceAssertions::new(&card).contains_type("ListItem"));
-            let card_json = serde_json::to_string(&card).expect("json");
-            assert!(card_json.contains("Télévision"));
-            assert!(!card_json.contains("Lave-linge"));
-            assert!(card_json.contains("\"type\":\"openOverlay\""));
-            assert!(card_json.contains("explore.detail"));
-            assert!(card_json.contains("appliances/tv"));
-
-            let detail = render_explore_detail(ctx.clone()).expect("render");
-            assert!(SurfaceAssertions::new(&detail).contains_type("Card"));
-            assert!(SurfaceAssertions::new(&detail).contains_type("ListItem"));
-            let detail_json = serde_json::to_string(&detail).expect("json");
-            assert!(detail_json.contains("Télévision"));
-            assert!(detail_json.contains("Lave-linge"));
-            assert!(detail_json.contains("appliances/washer"));
-        });
-}
-
-/// « Voir les N appareils » (§2.4), avec le compte de la liste et non celui des tuiles.
-///
-/// Les aperçus ne couvrent que `explore.detail` et `explore.item` : la carte d'accueil n'y est pas,
-/// donc ce bouton n'a que ce test pour le tenir.
-#[test]
-#[serial]
-fn the_home_card_says_how_many_appliances_there_are() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            seed_two_devices(ctx.clone());
-            let card = render_home_card(ctx.clone()).expect("render");
-            let json = serde_json::to_string(&card).expect("json");
-
-            assert!(SurfaceAssertions::new(&card).contains_type("Button"));
-            // Le nombre est glissé par le service de traduction de l'hôte, que le contexte de test
-            // ne fournit pas : il rend ici la clé. Ce que ce test tient, c'est que le bouton existe
-            // et porte bien ce libellé-là — jamais vide, jamais celui du repli sans nombre.
-            assert!(json.contains("home.card.seeAll"), "{json}");
-            assert!(!json.contains("\"label\":\"\""), "{json}");
-        });
-}
-
-/// La liste complète groupe par pièce (§2.4), et range sous « Autres » ce que l'hôte n'a pas placé.
-#[test]
-#[serial]
-fn the_full_list_is_grouped_by_room() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            seed_two_devices(ctx.clone());
-            let detail = render_explore_detail(ctx.clone()).expect("render");
-            let json = serde_json::to_string(&detail).expect("json");
-
-            // Deux pièces différentes dans la fixture : deux cartes titrées, comme la maquette
-            // les dessine. Avant, un seul bloc avec des intertitres `Eyebrow`.
-            assert_eq!(json.matches("\"type\":\"Card\"").count(), 2, "{json}");
-            assert!(
-                !SurfaceAssertions::new(&detail).contains_type("Eyebrow"),
-                "{json}"
-            );
-        });
+fn the_item_shows_safety_steps_with_their_diagram_and_the_manuals() {
+    let page = item(sample::seeded(MockContext::guest()), "plaques");
+    assert!(
+        page.contains("InfoBanner") && page.contains("La surface reste chaude"),
+        "{page}"
+    );
+    assert!(page.contains("portaki-file:plaques-induction-1") && page.contains("\"index\":2"));
+    assert!(page.contains("explore.item.manuals") && page.contains("notice-plaques.pdf"));
+    assert!(
+        !page.contains("explore.item.contactHost"),
+        "no report module, no button"
+    );
 }
 
 #[test]
-#[serial]
-fn explore_item_uses_device_id_and_howto_steps() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_peers(appliances::REPORT_ISSUE, vec![report_provider()])
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            seed_two_devices(ctx.clone());
-
-            let mut tv_ctx = ctx.clone();
-            tv_ctx.input = json!({ "deviceId": "tv" });
-            let tv = render_explore_item(tv_ctx).expect("render");
-            assert!(SurfaceAssertions::new(&tv).contains_type("ListItem"));
-            assert!(SurfaceAssertions::new(&tv).contains_type("Eyebrow"));
-            assert!(SurfaceAssertions::new(&tv).contains_type("Button"));
-            // La notice n'est plus un lien nu : elle est une rangée de la carte « Notices » (§3.1).
-            assert!(SurfaceAssertions::new(&tv).contains_type("Card"));
-            let tv_json = serde_json::to_string(&tv).expect("json");
-            assert!(tv_json.contains("Télévision"));
-            assert!(tv_json.contains("Allumez avec la télécommande."));
-            assert!(tv_json.contains("https://example.com/tv-manual"));
-            // Le bouton ouvre le formulaire du fournisseur, au chemin qu'il a déclaré.
-            assert!(tv_json.contains(r#""type":"navigate""#), "{tv_json}");
-            assert!(tv_json.contains(r#""to":"provider/form""#), "{tv_json}");
-            // Le formulaire de signalement lit ces deux noms pour s'ouvrir déjà rempli.
-            assert!(tv_json.contains(r#""category":"appliance""#));
-            assert!(tv_json.contains(r#""summary":"Télévision""#));
-            assert!(!tv_json.contains("Lave-linge"));
-
-            let mut washer_ctx = ctx.clone();
-            washer_ctx.input = json!({ "deviceId": "washer" });
-            let washer = render_explore_item(washer_ctx).expect("render");
-            assert!(SurfaceAssertions::new(&washer).contains_type("InfoBanner"));
-            let washer_json = serde_json::to_string(&washer).expect("json");
-            assert!(washer_json.contains("Lave-linge"));
-            assert!(washer_json.contains("Pas de machine après 21 h."));
-            assert!(washer_json.contains("ECO 30"));
-        });
-}
-
-/// Le module qui sait recevoir un signalement, tel que la plateforme le trouve.
-fn report_provider() -> portaki_sdk::host::module::ModulePeer {
-    serde_json::from_value(json!({ "moduleId": "provider", "path": "provider/form" })).unwrap()
-}
-
-/// Sans module qui reçoive un signalement, « Un souci avec cet appareil ? » ne s'affiche pas :
-/// un bouton qui ne mène nulle part coûte plus qu'aucun bouton.
-#[test]
-#[serial]
-fn explore_item_hides_the_report_button_without_a_provider() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            seed_two_devices(ctx.clone());
-            let mut tv_ctx = ctx.clone();
-            tv_ctx.input = json!({ "deviceId": "tv" });
-            let tv = render_explore_item(tv_ctx).expect("render");
-            let tv_json = serde_json::to_string(&tv).expect("json");
-            assert!(!tv_json.contains("explore.item.contactHost"), "{tv_json}");
-            assert!(!tv_json.contains("navigate"), "{tv_json}");
-        });
-}
-
-/// Une description sans liste part dans `RichText` **telle quelle** : `content` est un champ
-/// TipTap, et c'est le livret qui convertit.
-///
-/// Le module y posait du HTML pré-rendu. Depuis que le livret refuse d'injecter ce qui n'est pas du
-/// TipTap, ce HTML s'affichait littéralement — « <p>Appuyez… </p> », balises comprises, dans la
-/// carte « Mode d'emploi ».
-#[test]
-#[serial]
-fn explore_item_sends_tiptap_not_html_to_rich_text() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            let description = json!({
-                "type": "doc",
-                "content": [
-                    {
-                        "type": "paragraph",
-                        "content": [{ "type": "text", "text": "Appuyez 2 secondes." }]
-                    },
-                    {
-                        "type": "paragraph",
-                        "content": [{
-                            "type": "text",
-                            "text": "Fond aimanté.",
-                            "marks": [{ "type": "bold" }]
-                        }]
-                    }
-                ]
-            })
-            .to_string();
-            save_appliance(
-                ctx.clone(),
-                SaveApplianceArgs {
-                    id: Some("plaques".into()),
-                    name: "Plaques à induction".into(),
-                    emoji: String::new(),
-                    description: description.clone(),
-                    featured: false,
-                    order: None,
-                    location: String::new(),
-                    manual_url: String::new(),
-                    safety_note: String::new(),
-                    status: ApplianceStatus::Active,
-                    model: String::new(),
-                    video_url: String::new(),
-                    steps: None,
-                },
-            )
-            .expect("save");
-
-            let mut item_ctx = ctx.clone();
-            item_ctx.input = json!({ "deviceId": "plaques" });
-            let item = render_explore_item(item_ctx).expect("render");
-            let content =
-                rich_text_content(&item).expect("un RichText dans la carte mode d'emploi");
-
-            assert_eq!(content, description);
-            assert!(!content.contains("<p>"), "{content}");
-            assert_eq!(
-                serde_json::from_str::<serde_json::Value>(&content)
-                    .expect("TipTap")
-                    .get("type")
-                    .and_then(|t| t.as_str()),
-                Some("doc"),
-                "{content}"
-            );
-        });
-}
-
-/// Une description vide ne laisse pas une carte qui ne porte que son chapeau.
-#[test]
-#[serial]
-fn explore_item_hides_howto_card_for_an_empty_description() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            save_appliance(
-                ctx.clone(),
-                SaveApplianceArgs {
-                    id: Some("vide".into()),
-                    name: "Grille-pain".into(),
-                    emoji: String::new(),
-                    description: json!({ "type": "doc", "content": [{ "type": "paragraph" }] })
-                        .to_string(),
-                    featured: false,
-                    order: None,
-                    location: String::new(),
-                    manual_url: String::new(),
-                    safety_note: String::new(),
-                    status: ApplianceStatus::Active,
-                    model: String::new(),
-                    video_url: String::new(),
-                    steps: None,
-                },
-            )
-            .expect("save");
-
-            let mut item_ctx = ctx.clone();
-            item_ctx.input = json!({ "deviceId": "vide" });
-            let item = render_explore_item(item_ctx).expect("render");
-            assert!(
-                !SurfaceAssertions::new(&item).contains_type("Eyebrow"),
-                "{}",
-                serde_json::to_string(&item).expect("json")
-            );
-        });
-}
-
-/// Le `content` du premier `RichText` de l'arbre.
-fn rich_text_content(surface: &impl serde::Serialize) -> Option<String> {
-    fn walk(node: &serde_json::Value) -> Option<String> {
-        if node.get("type").and_then(|t| t.as_str()) == Some("RichText") {
-            return node
-                .get("content")
-                .and_then(|c| c.as_str())
-                .map(str::to_string);
-        }
-        match node {
-            serde_json::Value::Object(map) => map.values().find_map(walk),
-            serde_json::Value::Array(items) => items.iter().find_map(walk),
-            _ => None,
-        }
-    }
-    walk(&serde_json::to_value(surface).expect("json"))
+fn without_steps_the_free_text_lists_become_steps() {
+    let description = json!({ "type": "doc", "content": [ { "type": "orderedList", "content": [
+        { "type": "listItem", "content": [ { "type": "paragraph", "content": [ { "type": "text", "text": "Ouvrir le hublot" } ] } ] }
+    ] } ] }).to_string();
+    let devices = json!([ { "id": "l", "name": { "fr": "Lave-linge" }, "description": { "fr": description } } ]);
+    let page = item(sample::with(MockContext::guest(), devices, json!({})), "l");
+    assert!(
+        page.contains("\"title\":\"Ouvrir le hublot\"") && page.contains("\"index\":1"),
+        "{page}"
+    );
 }
 
 #[test]
-#[serial]
-fn explore_item_missing_device_id_is_not_found() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            seed_two_devices(ctx.clone());
-            let item = render_explore_item(ctx).expect("render");
-            let json = serde_json::to_string(&item).expect("json");
-            assert!(json.contains("explore.item.notFound"));
-            assert!(!json.contains("Télévision"));
-        });
+fn no_manual_at_all_says_so_and_the_pdf_wins_over_the_link() {
+    let devices = json!([
+        { "id": "a", "name": { "fr": "Four" } },
+        { "id": "b", "name": { "fr": "Télé" }, "manual_file": "portaki-file:notice", "manual_url": "https://example.com/n" }
+    ]);
+    let page = item(
+        sample::with(MockContext::guest(), devices.clone(), json!({})),
+        "a",
+    );
+    assert!(page.contains("explore.item.noManual") && !page.contains("explore.item.howto"));
+    let page = item(sample::with(MockContext::guest(), devices, json!({})), "b");
+    assert!(
+        page.contains("portaki-file:notice") && !page.contains("example.com/n"),
+        "{page}"
+    );
 }
 
 #[test]
-#[serial]
-fn get_content_returns_devices() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            seed_two_devices(ctx.clone());
-            let view = get_content(
-                ctx,
-                GetContentArgs {
-                    locale: Some("fr-FR".into()),
-                    device_id: None,
-                },
-            )
-            .expect("get");
-            assert_eq!(view.devices.len(), 2);
-            assert!(view.devices.iter().any(|d| d.name.contains("Télévision")));
-        });
+fn an_unknown_appliance_is_not_found() {
+    let page = item(sample::seeded(MockContext::guest()), "nope");
+    assert!(page.contains("explore.item.notFound"));
 }
 
 #[test]
-#[serial]
-fn migrates_legacy_payload_on_read() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            let legacy = json!({
-                "safety_notice": "Coupez l'eau en cas de fuite.",
-                "devices": [{
-                    "id": "tv",
-                    "icon": "📺",
-                    "title": "Télévision",
-                    "subtitle": "Salon",
-                    "steps": ["Allumez", "HDMI 1"],
-                    "tip": "Remote on stand"
-                }]
-            })
-            .to_string();
-            appliances::store_save_legacy_for_tests(legacy).expect("seed legacy");
-            let view = get_content(
-                ctx.clone(),
-                GetContentArgs {
-                    locale: Some("fr-FR".into()),
-                    device_id: None,
-                },
-            )
-            .expect("get");
-            assert_eq!(view.devices.len(), 1);
-            assert_eq!(view.devices[0].name, "Télévision");
-            assert_eq!(view.devices[0].emoji, "📺");
-            assert!(!view.devices[0].featured);
-            assert!(view.devices[0].description.contains("bulletList"));
-            assert!(view.safety_notice.contains("Coupez l'eau"));
-            let card = render_home_card(ctx).expect("render");
-            // featured=false after migration → the card falls back to the first active ones.
-            let card = serde_json::to_string(&card).expect("json");
-            assert_eq!(card.matches("\"layout\":\"tile\"").count(), 1, "{card}");
-        });
+fn a_report_module_adds_the_button() {
+    let reporter: portaki_sdk::host::module::ModulePeer =
+        serde_json::from_value(json!({ "moduleId": "issue-report", "path": "issue-report/form" }))
+            .unwrap();
+    let builder =
+        sample::seeded(MockContext::guest()).with_peers(appliances::REPORT_ISSUE, vec![reporter]);
+    let page = item(builder, "tv");
+    assert!(page.contains("issue-report/form") && page.contains("\"category\":\"appliance\""));
 }
 
-/// La carte « Notices » : lien seul, papier seul, les deux, ou masquée (§3.1 et §9).
 #[test]
-#[serial]
-fn the_manuals_card_appears_only_when_there_is_a_manual() {
-    for (manual_url, paper, shown) in [
-        (
-            "https://example.com/m.pdf",
-            "Boîte rouge, étagère du salon",
-            true,
-        ),
-        ("https://example.com/m.pdf", "", true),
-        ("", "Boîte rouge, étagère du salon", true),
-        ("", "", false),
+fn a_video_the_booklet_cannot_play_blocks_publication_and_stays_off() {
+    let devices =
+        json!([ { "id": "a", "name": { "fr": "Four" }, "video_url": "https://example.com/v" } ]);
+    assert!(readiness(devices.clone(), json!({})).contains(&"resources.devices.a.video_url".into()));
+    let page = item(sample::with(MockContext::guest(), devices, json!({})), "a");
+    assert!(!page.contains("explore.item.video"));
+}
+
+#[test]
+fn more_featured_than_the_card_shows_blocks_publication() {
+    let devices = json!([
+        { "id": "a", "name": { "fr": "Four" }, "featured": true },
+        { "id": "b", "name": { "fr": "Télé" }, "featured": true },
+        { "id": "c", "name": { "fr": "Bouilloire" }, "featured": true }
+    ]);
+    let ids = readiness(devices, json!({ "featured_limit": 2 }));
+    assert!(
+        ids.contains(&"resources.devices.featured_limit".into()),
+        "{ids:?}"
+    );
+}
+
+#[test]
+fn the_editor_is_the_home_card_then_the_table_with_steps() {
+    let surface = sample::seeded(MockContext::host()).run(|ctx| render_host_main(ctx).unwrap());
+    let page = tree(&surface);
+    for wanted in [
+        "host.section.homeCard",
+        r#""kind":"check""#,
+        r#""name":"🍳 Plaques à induction""#,
+        r#""name":"devices.0.steps.1.text""#,
+        r#""name":"devices.0.steps.0.id""#,
+        r#""accept":"application/pdf""#,
+        "host.search.placeholder",
     ] {
-        reset_test_store();
-        MockContext::guest()
-            .with_property(Property::default())
-            .with_capabilities(&[capability::core::STORAGE])
-            .run(|ctx| {
-                replace_devices(
-                    ctx.clone(),
-                    ReplaceDevicesArgs {
-                        safety_notice: None,
-                        paper_manuals_location: Some(paper.to_string()),
-                        devices: vec![ReplaceDeviceSlot {
-                            id: "tv".into(),
-                            name: Some("Télévision".into()),
-                            manual_url: Some(manual_url.to_string()),
-                            ..ReplaceDeviceSlot::default()
-                        }],
-                    },
-                )
-                .expect("save");
-
-                let mut item_ctx = ctx.clone();
-                item_ctx.input = json!({ "deviceId": "tv" });
-                let json_out =
-                    serde_json::to_string(&render_explore_item(item_ctx).expect("render")).unwrap();
-
-                assert_eq!(
-                    json_out.contains("explore.item.manuals"),
-                    shown,
-                    "lien: {manual_url:?}, papier: {paper:?} — {json_out}"
-                );
-                assert_eq!(
-                    json_out.contains("explore.item.manual.paper"),
-                    !paper.is_empty()
-                );
-            });
+        assert!(page.contains(wanted), "{wanted}");
     }
+    assert!(
+        !page.contains("host.manual.missing"),
+        "every sample has a manual"
+    );
 }
 
-/// L'emplacement des notices papier vaut pour tous les appareils, pas pour un seul.
-#[test]
-#[serial]
-fn the_paper_location_is_shared_by_every_appliance() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            replace_devices(
-                ctx.clone(),
-                ReplaceDevicesArgs {
-                    safety_notice: None,
-                    paper_manuals_location: Some("Boîte rouge".into()),
-                    devices: vec![
-                        ReplaceDeviceSlot {
-                            id: "tv".into(),
-                            name: Some("Télévision".into()),
-                            ..ReplaceDeviceSlot::default()
-                        },
-                        ReplaceDeviceSlot {
-                            id: "washer".into(),
-                            name: Some("Lave-linge".into()),
-                            ..ReplaceDeviceSlot::default()
-                        },
-                    ],
-                },
-            )
-            .expect("save");
-
-            for device in ["tv", "washer"] {
-                let mut item_ctx = ctx.clone();
-                item_ctx.input = json!({ "deviceId": device });
-                let out =
-                    serde_json::to_string(&render_explore_item(item_ctx).expect("render")).unwrap();
-                assert!(out.contains("Boîte rouge"), "{device}: {out}");
-            }
-        });
-}
-
-/// Le numéro d'une étape est un repère en tête de rangée, pas le texte de l'étape.
-#[test]
-#[serial]
-fn a_step_reads_its_text_not_its_number() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            seed_two_devices(ctx.clone());
-            let mut item_ctx = ctx.clone();
-            item_ctx.input = json!({ "deviceId": "tv" });
-            let out =
-                serde_json::to_string(&render_explore_item(item_ctx).expect("render")).unwrap();
-
-            // Le titre porte la consigne, le repère porte le rang.
-            assert!(
-                out.contains("\"title\":\"Allumez avec la télécommande.\""),
-                "{out}"
-            );
-            assert!(out.contains("\"index\":1"), "{out}");
-            assert!(!out.contains("\"title\":\"1\""), "{out}");
-        });
-}
-
-/// Trente appareils : le cas de la maquette, que la borne de dix rendait inatteignable.
-///
-/// Une villa avec sa cuisine, ses trois salles de bain et sa buanderie dépassait dix sans effort,
-/// et le onzième était refusé. Le contrat en annonce soixante (§2.4). La carte ne bouge pas —
-/// quatre tuiles et « Voir les N » — et la liste reste groupée par pièce.
-#[test]
-#[serial]
-fn thirty_appliances_fit_and_the_card_stays_short() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            for index in 0..30 {
-                save_appliance(
-                    ctx.clone(),
-                    SaveApplianceArgs {
-                        id: None,
-                        name: format!("Appareil {index}"),
-                        emoji: "🔌".into(),
-                        description: String::new(),
-                        featured: index < 4,
-                        order: Some(index),
-                        location: format!("Pièce {}", index % 5),
-                        manual_url: String::new(),
-                        safety_note: String::new(),
-                        status: ApplianceStatus::Active,
-                        model: String::new(),
-                        video_url: String::new(),
-                        steps: None,
-                    },
-                )
-                .unwrap_or_else(|e| panic!("appareil {index} refusé : {e:?}"));
-            }
-
-            let content = get_content(ctx.clone(), GetContentArgs::default()).expect("contenu");
-            assert_eq!(content.devices.len(), 30);
-
-            // Quatre tuiles mises en avant, pas trente : la carte donne un aperçu (§2.4).
-            let card = serde_json::to_string(&render_home_card(ctx.clone()).expect("carte"))
-                .expect("json");
-            assert_eq!(card.matches("\"layout\":\"tile\"").count(), 4, "{card}");
-
-            // La liste complète groupe par pièce : cinq pièces, cinq cartes.
-            let list = render_explore_detail(ctx).expect("liste");
-            let json = serde_json::to_string(&list).expect("json");
-            assert_eq!(json.matches("\"type\":\"Card\"").count(), 5, "{json}");
-        });
-}
-
-/// Un nom vide est refusé avec le message de la spec, pas une phrase de développeur.
-#[test]
-#[serial]
-fn an_appliance_without_a_name_is_refused_in_the_hosts_words() {
-    reset_test_store();
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|mut ctx| {
-            ctx.locale = "fr-FR".into();
-            let error = save_appliance(
-                ctx,
-                SaveApplianceArgs {
-                    id: None,
-                    name: "  ".into(),
-                    emoji: String::new(),
-                    description: String::new(),
-                    featured: false,
-                    order: None,
-                    location: String::new(),
-                    manual_url: String::new(),
-                    safety_note: String::new(),
-                    status: ApplianceStatus::Active,
-                    model: String::new(),
-                    video_url: String::new(),
-                    steps: None,
-                },
-            )
-            .expect_err("nom vide");
-            assert!(
-                error.to_string().contains("Donnez un nom à l'appareil."),
-                "{error}"
-            );
-        });
-}
-
-/// Un nombre mis en avant hors de 2 à 6 est gardé tel quel et signalé sous le champ.
-#[test]
-#[serial]
-fn a_featured_limit_out_of_range_is_kept_and_shown_under_the_field() {
-    reset_test_store();
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|mut ctx| {
-            ctx.locale = "fr-FR".into();
-            save_safety_notice(
-                ctx.clone(),
-                SaveSafetyNoticeArgs {
-                    safety_notice: String::new(),
-                    paper_manuals_location: String::new(),
-                    featured_limit: Some(9.0),
-                },
-            )
-            .expect("save");
-            let surface = render_host_main(ctx);
-            let json = serde_json::to_string(&surface).expect("json");
-            assert!(json.contains("Entre 2 et 6."), "{json}");
-        });
-}
-
-fn washer_with_steps(steps: Option<serde_json::Value>) -> SaveApplianceArgs {
-    SaveApplianceArgs {
-        id: Some("washer".into()),
-        name: "Lave-linge".into(),
-        emoji: "🌀".into(),
-        description: json!({
-            "type": "doc",
-            "content": [{
-                "type": "paragraph",
-                "content": [{ "type": "text", "text": "Lessive dans le placard." }]
-            }]
-        })
-        .to_string(),
-        featured: false,
-        order: Some(0),
-        location: "Salle de bain".into(),
-        manual_url: String::new(),
-        safety_note: String::new(),
-        status: ApplianceStatus::Active,
-        model: "Bosch Serie 6 WAU28".into(),
-        video_url: "https://youtu.be/abc".into(),
-        steps,
-    }
-}
-
-fn render_washer(ctx: &portaki_sdk::prelude::Context) -> String {
-    let mut item_ctx = ctx.clone();
-    item_ctx.input = json!({ "deviceId": "washer" });
-    serde_json::to_string(&render_explore_item(item_ctx).expect("render")).unwrap()
-}
-
-/// Les étapes de l'`EditableList` deviennent des rangées numérotées, le texte libre reste
-/// lisible sous elles ; le modèle passe en légende, la vidéo en lien.
-#[test]
-#[serial]
-fn structured_steps_model_and_video_reach_the_guest() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            let rows = json!([{ "label": "Ouvrez le hublot" }, { "label": " " }, { "label": "Choisissez Coton 40°" }]);
-            save_appliance(ctx.clone(), washer_with_steps(Some(rows.to_string().into())))
-                .expect("save");
-            let out = render_washer(&ctx);
-
-            let first = out.find("Ouvrez le hublot").expect("étape 1");
-            let second = out.find("Choisissez Coton 40°").expect("étape 2");
-            let free = out.find("Lessive dans le placard.").expect("texte libre");
-            assert!(first < second && second < free, "{out}");
-            assert!(out.contains(r#""index":2"#), "rangée vide écartée : {out}");
-            assert!(!out.contains(r#""index":3"#), "{out}");
-            assert!(out.contains("Bosch Serie 6 WAU28 · Salle de bain"), "{out}");
-            assert!(out.contains("explore.item.video"), "{out}");
-            assert!(out.contains("https://youtu.be/abc"), "{out}");
-        });
-}
-
-/// Un enregistrement sans étapes (ou depuis le formulaire complet) ne les efface pas.
-#[test]
-#[serial]
-fn saving_without_steps_keeps_them() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            save_appliance(
-                ctx.clone(),
-                washer_with_steps(Some(json!(["Ouvrez le hublot"]))),
-            )
-            .expect("save");
-            save_appliance(ctx.clone(), washer_with_steps(None)).expect("save again");
-            assert!(render_washer(&ctx).contains("Ouvrez le hublot"));
-
-            replace_devices(
-                ctx.clone(),
-                ReplaceDevicesArgs {
-                    safety_notice: None,
-                    paper_manuals_location: None,
-                    devices: vec![ReplaceDeviceSlot {
-                        id: "washer".into(),
-                        name: Some("Lave-linge".into()),
-                        ..ReplaceDeviceSlot::default()
-                    }],
-                },
-            )
-            .expect("replace");
-            assert!(render_washer(&ctx).contains("Ouvrez le hublot"));
-        });
-}
-
-/// Un lien vidéo hors règle avertit l'hôte sous le champ et à la publication, sans la bloquer,
-/// et n'atteint pas le voyageur.
-#[test]
-#[serial]
-fn a_bad_video_warns_and_stays_off_the_booklet() {
-    reset_test_store();
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|mut ctx| {
-            ctx.locale = "fr-FR".into();
-            let mut args = washer_with_steps(Some(json!([])));
-            args.video_url = "https://example.com/video".into();
-            save_appliance(ctx.clone(), args).expect("saved, not refused");
-
-            let readiness = serde_json::to_value(publish_readiness(ctx.clone()).unwrap()).unwrap();
-            let items = readiness["items"].as_array().unwrap();
-            assert_eq!(items.len(), 1, "{readiness}");
-            assert_eq!(items[0]["id"], "config.devices.0.videoUrl");
-            assert_eq!(items[0]["level"], "recommended", "{readiness}");
-
-            ctx.input = json!({ "selectedId": "washer" });
-            let host = serde_json::to_string(&render_host_main(ctx.clone())).unwrap();
-            assert!(
-                host.contains("Utilisez un lien YouTube, Vimeo, Google Drive ou un fichier .mp4."),
-                "{host}"
-            );
-            assert!(host.contains("i18n:host.device.steps"), "{host}");
-
-            assert!(!render_washer(&ctx).contains("example.com/video"));
-        });
-}
-
-/// `replaceDevices` sans `safetyNote` garde la consigne enregistrée (et tout autre champ
-/// absent) ; une valeur vide l'efface.
-#[test]
-#[serial]
-fn replace_devices_keeps_what_the_row_does_not_send() {
-    reset_test_store();
-    MockContext::guest()
-        .with_property(Property::default())
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|ctx| {
-            let mut args = washer_with_steps(None);
-            args.safety_note = "Pas de machine après 21 h.".into();
-            args.manual_url = "https://example.com/m.pdf".into();
-            save_appliance(ctx.clone(), args).expect("save");
-
-            let replace = |slot: ReplaceDeviceSlot| {
-                replace_devices(
-                    ctx.clone(),
-                    ReplaceDevicesArgs {
-                        safety_notice: None,
-                        paper_manuals_location: None,
-                        devices: vec![slot],
-                    },
-                )
-                .expect("replace")
-            };
-            replace(ReplaceDeviceSlot {
-                id: "washer".into(),
-                name: Some("Lave-linge".into()),
-                ..ReplaceDeviceSlot::default()
-            });
-            let out = render_washer(&ctx);
-            for kept in [
-                "Pas de machine après 21 h.",
-                "https://example.com/m.pdf",
-                "https://youtu.be/abc",
-                "Bosch Serie 6 WAU28 · Salle de bain",
-                "Lessive dans le placard.",
-            ] {
-                assert!(out.contains(kept), "{kept}: {out}");
-            }
-
-            replace(ReplaceDeviceSlot {
-                id: "washer".into(),
-                name: Some("Lave-linge".into()),
-                safety_note: Some(String::new()),
-                ..ReplaceDeviceSlot::default()
-            });
-            assert!(!render_washer(&ctx).contains("Pas de machine après 21 h."));
-        });
-}
-
-/// La consigne propre à l'appareil a son champ dans le formulaire, et s'enregistre par langue
-/// comme la description.
-#[test]
-#[serial]
-fn the_safety_note_has_its_field_and_is_saved_per_language() {
-    reset_test_store();
-    MockContext::host()
-        .with_capabilities(&[capability::core::STORAGE])
-        .run(|mut ctx| {
-            let host_form = |ctx: &portaki_sdk::prelude::Context, locale: &str| {
-                let mut ctx = ctx.clone();
-                ctx.locale = locale.into();
-                ctx.input = json!({ "selectedId": "washer" });
-                serde_json::to_string(&render_host_main(ctx)).expect("json")
-            };
-            for (locale, note) in [
-                ("fr-FR", "Pas de machine après 22 h."),
-                ("en-US", "No laundry after 10 pm."),
-            ] {
-                ctx.locale = locale.into();
-                let mut args = washer_with_steps(None);
-                args.safety_note = format!("  {note} ");
-                save_appliance(ctx.clone(), args).expect("save");
-            }
-
-            let fr = host_form(&ctx, "fr-FR");
-            assert!(fr.contains(r#""name":"devices.0.safetyNote""#), "{fr}");
-            assert!(fr.contains("host.device.safetyNote"), "{fr}");
-            assert!(
-                fr.contains(r#""value":"Pas de machine après 22 h.""#),
-                "{fr}"
-            );
-            assert!(!fr.contains("No laundry"), "{fr}");
-            let en = host_form(&ctx, "en-US");
-            assert!(en.contains(r#""value":"No laundry after 10 pm.""#), "{en}");
-        });
-}
-
-/// « Modes d'emploi ouverts » : les fiches d'appareil ouvertes sur la période ; « — » sans
-/// statistiques du livret, « 0 » quand personne n'a rien ouvert.
 #[test]
 fn the_stats_tile_counts_the_manuals_opened() {
-    let tile = |views: serde_json::Value| {
-        let mut args =
-            json!({ "propertyId": uuid::Uuid::nil(), "period": 30, "key": "appliances-views" });
-        if !views.is_null() {
-            args["views"] = views;
-        }
-        let mut value = String::new();
-        MockContext::host().run(|ctx| {
-            value = stats_summary(ctx, serde_json::from_value(args).expect("args"))
-                .expect("summary")
-                .value;
-        });
-        value
-    };
-    assert_eq!(tile(serde_json::Value::Null), "—");
-    assert_eq!(tile(json!({ "opens": 0 })), "0");
-    assert_eq!(
-        tile(json!({ "opens": 9, "surfaces": { "explore.item": 7, "explore.detail": 2 } })),
-        "7"
-    );
-
-    let detail = |input: serde_json::Value| {
-        let mut out = String::new();
-        MockContext::host().run(|mut ctx| {
-            ctx.input = input;
-            out = serde_json::to_string(&render_host_stats(ctx)).expect("json");
-        });
-        out
-    };
-    assert!(detail(json!({ "periodDays": 30 })).contains("stats.views.unavailable"));
-    assert!(detail(json!({ "views": { "opens": 0 } })).contains("stats.views.empty"));
-    let full = detail(json!({ "periodDays": 90, "views": {
-        "opens": 9, "surfaces": { "explore.item": 7, "explore.detail": 2 }, "clicks": { "link": 3 }
-    } }));
-    assert!(full.contains(r#""value":"7""#), "{full}");
-    assert!(full.contains("stats.views.clicks.link"), "{full}");
-    assert!(!full.contains("stats.views.clicks.call"), "{full}");
+    let summary = MockContext::host().run(|ctx| {
+        let args: StatsSummaryArgs = serde_json::from_value(json!({
+            "propertyId": "5f0c2b1e-8a4d-4c6f-9e21-3b7d9a6c4e10", "period": 30, "key": "appliances-views",
+            "views": { "opens": 9, "surfaces": { "explore.item": 7 } }
+        }))
+        .unwrap();
+        stats_summary(ctx, args).unwrap()
+    });
+    assert_eq!(serde_json::to_value(summary).unwrap()["value"], "7");
 }
