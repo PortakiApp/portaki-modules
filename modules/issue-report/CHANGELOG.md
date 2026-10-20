@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.11.0](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.10.4...issue-report-v1.11.0) (2026-10-20)
+
+
+### Features
+
+* **issue-report:** derive the settings form ([4f93a53](https://github.com/PortakiApp/portaki-modules/commit/4f93a53d36276d163b260f87b45880af8c964a04))
+* **issue-report:** port to declared record ([4d6299c](https://github.com/PortakiApp/portaki-modules/commit/4d6299c716d5b5c0dc5762c62969bfa647530380))
+* **issue-report:** take the earlier reports over ([63a1621](https://github.com/PortakiApp/portaki-modules/commit/63a16213c6f63c783f2b1291b01720cb7884ab98))
+
+
+### Bug Fixes
+
+* **issue-report:** declare the host-reply email again ([fe39d12](https://github.com/PortakiApp/portaki-modules/commit/fe39d124bcb4b375dd392c87e812c58743952ee5))
+
 ## [1.10.4](https://github.com/PortakiApp/portaki-modules/compare/issue-report-v1.10.3...issue-report-v1.10.4) (2026-10-20)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.0](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.12.9...waste-recycling-v1.13.0) (2026-10-20)
+
+
+### Features
+
+* **config:** visible_when sur les champs masqués ([f01856d](https://github.com/PortakiApp/portaki-modules/commit/f01856d2aab453d34c20bc0bc19677a9326adf18))
+
 ## [1.12.9](https://github.com/PortakiApp/portaki-modules/compare/waste-recycling-v1.12.8...waste-recycling-v1.12.9) (2026-10-20)
 
 

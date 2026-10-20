@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.0](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.14.4...lost-found-v1.15.0) (2026-10-20)
+
+
+### Features
+
+* **config:** visible_when sur les champs masqués ([f01856d](https://github.com/PortakiApp/portaki-modules/commit/f01856d2aab453d34c20bc0bc19677a9326adf18))
+
 ## [1.14.4](https://github.com/PortakiApp/portaki-modules/compare/lost-found-v1.14.3...lost-found-v1.14.4) (2026-10-20)
 
 
