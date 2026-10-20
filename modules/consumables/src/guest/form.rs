@@ -8,7 +8,6 @@ use portaki_sdk::sdui::primitives::{
 use portaki_sdk::sdui::surface::Surface;
 
 use super::load::{load_guest_consumables, GuestConsumablesData};
-use crate::labels;
 use crate::level;
 
 /// Bottom-sheet consumables shortage form (inputs live here — not on the home card).
@@ -144,11 +143,7 @@ fn item_choice_list(data: &GuestConsumablesData) -> ChoiceList {
         .items
         .iter()
         .map(|item| {
-            let label = labels::pick_label(
-                &labels::labels_from_item(item),
-                &data.locale,
-                &data.property_locale,
-            );
+            let label = item.name.clone();
             // L'emoji de l'hôte, sinon celui que le nom propose, sinon le colis du vocabulaire :
             // une grille de colis identiques ne se lit pas d'un coup d'œil (§2.5).
             let emoji = crate::suggest::shown(&item.emoji, &label);
@@ -157,11 +152,7 @@ fn item_choice_list(data: &GuestConsumablesData) -> ChoiceList {
             // qui rouvre le formulaire ne voit aucune différence, le resignale, et l'hôte se
             // déplace deux fois pour le même paquet de café. Sinon, où le trouver : le voyageur
             // regarde avant de demander.
-            let location = labels::pick_label(
-                &labels::location_from_item(item),
-                &data.locale,
-                &data.property_locale,
-            );
+            let location = item.location.clone();
             if let Some(level) = open_report_level(data, item.id) {
                 option = option.description(level);
             } else if !location.is_empty() {

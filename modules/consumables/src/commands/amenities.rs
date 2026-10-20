@@ -4,16 +4,10 @@
 use portaki_sdk::contracts::amenities::{self, AmenitiesList};
 use portaki_sdk::prelude::*;
 
-use crate::labels::labels_from_item;
-use crate::storage;
-
-/// Les produits sont des lignes d'entité, pas une config publiée : le catalogue tel que le livret
-/// le montre, sans les produits sans nom.
+/// Le catalogue tel que le livret le montre, sans les produits sans nom.
 #[portaki_sdk::query(name = "amenities.list", example(label = "Équipements fournis"))]
-pub fn amenities_list(_ctx: Context) -> Result<AmenitiesList> {
-    let named = storage::list_items()?
-        .iter()
-        .any(|item| !labels_from_item(item).is_empty());
+pub fn amenities_list(ctx: Context) -> Result<AmenitiesList> {
+    let named = !crate::domain::named_products(&ctx)?.is_empty();
     Ok(amenities::list(
         named.then(|| amenities::amenity("pantry-basics")),
     ))
