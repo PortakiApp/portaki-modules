@@ -17,14 +17,10 @@ use crate::entities::ConsumableReport;
 const ITEM_ROW_MAX_CHARS: usize = 120;
 
 /// Guest shortage report → notify workspace owner.
-pub fn notify_host_submitted(
-    property_id: Uuid,
-    stay_id: Uuid,
-    report_id: Uuid,
-    item_label: &str,
-    level: &str,
-    note: Option<&str>,
-) -> Result<()> {
+pub fn notify_host_submitted(property_id: Uuid, report: &ConsumableReport) -> Result<()> {
+    let (stay_id, report_id, item_label) = (report.stay_id, report.id, &report.item_label);
+    let note = report.note.as_deref();
+    let level = report.level.as_str();
     let level_fr = match level {
         "low" => "bientôt vide",
         _ => "manque",

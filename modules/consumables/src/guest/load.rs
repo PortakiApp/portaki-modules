@@ -2,14 +2,22 @@
 
 use portaki_sdk::prelude::*;
 
-use crate::entities::{ConsumableItem, ConsumableReport};
+use uuid::Uuid;
+
+use crate::entities::ConsumableReport;
 use crate::storage;
 
+/// Un produit, dans la langue du voyageur.
+pub struct Shown {
+    pub id: Uuid,
+    pub name: String,
+    pub location: String,
+    pub emoji: String,
+}
+
 pub struct GuestConsumablesData {
-    pub items: Vec<ConsumableItem>,
+    pub items: Vec<Shown>,
     pub reports: Vec<ConsumableReport>,
-    pub locale: String,
-    pub property_locale: String,
     /// Le délai que l'hôte annonce, dans la langue du voyageur ; « dans la journée » quand il n'a
     /// rien écrit.
     pub restock_delay: Option<String>,
@@ -24,9 +32,15 @@ pub struct GuestConsumablesData {
 /// The catalog and the stay's reports; `None` while the catalog is empty.
 pub fn load_guest_consumables(ctx: &GuestContext) -> Result<Option<GuestConsumablesData>> {
     // Un produit sans nom n'a rien à afficher sur sa tuile : il attend que l'hôte le nomme.
-    let items: Vec<ConsumableItem> = storage::list_items()?
-        .into_iter()
-        .filter(|item| !crate::labels::labels_from_item(item).is_empty())
+    let products = crate::Products::load(ctx)?;
+    let items: Vec<Shown> = crate::domain::named_products(ctx)?
+        .iter()
+        .map(|product| Shown {
+            id: product.uuid(),
+            name: product.label.for_ctx(ctx).to_string(),
+            location: product.location.for_ctx(ctx).to_string(),
+            emoji: product.emoji.clone(),
+        })
         .collect();
     if items.is_empty() {
         return Ok(None);
@@ -37,19 +51,16 @@ pub fn load_guest_consumables(ctx: &GuestContext) -> Result<Option<GuestConsumab
         None => Vec::new(),
     };
 
-    let settings = storage::settings::read();
-    let requests_disabled = !settings.requests_enabled();
-    let can_request = !requests_disabled && reports.len() < settings.max_requests() as usize;
+    let settings = products.meta();
+    let requests_disabled = !settings.enabled();
+    let can_request = !requests_disabled && reports.len() < settings.max() as usize;
     Ok(Some(GuestConsumablesData {
         can_request,
         requests_disabled,
         items,
         reports,
-        locale: ctx.locale.clone(),
-        property_locale: ctx.property.locale.clone(),
         // Rien d'écrit par l'hôte : « dans la journée », le défaut de la spec (§2.2).
-        restock_delay: storage::restock_delay::read()
-            .map(|text| text.get(&ctx.locale).trim().to_string())
+        restock_delay: Some(settings.restock_delay.get(&ctx.locale).trim().to_string())
             .filter(|delay| !delay.is_empty())
             .or_else(|| t!("form.restockDelay.default").ok()),
         host_name: ctx

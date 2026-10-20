@@ -4,34 +4,6 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-/// Property-scoped consumable catalog entry.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[portaki_sdk::entity(schema_version = 5)]
-pub struct ConsumableItem {
-    pub id: Uuid,
-    pub label_fr: String,
-    pub label_en: String,
-    pub sort_order: i32,
-    /// Reserved for future quantity alerts — 0 means unused in v0.1 UI.
-    #[serde(default)]
-    pub low_threshold: i32,
-    /// L'emoji du produit, dans la tuile que le voyageur touche (§2.5).
-    ///
-    /// Vide chez un hôte qui n'y touche pas — le colis du vocabulaire reprend alors sa place, et
-    /// une liste d'avant ce champ se lit comme avant.
-    #[serde(default)]
-    pub emoji: String,
-    /// « Où le trouver » : une carte JSON de toutes les langues, comme `label_fr`. Vide quand
-    /// l'hôte n'a rien dit.
-    #[serde(default)]
-    pub location: String,
-    pub created_at: DateTime<Utc>,
-}
-
-#[portaki_sdk::entity_indexes(ConsumableItem)]
-#[allow(dead_code)]
-pub const CONSUMABLE_ITEM_INDEXES: &[&str] = &["sort_order"];
-
 /// Stay-scoped guest shortage report (many per stay).
 ///
 /// `property_id` is injected by typed-repo from invocation context; kept in the
@@ -72,5 +44,5 @@ fn default_status() -> String {
 }
 
 #[portaki_sdk::entity_indexes(ConsumableReport)]
-#[allow(dead_code)]
+#[allow(dead_code, reason = "read by the migrations, not by the code")]
 pub const CONSUMABLE_REPORT_INDEXES: &[&str] = &["stay_id", "status"];
