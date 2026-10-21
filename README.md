@@ -8,137 +8,182 @@
 <h1 align="center">portaki-modules</h1>
 
 <p align="center">
-  <strong>Official Portaki Wasm guest modules monorepo</strong><br>
-  Independently versioned Extism modules, published to GitHub Container Registry as public OCI images.
+  <strong>The official Portaki modules</strong><br>
+  Rust crates compiled to Wasm (Extism), versioned one by one and published to Portaki's OCI registry.
 </p>
 
 <p align="center">
   <a href="https://github.com/PortakiApp/portaki-modules/actions/workflows/ci.yml"><img src="https://github.com/PortakiApp/portaki-modules/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License Apache-2.0"></a>
   <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/Rust-1.75+-dea584?logo=rust&logoColor=white" alt="Rust 1.75+"></a>
-  <a href="https://extism.org/"><img src="https://img.shields.io/badge/Extism-Wasm-7C3AED" alt="Extism"></a>
-  <a href="https://portaki.app"><img src="https://img.shields.io/badge/site-portaki.app-f59e0b" alt="portaki.app"></a>
 </p>
 
 <p align="center">
   <a href="#modules">Modules</a> ·
-  <a href="#requirements">Requirements</a> ·
-  <a href="#development">Development</a> ·
-  <a href="#publishing">Publishing</a> ·
-  <a href="docs/MARKETPLACE_ORDER.md">Marketplace order</a> ·
+  <a href="#getting-started">Getting started</a> ·
+  <a href="#before-opening-a-pr">Before a PR</a> ·
+  <a href="#releasing">Releasing</a> ·
   <a href="CONTRIBUTING.md">Contributing</a> ·
   <a href="SECURITY.md">Security</a>
 </p>
 
 ---
 
-Each crate under `modules/` is a Portaki guest module. Authoring uses [`portaki-sdk`](https://github.com/PortakiApp/portaki-sdk) (`portaki` CLI).
+[Portaki](https://portaki.app) is a digital welcome booklet for short-term rental hosts. Everything the
+guest sees in the booklet — Wi-Fi, access steps, house rules, weather, local guide… — and the matching
+host settings is a **module**: a sandboxed Wasm plugin that renders server-driven UI and talks to the
+platform only through the permissions it declares.
 
-On every push to **`main`**, CI builds and publishes:
+This repository holds the modules Portaki ships itself. They are written with
+[`portaki-sdk`](https://github.com/PortakiApp/portaki-sdk) and its `portaki` CLI — the same SDK a
+third-party module uses from its own repository. Read them as working examples.
 
-`oci.portaki.app/modules/<module-id>:<semver>`
-
-## Why this monorepo?
-
-- **One repo per ecosystem** — shared CI, shared SDK pins, consistent lint/build gates
-- **Independent versions** — each module bumps its own `Cargo.toml` semver
-- **OCI-first** — pushed to Portaki's OCI registry (`oci.portaki.app/modules/weather`, …), signed by CI
-- **Pattern A** — official modules live here; third-party modules use standalone repos + the same SDK
+Each module is published as `oci.portaki.app/modules/<module-id>:<semver>`.
 
 ## Modules
 
-| Module | OCI image | Description |
-|--------|-----------|-------------|
-| [`access-guide`](./modules/access-guide) | `oci.portaki.app/modules/access-guide:<semver>` | Arrival steps, codes, and parking |
-| [`appliances`](./modules/appliances) | `oci.portaki.app/modules/appliances:<semver>` | Device guides and safety notice |
-| [`checklist`](./modules/checklist) | `oci.portaki.app/modules/checklist:<semver>` | Checkout checklist with guest toggles |
-| [`consumables`](./modules/consumables) | `oci.portaki.app/modules/consumables:<semver>` | Consumables catalog, guest shortages, restock tracking |
-| [`emergency-contacts`](./modules/emergency-contacts) | `oci.portaki.app/modules/emergency-contacts:<semver>` | Useful numbers and host line |
-| [`ev-parking`](./modules/ev-parking) | `oci.portaki.app/modules/ev-parking:<semver>` | EV spot, gate code, charger PIN with timed reveal |
-| [`events`](./modules/events) | `oci.portaki.app/modules/events:<semver>` | Host-curated local events and map |
-| [`facility-hours`](./modules/facility-hours) | `oci.portaki.app/modules/facility-hours:<semver>` | Pool, spa, and shared amenity schedules |
-| [`guest-reviews`](./modules/guest-reviews) | `oci.portaki.app/modules/guest-reviews:<semver>` | Post-stay thank-you and review CTAs |
-| [`ical-sync`](./modules/ical-sync) | `oci.portaki.app/modules/ical-sync:<semver>` | Host iCal / Airbnb calendar feed import |
-| [`issue-report`](./modules/issue-report) | `oci.portaki.app/modules/issue-report:<semver>` | In-stay problem reports for the host |
-| [`local-guide`](./modules/local-guide) | `oci.portaki.app/modules/local-guide:<semver>` | Nearby spots and host picks |
-| [`lost-found`](./modules/lost-found) | `oci.portaki.app/modules/lost-found:<semver>` | Guest lost / found item reports |
-| [`nuki`](./modules/nuki) | `oci.portaki.app/modules/nuki:<semver>` | Nuki smart-lock provider for access-guide |
-| [`pre-arrival-form`](./modules/pre-arrival-form) | `oci.portaki.app/modules/pre-arrival-form:<semver>` | ETA, occasion, allergies, message to host |
-| [`rules`](./modules/rules) | `oci.portaki.app/modules/rules:<semver>` | Structured bilingual house rules |
-| [`sections`](./modules/sections) | `oci.portaki.app/modules/sections:<semver>` | Editorial title + markdown body blocks |
-| [`train`](./modules/train) | `oci.portaki.app/modules/train:<semver>` | Nearby station departure board |
-| [`waste-recycling`](./modules/waste-recycling) | `oci.portaki.app/modules/waste-recycling:<semver>` | Bins and collection schedule |
-| [`weather`](./modules/weather) | `oci.portaki.app/modules/weather:<semver>` | Current weather and 5-day forecast |
-| [`wifi-guest`](./modules/wifi-guest) | `oci.portaki.app/modules/wifi-guest:<semver>` | Guest Wi-Fi SSID and password with timed reveal |
+23 modules, one crate each under [`modules/`](./modules):
 
-## Structure
+| Module | What it does |
+|--------|--------------|
+| [`access-guide`](./modules/access-guide) | Arrival steps, codes, and parking |
+| [`appliances`](./modules/appliances) | Device guides and safety notice |
+| [`checklist`](./modules/checklist) | Checkout checklist with guest toggles |
+| [`consumables`](./modules/consumables) | Host stock list and guest shortage reports |
+| [`emergency-contacts`](./modules/emergency-contacts) | Useful numbers and host line |
+| [`ev-parking`](./modules/ev-parking) | EV spot, gate code, charger PIN with timed reveal |
+| [`events`](./modules/events) | Local happenings near the property |
+| [`facility-hours`](./modules/facility-hours) | Pool, spa, and shared amenity schedules |
+| [`guest-reviews`](./modules/guest-reviews) | Post-stay thank-you and review CTAs |
+| [`ical-sync`](./modules/ical-sync) | Host calendar feed import (iCal / Airbnb) |
+| [`issue-report`](./modules/issue-report) | In-stay problem reports for the host |
+| [`local-guide`](./modules/local-guide) | Nearby spots and host picks |
+| [`lost-found`](./modules/lost-found) | Guest lost / found item reports |
+| [`nuki`](./modules/nuki) | Nuki smart-lock provider for `access-guide` |
+| [`pre-arrival-form`](./modules/pre-arrival-form) | ETA, occasion, allergies, message to host |
+| [`rules`](./modules/rules) | Structured house rules |
+| [`safety-shutoffs`](./modules/safety-shutoffs) | Where to cut power, water and gas |
+| [`sections`](./modules/sections) | Editorial title + markdown body blocks |
+| [`trails`](./modules/trails) | Walks around the property, by level |
+| [`train`](./modules/train) | Nearest station departure board |
+| [`waste-recycling`](./modules/waste-recycling) | Bins and collection schedule |
+| [`weather`](./modules/weather) | Current conditions and 5-day forecast |
+| [`wifi-guest`](./modules/wifi-guest) | Guest Wi-Fi SSID and password with timed reveal |
+
+Catalogue order and maturity: [docs/MARKETPLACE_ORDER.md](./docs/MARKETPLACE_ORDER.md).
+What the guest sees, module by module (French): [docs/guest-surfaces.md](./docs/guest-surfaces.md).
+
+## Layout
 
 ```
 portaki-modules/
-├── Cargo.toml                 # workspace + shared SDK git deps (portaki-sdk main / 2.1+)
-├── modules/
-│   ├── access-guide/          # each crate: guest/, host/, …
-│   ├── appliances/
-│   ├── checklist/
-│   ├── consumables/
-│   ├── emergency-contacts/
-│   ├── ev-parking/
-│   ├── events/
-│   ├── facility-hours/
-│   ├── guest-reviews/
-│   ├── ical-sync/
-│   ├── issue-report/
-│   ├── local-guide/
-│   ├── lost-found/
-│   ├── nuki/
-│   ├── pre-arrival-form/
-│   ├── rules/
-│   ├── sections/
-│   ├── train/
-│   ├── waste-recycling/
-│   ├── weather/
-│   └── wifi-guest/
-└── .github/workflows/
-    └── ci.yml                 # quality gates; publish to Portaki on main
+├── Cargo.toml                  # workspace, pins portaki-sdk (crates.io)
+├── modules/<module-id>/
+│   ├── Cargo.toml              # version + portaki-sdk with the features (permissions) it uses
+│   ├── src/                    # guest/, host/, connectors — see docs/module-layout.md
+│   ├── i18n/                   # every user-facing text
+│   ├── tests/                  # conformance + scenarios
+│   ├── listing.json            # public catalogue listing (fr + en)
+│   ├── permission-reasons.json # why each permission is asked, shown to the host
+│   ├── CHANGELOG.md            # written by release-please
+│   └── CHANGELOG.fr.md         # French release notes, written by hand
+├── support/                    # test helpers shared by the modules
+├── scripts/                    # check-sdk-pin.sh, release-please config generator, …
+└── .github/workflows/          # ci, budget, release-please, security-audit
 ```
 
-## Requirements
+There is no hand-written manifest: `portaki build` derives it from the macros
+(`portaki_module!`, `#[surface]`, `#[query]`, `#[command]`…), the SDK features and `i18n/`.
 
-- Rust **1.75+**
-- Target `wasm32-unknown-unknown`
-- [`portaki` CLI](https://github.com/PortakiApp/portaki-sdk) from `portaki-sdk`
+## Getting started
+
+Requirements: Rust (stable, via [`rust-toolchain.toml`](./rust-toolchain.toml)), the
+`wasm32-unknown-unknown` target, and the `portaki` CLI at the version the workspace pins
+(`portaki-sdk` in [`Cargo.toml`](./Cargo.toml)).
 
 ```bash
+git clone https://github.com/PortakiApp/portaki-modules.git
+cd portaki-modules
 rustup target add wasm32-unknown-unknown
-cargo install --git https://github.com/PortakiApp/portaki-sdk --branch main --locked portaki-cli
+cargo install portaki-cli --version <pinned portaki-sdk version> --locked
 ```
 
-## Development
+Workspace checks, from the repo root:
 
 ```bash
 cargo fmt --all -- --check
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace
+cargo clippy --locked --workspace --all-targets -- -D warnings
+cargo test --locked --workspace --tests
+```
 
+One module, from its directory — **`portaki build` first**, so `portaki check` reads a fresh manifest
+rather than a stale one:
+
+```bash
 cd modules/weather
+portaki build
 portaki check
 ```
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for adding a new module.
+`portaki dev`, `portaki preview` and `portaki scenarios` run a module against Portaki's hosted
+sandbox (needs `portaki login`). `portaki --help` lists the rest.
 
-## Publishing
+Adding a module (`portaki init`, release-please registration, per-module `.cargo/config.toml`…) is
+covered in [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-1. Bump `version` in `modules/<id>/Cargo.toml`
-2. Merge to **`main`**
-3. CI publishes `oci.portaki.app/modules/<id>:<semver>`
+## Before opening a PR
 
-CI builds each module in a job without rights (`portaki-release-action/build@v2`), then publishes from a job holding only `id-token: write` (`portaki-release-action@v2`): the registry grants a short push right to its own OCI repository, the digest is attested with this workflow's provenance and `cargo audit` report, then announced. Official modules publish from CI only.
+The `ci` workflow does **not** run on pull requests — only `budget` does. Lint, tests and the publish
+gates run on `main`, after the merge. Run them locally first:
+
+```bash
+./scripts/check-sdk-pin.sh                  # every module's portaki-sdk = the workspace pin
+cargo fmt --all -- --check
+cargo clippy --locked --workspace --all-targets -- -D warnings
+cargo test --locked --workspace --tests
+cd modules/<module-id> && portaki build && portaki check && cd -
+portaki ci check --module <module-id>       # release notes in every language, permission reasons, entity columns, SDK pin
+```
+
+`portaki ci check` replaces the old `check-changelog-fr.sh` / `check-permission-reasons.sh`
+scripts; it runs in CI inside the module build, after `portaki build`.
+
+Commits follow Conventional Commits scoped to the module (`feat(weather): …`, `fix(rules): …`) —
+release-please uses the scope's path to decide what to bump.
+
+## Releasing
+
+Versions are owned by **release-please**, one package per `modules/<id>/`. Do not bump by hand.
+
+1. Conventional commits land on `main`.
+2. The `Release please` workflow opens a release PR that bumps each touched module's `Cargo.toml`
+   and `CHANGELOG.md`.
+3. **Write the French notes** in each bumped module's `CHANGELOG.fr.md`, on the release PR, before
+   merging it. They are mandatory: `portaki ci check` fails the build without them, and a red build
+   skips publishing for **every** module of that release, not only the one missing its notes.
+4. Merge the release PR. The `ci` workflow publishes only the modules whose version changed.
+
+Publishing runs in two jobs: the module is built and tested in a job without rights
+(`portaki-release-action/build`), then a job holding only `id-token: write` pushes it to the
+registry, attests the digest (workflow provenance + `cargo audit`) and announces it. Official modules
+publish from CI only. `ci` can also be dispatched by hand with `module=<id>` or `module=all`.
+
+Pipeline details: [.github/CI.md](./.github/CI.md).
+
+### What CI skips
+
+`ci` ignores pushes that only touch `**.md`, `docs/**` or `.github/CI.md` — including the
+`CHANGELOG*.md` files. Fixing notes after a release was skipped publishes nothing on its own:
+dispatch `ci` with the affected module ids (or `all`). A version already published as a draft
+because its notes were incomplete is completed with
+[`scripts/complete-releases.sh`](./scripts/complete-releases.sh), without republishing.
 
 ## Related repositories
 
 | Repository | Role |
 |------------|------|
-| [portaki-sdk](https://github.com/PortakiApp/portaki-sdk) | Rust SDK + `portaki` CLI |
+| [portaki-sdk](https://github.com/PortakiApp/portaki-sdk) | Rust SDK, `portaki` CLI, SDUI catalogue |
+| [portaki-release-action](https://github.com/PortakiApp/portaki-release-action) | GitHub Action that builds and publishes a module |
 | [portaki.app](https://portaki.app) | Product site |
 
 ## Contributing
